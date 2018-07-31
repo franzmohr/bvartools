@@ -1,12 +1,20 @@
 Package: bgvars
-Title: Bayesian Analysis of Global Vector Autoregressive Models
+Title: Bayesian Inference for Global Vector Autoregressive Models
 Version: 0.0.1
-Date: 2018-01-08
+Date: 2018-07-01
 Authors@R: person("Franz X.", "Mohr", email = "r-econometrics@outlook.com", role = c("aut","cre"))
-Description: R/C++ implementation of Bayesian global vector autoregressive models.
+Description: R/C++ implementation of Bayesian global vector autoregressive
+    models.
 License: GPL (>= 2)
-Depends: R (>= 3.4.3)
-Imports: Rcpp (>= 0.12.14), snow, snowfall, stats, stochvol, utils, zoo
+Depends:
+    R (>= 3.4.3)
+Imports:
+    Rcpp (>= 0.12.14),
+    snow,
+    snowfall,
+    stats,
+    stochvol,
+    utils
 LinkingTo: Rcpp, RcppArmadillo
 LazyData: true
 Encoding: latin1

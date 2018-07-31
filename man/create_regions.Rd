@@ -2,7 +2,7 @@
 % Please edit documentation in R/create_regions.R
 \name{create_regions}
 \alias{create_regions}
-\title{Create Region Series}
+\title{Create Regional Series}
 \usage{
 create_regions(country.data, regions, period, region.weights, weight.data)
 }
@@ -24,7 +24,7 @@ A list containing the following components:
 \item{weight.data}{a matrix or an array containing the updated weights.}
 }
 \description{
-Combines country-specific time series to regional series and updates the country and weight data.
+Combines multiple country-specific time series to regional series.
 }
 \examples{
 \dontrun{
@@ -35,7 +35,8 @@ weight.data <- gvar2016$weight.data
 region.weights <- gvar2016$region.weights
 
 period <- c("2008", "2009", "2010", "2011", "2012")
-regions <- list("EuroArea" = c("Austria", "Belgium", "Finland", "France", "Germany", "Italy", "Netherlands", "Spain"))
+regions <- list("EuroArea" = c("Austria", "Belgium", "Finland",
+"France", "Germany", "Italy", "Netherlands", "Spain"))
 regional.data <- create_regions(country.data, regions, period, region.weights, weight.data)
 
 country.data <- regional.data$country.data

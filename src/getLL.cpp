@@ -13,6 +13,7 @@ arma::vec getLL(arma::mat y, arma::mat Sigma,arma::mat Sigma_i) {
   int t = y.n_cols;
   double d = 0;
   double tpi = pow(2 * arma::datum::pi, -.5 * n);
+  //arma::vec yvec = arma::vectorise(y);
   arma::vec result = arma::zeros<arma::vec>(t);
   if (Sigma_i.n_rows > n) {
     for (int i = 0; i < t; i++){

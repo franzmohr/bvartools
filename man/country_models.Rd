@@ -8,7 +8,7 @@ country_models(country.data, weight.data, global.data = NULL,
   country.specs = NULL, prior = NULL)
 }
 \arguments{
-\item{country.data}{a named list of "zoo" objects containing country data.}
+\item{country.data}{a named list of "ts" objects containing country data.}
 
 \item{weight.data}{a matrix or an array of weights used to generate the weight matrices.}
 

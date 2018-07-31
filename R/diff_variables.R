@@ -23,20 +23,18 @@
 #' 
 #' @export
 diff_variables <- function(data, variables = NULL){
-  if(!requireNamespace("zoo")) {stop("Function requires the package 'zoo'.")}
-  
-  if (class(data) == "list") {
-    if(any(unlist(lapply(data, class)) != "zoo")) {stop("Data must be of class 'zoo'.")} 
+  if (any(class(data) == "list")) {
+    if(sum(unlist(lapply(data, class)) == "ts") != length(data)) {stop("Data must be of class 'ts'.")} 
     
     f <- function(x, variables){
       if (is.null(variables)){
-        for (i in names(x)){
-          x[, i] <- diff(x[, i], na.pad = TRUE)
+        for (i in dimnames(x)[[2]]){
+          x[, i] <- c(NA, diff(x[, i]))
         }
       } else {
         for (i in variables){
-          if (is.element(i, names(x))){
-            x[, i] <- diff(x[, i], na.pad = TRUE)
+          if (is.element(i, dimnames(x)[[2]])){
+            x[, i] <- c(NA, diff(x[, i]))
           }
         } 
       }
@@ -45,24 +43,23 @@ diff_variables <- function(data, variables = NULL){
       return(x)
     }
     
-    data <- lapply(data, f, variables)  
+    data <- lapply(data, f, variables)
   } else {
-    if(class(data) != "zoo") {stop("Data must be of class 'zoo'.")}
+    if(!"ts" %in% class(data)) {stop("Data must be of class 'ts'.")}
     
     if (is.null(variables)){
-      for (i in names(data)){
-        data[, i] <- diff(data[, i], na.pad = TRUE)
+      for (i in dimnames(data)[[2]]){
+        data[, i] <- c(NA, diff(data[, i]))
       }
     } else {
       for (i in variables){
-        if (is.element(i, names(data))){
-          data[, i] <- diff(data[, i], na.pad = TRUE)
+        if (is.element(i, dimnames(data)[[2]])){
+          data[, i] <- c(NA, diff(data[, i]))
         }
       } 
     }
     data <- stats::na.omit(data)
     attributes(data)$na.action <- NULL
   }
-  
   return(data)
 }

@@ -3,12 +3,12 @@
 \docType{data}
 \name{gvar2016}
 \alias{gvar2016}
-\title{Global VAR (GVAR) Database,  1979Q2-2016Q4}
+\title{GVAR Database, 1979Q2-2016Q4}
 \format{A list containing the following elements:
 \describe{
-  \item{country.data}{a list of 33 "zoo" objects containing 151 quarterly observations of macroeconomic variables.}
-  \item{global.data}{a "zoo" object containing 151 quarterly observations of oil, raw materials and metal prices.}
-  \item{region.weights}{a "zoo" object containing yearly data of PPP-GDP for 33 countries from 1990 to 2016.}
+  \item{country.data}{a named list of time series containing 151 quarterly observations of macroeconomic variables for 33 countries.}
+  \item{global.data}{a time series containing 151 quarterly observations of oil, raw materials and metal prices.}
+  \item{region.weights}{a time series containing yearly data of PPP-GDP for 33 countries from 1990 to 2016.}
   \item{weight.data}{an array of trade weights for 33 countries with yearly observations from 1980 to 2016.}
 }}
 \source{
@@ -18,7 +18,7 @@
 gvar2016
 }
 \description{
-GVAR dataset (2016 Vintage) produced from data of the GVAR Toolbox 2.0.
+Data set containing macroeconomic time series for 33 countries and 3 commodities from 1979 Q2 to 2016 Q4.
 }
 \references{
 Mohaddes, K. & Raissi, M. (2018). Compilation, Revision and Updating of the Global VAR (GVAR) Database, 1979Q2-2016Q4. University of Cambridge: Faculty of Economics (mimeo).

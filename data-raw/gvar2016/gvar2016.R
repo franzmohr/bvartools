@@ -16,7 +16,9 @@ nam[which(nam == "United Kingdom")] <- "UK"
 nam[which(nam == "United States")] <- "USA"
 names(PPP) <- c("Year", nam)
 rownames(PPP) <- NULL
-PPP <- zoo::zoo(PPP[, -1], order.by = PPP$Year)
+dates <- as.character(PPP[, "Year"])
+PPP <- ts(PPP[, -1], start = 1990, frequency = 1)
+dimnames(PPP)[[1]] <- dates
 
 # Country data
 variables <- c("y", "Dp", "eq", "ep", "r", "lr")
@@ -26,7 +28,10 @@ data <- c()
 nam <- c()
 for (i in countries[, "Country Name"]) {
   temp <- as.data.frame(read_xls("data-raw/gvar2016/Country Data (1979Q2-2016Q4).xls", sheet = i))
-  temp <- zoo::zoo(temp[, which(names(temp)%in%variables)], order.by = zoo::as.yearqtr(temp[, "date"]))
+  dates <- as.character(zoo::as.yearqtr(temp[, "date"]))
+  temp <- ts(temp[, which(names(temp)%in%variables)], start = as.numeric(zoo::as.yearqtr(temp[, "date"])[1]), frequency = 4)
+  dimnames(temp)[[1]] <- dates
+  #temp <- zoo::zoo(temp[, which(names(temp)%in%variables)], order.by = zoo::as.yearqtr(temp[, "date"]))
   data <- c(data, list(temp))
   nam <- c(nam, i)
   rm(temp)
@@ -49,24 +54,38 @@ country.data <- data
 # Global data
 global.variables <- c("poil", "pmat", "pmetal")
 global.data <- as.data.frame(read_xls("data-raw/gvar2016/Country Data (1979Q2-2016Q4).xls", sheet = 1))
-global.data <- zoo::zoo(global.data[, which(names(global.data)%in%global.variables)], order.by = zoo::as.yearqtr(global.data[, "date"]))
+dates <- as.character(zoo::as.yearqtr(global.data[, "date"]))
+global.data <- ts(global.data[, which(names(global.data)%in%global.variables)], start = as.numeric(zoo::as.yearqtr(global.data[, "date"])[1]), frequency = 4)
+dimnames(global.data)[[1]] <- dates
+
+#global.data <- zoo::zoo(global.data[, which(names(global.data)%in%global.variables)], order.by = zoo::as.yearqtr(global.data[, "date"]))
 
 # Weight matrix
-weights <- array(NA, dim = c(length(country.data), length(country.data), 37))
-dimnames(weights) <- list(countries[, "Country Code"], countries[, "Country Code"], as.character(1980:2016))
+#weights <- array(NA, dim = c(length(country.data), length(country.data), 37))
+#dimnames(weights) <- list(countries[, "Country Code"], countries[, "Country Code"], as.character(1980:2016))
+weights <- c()
+w.names <- c()
 for (i in countries[, "Country Code"]) {
   temp <- as.data.frame(read_xlsx("data-raw/gvar2016/Trade Flows (1980-2016).xlsx", sheet = i, na = "NaN"))
-  dimnames(temp)[[1]] <- temp[, 1]
+  #dimnames(temp)[[1]] <- temp[, 1]
+  dates <- temp[, 1]
   temp <- temp[, -(1:2)]
+  # Reorder columns
   temp <- temp[ , countries[, "Country Code"]]
+  # Set home country to zero
   temp[, i] <- 0
-  weights[i , ,] <- t(as.matrix(temp))
+  temp <- ts(temp, start = dates[1], frequency = 1)
+  dimnames(temp) <- list(as.character(dates), countries[, "Name"])
+  weights <- c(weights, list(temp))
+  w.names <- c(w.names, countries[which(countries["Country Code"] == i), "Name"])
+  #weights[i , ,] <- t(as.matrix(temp))
 }
+names(weights) <- w.names
 #for (i in 1:dim(weights)[3]) {
 #  weights[,, i] <- t(apply(weights[,, i], 1, function(x){s <- sum(x); return(x/s)}))
 #}
-dimnames(weights)[[1]] <- countries$Name
-dimnames(weights)[[2]] <- countries$Name
+#dimnames(weights)[[1]] <- countries$Name
+#dimnames(weights)[[2]] <- countries$Name
 weight.data <- weights
 
 gvar2016 <- list("country.data" = country.data,

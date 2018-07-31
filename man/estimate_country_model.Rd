@@ -17,14 +17,6 @@ not enter the computation of posterior moments, forecasts etc.}
 
 \item{thin}{an integer of thinning factor for MCMC output. Defaults to 10, which means that the forecast
 sequences contain only every tenth draw of the original sequence. Set \code{thin = 1} to obtain the full MCMC sequence.}
-
-\item{structural}{a logical specifying if the country models should be estimated as structual models a la Primicieri (2005).}
-
-\item{tvp}{a logical specifying if the country models should be estimated with time-varying parameters
-using the algorithm of Durbin & Koopman (2002).}
-
-\item{sv}{a logical specifying if the country models should be estimated with stochastic volatility
-using the algorithm of Kaster & Frühwirth-Schnatter (2014).}
 }
 \value{
 A list of data, model specifications, priors, thinned coefficient draws and the values of information criteria.

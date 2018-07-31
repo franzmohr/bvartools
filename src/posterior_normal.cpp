@@ -20,13 +20,16 @@
 // [[Rcpp::export]]
 arma::vec posterior_normal(arma::mat y, arma::mat x, arma::mat Sigma_i, arma::vec bprior, arma::mat Vprior_i) {
   int nvars = y.n_rows * x.n_rows;
-  arma::mat Vpost = inv(Vprior_i + kron(x*trans(x),Sigma_i));
-  arma::vec bpost = Vpost*(Vprior_i*bprior + vectorise(Sigma_i*y*trans(x)));
+  
+  arma::mat Vpost = arma::inv(Vprior_i + arma::kron(x * arma::trans(x), Sigma_i));
+  arma::vec bpost = Vpost * (Vprior_i * bprior + vectorise(Sigma_i * y * arma::trans(x)));
 
-  arma::vec eigval;
-  arma::mat eigvec;
-  eig_sym(eigval,eigvec,Vpost);
-  arma::mat A = eigvec * diagmat(sqrt(eigval));
+  arma::mat U;
+  arma::mat V;
+  arma::vec s;
+  arma::svd(U, s, V, Vpost);
+  arma::mat A = U * arma::diagmat(sqrt(s)) * arma::trans(V);
+  
   arma::vec z = arma::randn<arma::vec>(nvars);
   arma::vec result = bpost + A * z;
   return result;

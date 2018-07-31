@@ -3,7 +3,7 @@
 
 rm(list = ls())
 
-setwd("~/Dropbox/00_master/computations/data/gvar2013/GVAR Database (1979Q1-2013Q1)")
+setwd("/home/franz/Dropbox/00_Current projects/bgvars/data-raw/gvar2013")
 
 library(readxl)
 

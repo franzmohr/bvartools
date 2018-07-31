@@ -14,7 +14,7 @@
 #' @return Vector of generalised impulse response.
 #' 
 #' @export
-gir <- function(G, G0.i, Sigma, n.ahead, impulse, response, index, shock = "sd", t = NULL){
+gir <- function(G, G0_i, Omega, n.ahead, impulse, response, index, shock = "sd", t = NULL){
   k <- dim(G)[1]
   p <- dim(G)[2] / k
   if (n.ahead < p) {p <- n.ahead}
@@ -35,7 +35,7 @@ gir <- function(G, G0.i, Sigma, n.ahead, impulse, response, index, shock = "sd",
   for (i in 1:n.ahead){
     Phi.i <- matrix(0, k, k)
     for (j in 1:i){
-      Phi.i <- Phi.i + Phi[[i - j + 1]]%*%par[[j]]
+      Phi.i <- Phi.i + Phi[[i - j + 1]] %*% par[[j]]
     }
     Phi[[i + 1]] <- Phi.i
   }
@@ -44,8 +44,9 @@ gir <- function(G, G0.i, Sigma, n.ahead, impulse, response, index, shock = "sd",
   if (length(impulse) == 0){stop("Impulse variable not available.")}
   response <- which(index[, 1] == response[1] & index[, 2] == response[2])
   if (length(response) == 0){stop("Response variable not available.")}
-  
-  sjj <- Sigma[impulse, impulse]
+
+  #Omega <- G0.i %*% Omega %*% t(G0.i)
+  sjj <- Omega[impulse, impulse]
   sjj.sqrt <- sqrt(sjj)
   if (shock == "sd") {
     s <- 1
@@ -58,10 +59,11 @@ gir <- function(G, G0.i, Sigma, n.ahead, impulse, response, index, shock = "sd",
   }
   ej <- matrix(0, k, 1)
   ej[impulse, 1] <- 1
-  GI <- unlist(lapply(Phi,
-                      function(x, G0.i, Sigma, ej, sjj.sqrt, s, response) {
-                        return(((x%*%G0.i%*%Sigma%*%ej)/sjj.sqrt*s)[response, 1])
-                      }, G0.i, Sigma, ej, sjj.sqrt, s, response)
+  gir_fun <- function(x, G0_i, Omega, ej, sjj.sqrt, s, response) {
+    result <- ((x %*% G0_i %*% Omega %*% ej) / sjj.sqrt * s)[response, 1]
+    return(result)
+  }
+  Psi <- unlist(lapply(Phi, gir_fun, G0_i, Omega, ej, sjj.sqrt, s, response)
   )
-  return(GI)
+  return(Psi)
 }

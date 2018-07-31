@@ -2,3 +2,4 @@
 ^\.Rproj\.user$
 bgvars.working.file.R
 ^data-raw$
+^chunks$

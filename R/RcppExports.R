@@ -3,28 +3,6 @@
 
 #' Bayesian Variable Selection
 #' 
-#' Produces a draw of selection variables using the pseudo-althorithm from Korobilis (2013).
-#' 
-#' @param y a $n x T$ matrix containing the time series of the dependent variable.
-#' @param Z Matrix containing the time series of the explanatory variables.
-#' @param A Matirx.
-#' @param Gamma sfg.
-#' @param Sigma_i The inverse of the current draw of the variance-covariance matrix.
-#' @param pos_res fg.
-#' @param lpr_prior_0 Numeric vector containing the prior mean of the coefficients.
-#' @param lpr_prior_1 Covariance matrix of the coefficients.
-#' 
-#' @return a vector of inclusion indicators.
-#' 
-#' @references
-#' Korobilis, D. (2013). VAR forecasting using Bayesian variable selection. \emph{Journal of Applied Econometrics}, 28(2), 204--230.
-#' 
-bvs <- function(y, Z, A, Gamma, Sigma_i, pos_res, lpr_prior_0, lpr_prior_1) {
-    .Call(`_bgvars_bvs`, y, Z, A, Gamma, Sigma_i, pos_res, lpr_prior_0, lpr_prior_1)
-}
-
-#' Bayesian Variable Selection
-#' 
 #' Produces a draw of coefficients with a Minnesota Prior.
 #' 
 #' @param y Matrix containing the time series of the dependent variable.
@@ -41,8 +19,40 @@ bvs <- function(y, Z, A, Gamma, Sigma_i, pos_res, lpr_prior_0, lpr_prior_1) {
 #' @references
 #' Korobilis, D. (2013). VAR forecasting using Bayesian variable selection. \emph{Journal of Applied Econometrics}, 28(2), 204--230.
 #' 
-bvs_vec <- function(y, Z, A, Gamma, Sigma_i, pos_res, lpr_prior_0, lpr_prior_1) {
-    .Call(`_bgvars_bvs_vec`, y, Z, A, Gamma, Sigma_i, pos_res, lpr_prior_0, lpr_prior_1)
+bvs <- function(y, Z, A, Gamma, Omega_i, pos_res, lpr_prior_0, lpr_prior_1) {
+    .Call(`_bgvars_bvs`, y, Z, A, Gamma, Omega_i, pos_res, lpr_prior_0, lpr_prior_1)
+}
+
+#' Durbin and Koopman Kalman Filter
+#' 
+#' Produces a draw from the Kalman filter proposed by Durbin and Koopman.
+#' 
+#' @param y Matrix containing the time series of the dependent variable.
+#' @param Z Matrix containing the time series of the explanatory variables.
+#' @param H Matirx.
+#' @param Q sfg.
+#' @param T The inverse of the current draw of the variance-covariance matrix.
+#' @param a1 fg.
+#' @param P1 fg.
+#' 
+dk <- function(y, Z, H, Q, T, a1, P1) {
+    .Call(`_bgvars_dk`, y, Z, H, Q, T, a1, P1)
+}
+
+#' Seemingly Unrelated Regression
+#' 
+#' Produces a draw of normally distributed coefficients with using SUR.
+#' 
+#' @param y a matrix containing the time series of the dependent variable.
+#' @param Sigma_i a \eqn{n \times n} or \eqn{n * T \times n} (diagonal) variance matrix. 
+#' @param A0_mu_prior a numeric vector containing the prior mean of the coefficients.
+#' @param A0_V_i_prior a matrix containing the prior precisions of the coefficients.
+#' @param tvp Matrix containing the time series of the explanatory variables.
+#' 
+#' @return Vector of parameter values.
+#' 
+draw_structural_parameters <- function(y, Sigma_i, A0_mu_prior, A0_V_i_prior, tvp) {
+    .Call(`_bgvars_draw_structural_parameters`, y, Sigma_i, A0_mu_prior, A0_V_i_prior, tvp)
 }
 
 #' Calculates the log likelihood of the residuals of a multivariate time series.
@@ -53,6 +63,98 @@ bvs_vec <- function(y, Z, A, Gamma, Sigma_i, pos_res, lpr_prior_0, lpr_prior_1) 
 #' 
 getLL <- function(y, Sigma, Sigma_i) {
     .Call(`_bgvars_getLL`, y, Sigma, Sigma_i)
+}
+
+#' Draw Cointegration Matrix with Minnesota Prior
+#' 
+#' Produces a draw of coefficients of the cointegration matrix with a Minnesota Prior.
+#' 
+#' @param y Matrix containing the time series of the dependent variable.
+#' @param ect Matrix containing the time series of the explanatory variables.
+#' @param alpha Loading matrix of Pi.
+#' @param Sigma_i Inverse covariance matrix.
+#' 
+#' @return List of the matrix \eqn{\Pi} and the cointegration matrix \eqn{\beta}.
+#' 
+#' @references
+#' Koop, G., Leon-Gonzalez, R., & Strachan, R. W. (2010). Efficient posterior simulation for cointegrated models with priors on the cointegration space. \emph{Econometric Reviews}, 29(2), 224--242.
+#' 
+#' @export
+posterior_cointegration <- function(y, ect, beta, Sigma_i, G_i, v_i, P_i) {
+    .Call(`_bgvars_posterior_cointegration`, y, ect, beta, Sigma_i, G_i, v_i, P_i)
+}
+
+#' Draw Cointegration Matrix with Minnesota Prior
+#' 
+#' Produces a draw of coefficients of the cointegration matrix with a Minnesota Prior.
+#' 
+#' @param y Matrix containing the time series of the dependent variable.
+#' @param ect Matrix containing the time series of the explanatory variables.
+#' @param alpha Loading matrix of Pi.
+#' @param Sigma_i Inverse covariance matrix.
+#' 
+#' @return List of the matrix \eqn{\Pi} and the cointegration matrix \eqn{\beta}.
+#' 
+#' @references
+#' Koop, G., Leon-Gonzalez, R., & Strachan, R. W. (2010). Efficient posterior simulation for cointegrated models with priors on the cointegration space. \emph{Econometric Reviews}, 29(2), 224--242.
+#' 
+posterior_cointegration_sur <- function(y, ect, beta, Sigma_i, G_i, v_i, P_i) {
+    .Call(`_bgvars_posterior_cointegration_sur`, y, ect, beta, Sigma_i, G_i, v_i, P_i)
+}
+
+#' Draw Cointegration Matrix with Minnesota Prior
+#' 
+#' Produces a draw of coefficients of the cointegration matrix with a Minnesota Prior.
+#' 
+#' @param y Matrix containing the time series of the dependent variable.
+#' @param ect Matrix containing the time series of the explanatory variables.
+#' @param alpha Loading matrix of Pi.
+#' @param Sigma_i Inverse covariance matrix.
+#' 
+#' @return List of the matrix \eqn{\Pi} and the cointegration matrix \eqn{\beta}.
+#' 
+#' @references
+#' Koop, G., Leon-Gonzalez, R., & Strachan, R. W. (2010). Efficient posterior simulation for cointegrated models with priors on the cointegration space. \emph{Econometric Reviews}, 29(2), 224--242.
+#' 
+posterior_koop2010_beta_sur <- function(y, ect, alpha, Sigma_i, G_i, v_i, P_i) {
+    .Call(`_bgvars_posterior_koop2010_beta_sur`, y, ect, alpha, Sigma_i, G_i, v_i, P_i)
+}
+
+#' Draw Cointegration Matrix with Minnesota Prior
+#' 
+#' Produces a draw of coefficients of the cointegration matrix with a Minnesota Prior.
+#' 
+#' @param y Matrix containing the time series of the dependent variable.
+#' @param ect Matrix containing the time series of the explanatory variables.
+#' @param alpha Loading matrix of Pi.
+#' @param Sigma_i Inverse covariance matrix.
+#' 
+#' @return List of the matrix \eqn{\Pi} and the cointegration matrix \eqn{\beta}.
+#' 
+#' @references
+#' Koop, G., Leon-Gonzalez, R., & Strachan, R. W. (2010). Efficient posterior simulation for cointegrated models with priors on the cointegration space. \emph{Econometric Reviews}, 29(2), 224--242.
+#' 
+#' @export
+posterior_koop2010 <- function(y, x, ect, r, beta, Sigma_i, G_i, v_i, P_i, B_mu_prior, B_V_i_prior) {
+    .Call(`_bgvars_posterior_koop2010`, y, x, ect, r, beta, Sigma_i, G_i, v_i, P_i, B_mu_prior, B_V_i_prior)
+}
+
+#' Draw Cointegration Matrix with Minnesota Prior
+#' 
+#' Produces a draw of coefficients of the cointegration matrix with a Minnesota Prior.
+#' 
+#' @param y Matrix containing the time series of the dependent variable.
+#' @param ect Matrix containing the time series of the explanatory variables.
+#' @param alpha Loading matrix of Pi.
+#' @param Sigma_i Inverse covariance matrix.
+#' 
+#' @return List of the matrix \eqn{\Pi} and the cointegration matrix \eqn{\beta}.
+#' 
+#' @references
+#' Koop, G., Leon-Gonzalez, R., & Strachan, R. W. (2010). Efficient posterior simulation for cointegrated models with priors on the cointegration space. \emph{Econometric Reviews}, 29(2), 224--242.
+#' 
+posterior_koop2010_sur <- function(y, x, ect, beta, Sigma_i, G_i, v_i, P_i, B_mu_prior, B_V_i_prior) {
+    .Call(`_bgvars_posterior_koop2010_sur`, y, x, ect, beta, Sigma_i, G_i, v_i, P_i, B_mu_prior, B_V_i_prior)
 }
 
 #' Posterior Draw
@@ -92,21 +194,16 @@ posterior_normal_sur <- function(y, Z, Sigma_i, bprior, Vprior_i) {
     .Call(`_bgvars_posterior_normal_sur`, y, Z, Sigma_i, bprior, Vprior_i)
 }
 
-#' Draw Cointegration Matrix with Minnesota Prior
+#' Wishart Distribution
 #' 
-#' Produces a draw of coefficients of the cointegration matrix with a Minnesota Prior.
+#' Produces a single draw from the Wishart distribution.
 #' 
-#' @param y Matrix containing the time series of the dependent variable.
-#' @param ect Matrix containing the time series of the explanatory variables.
-#' @param alpha Loading matrix of Pi.
-#' @param Sigma_i Inverse covariance matrix.
+#' @param V a positive definite scale matrix.
+#' @param n an integer specifying the degrees of freedom.
 #' 
-#' @return List of the matrix \eqn{\Pi} and the cointegration matrix \eqn{\beta}.
+#' @return a matrix.
 #' 
-#' @references
-#' Koop, G., Leon-Gonzalez, R., & Strachan, R. W. (2010). Efficient posterior simulation for cointegrated models with priors on the cointegration space. \emph{Econometric Reviews}, 29(2), 224--242.
-#' 
-posterior_pi <- function(y, ect, alpha, Sigma_i) {
-    .Call(`_bgvars_posterior_pi`, y, ect, alpha, Sigma_i)
+wishart <- function(M, n) {
+    .Call(`_bgvars_wishart`, M, n)
 }
 

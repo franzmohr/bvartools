@@ -21,13 +21,24 @@
 #' \item{response}{a character vector containing the country name and variable of the response.}
 #' 
 #' @export
-irf_bgvar <- function(data, n.ahead = 20, impulse, response, shock = "sd", ci = .95, draws = NULL,
-                      t = NULL, mean = FALSE, cumulative = FALSE){
-  if (ci <= 0 | ci >= 1) {stop("Credible intervals must take a velue between 0 and 1.")}
-  n <- sqrt(dim(data$GVAR$coefs$Sigma)[1])
-  tvp <- dim(data$GVAR$coefs$G0.i)[2] > 1
-  sv <- dim(data$GVAR$coefs$Sigma)[2] > 1
-  t.max <- max(dim(data$GVAR$coefs$G0.i)[2], dim(data$GVAR$coefs$Sigma)[2])
+girf <- function(data, n.ahead = 20, impulse, response, shock = "sd", ci = .95, draws = NULL,
+                 t = NULL, mean = FALSE, cumulative = FALSE, structural = NULL){
+  if (any(ci <= 0) | any(ci >= 1)) {stop("Credible intervals must take a velue between 0 and 1.")}
+  
+  n <- sqrt(dim(data$GVAR$coefs$Omega)[1])
+  
+  tvp <- any(data$GVAR$specs$tvp)
+  #structural_possible <- any(data$GVAR$specs$structural)
+  #if (is.null(structural)) {
+  #  structural <- structural_possible
+  #} else {
+  #  if (structural & !structural_possible) {
+  #    stop("There are no draws of structural parameters available.")
+  #  }
+  #}
+  sv <- any(data$GVAR$specs$sv)
+  
+  t.max <- max(dim(data$GVAR$coefs$G0.i)[2], dim(data$GVAR$coefs$Omega)[2])
   t.force <- FALSE
   if (is.null(t)){
     if (tvp){
@@ -56,45 +67,55 @@ irf_bgvar <- function(data, n.ahead = 20, impulse, response, shock = "sd", ci = 
     }
   }
   
+  max_draws <- draws <- dim(data$GVAR$coefs$G0_i)[3]
   if (is.null(draws)){
-    draws <- dim(data$GVAR$coefs$G0.i)[3]
+    draws <- max_draws
+  } else {
+    if (draws > max_draws) {
+      stop("The number of specified draws is larger than the available amount of draws.")
+    }
   }
   
   index <- data$GVAR$specs$index
   global <- !is.na(data$GVAR$coefs$lags["global"])
   
-  draws.ir <- matrix(NA, 1 + n.ahead, draws)
+  draws_ir <- matrix(NA, 1 + n.ahead, draws)
   if (mean){
     G <- matrix(rowMeans(data$GVAR$coefs$G[, t,]), n)
-    S.u <- matrix(rowMeans(data$GVAR$coefs$Sigma[, t.sv,]), n)
-    G0.i <- matrix(rowMeans(data$GVAR$coefs$G0.i[, t,]), n)
-    IR <- zoo::zooreg(gir(G = G, G0.i = G0.i, Sigma = S.u, n.ahead = n.ahead, impulse = impulse, response = response,
-                 index = index, shock = shock), start = 0, frequency = stats::frequency(data$GVAR$data$X))
+    Omega_u <- matrix(rowMeans(data$GVAR$coefs$Omega[, t.sv,]), n)
+    G0_i <- matrix(rowMeans(data$GVAR$coefs$G0_i[, t,]), n)
+    IR <- stats::ts(gir(G = G, G0.i = G0_i, Omega = Omega_u, n.ahead = n.ahead, impulse = impulse, response = response,
+                        index = index, shock = shock), start = 0, frequency = stats::frequency(data$GVAR$data$X))
   } else {
     pb <- utils::txtProgressBar(width = 70, style = 3)
     for (draw in 1:draws){
       G <- matrix(data$GVAR$coefs$G[, t, draw], n)
-      Sigma <- matrix(data$GVAR$coefs$Sigma[, t.sv, draw], n)
-      G0.i <- matrix(data$GVAR$coefs$G0.i[, t, draw], n)
-      Psi <- gir(G = G, G0.i = G0.i, Sigma = Sigma, n.ahead = n.ahead, impulse = impulse, response = response,
+      G0_i <- matrix(data$GVAR$coefs$G0_i[, t, draw], n)
+      #if (structural) {
+      #  A0_i <- solve(matrix(data$GVAR$coefs$A0[, t, draw], n))
+      #G0_i <- G0_i %*% A0_i
+      #  Omega <- matrix(data$GVAR$coefs$Sigma[, t.sv, draw], n)
+      #  } else {
+      Omega <- matrix(data$GVAR$coefs$Omega[, t.sv, draw], n)
+      # }
+      Psi <- gir(G = G, G0_i = G0_i, Omega = Omega, n.ahead = n.ahead, impulse = impulse, response = response,
                  index = index, shock = shock)
       
-      draws.ir[, draw] <- Psi
+      draws_ir[, draw] <- Psi
       utils::setTxtProgressBar(pb, draw/draws)
     }
     
-    ci <- 1 - ci
-    ci <- apply(draws.ir, 1, stats::quantile, probs = c(.5, ci/2, 1 - ci/2))
-    IR <- t(ci)
     if (cumulative){
-      IR <- apply(IR, 2, cumsum) 
+      draws_ir <- apply(draws_ir, 2, cumsum)
     }
     
+    ci <- 1 - ci
+    IR <- t(apply(draws_ir, 1, stats::quantile, probs = c(.5, ci / 2, 1 - ci / 2)))
+    
     if (tvp | sv | t.force) {
-      ind.start <- zoo::index(data$GVAR$data$X)[max(c(t, t.sv))]
-      IR <- zoo::zooreg(IR, start = ind.start, frequency = stats::frequency(data$GVAR$data$X))
+      IR <- stats::ts(IR, start = stats::time(data$GVAR$data$X)[max(c(t, t.sv))], frequency = stats::frequency(data$GVAR$data$X))
     } else {
-      IR <- zoo::zooreg(IR, start = 0, frequency = stats::frequency(data$GVAR$data$X))
+      IR <- stats::ts(IR, start = 0, frequency = stats::frequency(data$GVAR$data$X))
     }
   }
   

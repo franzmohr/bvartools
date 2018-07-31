@@ -19,6 +19,6 @@ get_z <- function(W, X){
       x[, i] <- W[,, i]%*%X[, i]
     } 
   }
-  dimnames(x) <- dimnames(W)[1]
+  dimnames(x)[[1]] <- dimnames(W)[[1]]
   return(x)
 }

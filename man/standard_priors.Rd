@@ -4,12 +4,7 @@
 \alias{standard_priors}
 \title{Standard Priors}
 \usage{
-standard_priors(shrinkage = NULL)
-}
-\arguments{
-\item{shrinkage}{a character describing the shrinkage method. Either \code{NULL} (default) for none, "SSVS"
-for stochastic search variable selection as in George et. al (2008) or "BVS" for Bayesian variable selection
-as in Korobilis (2013).}
+standard_priors()
 }
 \value{
 A list containing a set of standard priors.
@@ -22,9 +17,4 @@ A list containing a set of standard priors.
 }
 \description{
 Produces a list of standard priors used in the estimation of the country models.
-}
-\references{
-George, E. I.; Sun, D. & Ni, S. (2008). Bayesian stochastic search for VAR model restrictions. \emph{Journal of Econometrics}, 142(1), 553--580.
-
-Korobilis, D. (2013). VAR forecasting using Bayesian variable selection. \emph{Journal of Applied Econometrics}, 28(2), 204--230.
 }

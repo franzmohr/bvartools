@@ -15,7 +15,7 @@ VAR model as produced by the \code{country_models} function.}
 \item{burnin}{an integer of MCMC draws used to initialize the sampler (defaults to 5000).
 These draws do not enter the computation of posterior moments, forecasts etc.}
 
-\item{thin}{an integer of thinning factor for MCMC output. Defaults to 10, which means that the
+\item{thin}{an integer specifying the thinning factor for the MCMC output. Defaults to 10, which means that the
 forecast sequences contain only every tenth draw of the original sequence. Set \code{thin = 1} to obtain the full MCMC sequence.}
 }
 \value{

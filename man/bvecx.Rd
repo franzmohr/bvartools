@@ -2,22 +2,23 @@
 % Please edit documentation in R/bvecx.R
 \name{bvecx}
 \alias{bvecx}
-\title{Estimate a Vector Error Correction Model}
+\title{Estimation of a Bayesian Vector Error Correction Model}
 \usage{
-bvecx(data, iterations = 15000, burnin = 5000, thin = NULL)
+bvecx(data, iterations = 50000, burnin = 5000, thin = 10)
 }
 \arguments{
-\item{data}{A list containing the data necessary to estimate a GVAR country model.}
+\item{data}{a list containing the neccesary data to estimate a GVAR country model. Usually and object produced by \code{\link{country_models}}.}
 
-\item{iterations}{Number of iterations of the Gibbs sampler.}
+\item{iterations}{an integer of MCMC draws including burn-in (defaults to 50000).}
 
-\item{burnin}{Number of burnin draws of the Gibbs sampler.}
+\item{burnin}{an integer of MCMC draws used to initialize the sampler (defaults to 5000).
+These draws do not enter the computation of posterior moments, forecasts etc.}
 
-\item{thin}{Thinning factor.}
+\item{thin}{an integer specifying the thinning factor for the MCMC output. Set \code{thin = 1} to obtain the full MCMC sequence.}
 }
 \value{
 Some object.
 }
 \description{
-Estimates a country-specific VECX* model with constant parameters.
+Estimates a country-specific VECX model without the cointegration matrix \eqn{\beta}.
 }

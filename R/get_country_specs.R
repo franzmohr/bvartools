@@ -14,11 +14,11 @@ get_country_specs <- function(data){
   result <- c()
   for (i in which(data$GVAR$specs$criteria[, "Maximum"])) {
     result <- rbind(result,
-                    data.frame("Country" = names(data$Country.models)[i],
-                               "p" = data$Country.models[[i]]$specs$lags$lags$domestic,
-                               "q" = data$Country.models[[i]]$specs$lags$lags$foreign,
-                               "s" = data$Country.models[[i]]$specs$lags$lags$global,
-                               "rank" = data$Country.models[[i]]$specs$rank$rank)
+                    data.frame("Country" = names(data$country.models)[i],
+                               "p" = data$country.models[[i]]$specs$lags$lags$domestic,
+                               "p.star" = data$country.models[[i]]$specs$lags$lags$foreign,
+                               "s.global" = data$country.models[[i]]$specs$lags$lags$global,
+                               "rank" = data$country.models[[i]]$specs$rank$rank)
                     )
   }
   return(result)

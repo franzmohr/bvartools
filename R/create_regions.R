@@ -1,6 +1,6 @@
-#' Create Region Series
+#' Create Regional Series
 #' 
-#' Combines country-specific time series to regional series and updates the country and weight data.
+#' Combines multiple country-specific time series to regional series.
 #' 
 #' @param country.data a named list of "zoo" objects containing country data.
 #' @param regions a named list of character vectors containing the names of the countries, which belong to a region.
@@ -22,7 +22,8 @@
 #' region.weights <- gvar2016$region.weights
 #' 
 #' period <- c("2008", "2009", "2010", "2011", "2012")
-#' regions <- list("EuroArea" = c("Austria", "Belgium", "Finland", "France", "Germany", "Italy", "Netherlands", "Spain"))
+#' regions <- list("EuroArea" = c("Austria", "Belgium", "Finland",
+#' "France", "Germany", "Italy", "Netherlands", "Spain"))
 #' regional.data <- create_regions(country.data, regions, period, region.weights, weight.data)
 #' 
 #' country.data <- regional.data$country.data
@@ -39,72 +40,106 @@ create_regions <- function(country.data, regions, period, region.weights, weight
     m <- TRUE
   }
   
+  tt <- unique(unlist(lapply(country.data, NROW)))
+  if (length(tt) > 1) {stop("Country data must have the same numbers of observations.")}
+  
   if ((class(regions) != "list") | is.null(names(regions))) {stop("Object 'regions' must be a named list.")}
   
   if (length(unique(unlist(regions))) < length(unlist(regions))) {
-    stop("Different regions may not contain the same country.") 
+    stop("The same country is not allowed to be in more than one region.") 
   }
   
-  vars <- unique(unlist(lapply(country.data, names)))
-  weights <- c()
-  for (i in 1:length(regions)){
-    s <- colSums(region.weights[period, regions[[i]]])
-    share <- s / sum(s)
-    weights <- c(weights, list(share))
-    names(weights)[i] <- names(regions)[i]
+  vars <- unique(unlist(lapply(country.data, function(x){return(dimnames(x)[[2]])})))
+  
+  var_exist <- matrix(FALSE, length(country.data), length(vars))
+  dimnames(var_exist) <- list(names(country.data), vars)
+  for (i in names(country.data)) {
+    var_exist[i, dimnames(country.data[[i]])[[2]]] <- TRUE
   }
+  
+  if (length(period) == 1) {
+    t.temp <- as.numeric(time(country.data[[1]]))
+    t.avail <- as.numeric(time(region.weights))
+    
+    t <- matrix(NA, tt, period)
+    for (i in 1:tt) {
+      if (t.temp[i] <= t.avail[period]) {
+        t[i,] <- t.avail[1:period]
+      }
+      if (t.temp[i] >= t.avail[period]) {
+        pos_t <- which(floor(t.temp[i]) == t.avail)
+        pos_t <- (pos_t - period + 1):pos_t
+        t[i,] <- t.avail[pos_t]
+      }
+    }
+  }
+  
   r_names <- names(regions)
-  all_r_countries <- unlist(lapply(weights, function(x){return(names(x))}))
+  all_r_countries <- unlist(regions)
   names(all_r_countries) <- NULL
+  r_tsp <- tsp(country.data[[1]])
   
-  n.new <- dim(weight.data)[1] - length(all_r_countries) + length(weights)
+  n.new <- dim(weight.data)[1] - length(unlist(regions)) + length(regions)
   w.temp <- array(0, dim = c(n.new, n.new, dim(weight.data)[3]))
-  w.names <- dimnames(weight.data)[[1]][-which(dimnames(weight.data)[[2]]%in%all_r_countries)]
+  w.names <- dimnames(weight.data)[[1]][-which(dimnames(weight.data)[[2]] %in% unlist(regions))]
   w.temp[1:length(w.names), 1:length(w.names) , ] <- weight.data[w.names, w.names, ]
-  w.names <- c(w.names, names(weights))
+  w.names <- c(w.names, names(regions))
   dimnames(w.temp) <- list(w.names, w.names, dimnames(weight.data)[[3]])
   
   r.temp <- c()
-  r.names <- c()
-  for (i in r_names){
-    c.temp <- zoo::zoo(NA, order.by = zoo::index(country.data[[1]]))
-    c.names <- c()
-    for (j in vars) {
-      v.temp <- zoo::zoo(NA, order.by = zoo::index(country.data[[1]]))
-      v.names <- c()
+  for (i in 1:length(regions)) {
+    vars_r <- apply(var_exist[regions[[i]], ], 2, any)
+    vars_r <- dimnames(var_exist)[[2]][vars_r]
+    
+    r_temp <- ts(matrix(NA, tt, length(vars_r)), start = r_tsp[1], frequency = r_tsp[3])
+    dimnames(r_temp)[[2]] <- vars_r
+    
+    for (j in vars_r) {
+      c_temp <- matrix(NA, tt, length(regions[[i]]))
+      dimnames(c_temp)[[2]] <- regions[[i]]
       for (k in regions[[i]]) {
-        if (j %in% names(country.data[[k]])) {
-          v.temp <- cbind(v.temp, country.data[[k]][, j])
-          v.names <- c(v.names, k)
+        if (var_exist[k , j]) {
+          c_temp[, k] <- country.data[[k]][, j] 
         }
       }
-      v.temp <- v.temp[, -1]
-      names(v.temp) <- v.names
-      non.w <- 1 - sum(weights[[i]][v.names])
-      if (NCOL(v.temp) > 1){
-        c.temp <- cbind(c.temp, v.temp %*% weights[[i]][v.names]/(1-non.w))
+      c_temp <- c_temp[, var_exist[regions[[i]], j]]
+      
+      if (NCOL(c_temp) > 1) {
+        if (length(period) == 1) {
+          for (k in 1:tt) {
+            temp <- colSums(region.weights[which(dimnames(region.weights)[[1]] %in% t[k,]), dimnames(c_temp)[[2]]])
+            temp <- temp / sum(temp)
+            r_temp[k, j] <- sum(c_temp[k, ] * temp)
+          }
+        } else {
+          temp <- colSums(region.weights[which(dimnames(region.weights)[[1]] %in% as.character(period)), dimnames(c_temp)[[2]]])
+          temp <- temp / sum(temp)
+          r_temp[, j] <- c_temp %*% matrix(temp)
+        }
       } else {
-        c.temp <- cbind(c.temp, v.temp * weights[[i]][v.names]/(1-non.w))
+        r_temp[, j] <- c_temp
       }
-      c.names <- c(c.names, j)
     }
-    c.temp <- c.temp[, -1]
-    names(c.temp) <- c.names
-    r.temp <- c(r.temp, list(c.temp))
-    r.names <- c(r.names, i)
+    r.temp <- c(r.temp, list(r_temp))
     
-    w.temp[-which(dimnames(w.temp)[[1]]%in%r_names), i, ] <- apply(weight.data[-which(dimnames(weight.data)[[1]]%in%all_r_countries), regions[[i]],], 3, rowSums)
-    w.temp[i , -which(dimnames(w.temp)[[2]]%in%r_names), ] <- apply(weight.data[regions[[i]], -which(dimnames(weight.data)[[2]]%in%all_r_countries), ], 3, colSums)
-    
+    if (m) {
+      w.temp[-which(dimnames(w.temp)[[1]] %in% r_names), r_names[i], ] <- rowSums(weight.data[-which(dimnames(weight.data)[[1]] %in% all_r_countries), regions[[i]],])
+      w.temp[r_names[i] , -which(dimnames(w.temp)[[2]]%in%r_names), ] <- colSums(weight.data[regions[[i]], -which(dimnames(weight.data)[[2]] %in% all_r_countries),])
+    } else {
+      w.temp[-which(dimnames(w.temp)[[1]] %in% r_names), r_names[i], ] <- apply(weight.data[-which(dimnames(weight.data)[[1]] %in% all_r_countries), regions[[i]],], 3, rowSums)
+      w.temp[r_names[i] , -which(dimnames(w.temp)[[2]]%in%r_names), ] <- apply(weight.data[regions[[i]], -which(dimnames(weight.data)[[2]] %in% all_r_countries), ], 3, colSums)
+    }
     for (j in r_names) {
-      if (i != j) {
-        w.temp[i, j,] <- apply(weight.data[regions[[i]], regions[[j]],], 3, sum)
+      if (r_names[i] != j) {
+        w.temp[r_names[i], j,] <- apply(weight.data[regions[[i]], regions[[j]],], 3, sum)
       } else {
         next
       }
     }
   }
-  names(r.temp) <- r.names
+  names(r.temp) <- names(regions)
+  
+  w.temp[,,] <- apply(w.temp, 3, function(x) {x / rowSums(x)})
   
   data <- c()
   data.names <- c()

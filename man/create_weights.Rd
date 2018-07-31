@@ -7,31 +7,31 @@
 create_weights(weight.data, period, country.data = NULL)
 }
 \arguments{
-\item{weight.data}{a matrix or an array containing weight data used to generate country-specific weight matrices.}
+\item{weight.data}{a list of named time series or a matrix containing data for the construction of weights.}
 
-\item{period}{a character vector or a numeric specifying the periods used to calculate the final weights, see details below.}
+\item{period}{an integer for time varying weights or a numeric vector specifying the periods used to calculate constant weights (see 'Details').}
 
-\item{country.data}{a named list of "zoo" objects containing country data. Only used if \code{period} is a numeric.}
+\item{country.data}{a named list of time series containing country data. Only requried if \code{period} is an integer.}
 }
 \value{
-A matrix or an array containing weight data used to generate country-specific weight matrices. Each row sums up to 1.
+A named matrix or array containing country-specific weight matrices.
 }
 \description{
-Produces a matrix of fixed weights or an array for time varying weights for a GVAR model.
+Produces a matrix of fixed weights or an array of time varying weights from raw data for a GVAR model.
 }
 \details{
-If a character vector is provided for \code{period}, the function will calculate country weights based on the sums over the
-specified periods. If a numeric is proved, the weights will be construced from rolling sums over the last \code{period} periods.
+The function assists in the creation of country-specific weight matrices from raw data. If a numeric vector
+is provided for \code{period}, the function will calculate country weights based on the sums over the
+specified periods. If an integer is proved, the weights will be construced from rolling sums over the last \code{period} periods.
 If the country data starts earlier than the weight series, the sums over the first \code{period} observations
-of the weight data will be used until the periods match.
+of \code{weight.data} will be used until the periods match.
 }
 \examples{
-\dontrun{
 # Constant weight matrix 
 data(gvar2016)
 
 weight.data <- gvar2016$weight.data
-period <- c("2008", "2009", "2010", "2011", "2012")
+period <- 2008:2012
 
 weight.data <- create_weights(weight.data, period)
 
@@ -44,5 +44,5 @@ country.data <- gvar2016$country.data
 period <- 3
 
 weight.data <- create_weights(weight.data, period, country.data)
-}
+
 }

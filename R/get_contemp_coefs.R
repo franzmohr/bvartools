@@ -16,47 +16,60 @@
 #' 
 #' @export
 get_contemp_coefs <- function(data, type = "mean", t = NULL, all = FALSE){
-  d.vars <- unique(unlist(lapply(data$Country.models, function(x){return(x$specs$domestic.variables)})))
-  s.vars <- unique(unlist(lapply(data$Country.models, function(x){return(x$specs$foreign.variables)})))
+  d.vars <- unique(unlist(lapply(data$country.models, function(x){return(x$specs$domestic.variables)})))
+  s.vars <- unique(unlist(lapply(data$country.models, function(x){return(x$specs$foreign.variables)})))
   vars <- s.vars[which(is.element(s.vars, d.vars))]
   
-  result <- as.data.frame(matrix(NA, length(data$Country.models), length(vars) + 1))
+  result <- as.data.frame(matrix(NA, length(data$country.models), length(vars) + 1))
   names(result) <- c("Country", vars)
-  result[, "Country"] <- names(data$Country.models)
+  result[, "Country"] <- names(data$country.models)
   
   if (is.null(t)){
-    t <- dim(data$Country.models[[1]]$coefs$A.s.0)[2]
+    t <- dim(data$country.models[[1]]$coefs$A_s_0)[2]
   }
   
   for (j in 1:nrow(result)){
-    if (type == "mean") {
-      A.s.0 <- apply(data$Country.models[[j]]$coefs$A.s.0[, t,], 1, mean)
+    if (class(data$country.models[[j]]$coefs$A_s_0[, t,]) == "numeric") {
+      if (type == "mean") {
+        A_s_0 <- mean(data$country.models[[j]]$coefs$A_s_0[, t,])
+      }
+      if (type == "median") {
+        A_s_0 <- stats::median(data$country.models[[j]]$coefs$A_s_0[, t,])
+      }
+      if (type == "sd") {
+        A_s_0 <- stats::sd(data$country.models[[j]]$coefs$A_s_0[, t,])
+      } 
+    } else {
+      if (type == "mean") {
+        A_s_0 <- apply(data$country.models[[j]]$coefs$A_s_0[, t,], 1, mean)
+      }
+      if (type == "median") {
+        A_s_0 <- apply(data$country.models[[j]]$coefs$A_s_0[, t,], 1, stats::median)
+      }
+      if (type == "sd") {
+        A_s_0 <- apply(data$country.models[[j]]$coefs$A_s_0[, t,], 1, stats::sd)
+      } 
     }
-    if (type == "median") {
-      A.s.0 <- apply(data$Country.models[[j]]$coefs$A.s.0[, t,], 1, median)
-    }
-    if (type == "sd") {
-      A.s.0 <- apply(data$Country.models[[j]]$coefs$A.s.0[, t,], 1, sd)
-    }
-    names.A0 <- names(A.s.0)
-    v <- strsplit(names.A0, split = "_", fixed = TRUE)
+    names_A0 <- dimnames(data$country.models[[j]]$coefs$A_s_0)[[1]]
+    v <- strsplit(names_A0, split = "_", fixed = TRUE)
     v1 <- unique(unlist(lapply(v, function(x){return(x[1])})))
     v2 <- unique(unlist(lapply(v, function(x){return(x[2])})))
     v2 <- strsplit(v2, split = ".", fixed = TRUE)
     v2 <- unlist(lapply(v2, function(x){return(x[length(x)])}))
     
-    A.s.0 <- matrix(A.s.0, length(v1))
+    A_s_0 <- matrix(A_s_0, length(v1))
     
-    pos.v1 <- which(is.element(v1, v2))
-    pos.v2 <- which(is.element(v2, v1))
-    vars.i <- v2[pos.v2]
+    pos_v1 <- which(is.element(v1, v2))
+    pos_v2 <- which(is.element(v2, v1))
+    vars_i <- v2[pos_v2]
     
-    for (i in vars.i){
-      result[j, which(is.element(vars, i)) + 1]  <- round(A.s.0[which(is.element(v1, i)), which(is.element(v2, i))], 2)
+    for (i in vars_i){
+      result[j, which(is.element(vars, i)) + 1]  <- round(A_s_0[which(is.element(v1, i)), which(is.element(v2, i))], 2)
     }
   }
   if (!all) {
     result <- result[which(data$GVAR$specs$criteria[, "Maximum"]),]
   }
+  row.names(result) <- NULL
   return(result)
 }

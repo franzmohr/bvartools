@@ -1,12 +1,13 @@
-#' Add Minnesota Priors to the Country Models
+#' Minnesota Prior
 #' 
+#' Calculates and add Minnesota prior for each country model.
 #' 
+#' @param data a list of country data and model specifications as produced by \code{\link{country_models}}.
+#' @param kappa a numeric specifying the degree of shrinkage of own lags, see details.
+#' @param lambda a numeric or numeric vector specifying the degree of shrinkage per lag, see details.
 #' 
-#' @param data a list as produced by \link{\code{country_models}}.
-#' @param method
+#' @details 
 #' 
-#' @references 
-#' Korobilis, D. (2013). VAR forecasting using Bayesian variable selection. \emph{Journal of Applied Econometrics}, 28(2), 204--230.
 #' @export
 add_Minnesota_prior <- function(data, kappa = 1, lambda = 1){
   if (length(lambda) == 1) {

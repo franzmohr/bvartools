@@ -2,7 +2,7 @@
 % Please edit documentation in R/bvarx.R
 \name{bvarx}
 \alias{bvarx}
-\title{Estimate a Vector Autoregressive Model}
+\title{Estimate a Vector Auto-Regressive Model}
 \usage{
 bvarx(data, iterations = 15000, burnin = 5000, thin = NULL)
 }
@@ -16,7 +16,10 @@ bvarx(data, iterations = 15000, burnin = 5000, thin = NULL)
 \item{thin}{Thinning factor.}
 }
 \value{
-Some object.
+A list of the following elements:
+\item{data}{}
+\item{coefs}{a list of coefficient draws.}
+\item{criteria}{a data frame containing the AIC, BIC and HQ test statistics for the model.}
 }
 \description{
 Estimates a country-specific VARX* model with constant parameters.

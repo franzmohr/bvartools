@@ -4,10 +4,10 @@
 \alias{bvs}
 \title{Bayesian Variable Selection}
 \usage{
-bvs(y, Z, A, Gamma, Sigma_i, pos_res, lpr_prior_0, lpr_prior_1)
+bvs(y, Z, A, Gamma, Omega_i, pos_res, lpr_prior_0, lpr_prior_1)
 }
 \arguments{
-\item{y}{a $n x T$ matrix containing the time series of the dependent variable.}
+\item{y}{Matrix containing the time series of the dependent variable.}
 
 \item{Z}{Matrix containing the time series of the explanatory variables.}
 
@@ -15,19 +15,19 @@ bvs(y, Z, A, Gamma, Sigma_i, pos_res, lpr_prior_0, lpr_prior_1)
 
 \item{Gamma}{sfg.}
 
-\item{Sigma_i}{The inverse of the current draw of the variance-covariance matrix.}
-
 \item{pos_res}{fg.}
 
 \item{lpr_prior_0}{Numeric vector containing the prior mean of the coefficients.}
 
 \item{lpr_prior_1}{Covariance matrix of the coefficients.}
+
+\item{Sigma_i}{The inverse of the current draw of the variance-covariance matrix.}
 }
 \value{
-a vector of inclusion indicators.
+Vector of parameter values.
 }
 \description{
-Produces a draw of selection variables using the pseudo-althorithm from Korobilis (2013).
+Produces a draw of coefficients with a Minnesota Prior.
 }
 \references{
 Korobilis, D. (2013). VAR forecasting using Bayesian variable selection. \emph{Journal of Applied Econometrics}, 28(2), 204--230.

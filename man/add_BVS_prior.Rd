@@ -2,13 +2,32 @@
 % Please edit documentation in R/add_BVS_prior.R
 \name{add_BVS_prior}
 \alias{add_BVS_prior}
-\title{Add Bayesian Variable Selection Priors to Country Models}
+\title{Priors for Bayesian Variable Selection}
 \usage{
-add_BVS_prior(data)
+add_BVS_prior(data, kappa_domestic = 0.9, kappa_foreign = 0.5,
+  kappa_global = 0.5, kappa_A0 = 0.5, kappa_deterministic = 0.8,
+  exclude_deterministic = TRUE, exclude_own_lags = FALSE,
+  structural = FALSE)
 }
 \arguments{
-\item{data}{a list as produced by \link{\code{country_models}}.}
+\item{data}{a list of country models as produced by \code{\link{country_models}}.}
+
+\item{kappa_domestic}{number between 0 and 1.}
+
+\item{kappa_foreign}{number between 0 and 1.}
+
+\item{kappa_global}{number between 0 and 1.}
+
+\item{kappa_A0}{number between 0 and 1.}
+
+\item{kappa_deterministic}{number between 0 and 1.}
+
+\item{exclude_deterministic}{logical; exclude deterministic terms from the BVS algorithm?}
+
+\item{exclude_own_lags}{logical; exclude the first own lags from the BVS algorithm?}
+
+\item{structural}{logical; should BVS should also be applied to structual coefficients?}
 }
 \description{
-Produces a
+Adds prior hyperparameters for Bayesian variable selection to every country model.
 }

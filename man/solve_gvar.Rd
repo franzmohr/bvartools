@@ -2,14 +2,12 @@
 % Please edit documentation in R/solve_gvar.R
 \name{solve_gvar}
 \alias{solve_gvar}
-\title{Solve a GVAR model}
+\title{Solve a GVAR Model}
 \usage{
-solve_gvar(data, global.data, ic = "BIC", t = NULL)
+solve_gvar(data, ic = "BIC", t = NULL)
 }
 \arguments{
 \item{data}{a list containing the results of the country estimates.}
-
-\item{global.data}{a list as produced by the function \code{\link{country_models}}.}
 
 \item{ic}{a character specifying the information criterion used for model selection. Available options are "AIC", "BIC" (default) and "HQ".
 were estimated with time varying parameters.}

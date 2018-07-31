@@ -5,21 +5,21 @@
 \title{Country Model Specifications}
 \usage{
 country_specifications(country.data, global.data = NULL, countries = NULL,
-  p = 2, q = 2, s = 2, case = "I", type = "VAR", use = NULL,
-  r = NULL, structural = FALSE, tvp = FALSE, sv = FALSE)
+  p = 2, p.star = 2, p.global = 2, case = "I", type = "VAR",
+  use = NULL, r = NULL, structural = FALSE, tvp = FALSE, sv = FALSE)
 }
 \arguments{
-\item{country.data}{a named list of "zoo" objects containing the country data.}
+\item{country.data}{a named list of "ts objects containing the country data.}
 
-\item{global.data}{a "zoo" object with global data.}
+\item{global.data}{a "ts" object with global data.}
 
 \item{countries}{a character vector specifying the used countries in \code{country.data}.}
 
 \item{p}{an integer or vector specifiying the lag order of domestic variables.}
 
-\item{q}{an integer or vector specifiying the lag order of foreign variables.}
+\item{p.star}{an integer or vector specifiying the lag order of foreign variables.}
 
-\item{s}{an integer or vector specifiying the lag order of global variables.}
+\item{p.global}{an integer or vector specifiying the lag order of global variables.}
 
 \item{case}{a character specifying the deterministic terms used in the country models, see details below.}
 
@@ -35,7 +35,21 @@ country_specifications(country.data, global.data = NULL, countries = NULL,
 using the algorithm of Durbin & Koopman (2002).}
 
 \item{sv}{a logical specifiying if the country models should be estimated with stochastic volatility
-using the algorithm of Kaster & Frühwirth-Schnatter (2014).}
+using the algorithm of Kaster & Frühwirth-Schnatter (2014).
+
+#' @details
+\code{p}, \code{q} and \code{s} refer to the lag order of the VAR formulation. If \code{type = "VEC"},
+the function \code{\link{country_models}} will automatically reduce each lag order by 1. If a vector is provided,
+\code{\link{country_models}} will produce a distinct model for all possible specification.
+
+The argument \code{case} refers to Johansen (1995), where case I (default) refers to no deterministic terms and
+case II and III specify a restricted and unrestricted constant term in the VEC formulation, respectively.
+Both case II and case III enter a VAR model in the same way as an intercept. Case IV refers to a restricted trend and
+an unrestricted constant in a VEC formulation. Case V adds an unrestricted constant and trend to the VEC model.
+Again, cases IV and V are equivalent in a VAR model.
+
+The argument \code{rank} is only used when \code{type = "VEC"}. Otherwise, the rank is set to zero.
+If a vector is provided, \code{\link{country_models}} will produce a distinct model for all possible specifications.}
 }
 \value{
 The function produces a list of preliminary model specifications, which consists of the following elements:
@@ -50,26 +64,12 @@ The function produces a list of preliminary model specifications, which consists
 \description{
 Produces a list of standard specifications for every country.
 }
-\details{
-\code{p}, \code{q} and \code{s} refer to the lag order of the VAR formulation. If \code{type = "VEC"},
-the function \code{\link{country.models}} will automatically reduce each lag order by 1. If a vector is provided,
-\code{\link{country.models}} will produce a distinct model for all possible specification.
-
-The argument \code{case} refers to Johansen (1995), where case I (default) refers to no deterministic terms and
-case II and III specify a restricted and unrestricted constant term in the VEC formulation, respectively.
-Both case II and case III enter a VAR model in the same way as an intercept. Case IV refers to a restricted trend and
-an unrestricted constant in a VEC formulation. Case V adds an unrestricted constant and trend to the VEC model.
-Again, cases IV and V are equivalent in a VAR model.
-
-The argument \code{rank} is only used when \code{type = "VEC"}. Otherwise, the rank is set to zero.
-If a vector is provided, \code{\link{country.models}} will produce a distinct model for all possible specifications.
-}
 \references{
 Durbin, J., & Koopman, S. J. (2002). A simple and efficient simulation smoother for state space time series analysis. \emph{Biometrika}, 89(3), 603--615.
 
 Johansen, S. (1995) \emph{Likelihood-based inference in cointegrated vector autoregressive models}. Oxford University Press.
 
-Kastner, G. & Frühwirth-Schnatter, S. (2014). Ancillarity-sufficiency interweaving strategy (ASIS) for boosting MCMC estimation of stochastic volatility models. \emph{Computational Statistics & Data Analysis}, 76, 408423, http://dx.doi.org/10.1016/j.csda.2013.01.002.
+Kastner, G. & Frühwirth-Schnatter, S. (2014). Ancillarity-sufficiency interweaving strategy (ASIS) for boosting MCMC estimation of stochastic volatility models. \emph{Computational Statistics & Data Analysis}, 76, 408423, doi: 10.1016/j.csda.2013.01.002.
 
 Primiceri, G. E. (2005). Time varying structural vector autoregressions and monetary policy. \emph{The Review of Economic Studies}, 72(3), 821--852.
 }

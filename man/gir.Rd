@@ -4,15 +4,11 @@
 \alias{gir}
 \title{Generalised Impulse Response}
 \usage{
-gir(G, G0.i, Sigma, n.ahead, impulse, response, index, shock = "sd",
+gir(G, G0_i, Omega, n.ahead, impulse, response, index, shock = "sd",
   t = NULL)
 }
 \arguments{
 \item{G}{matrix or array containing the coefficients of a VAR model.}
-
-\item{G0.i}{Inverse of G0 from the GVAR model.}
-
-\item{Sigma}{Variance-covariance matrix of the GVAR model.}
 
 \item{n.ahead}{an integer specifying the steps.}
 
@@ -23,6 +19,10 @@ gir(G, G0.i, Sigma, n.ahead, impulse, response, index, shock = "sd",
 \item{index}{Data frame containing indices of countries and variables in the model.}
 
 \item{shock}{Size of shock. Either "sd" (default), "nsd" for negative standard deviation of the impulse variable or a numeric value.}
+
+\item{G0.i}{Inverse of G0 from the GVAR model.}
+
+\item{Sigma}{Variance-covariance matrix of the GVAR model.}
 }
 \value{
 Vector of generalised impulse response.

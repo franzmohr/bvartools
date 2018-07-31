@@ -2,7 +2,7 @@
 #'
 #' Produces a list of country models, which can be estimated with the \code{\link{gvar_fit}} function.
 #'
-#' @param country.data a named list of "zoo" objects containing country data.
+#' @param country.data a named list of "ts" objects containing country data.
 #' @param weight.data a matrix or an array of weights used to generate the weight matrices.
 #' @param global.data a "zoo" object with global data.
 #' @param country.specs a list of model specifications as produced by \code{\link{country_specifications}}.
@@ -15,26 +15,13 @@
 #' @export
 country_models <- function(country.data, weight.data, global.data = NULL,
                            country.specs = NULL, prior = NULL){
-  
-  if(!requireNamespace("zoo")) {stop("Function 'country_models' requires the package 'zoo'.")}
-  if(any(unlist(lapply(country.data, class)) != "zoo")) {stop("Country data must be of class 'zoo'.")}
-  if (!is.null(global.data)) {
-    if(class(global.data) != "zoo") {stop("Global data must be of class 'zoo'.")}
-  }
-  
   # Check if country data is a list
   if (class(country.data) != "list") {
     stop("Country data must have class 'list'.")
   }
-  
-  # Check if time series data has class zoo
-  if(!all(unlist(lapply(country.data, class)) == "zoo")) {
-    stop("Country time series data must be class 'zoo'.")
-  }
-  if (!is.null(global.data)){
-    if(!all(unlist(lapply(global.data, class)) == "zoo")) {
-      stop("Global time series data must be class 'zoo'.")
-    }
+  if(sum(unlist(lapply(country.data, class)) == "ts") != length(country.data)) {stop("country.data must be of class 'ts'.")}
+  if (!is.null(global.data)) {
+    if(!"ts" %in% class(global.data)) {stop("Data must be of class 'ts'.")}
   }
   
   # Check if data is named
@@ -46,7 +33,7 @@ country_models <- function(country.data, weight.data, global.data = NULL,
     stop("Weight matrix rows and columns must both be named.")
   }
   
-  if(is.null(names(global.data))){
+  if(is.null(dimnames(global.data)[[2]])){
     stop("Global data must be named. Please, provide a name for each global variable.")
   }
   
@@ -63,7 +50,7 @@ country_models <- function(country.data, weight.data, global.data = NULL,
     temp.w <- array(0, dim = c(length(countries), length(countries), dim(weight.data)[[3]]))
     dimnames(temp.w) <- list(countries, countries, dimnames(weight.data)[[3]])
   }
-
+  
   for (i in countries){
     temp.spec <- c(temp.spec, list(country.specs[[i]]))
     temp.c <- c(temp.c, list(country.data[[i]]))
@@ -113,19 +100,19 @@ country_models <- function(country.data, weight.data, global.data = NULL,
   
   # If weight matrix is time varying, check if the number of periods is the same as in the country series
   if (!is.na(dim(weight.data)[3])){
-    if (dim(weight.data)[3] != t) {
-      warning("The weight array does not contain as much periods as the country sample. Trying to correct that.")
-      w.t <- zoo::as.yearqtr(ts(as.numeric(dimnames(weight.data)[[3]]),
-                                start = as.numeric(dimnames(weight.data)[[3]])[1],
-                                frequency = frequency(country.data[[1]])))
-      weight.data <- weight.data[,,-which(!w.t%in%zoo::index(country.data[[1]]))]
+    if (dim(weight.data)[3] > t) {
+      warning("The weight array does not contain as much periods as the country sample. Trying to correct this.")
+      dim_w <- as.numeric(dimnames(weight.data)[[3]])
+      w.t <- stats::ts(dim_w, start = dim_w[1], frequency = frequency(country.data[[1]]))
+      weight.data <- weight.data[,,-which(!w.t %in% time(country.data[[1]]))]
     }
   }
-
+  
   # Trim global variables if neccessary
   used.global.vars <- unique(unlist(lapply(country.specs, function(x) {return(x$global.variables)})))
   if (!all(is.na(used.global.vars))){
-    global.data <- global.data[, used.global.vars]
+    global.data <- as.matrix(global.data[, used.global.vars])
+    dimnames(global.data)[[2]] <- used.global.vars
   }
   
   # Get endogenous variables
@@ -140,13 +127,14 @@ country_models <- function(country.data, weight.data, global.data = NULL,
   global <- !is.null(global.data) # If a global variable is used
   if (global){
     k <- dim(X)[2]
-    names.X <- names(X)
-    names.g <- names(global.data)
+    names.X <- dimnames(X)[[2]]
+    names.g <- dimnames(global.data)[[2]]
     temp <- stats::na.omit(cbind(X, global.data))
     X <- temp[, 1:k]
-    X.global <- temp[, -(1:k)]
-    names(X) <- names.X
-    names(X.global) <- names.g
+    X.global <- stats::as.ts(as.matrix(temp[, -(1:k)]))
+    stats::tsp(X.global) <- stats::tsp(X)
+    dimnames(X)[[2]] <- names.X
+    dimnames(X.global)[[2]] <- names.g
     rm(list=c("temp", "names.X", "names.g"))
   } else {
     X.global <- NULL
@@ -166,13 +154,16 @@ country_models <- function(country.data, weight.data, global.data = NULL,
   # Generate vector z = (x, x.star)' for each country
   Z <- lapply(W, get_z, X)
   
-  X.index <- zoo::index(X)
+  X.index <- stats::tsp(X)
   data <- c()
   for (i in 1:length(Z)){
     # Split z into domestic and foreign
-    x <- zoo::zoo(t(matrix(Z[[i]][country.specs[[i]]$domestic.variables,], length(country.specs[[i]]$domestic.variables))), order.by = X.index)
-    names(x) <- country.specs[[i]]$domestic.variables
-    x.star <- zoo::zoo(t(Z[[i]][-(1:length(country.specs[[i]]$domestic.variables)),]), order.by = X.index)
+    x <- stats::ts(t(matrix(Z[[i]][country.specs[[i]]$domestic.variables,], length(country.specs[[i]]$domestic.variables))),
+                   start = X.index[1], frequency = X.index[3], class = c("mts", "ts", "matrix"))
+    dimnames(x)[[2]] <- country.specs[[i]]$domestic.variables
+    
+    x.star <- stats::ts(t(matrix(Z[[i]][-(1:length(country.specs[[i]]$domestic.variables)),], length(country.specs[[i]]$foreign.variables))),
+                        start = X.index[1], frequency = X.index[3], class = c("mts", "ts", "matrix"))
     # Check for global variables
     if (!any(is.na(country.specs[[i]][[3]]))){
       g <- X.global
@@ -189,15 +180,23 @@ country_models <- function(country.data, weight.data, global.data = NULL,
   data.temp <- NULL
   names.temp <- NULL
   for (i in 1:length(data)){
-    for (j in 1:length(data[[i]]$specs$lags$lags$domestic)){
-      for (k in 1:length(data[[i]]$specs$lags$lags$foreign)){
-        for (l in 1:length(data[[i]]$specs$rank$rank)){ # For multiple rank specifications of country VEC models.
-          temp <- data[[i]]
-          temp$specs$lags$lags$domestic <- temp$specs$lags$lags$domestic[j]
-          temp$specs$lags$lags$foreign <- temp$specs$lags$lags$foreign[k]
-          temp$specs$rank$rank <- temp$specs$rank$rank[l]
-          data.temp <- c(data.temp, list(temp))
-          names.temp <- c(names.temp, names(data)[i])  
+    if (!any(is.na(data[[i]]$specs$rank$rank))) {
+      if (data[[i]]$specs$type == "VEC" & any(r_temp == "rr")) {
+        data[[i]]$specs$rank$rank <- 0:length(data[[i]]$specs$domestic.variables)
+      } 
+    }
+    for (j in 1:length(data[[i]]$specs$lags$lags$domestic)) {
+      for (k in 1:length(data[[i]]$specs$lags$lags$foreign)) {
+        for (l in 1:length(data[[i]]$specs$lags$lags$global)) {
+          for (m in 1:length(data[[i]]$specs$rank$rank)) { # For multiple rank specifications of country VEC models.
+            temp <- data[[i]]
+            temp$specs$lags$lags$domestic <- temp$specs$lags$lags$domestic[j]
+            temp$specs$lags$lags$foreign <- temp$specs$lags$lags$foreign[k]
+            temp$specs$lags$lags$global <- temp$specs$lags$lags$global[l]
+            temp$specs$rank$rank <- temp$specs$rank$rank[m]
+            data.temp <- c(data.temp, list(temp))
+            names.temp <- c(names.temp, names(data)[i])  
+          } 
         }
       }
     }
@@ -205,7 +204,7 @@ country_models <- function(country.data, weight.data, global.data = NULL,
   names(data.temp) <- names.temp
   data <- data.temp
   
-  # Add priors to specifications
+  #### Add priors to specifications ####
   for (i in 1:length(data)){
     temp <- data[[i]]
     temp.type <- temp$specs$type
@@ -222,12 +221,12 @@ country_models <- function(country.data, weight.data, global.data = NULL,
       if (det == "II" || det == "III"){
         n.det <- 1
       }
-      if (det == "IV" || det == "V"){
+      if (det == "IV" || det == "V" || det == "VI"){
         n.det <- 2
       }
       p <- temp$specs$lags$lags$domestic
-      q <- temp$specs$lags$lags$foreign
-      s <- temp$specs$lags$lags$global
+      p.star <- temp$specs$lags$lags$foreign
+      p.global <- temp$specs$lags$lags$global
     }
     if (temp.type == "VEC"){
       if (det == "III" || det == "IV"){
@@ -237,44 +236,89 @@ country_models <- function(country.data, weight.data, global.data = NULL,
         n.det <- 2
       } 
       p <- temp$specs$lags$lags$domestic - 1
-      q <- temp$specs$lags$lags$foreign - 1
-      s <- temp$specs$lags$lags$global - 1
+      p.star <- temp$specs$lags$lags$foreign - 1
+      p.global <- temp$specs$lags$lags$global - 1
     }
-    if (is.na(s)){
-      s <- 0
+    if (is.na(p.global)){
+      p.global <- 0
     }
     
     r <- temp$specs$rank$rank
-    n.A <- n*(r + n*p + n.s*(1 + q) + n.g*(1 + s) + n.det)
-    n.A0 <- n*(n-1)/2
+    n.ect <- n * (n + n.s + n.g)
+    if (det == "II" || det == "IV"){
+      n.ect <- n.ect + n
+    }
+    if (det == "VI"){
+      n.ect <- n.ect + 2 * n
+    }
+    
+    if (!is.na(r)) {
+      n.alpha <- n * r 
+    }
+    n.A <- n * (n * p + n.s * (1 + p.star) + n.g * (1 + p.global) + n.det)
+    n.A0 <- n * (n - 1) / 2
     
     if (is.null(prior)){
       prior <- standard_priors()
     }
     
-    A.mu.prior <- matrix(prior$A$constant[1], n.A)
-    A.V.prior.i <- diag(prior$A$constant[2], n.A)
-    A.H.df.prior <- prior$A$tvp[1]
-    A.H.V.prior <- diag(prior$A$tvp[2],n.A)
-    if (r > 0){
-      pos.r <- 1:(n*r)
-      A.mu.prior[pos.r, 1] <- prior$Pi$alpha$constant[1]
-      diag(A.V.prior.i)[pos.r] <- prior$Pi$alpha$constant[2]
-      diag(A.H.V.prior)[pos.r] <- prior$Pi$alpha$tvp[2]
+    A_mu_prior <- matrix(prior$A$constant[1], n.A)
+    A_V_i_prior <- diag(prior$A$constant[2], n.A)
+    A_Q_df_prior <- matrix(prior$A$tvp[1], n.A)
+    A_Q_V_prior <- diag(prior$A$tvp[2], n.A)
+    
+    Pi_tvp <- temp$specs$tvp[2]
+    if (is.na(r)) {
+      Pi_mu_prior <- matrix(prior$Pi$non_rr$constant[1], n.ect)
+      Pi_V_i_prior <- diag(prior$Pi$non_rr$constant[2], n.ect)
+      if (det == "II" || det == "IV"){
+        Pi_mu_prior[(n.ect - n + 1):n.ect] <- prior$Deterministic$constant[1]
+        diag(Pi_V_i_prior)[(n.ect - n + 1):n.ect]  <- prior$Deterministic$constant[2]
+      }
+      if (det == "VI"){
+        Pi_mu_prior[(n.ect - 2 * n + 1):n.ect] <- prior$Deterministic$constant[1]
+        diag(Pi_V_i_prior)[(n.ect - 2 * n + 1):n.ect]  <- prior$Deterministic$constant[2]
+      }
+      Pi_Q_df_prior <- matrix(prior$Pi$non_rr$tvp[1], n.ect)
+      Pi_Q_V_prior <- diag(prior$Pi$non_rr$tvp[2], n.ect)
+      rho <- NA
+    } else {
+      Pi_mu_prior <- matrix(prior$Pi$reduced_rank$constant[[1]], n.alpha)
+      Pi_V_i_prior <- list("v_i" = prior$Pi$reduced_rank$constant[[2]],
+                           "P_i" = diag(prior$Pi$reduced_rank$constant[[3]], n.ect / n),
+                           "G_i" = NA)
+      if (prior$Pi$reduced_rank$constant[[4]] == "Omega_i") {
+        Pi_V_i_prior$G_i <- prior$Pi$reduced_rank$constant[[4]]
+      } else {
+        Pi_V_i_prior$G_i <- diag(prior$Pi$reduced_rank$constant[[4]], n) 
+      }
+      Pi_Q_df_prior <- matrix(prior$Pi$reduced_rank$tvp$alpha[1], n.alpha)
+      Pi_Q_V_prior <- diag(prior$Pi$reduced_rank$tvp$alpha[2], n.alpha)
+      rho <- prior$Pi$reduced_rank$tvp$rho
     }
+    
     if (n.det > 0){
-      pos.det <- n.A - (n.det*n) + 1:(n.det*n)
-      A.mu.prior[pos.det, 1] <- prior$Deterministic$constant[1]
-      diag(A.V.prior.i)[pos.det] <- prior$Deterministic$constant[2]
+      pos.det <- n.A - (n.det * n) + 1:(n.det * n)
+      A_mu_prior[pos.det, 1] <- prior$Deterministic$constant[1]
+      diag(A_V_i_prior)[pos.det] <- prior$Deterministic$constant[2]
+      A_Q_df_prior[pos.det, 1] <- prior$Deterministic$tvp[1]
+      diag(A_Q_V_prior)[pos.det] <- prior$Deterministic$tvp[2]
     }
     
-    A0.mu.prior <- matrix(prior$A0$constant[1], n.A0)
-    A0.V.prior.i <- diag(prior$A0$constant[2], n.A0)
-    A0.H.df.prior <- prior$A0$tvp[1]
-    A0.H.V.prior <- diag(prior$A0$tvp[2], n.A0)
+    if (n.A0 > 0) {
+      A0_mu_prior <- matrix(prior$A0$constant[1], n.A0)
+      A0_V_i_prior <- diag(prior$A0$constant[2], n.A0)
+      A0_Q_df_prior <- matrix(prior$A0$tvp[1], n.A0)
+      A0_Q_V_prior <- diag(prior$A0$tvp[2], n.A0) 
+    } else {
+      A0_mu_prior <- NULL
+      A0_V_i_prior <- NULL
+      A0_Q_df_prior <- NULL
+      A0_Q_V_prior <- NULL
+    }
     
-    Sigma.df.prior <- prior$Sigma$constant[1]
-    Sigma.V.prior <- diag(prior$Sigma$constant[2], n)
+    Omega_df_prior <- matrix(prior$Omega$constant[1], n)
+    Omega_V_i_prior <- diag(prior$Omega$constant[2], n)
     
     log.V <- NULL
     for (j in 1:n){
@@ -294,18 +338,23 @@ country_models <- function(country.data, weight.data, global.data = NULL,
           stop("BVS requires a mildly informative prior.")
         }
         if (prior$Shrinkage$exclude.deterministic){
-          A.restricted.variables <- matrix(1:(n.A - n.det*n), n.A - n.det*n)
+          A.restricted.variables <- matrix(1:(n.A - n.det * n), n.A - n.det * n)
         } else {
           A.restricted.variables <- matrix(1:n.A, n.A) 
         }
-        if (r > 0){
-          A.restricted.variables <- matrix(A.restricted.variables[-(1:(n*r)),])
-        }
-        A0.restricted.variables <- matrix(1:n.A0, n.A0)
         A.lpr.include.prior <- log(matrix(prior$Shrinkage$spec, n.A))
         A.lpr.exclude.prior <- log(matrix(1 - prior$Shrinkage$spec, n.A))
-        A0.lpr.include.prior <- log(matrix(prior$Shrinkage$spec, n.A0))
-        A0.lpr.exclude.prior <- log(matrix(1 - prior$Shrinkage$spec, n.A0))
+        
+        if (n.A0 > 0) {
+          A0.restricted.variables <- matrix(1:n.A0, n.A0)
+          A0.lpr.include.prior <- log(matrix(prior$Shrinkage$spec, n.A0))
+          A0.lpr.exclude.prior <- log(matrix(1 - prior$Shrinkage$spec, n.A0)) 
+        } else {
+          A0.restricted.variables <- NULL
+          A0.lpr.include.prior <- NULL
+          A0.lpr.exclude.prior <- NULL
+        }
+        
         shrinkage <- list("type" = shrinkage.type,
                           "spec" = list("A" = list(A.restricted.variables, A.lpr.include.prior, A.lpr.exclude.prior),
                                         "A0" = list(A0.restricted.variables, A0.lpr.include.prior, A0.lpr.exclude.prior)))
@@ -317,18 +366,22 @@ country_models <- function(country.data, weight.data, global.data = NULL,
       shrinkage <- list("type" = "none")
     }
     
-    data[[i]]$priors <- list(A = list("constant" = list(A.mu.prior, A.V.prior.i),
-                                      "tvp" = list(A.H.df.prior, A.H.V.prior)),
-                             A0 = list("constant" = list(A0.mu.prior, A0.V.prior.i),
-                                       "tvp" = list(A0.H.df.prior, A0.H.V.prior)),
-                             Pi = list("rho" = prior$Pi$rho),
-                             Sigma = list("constant" = list(Sigma.df.prior, Sigma.V.prior),
-                                          "sv" = log.V),
-                             Shrinkage = shrinkage) 
+    data[[i]]$priors <- list(A = list("constant" = list(A_mu_prior, A_V_i_prior),
+                                      "tvp" = list(A_Q_df_prior, A_Q_V_prior)),
+                             A0 = list("constant" = list(A0_mu_prior, A0_V_i_prior),
+                                       "tvp" = list(A0_Q_df_prior, A0_Q_V_prior)),
+                             Omega = list("constant" = list(Omega_df_prior, Omega_V_i_prior)),
+                             Sigma = list("sv" = log.V),
+                             Shrinkage = shrinkage)
+    
     if (temp.type == "VEC"){
       names(data[[i]]$priors)[1] <- "B"
+      if (is.na(r)) {
+        data[[i]]$priors$Pi <- list("constant" =  list("mu" = Pi_mu_prior, "V_i" = Pi_V_i_prior),
+                                    "tvp" = list(Pi_Q_df_prior, Pi_Q_V_prior, rho))
+      }
     }
   }
-  data <- list(Country.data = data, Global.data = list(X = X, X.global = X.global, W = W, index = index))
+  data <- list(country.data = data, global.data = list(X = X, X.global = X.global, W = W, index = index))
   return(data)
 }

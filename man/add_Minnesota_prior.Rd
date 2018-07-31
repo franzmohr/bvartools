@@ -2,18 +2,20 @@
 % Please edit documentation in R/add_Minnesota_prior.R
 \name{add_Minnesota_prior}
 \alias{add_Minnesota_prior}
-\title{Add Minnesota Priors to the Country Models}
+\title{Minnesota Prior}
 \usage{
 add_Minnesota_prior(data, kappa = 1, lambda = 1)
 }
 \arguments{
-\item{data}{a list as produced by \link{\code{country_models}}.}
+\item{data}{a list of country data and model specifications as produced by \code{\link{country_models}}.}
 
-\item{method}{}
+\item{kappa}{a numeric specifying the degree of shrinkage of own lags, see details.}
+
+\item{lambda}{a numeric or numeric vector specifying the degree of shrinkage per lag, see details.}
 }
 \description{
-Add Minnesota Priors to the Country Models
+Calculates and add Minnesota prior for each country model.
 }
-\references{
-Korobilis, D. (2013). VAR forecasting using Bayesian variable selection. \emph{Journal of Applied Econometrics}, 28(2), 204--230.
+\details{
+
 }

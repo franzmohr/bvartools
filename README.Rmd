@@ -1,0 +1,27 @@
+---
+output:
+  github_document:
+    html_preview: false
+---
+
+# bvartools
+
+## Overview
+
+bvartools implements some standard functions for Bayesian inference for mulitvariate time series analysis.
+
+## Installation
+
+### Development version
+
+```{r github, eval = FALSE}
+# install.packages("devtools")
+devtools::install_github("franzmohr/bvartools")
+```
+
+## Usage
+
+```{r usage, message = FALSE, eval = FALSE}
+# Load the package
+library(bvartools)
+```

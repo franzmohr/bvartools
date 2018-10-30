@@ -6,179 +6,9 @@
 
 using namespace Rcpp;
 
-// bvs
-arma::mat bvs(arma::mat y, arma::mat Z, arma::mat A, arma::mat Gamma, arma::mat Omega_i, arma::vec pos_res, arma::vec lpr_prior_0, arma::vec lpr_prior_1);
-RcppExport SEXP _bgvars_bvs(SEXP ySEXP, SEXP ZSEXP, SEXP ASEXP, SEXP GammaSEXP, SEXP Omega_iSEXP, SEXP pos_resSEXP, SEXP lpr_prior_0SEXP, SEXP lpr_prior_1SEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type y(ySEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Z(ZSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type A(ASEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Gamma(GammaSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Omega_i(Omega_iSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type pos_res(pos_resSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type lpr_prior_0(lpr_prior_0SEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type lpr_prior_1(lpr_prior_1SEXP);
-    rcpp_result_gen = Rcpp::wrap(bvs(y, Z, A, Gamma, Omega_i, pos_res, lpr_prior_0, lpr_prior_1));
-    return rcpp_result_gen;
-END_RCPP
-}
-// dk
-arma::mat dk(arma::mat y, arma::mat Z, arma::mat H, arma::mat Q, arma::mat T, arma::vec a1, arma::mat P1);
-RcppExport SEXP _bgvars_dk(SEXP ySEXP, SEXP ZSEXP, SEXP HSEXP, SEXP QSEXP, SEXP TSEXP, SEXP a1SEXP, SEXP P1SEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type y(ySEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Z(ZSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type H(HSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Q(QSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type T(TSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type a1(a1SEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type P1(P1SEXP);
-    rcpp_result_gen = Rcpp::wrap(dk(y, Z, H, Q, T, a1, P1));
-    return rcpp_result_gen;
-END_RCPP
-}
-// draw_structural_parameters
-Rcpp::List draw_structural_parameters(arma::mat y, arma::mat Sigma_i, arma::mat A0_mu_prior, arma::mat A0_V_i_prior, bool tvp);
-RcppExport SEXP _bgvars_draw_structural_parameters(SEXP ySEXP, SEXP Sigma_iSEXP, SEXP A0_mu_priorSEXP, SEXP A0_V_i_priorSEXP, SEXP tvpSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type y(ySEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Sigma_i(Sigma_iSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type A0_mu_prior(A0_mu_priorSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type A0_V_i_prior(A0_V_i_priorSEXP);
-    Rcpp::traits::input_parameter< bool >::type tvp(tvpSEXP);
-    rcpp_result_gen = Rcpp::wrap(draw_structural_parameters(y, Sigma_i, A0_mu_prior, A0_V_i_prior, tvp));
-    return rcpp_result_gen;
-END_RCPP
-}
-// getLL
-arma::vec getLL(arma::mat y, arma::mat Sigma, arma::mat Sigma_i);
-RcppExport SEXP _bgvars_getLL(SEXP ySEXP, SEXP SigmaSEXP, SEXP Sigma_iSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type y(ySEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Sigma(SigmaSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Sigma_i(Sigma_iSEXP);
-    rcpp_result_gen = Rcpp::wrap(getLL(y, Sigma, Sigma_i));
-    return rcpp_result_gen;
-END_RCPP
-}
-// posterior_cointegration
-Rcpp::List posterior_cointegration(arma::mat y, arma::mat ect, arma::mat beta, arma::mat Sigma_i, arma::mat G_i, double v_i, arma::mat P_i);
-RcppExport SEXP _bgvars_posterior_cointegration(SEXP ySEXP, SEXP ectSEXP, SEXP betaSEXP, SEXP Sigma_iSEXP, SEXP G_iSEXP, SEXP v_iSEXP, SEXP P_iSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type y(ySEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type ect(ectSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type beta(betaSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Sigma_i(Sigma_iSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type G_i(G_iSEXP);
-    Rcpp::traits::input_parameter< double >::type v_i(v_iSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type P_i(P_iSEXP);
-    rcpp_result_gen = Rcpp::wrap(posterior_cointegration(y, ect, beta, Sigma_i, G_i, v_i, P_i));
-    return rcpp_result_gen;
-END_RCPP
-}
-// posterior_cointegration_sur
-Rcpp::List posterior_cointegration_sur(arma::mat y, arma::mat ect, arma::mat beta, arma::mat Sigma_i, arma::mat G_i, double v_i, arma::mat P_i);
-RcppExport SEXP _bgvars_posterior_cointegration_sur(SEXP ySEXP, SEXP ectSEXP, SEXP betaSEXP, SEXP Sigma_iSEXP, SEXP G_iSEXP, SEXP v_iSEXP, SEXP P_iSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type y(ySEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type ect(ectSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type beta(betaSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Sigma_i(Sigma_iSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type G_i(G_iSEXP);
-    Rcpp::traits::input_parameter< double >::type v_i(v_iSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type P_i(P_iSEXP);
-    rcpp_result_gen = Rcpp::wrap(posterior_cointegration_sur(y, ect, beta, Sigma_i, G_i, v_i, P_i));
-    return rcpp_result_gen;
-END_RCPP
-}
-// posterior_koop2010_beta_sur
-Rcpp::List posterior_koop2010_beta_sur(arma::mat y, arma::mat ect, arma::mat alpha, arma::mat Sigma_i, arma::mat G_i, double v_i, arma::mat P_i);
-RcppExport SEXP _bgvars_posterior_koop2010_beta_sur(SEXP ySEXP, SEXP ectSEXP, SEXP alphaSEXP, SEXP Sigma_iSEXP, SEXP G_iSEXP, SEXP v_iSEXP, SEXP P_iSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type y(ySEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type ect(ectSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type alpha(alphaSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Sigma_i(Sigma_iSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type G_i(G_iSEXP);
-    Rcpp::traits::input_parameter< double >::type v_i(v_iSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type P_i(P_iSEXP);
-    rcpp_result_gen = Rcpp::wrap(posterior_koop2010_beta_sur(y, ect, alpha, Sigma_i, G_i, v_i, P_i));
-    return rcpp_result_gen;
-END_RCPP
-}
-// posterior_koop2010
-Rcpp::List posterior_koop2010(arma::mat y, arma::mat x, arma::mat ect, int r, arma::mat beta, arma::mat Sigma_i, arma::mat G_i, double v_i, arma::mat P_i, arma::mat B_mu_prior, arma::mat B_V_i_prior);
-RcppExport SEXP _bgvars_posterior_koop2010(SEXP ySEXP, SEXP xSEXP, SEXP ectSEXP, SEXP rSEXP, SEXP betaSEXP, SEXP Sigma_iSEXP, SEXP G_iSEXP, SEXP v_iSEXP, SEXP P_iSEXP, SEXP B_mu_priorSEXP, SEXP B_V_i_priorSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type y(ySEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type x(xSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type ect(ectSEXP);
-    Rcpp::traits::input_parameter< int >::type r(rSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type beta(betaSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Sigma_i(Sigma_iSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type G_i(G_iSEXP);
-    Rcpp::traits::input_parameter< double >::type v_i(v_iSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type P_i(P_iSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type B_mu_prior(B_mu_priorSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type B_V_i_prior(B_V_i_priorSEXP);
-    rcpp_result_gen = Rcpp::wrap(posterior_koop2010(y, x, ect, r, beta, Sigma_i, G_i, v_i, P_i, B_mu_prior, B_V_i_prior));
-    return rcpp_result_gen;
-END_RCPP
-}
-// posterior_koop2010_sur
-Rcpp::List posterior_koop2010_sur(arma::mat y, arma::mat x, arma::mat ect, arma::mat beta, arma::mat Sigma_i, arma::mat G_i, double v_i, arma::mat P_i, arma::mat B_mu_prior, arma::mat B_V_i_prior);
-RcppExport SEXP _bgvars_posterior_koop2010_sur(SEXP ySEXP, SEXP xSEXP, SEXP ectSEXP, SEXP betaSEXP, SEXP Sigma_iSEXP, SEXP G_iSEXP, SEXP v_iSEXP, SEXP P_iSEXP, SEXP B_mu_priorSEXP, SEXP B_V_i_priorSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type y(ySEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type x(xSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type ect(ectSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type beta(betaSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Sigma_i(Sigma_iSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type G_i(G_iSEXP);
-    Rcpp::traits::input_parameter< double >::type v_i(v_iSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type P_i(P_iSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type B_mu_prior(B_mu_priorSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type B_V_i_prior(B_V_i_priorSEXP);
-    rcpp_result_gen = Rcpp::wrap(posterior_koop2010_sur(y, x, ect, beta, Sigma_i, G_i, v_i, P_i, B_mu_prior, B_V_i_prior));
-    return rcpp_result_gen;
-END_RCPP
-}
-// posterior_normal
-arma::vec posterior_normal(arma::mat y, arma::mat x, arma::mat Sigma_i, arma::vec bprior, arma::mat Vprior_i);
-RcppExport SEXP _bgvars_posterior_normal(SEXP ySEXP, SEXP xSEXP, SEXP Sigma_iSEXP, SEXP bpriorSEXP, SEXP Vprior_iSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type y(ySEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type x(xSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Sigma_i(Sigma_iSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type bprior(bpriorSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Vprior_i(Vprior_iSEXP);
-    rcpp_result_gen = Rcpp::wrap(posterior_normal(y, x, Sigma_i, bprior, Vprior_i));
-    return rcpp_result_gen;
-END_RCPP
-}
 // posterior_normal_sur
 arma::vec posterior_normal_sur(arma::mat y, arma::mat Z, arma::mat Sigma_i, arma::vec bprior, arma::mat Vprior_i);
-RcppExport SEXP _bgvars_posterior_normal_sur(SEXP ySEXP, SEXP ZSEXP, SEXP Sigma_iSEXP, SEXP bpriorSEXP, SEXP Vprior_iSEXP) {
+RcppExport SEXP _bvartools_posterior_normal_sur(SEXP ySEXP, SEXP ZSEXP, SEXP Sigma_iSEXP, SEXP bpriorSEXP, SEXP Vprior_iSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -191,36 +21,13 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// wishart
-arma::mat wishart(arma::mat M, int n);
-RcppExport SEXP _bgvars_wishart(SEXP MSEXP, SEXP nSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type M(MSEXP);
-    Rcpp::traits::input_parameter< int >::type n(nSEXP);
-    rcpp_result_gen = Rcpp::wrap(wishart(M, n));
-    return rcpp_result_gen;
-END_RCPP
-}
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_bgvars_bvs", (DL_FUNC) &_bgvars_bvs, 8},
-    {"_bgvars_dk", (DL_FUNC) &_bgvars_dk, 7},
-    {"_bgvars_draw_structural_parameters", (DL_FUNC) &_bgvars_draw_structural_parameters, 5},
-    {"_bgvars_getLL", (DL_FUNC) &_bgvars_getLL, 3},
-    {"_bgvars_posterior_cointegration", (DL_FUNC) &_bgvars_posterior_cointegration, 7},
-    {"_bgvars_posterior_cointegration_sur", (DL_FUNC) &_bgvars_posterior_cointegration_sur, 7},
-    {"_bgvars_posterior_koop2010_beta_sur", (DL_FUNC) &_bgvars_posterior_koop2010_beta_sur, 7},
-    {"_bgvars_posterior_koop2010", (DL_FUNC) &_bgvars_posterior_koop2010, 11},
-    {"_bgvars_posterior_koop2010_sur", (DL_FUNC) &_bgvars_posterior_koop2010_sur, 10},
-    {"_bgvars_posterior_normal", (DL_FUNC) &_bgvars_posterior_normal, 5},
-    {"_bgvars_posterior_normal_sur", (DL_FUNC) &_bgvars_posterior_normal_sur, 5},
-    {"_bgvars_wishart", (DL_FUNC) &_bgvars_wishart, 2},
+    {"_bvartools_posterior_normal_sur", (DL_FUNC) &_bvartools_posterior_normal_sur, 5},
     {NULL, NULL, 0}
 };
 
-RcppExport void R_init_bgvars(DllInfo *dll) {
+RcppExport void R_init_bvartools(DllInfo *dll) {
     R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
     R_useDynamicSymbols(dll, FALSE);
 }

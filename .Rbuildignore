@@ -2,3 +2,5 @@
 ^\.Rproj\.user$
 ^data-raw$
 .gitignore
+.Rmd
+.md

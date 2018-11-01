@@ -6,6 +6,34 @@
 
 using namespace Rcpp;
 
+// getLL
+arma::vec getLL(arma::mat y, arma::mat Sigma, arma::mat Sigma_i);
+RcppExport SEXP _bvartools_getLL(SEXP ySEXP, SEXP SigmaSEXP, SEXP Sigma_iSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type y(ySEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Sigma(SigmaSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Sigma_i(Sigma_iSEXP);
+    rcpp_result_gen = Rcpp::wrap(getLL(y, Sigma, Sigma_i));
+    return rcpp_result_gen;
+END_RCPP
+}
+// posterior_normal
+arma::vec posterior_normal(arma::mat y, arma::mat x, arma::mat Sigma_i, arma::vec bprior, arma::mat Vprior_i);
+RcppExport SEXP _bvartools_posterior_normal(SEXP ySEXP, SEXP xSEXP, SEXP Sigma_iSEXP, SEXP bpriorSEXP, SEXP Vprior_iSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type y(ySEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type x(xSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Sigma_i(Sigma_iSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type bprior(bpriorSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Vprior_i(Vprior_iSEXP);
+    rcpp_result_gen = Rcpp::wrap(posterior_normal(y, x, Sigma_i, bprior, Vprior_i));
+    return rcpp_result_gen;
+END_RCPP
+}
 // posterior_normal_sur
 arma::vec posterior_normal_sur(arma::mat y, arma::mat Z, arma::mat Sigma_i, arma::vec bprior, arma::mat Vprior_i);
 RcppExport SEXP _bvartools_posterior_normal_sur(SEXP ySEXP, SEXP ZSEXP, SEXP Sigma_iSEXP, SEXP bpriorSEXP, SEXP Vprior_iSEXP) {
@@ -23,6 +51,8 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_bvartools_getLL", (DL_FUNC) &_bvartools_getLL, 3},
+    {"_bvartools_posterior_normal", (DL_FUNC) &_bvartools_posterior_normal, 5},
     {"_bvartools_posterior_normal_sur", (DL_FUNC) &_bvartools_posterior_normal_sur, 5},
     {NULL, NULL, 0}
 };

@@ -2,24 +2,33 @@
 % Please edit documentation in R/RcppExports.R
 \name{posterior_normal_sur}
 \alias{posterior_normal_sur}
-\title{Seemingly Unrelated Regression}
+\title{Posterior Draw from Normal Distribution (SUR)}
 \usage{
 posterior_normal_sur(y, Z, Sigma_i, bprior, Vprior_i)
 }
 \arguments{
-\item{y}{Matrix containing the time series of the dependent variable.}
+\item{y}{\eqn{n x T} matrix containing the time series of the dependent variable.}
 
-\item{Z}{Matrix containing the time series of the explanatory variables.}
+\item{Z}{\eqn{nT x m} matrix containing the time series of the explanatory variables.}
 
-\item{Sigma_i}{The inverse of the current draw of the variance-covariance matrix.}
+\item{Sigma_i}{inverse of the \eqn{n x n} or \eqn{n * T x n} variance-covariance matrix.}
 
-\item{bprior}{Numeric vector containing the prior mean of the coefficients.}
+\item{bprior}{\eqn{m x 1} numeric vector containing the prior mean of the coefficients.}
 
-\item{Vprior_i}{Covariance matrix of the coefficients.}
+\item{Vprior_i}{inverse of the \eqn{m x m} covariance matrix of the coefficients.}
 }
 \value{
-Vector of parameter values.
+a vector of coefficient draws.
 }
 \description{
-Produces a draw of normally distributed coefficients with using SUR.
+Produces a draw from a posterior density of a Gaussian process with normal prior using seemingly unlelated regression.
+}
+\details{
+The function produces a draw of the \eqn{m x 1} coefficient vector \eqn{a} of the model
+
+\deqn{y_{t} = Z_{t} a + \epsilson_{t},}
+
+where \eqn{y_{t}} is a \eqn{n x 1} vector of endogenous variables in period \eqn{t}, \eqn{Z_{t}} is a \eqn{n x m n}
+matrix of explanatory variables, and the error term \eqn{\epsilon_{t}} is normally distributed with zero mean
+and variance-covariance matrix \eqn{\Sigma_{t}}.
 }

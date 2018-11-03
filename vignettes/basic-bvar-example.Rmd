@@ -103,11 +103,11 @@ Both the mean parameter and the covariance estimates are close to their true val
 
 ### Bayesian estimator
 
-```{r load package, eval = FALSE}
+```{r load package}
 library(bvartools)
 ```
 ```{r load package 2, echo = FALSE, message=FALSE}
-devtools::load_all(".")
+#devtools::load_all(".")
 ```
 
 ```{r flat prior}
@@ -127,9 +127,8 @@ Sigma_V_prior <- diag(.0001, n) # Prior covariance matrix
 Sigma_df_post <- t + Sigma_df_prior # Posterior degrees of freedom
 
 # Initial values
-Sigma_draw <- diag(.1, n)#rWishart(1, n, Sigma_V_prior)[,,1]
-#Sigma_draw <- post_wishart(diag(0, n), Sigma_df_prior, Sigma_V_prior)
-Sigma_i_draw <- solve(Sigma_draw)
+Sigma_i_draw <- post_wishart(diag(0, n), Sigma_df_prior, Sigma_V_prior)
+Sigma_draw <- solve(Sigma_i_draw)
 
 # Data containers
 store <- iter - burnin

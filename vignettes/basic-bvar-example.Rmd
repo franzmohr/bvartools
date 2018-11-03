@@ -106,9 +106,6 @@ Both the mean parameter and the covariance estimates are close to their true val
 ```{r load package}
 library(bvartools)
 ```
-```{r load package 2, echo = FALSE, message=FALSE}
-#devtools::load_all(".")
-```
 
 ```{r flat prior}
 iter <- 10000 # Number of iterations of the Gibbs sampler

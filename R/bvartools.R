@@ -1,6 +1,6 @@
-#' bvartools: Tools for Bayesian Inference for Vector Autoregressive Models
+#' bvartools: Functions for Bayesian Inference of Vector Autoregressive Models
 #' 
-#' R/C++ implementation of Bayesian vector autoregressive models.
+#' The package contains a collection of R and C++ functions, which assist in the set-up of Gibbs samplers for the analysis of vector autoregressive (VAR) models.
 #' 
 #' @author Franz X. Mohr
 #' @docType package
@@ -8,7 +8,7 @@
 #' 
 #' 
 #' @useDynLib bvartools, .registration = TRUE
-#' @importFrom Rcpp evalCpp
-# @importFrom Rcpp sourceCpp
+# @importFrom Rcpp evalCpp
+#' @importFrom Rcpp sourceCpp
 #' @exportPattern "^[[:alpha:]]+"
 NULL

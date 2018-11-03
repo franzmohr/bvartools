@@ -6,16 +6,16 @@
 
 using namespace Rcpp;
 
-// getLL
-arma::vec getLL(arma::mat y, arma::mat Sigma, arma::mat Sigma_i);
-RcppExport SEXP _bvartools_getLL(SEXP ySEXP, SEXP SigmaSEXP, SEXP Sigma_iSEXP) {
+// gauss_loglik
+arma::vec gauss_loglik(arma::mat y, arma::mat Sigma, arma::mat Sigma_i);
+RcppExport SEXP _bvartools_gauss_loglik(SEXP ySEXP, SEXP SigmaSEXP, SEXP Sigma_iSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< arma::mat >::type y(ySEXP);
     Rcpp::traits::input_parameter< arma::mat >::type Sigma(SigmaSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type Sigma_i(Sigma_iSEXP);
-    rcpp_result_gen = Rcpp::wrap(getLL(y, Sigma, Sigma_i));
+    rcpp_result_gen = Rcpp::wrap(gauss_loglik(y, Sigma, Sigma_i));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -49,11 +49,25 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// post_wishart
+arma::mat post_wishart(arma::mat y, int df_post, arma::mat V_prior);
+RcppExport SEXP _bvartools_post_wishart(SEXP ySEXP, SEXP df_postSEXP, SEXP V_priorSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type y(ySEXP);
+    Rcpp::traits::input_parameter< int >::type df_post(df_postSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type V_prior(V_priorSEXP);
+    rcpp_result_gen = Rcpp::wrap(post_wishart(y, df_post, V_prior));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_bvartools_getLL", (DL_FUNC) &_bvartools_getLL, 3},
+    {"_bvartools_gauss_loglik", (DL_FUNC) &_bvartools_gauss_loglik, 3},
     {"_bvartools_posterior_normal", (DL_FUNC) &_bvartools_posterior_normal, 5},
     {"_bvartools_posterior_normal_sur", (DL_FUNC) &_bvartools_posterior_normal_sur, 5},
+    {"_bvartools_post_wishart", (DL_FUNC) &_bvartools_post_wishart, 3},
     {NULL, NULL, 0}
 };
 

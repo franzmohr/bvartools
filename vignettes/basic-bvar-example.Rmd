@@ -1,0 +1,186 @@
+---
+title: "Basic BVAR Estimation"
+author: "Franz X. Mohr"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+## Introduction
+
+This vignette provides the code to set up and estimate a basic Bayesian VAR (BVAR) model.
+
+## Data
+
+In order to compare the results of the presented estimators, we generate an artificical dataset from the following process:
+
+$$y_t = A y_{t-1} + \epsilon_t, \ \  with \ \ \epsilon_t \sim N(0, \Sigma) \ \ for \ \ t=1,...,150,$$
+where
+$$A = \pmatrix{
+0.4 & 0.3 & 0 \\
+0 & 0.6 & 0.1\\
+0 & 0.2 & 0.2
+} \ \ \text{and} \ \ \Sigma = \pmatrix{
+0.3 & 0 & 0 \\
+0 & 0.3 & 0\\
+0 & 0 & 0.3
+}.$$
+
+```{r, fig.align='center', fig.height=3, fig.width=5}
+# Define A
+A <- matrix(c(.4, 0, 0, .3, .6, .2, 0, .1, .2), 3)
+
+# Number of observations
+t <- 150
+
+# Set seed of random number generator for reproducibility
+set.seed(1234567)
+
+# Generate matrix with empty values
+y <- matrix(NA, 3, t + 1)
+
+# Initial value of the series
+y[, 1] <- rnorm(3, 0, .3)
+
+# Recursively calculate values of the series
+for (i in 2:(t + 1)) {
+  y[, i] <- A %*% y[, i - 1] + rnorm(3, 0, .3)
+}
+
+data <- ts(t(y)) # Transform into a 'time series' object
+dimnames(data)[[2]] <- c("s1", "s2", "s3") # Rename variables
+
+plot(data) # Plot the series
+```
+
+
+
+```{r}
+p <- 1 # Number of lags
+raw <- data
+raw_names <- data_names <- dimnames(raw)[[2]]
+for (i in 1:p) {
+  data <- cbind(data, lag(raw, -i))
+  data_names <- c(data_names, paste(raw_names, ".l", i, sep = ""))
+}
+data <- na.omit(data)
+dimnames(data)[[2]] <- data_names
+
+y <- t(data[, 1:3])
+x <- t(data[, -(1:3)])
+```
+
+For what follows, we will only require variables `y` and `x`.
+
+## Estimation
+
+### Frequentist estimator
+
+We calculate frequentist VAR estimates using the standard formula $y x' (x x')^{-1}$ to obtain a benchmark for the Bayesian estimator.
+
+```{r}
+A_freq <- tcrossprod(y, x) %*% solve(tcrossprod(x)) # Calculate estimates
+round(A_freq, 2) # Round estimates and print
+```
+
+```{r}
+res_freq <- y - A_freq %*% x
+Sigma_freq <- tcrossprod(res_freq) / (t - 9)
+round(Sigma_freq, 2)
+```
+
+Both the mean parameter and the covariance estimates are close to their true values.
+
+### Bayesian estimator
+
+```{r load package, eval = FALSE}
+library(bvartools)
+```
+```{r load package 2, echo = FALSE, message=FALSE}
+devtools::load_all(".")
+```
+
+```{r flat prior}
+iter <- 10000 # Number of iterations of the Gibbs sampler
+burnin <- 5000 # Number of burn-in draws
+
+t <- ncol(y) # Number of observations
+n <- nrow(y) # Number of endogenous variables
+nvars <- n * nrow(x) # Number of estimated coefficients
+
+# Set priors
+A_mu_prior <- matrix(0, nvars) # Vector of prior parameter means
+A_V_i_prior <- diag(0, nvars) # Inverse of the prior covariance matrix
+
+Sigma_df_prior <- n # Prior degrees of freedom
+Sigma_V_prior <- diag(.0001, n) # Prior covariance matrix
+Sigma_df_post <- t + Sigma_df_prior # Posterior degrees of freedom
+
+# Initial values
+Sigma_draw <- diag(.1, n)#rWishart(1, n, Sigma_V_prior)[,,1]
+#Sigma_draw <- post_wishart(diag(0, n), Sigma_df_prior, Sigma_V_prior)
+Sigma_i_draw <- solve(Sigma_draw)
+
+# Data containers
+store <- iter - burnin
+draws_A <- matrix(NA, nvars, store)
+draws_Sigma <- matrix(NA, n * n, store)
+draws_LL <- matrix(NA, t, store)
+
+# Start Gibbs sampler
+for (draw in 1:iter) {
+  # Draw conditional mean parameters
+  A_draw <- posterior_normal(y, x, Sigma_i_draw, A_mu_prior, A_V_i_prior)
+  
+  # Draw variance-covariance matrix
+  res <- y - matrix(A_draw, n) %*% x # Obtain residuals
+  Sigma_i_draw <- post_wishart(res, Sigma_df_post, Sigma_V_prior) # Draw inverse Wishart
+  Sigma_draw <- solve(Sigma_i_draw) # Invert Sigma_i to obtain Sigma
+  
+  # Store draws
+  if (draw > burnin) {
+    draws_A[, draw - burnin] <- A_draw
+    draws_Sigma[, draw - burnin] <- Sigma_draw
+    
+    # Calculate Log-Likelihood
+    LL_draw <- gauss_loglik(res, Sigma_draw, Sigma_i_draw)
+    draws_LL[, draw - burnin] <- LL_draw
+  }
+}
+```
+
+Obtain point estimates as the mean of the parameter draws
+
+```{r}
+A <- rowMeans(draws_A) # Obtain means for every row
+A <- matrix(A, n) # Transform mean vector into a matrix
+A <- round(A, 2) # Round values
+dimnames(A) <- list(dimnames(y)[[1]], dimnames(x)[[1]]) # Rename matrix dimensions
+
+A # Print
+```
+
+```{r}
+Sigma <- rowMeans(draws_Sigma) # Obtain means for every row
+Sigma <- matrix(Sigma, n) # Transform mean vector into a matrix
+Sigma <- round(Sigma, 2) # Round values
+dimnames(Sigma) <- list(dimnames(y)[[1]], dimnames(y)[[1]]) # Rename matrix dimensions
+
+Sigma # Print
+```
+
+The means of the coefficient draws are very close to the results of the frequentist estimatior and, hence, also close to the true parameter values.
+
+## References
+
+Luetkepohl, H. (2007). *New Introduction to Multiple Time Series Analyis*. Berlin: Springer.

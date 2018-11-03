@@ -21,7 +21,7 @@ posterior_normal(y, x, Sigma_i, bprior, Vprior_i)
 a vector of coefficient draws.
 }
 \description{
-Produces a draw from a posterior density of a Gaussian process with normal prior.
+Produces a draw from a posterior density of a Gaussian process and normal prior.
 }
 \details{
 The function produces a vectorised draw of the \eqn{n x k} coefficient matrix \eqn{A} of the model

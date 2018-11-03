@@ -3,7 +3,7 @@
 
 //' Posterior Draw from Normal Distribution
 //' 
-//' Produces a draw from a posterior density of a Gaussian process with normal prior.
+//' Produces a draw from a posterior density of a Gaussian process and normal prior.
 //' 
 //' @param y \eqn{n x T} matrix containing the time series of the dependent variable.
 //' @param x \eqn{k x T} matrix containing the time series of the explanatory variables.

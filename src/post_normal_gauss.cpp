@@ -13,7 +13,7 @@
 //' 
 //' @details The function produces a vectorised draw of the \eqn{n x k} coefficient matrix \eqn{A} of the model
 //' 
-//' \deqn{y_{t} = A x_{t} a + \epsilson_{t},}
+//' \deqn{y_{t} = A x_{t} a + \epsilon_{t},}
 //' 
 //' where \eqn{y_{t}} is a \eqn{n x 1} vector of endogenous variables in period \eqn{t}, \eqn{x_{t}} is a \eqn{k x 1}
 //' vector of explanatory variables, and the error term \eqn{\epsilon_{t}} is normally distributed with zero mean

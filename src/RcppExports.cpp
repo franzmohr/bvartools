@@ -6,6 +6,18 @@
 
 using namespace Rcpp;
 
+// feir
+arma::mat feir(arma::mat A, int h);
+RcppExport SEXP _bvartools_feir(SEXP ASEXP, SEXP hSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type A(ASEXP);
+    Rcpp::traits::input_parameter< int >::type h(hSEXP);
+    rcpp_result_gen = Rcpp::wrap(feir(A, h));
+    return rcpp_result_gen;
+END_RCPP
+}
 // gauss_loglik
 arma::vec gauss_loglik(arma::mat y, arma::mat Sigma, arma::mat Sigma_i);
 RcppExport SEXP _bvartools_gauss_loglik(SEXP ySEXP, SEXP SigmaSEXP, SEXP Sigma_iSEXP) {
@@ -64,6 +76,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_bvartools_feir", (DL_FUNC) &_bvartools_feir, 2},
     {"_bvartools_gauss_loglik", (DL_FUNC) &_bvartools_gauss_loglik, 3},
     {"_bvartools_posterior_normal", (DL_FUNC) &_bvartools_posterior_normal, 5},
     {"_bvartools_posterior_normal_sur", (DL_FUNC) &_bvartools_posterior_normal_sur, 5},

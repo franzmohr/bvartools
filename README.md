@@ -2,6 +2,8 @@
 bvartools
 =========
 
+[![Build Status](https://travis-ci.org/franzmohr/bvartools.svg?branch=master)](https://travis-ci.org/franzmohr/bvartools)
+
 Overview
 --------
 

@@ -1,12 +1,11 @@
 ---
-title: "Basic BVAR Estimation"
+title: "Building a Basic BVAR Estimatior"
 author: "Franz X. Mohr"
-date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteIndexEntry{Building a Basic BVAR Estimatior}
   %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
+  \usepackage[utf8]{inputenc}
 ---
 
 ```{r setup, include = FALSE}
@@ -80,7 +79,7 @@ y <- t(data[, 1:3])
 x <- t(data[, -(1:3)])
 ```
 
-For what follows, we will only require variables `y` and `x`.
+We will only require variables `y` and `x` in the following.
 
 ## Estimation
 

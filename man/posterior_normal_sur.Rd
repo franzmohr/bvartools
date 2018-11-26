@@ -26,7 +26,7 @@ Produces a draw from a posterior density of a Gaussian process with normal prior
 \details{
 The function produces a draw of the \eqn{m x 1} coefficient vector \eqn{a} of the model
 
-\deqn{y_{t} = Z_{t} a + \epsilson_{t},}
+\deqn{y_{t} = Z_{t} a + \epsilon_{t},}
 
 where \eqn{y_{t}} is a \eqn{n x 1} vector of endogenous variables in period \eqn{t}, \eqn{Z_{t}} is a \eqn{n x m n}
 matrix of explanatory variables, and the error term \eqn{\epsilon_{t}} is normally distributed with zero mean

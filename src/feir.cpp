@@ -44,6 +44,6 @@ arma::mat feir(arma::mat A, int h = 5) {
     }
     phi.rows(i * n, (i + 1) * n - 1) = phi_temp;
   }
-
+  
   return phi;
 }

@@ -6,7 +6,7 @@
 \alias{bvartools-package}
 \title{bvartools: Functions for Bayesian Inference of Vector Autoregressive Models}
 \description{
-The package contains a collection of R and C++ functions, which assist in the set-up of Gibbs samplers for the analysis of vector autoregressive (VAR) models.
+A collection of R and C++ functions, which assist in the set-up of Gibbs samplers for the analysis of vector autoregressive (VAR) models.
 }
 \author{
 Franz X. Mohr

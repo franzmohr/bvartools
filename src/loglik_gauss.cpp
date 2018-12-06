@@ -1,16 +1,19 @@
 #include <RcppArmadillo.h>
 // [[Rcpp::depends(RcppArmadillo)]]
 
-//' Log-Likelihood
+//' Gaussian Log-Likelihood
 //' 
-//' Calculates the log likelihood of the residuals of a multivariate time series.
+//' Calculates the log likelihood of a multivariate Gaussian process.
 //' 
-//' @param y an \eqn{n x T} matrix of residuals.
-//' @param Sigma an \eqn{n x n} or \eqn{nT x n} variance-covariance matrix.
+//' @param y an \eqn{n x T} matrix of residuals, where \eqn{n} is the number of
+//' variables and \eqn{T} is the total amount of observations.
+//' @param Sigma a constant \eqn{n x n} or time varying \eqn{nT x n} variance-covariance matrix.
 //' @param Sigma_i the inverse of Sigma.
 //' 
+//' @return A vector of log likelihoods for each period.
+//' 
 // [[Rcpp::export]]
-arma::vec gauss_loglik(arma::mat y, arma::mat Sigma, arma::mat Sigma_i) {
+arma::vec loglik_gauss(arma::mat y, arma::mat Sigma, arma::mat Sigma_i) {
   int n = y.n_rows;
   int t = y.n_cols;
   double d = 0;

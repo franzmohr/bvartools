@@ -6,6 +6,24 @@
 
 using namespace Rcpp;
 
+// bvs
+arma::mat bvs(arma::mat y, arma::mat Z, arma::mat a, arma::mat Gamma, arma::mat Sigma_i, arma::vec pos_res, arma::vec lpr_prior_0, arma::vec lpr_prior_1);
+RcppExport SEXP _bvartools_bvs(SEXP ySEXP, SEXP ZSEXP, SEXP aSEXP, SEXP GammaSEXP, SEXP Sigma_iSEXP, SEXP pos_resSEXP, SEXP lpr_prior_0SEXP, SEXP lpr_prior_1SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type y(ySEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Z(ZSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type a(aSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Gamma(GammaSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Sigma_i(Sigma_iSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type pos_res(pos_resSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type lpr_prior_0(lpr_prior_0SEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type lpr_prior_1(lpr_prior_1SEXP);
+    rcpp_result_gen = Rcpp::wrap(bvs(y, Z, a, Gamma, Sigma_i, pos_res, lpr_prior_0, lpr_prior_1));
+    return rcpp_result_gen;
+END_RCPP
+}
 // feir
 arma::mat feir(arma::mat A, int h);
 RcppExport SEXP _bvartools_feir(SEXP ASEXP, SEXP hSEXP) {
@@ -18,22 +36,39 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// gauss_loglik
-arma::vec gauss_loglik(arma::mat y, arma::mat Sigma, arma::mat Sigma_i);
-RcppExport SEXP _bvartools_gauss_loglik(SEXP ySEXP, SEXP SigmaSEXP, SEXP Sigma_iSEXP) {
+// kalman_dk
+arma::mat kalman_dk(arma::mat y, arma::mat Z, arma::mat Sigma_v, arma::mat Sigma_w, arma::mat B, arma::vec a_init, arma::mat Sigma_w_init);
+RcppExport SEXP _bvartools_kalman_dk(SEXP ySEXP, SEXP ZSEXP, SEXP Sigma_vSEXP, SEXP Sigma_wSEXP, SEXP BSEXP, SEXP a_initSEXP, SEXP Sigma_w_initSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type y(ySEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Z(ZSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Sigma_v(Sigma_vSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Sigma_w(Sigma_wSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type B(BSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type a_init(a_initSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Sigma_w_init(Sigma_w_initSEXP);
+    rcpp_result_gen = Rcpp::wrap(kalman_dk(y, Z, Sigma_v, Sigma_w, B, a_init, Sigma_w_init));
+    return rcpp_result_gen;
+END_RCPP
+}
+// loglik_gauss
+arma::vec loglik_gauss(arma::mat y, arma::mat Sigma, arma::mat Sigma_i);
+RcppExport SEXP _bvartools_loglik_gauss(SEXP ySEXP, SEXP SigmaSEXP, SEXP Sigma_iSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< arma::mat >::type y(ySEXP);
     Rcpp::traits::input_parameter< arma::mat >::type Sigma(SigmaSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type Sigma_i(Sigma_iSEXP);
-    rcpp_result_gen = Rcpp::wrap(gauss_loglik(y, Sigma, Sigma_i));
+    rcpp_result_gen = Rcpp::wrap(loglik_gauss(y, Sigma, Sigma_i));
     return rcpp_result_gen;
 END_RCPP
 }
-// posterior_normal
-arma::vec posterior_normal(arma::mat y, arma::mat x, arma::mat Sigma_i, arma::vec bprior, arma::mat Vprior_i);
-RcppExport SEXP _bvartools_posterior_normal(SEXP ySEXP, SEXP xSEXP, SEXP Sigma_iSEXP, SEXP bpriorSEXP, SEXP Vprior_iSEXP) {
+// post_normal
+arma::vec post_normal(arma::mat y, arma::mat x, arma::mat Sigma_i, arma::vec bprior, arma::mat Vprior_i);
+RcppExport SEXP _bvartools_post_normal(SEXP ySEXP, SEXP xSEXP, SEXP Sigma_iSEXP, SEXP bpriorSEXP, SEXP Vprior_iSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -42,13 +77,13 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::mat >::type Sigma_i(Sigma_iSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type bprior(bpriorSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type Vprior_i(Vprior_iSEXP);
-    rcpp_result_gen = Rcpp::wrap(posterior_normal(y, x, Sigma_i, bprior, Vprior_i));
+    rcpp_result_gen = Rcpp::wrap(post_normal(y, x, Sigma_i, bprior, Vprior_i));
     return rcpp_result_gen;
 END_RCPP
 }
-// posterior_normal_sur
-arma::vec posterior_normal_sur(arma::mat y, arma::mat Z, arma::mat Sigma_i, arma::vec bprior, arma::mat Vprior_i);
-RcppExport SEXP _bvartools_posterior_normal_sur(SEXP ySEXP, SEXP ZSEXP, SEXP Sigma_iSEXP, SEXP bpriorSEXP, SEXP Vprior_iSEXP) {
+// post_normal_sur
+arma::vec post_normal_sur(arma::mat y, arma::mat Z, arma::mat Sigma_i, arma::vec bprior, arma::mat Vprior_i);
+RcppExport SEXP _bvartools_post_normal_sur(SEXP ySEXP, SEXP ZSEXP, SEXP Sigma_iSEXP, SEXP bpriorSEXP, SEXP Vprior_iSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -57,30 +92,18 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::mat >::type Sigma_i(Sigma_iSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type bprior(bpriorSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type Vprior_i(Vprior_iSEXP);
-    rcpp_result_gen = Rcpp::wrap(posterior_normal_sur(y, Z, Sigma_i, bprior, Vprior_i));
-    return rcpp_result_gen;
-END_RCPP
-}
-// post_wishart
-arma::mat post_wishart(arma::mat y, int df_post, arma::mat V_prior);
-RcppExport SEXP _bvartools_post_wishart(SEXP ySEXP, SEXP df_postSEXP, SEXP V_priorSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type y(ySEXP);
-    Rcpp::traits::input_parameter< int >::type df_post(df_postSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type V_prior(V_priorSEXP);
-    rcpp_result_gen = Rcpp::wrap(post_wishart(y, df_post, V_prior));
+    rcpp_result_gen = Rcpp::wrap(post_normal_sur(y, Z, Sigma_i, bprior, Vprior_i));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_bvartools_bvs", (DL_FUNC) &_bvartools_bvs, 8},
     {"_bvartools_feir", (DL_FUNC) &_bvartools_feir, 2},
-    {"_bvartools_gauss_loglik", (DL_FUNC) &_bvartools_gauss_loglik, 3},
-    {"_bvartools_posterior_normal", (DL_FUNC) &_bvartools_posterior_normal, 5},
-    {"_bvartools_posterior_normal_sur", (DL_FUNC) &_bvartools_posterior_normal_sur, 5},
-    {"_bvartools_post_wishart", (DL_FUNC) &_bvartools_post_wishart, 3},
+    {"_bvartools_kalman_dk", (DL_FUNC) &_bvartools_kalman_dk, 7},
+    {"_bvartools_loglik_gauss", (DL_FUNC) &_bvartools_loglik_gauss, 3},
+    {"_bvartools_post_normal", (DL_FUNC) &_bvartools_post_normal, 5},
+    {"_bvartools_post_normal_sur", (DL_FUNC) &_bvartools_post_normal_sur, 5},
     {NULL, NULL, 0}
 };
 

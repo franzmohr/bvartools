@@ -21,3 +21,6 @@ A numeric vector.
 \description{
 The function produces a draw of an orthogonalised or structural impulse response.
 }
+\references{
+Pesaran, H. H., & Shin, Y. (1998). Generalized impulse response analysis in linear multivariate models. \emph{Economics Letters}, 58, 17-29.
+}

@@ -9,6 +9,10 @@
 #' 
 #' @return A numeric vector.
 #' 
+#' @references
+#' 
+#' Pesaran, H. H., & Shin, Y. (1998). Generalized impulse response analysis in linear multivariate models. \emph{Economics Letters}, 58, 17-29.
+#' 
 #' @export
 gir <- function(x, impulse, response, shock) {
   Phi <- x$Phi

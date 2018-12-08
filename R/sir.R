@@ -1,4 +1,4 @@
-#' Orthogonalised and Structural Impulse Response
+#' Orthogonalised and Structural Impulse Responses
 #' 
 #' The function produces a draw of an orthogonalised or structural impulse response.
 #' 

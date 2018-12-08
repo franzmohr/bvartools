@@ -2,7 +2,7 @@
 % Please edit documentation in R/sir.R
 \name{sir}
 \alias{sir}
-\title{Orthogonalised and Structural Impulse Response}
+\title{Orthogonalised and Structural Impulse Responses}
 \usage{
 sir(x, impulse, response, type)
 }

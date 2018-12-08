@@ -1,4 +1,4 @@
-#' Generalised Impulse Response
+#' Generalised Impulse Responses
 #' 
 #' The function produces a draw of an orthogonalised or structural impulse response.
 #' 

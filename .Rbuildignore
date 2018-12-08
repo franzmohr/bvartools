@@ -3,5 +3,6 @@
 ^data-raw$
 README.Rmd
 README.md
+^README_files$
 ^\.travis\.yml$
 ^\.gitignore

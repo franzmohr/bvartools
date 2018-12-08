@@ -2,6 +2,7 @@
 
 S3method(plot,irf.bvars)
 export(bvars)
+export(gen_var)
 export(gir)
 export(irf)
 export(sir)

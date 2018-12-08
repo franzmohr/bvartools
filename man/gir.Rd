@@ -2,7 +2,7 @@
 % Please edit documentation in R/gir.R
 \name{gir}
 \alias{gir}
-\title{Generalised Impulse Response}
+\title{Generalised Impulse Responses}
 \usage{
 gir(x, impulse, response, shock)
 }

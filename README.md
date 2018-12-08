@@ -7,10 +7,10 @@ bvartools
 Overview
 --------
 
-bvartools implements some standard functions for Bayesian inference for mulitvariate time series analysis. The approach is to give the researcher as much freedom in specifying a Gibbs sampler, but keeping calculation time short and avoiding the need to implement standard evaluation functions from scratch. Its main features are
+The package `bvartools` implements some common functions used for Bayesian inference for mulitvariate time series models. The package should give researchers maximum freedom in setting up a Gibbs sampler in R and keep calculation time limited at the same time. This is achieved by implementing posterior simultion functions in C++. Its main features are
 
--   Functions for parameter drawing, which are written in C++ for faster calculation
--   The `bvars` function collects the output of a Gibbs sampler in a standardised object
+-   Posterior simulation functions, which are written in C++ for faster calculation
+-   The `bvars` function collects the output of a Gibbs sampler in a standardised object, which can be used for further analyses
 -   Functions for further analyses such as `irf` for impulse response analysis
 
 Installation
@@ -26,13 +26,13 @@ devtools::install_github("franzmohr/bvartools")
 Usage
 -----
 
-This example covers the estimation of a simple BVAR model. For further examples on time varying parameter (TVP), stochastic volatility (SV), and vector error correction models and shrinkage methods such as stochastic search variable selection (SSVS), or Bayesian variable selection (BVS) see the vignettes of the package.
+This example covers the estimation of a simple BVAR model. For further examples on time varying parameter (TVP), stochastic volatility (SV), and vector error correction models as well as shrinkage methods like stochastic search variable selection (SSVS) or Bayesian variable selection (BVS) see the vignettes of the package.
 
 ### Generate an artificial sample
 
 The artifical data set for this example is based on the process
 
-$$y\_{t} = \\begin{bmatrix} 0.4 & 0.3 & 0 \\\\ 0 & 0.6 & 0.1 \\\\ 0 & 0.2 & 0.2 \\end{bmatrix} y\_{t-1} + u\_t, \\ \\ \\text{with} \\ \\ u\_t \\sim N(0, \\Sigma) \\ \\ \\text{and} \\ \\ \\Sigma = \\begin{bmatrix} 0.09 & 0 & 0 \\\\ 0 & 0.09 & 0 \\\\ 0 & 0 & 0.09 \\end{bmatrix}.$$
+$$y\_{t} = \\begin{pmatrix} 0.4 & 0.3 & 0 \\\\ 0 & 0.6 & 0.1 \\\\ 0 & 0.2 & 0.2 \\end{pmatrix} y\_{t-1} + u\_t, \\ \\ \\text{with} \\ \\ u\_t \\sim N(0, \\Sigma) \\ \\ \\text{and} \\ \\ \\Sigma = \\begin{pmatrix} 0.09 & 0 & 0 \\\\ 0 & 0.09 & 0 \\\\ 0 & 0 & 0.09 \\end{pmatrix}.$$
 
 ``` r
 # Number of endogenous variables
@@ -69,28 +69,17 @@ plot(data) # Plot the series
 ### Prepare data for estimation
 
 ``` r
-p <- 1 # Number of lags
-raw <- data
-raw_names <- data_names <- dimnames(raw)[[2]]
-for (i in 1:p) {
-  data <- cbind(data, lag(raw, -i))
-  data_names <- c(data_names, paste(raw_names, ".l", i, sep = ""))
-}
-data <- na.omit(data)
-dimnames(data)[[2]] <- data_names
+library(bvartools)
 
-y <- t(data[, 1:3])
-x <- t(data[, -(1:3)])
+temp <- gen_var(data, p = 1, deterministic = "none")
+
+y <- temp$y
+x <- temp$x
 ```
-
-We will only require variables `y` and `x` in the following.
 
 ### Estimation
 
 ``` r
-# Load the package
-library(bvartools)
-
 iter <- 10000 # Number of iterations of the Gibbs sampler
 burnin <- 2000 # Number of burn-in draws
 
@@ -149,10 +138,10 @@ dimnames(A) <- list(dimnames(y)[[1]], dimnames(x)[[1]]) # Rename matrix dimensio
 A # Print
 ```
 
-    ##    s1.l1 s2.l1 s3.l1
-    ## s1  0.46  0.28 -0.09
-    ## s2 -0.04  0.70  0.14
-    ## s3  0.06  0.24  0.17
+    ##     s1.1 s2.1  s3.1
+    ## s1  0.46 0.28 -0.09
+    ## s2 -0.04 0.70  0.14
+    ## s3  0.06 0.24  0.17
 
 ``` r
 Sigma <- rowMeans(draws_Sigma) # Obtain means for every row
@@ -208,4 +197,8 @@ GIR <- irf(bvar_est, impulse = "s2", response = "s1", n.ahead = 15, type = "gir"
 plot(GIR, main = "Generalised Impulse Response", xlab = "Period", ylab = "Response")
 ```
 
-![](README_files/figure-markdown_github/gir-1.png)
+![](README_files/figure-markdown_github/gir-1.png) \#\# References
+
+Lütkepohl, H. (2007). *New introduction to multiple time series analyis*. Berlin: Springer.
+
+Pesaran, H. H., & Shin, Y. (1998). Generalized impulse response analysis in linear multivariate models. *Economics Letters*, 58, 17-29.

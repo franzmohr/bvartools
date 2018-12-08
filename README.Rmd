@@ -10,10 +10,10 @@ output:
 
 ## Overview
 
-bvartools implements some standard functions for Bayesian inference for mulitvariate time series analysis. The approach is to give the researcher as much freedom in specifying a Gibbs sampler, but keeping calculation time short and avoiding the need to implement standard evaluation functions from scratch. Its main features are
+The package `bvartools` implements some common functions used for Bayesian inference for mulitvariate time series models. The package should give researchers maximum freedom in setting up a Gibbs sampler in R and keep calculation time limited at the same time. This is achieved by implementing posterior simultion functions in C++. Its main features are
 
-* Functions for parameter drawing, which are written in C++ for faster calculation
-* The `bvars` function collects the output of a Gibbs sampler in a standardised object
+* Posterior simulation functions, which are written in C++ for faster calculation
+* The `bvars` function collects the output of a Gibbs sampler in a standardised object, which can be used for further analyses
 * Functions for further analyses such as `irf` for impulse response analysis
 
 ## Installation
@@ -27,13 +27,13 @@ devtools::install_github("franzmohr/bvartools")
 
 ## Usage
 
-This example covers the estimation of a simple BVAR model. For further examples on time varying parameter (TVP), stochastic volatility (SV), and vector error correction models and shrinkage methods such as stochastic search variable selection (SSVS), or Bayesian variable selection (BVS) see the vignettes of the package.  
+This example covers the estimation of a simple BVAR model. For further examples on time varying parameter (TVP), stochastic volatility (SV), and vector error correction models as well as shrinkage methods like stochastic search variable selection (SSVS) or Bayesian variable selection (BVS) see the vignettes of the package.
 
 ### Generate an artificial sample
 
 The artifical data set for this example is based on the process
 
-$$y_{t} = \begin{bmatrix} 0.4 & 0.3 & 0 \\ 0 & 0.6 & 0.1 \\ 0 & 0.2 & 0.2 \end{bmatrix} y_{t-1} + u_t, \ \ \text{with} \ \ u_t \sim N(0, \Sigma) \ \ \text{and} \ \ \Sigma = \begin{bmatrix} 0.09 & 0 & 0 \\ 0 & 0.09 & 0 \\ 0 & 0 & 0.09 \end{bmatrix}.$$
+$$y_{t} = \begin{pmatrix} 0.4 & 0.3 & 0 \\ 0 & 0.6 & 0.1 \\ 0 & 0.2 & 0.2 \end{pmatrix} y_{t-1} + u_t, \ \ \text{with} \ \ u_t \sim N(0, \Sigma) \ \ \text{and} \ \ \Sigma = \begin{pmatrix} 0.09 & 0 & 0 \\ 0 & 0.09 & 0 \\ 0 & 0 & 0.09 \end{pmatrix}.$$
 
 ```{r art-data, fig.align='center', fig.height=3, fig.width=5}
 # Number of endogenous variables
@@ -181,3 +181,8 @@ GIR <- irf(bvar_est, impulse = "s2", response = "s1", n.ahead = 15, type = "gir"
 
 plot(GIR, main = "Generalised Impulse Response", xlab = "Period", ylab = "Response")
 ```
+## References
+
+Lütkepohl, H. (2007). *New introduction to multiple time series analyis*. Berlin: Springer.
+
+Pesaran, H. H., & Shin, Y. (1998). Generalized impulse response analysis in linear multivariate models. *Economics Letters*, 58, 17-29.

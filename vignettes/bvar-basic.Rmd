@@ -21,7 +21,8 @@ This vignette provides the code to set up and estimate a basic Bayesian VAR (BVA
 
 ## Data
 
-To illustrate the estimation process the dataset E1 from Lütkepohl (2007) is used.
+To illustrate the estimation process the dataset E1 from Lütkepohl (2007) is used. It contains
+data on West German fixed investment, disposable income and consumption expenditures in billions of DM from 1960Q1 to 1982Q4.
 
 ```{r data, fig.align='center', fig.height=5, fig.width=4.5}
 library(bvartools)
@@ -32,6 +33,8 @@ e1 <- diff(log(e1))
 plot(e1) # Plot the series
 ```
 
+The `gen_var` function produces the inputs `y` and `x` for the BVAR estimator, where `y` is the matrix of dependent variables and `x` is the matrix of regressors.
+
 ```{r}
 data <- gen_var(e1, p = 2, deterministic = "const")
 
@@ -39,6 +42,7 @@ y <- data$y[, 1:73]
 x <- data$x[, 1:73]
 ```
 
+As in Lütkepohl (2007) only the first 73 observations are used.
 
 ## Estimation
 
@@ -167,6 +171,8 @@ plot(GIR, main = "Generalised Impulse Response", xlab = "Period", ylab = "Respon
 
 ## References
 
-Luetkepohl, H. (2007). *New Introduction to Multiple Time Series Analyis*. Berlin: Springer.
+Luetkepohl, H. (2007). *New introduction to multiple time series analyis*. Berlin: Springer.
 
-Plummer, M., Best, N., Cowles, K., & Vines, K. (2006). CODA: Convergence Diagnosis and Output Analysis for MCMC, R News, vol 6, 7-11. [https://www.r-project.org/doc/Rnews/Rnews_2006-1.pdf](https://www.r-project.org/doc/Rnews/Rnews_2006-1.pdf)
+Pesaran, H. H., & Shin, Y. (1998). Generalized impulse response analysis in linear multivariate models, *Economics Letters*. 58, 17-29.
+
+Plummer, M., Best, N., Cowles, K., & Vines, K. (2006). CODA: Convergence Diagnosis and Output Analysis for MCMC, R News, 6, 7-11. [https://www.r-project.org/doc/Rnews/Rnews_2006-1.pdf](https://www.r-project.org/doc/Rnews/Rnews_2006-1.pdf)

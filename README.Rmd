@@ -127,7 +127,7 @@ The means of the coefficient draws are very close to the results of the frequent
 
 ### `bvars` objects
 
-The `bvars` function can be used to collect relevant output of the Gibbs sampler into a standardised object, which can be used by further function such as `irf` to obtain impulse responses.
+The `bvars` function can be used to collect relevant output of the Gibbs sampler into a standardised object, which can be used by further functions such as `irf` to obtain impulse responses.
 
 ```{r bvars-object}
 bvar_est <- bvars(y = y, x = x, A = draws_A, Sigma = draws_Sigma)

@@ -1,9 +1,9 @@
 ---
-title: "Building a Basic BVAR Estimatior"
+title: "A Simple BVAR Estimatior"
 author: "Franz X. Mohr"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Building a Basic BVAR Estimatior}
+  %\VignetteIndexEntry{A Simple BVAR Estimatior}
   %\VignetteEngine{knitr::rmarkdown}
   \usepackage[utf8]{inputenc}
 ---
@@ -21,8 +21,7 @@ This vignette provides the code to set up and estimate a basic Bayesian VAR (BVA
 
 ## Data
 
-To illustrate the estimation process the dataset E1 from Lütkepohl (2007) is used. It contains
-data on West German fixed investment, disposable income and consumption expenditures in billions of DM from 1960Q1 to 1982Q4.
+To illustrate the estimation process the dataset E1 from Lütkepohl (2007) is used. It contains data on West German fixed investment, disposable income and consumption expenditures in billions of DM from 1960Q1 to 1982Q4.
 
 ```{r data, fig.align='center', fig.height=5, fig.width=4.5}
 library(bvartools)
@@ -168,6 +167,7 @@ GIR <- irf(bvar_est, impulse = "income", response = "cons", n.ahead = 8, type = 
 
 plot(GIR, main = "Generalised Impulse Response", xlab = "Period", ylab = "Response")
 ```
+
 
 ## References
 

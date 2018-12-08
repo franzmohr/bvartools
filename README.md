@@ -32,7 +32,7 @@ This example covers the estimation of a simple BVAR model. For further examples 
 
 The artifical data set for this example is based on the process
 
-$$y\_{t} = \\begin{pmatrix} 0.4 & 0.3 & 0 \\\\ 0 & 0.6 & 0.1 \\\\ 0 & 0.2 & 0.2 \\end{pmatrix} y\_{t-1} + u\_t, \\ \\ \\text{with} \\ \\ u\_t \\sim N(0, \\Sigma) \\ \\ \\text{and} \\ \\ \\Sigma = \\begin{pmatrix} 0.09 & 0 & 0 \\\\ 0 & 0.09 & 0 \\\\ 0 & 0 & 0.09 \\end{pmatrix}.$$
+$$y\_{t} = \\pmatrix 0.4 & 0.3 & 0 \\\\ 0 & 0.6 & 0.1 \\\\ 0 & 0.2 & 0.2 \\pmatrix y\_{t-1} + u\_t.$$
 
 ``` r
 # Number of endogenous variables
@@ -197,7 +197,10 @@ GIR <- irf(bvar_est, impulse = "s2", response = "s1", n.ahead = 15, type = "gir"
 plot(GIR, main = "Generalised Impulse Response", xlab = "Period", ylab = "Response")
 ```
 
-![](README_files/figure-markdown_github/gir-1.png) \#\# References
+![](README_files/figure-markdown_github/gir-1.png)
+
+References
+----------
 
 Lütkepohl, H. (2007). *New introduction to multiple time series analyis*. Berlin: Springer.
 

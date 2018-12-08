@@ -116,9 +116,9 @@ A # Print
 ```
 
     ##        invest.1 income.1 cons.1 invest.2 income.2 cons.2  const
-    ## invest   -0.321    0.149  0.954   -0.161    0.113  0.922 -0.016
-    ## income    0.044   -0.154  0.288    0.050    0.019 -0.011  0.016
-    ## cons     -0.003    0.223 -0.264    0.034    0.354 -0.021  0.013
+    ## invest   -0.320    0.154  0.947   -0.160    0.117  0.918 -0.016
+    ## income    0.044   -0.153  0.287    0.050    0.020 -0.012  0.016
+    ## cons     -0.002    0.226 -0.266    0.034    0.355 -0.024  0.013
 
 ``` r
 Sigma <- rowMeans(draws_Sigma) # Obtain means for every row
@@ -130,11 +130,11 @@ Sigma # Print
 ```
 
     ##        invest income cons
-    ## invest  21.64   0.72 1.24
-    ## income   0.72   1.40 0.62
-    ## cons     1.24   0.62 0.91
+    ## invest  21.59   0.73 1.25
+    ## income   0.73   1.39 0.62
+    ## cons     1.25   0.62 0.91
 
-The means of the coefficient draws are very close to the results of the frequentist estimatior and, hence, also close to the true parameter values.
+The means of the coefficient draws are very close to the results of the frequentist estimatior in Lütkepohl (2007).
 
 ### `bvars` objects
 

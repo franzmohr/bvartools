@@ -123,7 +123,7 @@ dimnames(Sigma) <- list(dimnames(y)[[1]], dimnames(y)[[1]]) # Rename matrix dime
 Sigma # Print
 ```
 
-The means of the coefficient draws are very close to the results of the frequentist estimatior and, hence, also close to the true parameter values.
+The means of the coefficient draws are very close to the results of the frequentist estimatior in Lütkepohl (2007).
 
 ### `bvars` objects
 

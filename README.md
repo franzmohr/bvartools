@@ -28,63 +28,44 @@ Usage
 
 This example covers the estimation of a simple BVAR model. For further examples on time varying parameter (TVP), stochastic volatility (SV), and vector error correction models as well as shrinkage methods like stochastic search variable selection (SSVS) or Bayesian variable selection (BVS) see the vignettes of the package.
 
-### Generate an artificial sample
+### Data
 
-The artifical data set for this example is based on the process
-
-$$y\_{t} = \\pmatrix 0.4 & 0.3 & 0 \\\\ 0 & 0.6 & 0.1 \\\\ 0 & 0.2 & 0.2 \\pmatrix y\_{t-1} + u\_t.$$
-
-``` r
-# Number of endogenous variables
-k <- 3
-
-# Define A
-A <- matrix(c(.4, 0, 0, .3, .6, .2, 0, .1, .2), k)
-
-# Number of observations
-t <- 150
-
-# Set seed of random number generator for reproducibility
-set.seed(1234567)
-
-# Generate matrix with empty values
-y <- matrix(NA, 3, t + 1)
-
-# Initial value of the series
-y[, 1] <- rnorm(k, 0, .3)
-
-# Recursively calculate values of the series
-for (i in 2:(t + 1)) {
-  y[, i] <- A %*% y[, i - 1] + rnorm(k, 0, .3)
-}
-
-data <- ts(t(y)) # Transform into a 'time series' object
-dimnames(data)[[2]] <- c("s1", "s2", "s3") # Rename variables
-
-plot(data) # Plot the series
-```
-
-<img src="README_files/figure-markdown_github/art-data-1.png" style="display: block; margin: auto;" />
-
-### Prepare data for estimation
+To illustrate the estimation process the dataset E1 from Lütkepohl (2007) is used. It contains data on West German fixed investment, disposable income and consumption expenditures in billions of DM from 1960Q1 to 1982Q4.
 
 ``` r
 library(bvartools)
 
-temp <- gen_var(data, p = 1, deterministic = "none")
+data("e1")
+e1 <- diff(log(e1))
 
-y <- temp$y
-x <- temp$x
+plot(e1) # Plot the series
 ```
 
+<img src="README_files/figure-markdown_github/data-1.png" style="display: block; margin: auto;" />
+
+### Prepare data for estimation
+
+The `gen_var` function produces the inputs `y` and `x` for the BVAR estimator, where `y` is the matrix of dependent variables and `x` is the matrix of regressors.
+
+``` r
+data <- gen_var(e1, p = 2, deterministic = "const")
+
+y <- data$y[, 1:73]
+x <- data$x[, 1:73]
+```
+
+As in Lütkepohl (2007) only the first 73 observations are used.
+
 ### Estimation
+
+The following code sets up a simple Gibbs sampler algorithm.
 
 ``` r
 iter <- 10000 # Number of iterations of the Gibbs sampler
 burnin <- 2000 # Number of burn-in draws
 
 t <- ncol(y) # Number of observations
-k <- nrow(y) # Number of endogenous variables
+k <- NROW(y) # Number of endogenous variables
 nvars <- k * nrow(x) # Number of estimated coefficients
 
 # Set priors
@@ -103,7 +84,6 @@ Sigma_draw <- solve(Sigma_i_draw)
 store <- iter - burnin
 draws_A <- matrix(NA, nvars, store)
 draws_Sigma <- matrix(NA, k^2, store)
-draws_LL <- matrix(NA, t, store)
 
 # Start Gibbs sampler
 for (draw in 1:iter) {
@@ -120,9 +100,6 @@ for (draw in 1:iter) {
   if (draw > burnin) {
     draws_A[, draw - burnin] <- A_draw
     draws_Sigma[, draw - burnin] <- Sigma_draw
-    
-    # Calculate Log-Likelihood
-    draws_LL[, draw - burnin] <- loglik_gauss(res, Sigma_draw, Sigma_i_draw)
   }
 }
 ```
@@ -138,10 +115,10 @@ dimnames(A) <- list(dimnames(y)[[1]], dimnames(x)[[1]]) # Rename matrix dimensio
 A # Print
 ```
 
-    ##     s1.1 s2.1  s3.1
-    ## s1  0.46 0.28 -0.09
-    ## s2 -0.04 0.70  0.14
-    ## s3  0.06 0.24  0.17
+    ##        invest.1 income.1 cons.1 invest.2 income.2 cons.2 const
+    ## invest    -0.32     0.15   0.96    -0.16     0.11   0.94 -0.02
+    ## income     0.04    -0.15   0.29     0.05     0.02  -0.01  0.02
+    ## cons       0.00     0.23  -0.27     0.03     0.36  -0.02  0.01
 
 ``` r
 Sigma <- rowMeans(draws_Sigma) # Obtain means for every row
@@ -152,10 +129,10 @@ dimnames(Sigma) <- list(dimnames(y)[[1]], dimnames(y)[[1]]) # Rename matrix dime
 Sigma # Print
 ```
 
-    ##       s1  s2    s3
-    ## s1  0.08 0.0 -0.01
-    ## s2  0.00 0.1  0.00
-    ## s3 -0.01 0.0  0.09
+    ##        invest income cons
+    ## invest      0      0    0
+    ## income      0      0    0
+    ## cons        0      0    0
 
 The means of the coefficient draws are very close to the results of the frequentist estimatior and, hence, also close to the true parameter values.
 
@@ -172,7 +149,7 @@ bvar_est <- bvars(y = y, x = x, A = draws_A, Sigma = draws_Sigma)
 #### Forecast error impulse response
 
 ``` r
-IR <- irf(bvar_est, impulse = "s2", response = "s1", n.ahead = 15)
+IR <- irf(bvar_est, impulse = "income", response = "cons", n.ahead = 8)
 
 plot(IR, main = "Forecast Error Impulse Response", xlab = "Period", ylab = "Response")
 ```
@@ -182,7 +159,7 @@ plot(IR, main = "Forecast Error Impulse Response", xlab = "Period", ylab = "Resp
 #### Orthogonalised impulse response
 
 ``` r
-OIR <- irf(bvar_est, impulse = "s2", response = "s1", n.ahead = 15, type = "oir")
+OIR <- irf(bvar_est, impulse = "income", response = "cons", n.ahead = 8, type = "oir")
 
 plot(OIR, main = "Orthogonalised Impulse Response", xlab = "Period", ylab = "Response")
 ```
@@ -192,7 +169,7 @@ plot(OIR, main = "Orthogonalised Impulse Response", xlab = "Period", ylab = "Res
 #### Generalised impulse response
 
 ``` r
-GIR <- irf(bvar_est, impulse = "s2", response = "s1", n.ahead = 15, type = "gir")
+GIR <- irf(bvar_est, impulse = "income", response = "cons", n.ahead = 8, type = "gir")
 
 plot(GIR, main = "Generalised Impulse Response", xlab = "Period", ylab = "Response")
 ```

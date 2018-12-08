@@ -109,30 +109,30 @@ Obtain point estimates as the mean of the parameter draws
 ``` r
 A <- rowMeans(draws_A) # Obtain means for every row
 A <- matrix(A, k) # Transform mean vector into a matrix
-A <- round(A, 2) # Round values
+A <- round(A, 3) # Round values
 dimnames(A) <- list(dimnames(y)[[1]], dimnames(x)[[1]]) # Rename matrix dimensions
 
 A # Print
 ```
 
-    ##        invest.1 income.1 cons.1 invest.2 income.2 cons.2 const
-    ## invest    -0.32     0.15   0.96    -0.16     0.11   0.94 -0.02
-    ## income     0.04    -0.15   0.29     0.05     0.02  -0.01  0.02
-    ## cons       0.00     0.23  -0.27     0.03     0.36  -0.02  0.01
+    ##        invest.1 income.1 cons.1 invest.2 income.2 cons.2  const
+    ## invest   -0.321    0.149  0.954   -0.161    0.113  0.922 -0.016
+    ## income    0.044   -0.154  0.288    0.050    0.019 -0.011  0.016
+    ## cons     -0.003    0.223 -0.264    0.034    0.354 -0.021  0.013
 
 ``` r
 Sigma <- rowMeans(draws_Sigma) # Obtain means for every row
 Sigma <- matrix(Sigma, k) # Transform mean vector into a matrix
-Sigma <- round(Sigma, 2) # Round values
+Sigma <- round(Sigma * 10^4, 2) # Round values
 dimnames(Sigma) <- list(dimnames(y)[[1]], dimnames(y)[[1]]) # Rename matrix dimensions
 
 Sigma # Print
 ```
 
     ##        invest income cons
-    ## invest      0      0    0
-    ## income      0      0    0
-    ## cons        0      0    0
+    ## invest  21.64   0.72 1.24
+    ## income   0.72   1.40 0.62
+    ## cons     1.24   0.62 0.91
 
 The means of the coefficient draws are very close to the results of the frequentist estimatior and, hence, also close to the true parameter values.
 

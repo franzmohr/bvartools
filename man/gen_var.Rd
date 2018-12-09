@@ -2,33 +2,33 @@
 % Please edit documentation in R/gen_var.R
 \name{gen_var}
 \alias{gen_var}
-\title{VAR Model Input}
+\title{Vector Autoregressive Model Input}
 \usage{
-gen_var(data, p = 2, exog = NULL, q = 2, deterministic = "const",
+gen_var(data, p = 2, exogen = NULL, q = 2, deterministic = "const",
   seasonal = FALSE)
 }
 \arguments{
 \item{data}{a time-series object of endogenous variables.}
 
-\item{p}{integer. The number of lags of endogenous variables. Defaults to 2.}
+\item{p}{integer for the lag order (default is `p = 2`).}
 
-\item{exog}{an optional time-series object of exogenous variables.}
+\item{exogen}{optionally, a time-series object of external regressors.}
 
-\item{q}{integer. The number of lags of the exogenous variables. Defaults to 2.}
+\item{q}{optional integer for the lag order of the exogenous variables (default is `q = 2`).}
 
-\item{deterministic}{character specifying the used deterministic terms.
-Possible values are "none", "const" (default), "trend" and "both".}
+\item{deterministic}{type of deterministic regressors to include. Available values are
+`"none"`, `"const"` (default), `"trend"`, and `"both"`.}
 
-\item{seasonal}{logical specifying if seasonal dummies should be used. The amount of
-dummies depends on the frequency of the time-series object `data`, i.e. `freqency(data) - 1`.}
+\item{seasonal}{logical. If `TRUE`, seasonal dummy variables will be generated. The
+amount of dummies depends on the frequency of the time-series object provided in `data`.}
 }
 \value{
 A list containing two elements:
-\item{y}{A matrix of dependent variables.}
-\item{x}{A matrix of regressor variables.}
+\item{y}{A matrix of the dependent variables.}
+\item{x}{A matrix of the regressors.}
 }
 \description{
-The function produces the input for the estimation of VAR model.
+The function produces the input for the estimation of a vector autoregressive (VAR) model.
 }
 \examples{
 data("e1")

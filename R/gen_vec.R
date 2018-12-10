@@ -160,7 +160,7 @@ gen_vec <- function(data, p = 2, exogen = NULL, s = 2, const = NULL, trend = NUL
     }
     
     if (seasonal == "unrestricted") {
-      x <- cbind(x, s)
+      x <- cbind(x, seas)
       x_names <- c(x_names, s_name)
     }
   }

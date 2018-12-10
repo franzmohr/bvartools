@@ -50,8 +50,8 @@ The `gen_var` function produces the inputs `y` and `x` for the BVAR estimator, w
 ``` r
 data <- gen_var(e1, p = 2, deterministic = "const")
 
-y <- data$y[, 1:73]
-x <- data$x[, 1:73]
+y <- data$Y[, 1:73]
+x <- data$Z[, 1:73]
 ```
 
 As in Lütkepohl (2007) only the first 73 observations are used.
@@ -116,9 +116,9 @@ A # Print
 ```
 
     ##        invest.1 income.1 cons.1 invest.2 income.2 cons.2  const
-    ## invest   -0.322    0.145  0.959   -0.161    0.117  0.929 -0.016
-    ## income    0.044   -0.154  0.288    0.050    0.021 -0.013  0.016
-    ## cons     -0.003    0.225 -0.264    0.034    0.356 -0.026  0.013
+    ## invest   -0.321    0.144  0.967   -0.162    0.110  0.945 -0.017
+    ## income    0.044   -0.148  0.285    0.049    0.021 -0.009  0.016
+    ## cons     -0.002    0.227 -0.266    0.034    0.357 -0.022  0.013
 
 ``` r
 Sigma <- rowMeans(draws_Sigma) # Obtain means for every row
@@ -130,9 +130,9 @@ Sigma # Print
 ```
 
     ##        invest income cons
-    ## invest  21.57   0.71 1.24
-    ## income   0.71   1.39 0.62
-    ## cons     1.24   0.62 0.91
+    ## invest  21.60   0.71 1.24
+    ## income   0.71   1.40 0.62
+    ## cons     1.24   0.62 0.90
 
 The means of the coefficient draws are very close to the results of the frequentist estimatior in Lütkepohl (2007).
 

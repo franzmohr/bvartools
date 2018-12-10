@@ -37,8 +37,8 @@ The `gen_var` function produces the inputs `y` and `x` for the BVAR estimator, w
 ```{r}
 data <- gen_var(e1, p = 2, deterministic = "const")
 
-y <- data$y[, 1:73]
-x <- data$x[, 1:73]
+y <- data$Y[, 1:73]
+x <- data$Z[, 1:73]
 ```
 
 As in Lütkepohl (2007) only the first 73 observations are used.

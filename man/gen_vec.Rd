@@ -4,42 +4,73 @@
 \alias{gen_vec}
 \title{Vector Error Correction Model Input}
 \usage{
-gen_vec(data, p = 2, exogen = NULL, q = 2, const = NULL,
+gen_vec(data, p = 2, exogen = NULL, s = 2, const = NULL,
   trend = NULL, seasonal = NULL)
 }
 \arguments{
 \item{data}{a time-series object of endogenous variables.}
 
-\item{p}{integer for the lag order of the series (levels) in the VAR (default is `p = 2`).}
+\item{p}{an integer for the lag order of the series (levels) in the VAR (default is `p = 2`).}
 
-\item{exogen}{optionally, a time-series object of external regressors.}
+\item{exogen}{an optional time-series object of external regressors.}
 
-\item{q}{optional integer for the lag order of the exogenous variables of the series
+\item{s}{an optional integer for the lag order of the exogenous variables of the series
 (levels) in the VAR (default is `q = 2`).}
 
-\item{const}{character specifying whether a constant term enters the error correction term
+\item{const}{a character specifying whether a constant term enters the error correction term
 (`"restricted"`) or is `"unrestricted"`. If `NULL` (default) no constant term will be added.}
 
-\item{trend}{character specifying whether a linear trend term enters the error correction term
+\item{trend}{a character specifying whether a linear trend term enters the error correction term
 (`"restricted"`) or is `"unrestricted"`. If `NULL` (default) no trend term will be added.}
 
-\item{seasonal}{character specifying whether seasonal dummies should be included in the error
+\item{seasonal}{a character specifying whether seasonal dummies should be included in the error
 correction term (`"restricted"`) or as `"unrestricted"` variables. If `NULL` (default) no
 seasonal terms will be added. The amount of dummies depends on the frequency of the time-series
 object provided in `data`.}
 }
 \value{
-A list containing two elements:
-\item{y}{A matrix of differenced dependent variables.}
-\item{ect}{A matrix of level regressor variables.}
-\item{x}{A matrix of differenced regressor variables.}
+A list containing the following elements
+\item{Y}{A matrix of differenced dependent variables.}
+\item{ECT}{A matrix of regressor variables in levels and restricted
+deterministic terms.}
+\item{X}{A matrix of differenced regressor variables and unrestricted
+deterministic terms.}
 }
 \description{
 The function produces the input for the estimation of a vector error correction (VEC) model.
+}
+\details{
+The function produces the input matrices for the estimation of
+the vector error correction (VEC) model
+\deqn{\Delta y_t =  \Pi ECT_t + \sum_{i=1}^{p-1} \Gamma_i \Delta y_{t - i} + \sum_{i=0}^{s-1} \Upsilon_i \Delta x_{t - i} + C D_t + u_t,}
+where
+\eqn{\Delta y_t} is a \eqn{K \times 1} vector of differenced endogenous variables,
+\eqn{ECT_t} is a \eqn{K + M + N_{co} \times 1} vector of cointegration variables,
+\eqn{\Pi} is a \eqn{K \times K + M + N_{co}} matrix of cointegration parameters,
+\eqn{\Gamma_i} is a \eqn{K \times K} coefficient matrix of endogenous variables,
+\eqn{\Delta x_t} is a \eqn{M \times 1} vector of differenced exogenous regressors,
+\eqn{\Upsilon_i} is a \eqn{K \times M} coefficient matrix of exogenous regressors,
+\eqn{d_t} is a \eqn{N \times 1} vector of deterministic terms, and
+\eqn{D} is a \eqn{K \times N} coefficient matrix of deterministic terms.
+\eqn{p} is the lag order of endogenous variables, \eqn{s} is the lag
+order of exogenous variables, and \eqn{u_t} is a \eqn{K \times 1} error term.
+
+In matrix notation the above model can be written as
+\deqn{Y = \Pi ECT + \Gamma X + U,}
+where
+\eqn{Y} is a \eqn{K \times T} matrix of differenced endogenous variables,
+\eqn{ECT} is a \eqn{K + M + N_{co} \times T} matrix of cointegration
+variables, \eqn{X} is a \eqn{K(p - 1) + Ms + N \times T} matrix of
+differenced regressor variables and unrestricted deterministic terms.
+\eqn{U} is a \eqn{K \times T} matrix of errors. The function `gen_vec`
+generates the matrices \eqn{Y}, \eqn{ECT} and \eqn{X}.
 }
 \examples{
 data("e6")
 
 vec_input <- gen_vec(e6, p = 4, const = "unrestricted", seasonal = "unrestricted")
 
+}
+\references{
+Lütkepohl, H. (2007). \emph{New introduction to multiple time series analyis}. Berlin: Springer.
 }

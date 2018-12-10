@@ -4,31 +4,54 @@
 \alias{gen_var}
 \title{Vector Autoregressive Model Input}
 \usage{
-gen_var(data, p = 2, exogen = NULL, q = 2, deterministic = "const",
+gen_var(data, p = 2, exogen = NULL, s = 2, deterministic = "const",
   seasonal = FALSE)
 }
 \arguments{
 \item{data}{a time-series object of endogenous variables.}
 
-\item{p}{integer for the lag order (default is `p = 2`).}
+\item{p}{an integer for the lag order (default is `p = 2`).}
 
-\item{exogen}{optionally, a time-series object of external regressors.}
+\item{exogen}{an optional time-series object of external regressors.}
 
-\item{q}{optional integer for the lag order of the exogenous variables (default is `q = 2`).}
+\item{s}{an optional integer for the lag order of the exogenous variables (default is `q = 2`).}
 
-\item{deterministic}{type of deterministic regressors to include. Available values are
-`"none"`, `"const"` (default), `"trend"`, and `"both"`.}
+\item{deterministic}{a character specifying type of deterministic
+regressors to include. Available values are `"none"`, `"const"` (default),
+`"trend"`, and `"both"`.}
 
-\item{seasonal}{logical. If `TRUE`, seasonal dummy variables will be generated. The
-amount of dummies depends on the frequency of the time-series object provided in `data`.}
+\item{seasonal}{logical. If `TRUE`, seasonal dummy variables will be
+generated. The amount of dummies depends on the frequency of the
+time-series object provided in `data`.}
 }
 \value{
-A list containing two elements:
-\item{y}{A matrix of the dependent variables.}
-\item{x}{A matrix of the regressors.}
+A list containing the following elements
+\item{Y}{A matrix of dependent variables.}
+\item{Z}{A matrix of regressor variables.}
 }
 \description{
 The function produces the input for the estimation of a vector autoregressive (VAR) model.
+}
+\details{
+The function produces the input matrices for the estimation of the model
+\deqn{y_t = \sum_{i=1}^{p} A_i y_{t - i} + \sum_{i=0}^{s} B_i x_{t - i} + C D_t + u_t,}
+where
+\eqn{y_t} is a \eqn{K \times 1} vector of endogenous variables,
+\eqn{A_i} is a \eqn{K \times K} coefficient matrix of endogenous variables,
+\eqn{x_t} is a \eqn{M \times 1} vector of exogenous regressors,
+\eqn{B_i} is a \eqn{K \times M} coefficient matrix of exogenous regressors,
+\eqn{D_t} is a \eqn{N \times 1} vector of deterministic terms, and
+\eqn{C} is a \eqn{K \times N} coefficient matrix of deterministic terms.
+\eqn{p} is the lag order of endogenous variables, \eqn{s} is the lag
+order of exogenous variables, and \eqn{u_t} is a \eqn{K \times 1} error term.
+
+In matrix notation the above model can be written as
+\deqn{Y = A Z + U,}
+where
+\eqn{Y} is a \eqn{K \times T} matrix of endogenous variables,
+\eqn{Z} is a \eqn{Kp \times M(1+s) + N x T} matrix of regressor variables,
+and \eqn{U} is a \eqn{K \times T} matrix of errors. The function `gen_var`
+generates the matrices \eqn{Y} and \eqn{Z}.
 }
 \examples{
 data("e1")
@@ -36,4 +59,7 @@ data <- diff(log(e1))
 
 var_input <- gen_var(data, p = 2)
 
+}
+\references{
+Lütkepohl, H. (2007). \emph{New introduction to multiple time series analyis}. Berlin: Springer.
 }

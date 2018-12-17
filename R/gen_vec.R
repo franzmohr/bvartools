@@ -174,4 +174,5 @@ gen_vec <- function(data, p = 2, exogen = NULL, s = 2, const = NULL, trend = NUL
   result <- list("Y" = y,
                  "ECT" = ect,
                  "X" = x)
+  return(result)
 }

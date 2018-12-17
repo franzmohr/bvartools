@@ -1,6 +1,6 @@
 #' Bayesian Vector Autoregression Objects
 #' 
-#' The function `bvars` is used to create objects of class "bvars".
+#' The function `bvar` is used to create objects of class "bvar".
 #'
 #' @param y a \eqn{k x T} matrix, where \eqn{k} is the number of endogenous variables and
 #' \eqn{T} is the total amount of observations.
@@ -31,12 +31,11 @@
 #' \item{A}{a \eqn{D x pn^2} `mcmc` object of lagged AR coefficient draws.}
 #' \item{B}{a \eqn{D x pn^2} `mcmc` object of contemporanesous and lagged exogenous coefficient draws.}
 #' \item{D}{a \eqn{D x dn} `mcmc` object of deterministic terms.}
-# \item{M}{a \eqn{D x pn^2} `mcmc` object of MA coefficient draws.}
 #' \item{Sigma}{a \eqn{D x n^2} `mcmc` object of variance-covariance draws.}
 #' \item{LL}{a \eqn{D x t} `mcmc` object of log-likelihood draws.}
 #' 
 #' @export
-bvars <- function(y = NULL, x = NULL, A0 = NULL, A = NULL, B = NULL,
+bvar <- function(y = NULL, x = NULL, A0 = NULL, A = NULL, B = NULL,
                   D = NULL, Sigma = NULL, LL = NULL) {
 
   result <- NULL
@@ -59,9 +58,6 @@ bvars <- function(y = NULL, x = NULL, A0 = NULL, A = NULL, B = NULL,
   if(!is.null(D)) {
     result$D <- coda::mcmc(t(D))
   }
-#  if(!is.null(M)) {
-#    result$M <- coda::mcmc(t(M))
-#  }
   if(!is.null(Sigma)) {
     result$Sigma <- coda::mcmc(t(Sigma))
   }
@@ -69,6 +65,6 @@ bvars <- function(y = NULL, x = NULL, A0 = NULL, A = NULL, B = NULL,
     result$LL <- coda::mcmc(t(LL))
   }
   
-  class(result) <- append("bvars", class(result))
+  class(result) <- append("bvar", class(result))
   return(result)
 }

@@ -8,8 +8,8 @@
 //' @param y \eqn{n x T} matrix containing the time series of the dependent variable.
 //' @param x \eqn{k x T} matrix containing the time series of the explanatory variables.
 //' @param Sigma_i inverse of the \eqn{n x n} variance-covariance matrix.
-//' @param bprior \eqn{m x 1} numeric vector containing the prior mean of the coefficients.
-//' @param Vprior_i inverse of the \eqn{m x m} covariance matrix of the coefficients.
+//' @param mu_prior \eqn{m x 1} numeric vector containing the prior mean of the coefficients.
+//' @param V_i_prior inverse of the \eqn{m x m} covariance matrix of the coefficients.
 //' 
 //' @details The function produces a vectorised draw of the \eqn{n x k} coefficient
 //' matrix \eqn{A} of the model
@@ -23,11 +23,11 @@
 //' @return A \eqn{m x 1} vector of coefficient values.
 //' 
 // [[Rcpp::export]]
-arma::vec post_normal(arma::mat y, arma::mat x, arma::mat Sigma_i, arma::vec bprior, arma::mat Vprior_i) {
+arma::vec post_normal(arma::mat y, arma::mat x, arma::mat Sigma_i, arma::vec mu_prior, arma::mat V_i_prior) {
   int nvars = y.n_rows * x.n_rows;
   
-  arma::mat Vpost = arma::inv(Vprior_i + arma::kron(x * arma::trans(x), Sigma_i));
-  arma::vec bpost = Vpost * (Vprior_i * bprior + vectorise(Sigma_i * y * arma::trans(x)));
+  arma::mat Vpost = arma::inv(V_i_prior + arma::kron(x * arma::trans(x), Sigma_i));
+  arma::vec bpost = Vpost * (V_i_prior * mu_prior + vectorise(Sigma_i * y * arma::trans(x)));
 
   arma::mat U;
   arma::mat V;

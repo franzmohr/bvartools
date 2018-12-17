@@ -108,4 +108,5 @@ gen_var <- function(data, p = 2, exogen = NULL, s = 2, deterministic = "const", 
   x <- t(temp[, -(1:k)])
   result <- list("Y" = y,
                  "Z" = x)
+  return(result)
 }

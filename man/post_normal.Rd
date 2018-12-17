@@ -4,7 +4,7 @@
 \alias{post_normal}
 \title{Posterior Draw from Normal Distribution}
 \usage{
-post_normal(y, x, Sigma_i, bprior, Vprior_i)
+post_normal(y, x, Sigma_i, mu_prior, V_i_prior)
 }
 \arguments{
 \item{y}{\eqn{n x T} matrix containing the time series of the dependent variable.}
@@ -13,9 +13,9 @@ post_normal(y, x, Sigma_i, bprior, Vprior_i)
 
 \item{Sigma_i}{inverse of the \eqn{n x n} variance-covariance matrix.}
 
-\item{bprior}{\eqn{m x 1} numeric vector containing the prior mean of the coefficients.}
+\item{mu_prior}{\eqn{m x 1} numeric vector containing the prior mean of the coefficients.}
 
-\item{Vprior_i}{inverse of the \eqn{m x m} covariance matrix of the coefficients.}
+\item{V_i_prior}{inverse of the \eqn{m x m} covariance matrix of the coefficients.}
 }
 \value{
 A \eqn{m x 1} vector of coefficient values.

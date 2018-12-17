@@ -18,8 +18,8 @@
 irf <- function(object, impulse = NULL, response = NULL, n.ahead = 5,
                 shock = "sd", ci = .95, type = "feir", cumulative = FALSE) {
   
-  if (!"bvars" %in% class(object)) {
-    stop("Object must be of class 'bvars'.")
+  if (!"bvar" %in% class(object)) {
+    stop("Object must be of class 'bvar'.")
   }
   
   if (is.null(object$y) | is.null(dimnames(object$y)[[1]])) {

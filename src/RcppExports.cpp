@@ -66,18 +66,38 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// post_koop_2010
+Rcpp::List post_koop_2010(arma::mat y, arma::mat beta, arma::mat ect, arma::mat x, arma::mat Sigma_i, arma::vec Gamma_mu_prior, arma::mat Gamma_V_i_prior, double v_i, arma::mat P_tau_i, arma::mat G_i);
+RcppExport SEXP _bvartools_post_koop_2010(SEXP ySEXP, SEXP betaSEXP, SEXP ectSEXP, SEXP xSEXP, SEXP Sigma_iSEXP, SEXP Gamma_mu_priorSEXP, SEXP Gamma_V_i_priorSEXP, SEXP v_iSEXP, SEXP P_tau_iSEXP, SEXP G_iSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type y(ySEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type beta(betaSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type ect(ectSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type x(xSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Sigma_i(Sigma_iSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type Gamma_mu_prior(Gamma_mu_priorSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Gamma_V_i_prior(Gamma_V_i_priorSEXP);
+    Rcpp::traits::input_parameter< double >::type v_i(v_iSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type P_tau_i(P_tau_iSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type G_i(G_iSEXP);
+    rcpp_result_gen = Rcpp::wrap(post_koop_2010(y, beta, ect, x, Sigma_i, Gamma_mu_prior, Gamma_V_i_prior, v_i, P_tau_i, G_i));
+    return rcpp_result_gen;
+END_RCPP
+}
 // post_normal
-arma::vec post_normal(arma::mat y, arma::mat x, arma::mat Sigma_i, arma::vec bprior, arma::mat Vprior_i);
-RcppExport SEXP _bvartools_post_normal(SEXP ySEXP, SEXP xSEXP, SEXP Sigma_iSEXP, SEXP bpriorSEXP, SEXP Vprior_iSEXP) {
+arma::vec post_normal(arma::mat y, arma::mat x, arma::mat Sigma_i, arma::vec mu_prior, arma::mat V_i_prior);
+RcppExport SEXP _bvartools_post_normal(SEXP ySEXP, SEXP xSEXP, SEXP Sigma_iSEXP, SEXP mu_priorSEXP, SEXP V_i_priorSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< arma::mat >::type y(ySEXP);
     Rcpp::traits::input_parameter< arma::mat >::type x(xSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type Sigma_i(Sigma_iSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type bprior(bpriorSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Vprior_i(Vprior_iSEXP);
-    rcpp_result_gen = Rcpp::wrap(post_normal(y, x, Sigma_i, bprior, Vprior_i));
+    Rcpp::traits::input_parameter< arma::vec >::type mu_prior(mu_priorSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type V_i_prior(V_i_priorSEXP);
+    rcpp_result_gen = Rcpp::wrap(post_normal(y, x, Sigma_i, mu_prior, V_i_prior));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -102,6 +122,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_bvartools_feir", (DL_FUNC) &_bvartools_feir, 2},
     {"_bvartools_kalman_dk", (DL_FUNC) &_bvartools_kalman_dk, 7},
     {"_bvartools_loglik_gauss", (DL_FUNC) &_bvartools_loglik_gauss, 3},
+    {"_bvartools_post_koop_2010", (DL_FUNC) &_bvartools_post_koop_2010, 10},
     {"_bvartools_post_normal", (DL_FUNC) &_bvartools_post_normal, 5},
     {"_bvartools_post_normal_sur", (DL_FUNC) &_bvartools_post_normal_sur, 5},
     {NULL, NULL, 0}

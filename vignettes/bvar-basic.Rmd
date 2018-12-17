@@ -65,8 +65,8 @@ These are the same values as in Lütkepohl (2007).
 ### Bayesian estimator
 
 ```{r flat prior}
-iter <- 10000 # Number of iterations of the Gibbs sampler
-burnin <- 2000 # Number of burn-in draws
+iter <- 15000 # Number of iterations of the Gibbs sampler
+burnin <- 5000 # Number of burn-in draws
 
 t <- ncol(y) # Number of observations
 k <- nrow(y) # Number of endogenous variables
@@ -138,8 +138,8 @@ The means of the coefficient draws are very close to the results of the frequent
 
 The `bvars` function can be used to collect relevant output of the Gibbs sampler into a standardised object, which can be used by further function such as `irf` to obtain impulse responses.
 
-```{r bvars-object}
-bvar_est <- bvars(y = y, x = x, A = draws_A, Sigma = draws_Sigma)
+```{r bvar-object}
+bvar_est <- bvar(y = y, x = x, A = draws_A, Sigma = draws_Sigma)
 ```
 
 ## Impulse response analysis

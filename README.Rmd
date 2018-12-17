@@ -6,7 +6,9 @@ output:
 
 # bvartools
 
-[![Build Status](https://travis-ci.org/franzmohr/bvartools.svg?branch=master)](https://travis-ci.org/franzmohr/bvartools)
+[![lifecycle](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing)
+[![CRAN_Status_Badge](https://www.r-pkg.org/badges/version/bvartools)](https://cran.r-project.org/package=bvartools)
+[![Travis build status](https://travis-ci.org/franzmohr/bvartools.svg?branch=master)](https://travis-ci.org/franzmohr/bvartools)
 
 ## Overview
 
@@ -60,8 +62,8 @@ As in Lütkepohl (2007) only the first 73 observations are used.
 The following code sets up a simple Gibbs sampler algorithm.
 
 ```{r usage, message = FALSE, eval = TRUE}
-iter <- 10000 # Number of iterations of the Gibbs sampler
-burnin <- 2000 # Number of burn-in draws
+iter <- 20000 # Number of iterations of the Gibbs sampler
+burnin <- 10000 # Number of burn-in draws
 
 t <- ncol(y) # Number of observations
 k <- NROW(y) # Number of endogenous variables
@@ -130,7 +132,7 @@ The means of the coefficient draws are very close to the results of the frequent
 The `bvars` function can be used to collect relevant output of the Gibbs sampler into a standardised object, which can be used by further functions such as `irf` to obtain impulse responses.
 
 ```{r bvars-object}
-bvar_est <- bvars(y = y, x = x, A = draws_A, Sigma = draws_Sigma)
+bvar_est <- bvar(y = y, x = x, A = draws_A, Sigma = draws_Sigma)
 ```
 
 ### Impulse response analysis

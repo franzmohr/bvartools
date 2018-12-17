@@ -95,6 +95,47 @@ loglik_gauss <- function(y, Sigma, Sigma_i) {
     .Call(`_bvartools_loglik_gauss`, y, Sigma, Sigma_i)
 }
 
+#' Posterior Draw of Cointegration Parameters
+#' 
+#' Produces a draw from a posterior density Koop et al. (2010).
+#' 
+#' @param y a \eqn{k \times T} matrix of differenced dependent variables.
+#' @param beta a \eqn{k_{ect} \times r} matrix of variables in the error correction term.
+#' @param ect a \eqn{k_{ect} \times T} matrix of regressor variables in levels and deterministic terms in the error correction term.
+#' @param x a \eqn{k_{x} \times T} matrix of differenced regressor variables and unrestriced deterministic terms.
+#' @param Sigma_i a \eqn{k \times k} variance-covariance matrix.
+#' @param Gamma_mu_prior a \eqn{kk_{x} \times 1} prior mean vector of non-cointegration coefficients.
+#' @param Gamma_V_i_prior a \eqn{kk_{x} \times kk_{x}} inverted prior covariance vector of non-cointegration coefficients.
+#' @param v_i a numeric between 0 and 1 specifying the shrinkage.
+#' @param P_tau_i a \eqn{k_{ect} \times k_{ect}} inverted matrix specifying the central location of \eqn{sp(\beta)}.
+#' @param G_i a \eqn{k \times k} matrix.
+#' 
+#' @details The function produces a draw of coefficients for the model
+#' \deqn{\Delta y_t = \alpha \beta' ECT_{t} + \Gamma X_{t} + u_t,}
+#' where \eqn{\Delta y_t} is a \eqn{k \times 1} vector of differenced dependent variables,
+#' \eqn{\alpha} is a \eqn{k \times r} loading matrix,
+#' \eqn{\beta} is a \eqn{k_{ect} \times r} cointegration matrix,
+#' \eqn{ECT_t} is a \eqn{k_{ect} \times 1} vector of regressors in the error correction term,
+#' \eqn{\Gamma} is a \eqn{k \times k_{x}} matrix of non-cointegration parameters,
+#' \eqn{X_t} is a \eqn{k_{x} \times 1} vector of non-cointegration regressors,
+#' and \eqn{u_t} is a \eqn{k \times 1} error term.
+#' 
+#' @return A list containing the following elements:
+#' \item{alpha}{a draw of the \eqn{k \times r} loading matrix.}
+#' \item{beta}{a draw of the \eqn{k_{ect} \times r} cointegration matrix.}
+#' \item{Pi}{a draw of the \eqn{k \times k_{ect}} matrix \eqn{\Pi = \alpha \beta'}.}
+#' \item{Gamma}{a draw of the \eqn{k \times k_{x}} coefficient matrix for non-cointegration parameters.}
+#' 
+#' @references
+#' 
+#' Koop, G., León-González, R., & Strachan R. W. (2010). Efficient posterior
+#' simulation for cointegrated models with priors on the cointegration space.
+#' \emph{Econometric Reviews}, 29(2), 224-242. \url{https://doi.org/10.1080/07474930903382208}
+#' 
+post_koop_2010 <- function(y, beta, ect, x, Sigma_i, Gamma_mu_prior, Gamma_V_i_prior, v_i, P_tau_i, G_i) {
+    .Call(`_bvartools_post_koop_2010`, y, beta, ect, x, Sigma_i, Gamma_mu_prior, Gamma_V_i_prior, v_i, P_tau_i, G_i)
+}
+
 #' Posterior Draw from Normal Distribution
 #' 
 #' Produces a draw from a posterior density of a Gaussian process and normal prior.
@@ -102,8 +143,8 @@ loglik_gauss <- function(y, Sigma, Sigma_i) {
 #' @param y \eqn{n x T} matrix containing the time series of the dependent variable.
 #' @param x \eqn{k x T} matrix containing the time series of the explanatory variables.
 #' @param Sigma_i inverse of the \eqn{n x n} variance-covariance matrix.
-#' @param bprior \eqn{m x 1} numeric vector containing the prior mean of the coefficients.
-#' @param Vprior_i inverse of the \eqn{m x m} covariance matrix of the coefficients.
+#' @param mu_prior \eqn{m x 1} numeric vector containing the prior mean of the coefficients.
+#' @param V_i_prior inverse of the \eqn{m x m} covariance matrix of the coefficients.
 #' 
 #' @details The function produces a vectorised draw of the \eqn{n x k} coefficient
 #' matrix \eqn{A} of the model
@@ -116,8 +157,8 @@ loglik_gauss <- function(y, Sigma, Sigma_i) {
 #' 
 #' @return A \eqn{m x 1} vector of coefficient values.
 #' 
-post_normal <- function(y, x, Sigma_i, bprior, Vprior_i) {
-    .Call(`_bvartools_post_normal`, y, x, Sigma_i, bprior, Vprior_i)
+post_normal <- function(y, x, Sigma_i, mu_prior, V_i_prior) {
+    .Call(`_bvartools_post_normal`, y, x, Sigma_i, mu_prior, V_i_prior)
 }
 
 #' Posterior Draw from Normal Distribution (SUR)

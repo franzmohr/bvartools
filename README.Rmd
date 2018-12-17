@@ -6,8 +6,7 @@ output:
 
 # bvartools
 
-[![lifecycle](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing)
-[![CRAN_Status_Badge](https://www.r-pkg.org/badges/version/bvartools)](https://cran.r-project.org/package=bvartools)
+[![CRAN status](https://www.r-pkg.org/badges/version/bvartools)](https://cran.r-project.org/package=bvartools)
 [![Travis build status](https://travis-ci.org/franzmohr/bvartools.svg?branch=master)](https://travis-ci.org/franzmohr/bvartools)
 
 ## Overview

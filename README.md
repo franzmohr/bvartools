@@ -2,7 +2,7 @@
 bvartools
 =========
 
-[![lifecycle](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing) [![CRAN\_Status\_Badge](https://www.r-pkg.org/badges/version/bvartools)](https://cran.r-project.org/package=bvartools) [![Travis build status](https://travis-ci.org/franzmohr/bvartools.svg?branch=master)](https://travis-ci.org/franzmohr/bvartools)
+[![CRAN status](https://www.r-pkg.org/badges/version/bvartools)](https://cran.r-project.org/package=bvartools) [![Travis build status](https://travis-ci.org/franzmohr/bvartools.svg?branch=master)](https://travis-ci.org/franzmohr/bvartools)
 
 Overview
 --------
@@ -116,9 +116,9 @@ A # Print
 ```
 
     ##        invest.1 income.1 cons.1 invest.2 income.2 cons.2  const
-    ## invest   -0.318    0.139  0.970   -0.161    0.110  0.943 -0.017
-    ## income    0.044   -0.154  0.289    0.050    0.016 -0.007  0.016
-    ## cons     -0.002    0.224 -0.262    0.034    0.353 -0.020  0.013
+    ## invest   -0.320    0.150  0.958   -0.161    0.111  0.933 -0.017
+    ## income    0.043   -0.153  0.292    0.050    0.019 -0.010  0.016
+    ## cons     -0.003    0.225 -0.262    0.034    0.354 -0.022  0.013
 
 ``` r
 Sigma <- rowMeans(draws_Sigma) # Obtain means for every row
@@ -130,9 +130,9 @@ Sigma # Print
 ```
 
     ##        invest income cons
-    ## invest  21.61   0.72 1.25
-    ## income   0.72   1.39 0.62
-    ## cons     1.25   0.62 0.90
+    ## invest  21.60   0.73 1.26
+    ## income   0.73   1.40 0.62
+    ## cons     1.26   0.62 0.91
 
 The means of the coefficient draws are very close to the results of the frequentist estimatior in Lütkepohl (2007).
 

@@ -24,7 +24,6 @@
 #' 
 #' Durbin, J., & Koopman, S. J. (2002). A simple and efficient simulation smoother for
 #' state space time series analysis. \emph{Biometrika, 89}(3), 603--615.
-#' \url{https://www.jstor.org/stable/4140605}
 #' 
 #' George, E. I., Sun, D., & Ni, S. (2008). Bayesian stochastic search for VAR model
 #' restrictions. \emph{Journal of Econometrics, 142}(1), 553--580.
@@ -32,7 +31,7 @@
 #' 
 #' Koop, G, & Korobilis, D. (2010), Bayesian multivariate time series Methods for empirical
 #' macroeconomics, \emph{Foundations and Trends in Econometrics, 3}(4), 267--358.
-#' \url{https://doi.org/10.1016/10.1561/0800000013}
+#' \url{http://dx.doi.org/10.1561/0800000013}
 #' 
 #' Koop, G., León-González, R., & Strachan R. W. (2010). Efficient posterior
 #' simulation for cointegrated models with priors on the cointegration space.

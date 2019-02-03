@@ -1,40 +1,47 @@
 #include <RcppArmadillo.h>
 // [[Rcpp::depends(RcppArmadillo)]]
 
-//' Posterior Draw from Normal Distribution
+//' Posterior Draw from a Normal Distribution
 //' 
-//' Produces a draw from a posterior density of a Gaussian process and normal prior.
+//' Produces a draw of coefficients from a normal posterior density.
 //' 
-//' @param y \eqn{n x T} matrix containing the time series of the dependent variable.
-//' @param x \eqn{k x T} matrix containing the time series of the explanatory variables.
-//' @param Sigma_i inverse of the \eqn{n x n} variance-covariance matrix.
-//' @param mu_prior \eqn{m x 1} numeric vector containing the prior mean of the coefficients.
-//' @param V_i_prior inverse of the \eqn{m x m} covariance matrix of the coefficients.
+//' @param y a \eqn{K \times T} matrix of endogenous variables.
+//' @param x an \eqn{M \times T} matrix of explanatory variables.
+//' @param sigma_i the inverse of the \eqn{K \times K} variance-covariance matrix.
+//' @param a_prior a \eqn{KM \times 1} numeric vector of prior means.
+//' @param v_i_prior the inverse of the \eqn{KM \times KM} prior covariance matrix.
 //' 
-//' @details The function produces a vectorised draw of the \eqn{n x k} coefficient
-//' matrix \eqn{A} of the model
-//' \deqn{y_{t} = A x_{t} a + \epsilon_{t},}
-//' where \eqn{y_{t}} is a \eqn{n x 1} vector of endogenous variables in period \eqn{t},
-//' \eqn{x_{t}} is a \eqn{k x 1} vector of explanatory variables, and the error term
-//' \eqn{\epsilon_{t}} is normally distributed with zero mean and variance-covariance
-//' matrix \eqn{\Sigma}. \eqn{k} is the number of explanatory variables and \eqn{m} it
-//' the total number of estimated coefficients.
+//' @details The function produces a vectorised posterior draw \eqn{a} of the
+//' \eqn{K \times M} coefficient matrix \eqn{A} for the model
+//' \deqn{y_{t} = A x_{t} + u_{t},}
+//' where \eqn{y_{t}} is a K-dimensional vector of endogenous variables,
+//' \eqn{x_{t}} is an M-dimensional vector of explanatory variabes
+//' and the error term is \eqn{u_t \sim \Sigma}.
 //' 
-//' @return A \eqn{m x 1} vector of coefficient values.
+//' For a given prior mean vector \eqn{\underline{a}} and prior covariance matrix \eqn{\underline{V}}
+//' the posterior covariance matrix is obtained by
+//' \deqn{\overline{V} = \left[ \underline{V}^{-1} + \left(X X^{\prime} \otimes \Sigma^{-1} \right) \right]^{-1}}
+//' and the posterior mean by
+//' \deqn{\overline{a} = \overline{V} \left[ \underline{V}^{-1} \underline{a} + vec(\Sigma^{-1} Y X^{\prime}) \right],}
+//' where \eqn{Y} is a \eqn{K \times T} matrix of the endogenous variables and \eqn{X} is an \eqn{M \times T} matrix of
+//' the explanatory variables.
+//' 
+//' @return A vector.
+//' 
+//' @references
+//' 
+//' Lütkepohl, H. (2007). \emph{New introduction to multiple time series analyis}. Berlin: Springer.
 //' 
 // [[Rcpp::export]]
-arma::vec post_normal(arma::mat y, arma::mat x, arma::mat Sigma_i, arma::vec mu_prior, arma::mat V_i_prior) {
-  int nvars = y.n_rows * x.n_rows;
+arma::vec post_normal(arma::mat y, arma::mat x, arma::mat sigma_i, arma::vec a_prior, arma::mat v_i_prior) {
+  int m = y.n_rows * x.n_rows;
   
-  arma::mat Vpost = arma::inv(V_i_prior + arma::kron(x * arma::trans(x), Sigma_i));
-  arma::vec bpost = Vpost * (V_i_prior * mu_prior + vectorise(Sigma_i * y * arma::trans(x)));
+  arma::mat v_post = arma::inv(v_i_prior + arma::kron(x * arma::trans(x), sigma_i));
+  arma::vec a_post = v_post * (v_i_prior * a_prior + vectorise(sigma_i * y * arma::trans(x)));
 
-  arma::mat U;
-  arma::mat V;
+  arma::mat U, V;
   arma::vec s;
-  arma::svd(U, s, V, Vpost);
-  arma::mat A = U * arma::diagmat(sqrt(s)) * arma::trans(V);
-  
-  arma::vec z = arma::randn<arma::vec>(nvars);
-  return bpost + A * z;
+  arma::svd(U, s, V, v_post);
+
+  return a_post + (U * arma::diagmat(sqrt(s)) * arma::trans(V)) * arma::randn<arma::vec>(m);
 }

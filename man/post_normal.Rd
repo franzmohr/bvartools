@@ -2,34 +2,43 @@
 % Please edit documentation in R/RcppExports.R
 \name{post_normal}
 \alias{post_normal}
-\title{Posterior Draw from Normal Distribution}
+\title{Posterior Draw from a Normal Distribution}
 \usage{
-post_normal(y, x, Sigma_i, mu_prior, V_i_prior)
+post_normal(y, x, sigma_i, a_prior, v_i_prior)
 }
 \arguments{
-\item{y}{\eqn{n x T} matrix containing the time series of the dependent variable.}
+\item{y}{a \eqn{K \times T} matrix of endogenous variables.}
 
-\item{x}{\eqn{k x T} matrix containing the time series of the explanatory variables.}
+\item{x}{an \eqn{M \times T} matrix of explanatory variables.}
 
-\item{Sigma_i}{inverse of the \eqn{n x n} variance-covariance matrix.}
+\item{sigma_i}{the inverse of the \eqn{K \times K} variance-covariance matrix.}
 
-\item{mu_prior}{\eqn{m x 1} numeric vector containing the prior mean of the coefficients.}
+\item{a_prior}{a \eqn{KM \times 1} numeric vector of prior means.}
 
-\item{V_i_prior}{inverse of the \eqn{m x m} covariance matrix of the coefficients.}
+\item{v_i_prior}{the inverse of the \eqn{KM \times KM} prior covariance matrix.}
 }
 \value{
-A \eqn{m x 1} vector of coefficient values.
+A vector.
 }
 \description{
-Produces a draw from a posterior density of a Gaussian process and normal prior.
+Produces a draw of coefficients from a normal posterior density.
 }
 \details{
-The function produces a vectorised draw of the \eqn{n x k} coefficient
-matrix \eqn{A} of the model
-\deqn{y_{t} = A x_{t} a + \epsilon_{t},}
-where \eqn{y_{t}} is a \eqn{n x 1} vector of endogenous variables in period \eqn{t},
-\eqn{x_{t}} is a \eqn{k x 1} vector of explanatory variables, and the error term
-\eqn{\epsilon_{t}} is normally distributed with zero mean and variance-covariance
-matrix \eqn{\Sigma}. \eqn{k} is the number of explanatory variables and \eqn{m} it
-the total number of estimated coefficients.
+The function produces a vectorised posterior draw \eqn{a} of the
+\eqn{K \times M} coefficient matrix \eqn{A} for the model
+\deqn{y_{t} = A x_{t} + u_{t},}
+where \eqn{y_{t}} is a K-dimensional vector of endogenous variables,
+\eqn{x_{t}} is an M-dimensional vector of explanatory variabes
+and the error term is \eqn{u_t \sim \Sigma}.
+
+For a given prior mean vector \eqn{\underline{a}} and prior covariance matrix \eqn{\underline{V}}
+the posterior covariance matrix is obtained by
+\deqn{\overline{V} = \left[ \underline{V}^{-1} + \left(X X^{\prime} \otimes \Sigma^{-1} \right) \right]^{-1}}
+and the posterior mean by
+\deqn{\overline{a} = \overline{V} \left[ \underline{V}^{-1} \underline{a} + vec(\Sigma^{-1} Y X^{\prime}) \right],}
+where \eqn{Y} is a \eqn{K \times T} matrix of the endogenous variables and \eqn{X} is an \eqn{M \times T} matrix of
+the explanatory variables.
+}
+\references{
+Lütkepohl, H. (2007). \emph{New introduction to multiple time series analyis}. Berlin: Springer.
 }

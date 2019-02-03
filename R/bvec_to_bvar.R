@@ -1,10 +1,10 @@
 #' Transform a VECM to VAR in levels
 #' 
-#' An object of class `bvec`` is transformed to a VAR in level presentation.
+#' An object of class "bvec" is transformed to a VAR in level representation.
 #' 
-#' @param object an object of class `bvec`.
+#' @param object an object of class "bvec".
 #' 
-#' @return An object of class `bvar`.
+#' @return An object of class "bvar".
 #' 
 #' @export
 bvec_to_bvar <- function(object) {
@@ -32,9 +32,8 @@ bvec_to_bvar <- function(object) {
   }
 
   if (!is.null(object$Ypsilon)) {
-    k_x <- nrow(object$ect) - k
+    k_x <- NCOL(object$Pi_x)
     s <- NCOL(object$Ypsilon) / (k * k_x)
-    s <- s + 1
     W <- diag(-1, k_x * (s + 1))
     W[1:k_x, 1:k_x] <- 0
     W[1:k_x, k_x + 1:k_x] <- diag(1, k_x)
@@ -48,20 +47,53 @@ bvec_to_bvar <- function(object) {
     B <- NULL
   }
   
+  if (!is.null(object$data)) {
+    data <- object$data
+  } else {
+    data <- NULL
+  }
+  
+  if (!is.null(object$exogen)) {
+    exogen <- object$exogen
+  } else {
+    exogen <- NULL
+  }
+  
   if (!is.null(object$y)) {
     y <- object$y
+    dimnames(y)[[1]] <- gsub("d.", "", dimnames(y)[[1]])
   } else {
     y <- NULL
   }
   if (!is.null(object$x)) {
     x <- object$x
+    dimnames(x)[[1]] <- gsub("d.", "", dimnames(x)[[1]])
   } else {
     x <- NULL
   }
-  if (!is.null(object$D)) {
-    D <- t(object$D)
+  
+  if (!is.null(object$A0)) {
+    A0 <- t(object$A0)
   } else {
-    D <- NULL
+    A0 <- NULL
+  }
+  
+  if (!is.null(object$Pi_d)) {
+    Pi_d <- t(object$Pi_d)
+  } else {
+    Pi_d <- NULL
+  }
+  if (!is.null(object$C)) {
+    if (!is.null(Pi_d)) {
+      C <- rbind(Pi_d, t(object$C))
+    } else {
+      C <- t(object$C)
+    }
+  } else {
+    C <- NULL
+    if (!is.null(Pi_d)) {
+      C <- Pi_d
+    }
   }
   if (!is.null(object$Sigma)) {
     Sigma <- t(object$Sigma)
@@ -69,8 +101,6 @@ bvec_to_bvar <- function(object) {
     Sigma <- NULL
   }
   
-  dimnames(y)[[1]] <- gsub("d.", "", dimnames(y)[[1]])
-  
-  result <- bvar(y = y, x = x, A = A, B = B, D = D, Sigma = Sigma)
+  result <- bvar(data = data, exogen = exogen, y = y, x = x, A0 = A0, A = A, B = B, C = C, Sigma = Sigma)
   return(result)
 }

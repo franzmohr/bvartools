@@ -2,34 +2,40 @@
 % Please edit documentation in R/RcppExports.R
 \name{post_normal_sur}
 \alias{post_normal_sur}
-\title{Posterior Draw from Normal Distribution (SUR)}
+\title{Posterior Draw from a Normal Distribution}
 \usage{
-post_normal_sur(y, Z, Sigma_i, bprior, Vprior_i)
+post_normal_sur(y, z, sigma_i, a_prior, v_i_prior)
 }
 \arguments{
-\item{y}{\eqn{n x T} matrix containing the time series of the dependent variable.}
+\item{y}{a \eqn{K \times T} matrix of endogenous variables.}
 
-\item{Z}{\eqn{nT x m} matrix containing the time series of the explanatory variables.}
+\item{z}{a \eqn{KT \times M} matrix of explanatory variables.}
 
-\item{Sigma_i}{inverse of the \eqn{n x n} or \eqn{nT x n} variance-covariance matrix.}
+\item{sigma_i}{the inverse of the constant \eqn{K \times K} error variance-covariance matrix.
+For time varying variance-covariance matrics a \eqn{KT \times K} can be specified.}
 
-\item{bprior}{\eqn{m x 1} numeric vector containing the prior mean of the coefficients.}
+\item{a_prior}{a \eqn{M x 1} numeric vector of prior means.}
 
-\item{Vprior_i}{inverse of the \eqn{m x m} covariance matrix of the coefficients.}
+\item{v_i_prior}{the inverse of the \eqn{M x M} prior covariance matrix.}
 }
 \value{
-A \eqn{m x 1} vector of coefficient values.
+A vector.
 }
 \description{
-Produces a draw from a posterior density of a Gaussian process with normal prior
-using seemingly unlelated regression.
+Produces a draw of coefficients from a normal posterior density for
+a model with seemingly unrelated regresssions (SUR).
 }
 \details{
-The function produces a draw of the \eqn{m x 1} coefficient vector \eqn{a}
-of the model
-\deqn{y_{t} = Z_{t} a + \epsilon_{t},}
-where \eqn{y_{t}} is a \eqn{n x 1} vector of endogenous variables in period \eqn{t},
-\eqn{Z_{t}} is a \eqn{n x mn} matrix of explanatory variables, and the error term
-\eqn{\epsilon_{t}} is normally distributed with zero mean and variance-covariance
-matrix \eqn{\Sigma_{t}}.
+The function produces a posterior draw of the coefficient vector \eqn{a} for the model
+\deqn{y_{t} = Z_{t} a + u_{t},}
+where \eqn{u_t \sim N(0, \Sigma_{t})}.
+\eqn{y_t} is a K-dimensional vector of endogenous variables and
+\eqn{Z_t = z_t^{\prime} \otimes I_K} is a \eqn{K \times KM} matrix of regressors with
+\eqn{z_t} as a vector of regressors.
+
+For a given prior mean vector \eqn{\underline{a}} and prior covariance matrix \eqn{\underline{V}}
+the posterior covariance matrix is obtained by
+\deqn{\overline{V} = \left[ \underline{V}^{-1} + \sum_{t=1}^{T} Z_{t}^{\prime} \Sigma_{t}^{-1} Z_{t} \right]^{-1}}
+and the posterior mean by
+\deqn{\overline{a} = \overline{V} \left[ \underline{V}^{-1} \underline{a} + \sum_{t=1}^{T} Z_{t}^{\prime} \Sigma_{t}^{-1} y_{t}  \right].}
 }

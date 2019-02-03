@@ -3,125 +3,143 @@
 
 //' Durbin and Koopman Simulation Smoother
 //' 
-//' The function is an implementation of the Kalman filter and backward smoothing
+//' An implementation of the Kalman filter and backward smoothing
 //' algorithm proposed by Durbin and Koopman (2002).
 //' 
-//' @param y a \eqn{n x T} matrix containing the time series of the dependent variable.
-//' @param Z a \eqn{nT x m} matrix containing the time series of the explanatory variables.
-//' @param Sigma_v a \eqn{n x n} or \eqn{nT x n} variance-covariance matrix.
-//' @param Sigma_w a \eqn{m x m} variance-covariance matrix of the transition equation.
-//' @param B a \eqn{m x m} autocorrelation function of the transition equation.
-//' @param a_init a \eqn{m x 1} vector of the initial values.
-//' @param Sigma_w_init a \eqn{m x m} variance-covariance matrix of the initial parameter values.
+//' @param y a \eqn{K \times T} matrix of endogenous variables.
+//' @param z a \eqn{KT \times M} matrix of explanatory variables.
+//' @param sigma_u the inverse of the constant \eqn{K \times K} error variance-covariance matrix.
+//' For time varying variance-covariance matrices a \eqn{KT \times K} can be specified.
+//' @param sigma_v the inverse of the constant \eqn{M \times M} coefficient variance-covariance matrix.
+//' For time varying variance-covariance matrices a \eqn{MT \times M} can be specified.
+//' @param B an \eqn{M \times M} autocorrelation matrix of the transition equation.
+//' @param a_init an M-dimensional vector of initial states.
+//' @param P_init an \eqn{M \times M} variance-covariance matrix of the initial states.
 //' 
-//' @details For the state space model with the measurement equation
-//' \deqn{y_t = Z_t a_t + v_t}
-//' and the transition equation 
-//' \deqn{a_{t+1} = B_t a_t + w_t,}
-//' where \eqn{v_t \sim N(0, \Sigma_{v_t})} and \eqn{w_t \sim N(0, \Sigma_{w_t})} the
-//' function produces a draw of the state vector \eqn{a_t} for \eqn{T = 1,...,T}.
+//' @details The function uses algorithm 2 from Durbin and Koopman (2002) to produce
+//' a draw of the state vector \eqn{a_t} for \eqn{t = 1,...,T} for a state space model
+//' with measurement equation
+//' \deqn{y_t = Z_t a_t + u_t}
+//' and transition equation 
+//' \deqn{a_{t + 1} = B_t a_{t} + v_t,}
+//' where \eqn{u_t \sim N(0, \Sigma_{u,t})} and \eqn{v_t \sim N(0, \Sigma_{v,t})}.
+//' \eqn{y_t} is a K-dimensional vector of endogenous variables and
+//' \eqn{Z_t = z_t^{\prime} \otimes I_K} is a \eqn{K \times M} matrix of regressors with
+//' \eqn{z_t} as a vector of regressors.
 //' 
-//' @return A \eqn{m x T} matrix of parameter values.
+//' The algorithm takes into account Jarociński (2015), where a possible missunderstanding
+//' in the implementation of the algorithm of Durbin and Koopman (2002) is pointed out. Following
+//' that note the function sets the mean of the initial state to zero in the first step of the algorithm.
+//' 
+//' @return A \eqn{M \times T+1} matrix of state vector draws.
 //' 
 //' @references
 //' 
-//' Durbin, J., & Koopman, S. J. (2002). A simple and efficient simulation smoother for state space time series analysis. \emph{Biometrika}, 89(3), 603--615.
+//' Durbin, J., & Koopman, S. J. (2002). A simple and efficient simulation smoother for
+//' state space time series analysis. \emph{Biometrika, 89}(3), 603--615.
+//' \url{https://www.jstor.org/stable/4140605}
+//' 
+//' Jarociński, M. (2015). A note on implementing the Durbin and Koopman simulation
+//' smoother. \emph{Computational Statistics and Data Analysis, 91}, 1--3.
+//' \url{https://doi.org/10.1016/j.csda.2015.05.001}
 //' 
 // [[Rcpp::export]]
-arma::mat kalman_dk(arma::mat y, arma::mat Z, arma::mat Sigma_v, arma::mat Sigma_w, arma::mat B, arma::vec a_init, arma::mat Sigma_w_init) {
-  // Algorithm 2  of Durbin and Koopman (2002)
-  int n = y.n_rows;
+arma::mat kalman_dk(arma::mat y, arma::mat z,
+                    arma::mat sigma_u, arma::mat sigma_v,
+                    arma::mat B, arma::vec a_init, arma::mat P_init) {
+  
+  int k = y.n_rows;
   int t = y.n_cols;
-  int nvars = Z.n_cols;
+  int nvars = z.n_cols;
   
-  arma::mat H_temp = arma::zeros<arma::mat>(n * t, n);
-  if (Sigma_v.n_rows == n){
+  arma::mat sigma_u_temp = arma::zeros<arma::mat>(k * t, k);
+  if (sigma_u.n_rows == k){
     for (int i = 0; i < t; i++){
-      H_temp.rows(i * n, (i + 1) * n - 1) = Sigma_v;
+      sigma_u_temp.rows(i * k, (i + 1) * k - 1) = sigma_u;
     }
-    Sigma_v = H_temp;
+    sigma_u = sigma_u_temp;
   }
   
-  arma::mat Q_temp = arma::zeros<arma::mat>(nvars * t, nvars);
-  if (Sigma_w.n_rows == nvars){
+  arma::mat sigma_v_temp = arma::zeros<arma::mat>(nvars * t, nvars);
+  if (sigma_v.n_rows == nvars){
     for (int i = 0; i < t; i++){
-      Q_temp.rows(i * nvars, (i + 1) * nvars - 1) = Sigma_w;
+      sigma_v_temp.rows(i * nvars, (i + 1) * nvars - 1) = sigma_v;
     }
-    Sigma_w = Q_temp;
+    sigma_v = sigma_v_temp;
   }
   
-  arma::mat T_temp = arma::zeros<arma::mat>(nvars * t, nvars);
+  arma::mat B_temp = arma::zeros<arma::mat>(nvars * t, nvars);
   if (B.n_rows == nvars){
     for (int i = 0; i < t; i++){
-      T_temp.rows(i * nvars, (i + 1) * nvars - 1) = B;
+      B_temp.rows(i * nvars, (i + 1) * nvars - 1) = B;
     }
-    B = T_temp;
+    B = B_temp;
   }
   
-  arma::mat yplus = arma::zeros<arma::mat>(n, t);
+  arma::mat yplus = y * 0;
   arma::mat aplus = arma::zeros<arma::mat>(nvars, t + 1);
   
-  arma::mat U;
-  arma::mat V;
+  arma::mat U, V;
   arma::vec s;
   
-  svd(U, s, V, Sigma_w_init);
-  arma::mat A = U * arma::diagmat(sqrt(s)) * arma::trans(V);
-  arma::vec z = arma::randn<arma::vec>(nvars);
-  aplus.col(0) = a_init + A * z;
+  // Step 1
   
-  int p1 = 0;
-  int p2 = 0;
-  int pA1 = 0;
-  int pA2 = 0;
+  svd(U, s, V, P_init);
+  arma::mat A = U * arma::diagmat(sqrt(s)) * arma::trans(V);
+  arma::vec Z = arma::randn<arma::vec>(nvars);
+  aplus.col(0) = A * Z;
+  
+  int p1, p2, pA1, pA2;
   for (int i = 0; i < t; i++){
-    p1 = i * n;
-    p2 = (i + 1) * n - 1;
+    p1 = i * k;
+    p2 = (i + 1) * k - 1;
     pA1 = i * nvars;
     pA2 = (i + 1) * nvars - 1;
     
-    svd(U, s, V, Sigma_w.rows(pA1, pA2));
+    svd(U, s, V, sigma_u.rows(p1, p2));
     A = U * arma::diagmat(sqrt(s)) * arma::trans(V);
-    z = arma::randn<arma::vec>(nvars);
-    aplus.col(i + 1) = B.rows(pA1, pA2) * aplus.col(i) + A * z;
+    Z = arma::randn<arma::vec>(k);
+    yplus.col(i) =  z.rows(p1, p2) * aplus.col(i) + A * Z;
     
-    svd(U, s, V, Sigma_v.rows(p1, p2));
+    svd(U, s, V, sigma_v.rows(pA1, pA2));
     A = U * arma::diagmat(sqrt(s)) * arma::trans(V);
-    z = arma::randn<arma::vec>(n);
-    yplus.col(i) =  Z.rows(p1, p2) * aplus.col(i) + A * z;
+    Z = arma::randn<arma::vec>(nvars);
+    aplus.col(i + 1) = B.rows(pA1, pA2) * aplus.col(i) + A * Z;
   }
-  arma::mat ystar = y - yplus;
   
+  // Step 2
+  arma::mat ystar = y - yplus;
   arma::mat a = arma::zeros<arma::mat>(nvars, t + 1);
   a.col(0) = a_init;
-  arma::mat P = Sigma_w_init;
-  arma::mat v = arma::zeros<arma::mat>(n, t);
-  arma::mat Fi = arma::zeros<arma::mat>(n * t, n);
-  arma::mat K = arma::zeros<arma::mat>(nvars * t, n);
+  arma::mat P = P_init;
+  arma::mat v = y * 0;
+  arma::mat Fi = arma::zeros<arma::mat>(k * t, k);
+  arma::mat K = arma::zeros<arma::mat>(nvars * t, k);
   arma::mat L = arma::zeros<arma::mat>(nvars * t, nvars);
   for (int i = 0; i < t ; i++){
-    p1 = i * n;
-    p2 = (i + 1) * n - 1;
+    p1 = i * k;
+    p2 = (i + 1) * k - 1;
     pA1 = i * nvars;
     pA2 = (i + 1) * nvars - 1;
-    v.col(i) = ystar.col(i) - Z.rows(p1, p2) * a.col(i);
-    Fi.rows(p1, p2) = inv(Z.rows(p1, p2) * P * arma::trans(Z.rows(p1, p2)) + Sigma_v.rows(p1, p2));
-    K.rows(pA1, pA2) = B.rows(pA1, pA2) * P * arma::trans(Z.rows(p1, p2)) * Fi.rows(p1, p2);
-    L.rows(pA1, pA2) = B.rows(pA1, pA2) - K.rows(pA1, pA2) * Z.rows(p1, p2);
+    v.col(i) = ystar.col(i) - z.rows(p1, p2) * a.col(i);
+    Fi.rows(p1, p2) = arma::inv(z.rows(p1, p2) * P * arma::trans(z.rows(p1, p2)) + sigma_u.rows(p1, p2));
+    K.rows(pA1, pA2) = B.rows(pA1, pA2) * P * arma::trans(z.rows(p1, p2)) * Fi.rows(p1, p2);
+    L.rows(pA1, pA2) = B.rows(pA1, pA2) - K.rows(pA1, pA2) * z.rows(p1, p2);
     a.col(i + 1) = B.rows(pA1, pA2) * a.col(i) + K.rows(pA1, pA2) * v.col(i);
-    P = B.rows(pA1, pA2) * P * arma::trans(L.rows(pA1, pA2)) + Sigma_w.rows(pA1, pA2);
+    P = B.rows(pA1, pA2) * P * arma::trans(L.rows(pA1, pA2)) + sigma_v.rows(pA1, pA2);
   }
   
   arma::mat r = arma::zeros<arma::mat>(nvars, t);
   for (int i = (t - 1); i > 0; i--){
-    r.col(i - 1) = arma::trans(Z.rows(i * n, (i + 1) * n - 1)) * Fi.rows(i * n, (i + 1) * n - 1) * v.col(i) + arma::trans(L.rows(i * nvars, (i + 1) * nvars - 1)) * r.col(i);
+    r.col(i - 1) = arma::trans(z.rows(i * k, (i + 1) * k - 1)) * Fi.rows(i * k, (i + 1) * k - 1) * v.col(i) + arma::trans(L.rows(i * nvars, (i + 1) * nvars - 1)) * r.col(i);
   }
-  arma::vec r0 = arma::trans(Z.rows(0, n - 1)) * Fi.rows(0, n - 1) * v.col(0) + arma::trans(L.rows(0, nvars - 1)) * r.col(0);
+  arma::vec r0 = arma::trans(z.rows(0, k - 1)) * Fi.rows(0, k - 1) * v.col(0) + arma::trans(L.rows(0, nvars - 1)) * r.col(0);
   
-  arma::mat ahatstar = arma::zeros<arma::mat>(nvars, t + 1);
-  ahatstar.col(0) = a_init + Sigma_w_init * r0;
+  a.col(0) = a_init + P_init * r0;
   for (int i = 0; i < t; i++){
-    ahatstar.col(i + 1) = B.rows(i * nvars, (i + 1) * nvars - 1) * ahatstar.col(i) + Sigma_w.rows(i * nvars, (i + 1) * nvars - 1) * r.col(i);
+    a.col(i + 1) = B.rows(i * nvars, (i + 1) * nvars - 1) * a.col(i) + sigma_v.rows(i * nvars, (i + 1) * nvars - 1) * r.col(i);
   }
-  return ahatstar + aplus;
+  
+  // Step 3
+  return a + aplus;
 }

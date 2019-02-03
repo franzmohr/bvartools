@@ -1,57 +1,58 @@
 #' Vector Error Correction Model Input
 #' 
-#' The function produces the input for the estimation of a vector error correction (VEC) model.
+#' `gen_vec` produces the input for the estimation of a vector error correction (VEC) model.
 #' 
 #' @param data a time-series object of endogenous variables.
-#' @param p an integer for the lag order of the series (levels) in the VAR (default is `p = 2`).
+#' @param p an integer of the lag order of the series (levels) in the VAR.
 #' @param exogen an optional time-series object of external regressors.
-#' @param s an optional integer for the lag order of the exogenous variables of the series
-#' (levels) in the VAR (default is `q = 2`).
-#' @param const a character specifying whether a constant term enters the error correction term
-#' (`"restricted"`) or is `"unrestricted"`. If `NULL` (default) no constant term will be added.
-#' @param trend a character specifying whether a linear trend term enters the error correction term
-#' (`"restricted"`) or is `"unrestricted"`. If `NULL` (default) no trend term will be added.
+#' @param s an optional integer of the lag order of the exogenous variables of the series
+#' (levels) in the VAR.
+#' @param const a character specifying whether a constant term enters the error correction
+#' term (`"restricted"`) or the non-cointegration term as an `"unrestricted"` variable.
+#' If `NULL` (default) no constant term will be added.
+#' @param trend a character specifying whether a trend term enters the error correction
+#' term (`"restricted"`) or the non-cointegration term as an `"unrestricted"` variable.
+#' If `NULL` (default) no constant term will be added.
 #' @param seasonal a character specifying whether seasonal dummies should be included in the error
-#' correction term (`"restricted"`) or as `"unrestricted"` variables. If `NULL` (default) no
-#' seasonal terms will be added. The amount of dummies depends on the frequency of the time-series
-#' object provided in `data`. 
+#' correction term (`"restricted"`) or in the non-cointegreation term as `"unrestricted"` variables.
+#' If `NULL` (default) no seasonal terms will be added. The amount of dummy variables depends
+#' on the frequency of the time-series object provided in `data`.
 #' 
-#' @details The function produces the input matrices for the estimation of
-#' the vector error correction (VEC) model
-#' \deqn{\Delta y_t =  \Pi ECT_t + \sum_{i=1}^{p-1} \Gamma_i \Delta y_{t - i} + \sum_{i=0}^{s-1} \Upsilon_i \Delta x_{t - i} + C D_t + u_t,}
+#' @details The function produces the variable matrices of a vector error correction (VEC)
+#' model, which can also include exogenous variables:
+#' \deqn{\Delta y_t = \Pi w_t + \sum_{i=1}^{p-1} \Gamma_i \Delta y_{t - i} + 
+#' \sum_{i=0}^{s-1} \Upsilon_i \Delta x_{t - i} +
+#' C^{UR} d^{UR}_t + u_t,}
 #' where
 #' \eqn{\Delta y_t} is a \eqn{K \times 1} vector of differenced endogenous variables,
-#' \eqn{ECT_t} is a \eqn{K + M + N_{co} \times 1} vector of cointegration variables,
-#' \eqn{\Pi} is a \eqn{K \times K + M + N_{co}} matrix of cointegration parameters,
+#' \eqn{w_t} is a \eqn{(K + M + N^{R}) \times 1} vector of cointegration variables,
+#' \eqn{\Pi} is a \eqn{K \times (K + M + N^{R})} matrix of cointegration parameters,
 #' \eqn{\Gamma_i} is a \eqn{K \times K} coefficient matrix of endogenous variables,
 #' \eqn{\Delta x_t} is a \eqn{M \times 1} vector of differenced exogenous regressors,
 #' \eqn{\Upsilon_i} is a \eqn{K \times M} coefficient matrix of exogenous regressors,
-#' \eqn{d_t} is a \eqn{N \times 1} vector of deterministic terms, and
-#' \eqn{D} is a \eqn{K \times N} coefficient matrix of deterministic terms.
-#' \eqn{p} is the lag order of endogenous variables, \eqn{s} is the lag
-#' order of exogenous variables, and \eqn{u_t} is a \eqn{K \times 1} error term.
+#' \eqn{d^{UR}_t} is a \eqn{N \times 1} vector of deterministic terms, and
+#' \eqn{C^{UR}} is a \eqn{K \times N^{UR}} coefficient matrix of deterministic terms
+#' that do not enter the cointegration term.
+#' \eqn{p} is the lag order of endogenous variables and \eqn{s} is the lag
+#' order of exogenous variables of the corresponding VAR model.
+#' \eqn{u_t} is a \eqn{K \times 1} error term.
 #' 
-#' In matrix notation the above model can be written as
-#' \deqn{Y = \Pi ECT + \Gamma X + U,}
+#' In matrix notation the above model can be re-written as
+#' \deqn{Y = \Pi W + \Gamma X + U,}
 #' where
 #' \eqn{Y} is a \eqn{K \times T} matrix of differenced endogenous variables,
-#' \eqn{ECT} is a \eqn{K + M + N_{co} \times T} matrix of cointegration
-#' variables, \eqn{X} is a \eqn{K(p - 1) + Ms + N \times T} matrix of
-#' differenced regressor variables and unrestricted deterministic terms.
-#' \eqn{U} is a \eqn{K \times T} matrix of errors. The function `gen_vec`
-#' generates the matrices \eqn{Y}, \eqn{ECT} and \eqn{X}.
+#' \eqn{W} is a \eqn{(K + M + N^{R}) \times T} matrix of variables in the cointegration term,
+#' \eqn{X} is a \eqn{(K(p - 1) + Ms + N^{UR}) \times T} matrix of differenced regressor variables
+#' and unrestricted deterministic terms. \eqn{U} is a \eqn{K \times T} matrix of errors.
 #' 
-#' @return A list containing the following elements
-#' \item{Y}{A matrix of differenced dependent variables.}
-#' \item{ECT}{A matrix of regressor variables in levels and restricted
-#' deterministic terms.}
-#' \item{X}{A matrix of differenced regressor variables and unrestricted
-#' deterministic terms.}
+#' @return A list containing the following elements:
+#' \item{Y}{a matrix of differenced dependent variables.}
+#' \item{W}{a matrix of variables in the cointegration term.}
+#' \item{X}{a matrix of non-cointegration regressors.}
 #' 
 #' @references
 #' 
 #' Lütkepohl, H. (2007). \emph{New introduction to multiple time series analyis}. Berlin: Springer.
-#' 
 #' 
 #' @examples
 #' data("e6")
@@ -60,6 +61,15 @@
 #' 
 #' @export
 gen_vec <- function(data, p = 2, exogen = NULL, s = 2, const = NULL, trend = NULL, seasonal = NULL) {
+  if (!"ts" %in% class(data)) {
+    stop("Argument 'data' must be an object of class 'ts'.")
+  }
+  if (is.null(dimnames(data))) {
+    tsp_temp <- stats::tsp(data)
+    data <- stats::ts(as.matrix(data), class = c("mts", "ts", "matrix"))
+    stats::tsp(data) <- tsp_temp
+    dimnames(data)[[2]] <- "y"
+  }
   data_name <- dimnames(data)[[2]]
   k <- NCOL(data)
   
@@ -72,6 +82,15 @@ gen_vec <- function(data, p = 2, exogen = NULL, s = 2, const = NULL, trend = NUL
   n_ect <- k
   
   if (!is.null(exogen)) {
+    if (!"ts" %in% class(exogen)) {
+      stop("Argument 'exogen' must be an object of class 'ts'.")
+    }
+    if (is.null(dimnames(exogen))) {
+      tsp_temp <- stats::tsp(exogen)
+      exogen <- stats::ts(as.matrix(exogen), class = c("mts", "ts", "matrix"))
+      stats::tsp(exogen) <- tsp_temp
+      dimnames(exogen)[[2]] <- "x"
+    }
     exog_name <- dimnames(exogen)[[2]]
     temp <- cbind(temp, stats::lag(exogen, -1))
     temp_name <- c(temp_name, paste("l.", exog_name, sep = ""))
@@ -142,7 +161,7 @@ gen_vec <- function(data, p = 2, exogen = NULL, s = 2, const = NULL, trend = NUL
       warning("The frequency of the provided data is 1. No seasonal dummmies are generated.")
     } else {
       pos <- which(floor(stats::time(temp)) == stats::time(temp))[1]
-      pos <- rep(1:4, 2)[pos:(pos + (freq - 2))]
+      pos <- rep(1:freq, 2)[pos:(pos + (freq - 2))]
       seas <- NULL
       s_name <- NULL
       for (i in 1:3) {
@@ -166,13 +185,19 @@ gen_vec <- function(data, p = 2, exogen = NULL, s = 2, const = NULL, trend = NUL
   }
   
   temp <- cbind(y, ect, x)
-  dimnames(temp)[[2]] <- c(y_names, ect_names, x_names)
+
+  y <- matrix(t(temp[, 1:k]), k, dimnames = list(y_names, NULL))
+  ect <- matrix(t(temp[, k + 1:n_ect]), n_ect,
+                dimnames = list(ect_names, NULL))
+  if (length(x_names) > 0) {
+    x <- matrix(t(temp[, -(1:(k + n_ect))]), length(x_names),
+                dimnames = list(x_names, NULL)) 
+  } else {
+    x <- NULL
+  }
   
-  y <- t(temp[, 1:k])
-  ect <- t(temp[, k + 1:n_ect])
-  x <- t(temp[, -(1:(k + n_ect))])
   result <- list("Y" = y,
-                 "ECT" = ect,
+                 "W" = ect,
                  "X" = x)
   return(result)
 }

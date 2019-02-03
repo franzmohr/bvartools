@@ -4,60 +4,90 @@
 \alias{bvec}
 \title{Bayesian Vector Error Correction Objects}
 \usage{
-bvec(y = NULL, ect = NULL, x = NULL, A0 = NULL, alpha = NULL,
-  beta = NULL, Pi = NULL, Gamma = NULL, Ypsilon = NULL, D = NULL,
-  Sigma = NULL, LL = NULL)
+bvec(data = NULL, exogen = NULL, y = NULL, w = NULL, x = NULL,
+  alpha = NULL, beta = NULL, Pi = NULL, Pi_x = NULL, Pi_d = NULL,
+  A0 = NULL, Gamma = NULL, Upsilon = NULL, C = NULL,
+  Sigma = NULL)
 }
 \arguments{
-\item{y}{a \eqn{k x T} matrix of differenced dependent variables.}
+\item{data}{the original time-series object of endogenous variables.}
 
-\item{ect}{a matrix of cointegrating variables.}
+\item{exogen}{the original time-series object of unmodelled variables.}
 
-\item{x}{a matrix of differenced regressors.}
+\item{y}{a \eqn{K \times T} matrix of differenced endogenous variables,
+usually, a result of a call to \code{\link{gen_vec}}.}
 
-\item{A0}{a \eqn{k^2 x S} matrix of structural coefficients, where \eqn{S} is the
-total amount of MCMC draws.}
+\item{w}{a \eqn{(K + M + N^{R}) \times T} matrix of variables in the
+cointegration term, usually, a result of a call to \code{\link{gen_vec}}.}
 
-\item{alpha}{a matrix of MCMC draws.}
+\item{x}{a \eqn{(K(p - 1) + Ms + N^{UR}) \times T} matrix of differenced regressors
+of \eqn{y} and \eqn{x}, and unrestricted deterministic terms, usually,
+a result of a call to \code{\link{gen_vec}}.}
 
-\item{beta}{a matrix of MCMC draws.}
+\item{alpha}{a \eqn{Kr \times S} matrix of MCMC coefficient draws of the loading matrix \eqn{\alpha}.}
 
-\item{Pi}{a matrix of MCMC draws.}
+\item{beta}{a \eqn{((K + M + N^{R})r) \times S} matrix of MCMC coefficient draws of cointegration matrix \eqn{\beta}.}
 
-\item{Gamma}{a matrix of MCMC draws.}
+\item{Pi}{a \eqn{K^2 \times S} matrix of MCMC coefficient draws of endogenous varaibles in the cointegration matrix.}
 
-\item{Ypsilon}{a matrix of MCMC draws.}
+\item{Pi_x}{a \eqn{KM \times S} matrix of MCMC coefficient draws of unmodelled, non-deterministic variables in the cointegration matrix.}
 
-\item{D}{a matrix of MCMC draws.}
+\item{Pi_d}{a \eqn{KN^{R} \times S} matrix of MCMC coefficient draws of restricted deterministic terms.}
 
-\item{Sigma}{a matrix of MCMC draws.}
+\item{A0}{a \eqn{K^2 \times S} matrix of MCMC coefficient draws of structural parameters.}
 
-\item{LL}{a matrix of MCMC draws.}
+\item{Gamma}{a \eqn{(p-1)K^2 \times S} matrix of MCMC coefficient draws of differenced lagged endogenous variables.}
+
+\item{Upsilon}{an \eqn{sMK \times S} matrix of MCMC coefficient draws of differenced unmodelled variables.}
+
+\item{C}{an \eqn{KN^{UR} \times S} matrix of MCMC coefficient draws of unrestricted deterministic terms.}
+
+\item{Sigma}{a \eqn{K^2 \times S} matrix of variance-covariance MCMC draws.}
 }
 \value{
-A list containing the following elements:
-\item{y}{a \eqn{n x T} matrix.}
-\item{ect}{error correction term.}
-\item{x}{a \eqn{pn + qm x T} matrix.}
-\item{A0}{a \eqn{D x pn^2} `mcmc` object of structural parameters draws.}
-\item{alpha}{a `mcmc` object of loading matrix.}
-\item{beta}{a `mcmc` object of cointegration matrix.}
-\item{Pi}{a `mcmc` object of cointegration matrix.}
-\item{Gamma}{a \eqn{D x pn^2} `mcmc` object of lagged AR coefficient draws.}
-\item{Ypsilon}{a \eqn{D x pn^2} `mcmc` object of contemporanesous and lagged exogenous coefficient draws.}
-\item{D}{a \eqn{D x dn} `mcmc` object of deterministic terms.}
-\item{Sigma}{a \eqn{D x n^2} `mcmc` object of variance-covariance draws.}
-\item{LL}{a \eqn{D x t} `mcmc` object of log-likelihood draws.}
+An object of class "gvec" containing the following components, if specified:
+\item{data}{the original time-series object of endogenous variables.}
+\item{exogen}{the original time-series object of unmodelled variables.}
+\item{y}{a \eqn{K \times T} matrix of differenced endogenous variables.}
+\item{w}{a \eqn{(K + M + N^{R}) \times T} matrix of variables in the cointegration term.}
+\item{x}{a \eqn{((p - 1)K + sM + N^{UR}) \times T} matrix of differenced regressor variables and
+unrestricted deterministic terms.}
+\item{A0}{an \eqn{S \times K^2} `mcmc` object of coefficient draws of structural parameters.}
+\item{alpha}{an \eqn{S \times Kr} `mcmc` object of coefficient draws of loading parameters.}
+\item{beta}{an \eqn{S \times ((K + M + N^{R})r)} `mcmc` object of coefficient draws of cointegration parameters.}
+\item{Pi}{an \eqn{S \times K^2} `mcmc` object of coefficient draws of endogenous variables in the cointegration matrix.}
+\item{Pi_x}{an \eqn{S \times KM} `mcmc` object of coefficient draws of unmodelled, non-deterministic variables in the cointegration matrix.}
+\item{Pi_d}{an \eqn{S \times KN^{R}} `mcmc` object of coefficient draws of unrestricted deterministic variables in the cointegration matrix.}
+\item{Gamma}{an \eqn{S \times (p-1)K^2} `mcmc` object of coefficient draws of differenced lagged endogenous variables.}
+\item{Upsilon}{an \eqn{S \times sMK} `mcmc` object of coefficient draws of differenced unmodelled variables.}
+\item{C}{an \eqn{S \times KN^{UR}} `mcmc` object of coefficient draws of deterministic terms.}
+\item{Sigma}{an \eqn{S \times K^2} `mcmc` object of variance-covariance draws.}
 }
 \description{
-The function `bvec` is used to create objects of class "bvec".
+`bvec` is used to create objects of class "bvec".
 }
 \details{
-The function collects the output of a Gibbs sampler in a standardised object,
-which can be used as input for further analyis such as forecasting and impulse
-response analysis.
+For the VECX model
+\deqn{A_0 \Delta y_t = \Pi^{+} \begin{pmatrix} y_{t-1} \\ x_{t-1} \\ d^{R}_{t-1} \end{pmatrix} +
+\sum_{i = 1}^{p-1} \Gamma_i \Delta y_{t-i} +
+\sum_{i = 0}^{s-1} \Upsilon_i \Delta x_{t-i} +
+C^{UR} d^{UR}_t + u_t}
+the function collects the S draws of a Gibbs sampler (after the burn-in phase) in a standardised object,
+where \eqn{\Delta y_t} is a K-dimensional vector of differenced endogenous variables
+and \eqn{A_0} is a \eqn{K \times K} matrix of structural coefficients.
+\eqn{\Pi^{+} = \left[ \Pi, \Pi^{x}, \Pi^{d} \right]} is
+the coefficient matrix of the error correction term, where
+\eqn{y_{t-1}}, \eqn{x_{t-1}} and \eqn{d^{R}_{t-1}} are the first lags of endogenous,
+exogenous variables in levels and restricted deterministic terms, respectively.
+\eqn{\Pi}, \eqn{\Pi^{x}}, and \eqn{\Pi^{d}} are the corresponding coefficient matrices, respectively.
+\eqn{\Gamma_i} is a coefficient matrix of lagged differenced endogenous variabels.
+\eqn{\Delta x_t} is an M-dimensional vector of unmodelled, non-deterministic variables
+and \eqn{\Upsilon_i} its corresponding coefficient matrix. \eqn{d_t} is an
+\eqn{N^{UR}}-dimensional vector of unrestricted deterministics and \eqn{C^{UR}}
+the corresponding coefficient matrix.
+\eqn{u_t} is an error term with \eqn{u_t \sim N(0, \Sigma_u)}.
 
-The notation corresponds to the following model
-\deqn{y_t = \Pi ECT_{t} +  \sum_{i=1}^p Gamma_i y_{t-i} + \sum_{i=0}^s Ypsilon_i x_{t-i} + A_0 u_t,}
-with \eqn{\Pi = \alpha \beta'} and \eqn{u_t \sim \Sigma}.
+The draws of the different coefficient matrices provided in `alpha`, `beta`, `Pi`,
+`Pi_x`, `Pi_d`, `A0`, `Gamma`, `Ypsilon`, `C` and `Sigma` have to correspond to the
+same MCMC iteration.
 }

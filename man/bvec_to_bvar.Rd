@@ -7,11 +7,11 @@
 bvec_to_bvar(object)
 }
 \arguments{
-\item{object}{an object of class `bvec`.}
+\item{object}{an object of class "bvec".}
 }
 \value{
-An object of class `bvar`.
+An object of class "bvar".
 }
 \description{
-An object of class `bvec`` is transformed to a VAR in level presentation.
+An object of class "bvec" is transformed to a VAR in level representation.
 }

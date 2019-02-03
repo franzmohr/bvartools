@@ -1,10 +1,49 @@
 #' bvartools: Functions for Bayesian Inference of Vector Autoregressive Models
 #' 
-#' A collection of R and C++ functions, which assist in the set-up of Gibbs samplers for the analysis of vector autoregressive (VAR) models.
+#' A collection of R and C++ functions, which assist in the set-up of Gibbs samplers for
+#' the analysis of vector autoregressive (VAR) models.
+#' 
+#' The package `bvartools` implements some common functions used for Bayesian
+#' inference for mulitvariate time series models. It should give researchers
+#' maximum freedom in setting up a Gibbs sampler in R and keep calculation time
+#' limited at the same time. This is achieved by implementing posterior simulation
+#' functions in C++. Its main features are
+#' \itemize{
+#' \item Posterior simulation functions, which are written in C++ for faster calculation
+#' \item The `bvar` and `bvec` function collects the output of a Gibbs sampler in standardised objects, which can be used for further analyses
+#' \item Functions for further analysis such as `irf` for impulse response analysis and `predict` for forecasting.
+#' }
+#' 
 #' 
 #' @author Franz X. Mohr
 #' @docType package
 #' @name bvartools
+#' 
+#'
+#' @references
+#' 
+#' Durbin, J., & Koopman, S. J. (2002). A simple and efficient simulation smoother for
+#' state space time series analysis. \emph{Biometrika, 89}(3), 603--615.
+#' \url{https://www.jstor.org/stable/4140605}
+#' 
+#' George, E. I., Sun, D., & Ni, S. (2008). Bayesian stochastic search for VAR model
+#' restrictions. \emph{Journal of Econometrics, 142}(1), 553--580.
+#' \url{https://doi.org/10.1016/j.jeconom.2007.08.017}
+#' 
+#' Koop, G, & Korobilis, D. (2010), Bayesian multivariate time series Methods for empirical
+#' macroeconomics, \emph{Foundations and Trends in Econometrics, 3}(4), 267--358.
+#' \url{https://doi.org/10.1016/10.1561/0800000013}
+#' 
+#' Koop, G., León-González, R., & Strachan R. W. (2010). Efficient posterior
+#' simulation for cointegrated models with priors on the cointegration space.
+#' \emph{Econometric Reviews, 29}(2), 224--242.
+#' \url{https://doi.org/10.1080/07474930903382208}
+#' 
+#' Korobilis, D. (2013). VAR forecasting using Bayesian variable selection.
+#' \emph{Journal of Applied Econometrics, 28}(2), 204--230.
+#' \url{https://doi.org/10.1002/jae.1271}
+#' 
+#' Lütkepohl, H. (2007). \emph{New introduction to multiple time series analyis}. Berlin: Springer.
 #' 
 #' @useDynLib bvartools, .registration = TRUE
 #' @importFrom Rcpp sourceCpp

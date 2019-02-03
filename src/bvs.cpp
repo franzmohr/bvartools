@@ -3,35 +3,46 @@
 
 //' Bayesian Variable Selection
 //' 
-//' Produces a draw of coefficients with a Minnesota Prior.
+//' \code{bvs} employs Bayesian variable selection as proposed by Korobilis (2013)
+//' to produce a vector of inclusion parameters for the coefficient matrix
+//' of a VAR model.
 //' 
-//' @param y a \eqn{n x T} matrix containing the time series of the dependent variable.
-//' @param Z a \eqn{nT x m} matrix containing the time series of the explanatory variables.
-//' @param a a \eqn{m x 1} or \eqn{m x T} matrix of parameter values for a model with
-//' constant or time-varying coefficients, respectively.
-//' @param Gamma a \eqn{m x 1} vector of inclusion parameters.
-//' @param Sigma_i The inverse of the \eqn{n x n} variance-covariance matrix.
-//' @param pos_res an integer vector specifying the paramters for which BVS should be applied.
-//' @param lpr_prior_0 a \eqn{m x 1} vector of log inclusion probabilities, i.e. \eqn{ln(\pi)}.
-//' @param lpr_prior_1 a \eqn{m x 1} vector of log inclusion probabilities, i.e. \eqn{ln(1 - \pi)}.
+//' @param y a \eqn{K \times T} matrix of the endogenous variables.
+//' @param z a \eqn{KT \times M} matrix of explanatory variables.
+//' @param a an M-dimensional vector of parameter draws. If time varying parameters are used,
+//' an \eqn{M \times T} coefficient matrix can be provided.
+//' @param lambda an \eqn{M \times M} inclusion matrix that should be updated.
+//' @param sigma_i the inverse variance-covariance matrix. If the variance-covariance matrix
+//' is time varying, a \eqn{KT \times K} matrix can be provided.
+//' @param prob_prior an M-dimensional vector of prior inclusion probabilities.
+//' @param include an integer vector specifying the positions of variables, which should be
+//' included in the BVS algorithm. If \code{NULL} (default), BVS will be applied to all variables.
 //' 
-//' @details For the model
-//' \deqn{y_t = Z_t \Gamma a_t + v_t,}
-//' where \eqn{v_t \sim N(0, \Sigma)} the function produces of a draw of the inclusion
-//' parameters \eqn{\gamma_i}.
+//' @details The function employs Bayesian variable selection as proposed
+//' by Korobilis (2013) to produce a vector of inclusion parameters, which are
+//' the diagonal elements of the inclusion matrix \eqn{\Lambda} for the VAR model
+//' \deqn{y_t = Z_t \Lambda a_t + u_t,}
+//' where \eqn{u_t \sim N(0, \Sigma_{t})}.
+//' \eqn{y_t} is a K-dimensional vector of endogenous variables and
+//' \eqn{Z_t = x_t^{\prime} \otimes I_K} is a \eqn{K \times M} matrix of regressors with
+//' \eqn{x_t} as a vector of regressors.
 //' 
-//' @return A \eqn{m x 1} vector of inclusion parameters.
+//' @return A vector of inclusion parameters.
 //' 
 //' @references
 //' 
-//' Korobilis, D. (2013). VAR forecasting using Bayesian variable selection. \emph{Journal of Applied Econometrics}, 28(2), 204--230.
+//' Korobilis, D. (2013). VAR forecasting using Bayesian variable selection. \emph{Journal of Applied Econometrics, 28}(2), 204--230.
 //' 
 // [[Rcpp::export]]
-arma::mat bvs(arma::mat y, arma::mat Z, arma::mat a, arma::mat Gamma, arma::mat Sigma_i, arma::vec pos_res, arma::vec lpr_prior_0, arma::vec lpr_prior_1)
+arma::mat bvs(arma::mat y, arma::mat z, arma::mat a, arma::mat lambda, arma::mat sigma_i,
+              arma::vec prob_prior, Rcpp::Nullable<Rcpp::IntegerVector> include = R_NilValue)
 {
-  int n = y.n_rows;
+  arma::vec lpr_prior_0 = arma::log(1 - prob_prior);
+  arma::vec lpr_prior_1 = arma::log(prob_prior);
+  int k = y.n_rows;
+  int m = a.n_rows;
   int t = y.n_cols;
-  int nomega = Sigma_i.n_rows;
+  int nomega = sigma_i.n_rows;
   
   bool const_par = true;
   if (a.n_cols > 1){
@@ -39,65 +50,75 @@ arma::mat bvs(arma::mat y, arma::mat Z, arma::mat a, arma::mat Gamma, arma::mat 
   }
   
   bool sv = false;
-  if (nomega > n) {
+  if (nomega > k) {
     sv = true;
   }
   
-  arma::mat S_i = arma::zeros<arma::mat>(n * t, n * t);
+  arma::mat S_i = arma::zeros<arma::mat>(k * t, k * t);
   if (sv) {
     for (int i = 0; i < t; i++) {
-      S_i.submat(i * n, i * n, (i + 1) * n - 1, (i + 1) * n - 1 ) = Sigma_i.rows(i * n, (i + 1) * n - 1);
+      S_i.submat(i * k, i * k, (i + 1) * k - 1, (i + 1) * k - 1 ) = sigma_i.rows(i * k, (i + 1) * k - 1);
     }
   } else {
-    S_i = kron(Sigma_i, arma::eye<arma::mat>(t, t));  
+    S_i = kron(sigma_i, arma::eye<arma::mat>(t, t));  
   }
+  
   arma::vec yvec = vectorise(y);
   arma::vec g = arma::zeros<arma::vec>(1);
-  arma::mat AG = Gamma * a;
+  arma::mat AG = lambda * a;
   arma::mat theta0 = AG;
   arma::mat theta1 = AG;
-  arma::vec l0_res = arma::zeros<arma::vec>(n * t);
-  arma::vec l1_res = arma::zeros<arma::vec>(n * t);
+  arma::vec l0_res = arma::zeros<arma::vec>(k * t);
+  arma::vec l1_res = arma::zeros<arma::vec>(k * t);
   
   double l0 = 0;
   double l1 = 0;
   double bayes = 0;
   double bayes_rand = 0;
   
-  pos_res = shuffle(pos_res) - 1;
+  arma::vec pos_res(m);
+  for (int l = 0; l < m; l++) {
+    pos_res(l) = l;
+  }
+  arma::uvec ex;
+  if (include.isNotNull()) {
+    ex = Rcpp::as<arma::uvec>(include) - 1;
+    pos_res = pos_res.elem(ex);
+  }
+  
+  pos_res = shuffle(pos_res);
   int pos_size = size(pos_res)(0);
-  int k = 0;
-
+  int var = 0;
   for (int j = 0; j < pos_size; j++){
-    k = pos_res(j);
+    var = pos_res(j);
     g = log(arma::randu<arma::vec>(1));
-    if (Gamma(k, k) == 1 && g(0) > lpr_prior_0(k)){continue;}
-    if (Gamma(k, k) == 0 && g(0) > lpr_prior_1(k)){continue;}
-    if ((Gamma(k, k) == 1 && g(0) < lpr_prior_0(k)) || (Gamma(k, k) == 0 && g(0) < lpr_prior_1(k))){
+    if (lambda(var, var) == 1 && g(0) >= lpr_prior_1(var)){continue;}
+    if (lambda(var, var) == 0 && g(0) >= lpr_prior_0(var)){continue;}
+    if ((lambda(var, var) == 1 && g(0) < lpr_prior_1(var)) || (lambda(var, var) == 0 && g(0) < lpr_prior_0(var))){
       theta0 = AG;
       theta1 = AG;
-      theta0.row(k) = a.row(k);
+      theta1.row(var) = a.row(var);
       if (const_par) {
-        theta1.row(k) = 0;
-        l0_res = yvec - Z * theta0;
-        l1_res = yvec - Z * theta1;
+        theta0.row(var) = 0;
+        l0_res = yvec - z * theta0;
+        l1_res = yvec - z * theta1;
       } else {
-        theta1.row(k) = arma::zeros<arma::mat>(1, t);
+        theta0.row(var) = arma::zeros<arma::mat>(1, t);
         for (int i = 0; i < t; i++){
-          l0_res.rows(i * n, (i + 1) * n - 1) = yvec.rows(i * n, (i + 1) * n - 1) - Z.rows(i * n, (i + 1) * n - 1) * theta0.col(i);
-          l1_res.rows(i * n, (i + 1) * n - 1) = yvec.rows(i * n, (i + 1) * n - 1) - Z.rows(i * n, (i + 1) * n - 1) * theta1.col(i);
+          l0_res.rows(i * k, (i + 1) * k - 1) = yvec.rows(i * k, (i + 1) * k - 1) - z.rows(i * k, (i + 1) * k - 1) * theta0.col(i);
+          l1_res.rows(i * k, (i + 1) * k - 1) = yvec.rows(i * k, (i + 1) * k - 1) - z.rows(i * k, (i + 1) * k - 1) * theta1.col(i);
         }
       }
-      l0 = -.5 * arma::as_scalar(trans(l0_res) * S_i * l0_res) + arma::as_scalar(lpr_prior_0(k));
-      l1 = -.5 * arma::as_scalar(trans(l1_res) * S_i * l1_res) + arma::as_scalar(lpr_prior_1(k));
-      bayes = l0 - l1;
+      l0 = -.5 * arma::as_scalar(trans(l0_res) * S_i * l0_res) + arma::as_scalar(lpr_prior_0(var));
+      l1 = -.5 * arma::as_scalar(trans(l1_res) * S_i * l1_res) + arma::as_scalar(lpr_prior_1(var));
+      bayes = l1 - l0;
       bayes_rand = log(arma::as_scalar(arma::randu<arma::vec>(1)));
       if (bayes >= bayes_rand){
-        Gamma(k, k) = 1;
+        lambda(var, var) = 1;
       } else {
-        Gamma(k, k) = 0;
+        lambda(var, var) = 0;
       }
     }
   }
-  return Gamma;
+  return lambda;
 }

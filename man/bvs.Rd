@@ -4,38 +4,44 @@
 \alias{bvs}
 \title{Bayesian Variable Selection}
 \usage{
-bvs(y, Z, a, Gamma, Sigma_i, pos_res, lpr_prior_0, lpr_prior_1)
+bvs(y, z, a, lambda, sigma_i, prob_prior, include = NULL)
 }
 \arguments{
-\item{y}{a \eqn{n x T} matrix containing the time series of the dependent variable.}
+\item{y}{a \eqn{K \times T} matrix of the endogenous variables.}
 
-\item{Z}{a \eqn{nT x m} matrix containing the time series of the explanatory variables.}
+\item{z}{a \eqn{KT \times M} matrix of explanatory variables.}
 
-\item{a}{a \eqn{m x 1} or \eqn{m x T} matrix of parameter values for a model with
-constant or time-varying coefficients, respectively.}
+\item{a}{an M-dimensional vector of parameter draws. If time varying parameters are used,
+an \eqn{M \times T} coefficient matrix can be provided.}
 
-\item{Gamma}{a \eqn{m x 1} vector of inclusion parameters.}
+\item{lambda}{an \eqn{M \times M} inclusion matrix that should be updated.}
 
-\item{Sigma_i}{The inverse of the \eqn{n x n} variance-covariance matrix.}
+\item{sigma_i}{the inverse variance-covariance matrix. If the variance-covariance matrix
+is time varying, a \eqn{KT \times K} matrix can be provided.}
 
-\item{pos_res}{an integer vector specifying the paramters for which BVS should be applied.}
+\item{prob_prior}{an M-dimensional vector of prior inclusion probabilities.}
 
-\item{lpr_prior_0}{a \eqn{m x 1} vector of log inclusion probabilities, i.e. \eqn{ln(\pi)}.}
-
-\item{lpr_prior_1}{a \eqn{m x 1} vector of log inclusion probabilities, i.e. \eqn{ln(1 - \pi)}.}
+\item{include}{an integer vector specifying the positions of variables, which should be
+included in the BVS algorithm. If \code{NULL} (default), BVS will be applied to all variables.}
 }
 \value{
-A \eqn{m x 1} vector of inclusion parameters.
+A vector of inclusion parameters.
 }
 \description{
-Produces a draw of coefficients with a Minnesota Prior.
+\code{bvs} employs Bayesian variable selection as proposed by Korobilis (2013)
+to produce a vector of inclusion parameters for the coefficient matrix
+of a VAR model.
 }
 \details{
-For the model
-\deqn{y_t = Z_t \Gamma a_t + v_t,}
-where \eqn{v_t \sim N(0, \Sigma)} the function produces of a draw of the inclusion
-parameters \eqn{\gamma_i}.
+The function employs Bayesian variable selection as proposed
+by Korobilis (2013) to produce a vector of inclusion parameters, which are
+the diagonal elements of the inclusion matrix \eqn{\Lambda} for the VAR model
+\deqn{y_t = Z_t \Lambda a_t + u_t,}
+where \eqn{u_t \sim N(0, \Sigma_{t})}.
+\eqn{y_t} is a K-dimensional vector of endogenous variables and
+\eqn{Z_t = x_t^{\prime} \otimes I_K} is a \eqn{K \times M} matrix of regressors with
+\eqn{x_t} as a vector of regressors.
 }
 \references{
-Korobilis, D. (2013). VAR forecasting using Bayesian variable selection. \emph{Journal of Applied Econometrics}, 28(2), 204--230.
+Korobilis, D. (2013). VAR forecasting using Bayesian variable selection. \emph{Journal of Applied Econometrics, 28}(2), 204--230.
 }

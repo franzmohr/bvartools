@@ -3,186 +3,295 @@
 
 #' Bayesian Variable Selection
 #' 
-#' Produces a draw of coefficients with a Minnesota Prior.
+#' \code{bvs} employs Bayesian variable selection as proposed by Korobilis (2013)
+#' to produce a vector of inclusion parameters for the coefficient matrix
+#' of a VAR model.
 #' 
-#' @param y a \eqn{n x T} matrix containing the time series of the dependent variable.
-#' @param Z a \eqn{nT x m} matrix containing the time series of the explanatory variables.
-#' @param a a \eqn{m x 1} or \eqn{m x T} matrix of parameter values for a model with
-#' constant or time-varying coefficients, respectively.
-#' @param Gamma a \eqn{m x 1} vector of inclusion parameters.
-#' @param Sigma_i The inverse of the \eqn{n x n} variance-covariance matrix.
-#' @param pos_res an integer vector specifying the paramters for which BVS should be applied.
-#' @param lpr_prior_0 a \eqn{m x 1} vector of log inclusion probabilities, i.e. \eqn{ln(\pi)}.
-#' @param lpr_prior_1 a \eqn{m x 1} vector of log inclusion probabilities, i.e. \eqn{ln(1 - \pi)}.
+#' @param y a \eqn{K \times T} matrix of the endogenous variables.
+#' @param z a \eqn{KT \times M} matrix of explanatory variables.
+#' @param a an M-dimensional vector of parameter draws. If time varying parameters are used,
+#' an \eqn{M \times T} coefficient matrix can be provided.
+#' @param lambda an \eqn{M \times M} inclusion matrix that should be updated.
+#' @param sigma_i the inverse variance-covariance matrix. If the variance-covariance matrix
+#' is time varying, a \eqn{KT \times K} matrix can be provided.
+#' @param prob_prior an M-dimensional vector of prior inclusion probabilities.
+#' @param include an integer vector specifying the positions of variables, which should be
+#' included in the BVS algorithm. If \code{NULL} (default), BVS will be applied to all variables.
 #' 
-#' @details For the model
-#' \deqn{y_t = Z_t \Gamma a_t + v_t,}
-#' where \eqn{v_t \sim N(0, \Sigma)} the function produces of a draw of the inclusion
-#' parameters \eqn{\gamma_i}.
+#' @details The function employs Bayesian variable selection as proposed
+#' by Korobilis (2013) to produce a vector of inclusion parameters, which are
+#' the diagonal elements of the inclusion matrix \eqn{\Lambda} for the VAR model
+#' \deqn{y_t = Z_t \Lambda a_t + u_t,}
+#' where \eqn{u_t \sim N(0, \Sigma_{t})}.
+#' \eqn{y_t} is a K-dimensional vector of endogenous variables and
+#' \eqn{Z_t = x_t^{\prime} \otimes I_K} is a \eqn{K \times M} matrix of regressors with
+#' \eqn{x_t} as a vector of regressors.
 #' 
-#' @return A \eqn{m x 1} vector of inclusion parameters.
+#' @return A vector of inclusion parameters.
 #' 
 #' @references
 #' 
-#' Korobilis, D. (2013). VAR forecasting using Bayesian variable selection. \emph{Journal of Applied Econometrics}, 28(2), 204--230.
+#' Korobilis, D. (2013). VAR forecasting using Bayesian variable selection. \emph{Journal of Applied Econometrics, 28}(2), 204--230.
 #' 
-bvs <- function(y, Z, a, Gamma, Sigma_i, pos_res, lpr_prior_0, lpr_prior_1) {
-    .Call(`_bvartools_bvs`, y, Z, a, Gamma, Sigma_i, pos_res, lpr_prior_0, lpr_prior_1)
+bvs <- function(y, z, a, lambda, sigma_i, prob_prior, include = NULL) {
+    .Call(`_bvartools_bvs`, y, z, a, lambda, sigma_i, prob_prior, include)
 }
 
-#' Forecast Error Impulse Response
+#' Impulse Response
 #' 
-#' Produces a forecast error impulse response matrix of a vector autoregressive model.
+#' Produces different types of impulse responses.
 #' 
-#' @param A \eqn{n x np} matrix of coefficients, where \eqn{n} is the number of endogenous
+#' @param A \eqn{K \times Kp} matrix of coefficients, where \eqn{K} is the number of endogenous
 #' variables and \eqn{p} is the number of lags.
 #' @param h integer specifying the steps.
+#' @param type character specifying the type of the impulse response.
+#' @param impulse numeric specifying the position of the impulse variable.
+#' @param response numeric specifying the position of the response variable.
 #' 
-#' @details The function produces the moving average representation \eqn{\Phi_i} for the model
-#' \deqn{y_t = \sum_{i}^{p} A_i y_{t - i} + \epsilon_{t}}
-#' by recursions
-#' \deqn{\Phi_i = \sum_{j = 1}^{i} \Phi_{i - j} A_j}
-#' for \eqn{i = 1, 2, ...} and starting with \eqn{\Phi_0 = I_K}.
+#' @details The function produces different types of impulse responses for the VAR model
+#' \deqn{A_0 y_t = \sum_{i = 1}^{p} A_{i} y_{t-i} + u_t,}
+#' with \eqn{u_t \sim N(0, \Sigma)}.
 #' 
-#' @return a \eqn{nh x n} matrix.
+#' Forecast error impulse responses \eqn{\Phi_i} are obtained by recursions
+#' \deqn{\Phi_i = \sum_{j = 1}^{i} \Phi_{i-j} A_j,   i = 1, 2,...,}
+#' with \eqn{\Phi_0 = I_K}.
 #' 
-feir <- function(A, h = 5L) {
-    .Call(`_bvartools_feir`, A, h)
+#' Orthogonalised impulse responses \eqn{\Theta^o_i} are calculated as \eqn{\Theta^o_i = \Phi_i P,}
+#' where P is the lower triangular Choleski decomposition of \eqn{\Sigma}.
+#' 
+#' Structural impulse responses \eqn{\Theta^s_i} are calculated as \eqn{\Theta^s_i = \Phi_i A_0^{-1}}.
+#' 
+#' Generalised impulse responses for variable \eqn{j}, i.e. \eqn{\Theta^g_ji} are calculated as
+#' \eqn{\Theta^g_ji = \sigma_{jj}^{-1/2} \Phi_i \Sigma e_j}, where \eqn{\sigma_{jj}} is the variance
+#' of the \eqn{j^{th}} diagonal element of \eqn{\Sigma} and \eqn{e_i} is a selection vector containing
+#' one in its \eqn{j^{th}} element and zero otherwise.
+#' 
+#' @return A \eqn{K(h + 1) \times K} matrix.
+#' 
+#' @references
+#' 
+#' Lütkepohl, H. (2007). \emph{New introduction to multiple time series analyis}. Berlin: Springer.
+#' 
+ir <- function(A, h, type, impulse, response) {
+    .Call(`_bvartools_ir`, A, h, type, impulse, response)
 }
 
 #' Durbin and Koopman Simulation Smoother
 #' 
-#' The function is an implementation of the Kalman filter and backward smoothing
+#' An implementation of the Kalman filter and backward smoothing
 #' algorithm proposed by Durbin and Koopman (2002).
 #' 
-#' @param y a \eqn{n x T} matrix containing the time series of the dependent variable.
-#' @param Z a \eqn{nT x m} matrix containing the time series of the explanatory variables.
-#' @param Sigma_v a \eqn{n x n} or \eqn{nT x n} variance-covariance matrix.
-#' @param Sigma_w a \eqn{m x m} variance-covariance matrix of the transition equation.
-#' @param B a \eqn{m x m} autocorrelation function of the transition equation.
-#' @param a_init a \eqn{m x 1} vector of the initial values.
-#' @param Sigma_w_init a \eqn{m x m} variance-covariance matrix of the initial parameter values.
+#' @param y a \eqn{K \times T} matrix of endogenous variables.
+#' @param z a \eqn{KT \times M} matrix of explanatory variables.
+#' @param sigma_u the inverse of the constant \eqn{K \times K} error variance-covariance matrix.
+#' For time varying variance-covariance matrices a \eqn{KT \times K} can be specified.
+#' @param sigma_v the inverse of the constant \eqn{M \times M} coefficient variance-covariance matrix.
+#' For time varying variance-covariance matrices a \eqn{MT \times M} can be specified.
+#' @param B an \eqn{M \times M} autocorrelation matrix of the transition equation.
+#' @param a_init an M-dimensional vector of initial states.
+#' @param P_init an \eqn{M \times M} variance-covariance matrix of the initial states.
 #' 
-#' @details For the state space model with the measurement equation
-#' \deqn{y_t = Z_t a_t + v_t}
-#' and the transition equation 
-#' \deqn{a_{t+1} = B_t a_t + w_t,}
-#' where \eqn{v_t \sim N(0, \Sigma_{v_t})} and \eqn{w_t \sim N(0, \Sigma_{w_t})} the
-#' function produces a draw of the state vector \eqn{a_t} for \eqn{T = 1,...,T}.
+#' @details The function uses algorithm 2 from Durbin and Koopman (2002) to produce
+#' a draw of the state vector \eqn{a_t} for \eqn{t = 1,...,T} for a state space model
+#' with measurement equation
+#' \deqn{y_t = Z_t a_t + u_t}
+#' and transition equation 
+#' \deqn{a_{t + 1} = B_t a_{t} + v_t,}
+#' where \eqn{u_t \sim N(0, \Sigma_{u,t})} and \eqn{v_t \sim N(0, \Sigma_{v,t})}.
+#' \eqn{y_t} is a K-dimensional vector of endogenous variables and
+#' \eqn{Z_t = z_t^{\prime} \otimes I_K} is a \eqn{K \times M} matrix of regressors with
+#' \eqn{z_t} as a vector of regressors.
 #' 
-#' @return A \eqn{m x T} matrix of parameter values.
+#' The algorithm takes into account Jarociński (2015), where a possible missunderstanding
+#' in the implementation of the algorithm of Durbin and Koopman (2002) is pointed out. Following
+#' that note the function sets the mean of the initial state to zero in the first step of the algorithm.
+#' 
+#' @return A \eqn{M \times T+1} matrix of state vector draws.
 #' 
 #' @references
 #' 
-#' Durbin, J., & Koopman, S. J. (2002). A simple and efficient simulation smoother for state space time series analysis. \emph{Biometrika}, 89(3), 603--615.
+#' Durbin, J., & Koopman, S. J. (2002). A simple and efficient simulation smoother for
+#' state space time series analysis. \emph{Biometrika, 89}(3), 603--615.
+#' \url{https://www.jstor.org/stable/4140605}
 #' 
-kalman_dk <- function(y, Z, Sigma_v, Sigma_w, B, a_init, Sigma_w_init) {
-    .Call(`_bvartools_kalman_dk`, y, Z, Sigma_v, Sigma_w, B, a_init, Sigma_w_init)
+#' Jarociński, M. (2015). A note on implementing the Durbin and Koopman simulation
+#' smoother. \emph{Computational Statistics and Data Analysis, 91}, 1--3.
+#' \url{https://doi.org/10.1016/j.csda.2015.05.001}
+#' 
+kalman_dk <- function(y, z, sigma_u, sigma_v, B, a_init, P_init) {
+    .Call(`_bvartools_kalman_dk`, y, z, sigma_u, sigma_v, B, a_init, P_init)
 }
 
-#' Gaussian Log-Likelihood
+#' Posterior Draw for Cointegration Models
 #' 
-#' Calculates the log likelihood of a multivariate Gaussian process.
+#' Produces a draw of coefficients for cointegration models with a prior on
+#' the cointegration space as proposed in Koop et al. (2010) and a draw of
+#' non-cointegration coefficients from a normal density.
 #' 
-#' @param y an \eqn{n x T} matrix of residuals, where \eqn{n} is the number of
-#' variables and \eqn{T} is the total amount of observations.
-#' @param Sigma a constant \eqn{n x n} or time varying \eqn{nT x n} variance-covariance matrix.
-#' @param Sigma_i the inverse of Sigma.
-#' 
-#' @return A vector of log likelihoods for each period.
-#' 
-loglik_gauss <- function(y, Sigma, Sigma_i) {
-    .Call(`_bvartools_loglik_gauss`, y, Sigma, Sigma_i)
-}
-
-#' Posterior Draw of Cointegration Parameters
-#' 
-#' Produces a draw from a posterior density Koop et al. (2010).
-#' 
-#' @param y a \eqn{k \times T} matrix of differenced dependent variables.
-#' @param beta a \eqn{k_{ect} \times r} matrix of variables in the error correction term.
-#' @param ect a \eqn{k_{ect} \times T} matrix of regressor variables in levels and deterministic terms in the error correction term.
-#' @param x a \eqn{k_{x} \times T} matrix of differenced regressor variables and unrestriced deterministic terms.
-#' @param Sigma_i a \eqn{k \times k} variance-covariance matrix.
-#' @param Gamma_mu_prior a \eqn{kk_{x} \times 1} prior mean vector of non-cointegration coefficients.
-#' @param Gamma_V_i_prior a \eqn{kk_{x} \times kk_{x}} inverted prior covariance vector of non-cointegration coefficients.
+#' @param y a \eqn{K \times T} matrix of differenced endogenous variables.
+#' @param beta a \eqn{M \times r} cointegration matrix \eqn{\beta}.
+#' @param w a \eqn{M \times T} matrix of variables in the cointegration term.
+#' @param x  a \eqn{N \times T} matrix of differenced regressors and unrestricted deterministic terms.
+#' @param sigma_i an inverse of the \eqn{K \times K} variance-covariance matrix.
 #' @param v_i a numeric between 0 and 1 specifying the shrinkage.
-#' @param P_tau_i a \eqn{k_{ect} \times k_{ect}} inverted matrix specifying the central location of \eqn{sp(\beta)}.
-#' @param G_i a \eqn{k \times k} matrix.
+#' @param p_tau_i an inverted \eqn{M \times M} matrix specifying the central location of the cointegration space \eqn{sp(\beta)}.
+#' @param g_i a \eqn{K \times K} matrix.
+#' @param gamma_mu_prior a \eqn{KN \times 1} prior mean vector of non-cointegration coefficients.
+#' @param gamma_V_i_prior an inverted \eqn{KN \times KN} prior covariance matrix of non-cointegration coefficients.
 #' 
-#' @details The function produces a draw of coefficients for the model
-#' \deqn{\Delta y_t = \alpha \beta' ECT_{t} + \Gamma X_{t} + u_t,}
-#' where \eqn{\Delta y_t} is a \eqn{k \times 1} vector of differenced dependent variables,
-#' \eqn{\alpha} is a \eqn{k \times r} loading matrix,
-#' \eqn{\beta} is a \eqn{k_{ect} \times r} cointegration matrix,
-#' \eqn{ECT_t} is a \eqn{k_{ect} \times 1} vector of regressors in the error correction term,
-#' \eqn{\Gamma} is a \eqn{k \times k_{x}} matrix of non-cointegration parameters,
-#' \eqn{X_t} is a \eqn{k_{x} \times 1} vector of non-cointegration regressors,
-#' and \eqn{u_t} is a \eqn{k \times 1} error term.
+#' @details The function produces posterior draws of the coefficient
+#' matrices \eqn{\alpha}, \eqn{\beta} and \eqn{\Gamma} for the model
+#' \deqn{y_{t} = \alpha \beta^{\prime} w_{t-1} + \Gamma z_{t} + u_{t},}
+#' where \eqn{y_{t}} is a K-dimensional vector of differenced endogenous variables.
+#' \eqn{w_{t}} is an \eqn{M \times 1} vector of variables in the cointegration term,
+#' which include lagged values of endogenous and exogenous variables in levels and
+#' restricted deterministic terms. \eqn{z_{t}} is an N-dimensional vector of
+#' differenced endogenous and exogenous explanatory variabes as well as unrestricted
+#' deterministic terms. The error term is \eqn{u_t \sim \Sigma}.
 #' 
-#' @return A list containing the following elements:
-#' \item{alpha}{a draw of the \eqn{k \times r} loading matrix.}
-#' \item{beta}{a draw of the \eqn{k_{ect} \times r} cointegration matrix.}
-#' \item{Pi}{a draw of the \eqn{k \times k_{ect}} matrix \eqn{\Pi = \alpha \beta'}.}
-#' \item{Gamma}{a draw of the \eqn{k \times k_{x}} coefficient matrix for non-cointegration parameters.}
+#' Draws of the loading matrix \eqn{\alpha} are obtained using the prior on the cointegration space
+#' as proposed in Koop et al. (2010). The posterior covariance matrix is
+#' \deqn{\overline{V}_{\alpha} = \left[\left(v^{-1} (\beta^{\prime} P_{\tau}^{-1} \beta) \otimes G_{⁻1}\right) + \left(ZZ^{\prime} \otimes \Sigma^{-1} \right) \right]^{-1}}
+#' and the posterior mean by
+#' \deqn{\overline{\alpha} = \overline{V}_{\alpha} + vec(\Sigma^{-1} Y Z^{\prime}),}
+#' where \eqn{Y} is a \eqn{K \times T} matrix of differenced endogenous variables and
+#' \eqn{Z = \beta^{\prime} W} with \eqn{W} as an \eqn{M \times T} matrix of
+#' variables in the cointegration term.
+#' 
+#' For a given prior mean vector \eqn{\underline{\Gamma}} and prior covariance matrix \eqn{\underline{V_{\Gamma}}}
+#' the posterior covariance matrix of non-cointegration coefficients in \eqn{\Gamma} is obtained by
+#' \deqn{\overline{V}_{\Gamma} = \left[ \underline{V}_{\Gamma}^{-1} + \left(X X^{\prime} \otimes \Sigma^{-1} \right) \right]^{-1}}
+#' and the posterior mean by
+#' \deqn{\overline{\Gamma} = \overline{V}_{\Gamma} \left[ \underline{V}_{\Gamma}^{-1} \underline{\Gamma} + vec(\Sigma^{-1} Y X^{\prime}) \right],}
+#' where \eqn{X} is an \eqn{M \times T} matrix of
+#' explanatory variables, which do not enter the cointegration term.
+#' 
+#' Draws of the cointegration matrix \eqn{\beta} are obtained using the prior on the cointegration space
+#' as proposed in Koop et al. (2010). The posterior covariance matrix of the unrestricted cointegration
+#' matrix \eqn{B} is
+#' \deqn{\overline{V}_{B} = \left[\left(A^{\prime} G^{-1} A \otimes v^{-1} P_{\tau}^{-1} \right) + \left(A^{\prime} \Sigma^{-1} A \otimes WW^{\prime} \right) \right]^{-1}}
+#' and the posterior mean by
+#' \deqn{\overline{B} = \overline{V}_{B} + vec(W Y_{B}^{-1} \Sigma^{-1} A),}
+#' where \eqn{Y_{B} = Y - \Gamma X} and \eqn{A = \alpha (\alpha^{\prime} \alpha)^{-\frac{1}{2}}}.
+#' 
+#' The final draws of \eqn{\alpha} and \eqn{\beta} are calculated using
+#' \eqn{\beta = B (B^{\prime} B)^{-\frac{1}{2}}} and
+#' \eqn{\alpha = A (B^{\prime} B)^{\frac{1}{2}}}.
+#' 
+#' @return A named list containing the following elements:
+#' \item{alpha}{a draw of the \eqn{K \times r} loading matrix.}
+#' \item{beta}{a draw of the \eqn{M \times r} cointegration matrix.}
+#' \item{Pi}{a draw of the \eqn{K \times M} cointegration matrix \eqn{\Pi = \alpha \beta^{\prime}}.}
+#' \item{Gamma}{a draw of the \eqn{K \times N} coefficient matrix for non-cointegration parameters.}
 #' 
 #' @references
 #' 
 #' Koop, G., León-González, R., & Strachan R. W. (2010). Efficient posterior
 #' simulation for cointegrated models with priors on the cointegration space.
-#' \emph{Econometric Reviews}, 29(2), 224-242. \url{https://doi.org/10.1080/07474930903382208}
+#' \emph{Econometric Reviews, 29}(2), 224-242. \url{https://doi.org/10.1080/07474930903382208}
 #' 
-post_koop_2010 <- function(y, beta, ect, x, Sigma_i, Gamma_mu_prior, Gamma_V_i_prior, v_i, P_tau_i, G_i) {
-    .Call(`_bvartools_post_koop_2010`, y, beta, ect, x, Sigma_i, Gamma_mu_prior, Gamma_V_i_prior, v_i, P_tau_i, G_i)
+post_coint_kls <- function(y, beta, w, sigma_i, v_i, p_tau_i, g_i, x = NULL, gamma_mu_prior = NULL, gamma_V_i_prior = NULL) {
+    .Call(`_bvartools_post_coint_kls`, y, beta, w, sigma_i, v_i, p_tau_i, g_i, x, gamma_mu_prior, gamma_V_i_prior)
 }
 
-#' Posterior Draw from Normal Distribution
+#' Posterior Draw from a Normal Distribution
 #' 
-#' Produces a draw from a posterior density of a Gaussian process and normal prior.
+#' Produces a draw of coefficients from a normal posterior density.
 #' 
-#' @param y \eqn{n x T} matrix containing the time series of the dependent variable.
-#' @param x \eqn{k x T} matrix containing the time series of the explanatory variables.
-#' @param Sigma_i inverse of the \eqn{n x n} variance-covariance matrix.
-#' @param mu_prior \eqn{m x 1} numeric vector containing the prior mean of the coefficients.
-#' @param V_i_prior inverse of the \eqn{m x m} covariance matrix of the coefficients.
+#' @param y a \eqn{K \times T} matrix of endogenous variables.
+#' @param x an \eqn{M \times T} matrix of explanatory variables.
+#' @param sigma_i the inverse of the \eqn{K \times K} variance-covariance matrix.
+#' @param a_prior a \eqn{KM \times 1} numeric vector of prior means.
+#' @param v_i_prior the inverse of the \eqn{KM \times KM} prior covariance matrix.
 #' 
-#' @details The function produces a vectorised draw of the \eqn{n x k} coefficient
-#' matrix \eqn{A} of the model
-#' \deqn{y_{t} = A x_{t} a + \epsilon_{t},}
-#' where \eqn{y_{t}} is a \eqn{n x 1} vector of endogenous variables in period \eqn{t},
-#' \eqn{x_{t}} is a \eqn{k x 1} vector of explanatory variables, and the error term
-#' \eqn{\epsilon_{t}} is normally distributed with zero mean and variance-covariance
-#' matrix \eqn{\Sigma}. \eqn{k} is the number of explanatory variables and \eqn{m} it
-#' the total number of estimated coefficients.
+#' @details The function produces a vectorised posterior draw \eqn{a} of the
+#' \eqn{K \times M} coefficient matrix \eqn{A} for the model
+#' \deqn{y_{t} = A x_{t} + u_{t},}
+#' where \eqn{y_{t}} is a K-dimensional vector of endogenous variables,
+#' \eqn{x_{t}} is an M-dimensional vector of explanatory variabes
+#' and the error term is \eqn{u_t \sim \Sigma}.
 #' 
-#' @return A \eqn{m x 1} vector of coefficient values.
+#' For a given prior mean vector \eqn{\underline{a}} and prior covariance matrix \eqn{\underline{V}}
+#' the posterior covariance matrix is obtained by
+#' \deqn{\overline{V} = \left[ \underline{V}^{-1} + \left(X X^{\prime} \otimes \Sigma^{-1} \right) \right]^{-1}}
+#' and the posterior mean by
+#' \deqn{\overline{a} = \overline{V} \left[ \underline{V}^{-1} \underline{a} + vec(\Sigma^{-1} Y X^{\prime}) \right],}
+#' where \eqn{Y} is a \eqn{K \times T} matrix of the endogenous variables and \eqn{X} is an \eqn{M \times T} matrix of
+#' the explanatory variables.
 #' 
-post_normal <- function(y, x, Sigma_i, mu_prior, V_i_prior) {
-    .Call(`_bvartools_post_normal`, y, x, Sigma_i, mu_prior, V_i_prior)
+#' @return A vector.
+#' 
+#' @references
+#' 
+#' Lütkepohl, H. (2007). \emph{New introduction to multiple time series analyis}. Berlin: Springer.
+#' 
+post_normal <- function(y, x, sigma_i, a_prior, v_i_prior) {
+    .Call(`_bvartools_post_normal`, y, x, sigma_i, a_prior, v_i_prior)
 }
 
-#' Posterior Draw from Normal Distribution (SUR)
+#' Posterior Draw from a Normal Distribution
 #' 
-#' Produces a draw from a posterior density of a Gaussian process with normal prior
-#' using seemingly unlelated regression.
+#' Produces a draw of coefficients from a normal posterior density for
+#' a model with seemingly unrelated regresssions (SUR).
 #' 
-#' @param y \eqn{n x T} matrix containing the time series of the dependent variable.
-#' @param Z \eqn{nT x m} matrix containing the time series of the explanatory variables.
-#' @param Sigma_i inverse of the \eqn{n x n} or \eqn{nT x n} variance-covariance matrix.
-#' @param bprior \eqn{m x 1} numeric vector containing the prior mean of the coefficients.
-#' @param Vprior_i inverse of the \eqn{m x m} covariance matrix of the coefficients.
+#' @param y a \eqn{K \times T} matrix of endogenous variables.
+#' @param z a \eqn{KT \times M} matrix of explanatory variables.
+#' @param sigma_i the inverse of the constant \eqn{K \times K} error variance-covariance matrix.
+#' For time varying variance-covariance matrics a \eqn{KT \times K} can be specified.
+#' @param a_prior a \eqn{M x 1} numeric vector of prior means.
+#' @param v_i_prior the inverse of the \eqn{M x M} prior covariance matrix.
 #' 
-#' @details The function produces a draw of the \eqn{m x 1} coefficient vector \eqn{a}
-#' of the model
-#' \deqn{y_{t} = Z_{t} a + \epsilon_{t},}
-#' where \eqn{y_{t}} is a \eqn{n x 1} vector of endogenous variables in period \eqn{t},
-#' \eqn{Z_{t}} is a \eqn{n x mn} matrix of explanatory variables, and the error term
-#' \eqn{\epsilon_{t}} is normally distributed with zero mean and variance-covariance
-#' matrix \eqn{\Sigma_{t}}.
+#' @details The function produces a posterior draw of the coefficient vector \eqn{a} for the model
+#' \deqn{y_{t} = Z_{t} a + u_{t},}
+#' where \eqn{u_t \sim N(0, \Sigma_{t})}.
+#' \eqn{y_t} is a K-dimensional vector of endogenous variables and
+#' \eqn{Z_t = z_t^{\prime} \otimes I_K} is a \eqn{K \times KM} matrix of regressors with
+#' \eqn{z_t} as a vector of regressors.
 #' 
-#' @return A \eqn{m x 1} vector of coefficient values.
+#' For a given prior mean vector \eqn{\underline{a}} and prior covariance matrix \eqn{\underline{V}}
+#' the posterior covariance matrix is obtained by
+#' \deqn{\overline{V} = \left[ \underline{V}^{-1} + \sum_{t=1}^{T} Z_{t}^{\prime} \Sigma_{t}^{-1} Z_{t} \right]^{-1}}
+#' and the posterior mean by
+#' \deqn{\overline{a} = \overline{V} \left[ \underline{V}^{-1} \underline{a} + \sum_{t=1}^{T} Z_{t}^{\prime} \Sigma_{t}^{-1} y_{t}  \right].}
 #' 
-post_normal_sur <- function(y, Z, Sigma_i, bprior, Vprior_i) {
-    .Call(`_bvartools_post_normal_sur`, y, Z, Sigma_i, bprior, Vprior_i)
+#' @return A vector.
+#' 
+post_normal_sur <- function(y, z, sigma_i, a_prior, v_i_prior) {
+    .Call(`_bvartools_post_normal_sur`, y, z, sigma_i, a_prior, v_i_prior)
+}
+
+#' Stochastic Search Variable Selection
+#' 
+#' \code{ssvs} employs stochastic search variable selection as proposed by George et al. (2008)
+#' to produce a draw of the precision matrix of the coefficients in a VAR model.
+#' 
+#' @param a an M-dimensional vector of coefficient draws.
+#' @param tau0 an M-dimensional vector of prior standard deviations for restricted variables.
+#' @param tau1 an M-dimensional vector of prior standard deviations for unrestricted variables.
+#' @param prob_prior an M-dimensional vector of prior inclusion probabilites.
+#' @param include an integer vector specifying the positions of variables, which should be
+#' included in the SSVS algorithm. If \code{NULL} (default), SSVS will be applied to all variables.
+#' 
+#' @details The function employs stochastic search variable selection (SSVS) as proposed
+#' by George et al. (2008) to produce a draw of the diagonal inverse prior covariance matrix
+#' \eqn{\underline{V}^{-1}} and the corresponding vector of inclusion parameters \eqn{\lambda}
+#' of the vectorised coefficient matrix \eqn{a = vec(A)} for the VAR model
+#' \deqn{y_t = A x_t + u_t,}
+#' where \eqn{y_{t}} is a K-dimensional vector of endogenous variables,
+#' \eqn{x_{t}} is a vector of explanatory variabes
+#' and the error term is \eqn{u_t \sim \Sigma}.
+#' 
+#' @return A named list containing two components:
+#' \item{V_i}{an \eqn{M \times M} inverse prior covariance matrix.}
+#' \item{lambda}{an M-dimensional vector of inclusion parameters.}
+#' 
+#' @references
+#' 
+#' George, E. I., Sun, D., & Ni, S. (2008). Bayesian stochastic search for VAR model
+#' restrictions. \emph{Journal of Econometrics, 142}(1), 553--580.
+#' \url{https://doi.org/10.1016/j.jeconom.2007.08.017}
+#' 
+ssvs <- function(a, tau0, tau1, prob_prior, include = NULL) {
+    .Call(`_bvartools_ssvs`, a, tau0, tau1, prob_prior, include)
 }
 

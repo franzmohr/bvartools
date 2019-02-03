@@ -1,9 +1,10 @@
 ---
-title: "A Simple BVAR Estimatior"
+title: "A Simple Bayesian VAR Estimator"
 author: "Franz X. Mohr"
+date: "2019-02-04"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{A Simple BVAR Estimatior}
+  %\VignetteIndexEntry{A Simple Bayesian VAR Estimator}
   %\VignetteEngine{knitr::rmarkdown}
   \usepackage[utf8]{inputenc}
 ---
@@ -17,11 +18,7 @@ knitr::opts_chunk$set(
 
 ## Introduction
 
-This vignette provides the code to set up and estimate a basic Bayesian VAR (BVAR) model with the `bvartools` package.
-
-## Data
-
-To illustrate the estimation process the dataset E1 from Lütkepohl (2007) is used. It contains data on West German fixed investment, disposable income and consumption expenditures in billions of DM from 1960Q1 to 1982Q4.
+This vignette provides the code to set up and estimate a basic Bayesian VAR (BVAR) model with the `bvartools` package. To illustrate the estimation process the dataset E1 from Lütkepohl (2007) is used. It contains data on West German fixed investment, disposable income and consumption expenditures in billions of DM from 1960Q1 to 1982Q4.
 
 ```{r data, fig.align='center', fig.height=5, fig.width=4.5}
 library(bvartools)
@@ -55,9 +52,9 @@ round(A_freq, 3) # Round estimates and print
 ```
 
 ```{r}
-res_freq <- y - A_freq %*% x
-Sigma_freq <- tcrossprod(res_freq) / (ncol(y) - nrow(x))
-round(Sigma_freq * 10^4, 2)
+u_freq <- y - A_freq %*% x
+u_sigma_freq <- tcrossprod(u_freq) / (ncol(y) - nrow(x))
+round(u_sigma_freq * 10^4, 2)
 ```
 
 These are the same values as in Lütkepohl (2007).
@@ -67,47 +64,43 @@ These are the same values as in Lütkepohl (2007).
 ```{r flat prior}
 iter <- 15000 # Number of iterations of the Gibbs sampler
 burnin <- 5000 # Number of burn-in draws
+store <- iter - burnin
 
 t <- ncol(y) # Number of observations
 k <- nrow(y) # Number of endogenous variables
-nvars <- k * nrow(x) # Number of estimated coefficients
+m <- k * nrow(x) # Number of estimated coefficients
 
-# Set priors
-A_mu_prior <- matrix(0, nvars) # Vector of prior parameter means
-A_V_i_prior <- diag(0, nvars) # Inverse of the prior covariance matrix
+# Set (uninformative) priors
+a_mu_prior <- matrix(0, m) # Vector of prior parameter means
+a_v_i_prior <- diag(0, m) # Inverse of the prior covariance matrix
 
-Sigma_df_prior <- k # Prior degrees of freedom
-Sigma_V_prior <- diag(.00001, k) # Prior covariance matrix
-Sigma_df_post <- t + Sigma_df_prior # Posterior degrees of freedom
+u_sigma_df_prior <- 0 # Prior degrees of freedom
+u_sigma_scale_prior <- diag(0, k) # Prior covariance matrix
+u_sigma_df_post <- t + u_sigma_df_prior # Posterior degrees of freedom
 
 # Initial values
-Sigma_i_draw <- rWishart(1, Sigma_df_prior, solve(Sigma_V_prior))[,,1]
-Sigma_draw <- solve(Sigma_i_draw)
+u_sigma_i <- diag(.00001, k)
+u_sigma <- solve(u_sigma_i)
 
 # Data containers
-store <- iter - burnin
-draws_A <- matrix(NA, nvars, store)
-draws_Sigma <- matrix(NA, k^2, store)
-draws_LL <- matrix(NA, t, store)
+draws_a <- matrix(NA, m, store)
+draws_sigma <- matrix(NA, k^2, store)
 
 # Start Gibbs sampler
 for (draw in 1:iter) {
   # Draw conditional mean parameters
-  A_draw <- post_normal(y, x, Sigma_i_draw, A_mu_prior, A_V_i_prior)
+  a <- post_normal(y, x, u_sigma_i, a_mu_prior, a_v_i_prior)
   
   # Draw variance-covariance matrix
-  res <- y - matrix(A_draw, k) %*% x # Obtain residuals
-  Sigma_V_post <- solve(Sigma_V_prior + tcrossprod(res))
-  Sigma_i_draw <- rWishart(1, Sigma_df_post, Sigma_V_post)[,, 1]
-  Sigma_draw <- solve(Sigma_i_draw) # Invert Sigma_i to obtain Sigma
+  u <- y - matrix(a, k) %*% x # Obtain residuals
+  u_sigma_scale_post <- solve(u_sigma_scale_prior + tcrossprod(u))
+  u_sigma_i <- matrix(rWishart(1, u_sigma_df_post, u_sigma_scale_post)[,, 1], k)
+  u_sigma <- solve(u_sigma_i) # Invert Sigma_i to obtain Sigma
   
   # Store draws
   if (draw > burnin) {
-    draws_A[, draw - burnin] <- A_draw
-    draws_Sigma[, draw - burnin] <- Sigma_draw
-    
-    # Calculate Log-Likelihood
-    draws_LL[, draw - burnin] <- loglik_gauss(res, Sigma_draw, Sigma_i_draw)
+    draws_a[, draw - burnin] <- a
+    draws_sigma[, draw - burnin] <- u_sigma
   }
 }
 ```
@@ -115,7 +108,7 @@ for (draw in 1:iter) {
 Obtain point estimates as the mean of the parameter draws:
 
 ```{r}
-A <- rowMeans(draws_A) # Obtain means for every row
+A <- rowMeans(draws_a) # Obtain means for every row
 A <- matrix(A, k) # Transform mean vector into a matrix
 A <- round(A, 3) # Round values
 dimnames(A) <- list(dimnames(y)[[1]], dimnames(x)[[1]]) # Rename matrix dimensions
@@ -124,7 +117,7 @@ A # Print
 ```
 
 ```{r}
-Sigma <- rowMeans(draws_Sigma) # Obtain means for every row
+Sigma <- rowMeans(draws_sigma) # Obtain means for every row
 Sigma <- matrix(Sigma, k) # Transform mean vector into a matrix
 Sigma <- round(Sigma * 10^4, 2) # Round values
 dimnames(Sigma) <- list(dimnames(y)[[1]], dimnames(y)[[1]]) # Rename matrix dimensions
@@ -134,12 +127,23 @@ Sigma # Print
 
 The means of the coefficient draws are very close to the results of the frequentist estimatior.
 
-## `bvars` objects
+## `bvar` objects
 
-The `bvars` function can be used to collect relevant output of the Gibbs sampler into a standardised object, which can be used by further function such as `irf` to obtain impulse responses.
+The `bvar` function can be used to collect relevant output of the Gibbs sampler into a standardised object, which can be used by further functions such as `predict` to obtain forecasts or `irf` for impulse respons analysis.
 
 ```{r bvar-object}
-bvar_est <- bvar(y = y, x = x, A = draws_A, Sigma = draws_Sigma)
+bvar_est <- bvar(y = y, x = x, A = draws_a[1:18,],
+                 C = draws_a[19:21, ], Sigma = draws_sigma)
+```
+
+## Forecasts
+
+Forecasts can be obtained with the function `predict`. If the model contains deterministic terms, new values have to be provided in the argument `new_D`, which must be of the same length as the argument `n.ahead`.
+
+```{r forecasts, fig.width=5.5, fig.height=5.5}
+bvar_pred <- predict(bvar_est, n.ahead = 10, new_D = rep(1, 10))
+
+plot(bvar_pred)
 ```
 
 ## Impulse response analysis
@@ -168,11 +172,20 @@ GIR <- irf(bvar_est, impulse = "income", response = "cons", n.ahead = 8, type = 
 plot(GIR, main = "Generalised Impulse Response", xlab = "Period", ylab = "Response")
 ```
 
+## Forecast error variance decomposition
+
+```{r fevd, fig.width=5.5, fig.height=4.5}
+bvar_fevd <- fevd(bvar_est, response = "cons")
+
+plot(bvar_fevd, main = "FEVD of consumption")
+```
+
+
 
 ## References
 
-Luetkepohl, H. (2007). *New introduction to multiple time series analyis*. Berlin: Springer.
+Koop, G., Pesaran, M. H., & Potter, S.M. (1996). Impulse response analysis in nonlinear multivariate models. *Journal of Econometrics 74*(1), 119-147.
 
-Pesaran, H. H., & Shin, Y. (1998). Generalized impulse response analysis in linear multivariate models, *Economics Letters*. 58, 17-29.
+Lütkepohl, H. (2007). *New introduction to multiple time series analyis*. Berlin: Springer.
 
-Plummer, M., Best, N., Cowles, K., & Vines, K. (2006). CODA: Convergence Diagnosis and Output Analysis for MCMC, R News, 6, 7-11. [https://www.r-project.org/doc/Rnews/Rnews_2006-1.pdf](https://www.r-project.org/doc/Rnews/Rnews_2006-1.pdf)
+Pesaran, H. H., & Shin, Y. (1998). Generalized impulse response analysis in linear multivariate models. *Economics Letters, 58*(1), 17-29.

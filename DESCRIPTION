@@ -1,7 +1,7 @@
 Package: bvartools
 Title: Functions for Bayesian Inference of Vector Autoregressive Models
-Version: 0.0.9000
-Date: 2018-12-15
+Version: 0.0.1.9000
+Date: 2019-02-03
 Authors@R: person("Franz X.", "Mohr", email = "bvartools@outlook.com", role = c("aut","cre"))
 Description: A collection of R and C++ functions, which assist in the set-up of Gibbs samplers for the analysis of vector autoregressive (VAR) models.
 License: GPL (>= 2)

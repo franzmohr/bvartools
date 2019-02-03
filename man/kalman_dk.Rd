@@ -4,38 +4,54 @@
 \alias{kalman_dk}
 \title{Durbin and Koopman Simulation Smoother}
 \usage{
-kalman_dk(y, Z, Sigma_v, Sigma_w, B, a_init, Sigma_w_init)
+kalman_dk(y, z, sigma_u, sigma_v, B, a_init, P_init)
 }
 \arguments{
-\item{y}{a \eqn{n x T} matrix containing the time series of the dependent variable.}
+\item{y}{a \eqn{K \times T} matrix of endogenous variables.}
 
-\item{Z}{a \eqn{nT x m} matrix containing the time series of the explanatory variables.}
+\item{z}{a \eqn{KT \times M} matrix of explanatory variables.}
 
-\item{Sigma_v}{a \eqn{n x n} or \eqn{nT x n} variance-covariance matrix.}
+\item{sigma_u}{the inverse of the constant \eqn{K \times K} error variance-covariance matrix.
+For time varying variance-covariance matrices a \eqn{KT \times K} can be specified.}
 
-\item{Sigma_w}{a \eqn{m x m} variance-covariance matrix of the transition equation.}
+\item{sigma_v}{the inverse of the constant \eqn{M \times M} coefficient variance-covariance matrix.
+For time varying variance-covariance matrices a \eqn{MT \times M} can be specified.}
 
-\item{B}{a \eqn{m x m} autocorrelation function of the transition equation.}
+\item{B}{an \eqn{M \times M} autocorrelation matrix of the transition equation.}
 
-\item{a_init}{a \eqn{m x 1} vector of the initial values.}
+\item{a_init}{an M-dimensional vector of initial states.}
 
-\item{Sigma_w_init}{a \eqn{m x m} variance-covariance matrix of the initial parameter values.}
+\item{P_init}{an \eqn{M \times M} variance-covariance matrix of the initial states.}
 }
 \value{
-A \eqn{m x T} matrix of parameter values.
+A \eqn{M \times T+1} matrix of state vector draws.
 }
 \description{
-The function is an implementation of the Kalman filter and backward smoothing
+An implementation of the Kalman filter and backward smoothing
 algorithm proposed by Durbin and Koopman (2002).
 }
 \details{
-For the state space model with the measurement equation
-\deqn{y_t = Z_t a_t + v_t}
-and the transition equation 
-\deqn{a_{t+1} = B_t a_t + w_t,}
-where \eqn{v_t \sim N(0, \Sigma_{v_t})} and \eqn{w_t \sim N(0, \Sigma_{w_t})} the
-function produces a draw of the state vector \eqn{a_t} for \eqn{T = 1,...,T}.
+The function uses algorithm 2 from Durbin and Koopman (2002) to produce
+a draw of the state vector \eqn{a_t} for \eqn{t = 1,...,T} for a state space model
+with measurement equation
+\deqn{y_t = Z_t a_t + u_t}
+and transition equation 
+\deqn{a_{t + 1} = B_t a_{t} + v_t,}
+where \eqn{u_t \sim N(0, \Sigma_{u,t})} and \eqn{v_t \sim N(0, \Sigma_{v,t})}.
+\eqn{y_t} is a K-dimensional vector of endogenous variables and
+\eqn{Z_t = z_t^{\prime} \otimes I_K} is a \eqn{K \times M} matrix of regressors with
+\eqn{z_t} as a vector of regressors.
+
+The algorithm takes into account Jarociński (2015), where a possible missunderstanding
+in the implementation of the algorithm of Durbin and Koopman (2002) is pointed out. Following
+that note the function sets the mean of the initial state to zero in the first step of the algorithm.
 }
 \references{
-Durbin, J., & Koopman, S. J. (2002). A simple and efficient simulation smoother for state space time series analysis. \emph{Biometrika}, 89(3), 603--615.
+Durbin, J., & Koopman, S. J. (2002). A simple and efficient simulation smoother for
+state space time series analysis. \emph{Biometrika, 89}(3), 603--615.
+\url{https://www.jstor.org/stable/4140605}
+
+Jarociński, M. (2015). A note on implementing the Durbin and Koopman simulation
+smoother. \emph{Computational Statistics and Data Analysis, 91}, 1--3.
+\url{https://doi.org/10.1016/j.csda.2015.05.001}
 }

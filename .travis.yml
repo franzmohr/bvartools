@@ -1,2 +1,7 @@
 language: r
 cache: packages
+
+jobs:
+  include:
+  - r: devel
+  - r: release

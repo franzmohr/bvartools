@@ -54,11 +54,6 @@
 #' 
 #' Lütkepohl, H. (2007). \emph{New introduction to multiple time series analyis}. Berlin: Springer.
 #' 
-#' @examples
-#' data("e6")
-#' 
-#' vec_input <- gen_vec(e6, p = 4, const = "unrestricted", seasonal = "unrestricted")
-#' 
 #' @export
 gen_vec <- function(data, p = 2, exogen = NULL, s = 2, const = NULL, trend = NULL, seasonal = NULL) {
   if (!"ts" %in% class(data)) {

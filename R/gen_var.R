@@ -44,12 +44,6 @@
 #' 
 #' Lütkepohl, H. (2007). \emph{New introduction to multiple time series analyis}. Berlin: Springer.
 #' 
-#' @examples
-#' data("e1")
-#' data <- diff(log(e1))
-#' 
-#' var_input <- gen_var(data, p = 2)
-#' 
 #' @export
 gen_var <- function(data, p = 2, exogen = NULL, s = 2, deterministic = "const", seasonal = FALSE) {
   if (!"ts" %in% class(data)) {

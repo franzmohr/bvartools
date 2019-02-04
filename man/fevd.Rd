@@ -40,14 +40,14 @@ The function produces forecast error variance decompositions (FEVD) for the VAR 
 with \eqn{u_t \sim N(0, \Sigma)}.
 
 If the FEVD is based on the orthogonalised impulse resonse (OIR), the FEVD will be calculated as
-\deqn{\omega^{OIR}_{jk, h} = \dfrac{\sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i P e_k )^2}{\sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i \Sigma \Phi_i^{\prime} e_j )},}
+\deqn{\omega^{OIR}_{jk, h} = \frac{\sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i P e_k )^2}{\sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i \Sigma \Phi_i^{\prime} e_j )},}
 where \eqn{\Phi_i} is the forecast error impulse response for the \eqn{i}th period,
 \eqn{P} is the lower triangular Choleski decomposition of the variance-covariance
 matrix \eqn{\Sigma}, \eqn{e_j} is a selection vector for the response variable and
 \eqn{e_k} a selection vector for the impulse variable.
 
 If `type = "gir"`, the FEVD will be
-calculated as \deqn{\omega^{GIR}_{jk, h} = \dfrac{\sigma^{-1}_{jj} \sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i \Sigma e_k )^2}{\sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i \Sigma \Phi_i^{\prime} e_j )},}
+calculated as \deqn{\omega^{GIR}_{jk, h} = \frac{\sigma^{-1}_{jj} \sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i \Sigma e_k )^2}{\sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i \Sigma \Phi_i^{\prime} e_j )},}
 where \eqn{\sigma_{jj}} is the diagonal element of the \eqn{j}th variable of the variance covariance matrix.
 
 Since GIR-based FEVDs do not add up to unity, they can be normalised by setting \code{rescale_gir = TRUE}.

@@ -56,13 +56,6 @@ where
 and \eqn{U} is a \eqn{K \times T} matrix of errors. The function `gen_var`
 generates the matrices \eqn{Y} and \eqn{Z}.
 }
-\examples{
-data("e1")
-data <- diff(log(e1))
-
-var_input <- gen_var(data, p = 2)
-
-}
 \references{
 Lütkepohl, H. (2007). \emph{New introduction to multiple time series analyis}. Berlin: Springer.
 }

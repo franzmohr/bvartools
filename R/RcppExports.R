@@ -151,7 +151,7 @@ kalman_dk <- function(y, z, sigma_u, sigma_v, B, a_init, P_init) {
 #' 
 #' Draws of the loading matrix \eqn{\alpha} are obtained using the prior on the cointegration space
 #' as proposed in Koop et al. (2010). The posterior covariance matrix is
-#' \deqn{\overline{V}_{\alpha} = \left[\left(v^{-1} (\beta^{\prime} P_{\tau}^{-1} \beta) \otimes G_{⁻1}\right) + \left(ZZ^{\prime} \otimes \Sigma^{-1} \right) \right]^{-1}}
+#' \deqn{\overline{V}_{\alpha} = \left[\left(v^{-1} (\beta^{\prime} P_{\tau}^{-1} \beta) \otimes G_{-1}\right) + \left(ZZ^{\prime} \otimes \Sigma^{-1} \right) \right]^{-1}}
 #' and the posterior mean by
 #' \deqn{\overline{\alpha} = \overline{V}_{\alpha} + vec(\Sigma^{-1} Y Z^{\prime}),}
 #' where \eqn{Y} is a \eqn{K \times T} matrix of differenced endogenous variables and

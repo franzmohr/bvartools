@@ -3,7 +3,7 @@
 \docType{data}
 \name{e1}
 \alias{e1}
-\title{West German economic time series}
+\title{West German economic time series data}
 \format{A named time-series object with 92 rows and 3 variables:
 \describe{
   \item{invest}{fixed investment.}

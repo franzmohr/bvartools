@@ -1,4 +1,4 @@
-#' West German economic time series
+#' West German economic time series data
 #'
 #' The dataset contains quarterly, seasonally adjusted time series for West German fixed investment, disposable
 #' income, and consumption expenditures in billions of DM from 1960Q1 to 1982Q4. It was produced

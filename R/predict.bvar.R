@@ -22,19 +22,18 @@
 #' 
 #' @export
 #' @rdname bvar
-predict.bvar <- function(object, ..., n.ahead = 10, new_y = NULL, new_x = NULL, new_D = NULL, ci = .95) {
+predict.bvar <- function(object, ..., n.ahead = 10, new_x = NULL, new_D = NULL, ci = .95) {
   k <- object$specifications$dims["K"]
   t <- ncol(object$y)
   A <- object$A
   p <- object$specifications$lags["p"]
   tot <- k * p
-
+  
   if (!is.null(object$B)) {
     A <- cbind(A, object$B)
     m <- ncol(object$B) / k
     tot <- tot + m
     if (is.null(new_x)) {
-      #stop("For the inclusion of exogenous please specify the 'new_x' argument.")
       new_x <- matrix(0, n.ahead, m)
     }
     if (NROW(new_x) != n.ahead) {
@@ -46,7 +45,6 @@ predict.bvar <- function(object, ..., n.ahead = 10, new_y = NULL, new_x = NULL, 
     n <- ncol(object$C) / k
     tot <- tot + n
     if (is.null(new_D)) {
-      #stop("For the inclusion of deterministic terms please specify the 'new_D' argument.")
       new_D <- matrix(0, n.ahead, n)
     }
     if (NROW(new_D) != n.ahead) {
@@ -62,11 +60,7 @@ predict.bvar <- function(object, ..., n.ahead = 10, new_y = NULL, new_x = NULL, 
   
   pos_y <- 1:(k * p)
   pred <- matrix(NA, tot, n.ahead + 1)
-  if (is.null(new_y)) {
-    pred[pos_y, 1] <- object$y[, t:(t - p + 1)]
-  } else {
-    pred[pos_y, 1] <- new_y
-  }
+  pred[pos_y, 1] <- object$y[, t:(t - p + 1)]
   if (!is.null(new_x)) {
     pos_x <- k * p + 1:m
     pred[pos_x, ] <- cbind(object$x[pos_x, t], t(new_x))

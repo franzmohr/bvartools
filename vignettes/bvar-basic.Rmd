@@ -62,7 +62,7 @@ These are the same values as in Lütkepohl (2007).
 ### Bayesian estimator
 
 ```{r flat prior}
-iter <- 15000 # Number of iterations of the Gibbs sampler
+iter <- 25000 # Number of iterations of the Gibbs sampler
 burnin <- 5000 # Number of burn-in draws
 store <- iter - burnin
 

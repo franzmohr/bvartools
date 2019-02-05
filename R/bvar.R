@@ -39,6 +39,7 @@
 #' \item{B}{an \eqn{S \times ((1 + s)MK)} `mcmc` object of coefficient draws of unmodelled, non-deterministic variables.}
 #' \item{C}{an \eqn{S \times NK} `mcmc` object of coefficient draws of deterministic terms.}
 #' \item{Sigma}{an \eqn{S \times K^2} `mcmc` object of variance-covariance draws.}
+#' \item{specifications}{a list containing information on the model specification.}
 #' 
 #' @export
 bvar <- function(data = NULL, exogen = NULL, y = NULL, x = NULL,

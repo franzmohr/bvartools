@@ -3,8 +3,7 @@
 #' Forecasting a Bayesian VAR object of class "bvar" with credible bands.
 #' 
 #' @param object an object of class "bvar", usually, a result of a call to `bvar` or `bvec_to_bvar`.
-#' @param n.ahead number of steps ahead.
-#' @param new_y a matrix of new endogenous variables. Must have `n.ahead` rows.
+#' @param n.ahead number of steps ahead at which to predict.
 #' @param new_x a matrix of new non-deterministic, exogenous variables. Must have `n.ahead` rows.
 #' @param new_D a matrix of new deterministic variables. Must have `n.ahead` rows.
 #' @param ci a numeric between 0 and 1 specifying the probability mass covered by the
@@ -12,7 +11,7 @@
 #' @param ... additional arguments.
 #' 
 #' @details For the VAR model
-#' \deqn{A_0 y_t = \sum_{i = 1}^{p} A_{i} y_{t-i} + C D_t + u_t,}
+#' \deqn{A_0 y_t = \sum_{i = 1}^{p} A_{i} y_{t-i} + \sum_{i = 0}^{s} B_{i} x_{t-i} + C D_t + u_t,}
 #' with \eqn{u_t \sim N(0, \Sigma)} the function produces `n.ahead` forecasts.
 #' 
 #' @return A time-series object of class "irf.bvar".
@@ -31,26 +30,28 @@ predict.bvar <- function(object, ..., n.ahead = 10, new_y = NULL, new_x = NULL, 
   tot <- k * p
 
   if (!is.null(object$B)) {
+    A <- cbind(A, object$B)
+    m <- ncol(object$B) / k
+    tot <- tot + m
     if (is.null(new_x)) {
-      stop("For the inclusion of exogenous please specify the 'new_x' argument.")
+      #stop("For the inclusion of exogenous please specify the 'new_x' argument.")
+      new_x <- matrix(0, n.ahead, m)
     }
     if (NROW(new_x) != n.ahead) {
       stop("Length of argument 'new_x' must be equal to 'n.ahead'.")
     }
-    A <- cbind(A, object$B)
-    m <- ncol(object$B) / k
-    tot <- tot + m
   }
   if (!is.null(object$C)) {
+    A <- cbind(A, object$C)
+    n <- ncol(object$C) / k
+    tot <- tot + n
     if (is.null(new_D)) {
-      stop("For the inclusion of deterministic terms please specify the 'new_D' argument.")
+      #stop("For the inclusion of deterministic terms please specify the 'new_D' argument.")
+      new_D <- matrix(0, n.ahead, n)
     }
     if (NROW(new_D) != n.ahead) {
       stop("Length of argument 'new_D' must be equal to 'n.ahead'.")
     }
-    A <- cbind(A, object$C)
-    n <- ncol(object$C) / k
-    tot <- tot + n
   }
   
   if (is.null(object$A0)) {
@@ -68,7 +69,7 @@ predict.bvar <- function(object, ..., n.ahead = 10, new_y = NULL, new_x = NULL, 
   }
   if (!is.null(new_x)) {
     pos_x <- k * p + 1:m
-    pred[pos_x, 1] <- cbind(object$x[pos_x, t], t(new_x))
+    pred[pos_x, ] <- cbind(object$x[pos_x, t], t(new_x))
   }
   if (!is.null(object$C)) {
     pos_d <- (tot - n + 1):tot

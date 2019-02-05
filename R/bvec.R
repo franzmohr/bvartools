@@ -63,6 +63,7 @@
 #' \item{Upsilon}{an \eqn{S \times sMK} `mcmc` object of coefficient draws of differenced unmodelled variables.}
 #' \item{C}{an \eqn{S \times KN^{UR}} `mcmc` object of coefficient draws of deterministic terms.}
 #' \item{Sigma}{an \eqn{S \times K^2} `mcmc` object of variance-covariance draws.}
+#' \item{specifications}{a list containing information on the model specification.}
 #' 
 #' @export
 bvec <- function(data = NULL, exogen = NULL, y = NULL, w = NULL, x = NULL,
@@ -70,9 +71,18 @@ bvec <- function(data = NULL, exogen = NULL, y = NULL, w = NULL, x = NULL,
                  A0 = NULL, Gamma = NULL, Upsilon = NULL, C = NULL, Sigma = NULL) {
 
   result <- NULL
-  
+  if (is.null(y) | is.null(Pi)) {
+    stop("At least the arguments 'y' and 'Pi' must be specified.")
+  }
   if(!is.null(y)) {
     result$y <- y
+    k <- NROW(y)
+  }
+  if(!is.null(Pi)) {
+    result$Pi <- coda::mcmc(t(Pi))
+    if (NROW(Pi) != k^2) {
+      stop("Row number of argument 'Pi' is not equal to the number of endogenous variables.")
+    }
   }
   if(!is.null(w)) {
     result$w <- w
@@ -89,9 +99,6 @@ bvec <- function(data = NULL, exogen = NULL, y = NULL, w = NULL, x = NULL,
   if(!is.null(beta)) {
     result$beta <- coda::mcmc(t(beta))
   }
-  if(!is.null(Pi)) {
-    result$Pi <- coda::mcmc(t(Pi))
-  }
   if(!is.null(Pi_x)) {
     result$Pi_x <- coda::mcmc(t(Pi_x))
   }
@@ -100,6 +107,14 @@ bvec <- function(data = NULL, exogen = NULL, y = NULL, w = NULL, x = NULL,
   }
   if(!is.null(Gamma)) {
     result$Gamma <- coda::mcmc(t(Gamma))
+    n_gamma <- ncol(result$Gamma)
+    if (n_gamma %% k == 0) {
+      p <- n_gamma / k^2
+    } else {
+      stop("Row number of argument 'Gamma' is not a multiple of the number of endogenous variables.")
+    }
+  } else {
+    p <- 0
   }
   if(!is.null(Upsilon)) {
     result$Ypsilon <- coda::mcmc(t(Upsilon))
@@ -110,6 +125,8 @@ bvec <- function(data = NULL, exogen = NULL, y = NULL, w = NULL, x = NULL,
   if(!is.null(Sigma)) {
     result$Sigma <- coda::mcmc(t(Sigma))
   }
+  result$specifications <- list("dims" = c("K" = k),
+                                "lags" = c("p" = p + 1))
   
   class(result) <- append("bvec", class(result))
   return(result)

@@ -62,6 +62,7 @@ unrestricted deterministic terms.}
 \item{Upsilon}{an \eqn{S \times sMK} `mcmc` object of coefficient draws of differenced unmodelled variables.}
 \item{C}{an \eqn{S \times KN^{UR}} `mcmc` object of coefficient draws of deterministic terms.}
 \item{Sigma}{an \eqn{S \times K^2} `mcmc` object of variance-covariance draws.}
+\item{specifications}{a list containing information on the model specification.}
 }
 \description{
 `bvec` is used to create objects of class "bvec".

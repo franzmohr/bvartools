@@ -36,9 +36,7 @@ call to \code{\link{gen_var}}.}
 
 \item{...}{additional arguments.}
 
-\item{n.ahead}{number of steps ahead.}
-
-\item{new_y}{a matrix of new endogenous variables. Must have `n.ahead` rows.}
+\item{n.ahead}{number of steps ahead at which to predict.}
 
 \item{new_x}{a matrix of new non-deterministic, exogenous variables. Must have `n.ahead` rows.}
 
@@ -58,6 +56,7 @@ An object of class "bvar" containing the following components, if specified:
 \item{B}{an \eqn{S \times ((1 + s)MK)} `mcmc` object of coefficient draws of unmodelled, non-deterministic variables.}
 \item{C}{an \eqn{S \times NK} `mcmc` object of coefficient draws of deterministic terms.}
 \item{Sigma}{an \eqn{S \times K^2} `mcmc` object of variance-covariance draws.}
+\item{specifications}{a list containing information on the model specification.}
 
 A time-series object of class "irf.bvar".
 }
@@ -83,7 +82,7 @@ The draws of the different coefficient matrices provided in `A0`, `A`, `B`,
 `C` and `Sigma` have to correspond to the same MCMC iteration.
 
 For the VAR model
-\deqn{A_0 y_t = \sum_{i = 1}^{p} A_{i} y_{t-i} + C D_t + u_t,}
+\deqn{A_0 y_t = \sum_{i = 1}^{p} A_{i} y_{t-i} + \sum_{i = 0}^{s} B_{i} x_{t-i} + C D_t + u_t,}
 with \eqn{u_t \sim N(0, \Sigma)} the function produces `n.ahead` forecasts.
 }
 \references{

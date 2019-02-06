@@ -8,8 +8,8 @@
 bvar(data = NULL, exogen = NULL, y = NULL, x = NULL, A0 = NULL,
   A = NULL, B = NULL, C = NULL, Sigma = NULL)
 
-\method{predict}{bvar}(object, ..., n.ahead = 10, new_y = NULL,
-  new_x = NULL, new_D = NULL, ci = 0.95)
+\method{predict}{bvar}(object, ..., n.ahead = 10, new_x = NULL,
+  new_D = NULL, ci = 0.95)
 }
 \arguments{
 \item{data}{the original time-series object of endogenous variables.}

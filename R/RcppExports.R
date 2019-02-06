@@ -112,7 +112,6 @@ ir <- function(A, h, type, impulse, response) {
 #' 
 #' Durbin, J., & Koopman, S. J. (2002). A simple and efficient simulation smoother for
 #' state space time series analysis. \emph{Biometrika, 89}(3), 603--615.
-#' \url{https://www.jstor.org/stable/4140605}
 #' 
 #' Jarociński, M. (2015). A note on implementing the Durbin and Koopman simulation
 #' smoother. \emph{Computational Statistics and Data Analysis, 91}, 1--3.

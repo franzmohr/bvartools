@@ -1,10 +1,10 @@
 ---
-title: "A Simple Bayesian VAR Estimator"
+title: "Introduction to bvartools"
 author: "Franz X. Mohr"
 date: "2019-02-04"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{A Simple Bayesian VAR Estimator}
+  %\VignetteIndexEntry{Introduction to bvartools}
   %\VignetteEngine{knitr::rmarkdown}
   \usepackage[utf8]{inputenc}
 ---
@@ -18,7 +18,13 @@ knitr::opts_chunk$set(
 
 ## Introduction
 
-This vignette provides the code to set up and estimate a basic Bayesian VAR (BVAR) model with the `bvartools` package. To illustrate the estimation process the dataset E1 from Lütkepohl (2007) is used. It contains data on West German fixed investment, disposable income and consumption expenditures in billions of DM from 1960Q1 to 1982Q4.
+The package `bvartools` implements some common functions used for Bayesian inference for mulitvariate time series models. It should give researchers maximum freedom in setting up an MCMC algorithm in R and keep calculation time limited at the same time. This is achieved by implementing posterior simulation functions in C++. Its main features are
+
+-   Posterior simulation functions, which are written in C++ for faster computation
+-   The `bvar` and `bvec` function collects the output of a Gibbs sampler in standardised objects, which can be used for further analyses
+-   Further functions such as `predict`, `irf`, `fevd` for forecasting, impulse response analysis and forecast error variance decomposition, respectively.
+
+This vignette provides the code to set up and estimate a basic Bayesian VAR (BVAR) model with the `bvartools` package. For this illustration the dataset E1 from Lütkepohl (2007) is used. It contains data on West German fixed investment, disposable income and consumption expenditures in billions of DM from 1960Q1 to 1982Q4.
 
 ```{r data, fig.align='center', fig.height=5, fig.width=4.5}
 library(bvartools)
@@ -29,7 +35,10 @@ e1 <- diff(log(e1))
 plot(e1) # Plot the series
 ```
 
-The `gen_var` function produces the inputs `y` and `x` for the BVAR estimator, where `y` is the matrix of dependent variables and `x` is the matrix of regressors.
+The `gen_var` function produces the inputs `y` and `x` for the BVAR estimator, where `y` is a matrix of dependent variables and `x` is the matrix of regressors for the model
+
+$$y_t = A x_t + u_t,$$
+with $u_t \sim N(0, \Sigma)$.
 
 ```{r}
 data <- gen_var(e1, p = 2, deterministic = "const")
@@ -44,12 +53,14 @@ As in Lütkepohl (2007) only the first 73 observations are used.
 
 ### Frequentist estimator
 
-We calculate frequentist VAR estimates using the standard formula $y x' (x x')^{-1}$ to obtain a benchmark for the Bayesian estimator.
+We calculate frequentist VAR estimates using the standard formula $y x' (x x')^{-1}$ to obtain a benchmark for the Bayesian estimator. The parameters are obtained by OLS:
 
 ```{r}
 A_freq <- tcrossprod(y, x) %*% solve(tcrossprod(x)) # Calculate estimates
 round(A_freq, 3) # Round estimates and print
 ```
+
+And $\Sigma$ is calculated by
 
 ```{r}
 u_freq <- y - A_freq %*% x
@@ -60,6 +71,8 @@ round(u_sigma_freq * 10^4, 2)
 These are the same values as in Lütkepohl (2007).
 
 ### Bayesian estimator
+
+The following code is a Gibbs sampler for a simple VAR model with non-informative priors.
 
 ```{r flat prior}
 iter <- 25000 # Number of iterations of the Gibbs sampler
@@ -82,7 +95,7 @@ u_sigma_df_post <- t + u_sigma_df_prior # Posterior degrees of freedom
 u_sigma_i <- diag(.00001, k)
 u_sigma <- solve(u_sigma_i)
 
-# Data containers
+# Data containers for posterior draws
 draws_a <- matrix(NA, m, store)
 draws_sigma <- matrix(NA, k^2, store)
 
@@ -105,7 +118,7 @@ for (draw in 1:iter) {
 }
 ```
 
-Obtain point estimates as the mean of the parameter draws:
+After the Gibbs sampler has finished, point estimates can be obtained as the mean of the posterior draws:
 
 ```{r}
 A <- rowMeans(draws_a) # Obtain means for every row
@@ -125,7 +138,7 @@ dimnames(Sigma) <- list(dimnames(y)[[1]], dimnames(y)[[1]]) # Rename matrix dime
 Sigma # Print
 ```
 
-The means of the coefficient draws are very close to the results of the frequentist estimatior.
+The means of the coefficient draws are very close to the results of the frequentist estimatior, which would be expected with non-informative priors.
 
 ## `bvar` objects
 
@@ -138,7 +151,7 @@ bvar_est <- bvar(y = y, x = x, A = draws_a[1:18,],
 
 ## Forecasts
 
-Forecasts can be obtained with the function `predict`. If the model contains deterministic terms, new values have to be provided in the argument `new_D`, which must be of the same length as the argument `n.ahead`.
+Forecasts with credible bands can be obtained with the function `predict`. If the model contains deterministic terms, new values can be provided in the argument `new_D`. If no values are provided, the function sets them to zero. The number of rows of `new_D` must be the same as the argument `n.ahead`.
 
 ```{r forecasts, fig.width=5.5, fig.height=5.5}
 bvar_pred <- predict(bvar_est, n.ahead = 10, new_D = rep(1, 10))
@@ -147,6 +160,8 @@ plot(bvar_pred)
 ```
 
 ## Impulse response analysis
+
+Currently, `bvartools` supports forecast error, orthogonalised, and generalised impulse response functions.
 
 ### Forecast error impulse response
 
@@ -174,12 +189,21 @@ plot(GIR, main = "Generalised Impulse Response", xlab = "Period", ylab = "Respon
 
 ## Forecast error variance decomposition
 
-```{r fevd, fig.width=5.5, fig.height=4.5}
-bvar_fevd <- fevd(bvar_est, response = "cons")
+Default forecast error variance decomposition (FEVD) is based on orthogonalised impulse responses (OIR).
 
-plot(bvar_fevd, main = "FEVD of consumption")
+```{r fevd-oir, fig.width=5.5, fig.height=4.5}
+bvar_fevd_oir <- fevd(bvar_est, response = "cons")
+
+plot(bvar_fevd_oir, main = "OIR-based FEVD of consumption")
 ```
 
+It is also possible to calculate FEVDs, which are based on generalised impulse responses (GIR). Note that these do not automatically add up to unity.
+
+```{r fevd-gir, fig.width=5.5, fig.height=4.5}
+bvar_fevd_gir <- fevd(bvar_est, response = "cons", type = "gir")
+
+plot(bvar_fevd_gir, main = "GIR-based FEVD of consumption")
+```
 
 
 ## References

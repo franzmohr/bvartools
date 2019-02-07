@@ -11,9 +11,9 @@ output:
 
 ## Overview
 
-The package `bvartools` implements some common functions used for Bayesian inference for mulitvariate time series models. It should give researchers maximum freedom in setting up a Gibbs sampler in R and keep calculation time limited at the same time. This is achieved by implementing posterior simulation functions in C++. Its main features are
+The package `bvartools` implements some common functions used for Bayesian inference for mulitvariate time series models. It should give researchers maximum freedom in setting up an MCMC algorithm in R and keep calculation time limited at the same time. This is achieved by implementing posterior simulation functions in C++. Its main features are
 
-* Posterior simulation functions, which are written in C++ for faster calculation
+* Posterior simulation functions, which are written in C++ for faster computation
 * The `bvar` and `bvec` function collects the output of a Gibbs sampler in standardised objects, which can be used for further analyses
 * Further functions such as `predict`, `irf`, `fevd` for forecasting, impulse response analysis and forecast error variance decomposition, respectively.
 
@@ -28,7 +28,7 @@ devtools::install_github("franzmohr/bvartools")
 
 ## Usage
 
-This example covers the estimation of a simple BVAR model. For further examples on time varying parameter (TVP), stochastic volatility (SV), and vector error correction (VEC) models as well as shrinkage methods like stochastic search variable selection (SSVS) or Bayesian variable selection (BVS) see the vignettes of the package.
+This example covers the estimation of a simple Bayesian VAR (BVAR) model. For further examples on time varying parameter (TVP), stochastic volatility (SV), and vector error correction (VEC) models as well as shrinkage methods like stochastic search variable selection (SSVS) or Bayesian variable selection (BVS) see the vignettes of the package.
 
 ### Data
 
@@ -81,7 +81,7 @@ u_sigma_df_post <- t + u_sigma_df_prior # Posterior degrees of freedom
 u_sigma_i <- diag(.00001, k)
 u_sigma <- solve(u_sigma_i)
 
-# Data containers
+# Data containers for posterior draws
 draws_a <- matrix(NA, m, store)
 draws_sigma <- matrix(NA, k^2, store)
 
@@ -104,7 +104,7 @@ for (draw in 1:iter) {
 }
 ```
 
-Obtain point estimates as the mean of the parameter draws
+Obtain point estimates as the mean of the posterior draws
 
 ```{r A}
 A <- rowMeans(draws_a) # Obtain means for every row
@@ -126,9 +126,9 @@ Sigma # Print
 
 The means of the coefficient draws are very close to the results of the frequentist estimatior in Lütkepohl (2007).
 
-### `bvars` objects
+### `bvar` objects
 
-The `bvar` function can be used to collect relevant output of the Gibbs sampler into a standardised object, which can be used by further functions such as `predict` to obtain forecasts or `irf` for impulse respons analysis.
+The `bvar` function can be used to collect relevant output of the Gibbs sampler in a standardised object, which can be used by further functions such as `predict` to obtain forecasts or `irf` for impulse respons analysis.
 
 ```{r bvars-object}
 bvar_est <- bvar(y = y, x = x, A = draws_a[1:18,],

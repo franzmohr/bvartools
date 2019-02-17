@@ -25,7 +25,7 @@ is time varying, a \eqn{KT \times K} matrix can be provided.}
 included in the BVS algorithm. If \code{NULL} (default), BVS will be applied to all variables.}
 }
 \value{
-A vector of inclusion parameters.
+A matrix of inclusion parameters on its diagonal.
 }
 \description{
 \code{bvs} employs Bayesian variable selection as proposed by Korobilis (2013)

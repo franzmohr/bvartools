@@ -27,7 +27,7 @@
 #' \eqn{Z_t = x_t^{\prime} \otimes I_K} is a \eqn{K \times M} matrix of regressors with
 #' \eqn{x_t} as a vector of regressors.
 #' 
-#' @return A vector of inclusion parameters.
+#' @return A matrix of inclusion parameters on its diagonal.
 #' 
 #' @references
 #' 

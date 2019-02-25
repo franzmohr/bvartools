@@ -1,7 +1,7 @@
 ---
 title: "Stochastic Search Variable Selection"
 author: "Franz X. Mohr"
-date: "2019-02-17"
+date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Stochastic Search Variable Selection}

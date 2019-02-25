@@ -32,15 +32,16 @@ call to \code{\link{gen_var}}.}
 
 \item{Sigma}{a \eqn{K^2 \times S} matrix of variance-covariance MCMC draws.}
 
-\item{object}{an object of class "bvar", usually, a result of a call to `bvar` or `bvec_to_bvar`.}
+\item{object}{an object of class "bvar", usually, a result of a call to
+\code{\link{bvar}} or \code{\link{bvec_to_bvar}}.}
 
 \item{...}{additional arguments.}
 
 \item{n.ahead}{number of steps ahead at which to predict.}
 
-\item{new_x}{a matrix of new non-deterministic, exogenous variables. Must have `n.ahead` rows.}
+\item{new_x}{a matrix of new non-deterministic, exogenous variables. Must have \code{n.ahead} rows.}
 
-\item{new_D}{a matrix of new deterministic variables. Must have `n.ahead` rows.}
+\item{new_D}{a matrix of new deterministic variables. Must have \code{n.ahead} rows.}
 
 \item{ci}{a numeric between 0 and 1 specifying the probability mass covered by the
 credible intervals. Defaults to 0.95.}
@@ -51,14 +52,14 @@ An object of class "bvar" containing the following components, if specified:
 \item{exogen}{the original time-series object of unmodelled variables.}
 \item{y}{a \eqn{K \times T} matrix of endogenous variables.}
 \item{x}{a \eqn{(pK + (1+s)M + N) \times T} matrix of regressor variables.}
-\item{A0}{an \eqn{S \times K^2} `mcmc` object of coefficient draws of structural parameters.}
-\item{A}{an \eqn{S \times pK^2} `mcmc` object of coefficient draws of lagged endogenous variables.}
-\item{B}{an \eqn{S \times ((1 + s)MK)} `mcmc` object of coefficient draws of unmodelled, non-deterministic variables.}
-\item{C}{an \eqn{S \times NK} `mcmc` object of coefficient draws of deterministic terms.}
-\item{Sigma}{an \eqn{S \times K^2} `mcmc` object of variance-covariance draws.}
+\item{A0}{an \eqn{S \times K^2} "mcmc" object of coefficient draws of structural parameters.}
+\item{A}{an \eqn{S \times pK^2} "mcmc" object of coefficient draws of lagged endogenous variables.}
+\item{B}{an \eqn{S \times ((1 + s)MK)} "mcmc" object of coefficient draws of unmodelled, non-deterministic variables.}
+\item{C}{an \eqn{S \times NK} "mcmc" object of coefficient draws of deterministic terms.}
+\item{Sigma}{an \eqn{S \times K^2} "mcmc" object of variance-covariance draws.}
 \item{specifications}{a list containing information on the model specification.}
 
-A time-series object of class "irf.bvar".
+A time-series object of class "bvarprd".
 }
 \description{
 `bvar` is used to create objects of class "bvar".
@@ -78,12 +79,12 @@ and \eqn{B_i} its corresponding coefficient matrix.
 and \eqn{C} its corresponding coefficient matrix.
 \eqn{u_t} is an error term with \eqn{u_t \sim N(0, \Sigma_u)}.
 
-The draws of the different coefficient matrices provided in `A0`, `A`, `B`,
-`C` and `Sigma` have to correspond to the same MCMC iteration.
+The draws of the different coefficient matrices provided in \code{A0}, \code{A},
+\code{B}, \code{C} and \code{Sigma} have to correspond to the same MCMC iteration.
 
 For the VAR model
 \deqn{A_0 y_t = \sum_{i = 1}^{p} A_{i} y_{t-i} + \sum_{i = 0}^{s} B_{i} x_{t-i} + C D_t + u_t,}
-with \eqn{u_t \sim N(0, \Sigma)} the function produces `n.ahead` forecasts.
+with \eqn{u_t \sim N(0, \Sigma)} the function produces \code{n.ahead} forecasts.
 }
 \references{
 Lütkepohl, H. (2007). \emph{New introduction to multiple time series analyis}. Berlin: Springer.

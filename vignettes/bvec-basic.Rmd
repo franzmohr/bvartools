@@ -1,7 +1,7 @@
 ---
 title: "Bayesian Error Correction Models with Priors on the Cointegration Space"
 author: "Franz X. Mohr"
-date: "2019-02-04"
+date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Bayesian Error Correction Models with Priors on the Cointegration Space}

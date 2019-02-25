@@ -26,19 +26,19 @@
 #' and \eqn{C} its corresponding coefficient matrix.
 #' \eqn{u_t} is an error term with \eqn{u_t \sim N(0, \Sigma_u)}.
 #' 
-#' The draws of the different coefficient matrices provided in `A0`, `A`, `B`,
-#' `C` and `Sigma` have to correspond to the same MCMC iteration.
+#' The draws of the different coefficient matrices provided in \code{A0}, \code{A},
+#' \code{B}, \code{C} and \code{Sigma} have to correspond to the same MCMC iteration.
 #' 
 #' @return An object of class "bvar" containing the following components, if specified:
 #' \item{data}{the original time-series object of endogenous variables.}
 #' \item{exogen}{the original time-series object of unmodelled variables.}
 #' \item{y}{a \eqn{K \times T} matrix of endogenous variables.}
 #' \item{x}{a \eqn{(pK + (1+s)M + N) \times T} matrix of regressor variables.}
-#' \item{A0}{an \eqn{S \times K^2} `mcmc` object of coefficient draws of structural parameters.}
-#' \item{A}{an \eqn{S \times pK^2} `mcmc` object of coefficient draws of lagged endogenous variables.}
-#' \item{B}{an \eqn{S \times ((1 + s)MK)} `mcmc` object of coefficient draws of unmodelled, non-deterministic variables.}
-#' \item{C}{an \eqn{S \times NK} `mcmc` object of coefficient draws of deterministic terms.}
-#' \item{Sigma}{an \eqn{S \times K^2} `mcmc` object of variance-covariance draws.}
+#' \item{A0}{an \eqn{S \times K^2} "mcmc" object of coefficient draws of structural parameters.}
+#' \item{A}{an \eqn{S \times pK^2} "mcmc" object of coefficient draws of lagged endogenous variables.}
+#' \item{B}{an \eqn{S \times ((1 + s)MK)} "mcmc" object of coefficient draws of unmodelled, non-deterministic variables.}
+#' \item{C}{an \eqn{S \times NK} "mcmc" object of coefficient draws of deterministic terms.}
+#' \item{Sigma}{an \eqn{S \times K^2} "mcmc" object of variance-covariance draws.}
 #' \item{specifications}{a list containing information on the model specification.}
 #' 
 #' @export

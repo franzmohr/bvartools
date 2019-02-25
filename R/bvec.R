@@ -42,9 +42,9 @@
 #' the corresponding coefficient matrix.
 #' \eqn{u_t} is an error term with \eqn{u_t \sim N(0, \Sigma_u)}.
 #' 
-#' The draws of the different coefficient matrices provided in `alpha`, `beta`, `Pi`,
-#' `Pi_x`, `Pi_d`, `A0`, `Gamma`, `Ypsilon`, `C` and `Sigma` have to correspond to the
-#' same MCMC iteration.
+#' The draws of the different coefficient matrices provided in \code{alpha}, \code{beta},
+#' \code{Pi}, \code{Pi_x}, \code{Pi_d}, \code{A0}, \code{Gamma}, \code{Ypsilon},
+#' \code{C} and \code{Sigma} have to correspond to the same MCMC iteration.
 #' 
 #' @return An object of class "gvec" containing the following components, if specified:
 #' \item{data}{the original time-series object of endogenous variables.}
@@ -53,16 +53,16 @@
 #' \item{w}{a \eqn{(K + M + N^{R}) \times T} matrix of variables in the cointegration term.}
 #' \item{x}{a \eqn{((p - 1)K + sM + N^{UR}) \times T} matrix of differenced regressor variables and
 #' unrestricted deterministic terms.}
-#' \item{A0}{an \eqn{S \times K^2} `mcmc` object of coefficient draws of structural parameters.}
-#' \item{alpha}{an \eqn{S \times Kr} `mcmc` object of coefficient draws of loading parameters.}
-#' \item{beta}{an \eqn{S \times ((K + M + N^{R})r)} `mcmc` object of coefficient draws of cointegration parameters.}
-#' \item{Pi}{an \eqn{S \times K^2} `mcmc` object of coefficient draws of endogenous variables in the cointegration matrix.}
-#' \item{Pi_x}{an \eqn{S \times KM} `mcmc` object of coefficient draws of unmodelled, non-deterministic variables in the cointegration matrix.}
-#' \item{Pi_d}{an \eqn{S \times KN^{R}} `mcmc` object of coefficient draws of unrestricted deterministic variables in the cointegration matrix.}
-#' \item{Gamma}{an \eqn{S \times (p-1)K^2} `mcmc` object of coefficient draws of differenced lagged endogenous variables.}
-#' \item{Upsilon}{an \eqn{S \times sMK} `mcmc` object of coefficient draws of differenced unmodelled variables.}
-#' \item{C}{an \eqn{S \times KN^{UR}} `mcmc` object of coefficient draws of deterministic terms.}
-#' \item{Sigma}{an \eqn{S \times K^2} `mcmc` object of variance-covariance draws.}
+#' \item{A0}{an \eqn{S \times K^2} "mcmc" object of coefficient draws of structural parameters.}
+#' \item{alpha}{an \eqn{S \times Kr} "mcmc" object of coefficient draws of loading parameters.}
+#' \item{beta}{an \eqn{S \times ((K + M + N^{R})r)} "mcmc" object of coefficient draws of cointegration parameters.}
+#' \item{Pi}{an \eqn{S \times K^2} "mcmc" object of coefficient draws of endogenous variables in the cointegration matrix.}
+#' \item{Pi_x}{an \eqn{S \times KM} "mcmc" object of coefficient draws of unmodelled, non-deterministic variables in the cointegration matrix.}
+#' \item{Pi_d}{an \eqn{S \times KN^{R}} "mcmc" object of coefficient draws of unrestricted deterministic variables in the cointegration matrix.}
+#' \item{Gamma}{an \eqn{S \times (p-1)K^2} "mcmc" object of coefficient draws of differenced lagged endogenous variables.}
+#' \item{Upsilon}{an \eqn{S \times sMK} "mcmc" object of coefficient draws of differenced unmodelled variables.}
+#' \item{C}{an \eqn{S \times KN^{UR}} "mcmc" object of coefficient draws of deterministic terms.}
+#' \item{Sigma}{an \eqn{S \times K^2} "mcmc" object of variance-covariance draws.}
 #' \item{specifications}{a list containing information on the model specification.}
 #' 
 #' @export

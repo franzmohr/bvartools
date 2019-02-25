@@ -116,9 +116,9 @@ A # Print
 ```
 
     ##        invest.1 income.1 cons.1 invest.2 income.2 cons.2  const
-    ## invest   -0.319    0.151  0.949   -0.159    0.114  0.933 -0.017
-    ## income    0.044   -0.151  0.289    0.050    0.018 -0.010  0.016
-    ## cons     -0.002    0.224 -0.262    0.034    0.352 -0.020  0.013
+    ## invest   -0.319    0.156  0.960   -0.160    0.117  0.928 -0.017
+    ## income    0.043   -0.152  0.289    0.050    0.017 -0.005  0.016
+    ## cons     -0.003    0.224 -0.262    0.034    0.352 -0.020  0.013
 
 ``` r
 Sigma <- rowMeans(draws_sigma) # Obtain means for every row
@@ -130,9 +130,9 @@ Sigma # Print
 ```
 
     ##        invest income cons
-    ## invest  22.68   0.77 1.31
-    ## income   0.77   1.46 0.66
-    ## cons     1.31   0.66 0.95
+    ## invest  22.78   0.76 1.32
+    ## income   0.76   1.46 0.66
+    ## cons     1.32   0.66 0.95
 
 The means of the coefficient draws are very close to the results of the frequentist estimatior in Lütkepohl (2007).
 

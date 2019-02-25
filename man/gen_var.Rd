@@ -10,19 +10,19 @@ gen_var(data, p = 2, exogen = NULL, s = 2, deterministic = "const",
 \arguments{
 \item{data}{a time-series object of endogenous variables.}
 
-\item{p}{an integer of the lag order (default is `p = 2`).}
+\item{p}{an integer of the lag order (default is \code{p = 2}).}
 
 \item{exogen}{an optional time-series object of external regressors.}
 
-\item{s}{an optional integer of the lag order of the exogenous variables (default is `s = 2`).}
+\item{s}{an optional integer of the lag order of the exogenous variables (default is \code{s = 2}).}
 
 \item{deterministic}{a character specifying which deterministic terms should
-be included. Available values are `"none"`, `"const"` (default),
-`"trend"`, and `"both"`.}
+be included. Available values are \code{"none"}, \code{"const"} (default),
+\code{"trend"}, and \code{"both"}.}
 
-\item{seasonal}{logical. If `TRUE`, seasonal dummy variables will be
+\item{seasonal}{logical. If \code{TRUE}, seasonal dummy variables are
 generated. The amount of dummies depends on the frequency of the
-time-series object provided in `data`.}
+time-series object provided in \code{data}.}
 }
 \value{
 A list containing the following elements:
@@ -30,7 +30,7 @@ A list containing the following elements:
 \item{Z}{a matrix of regressor variables.}
 }
 \description{
-`gen_var` produces the input for the estimation of a vector autoregressive (VAR) model.
+\code{gen_var} produces the input for the estimation of a vector autoregressive (VAR) model.
 }
 \details{
 The function produces the variable matrices of a vector autoregressive (VAR)
@@ -53,7 +53,7 @@ In matrix notation the above model can be written as
 where
 \eqn{Y} is a \eqn{K \times T} matrix of endogenous variables,
 \eqn{Z} is a \eqn{Kp + M(1+s) + N \times T} matrix of regressor variables,
-and \eqn{U} is a \eqn{K \times T} matrix of errors. The function `gen_var`
+and \eqn{U} is a \eqn{K \times T} matrix of errors. The function \code{gen_var}
 generates the matrices \eqn{Y} and \eqn{Z}.
 }
 \references{

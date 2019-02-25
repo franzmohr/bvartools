@@ -1,17 +1,18 @@
 #' Impulse Response Function
 #' 
 #' Computes the impulse response coefficients of an object of class "bvar" for
-#' `n.ahead` steps.
+#' \code{n.ahead} steps.
 #' 
-#' @param object an object of class "bvar", usually, a result of a call to `bvar` or `bvec_to_bvar`.
+#' @param object an object of class "bvar", usually, a result of a call to
+#' \code{\link{bvar}} or \code{\link{bvec_to_bvar}}.
 #' @param impulse name of the impulse variable.
 #' @param response name of the response variable.
 #' @param n.ahead number of steps ahead.
 #' @param shock size of the impulse shock.
 #' @param ci a numeric between 0 and 1 specifying the probability mass covered by the
 #' credible intervals. Defaults to 0.95.
-#' @param type type of the impulse resoponse. Possible choices are forecast error `feir`
-#' (default), orthogonalised `oir`, structural `sir`, and generalised `gir` impulse responses.
+#' @param type type of the impulse resoponse. Possible choices are forecast error "feir"
+#' (default), orthogonalised "oir", structural "sir", and generalised "gir" impulse responses.
 #' @param cumulative logical specifying whether a cumulative IRF should be calculated.
 #' 
 #' @details The function produces different types of impulse responses for the VAR model
@@ -99,7 +100,7 @@ irf <- function(object, impulse = NULL, response = NULL, n.ahead = 5,
   }
   
   ci_low <- (1 - ci) / 2
-  ci_high <- 1 - (1 - ci) / 2
+  ci_high <- 1 - ci_low
   pr <- c(ci_low, .5, ci_high)
   result <- stats::ts(t(apply(result, 2, stats::quantile, probs = pr)))
   stats::tsp(result) <- c(0, n.ahead, stats::tsp(result)[3])

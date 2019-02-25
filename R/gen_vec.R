@@ -1,6 +1,6 @@
 #' Vector Error Correction Model Input
 #' 
-#' `gen_vec` produces the input for the estimation of a vector error correction (VEC) model.
+#' \code{gen_vec} produces the input for the estimation of a vector error correction (VEC) model.
 #' 
 #' @param data a time-series object of endogenous variables.
 #' @param p an integer of the lag order of the series (levels) in the VAR.
@@ -8,15 +8,15 @@
 #' @param s an optional integer of the lag order of the exogenous variables of the series
 #' (levels) in the VAR.
 #' @param const a character specifying whether a constant term enters the error correction
-#' term (`"restricted"`) or the non-cointegration term as an `"unrestricted"` variable.
-#' If `NULL` (default) no constant term will be added.
+#' term (\code{"restricted"}) or the non-cointegration term as an \code{"unrestricted"} variable.
+#' If \code{NULL} (default) no constant term will be added.
 #' @param trend a character specifying whether a trend term enters the error correction
-#' term (`"restricted"`) or the non-cointegration term as an `"unrestricted"` variable.
-#' If `NULL` (default) no constant term will be added.
+#' term (\code{"restricted"}) or the non-cointegration term as an \code{"unrestricted"} variable.
+#' If \code{NULL} (default) no constant term will be added.
 #' @param seasonal a character specifying whether seasonal dummies should be included in the error
-#' correction term (`"restricted"`) or in the non-cointegreation term as `"unrestricted"` variables.
-#' If `NULL` (default) no seasonal terms will be added. The amount of dummy variables depends
-#' on the frequency of the time-series object provided in `data`.
+#' correction term (\code{"restricted"}) or in the non-cointegreation term as \code{"unrestricted"}
+#' variables. If \code{NULL} (default) no seasonal terms will be added. The amount of dummy variables depends
+#' on the frequency of the time-series object provided in \code{data}.
 #' 
 #' @details The function produces the variable matrices of a vector error correction (VEC)
 #' model, which can also include exogenous variables:
@@ -159,7 +159,7 @@ gen_vec <- function(data, p = 2, exogen = NULL, s = 2, const = NULL, trend = NUL
       pos <- rep(1:freq, 2)[pos:(pos + (freq - 2))]
       seas <- NULL
       s_name <- NULL
-      for (i in 1:3) {
+      for (i in 1:(freq - 1)) {
         s_temp <- rep(0, freq)
         s_temp[pos[i]] <- 1
         seas <- cbind(seas, rep(s_temp, length.out = t))

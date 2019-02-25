@@ -1,17 +1,17 @@
 #' Vector Autoregressive Model Input
 #' 
-#' `gen_var` produces the input for the estimation of a vector autoregressive (VAR) model.
+#' \code{gen_var} produces the input for the estimation of a vector autoregressive (VAR) model.
 #' 
 #' @param data a time-series object of endogenous variables.
-#' @param p an integer of the lag order (default is `p = 2`).
+#' @param p an integer of the lag order (default is \code{p = 2}).
 #' @param exogen an optional time-series object of external regressors.
-#' @param s an optional integer of the lag order of the exogenous variables (default is `s = 2`).
+#' @param s an optional integer of the lag order of the exogenous variables (default is \code{s = 2}).
 #' @param deterministic a character specifying which deterministic terms should
-#' be included. Available values are `"none"`, `"const"` (default),
-#' `"trend"`, and `"both"`.
-#' @param seasonal logical. If `TRUE`, seasonal dummy variables will be
+#' be included. Available values are \code{"none"}, \code{"const"} (default),
+#' \code{"trend"}, and \code{"both"}.
+#' @param seasonal logical. If \code{TRUE}, seasonal dummy variables are
 #' generated. The amount of dummies depends on the frequency of the
-#' time-series object provided in `data`.
+#' time-series object provided in \code{data}.
 #' 
 #' @details The function produces the variable matrices of a vector autoregressive (VAR)
 #' model, which can also include exogenous variables:
@@ -33,7 +33,7 @@
 #' where
 #' \eqn{Y} is a \eqn{K \times T} matrix of endogenous variables,
 #' \eqn{Z} is a \eqn{Kp + M(1+s) + N \times T} matrix of regressor variables,
-#' and \eqn{U} is a \eqn{K \times T} matrix of errors. The function `gen_var`
+#' and \eqn{U} is a \eqn{K \times T} matrix of errors. The function \code{gen_var}
 #' generates the matrices \eqn{Y} and \eqn{Z}.
 #' 
 #' @return A list containing the following elements:
@@ -108,7 +108,7 @@ gen_var <- function(data, p = 2, exogen = NULL, s = 2, deterministic = "const", 
     } else {
       pos <- which(floor(stats::time(temp)) == stats::time(temp))[1]
       pos <- rep(1:freq, 2)[pos:(pos + (freq - 2))]
-      for (i in 1:3) {
+      for (i in 1:(freq - 1)) {
         s_temp <- rep(0, freq)
         s_temp[pos[i]] <- 1
         temp <- cbind(temp, rep(s_temp, length.out = t))

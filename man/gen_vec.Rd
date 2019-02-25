@@ -18,17 +18,17 @@ gen_vec(data, p = 2, exogen = NULL, s = 2, const = NULL,
 (levels) in the VAR.}
 
 \item{const}{a character specifying whether a constant term enters the error correction
-term (`"restricted"`) or the non-cointegration term as an `"unrestricted"` variable.
-If `NULL` (default) no constant term will be added.}
+term (\code{"restricted"}) or the non-cointegration term as an \code{"unrestricted"} variable.
+If \code{NULL} (default) no constant term will be added.}
 
 \item{trend}{a character specifying whether a trend term enters the error correction
-term (`"restricted"`) or the non-cointegration term as an `"unrestricted"` variable.
-If `NULL` (default) no constant term will be added.}
+term (\code{"restricted"}) or the non-cointegration term as an \code{"unrestricted"} variable.
+If \code{NULL} (default) no constant term will be added.}
 
 \item{seasonal}{a character specifying whether seasonal dummies should be included in the error
-correction term (`"restricted"`) or in the non-cointegreation term as `"unrestricted"` variables.
-If `NULL` (default) no seasonal terms will be added. The amount of dummy variables depends
-on the frequency of the time-series object provided in `data`.}
+correction term (\code{"restricted"}) or in the non-cointegreation term as \code{"unrestricted"}
+variables. If \code{NULL} (default) no seasonal terms will be added. The amount of dummy variables depends
+on the frequency of the time-series object provided in \code{data}.}
 }
 \value{
 A list containing the following elements:
@@ -37,7 +37,7 @@ A list containing the following elements:
 \item{X}{a matrix of non-cointegration regressors.}
 }
 \description{
-`gen_vec` produces the input for the estimation of a vector error correction (VEC) model.
+\code{gen_vec} produces the input for the estimation of a vector error correction (VEC) model.
 }
 \details{
 The function produces the variable matrices of a vector error correction (VEC)

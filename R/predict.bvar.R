@@ -2,19 +2,20 @@
 #' 
 #' Forecasting a Bayesian VAR object of class "bvar" with credible bands.
 #' 
-#' @param object an object of class "bvar", usually, a result of a call to `bvar` or `bvec_to_bvar`.
+#' @param object an object of class "bvar", usually, a result of a call to
+#' \code{\link{bvar}} or \code{\link{bvec_to_bvar}}.
 #' @param n.ahead number of steps ahead at which to predict.
-#' @param new_x a matrix of new non-deterministic, exogenous variables. Must have `n.ahead` rows.
-#' @param new_D a matrix of new deterministic variables. Must have `n.ahead` rows.
+#' @param new_x a matrix of new non-deterministic, exogenous variables. Must have \code{n.ahead} rows.
+#' @param new_D a matrix of new deterministic variables. Must have \code{n.ahead} rows.
 #' @param ci a numeric between 0 and 1 specifying the probability mass covered by the
 #' credible intervals. Defaults to 0.95.
 #' @param ... additional arguments.
 #' 
 #' @details For the VAR model
 #' \deqn{A_0 y_t = \sum_{i = 1}^{p} A_{i} y_{t-i} + \sum_{i = 0}^{s} B_{i} x_{t-i} + C D_t + u_t,}
-#' with \eqn{u_t \sim N(0, \Sigma)} the function produces `n.ahead` forecasts.
+#' with \eqn{u_t \sim N(0, \Sigma)} the function produces \code{n.ahead} forecasts.
 #' 
-#' @return A time-series object of class "irf.bvar".
+#' @return A time-series object of class "bvarprd".
 #' 
 #' @references
 #' 

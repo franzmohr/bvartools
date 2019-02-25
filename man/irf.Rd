@@ -11,7 +11,8 @@ irf(object, impulse = NULL, response = NULL, n.ahead = 5,
 \method{plot}{bvarirf}(x, ...)
 }
 \arguments{
-\item{object}{an object of class "bvar", usually, a result of a call to `bvar` or `bvec_to_bvar`.}
+\item{object}{an object of class "bvar", usually, a result of a call to
+\code{\link{bvar}} or \code{\link{bvec_to_bvar}}.}
 
 \item{impulse}{name of the impulse variable.}
 
@@ -24,8 +25,8 @@ irf(object, impulse = NULL, response = NULL, n.ahead = 5,
 \item{ci}{a numeric between 0 and 1 specifying the probability mass covered by the
 credible intervals. Defaults to 0.95.}
 
-\item{type}{type of the impulse resoponse. Possible choices are forecast error `feir`
-(default), orthogonalised `oir`, structural `sir`, and generalised `gir` impulse responses.}
+\item{type}{type of the impulse resoponse. Possible choices are forecast error "feir"
+(default), orthogonalised "oir", structural "sir", and generalised "gir" impulse responses.}
 
 \item{cumulative}{logical specifying whether a cumulative IRF should be calculated.}
 
@@ -38,7 +39,7 @@ A time-series object of class "bvarirf".
 }
 \description{
 Computes the impulse response coefficients of an object of class "bvar" for
-`n.ahead` steps.
+\code{n.ahead} steps.
 
 A plot function for objects of class "bvarirf".
 }

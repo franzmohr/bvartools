@@ -31,6 +31,7 @@
 // [[Rcpp::export]]
 arma::vec post_normal_sur(arma::mat y ,arma::mat z, arma::mat sigma_i,
                           arma::vec a_prior, arma::mat v_i_prior) {
+  
   int n = y.n_rows;
   int t = y.n_cols;
   int nvars = z.n_cols;
@@ -58,10 +59,9 @@ arma::vec post_normal_sur(arma::mat y ,arma::mat z, arma::mat sigma_i,
   arma::mat V_post = arma::inv(v_i_prior + ZHZ);
   arma::vec mu_post = V_post * (v_i_prior * a_prior + ZHy);
 
-  arma::mat U, V;
-  arma::vec s;
-  svd(U, s, V, V_post);
-  arma::mat A = U * arma::diagmat(sqrt(s)) * arma::trans(V);
-  arma::vec Z = arma::randn<arma::vec>(nvars);
-  return mu_post + A * Z;
+  arma::mat U;
+  arma::vec s, Z;
+  arma::eig_sym(s, U, V_post);
+
+  return mu_post + U * arma::diagmat(sqrt(s)) * arma::trans(U) * arma::randn<arma::vec>(nvars);
 }

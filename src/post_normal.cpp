@@ -39,9 +39,9 @@ arma::vec post_normal(arma::mat y, arma::mat x, arma::mat sigma_i, arma::vec a_p
   arma::mat v_post = arma::inv(v_i_prior + arma::kron(x * arma::trans(x), sigma_i));
   arma::vec a_post = v_post * (v_i_prior * a_prior + vectorise(sigma_i * y * arma::trans(x)));
 
-  arma::mat U, V;
+  arma::mat U;
   arma::vec s;
-  arma::svd(U, s, V, v_post);
+  arma::eig_sym(s, U, v_post);
 
-  return a_post + (U * arma::diagmat(sqrt(s)) * arma::trans(V)) * arma::randn<arma::vec>(m);
+  return a_post + (U * arma::diagmat(sqrt(s)) * arma::trans(U)) * arma::randn<arma::vec>(m);
 }

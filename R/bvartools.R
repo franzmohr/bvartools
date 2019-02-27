@@ -1,7 +1,7 @@
 #' bvartools: Functions for Bayesian Inference of Vector Autoregressive Models
 #' 
-#' A collection of R and C++ functions, which assist in the set-up of algorithms for
-#' Bayesian inference of vector autoregressive (VAR) models.
+#' A collection of R and C++ functions, which assist in the set-up of algorithms
+#' for Bayesian inference of vector autoregressive (VAR) models.
 #' 
 #' The package \code{bvartools} implements some common functions used for Bayesian
 #' inference for mulitvariate time series models. It should give researchers

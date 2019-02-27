@@ -1,19 +1,22 @@
 #' bvartools: Functions for Bayesian Inference of Vector Autoregressive Models
 #' 
-#' A collection of R and C++ functions, which assist in the set-up of Gibbs samplers for
-#' the analysis of vector autoregressive (VAR) models.
+#' A collection of R and C++ functions, which assist in the set-up of algorithms for
+#' Bayesian inference of vector autoregressive (VAR) models.
 #' 
-#' The package `bvartools` implements some common functions used for Bayesian
+#' The package \code{bvartools} implements some common functions used for Bayesian
 #' inference for mulitvariate time series models. It should give researchers
 #' maximum freedom in setting up a Gibbs sampler in R and keep calculation time
 #' limited at the same time. This is achieved by implementing posterior simulation
 #' functions in C++. Its main features are
 #' \itemize{
-#' \item Posterior simulation functions, which are written in C++ for faster calculation
-#' \item The `bvar` and `bvec` function collects the output of a Gibbs sampler in standardised objects, which can be used for further analyses
-#' \item Functions for further analysis such as `irf` for impulse response analysis and `predict` for forecasting.
+#' \item The \code{bvar} and \code{bvec} functions collect the output of a Gibbs sampler
+#' in standardised objects, which can be used for further analyses.
+#' \item Further functions such as \code{predict}, \code{irf}, \code{fevd} for forecasting,
+#' impulse response analysis and forecast error variance decomposition, respectively.
+#' \item Computationally intensive functions - such as for posterior
+#' simulation - are written in C++ using the \code{RcppArmadillo} package of Eddelbuettel
+#' and Sanderson (2014).
 #' }
-#' 
 #' 
 #' @author Franz X. Mohr
 #' @docType package
@@ -22,8 +25,15 @@
 #'
 #' @references
 #' 
+#' Sanderson, C., & Curtin, R. (2016). Armadillo: a template-based C++ library for linear algebra.
+#' \emph{Journal of Open Source Software, 1}(2), 26. \url{http://dx.doi.org/10.21105/joss.00026}
+#' 
 #' Durbin, J., & Koopman, S. J. (2002). A simple and efficient simulation smoother for
 #' state space time series analysis. \emph{Biometrika, 89}(3), 603--615.
+#' 
+#' Eddelbuettel, D., & Sanderson C. (2014). RcppArmadillo: Accelerating R with high-performance
+#' C++ linear algebra. \emph{Computational Statistics and Data Analysis, 71}, 1054--1063.
+#' \url{http://dx.doi.org/10.1016/j.csda.2013.02.005}
 #' 
 #' George, E. I., Sun, D., & Ni, S. (2008). Bayesian stochastic search for VAR model
 #' restrictions. \emph{Journal of Econometrics, 142}(1), 553--580.
@@ -42,7 +52,7 @@
 #' \emph{Journal of Applied Econometrics, 28}(2), 204--230.
 #' \url{https://doi.org/10.1002/jae.1271}
 #' 
-#' Lütkepohl, H. (2007). \emph{New introduction to multiple time series analyis}. Berlin: Springer.
+#' Lütkepohl, H. (2006). \emph{New introduction to multiple time series analyis}. Berlin: Springer.
 #' 
 #' @useDynLib bvartools, .registration = TRUE
 #' @importFrom Rcpp sourceCpp

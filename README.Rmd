@@ -13,9 +13,9 @@ output:
 
 The package `bvartools` implements some common functions used for Bayesian inference for mulitvariate time series models. It should give researchers maximum freedom in setting up an MCMC algorithm in R and keep calculation time limited at the same time. This is achieved by implementing posterior simulation functions in C++. Its main features are
 
-* Posterior simulation functions, which are written in C++ for faster computation
-* The `bvar` and `bvec` function collects the output of a Gibbs sampler in standardised objects, which can be used for further analyses
-* Further functions such as `predict`, `irf`, `fevd` for forecasting, impulse response analysis and forecast error variance decomposition, respectively.
+- The `bvar` and `bvec` function collects the output of a Gibbs sampler in standardised objects, which can be used for further analyses
+- Further functions such as `predict`, `irf`, `fevd` for forecasting, impulse response analysis and forecast error variance decomposition, respectively.
+- Computationally intensive functions - such as for posterior simulation - are written in C++ using the `RcppArmadillo` package of Eddelbuettel and Sanderson (2014).[^cpp]
 
 ## Installation
 
@@ -32,7 +32,7 @@ This example covers the estimation of a simple Bayesian VAR (BVAR) model. For fu
 
 ### Data
 
-To illustrate the estimation process the dataset E1 from Lütkepohl (2007) is used. It contains data on West German fixed investment, disposable income and consumption expenditures in billions of DM from 1960Q1 to 1982Q4.
+To illustrate the estimation process the dataset E1 from Lütkepohl (2006) is used. It contains data on West German fixed investment, disposable income and consumption expenditures in billions of DM from 1960Q1 to 1982Q4.
 
 ```{r data, fig.align='center', fig.height=5, fig.width=4.5}
 library(bvartools)
@@ -54,7 +54,7 @@ y <- data$Y[, 1:73]
 x <- data$Z[, 1:73]
 ```
 
-As in Lütkepohl (2007) only the first 73 observations are used.
+As in Lütkepohl (2006) only the first 73 observations are used.
 
 ### Estimation
 
@@ -124,7 +124,7 @@ dimnames(Sigma) <- list(dimnames(y)[[1]], dimnames(y)[[1]]) # Rename matrix dime
 Sigma # Print
 ```
 
-The means of the coefficient draws are very close to the results of the frequentist estimatior in Lütkepohl (2007).
+The means of the coefficient draws are very close to the results of the frequentist estimatior in Lütkepohl (2006).
 
 ### `bvar` objects
 
@@ -181,6 +181,12 @@ plot(bvar_fevd, main = "FEVD of consumption")
 
 ## References
 
-Lütkepohl, H. (2007). *New introduction to multiple time series analyis*. Berlin: Springer.
+Eddelbuettel, D., & Sanderson C. (2014). RcppArmadillo: Accelerating R with high-performance C++ linear algebra. *Computational Statistics and Data Analysis, 71*, 1054-1063.
+
+Lütkepohl, H. (2006). *New introduction to multiple time series analyis*. Berlin: Springer.
 
 Pesaran, H. H., & Shin, Y. (1998). Generalized impulse response analysis in linear multivariate models. *Economics Letters, 58*, 17-29.
+
+Sanderson, C., & Curtin, R. (2016). Armadillo: a template-based C++ library for linear algebra. *Journal of Open Source Software, 1*(2), 26.
+
+[^cpp]: `RcppArmadillo` is the `Rcpp` bridge to the open source 'Armadillo' library of Sanderson and Curtin (2016).

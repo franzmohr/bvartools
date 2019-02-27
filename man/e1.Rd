@@ -21,6 +21,6 @@ from file E1 of the datasets associated with Lütkepohl (2007). Raw data are ava
 Deutsche Bundesbank.
 }
 \references{
-Lütkepohl, H. (2007). \emph{New introduction to multiple time series analysis}. Berlin: Springer.
+Lütkepohl, H. (2006). \emph{New introduction to multiple time series analysis}. Berlin: Springer.
 }
 \keyword{datasets}

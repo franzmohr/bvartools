@@ -37,42 +37,7 @@ bvs <- function(y, z, a, lambda, sigma_i, prob_prior, include = NULL) {
     .Call(`_bvartools_bvs`, y, z, a, lambda, sigma_i, prob_prior, include)
 }
 
-#' Impulse Response
-#' 
-#' Produces different types of impulse responses.
-#' 
-#' @param A \eqn{K \times Kp} matrix of coefficients, where \eqn{K} is the number of endogenous
-#' variables and \eqn{p} is the number of lags.
-#' @param h integer specifying the steps.
-#' @param type character specifying the type of the impulse response.
-#' @param impulse numeric specifying the position of the impulse variable.
-#' @param response numeric specifying the position of the response variable.
-#' 
-#' @details The function produces different types of impulse responses for the VAR model
-#' \deqn{A_0 y_t = \sum_{i = 1}^{p} A_{i} y_{t-i} + u_t,}
-#' with \eqn{u_t \sim N(0, \Sigma)}.
-#' 
-#' Forecast error impulse responses \eqn{\Phi_i} are obtained by recursions
-#' \deqn{\Phi_i = \sum_{j = 1}^{i} \Phi_{i-j} A_j,   i = 1, 2,...,}
-#' with \eqn{\Phi_0 = I_K}.
-#' 
-#' Orthogonalised impulse responses \eqn{\Theta^o_i} are calculated as \eqn{\Theta^o_i = \Phi_i P,}
-#' where P is the lower triangular Choleski decomposition of \eqn{\Sigma}.
-#' 
-#' Structural impulse responses \eqn{\Theta^s_i} are calculated as \eqn{\Theta^s_i = \Phi_i A_0^{-1}}.
-#' 
-#' Generalised impulse responses for variable \eqn{j}, i.e. \eqn{\Theta^g_ji} are calculated as
-#' \eqn{\Theta^g_ji = \sigma_{jj}^{-1/2} \Phi_i \Sigma e_j}, where \eqn{\sigma_{jj}} is the variance
-#' of the \eqn{j^{th}} diagonal element of \eqn{\Sigma} and \eqn{e_i} is a selection vector containing
-#' one in its \eqn{j^{th}} element and zero otherwise.
-#' 
-#' @return A \eqn{K(h + 1) \times K} matrix.
-#' 
-#' @references
-#' 
-#' Lütkepohl, H. (2007). \emph{New introduction to multiple time series analyis}. Berlin: Springer.
-#' 
-ir <- function(A, h, type, impulse, response) {
+.ir <- function(A, h, type, impulse, response) {
     .Call(`_bvartools_ir`, A, h, type, impulse, response)
 }
 
@@ -222,7 +187,7 @@ post_coint_kls <- function(y, beta, w, sigma_i, v_i, p_tau_i, g_i, x = NULL, gam
 #' 
 #' @references
 #' 
-#' Lütkepohl, H. (2007). \emph{New introduction to multiple time series analyis}. Berlin: Springer.
+#' Lütkepohl, H. (2006). \emph{New introduction to multiple time series analyis}. Berlin: Springer.
 #' 
 post_normal <- function(y, x, sigma_i, a_prior, v_i_prior) {
     .Call(`_bvartools_post_normal`, y, x, sigma_i, a_prior, v_i_prior)

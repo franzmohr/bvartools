@@ -20,9 +20,9 @@ knitr::opts_chunk$set(
 
 The package `bvartools` implements some common functions used for Bayesian inference for mulitvariate time series models. It should give researchers maximum freedom in setting up an MCMC algorithm in R and keep calculation time limited at the same time. This is achieved by implementing posterior simulation functions in C++. Its main features are
 
--   Posterior simulation functions, which are written in C++ for faster computation
 -   The `bvar` and `bvec` function collects the output of a Gibbs sampler in standardised objects, which can be used for further analyses
 -   Further functions such as `predict`, `irf`, `fevd` for forecasting, impulse response analysis and forecast error variance decomposition, respectively.
+- Computationally intensive functions - such as for posterior simulation - are written in C++ using the `RcppArmadillo` package of Eddelbuettel and Sanderson (2014).[^cpp]
 
 This vignette provides the code to set up and estimate a basic Bayesian VAR (BVAR) model with the `bvartools` package. For this illustration the dataset E1 from Lütkepohl (2007) is used. It contains data on West German fixed investment, disposable income and consumption expenditures in billions of DM from 1960Q1 to 1982Q4.
 
@@ -47,7 +47,7 @@ y <- data$Y[, 1:73]
 x <- data$Z[, 1:73]
 ```
 
-As in Lütkepohl (2007) only the first 73 observations are used.
+As in Lütkepohl (2006) only the first 73 observations are used.
 
 ## Estimation
 
@@ -68,7 +68,7 @@ u_sigma_freq <- tcrossprod(u_freq) / (ncol(y) - nrow(x))
 round(u_sigma_freq * 10^4, 2)
 ```
 
-These are the same values as in Lütkepohl (2007).
+These are the same values as in Lütkepohl (2006).
 
 ### Bayesian estimator
 
@@ -211,8 +211,14 @@ plot(bvar_fevd_gir, main = "GIR-based FEVD of consumption")
 
 ## References
 
+Eddelbuettel, D., & Sanderson C. (2014). RcppArmadillo: Accelerating R with high-performance C++ linear algebra. *Computational Statistics and Data Analysis, 71*, 1054-1063.
+
 Koop, G., Pesaran, M. H., & Potter, S.M. (1996). Impulse response analysis in nonlinear multivariate models. *Journal of Econometrics 74*(1), 119-147.
 
-Lütkepohl, H. (2007). *New introduction to multiple time series analyis*. Berlin: Springer.
+Lütkepohl, H. (2006). *New introduction to multiple time series analyis*. Berlin: Springer.
 
 Pesaran, H. H., & Shin, Y. (1998). Generalized impulse response analysis in linear multivariate models. *Economics Letters, 58*(1), 17-29.
+
+Sanderson, C., & Curtin, R. (2016). Armadillo: a template-based C++ library for linear algebra. *Journal of Open Source Software, 1*(2), 26.
+
+[^cpp]: `RcppArmadillo` is the `Rcpp` bridge to the open source 'Armadillo' library of Sanderson and Curtin (2016).

@@ -37,7 +37,7 @@
 #' 
 #' @references
 #' 
-#' Lütkepohl, H. (2007). \emph{New introduction to multiple time series analyis}. Berlin: Springer.
+#' Lütkepohl, H. (2006). \emph{New introduction to multiple time series analyis}. Berlin: Springer.
 #' 
 #' Pesaran, H. H., & Shin, Y. (1998). Generalized impulse response analysis in linear multivariate models. \emph{Economics Letters, 58}, 17-29.
 #' 
@@ -91,7 +91,7 @@ irf <- function(object, impulse = NULL, response = NULL, n.ahead = 5,
     A[[i]] <- temp
   }
 
-  result <- lapply(A, ir, h = n.ahead, type = type, impulse = impulse, response = response)
+  result <- lapply(A, .ir, h = n.ahead, type = type, impulse = impulse, response = response)
   
   result <- t(matrix(unlist(result), n.ahead + 1))
   

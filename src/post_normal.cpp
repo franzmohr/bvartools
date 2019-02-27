@@ -30,7 +30,7 @@
 //' 
 //' @references
 //' 
-//' Lütkepohl, H. (2007). \emph{New introduction to multiple time series analyis}. Berlin: Springer.
+//' Lütkepohl, H. (2006). \emph{New introduction to multiple time series analyis}. Berlin: Springer.
 //' 
 // [[Rcpp::export]]
 arma::vec post_normal(arma::mat y, arma::mat x, arma::mat sigma_i, arma::vec a_prior, arma::mat v_i_prior) {

@@ -20,7 +20,7 @@ knitr::opts_chunk$set(
 
 A general drawback of vector autoregressive (VAR) models is that the number of estimated coefficients increases disproportionately with the number of lags. Therefore, fewer information per parameter is available for the estimation as the number of lags increases. In the Bayesian VAR literature one approach to mitigate this so-called *curse of dimensionality* is *stochastic search variable selection* (SSVS) as proposed by George et al. (2008). The basic idea of SSVS is to assign commonly used prior variances to parameters, which should be included in a model, and prior variances close to zero to irrelevant parameters. By that, relevant parameters are estimated in the usual way and posterior draws of irrelevant variables are close to zero so that they have no significant effect on forecasts and impulse responses. This is achieved by adding a hierarchial prior to the model, where the relevance of a variable is assessed in each step of the sampling algorithm.[^koop]
 
-This vignette presents code for the estimation of a Bayesian vector autoregressive (BVAR) model with SSVS. It uses [dataset E1](http://www.jmulti.de/download/datasets/e1.dat) from Lütkepohl (2007), which contains data on West German fixed investment, disposable income and consumption expenditures in billions of DM from 1960Q1 to 1982Q4. Following a related example in Lütkepohl (2007, Section 5.2.10) only the first 71 observations of a VAR(4) model are used. The `bvartools` package can be used to load the data and generate the data matrices:
+This vignette presents code for the estimation of a Bayesian vector autoregressive (BVAR) model with SSVS. It uses [dataset E1](http://www.jmulti.de/download/datasets/e1.dat) from Lütkepohl (2006), which contains data on West German fixed investment, disposable income and consumption expenditures in billions of DM from 1960Q1 to 1982Q4. Following a related example in Lütkepohl (2007, Section 5.2.10) only the first 71 observations of a VAR(4) model are used. The `bvartools` package can be used to load the data and generate the data matrices:
 
 ```{r data, fig.align='center', fig.height=5, fig.width=4.5}
 # devtools::install_github("franzmohr/bvartools")
@@ -181,7 +181,7 @@ for (draw in 1:iter) {
 }
 ```
 
-The means of the posterior draws are similar to the OLS estimates in Lütkepohl (2007, Section 5.2.10):
+The means of the posterior draws are similar to the OLS estimates in Lütkepohl (2006, Section 5.2.10):
 
 ```{r}
 A <- rowMeans(draws_a) # Obtain means for every row
@@ -225,7 +225,7 @@ George, E. I., Sun, D., & Ni, S. (2008). Bayesian stochastic search for VAR mode
 
 Koop, G., & Korobilis, D. (2010). Bayesian multivariate time series methods for empirical macroeconomics. *Foundations and trends in econometrics, 3*(4), 267-358.
 
-Lütkepohl, H. (2007). *New introduction to multiple time series analyis*. Berlin: Springer.
+Lütkepohl, H. (2006). *New introduction to multiple time series analyis*. Berlin: Springer.
 
 [^koop]: See Koop and Korobilis (2010) for an introduction to Bayesian VAR modelling and SSVS.
 

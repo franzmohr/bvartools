@@ -63,7 +63,7 @@ of the \eqn{j^{th}} diagonal element of \eqn{\Sigma} and \eqn{e_i} is a selectio
 one in its \eqn{j^{th}} element and zero otherwise.
 }
 \references{
-Lütkepohl, H. (2007). \emph{New introduction to multiple time series analyis}. Berlin: Springer.
+Lütkepohl, H. (2006). \emph{New introduction to multiple time series analyis}. Berlin: Springer.
 
 Pesaran, H. H., & Shin, Y. (1998). Generalized impulse response analysis in linear multivariate models. \emph{Economics Letters, 58}, 17-29.
 }

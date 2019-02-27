@@ -22,7 +22,7 @@ This vignette provides the code to set up and estimate a basic Bayesian vector e
 
 ## Data
 
-To illustrate the estimation process the dataset E6 from Lütkepohl (2007) is used. It contains data on German long-term interest rates and inflation from 1972Q2 to 1998Q4.
+To illustrate the estimation process, the dataset E6 from Lütkepohl (2007) is used, which contains data on German long-term interest rates and inflation from 1972Q2 to 1998Q4.
 
 ```{r data, fig.align='center', fig.height=5, fig.width=4.5}
 library(bvartools)
@@ -220,6 +220,6 @@ plot(bvec_fevd, main = "FEVD of inflation")
 
 Koop, G., León-González, R., & Strachan R. W. (2010). Efficient posterior simulation for cointegrated models with priors on the cointegration space. *Econometric Reviews, 29*(2), 224-242. [https://doi.org/10.1080/07474930903382208](https://doi.org/10.1080/07474930903382208)
 
-Lütkepohl, H. (2007). *New introduction to multiple time series analyis*. Berlin: Springer.
+Lütkepohl, H. (2006). *New introduction to multiple time series analyis*. Berlin: Springer.
 
 Pesaran, H. H., & Shin, Y. (1998). Generalized impulse response analysis in linear multivariate models, *Economics Letters, 58*, 17-29.

@@ -87,5 +87,5 @@ For the VAR model
 with \eqn{u_t \sim N(0, \Sigma)} the function produces \code{n.ahead} forecasts.
 }
 \references{
-Lütkepohl, H. (2007). \emph{New introduction to multiple time series analyis}. Berlin: Springer.
+Lütkepohl, H. (2006). \emph{New introduction to multiple time series analyis}. Berlin: Springer.
 }

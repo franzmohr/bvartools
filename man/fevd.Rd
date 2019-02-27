@@ -23,7 +23,7 @@ Possible choices are orthogonalised \code{oir} (default) and generalised \code{g
 
 \item{rescale_gir}{logical. Should the GIR-based FEVD be normalised?}
 
-\item{x}{an object of class "fevd.bvar", usually, a result of a call to \code{\link{irf}}.}
+\item{x}{an object of class "bvarfevd", usually, a result of a call to \code{\link{irf}}.}
 
 \item{...}{further graphical parameters.}
 }
@@ -54,7 +54,7 @@ where \eqn{\sigma_{jj}} is the diagonal element of the \eqn{j}th variable of the
 Since GIR-based FEVDs do not add up to unity, they can be normalised by setting \code{rescale_gir = TRUE}.
 }
 \references{
-Lütkepohl, H. (2007). \emph{New introduction to multiple time series analyis}. Berlin: Springer.
+Lütkepohl, H. (2006). \emph{New introduction to multiple time series analyis}. Berlin: Springer.
 
 Pesaran, H. H., & Shin, Y. (1998). Generalized impulse response analysis in linear multivariate models. \emph{Economics Letters, 58}, 17-29.
 }

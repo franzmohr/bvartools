@@ -1,42 +1,6 @@
 #include <RcppArmadillo.h>
 // [[Rcpp::depends(RcppArmadillo)]]
-
-//' Impulse Response
-//' 
-//' Produces different types of impulse responses.
-//' 
-//' @param A \eqn{K \times Kp} matrix of coefficients, where \eqn{K} is the number of endogenous
-//' variables and \eqn{p} is the number of lags.
-//' @param h integer specifying the steps.
-//' @param type character specifying the type of the impulse response.
-//' @param impulse numeric specifying the position of the impulse variable.
-//' @param response numeric specifying the position of the response variable.
-//' 
-//' @details The function produces different types of impulse responses for the VAR model
-//' \deqn{A_0 y_t = \sum_{i = 1}^{p} A_{i} y_{t-i} + u_t,}
-//' with \eqn{u_t \sim N(0, \Sigma)}.
-//' 
-//' Forecast error impulse responses \eqn{\Phi_i} are obtained by recursions
-//' \deqn{\Phi_i = \sum_{j = 1}^{i} \Phi_{i-j} A_j,   i = 1, 2,...,}
-//' with \eqn{\Phi_0 = I_K}.
-//' 
-//' Orthogonalised impulse responses \eqn{\Theta^o_i} are calculated as \eqn{\Theta^o_i = \Phi_i P,}
-//' where P is the lower triangular Choleski decomposition of \eqn{\Sigma}.
-//' 
-//' Structural impulse responses \eqn{\Theta^s_i} are calculated as \eqn{\Theta^s_i = \Phi_i A_0^{-1}}.
-//' 
-//' Generalised impulse responses for variable \eqn{j}, i.e. \eqn{\Theta^g_ji} are calculated as
-//' \eqn{\Theta^g_ji = \sigma_{jj}^{-1/2} \Phi_i \Sigma e_j}, where \eqn{\sigma_{jj}} is the variance
-//' of the \eqn{j^{th}} diagonal element of \eqn{\Sigma} and \eqn{e_i} is a selection vector containing
-//' one in its \eqn{j^{th}} element and zero otherwise.
-//' 
-//' @return A \eqn{K(h + 1) \times K} matrix.
-//' 
-//' @references
-//' 
-//' Lütkepohl, H. (2007). \emph{New introduction to multiple time series analyis}. Berlin: Springer.
-//' 
-// [[Rcpp::export]]
+// [[Rcpp::export(.ir)]]
 arma::vec ir(Rcpp::List A, int h, std::string type, int impulse, int response) {
   arma::mat coef = Rcpp::as<arma::mat>(A["A"]);
   

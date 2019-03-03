@@ -19,6 +19,12 @@ The package `bvartools` implements some common functions used for Bayesian infer
 
 ## Installation
 
+### CRAN 
+
+```{r cran, eval = FALSE}
+install.packages("bvartools")
+```
+
 ### Development version
 
 ```{r github, eval = FALSE}

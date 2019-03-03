@@ -16,6 +16,12 @@ The package `bvartools` implements some common functions used for Bayesian infer
 Installation
 ------------
 
+### CRAN
+
+``` r
+install.packages("bvartools")
+```
+
 ### Development version
 
 ``` r
@@ -116,9 +122,9 @@ A # Print
 ```
 
     ##        invest.1 income.1 cons.1 invest.2 income.2 cons.2  const
-    ## invest   -0.320    0.157  0.963   -0.161    0.115  0.934 -0.017
-    ## income    0.045   -0.151  0.288    0.050    0.019 -0.012  0.016
-    ## cons     -0.002    0.226 -0.266    0.034    0.355 -0.022  0.013
+    ## invest   -0.319    0.149  0.960   -0.161    0.115  0.929 -0.017
+    ## income    0.044   -0.152  0.287    0.050    0.020 -0.013  0.016
+    ## cons     -0.003    0.224 -0.265    0.034    0.356 -0.022  0.013
 
 ``` r
 Sigma <- rowMeans(draws_sigma) # Obtain means for every row
@@ -130,8 +136,8 @@ Sigma # Print
 ```
 
     ##        invest income cons
-    ## invest  22.67   0.78 1.32
-    ## income   0.78   1.47 0.66
+    ## invest  22.62   0.77 1.32
+    ## income   0.77   1.46 0.66
     ## cons     1.32   0.66 0.95
 
 The means of the coefficient draws are very close to the results of the frequentist estimatior in Lütkepohl (2006).

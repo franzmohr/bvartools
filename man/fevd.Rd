@@ -6,7 +6,7 @@
 \title{Forecast Error Variance Decomposition}
 \usage{
 fevd(object, response = NULL, n.ahead = 5, type = "oir",
-  rescale_gir = FALSE)
+  normalise_gir = FALSE)
 
 \method{plot}{bvarfevd}(x, ...)
 }
@@ -21,7 +21,7 @@ or \code{\link{bvec_to_bvar}}.}
 \item{type}{type of the impulse responses used to calculate forecast error variable decompositions.
 Possible choices are orthogonalised \code{oir} (default) and generalised \code{gir} impulse responses.}
 
-\item{rescale_gir}{logical. Should the GIR-based FEVD be normalised?}
+\item{normalise_gir}{logical. Should the GIR-based FEVD be normalised?}
 
 \item{x}{an object of class "bvarfevd", usually, a result of a call to \code{\link{irf}}.}
 
@@ -51,7 +51,7 @@ If \code{type = "gir"}, the FEVD will be
 calculated as \deqn{\omega^{GIR}_{jk, h} = \frac{\sigma^{-1}_{jj} \sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i \Sigma e_k )^2}{\sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i \Sigma \Phi_i^{\prime} e_j )},}
 where \eqn{\sigma_{jj}} is the diagonal element of the \eqn{j}th variable of the variance covariance matrix.
 
-Since GIR-based FEVDs do not add up to unity, they can be normalised by setting \code{rescale_gir = TRUE}.
+Since GIR-based FEVDs do not add up to unity, they can be normalised by setting \code{normalise_gir = TRUE}.
 }
 \references{
 Lütkepohl, H. (2006). \emph{New introduction to multiple time series analyis}. Berlin: Springer.

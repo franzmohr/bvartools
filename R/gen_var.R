@@ -118,6 +118,7 @@ gen_var <- function(data, p = 2, exogen = NULL, s = 2, deterministic = "const", 
   }
   
   y <- matrix(t(temp[, 1:k]), k, dimnames = list(temp_name[1:k], NULL))
+  attr(y, "ts_info") <- stats::tsp(temp)
   x <- matrix(t(temp[, -(1:k)]), length(temp_name) - k,
                 dimnames = list(temp_name[-(1:k)], NULL))
   result <- list("Y" = y,

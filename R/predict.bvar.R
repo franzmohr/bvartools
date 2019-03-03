@@ -98,6 +98,24 @@ predict.bvar <- function(object, ..., n.ahead = 10, new_x = NULL, new_D = NULL, 
   }
   names(result) <- dimnames(object$y)[[1]]
   
+  if (!is.null(attr(object$y, "ts_info"))) {
+    ts_info <- attr(object$y, "ts_info")
+    object$y <- stats::ts(t(object$y), start = ts_info[1], frequency = ts_info[3])
+    attr(object$y, "ts_info") <- NULL
+    
+    ts_temp <- stats::ts(0:n.ahead, start = ts_info[2], frequency = ts_info[3])
+    ts_temp <- stats::time(ts_temp)[-1]
+    for (i in 1:k) {
+      stats::tsp(result[[i]]) <- c(ts_temp[1], ts_temp[length(ts_temp)], ts_info[3])
+    }
+  } else {
+    object$y <- stats::ts(t(object$y))
+    ts_temp <- stats::tsp(object$y)
+    for (i in 1:k) {
+      result[[i]] <- stats::ts(result[[i]], start = ts_temp[2] + 1, frequency = 1)
+    }
+  }
+  
   result <- list("y" = object$y,
                  "fcst" = result)
   

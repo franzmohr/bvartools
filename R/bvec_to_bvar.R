@@ -50,6 +50,11 @@ bvec_to_bvar <- function(object) {
   }
   
   y <- object$y
+  if (!is.null(attr(y, "ts_info"))) {
+    ts_info <- attr(y, "ts_info") 
+  } else (
+    ts_info <- NULL
+  )
   y_names <- gsub("d.", "", dimnames(y)[[1]])
   dimnames(y) <- list(y_names, NULL)
   if (!is.null(object$w)) {
@@ -110,6 +115,7 @@ bvec_to_bvar <- function(object) {
     temp <- stats::na.omit(temp)
     dimnames(temp)[[2]] <- temp_names
     y <- t(temp[, 1:k])
+    
     dimnames(y) <- list(y_names, NULL)
     x <- t(temp[, -(1:k)])
     dimnames(x) <- list(temp_names[-(1:k)], NULL)
@@ -173,6 +179,11 @@ bvec_to_bvar <- function(object) {
     exogen <- object$exogen
   } else {
     exogen <- NULL
+  }
+  
+  if (!is.null(ts_info)) {
+    ts_temp <- stats::ts(1:ncol(y), end = ts_info[2], frequency = ts_info[3])
+    attr(y, "ts_info") <- stats::tsp(ts_temp)
   }
   
   result <- bvar(data = data, exogen = exogen, y = y, x = x, A0 = A0, A = A, B = B, C = C, Sigma = Sigma)

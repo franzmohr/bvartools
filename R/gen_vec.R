@@ -115,7 +115,7 @@ gen_vec <- function(data, p = 2, exogen = NULL, s = 2, const = NULL, trend = NUL
   
   temp <- stats::na.omit(temp)
   t <- nrow(temp)
-  t_info <- stats::tsp(temp)
+  ts_info <- stats::tsp(temp)
   
   y <- matrix(temp[, 1:k], t)
   y_names <- temp_name[1:k]
@@ -182,6 +182,7 @@ gen_vec <- function(data, p = 2, exogen = NULL, s = 2, const = NULL, trend = NUL
   temp <- cbind(y, ect, x)
 
   y <- matrix(t(temp[, 1:k]), k, dimnames = list(y_names, NULL))
+  attr(y, "ts_info") <- ts_info
   ect <- matrix(t(temp[, k + 1:n_ect]), n_ect,
                 dimnames = list(ect_names, NULL))
   if (length(x_names) > 0) {

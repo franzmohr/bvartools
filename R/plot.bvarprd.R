@@ -8,17 +8,15 @@
 #' @export
 plot.bvarprd <- function(x, ...) {
   y <- x$y
-  t <- ncol(y)
-  var_names <- dimnames(y)[[1]]
+  t <- nrow(y)
+  var_names <- dimnames(y)[[2]]
   
   graphics::par(mfcol = c(length(var_names), 1))
   for (i in var_names) {
     n_ahead <- nrow(x$fcst[[i]])
-    temp <- matrix(NA, t + n_ahead, 4)
-    temp[1:t, 1] <- y[i,]
-    temp[t, 2:4] <- y[i, t]
-    temp[(t + 1):(t + n_ahead), 2:4] <- x$fcst[[i]]
-    stats::plot.ts(temp, plot.type = "single", lty = c(1, 2, 1, 2), main = i, ylab = "", ...)
+    temp <- cbind(y[, i], x$fcst[[i]])
+    temp[t, 2:4] <- y[t, i]
+    stats::plot.ts(temp, plot.type = "single", lty = c(1, 2, 1, 2), main = i, ylab = "")
   }
   graphics::par(mfcol = c(1, 1))
 }

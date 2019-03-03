@@ -8,7 +8,7 @@
 #' @param n.ahead number of steps ahead.
 #' @param type type of the impulse responses used to calculate forecast error variable decompositions.
 #' Possible choices are orthogonalised \code{oir} (default) and generalised \code{gir} impulse responses.
-#' @param rescale_gir logical. Should the GIR-based FEVD be normalised?
+#' @param normalise_gir logical. Should the GIR-based FEVD be normalised?
 #' 
 #' @details The function produces forecast error variance decompositions (FEVD) for the VAR model
 #' \deqn{y_t = \sum_{i = 1}^{p} A_{i} y_{t-i} + u_t,}
@@ -25,7 +25,7 @@
 #' calculated as \deqn{\omega^{GIR}_{jk, h} = \frac{\sigma^{-1}_{jj} \sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i \Sigma e_k )^2}{\sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i \Sigma \Phi_i^{\prime} e_j )},}
 #' where \eqn{\sigma_{jj}} is the diagonal element of the \eqn{j}th variable of the variance covariance matrix.
 #' 
-#' Since GIR-based FEVDs do not add up to unity, they can be normalised by setting \code{rescale_gir = TRUE}.
+#' Since GIR-based FEVDs do not add up to unity, they can be normalised by setting \code{normalise_gir = TRUE}.
 #' 
 #' @return A time-series object of class "bvarfevd".
 #' 
@@ -36,7 +36,7 @@
 #' Pesaran, H. H., & Shin, Y. (1998). Generalized impulse response analysis in linear multivariate models. \emph{Economics Letters, 58}, 17-29.
 #' 
 #' @export
-fevd <- function(object, response = NULL, n.ahead = 5, type = "oir", rescale_gir = FALSE) {
+fevd <- function(object, response = NULL, n.ahead = 5, type = "oir", normalise_gir = FALSE) {
   if (!"bvar" %in% class(object)) {
     stop("Object must be of class 'bvar'.")
   }
@@ -53,7 +53,7 @@ fevd <- function(object, response = NULL, n.ahead = 5, type = "oir", rescale_gir
     stop("Please provide a valid response variable.")
   }
   
-  k <- NROW(object$y)
+  k <- nrow(object$y)
   
   A_temp <- matrix(colMeans(object$A), k)
   A <- matrix(0, k, k * n.ahead)
@@ -97,13 +97,12 @@ fevd <- function(object, response = NULL, n.ahead = 5, type = "oir", rescale_gir
   result <- apply(numerator, 1, function(x, y) {x / y}, y = mse)
   if (type == "gir") {
     result <- result / Sigma[response, response]
-    if (rescale_gir) {
+    if (normalise_gir) {
       result <- t(apply(result, 1, function(x) {x / sum(x)}))
     }
   }
-  dimnames(result) <- list(NULL, dimnames(object$y)[[1]])
-  result <- stats::ts(result)
-  stats::tsp(result) <- c(0, n.ahead, stats::tsp(result)[3])
+  dimnames(result) <- list(NULL, dimnames(object$y)[[2]])
+  result <- stats::ts(result, start = 0, frequency = 1)
   
   class(result) <- append("bvarfevd", class(result))
   return(result)

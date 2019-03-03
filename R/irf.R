@@ -99,11 +99,16 @@ irf <- function(object, impulse = NULL, response = NULL, n.ahead = 5,
     result <- t(apply(result, 1, cumsum))
   }
   
+  if (!is.null(attr(object$y, "ts_info"))) {
+    freq <- attr(object$y, "ts_info")[3]
+  } else {
+    freq <- 1
+  }
+  
   ci_low <- (1 - ci) / 2
   ci_high <- 1 - ci_low
   pr <- c(ci_low, .5, ci_high)
-  result <- stats::ts(t(apply(result, 2, stats::quantile, probs = pr)))
-  stats::tsp(result) <- c(0, n.ahead, stats::tsp(result)[3])
+  result <- stats::ts(t(apply(result, 2, stats::quantile, probs = pr)), start = 0, frequency = freq)
   
   class(result) <- append("bvarirf", class(result))
   return(result)

@@ -169,9 +169,9 @@ Currently, `bvartools` supports forecast error, orthogonalised, and generalised 
 ### Forecast error impulse response
 
 ```{r feir, fig.width=5.5, fig.height=4.5}
-IR <- irf(bvar_est, impulse = "income", response = "cons", n.ahead = 8)
+FEIR <- irf(bvar_est, impulse = "income", response = "cons", n.ahead = 8)
 
-plot(IR, main = "Forecast Error Impulse Response", xlab = "Period", ylab = "Response")
+plot(FEIR, main = "Forecast Error Impulse Response", xlab = "Period", ylab = "Response")
 ```
 
 ### Orthogonalised impulse response

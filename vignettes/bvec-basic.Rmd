@@ -189,7 +189,7 @@ Impulse responses for VECs can be constructed from their VAR respresentations.
 ```{r feir, fig.width=5.5, fig.height=4.5}
 IR <- irf(bvar_form, impulse = "R", response = "Dp", n.ahead = 20)
 
-plot(IR, main = "Forecast Error Impulse Response", xlab = "Period", ylab = "Response")
+plot(IR, main = "Forecast Error Impulse Response", xlab = "Year", ylab = "Response")
 ```
 
 ### Orthogonalised impulse response
@@ -197,7 +197,7 @@ plot(IR, main = "Forecast Error Impulse Response", xlab = "Period", ylab = "Resp
 ```{r oir, fig.width=5.5, fig.height=4.5}
 OIR <- irf(bvar_form, impulse = "R", response = "Dp", n.ahead = 20, type = "oir")
 
-plot(OIR, main = "Orthogonalised Impulse Response", xlab = "Period", ylab = "Response")
+plot(OIR, main = "Orthogonalised Impulse Response", xlab = "Year", ylab = "Response")
 ```
 
 ### Generalised impulse response
@@ -205,7 +205,7 @@ plot(OIR, main = "Orthogonalised Impulse Response", xlab = "Period", ylab = "Res
 ```{r gir, fig.width=5.5, fig.height=4.5}
 GIR <- irf(bvar_form, impulse = "R", response = "Dp", n.ahead = 20, type = "gir")
 
-plot(GIR, main = "Generalised Impulse Response", xlab = "Period", ylab = "Response")
+plot(GIR, main = "Generalised Impulse Response", xlab = "Year", ylab = "Response")
 ```
 
 ### Forecast error variance decomposition

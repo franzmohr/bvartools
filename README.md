@@ -16,12 +16,6 @@ The package `bvartools` implements some common functions used for Bayesian infer
 Installation
 ------------
 
-### CRAN
-
-``` r
-install.packages("bvartools")
-```
-
 ### Development version
 
 ``` r
@@ -122,9 +116,9 @@ A # Print
 ```
 
     ##        invest.1 income.1 cons.1 invest.2 income.2 cons.2  const
-    ## invest   -0.320    0.152  0.955   -0.160    0.114  0.923 -0.016
-    ## income    0.044   -0.153  0.289    0.050    0.020 -0.012  0.016
-    ## cons     -0.003    0.225 -0.265    0.033    0.356 -0.022  0.013
+    ## invest   -0.321    0.141  0.964   -0.161    0.115  0.946 -0.017
+    ## income    0.044   -0.154  0.291    0.050    0.018 -0.009  0.016
+    ## cons     -0.003    0.224 -0.261    0.033    0.355 -0.020  0.013
 
 ``` r
 Sigma <- rowMeans(draws_sigma) # Obtain means for every row
@@ -136,9 +130,9 @@ Sigma # Print
 ```
 
     ##        invest income cons
-    ## invest  22.67   0.75 1.30
-    ## income   0.75   1.46 0.65
-    ## cons     1.30   0.65 0.95
+    ## invest  22.63   0.76 1.31
+    ## income   0.76   1.46 0.65
+    ## cons     1.31   0.65 0.95
 
 The means of the coefficient draws are very close to the results of the frequentist estimatior in Lütkepohl (2006).
 
@@ -210,7 +204,7 @@ References
 
 Eddelbuettel, D., & Sanderson C. (2014). RcppArmadillo: Accelerating R with high-performance C++ linear algebra. *Computational Statistics and Data Analysis, 71*, 1054-1063. <https://doi.org/10.1016/j.csda.2013.02.005>
 
-Lütkepohl, H. (2006). *New introduction to multiple time series analyis*. Berlin: Springer.
+Lütkepohl, H. (2007). *New introduction to multiple time series analysis*. Berlin: Springer.
 
 Pesaran, H. H., & Shin, Y. (1998). Generalized impulse response analysis in linear multivariate models. *Economics Letters, 58*, 17-29. <https://doi.org/10.1016/S0165-1765(97)00214-0>
 

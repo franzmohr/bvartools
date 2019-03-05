@@ -40,5 +40,5 @@ where \eqn{Y} is a \eqn{K \times T} matrix of the endogenous variables and \eqn{
 the explanatory variables.
 }
 \references{
-Lütkepohl, H. (2007). \emph{New introduction to multiple time series analyis} (2nd ed.). Berlin: Springer.
+Lütkepohl, H. (2007). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
 }

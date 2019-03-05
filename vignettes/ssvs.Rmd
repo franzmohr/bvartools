@@ -228,7 +228,7 @@ George, E. I., Sun, D., & Ni, S. (2008). Bayesian stochastic search for VAR mode
 
 Koop, G., & Korobilis, D. (2010). Bayesian multivariate time series methods for empirical macroeconomics. *Foundations and trends in econometrics, 3*(4), 267-358. <https://dx.doi.org/10.1561/0800000013>
 
-Lütkepohl, H. (2007). *New introduction to multiple time series analyis* (2nd ed.). Berlin: Springer.
+Lütkepohl, H. (2007). *New introduction to multiple time series analysis* (2nd ed.). Berlin: Springer.
 
 [^koop]: See Koop and Korobilis (2010) for an introduction to Bayesian VAR modelling and SSVS.
 

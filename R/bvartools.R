@@ -52,7 +52,7 @@
 #' \emph{Journal of Applied Econometrics, 28}(2), 204--230.
 #' \url{https://doi.org/10.1002/jae.1271}
 #' 
-#' Lütkepohl, H. (2007). \emph{New introduction to multiple time series analyis} (2nd ed.). Berlin: Springer.
+#' Lütkepohl, H. (2007). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
 #' 
 #' @useDynLib bvartools, .registration = TRUE
 #' @importFrom Rcpp sourceCpp

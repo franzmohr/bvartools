@@ -187,7 +187,7 @@ post_coint_kls <- function(y, beta, w, sigma_i, v_i, p_tau_i, g_i, x = NULL, gam
 #' 
 #' @references
 #' 
-#' Lütkepohl, H. (2007). \emph{New introduction to multiple time series analyis} (2nd ed.). Berlin: Springer.
+#' Lütkepohl, H. (2007). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
 #' 
 post_normal <- function(y, x, sigma_i, a_prior, v_i_prior) {
     .Call(`_bvartools_post_normal`, y, x, sigma_i, a_prior, v_i_prior)

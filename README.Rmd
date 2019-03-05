@@ -19,9 +19,7 @@ The package `bvartools` implements some common functions used for Bayesian infer
 
 ## Installation
 
-### CRAN 
-
-```{r cran, eval = FALSE}
+```{r cran, include = FALSE}
 install.packages("bvartools")
 ```
 
@@ -189,7 +187,7 @@ plot(bvar_fevd, main = "FEVD of consumption")
 
 Eddelbuettel, D., & Sanderson C. (2014). RcppArmadillo: Accelerating R with high-performance C++ linear algebra. *Computational Statistics and Data Analysis, 71*, 1054-1063. <https://doi.org/10.1016/j.csda.2013.02.005>
 
-Lütkepohl, H. (2006). *New introduction to multiple time series analyis*. Berlin: Springer.
+Lütkepohl, H. (2007). *New introduction to multiple time series analysis*. Berlin: Springer.
 
 Pesaran, H. H., & Shin, Y. (1998). Generalized impulse response analysis in linear multivariate models. *Economics Letters, 58*, 17-29. <https://doi.org/10.1016/S0165-1765(97)00214-0>
 

@@ -57,5 +57,5 @@ and \eqn{U} is a \eqn{K \times T} matrix of errors. The function \code{gen_var}
 generates the matrices \eqn{Y} and \eqn{Z}.
 }
 \references{
-Lütkepohl, H. (2007). \emph{New introduction to multiple time series analyis} (2nd ed.). Berlin: Springer.r.
+Lütkepohl, H. (2007). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
 }

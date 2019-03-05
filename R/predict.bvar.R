@@ -19,7 +19,7 @@
 #' 
 #' @references
 #' 
-#' Lütkepohl, H. (2006). \emph{New introduction to multiple time series analyis}. Berlin: Springer.
+#' Lütkepohl, H. (2007). \emph{New introduction to multiple time series analyis} (2nd ed.). Berlin: Springer.
 #' 
 #' @export
 #' @rdname bvar

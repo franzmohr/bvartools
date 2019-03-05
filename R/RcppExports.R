@@ -31,7 +31,7 @@
 #' 
 #' @references
 #' 
-#' Korobilis, D. (2013). VAR forecasting using Bayesian variable selection. \emph{Journal of Applied Econometrics, 28}(2), 204--230.
+#' Korobilis, D. (2013). VAR forecasting using Bayesian variable selection. \emph{Journal of Applied Econometrics, 28}(2), 204--230. \url{https://doi.org/10.1002/jae.1271}
 #' 
 bvs <- function(y, z, a, lambda, sigma_i, prob_prior, include = NULL) {
     .Call(`_bvartools_bvs`, y, z, a, lambda, sigma_i, prob_prior, include)
@@ -187,7 +187,7 @@ post_coint_kls <- function(y, beta, w, sigma_i, v_i, p_tau_i, g_i, x = NULL, gam
 #' 
 #' @references
 #' 
-#' Lütkepohl, H. (2006). \emph{New introduction to multiple time series analyis}. Berlin: Springer.
+#' Lütkepohl, H. (2007). \emph{New introduction to multiple time series analyis} (2nd ed.). Berlin: Springer.
 #' 
 post_normal <- function(y, x, sigma_i, a_prior, v_i_prior) {
     .Call(`_bvartools_post_normal`, y, x, sigma_i, a_prior, v_i_prior)

@@ -6,7 +6,7 @@
 \title{Impulse Response Function}
 \usage{
 irf(object, impulse = NULL, response = NULL, n.ahead = 5,
-  shock = NULL, ci = 0.95, type = "feir", cumulative = FALSE)
+  ci = 0.95, type = "feir", cumulative = FALSE)
 
 \method{plot}{bvarirf}(x, ...)
 }
@@ -19,8 +19,6 @@ irf(object, impulse = NULL, response = NULL, n.ahead = 5,
 \item{response}{name of the response variable.}
 
 \item{n.ahead}{number of steps ahead.}
-
-\item{shock}{size of the impulse shock.}
 
 \item{ci}{a numeric between 0 and 1 specifying the probability mass covered by the
 credible intervals. Defaults to 0.95.}
@@ -63,7 +61,7 @@ of the \eqn{j^{th}} diagonal element of \eqn{\Sigma} and \eqn{e_i} is a selectio
 one in its \eqn{j^{th}} element and zero otherwise.
 }
 \references{
-Lütkepohl, H. (2006). \emph{New introduction to multiple time series analyis}. Berlin: Springer.
+Lütkepohl, H. (2007). \emph{New introduction to multiple time series analyis} (2nd ed.). Berlin: Springer.
 
 Pesaran, H. H., & Shin, Y. (1998). Generalized impulse response analysis in linear multivariate models. \emph{Economics Letters, 58}, 17-29.
 }

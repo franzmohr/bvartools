@@ -43,5 +43,5 @@ where \eqn{u_t \sim N(0, \Sigma_{t})}.
 \eqn{x_t} as a vector of regressors.
 }
 \references{
-Korobilis, D. (2013). VAR forecasting using Bayesian variable selection. \emph{Journal of Applied Econometrics, 28}(2), 204--230.
+Korobilis, D. (2013). VAR forecasting using Bayesian variable selection. \emph{Journal of Applied Econometrics, 28}(2), 204--230. \url{https://doi.org/10.1002/jae.1271}
 }

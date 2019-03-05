@@ -47,7 +47,7 @@ y <- data$Y[, 1:73]
 x <- data$Z[, 1:73]
 ```
 
-As in Lütkepohl (2006) only the first 73 observations are used.
+As in Lütkepohl (2007) only the first 73 observations are used.
 
 ## Estimation
 
@@ -68,7 +68,7 @@ u_sigma_freq <- tcrossprod(u_freq) / (ncol(y) - nrow(x))
 round(u_sigma_freq * 10^4, 2)
 ```
 
-These are the same values as in Lütkepohl (2006).
+These are the same values as in Lütkepohl (2007).
 
 ### Bayesian estimator
 
@@ -211,14 +211,14 @@ plot(bvar_fevd_gir, main = "GIR-based FEVD of consumption")
 
 ## References
 
-Eddelbuettel, D., & Sanderson C. (2014). RcppArmadillo: Accelerating R with high-performance C++ linear algebra. *Computational Statistics and Data Analysis, 71*, 1054-1063.
+Eddelbuettel, D., & Sanderson C. (2014). RcppArmadillo: Accelerating R with high-performance C++ linear algebra. *Computational Statistics and Data Analysis, 71*, 1054-1063. <https://doi.org/10.1016/j.csda.2013.02.005>
 
-Koop, G., Pesaran, M. H., & Potter, S.M. (1996). Impulse response analysis in nonlinear multivariate models. *Journal of Econometrics 74*(1), 119-147.
+Koop, G., Pesaran, M. H., & Potter, S.M. (1996). Impulse response analysis in nonlinear multivariate models. *Journal of Econometrics 74*(1), 119-147. <https://doi.org/10.1016/0304-4076(95)01753-4>
 
-Lütkepohl, H. (2006). *New introduction to multiple time series analyis*. Berlin: Springer.
+Lütkepohl, H. (2007). *New introduction to multiple time series analyis* (2nd ed.). Berlin: Springer.
 
-Pesaran, H. H., & Shin, Y. (1998). Generalized impulse response analysis in linear multivariate models. *Economics Letters, 58*(1), 17-29.
+Pesaran, H. H., & Shin, Y. (1998). Generalized impulse response analysis in linear multivariate models. *Economics Letters, 58*(1), 17-29. <https://doi.org/10.1016/S0165-1765(97)00214-0>
 
-Sanderson, C., & Curtin, R. (2016). Armadillo: a template-based C++ library for linear algebra. *Journal of Open Source Software, 1*(2), 26.
+Sanderson, C., & Curtin, R. (2016). Armadillo: a template-based C++ library for linear algebra. *Journal of Open Source Software, 1*(2), 26. <https://doi.org/10.21105/joss.00026>
 
 [^cpp]: `RcppArmadillo` is the `Rcpp` bridge to the open source 'Armadillo' library of Sanderson and Curtin (2016).

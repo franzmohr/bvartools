@@ -8,7 +8,6 @@
 #' @param impulse name of the impulse variable.
 #' @param response name of the response variable.
 #' @param n.ahead number of steps ahead.
-#' @param shock size of the impulse shock.
 #' @param ci a numeric between 0 and 1 specifying the probability mass covered by the
 #' credible intervals. Defaults to 0.95.
 #' @param type type of the impulse resoponse. Possible choices are forecast error "feir"
@@ -37,13 +36,13 @@
 #' 
 #' @references
 #' 
-#' Lütkepohl, H. (2006). \emph{New introduction to multiple time series analyis}. Berlin: Springer.
+#' Lütkepohl, H. (2007). \emph{New introduction to multiple time series analyis} (2nd ed.). Berlin: Springer.
 #' 
 #' Pesaran, H. H., & Shin, Y. (1998). Generalized impulse response analysis in linear multivariate models. \emph{Economics Letters, 58}, 17-29.
 #' 
 #' @export
 irf <- function(object, impulse = NULL, response = NULL, n.ahead = 5,
-                shock = NULL, ci = .95, type = "feir", cumulative = FALSE) {
+                ci = .95, type = "feir", cumulative = FALSE) {
   
   if (!"bvar" %in% class(object)) {
     stop("Object must be of class 'bvar'.")

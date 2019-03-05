@@ -68,5 +68,5 @@ where
 and unrestricted deterministic terms. \eqn{U} is a \eqn{K \times T} matrix of errors.
 }
 \references{
-Lütkepohl, H. (2006). \emph{New introduction to multiple time series analyis}. Berlin: Springer.
+Lütkepohl, H. (2007). \emph{New introduction to multiple time series analyis} (2nd ed.). Berlin: Springer.
 }

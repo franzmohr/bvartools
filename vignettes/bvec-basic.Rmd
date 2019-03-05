@@ -218,8 +218,8 @@ plot(bvec_fevd, main = "FEVD of inflation")
 
 ## References
 
-Koop, G., León-González, R., & Strachan R. W. (2010). Efficient posterior simulation for cointegrated models with priors on the cointegration space. *Econometric Reviews, 29*(2), 224-242. [https://doi.org/10.1080/07474930903382208](https://doi.org/10.1080/07474930903382208)
+Koop, G., León-González, R., & Strachan R. W. (2010). Efficient posterior simulation for cointegrated models with priors on the cointegration space. *Econometric Reviews, 29*(2), 224-242. <https://doi.org/10.1080/07474930903382208>
 
-Lütkepohl, H. (2006). *New introduction to multiple time series analyis*. Berlin: Springer.
+Lütkepohl, H. (2007). *New introduction to multiple time series analyis* (2nd ed.). Berlin: Springer.
 
-Pesaran, H. H., & Shin, Y. (1998). Generalized impulse response analysis in linear multivariate models, *Economics Letters, 58*, 17-29.
+Pesaran, H. H., & Shin, Y. (1998). Generalized impulse response analysis in linear multivariate models, *Economics Letters, 58*, 17-29. <https://doi.org/10.1016/S0165-1765(97)00214-0>

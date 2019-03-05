@@ -17,7 +17,7 @@
 #' 
 #' @references
 #' 
-#' Lütkepohl, H. (2006). \emph{New introduction to multiple time series analysis}. Berlin: Springer.
+#' Lütkepohl, H. (2007). \emph{New introduction to multiple time series analyis} (2nd ed.). Berlin: Springer.
 #' 
 "e1"
 
@@ -41,6 +41,6 @@
 #' 
 #' @references
 #' 
-#' Lütkepohl, H. (2006). \emph{New introduction to multiple time series analysis}. Berlin: Springer.
+#' Lütkepohl, H. (2007). \emph{New introduction to multiple time series analyis} (2nd ed.). Berlin: Springer.
 #' 
 "e6"

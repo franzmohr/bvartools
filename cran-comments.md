@@ -12,8 +12,7 @@ In addition I have:
 * Changed R dependency from 3.2.0 to 3.3.0
 
 ## Test environments
-ubuntu 14.04 (on travis-ci), R-devel, R 3.5.0, R 3.4.4, R 3.3.3
-mac OS 10.13.3 (on travis-ci) R 3.5.2
+ubuntu 14.04 (on travis-ci), R-devel, R 3.5.2, R 3.4.4, R 3.3.3
 win-builder (devel)
 
 ## R CMD check results

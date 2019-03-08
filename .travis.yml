@@ -5,9 +5,10 @@ dist: trusty
 jobs:
   include:
   - os: osx
+    r: 3.5
   - r: devel
   - r: 3.3
-  - r: 3.4
-  - r: 3.5
-  - r: release
   
+compiler:
+  - gcc
+  - clang

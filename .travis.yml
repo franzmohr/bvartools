@@ -19,7 +19,7 @@ compiler:
   - clang
 
 before_install:
- - export LD_LIBRARY_PATH=$(if [[ $C == "clang" ]]; then echo -n '/usr/local/clang/lib'; fi)
+ - export LD_LIBRARY_PATH=$(if [[ $CC == "clang" ]]; then echo -n '/usr/local/clang/lib'; fi)
 
 env:
   global:

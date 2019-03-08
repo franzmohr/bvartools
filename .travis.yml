@@ -2,22 +2,25 @@ language: r
 cache: packages
 dist: trusty
 
+branches:
+  only:
+  - master
+
 jobs:
   include:
-  - r: devel
   - r: 3.3
   - r: 3.4
   - r: release
+  - r: devel
   - os: osx
   
 compiler:
   - gcc
   - clang
-  
-branches:
-  only:
-  - master
-  
+
+before_install:
+ - export LD_LIBRARY_PATH=$(if [[ $C == "clang" ]]; then echo -n '/usr/local/clang/lib'; fi)
+
 env:
   global:
   - _R_CHECK_FORCE_SUGGESTS_=false

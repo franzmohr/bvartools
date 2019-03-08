@@ -3,7 +3,6 @@ This is a resubmission. In this version I have:
 
 * Rewritten the Description field in DESCRIPTION
 * Reformated the references in the Description field in DESCRIPTION
-* Confirm that I am only using the RcppArmadillo package as a bridge to the C++ Armadillo library.
 
 In addition I have:
 

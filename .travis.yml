@@ -4,17 +4,10 @@ dist: trusty
 
 jobs:
   include:
+  - os: osx
   - r: devel
   - r: 3.3
   - r: 3.4
   - r: 3.5
-  - os: osx
   - r: release
   
-env:
-  global:
-  - _R_CHECK_FORCE_SUGGESTS_=false
-  - MAKEFLAGS="-j 2"
-  - TRAVIS_CXXFLAGS="-Wall -Wextra -pedantic -Werror"
-  - R_REMOTES_NO_ERRORS_FROM_WARNINGS=true
-  - _R_CHECK_SYSTEM_CLOCK_=FALSE

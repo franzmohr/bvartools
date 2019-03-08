@@ -13,7 +13,7 @@ In addition I have:
 
 ## Test environments
 ubuntu 14.04 (on travis-ci), R-devel, R 3.5.0, R 3.4.4, R 3.3.3
-mac OS 10.3.3 (on travis-ci) R 3.5.2
+mac OS 10.13.3 (on travis-ci) R 3.5.2
 win-builder (devel)
 
 ## R CMD check results

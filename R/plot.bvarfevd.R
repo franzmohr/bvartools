@@ -2,7 +2,7 @@
 #' 
 #' A plot function for objects of class "bvarfevd".
 #' 
-#' @param x an object of class "bvarfevd", usually, a result of a call to \code{\link{irf}}.
+#' @param x an object of class "bvarfevd", usually, a result of a call to \code{\link{fevd}}.
 #' @param ... further graphical parameters.
 #' 
 #' @export

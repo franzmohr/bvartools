@@ -1,44 +1,47 @@
 #' Impulse Response Function
 #' 
-#' Computes the impulse response coefficients of an object of class "bvar" for
+#' Computes the impulse response coefficients of an object of class \code{"bvar"} for
 #' \code{n.ahead} steps.
 #' 
-#' @param object an object of class "bvar", usually, a result of a call to
+#' @param object an object of class \code{"bvar"}, usually, a result of a call to
 #' \code{\link{bvar}} or \code{\link{bvec_to_bvar}}.
 #' @param impulse name of the impulse variable.
 #' @param response name of the response variable.
 #' @param n.ahead number of steps ahead.
 #' @param ci a numeric between 0 and 1 specifying the probability mass covered by the
 #' credible intervals. Defaults to 0.95.
-#' @param type type of the impulse resoponse. Possible choices are forecast error "feir"
-#' (default), orthogonalised "oir", structural "sir", and generalised "gir" impulse responses.
+#' @param type type of the impulse resoponse. Possible choices are forecast error \code{"feir"}
+#' (default), orthogonalised \code{"oir"}, structural \code{"sir"}, generalised \code{"gir"},
+#' and structural generalised \code{"sgir"} impulse responses.
 #' @param cumulative logical specifying whether a cumulative IRF should be calculated.
 #' 
 #' @details The function produces different types of impulse responses for the VAR model
-#' \deqn{A_0 y_t = \sum_{i = 1}^{p} A_{i} y_{t-i} + u_t,}
+#' \deqn{y_t = \sum_{i = 1}^{p} A_{i} y_{t-i} + A_0^{-1} u_t,}
 #' with \eqn{u_t \sim N(0, \Sigma)}.
 #' 
 #' Forecast error impulse responses \eqn{\Phi_i} are obtained by recursions
-#' \deqn{\Phi_i = \sum_{j = 1}^{i} \Phi_{i-j} A_j,   i = 1, 2,...,}
+#' \deqn{\Phi_i = \sum_{j = 1}^{i} \Phi_{i-j} A_j,   i = 1, 2,...,h}
 #' with \eqn{\Phi_0 = I_K}.
 #' 
-#' Orthogonalised impulse responses \eqn{\Theta^o_i} are calculated as \eqn{\Theta^o_i = \Phi_i P,}
-#' where P is the lower triangular Choleski decomposition of \eqn{\Sigma}.
+#' Orthogonalised impulse responses \eqn{\Theta^o_i} are calculated as \eqn{\Theta^o_i = \Phi_i P},
+#' where P is the lower triangular Choleski decomposition of \eqn{\Sigma}. \eqn{A_0} is assumed to
+#' be an identity matrix.
 #' 
 #' Structural impulse responses \eqn{\Theta^s_i} are calculated as \eqn{\Theta^s_i = \Phi_i A_0^{-1}}.
 #' 
-#' Generalised impulse responses for variable \eqn{j}, i.e. \eqn{\Theta^g_ji} are calculated as
-#' \eqn{\Theta^g_ji = \sigma_{jj}^{-1/2} \Phi_i \Sigma e_j}, where \eqn{\sigma_{jj}} is the variance
+#' (Structural) Generalised impulse responses for variable \eqn{j}, i.e. \eqn{\Theta^g_ji} are calculated as
+#' \eqn{\Theta^g_{ji} = \sigma_{jj}^{-1/2} \Phi_i A_0^{-1} \Sigma e_j}, where \eqn{\sigma_{jj}} is the variance
 #' of the \eqn{j^{th}} diagonal element of \eqn{\Sigma} and \eqn{e_i} is a selection vector containing
-#' one in its \eqn{j^{th}} element and zero otherwise.
+#' one in its \eqn{j^{th}} element and zero otherwise. If the \code{"bvar"} object does not contain draws
+#' of \eqn{A_0}, it is assumed to be an identity matrix.
 #' 
-#' @return A time-series object of class "bvarirf".
+#' @return A time-series object of class \code{"bvarirf"}.
 #' 
 #' @references
 #' 
 #' Lütkepohl, H. (2007). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
 #' 
-#' Pesaran, H. H., & Shin, Y. (1998). Generalized impulse response analysis in linear multivariate models. \emph{Economics Letters, 58}, 17-29.
+#' Pesaran, H. H., Shin, Y. (1998). Generalized impulse response analysis in linear multivariate models. \emph{Economics Letters, 58}, 17-29.
 #' 
 #' @export
 irf <- function(object, impulse = NULL, response = NULL, n.ahead = 5,
@@ -51,23 +54,22 @@ irf <- function(object, impulse = NULL, response = NULL, n.ahead = 5,
   if (is.null(object$y) | is.null(dimnames(object$y)[[1]])) {
     stop("The argument 'object' must include a named matrix of endogenous variables.")
   }
+
+  need_A0 <- FALSE
+  if (type %in% c("sgir", "sir")) {
+    if (is.null(object$A0)) {
+      stop("Structural impulse responses require that draws of 'A0' are contained in the 'bvar' object.")
+    }
+    need_A0 <- TRUE
+  }
   
-  if (type %in% c("oir", "gir")) {
+  if (type %in% c("oir", "gir", "sgir")) {
     if (is.null(object$Sigma)) {
-      stop("OIR or GIR require to specify the 'Sigma' argument.")
+      stop("OIR, GIR, SGIR require that draws of 'Sigma' are contained in the 'bvar' object.")
     }
     need_Sigma <- TRUE
   } else {
     need_Sigma <- FALSE
-  }
-  
-  if (type == "sir") {
-    if (is.null(object$A0)) {
-      stop("Structural impulse response requires to specify the 'A0' argument.")
-    }
-    need_A0 <- TRUE
-  } else {
-    need_A0 <- FALSE
   }
   
   impulse <- which(dimnames(object$y)[[1]] == impulse)
@@ -82,7 +84,7 @@ irf <- function(object, impulse = NULL, response = NULL, n.ahead = 5,
   for (i in 1:store) {
     temp <- list(A = matrix(object$A[i, ], k))
     if (need_Sigma) {
-      temp$Sigma <- matrix(object$Sigma[i, ], k) 
+      temp$Sigma <- matrix(object$Sigma[i, ], k)
     }
     if (need_A0) {
       temp$A0 = matrix(object$A0[i, ], k) 

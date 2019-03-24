@@ -1,16 +1,24 @@
 ## Resubmission
 This is a resubmission. In this version I have:
 
+* Omitted the redundant part "Functions for" in the title
+* Added small executeable examples in Rd-files, where it seemed appropriate from a computational point of view
+
+In a former resubmission I have:
+
 * Rewritten the Description field in DESCRIPTION
 * Reformated the references in the Description field in DESCRIPTION
 
 In addition I have:
 
+* Added functionalities for structrual GIRs and structural GFEVDs
+* Added a vignette on structural BVAR estimation
 * Added inst/CITATION
 * Updated references in the vignettes
 * Renamed an argument in 'fevd'
 * Changed the R dependency from 3.2.0 to 3.3.0
 * Changed flags in src/Makevars(.win)
+* Fixed documentation of "plot.bvarfevd"
 
 ## Test environments
 ubuntu 14.04 (on travis-ci), R-devel, R 3.5.2, R 3.4.4, R 3.3.3

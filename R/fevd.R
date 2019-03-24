@@ -2,7 +2,7 @@
 #' 
 #' Produces the forecast error variance decomposition of a Bayesian VAR model.
 #' 
-#' @param object an object of class "bvar", usually, a result of a call to \code{\link{bvar}}
+#' @param object an object of class \code{"bvar"}, usually, a result of a call to \code{\link{bvar}}
 #' or \code{\link{bvec_to_bvar}}.
 #' @param response name of the response variable.
 #' @param n.ahead number of steps ahead.
@@ -11,7 +11,7 @@
 #' @param normalise_gir logical. Should the GIR-based FEVD be normalised?
 #' 
 #' @details The function produces forecast error variance decompositions (FEVD) for the VAR model
-#' \deqn{y_t = \sum_{i = 1}^{p} A_{i} y_{t-i} + u_t,}
+#' \deqn{y_t = \sum_{i = 1}^{p} A_{i} y_{t-i} + A_0^{-1} u_t,}
 #' with \eqn{u_t \sim N(0, \Sigma)}.
 #' 
 #' If the FEVD is based on the orthogonalised impulse resonse (OIR), the FEVD will be calculated as
@@ -21,13 +21,20 @@
 #' matrix \eqn{\Sigma}, \eqn{e_j} is a selection vector for the response variable and
 #' \eqn{e_k} a selection vector for the impulse variable.
 #'
-#' If \code{type = "gir"}, the FEVD will be
+#' If \code{type = "sir"}, the structural FEVD will be
+#' calculated as \deqn{\omega^{SIR}_{jk, h} = \frac{\sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i A_0^{-1} \Sigma^{\frac{1}{2}} e_k )^2}{\sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i A_0^{-1}  \Sigma A_0^{-1\prime} \Phi_i^{\prime} e_j )},}
+#' where \eqn{\sigma_{jj}} is the diagonal element of the \eqn{j}th variable of the variance covariance matrix.
+#'
+#' If \code{type = "gir"}, the generalised FEVD will be
 #' calculated as \deqn{\omega^{GIR}_{jk, h} = \frac{\sigma^{-1}_{jj} \sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i \Sigma e_k )^2}{\sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i \Sigma \Phi_i^{\prime} e_j )},}
 #' where \eqn{\sigma_{jj}} is the diagonal element of the \eqn{j}th variable of the variance covariance matrix.
 #' 
+#' If \code{type = "sgir"}, the structural generalised FEVD will be
+#' calculated as \deqn{\omega^{SGIR}_{jk, h} = \frac{\sigma^{-1}_{jj} \sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i A_0^{-1} \Sigma e_k )^2}{\sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i A_0^{-1} \Sigma A_0^{-1\prime} \Phi_i^{\prime} e_j )}}.
+#' 
 #' Since GIR-based FEVDs do not add up to unity, they can be normalised by setting \code{normalise_gir = TRUE}.
 #' 
-#' @return A time-series object of class "bvarfevd".
+#' @return A time-series object of class \code{"bvarfevd"}.
 #' 
 #' @references
 #' 
@@ -46,7 +53,7 @@ fevd <- function(object, response = NULL, n.ahead = 5, type = "oir", normalise_g
   if (is.null(object$Sigma)) {
     stop("The 'bvar' object must include draws of the variance-covariance matrix Sigma.")
   }
-  if (!type %in% c("oir", "gir")) {
+  if (!type %in% c("oir", "sir", "gir", "sgir")) {
     stop("The specified type of the used impulse response is not known.")
   }
   if(is.null(response)) {
@@ -54,7 +61,16 @@ fevd <- function(object, response = NULL, n.ahead = 5, type = "oir", normalise_g
   }
   
   k <- nrow(object$y)
-  
+
+  if (type %in% c("sgir", "sir")) {
+    if (is.null(object$A0)) {
+      stop("Structural impulse responses require that draws of 'A0' are contained in the 'bvar' object.")
+    }
+    A0_i <- solve(matrix(colMeans(object$A0), k))
+  } else {
+    A0_i <- diag(1, k)
+  }
+    
   A_temp <- matrix(colMeans(object$A), k)
   A <- matrix(0, k, k * n.ahead)
   A[, 1:ncol(A_temp)] <- A_temp
@@ -75,17 +91,14 @@ fevd <- function(object, response = NULL, n.ahead = 5, type = "oir", normalise_g
   ej_t <- matrix(0, 1, k)
   ej_t[,response] <- 1
   
-  mse <- rep(NA, n.ahead + 1)
-  mse[1] <- ej_t %*% phi[1:k,] %*% Sigma %*% t(phi[1:k,]) %*% t(ej_t)
-  for (i in 2:(n.ahead + 1)) {
-    mse[i] <- mse[i - 1] + ej_t %*% phi[(i - 1) * k + 1:k,] %*% Sigma %*% t(phi[(i - 1) * k + 1:k,]) %*% t(ej_t)
-  }
-  
   if (type == "oir") {
     P <- t(chol(Sigma))
   }
-  if (type == "gir") {
-    P <- Sigma
+  if (type == "sir") {
+    P <- A0_i %*% sqrt(Sigma)
+  }
+  if (type %in% c("gir", "sgir")) {
+    P <- A0_i %*% Sigma
   }
   
   numerator <- matrix(NA, k, n.ahead + 1)
@@ -93,14 +106,33 @@ fevd <- function(object, response = NULL, n.ahead = 5, type = "oir", normalise_g
   for (i in 2:(n.ahead + 1)) {
     numerator[, i] <- numerator[, i - 1] + (ej_t %*% phi[(i - 1) * k + 1:k, ] %*% P)^2
   }
+  
+  if (type == "gir") {
+    numerator <- numerator / Sigma[response, response]
+  }
+  
+  P <- NULL
+  if (type %in% c("gir", "oir")) {
+    P <- Sigma
+  }
+  if (type %in% c("sgir", "sir")) {
+    P <- A0_i %*% tcrossprod(Sigma, A0_i)
+  }
+  
+  mse <- rep(NA, n.ahead + 1)
+  mse[1] <- ej_t %*% phi[1:k,] %*% P %*% t(phi[1:k,]) %*% t(ej_t)
+  for (i in 2:(n.ahead + 1)) {
+    mse[i] <- mse[i - 1] + ej_t %*% phi[(i - 1) * k + 1:k,] %*% P %*% t(phi[(i - 1) * k + 1:k,]) %*% t(ej_t)
+  }
 
   result <- apply(numerator, 1, function(x, y) {x / y}, y = mse)
-  if (type == "gir") {
-    result <- result / Sigma[response, response]
+  
+  if (type %in% c("gir", "sgir")) {
     if (normalise_gir) {
       result <- t(apply(result, 1, function(x) {x / sum(x)}))
     }
   }
+  
   dimnames(result) <- list(NULL, dimnames(object$y)[[2]])
   result <- stats::ts(result, start = 0, frequency = 1)
   

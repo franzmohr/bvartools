@@ -26,6 +26,48 @@
 //' \item{V_i}{an \eqn{M \times M} inverse prior covariance matrix.}
 //' \item{lambda}{an M-dimensional vector of inclusion parameters.}
 //' 
+//' @examples
+//' # Prepare data
+//' data("e1")
+//' data <- diff(log(e1))
+//' temp <- gen_var(data, p = 2, deterministic = "const")
+//' y <- temp$Y
+//' x <- temp$Z
+//' k <- nrow(y)
+//' t <- ncol(y)
+//' m <- k * nrow(x)
+//' 
+//' # OLS estimates for semiautomatic approach
+//' ols <- tcrossprod(y, x) %*% solve(tcrossprod(x))
+//' # OLS error covariance matrix
+//' sigma_ols <- tcrossprod(y - ols %*% x) / (t - nrow(x))
+//' # Covariance matrix
+//' cov_ols <- kronecker(solve(tcrossprod(x)), sigma_ols)
+//' # Standard errors
+//' se_ols <- matrix(sqrt(diag(cov_ols))) # OLS standard errors
+//' 
+//' # SSVS priors
+//' tau0 <- se_ols * 0.1 # If excluded
+//' tau1 <- se_ols * 10 # If included
+//' 
+//' # Prior for inclusion parameter
+//' prob_prior <- matrix(0.5, m)
+//' 
+//' # Priors
+//' a_mu_prior <- matrix(0, m)
+//' a_v_i_prior <- diag(c(tau1^2), m)
+//' 
+//' # Initial value of Sigma
+//' sigma_i <- solve(sigma_ols)
+//' 
+//' # Draw parameters
+//' a <- post_normal(y = y, x = x, sigma_i = sigma_i,
+//'                  a_prior = a_mu_prior, v_i_prior = a_v_i_prior)
+//' 
+//' # Run SSVS
+//' lambda <- ssvs(a = a, tau0 = tau0, tau1 = tau1,
+//'                prob_prior = prob_prior)
+//' 
 //' @references
 //' 
 //' George, E. I., Sun, D., & Ni, S. (2008). Bayesian stochastic search for VAR model

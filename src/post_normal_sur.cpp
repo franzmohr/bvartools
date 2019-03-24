@@ -26,6 +26,29 @@
 //' and the posterior mean by
 //' \deqn{\overline{a} = \overline{V} \left[ \underline{V}^{-1} \underline{a} + \sum_{t=1}^{T} Z_{t}^{\prime} \Sigma_{t}^{-1} y_{t}  \right].}
 //' 
+//' @examples
+//' # Prepare data
+//' data("e1")
+//' data <- diff(log(e1))
+//' temp <- gen_var(data, p = 2, deterministic = "const")
+//' y <- temp$Y
+//' x <- temp$Z
+//' k <- nrow(y)
+//' z <- kronecker(t(x), diag(1, k))
+//' t <- ncol(y)
+//' m <- k * nrow(x)
+//' 
+//' # Priors
+//' a_mu_prior <- matrix(0, m)
+//' a_v_i_prior <- diag(0.1, m)
+//' 
+//' # Initial value of inverse Sigma
+//' sigma_i <- solve(tcrossprod(y) / t)
+//'
+//' # Draw parameters
+//' a <- post_normal_sur(y = y, z = z, sigma_i = sigma_i,
+//'                      a_prior = a_mu_prior, v_i_prior = a_v_i_prior)
+//' 
 //' @return A vector.
 //' 
 // [[Rcpp::export]]
@@ -59,9 +82,9 @@ arma::vec post_normal_sur(arma::mat y ,arma::mat z, arma::mat sigma_i,
   arma::mat V_post = arma::inv(v_i_prior + ZHZ);
   arma::vec mu_post = V_post * (v_i_prior * a_prior + ZHy);
 
+  arma::vec s;
   arma::mat U;
-  arma::vec s, Z;
   arma::eig_sym(s, U, V_post);
-
+  
   return mu_post + U * arma::diagmat(sqrt(s)) * arma::trans(U) * arma::randn<arma::vec>(nvars);
 }

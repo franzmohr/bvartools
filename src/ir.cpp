@@ -11,6 +11,7 @@ arma::vec ir(Rcpp::List A, int h, std::string type, int impulse, int response) {
   std::string oir ("oir");
   std::string sir ("sir");
   std::string gir ("gir");
+  std::string sgir ("sgir");
   
   if (h < p) {
     p = h * k;
@@ -21,7 +22,7 @@ arma::vec ir(Rcpp::List A, int h, std::string type, int impulse, int response) {
   arma::mat A_temp = arma::zeros<arma::mat>(k, h * k);
   A_temp.cols(0, p - 1) = coef.cols(0, p - 1); 
   
-  arma::mat A0, P, Sigma, temp;
+  arma::mat P, Sigma, temp;
   
   arma::mat phi = arma::zeros<arma::mat>((h + 1) * k, k);
   arma::mat phi_temp = arma::eye<arma::mat>(k, k);
@@ -35,12 +36,15 @@ arma::vec ir(Rcpp::List A, int h, std::string type, int impulse, int response) {
     P = arma::trans(arma::chol(Rcpp::as<arma::mat>(A["Sigma"])));
   }
   if (type == sir) {
-    A0 = Rcpp::as<arma::mat>(A["A0"]);
-    P = arma::inv(A0);
+    P = arma::inv(Rcpp::as<arma::mat>(A["A0"]));
   }
   if (type == gir) {
     Sigma = Rcpp::as<arma::mat>(A["Sigma"]);
     P = Sigma / sqrt(arma::as_scalar(Sigma(impulse - 1, impulse - 1)));
+  }
+  if (type == sgir) {
+    Sigma = Rcpp::as<arma::mat>(A["Sigma"]);
+    P = arma::inv(Rcpp::as<arma::mat>(A["A0"])) * Sigma / sqrt(arma::as_scalar(Sigma(impulse - 1, impulse - 1)));
   }
   if (type != fe) {
     temp = phi_temp * P;

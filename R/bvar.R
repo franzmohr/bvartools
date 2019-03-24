@@ -1,6 +1,6 @@
 #' Bayesian Vector Autoregression Objects
 #' 
-#' `bvar` is used to create objects of class "bvar".
+#' \code{bvar} is used to create objects of class "bvar".
 #' 
 #' @param data the original time-series object of endogenous variables.
 #' @param exogen the original time-series object of unmodelled variables.
@@ -15,14 +15,14 @@
 #' @param Sigma a \eqn{K^2 \times S} matrix of variance-covariance MCMC draws.
 #' 
 #' @details For the VARX model
-#' \deqn{A_0 y_t = \sum_{i = 1}^{p} A_i y_{t-i} + \sum_{i = 0}^{s} B_i x_{t - i} + C D_t + u_t}
+#' \deqn{A_0 y_t = \sum_{i = 1}^{p} A_i y_{t-i} + \sum_{i = 0}^{s} B_i x_{t - i} + C d_t + u_t}
 #' the function collects the S draws of a Gibbs sampler (after the burn-in phase) in a standardised object,
 #' where \eqn{y_t} is a K-dimensional vector of endogenous variables,
 #' \eqn{A_0} is a \eqn{K \times K} matrix of structural coefficients.
 #' \eqn{A_i} is a \eqn{K \times K} coefficient matrix of lagged endogenous variabels.
 #' \eqn{x_t} is an M-dimensional vector of unmodelled, non-deterministic variables
 #' and \eqn{B_i} its corresponding coefficient matrix.
-#' \eqn{D_t} is an N-dimensional vector of deterministic terms
+#' \eqn{d_t} is an N-dimensional vector of deterministic terms
 #' and \eqn{C} its corresponding coefficient matrix.
 #' \eqn{u_t} is an error term with \eqn{u_t \sim N(0, \Sigma_u)}.
 #' 
@@ -48,7 +48,7 @@ bvar <- function(data = NULL, exogen = NULL, y = NULL, x = NULL,
 
   result <- NULL
   if (is.null(y) | is.null(A)) {
-    stop("At least the arguments 'y' and 'A' must be specified.")
+    stop("At least arguments 'y' and 'A' must be specified.")
   }
   if(!is.null(y)) {
     result$y <- y

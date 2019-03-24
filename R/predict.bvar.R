@@ -1,8 +1,8 @@
 #' Predict Method for Objects of Class bvar
 #' 
-#' Forecasting a Bayesian VAR object of class "bvar" with credible bands.
+#' Forecasting a Bayesian VAR object of class \code{"bvar"} with credible bands.
 #' 
-#' @param object an object of class "bvar", usually, a result of a call to
+#' @param object an object of class \code{"bvar"}, usually, a result of a call to
 #' \code{\link{bvar}} or \code{\link{bvec_to_bvar}}.
 #' @param n.ahead number of steps ahead at which to predict.
 #' @param new_x a matrix of new non-deterministic, exogenous variables. Must have \code{n.ahead} rows.
@@ -12,10 +12,10 @@
 #' @param ... additional arguments.
 #' 
 #' @details For the VAR model
-#' \deqn{A_0 y_t = \sum_{i = 1}^{p} A_{i} y_{t-i} + \sum_{i = 0}^{s} B_{i} x_{t-i} + C D_t + u_t,}
+#' \deqn{y_t = \sum_{i = 1}^{p} A_{i} y_{t-i} + \sum_{i = 0}^{s} B_{i} x_{t-i} + C D_t + A_0^{-1} u_t,}
 #' with \eqn{u_t \sim N(0, \Sigma)} the function produces \code{n.ahead} forecasts.
 #' 
-#' @return A time-series object of class "bvarprd".
+#' @return A time-series object of class \code{"bvarprd"}.
 #' 
 #' @references
 #' 
@@ -74,14 +74,15 @@ predict.bvar <- function(object, ..., n.ahead = 10, new_x = NULL, new_D = NULL, 
   A0_i <- diag(1, k)
   draws <- nrow(A)
   result <- array(NA, dim = c(k, n.ahead, draws))
+  
   for (draw in 1:draws) {
     for (i in 1:n.ahead) {
+      temp <- eigen(matrix(object$Sigma[draw, ], k))
+      u <- temp$vectors %*% diag(sqrt(temp$values), k) %*% t(temp$vectors) %*% stats::rnorm(k)
       if (struct) {
         A0_i <- solve(matrix(object$A0[draw, ], k))
       }
-      temp <- svd(matrix(object$Sigma[draw, ], k))
-      u <- temp$u %*% diag(sqrt(temp$d), k) %*% t(temp$v) %*% stats::rnorm(k)
-      pred[1:k, i + 1] <- A0_i %*% matrix(A[draw, ], k) %*% pred[, i] + u
+      pred[1:k, i + 1] <- matrix(A[draw, ], k) %*% pred[, i] + A0_i %*% u
       for (j in 1:(p - 1)) {
         pred[j * k + 1:k, i + 1] <- pred[(j - 1) * k + 1:k, i]
       }

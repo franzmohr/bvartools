@@ -30,7 +30,7 @@ This example covers the estimation of a simple Bayesian VAR (BVAR) model. For fu
 
 ### Data
 
-To illustrate the estimation process the dataset E1 from Lütkepohl (2006) is used. It contains data on West German fixed investment, disposable income and consumption expenditures in billions of DM from 1960Q1 to 1982Q4.
+To illustrate the estimation process the dataset E1 from Lütkepohl (2007) is used. It contains data on West German fixed investment, disposable income and consumption expenditures in billions of DM from 1960Q1 to 1982Q4.
 
 ``` r
 library(bvartools)
@@ -54,13 +54,15 @@ y <- data$Y[, 1:73]
 x <- data$Z[, 1:73]
 ```
 
-As in Lütkepohl (2006) only the first 73 observations are used.
+As in Lütkepohl (2007) only the first 73 observations are used.
 
 ### Estimation
 
 The following code sets up a simple Gibbs sampler algorithm.
 
 ``` r
+set.seed(1234567)
+
 iter <- 15000 # Number of iterations of the Gibbs sampler
 burnin <- 5000 # Number of burn-in draws
 store <- iter - burnin
@@ -116,9 +118,9 @@ A # Print
 ```
 
     ##        invest.1 income.1 cons.1 invest.2 income.2 cons.2  const
-    ## invest   -0.321    0.141  0.964   -0.161    0.115  0.946 -0.017
-    ## income    0.044   -0.154  0.291    0.050    0.018 -0.009  0.016
-    ## cons     -0.003    0.224 -0.261    0.033    0.355 -0.020  0.013
+    ## invest   -0.321    0.147  0.966   -0.160    0.104  0.936 -0.017
+    ## income    0.044   -0.152  0.287    0.050    0.019 -0.009  0.016
+    ## cons     -0.003    0.223 -0.263    0.034    0.354 -0.020  0.013
 
 ``` r
 Sigma <- rowMeans(draws_sigma) # Obtain means for every row
@@ -130,11 +132,11 @@ Sigma # Print
 ```
 
     ##        invest income cons
-    ## invest  22.63   0.76 1.31
-    ## income   0.76   1.46 0.65
-    ## cons     1.31   0.65 0.95
+    ## invest  22.67   0.77 1.32
+    ## income   0.77   1.46 0.65
+    ## cons     1.32   0.65 0.95
 
-The means of the coefficient draws are very close to the results of the frequentist estimatior in Lütkepohl (2006).
+The means of the coefficient draws are very close to the results of the frequentist estimatior in Lütkepohl (2007).
 
 ### `bvar` objects
 
@@ -204,7 +206,7 @@ References
 
 Eddelbuettel, D., & Sanderson C. (2014). RcppArmadillo: Accelerating R with high-performance C++ linear algebra. *Computational Statistics and Data Analysis, 71*, 1054-1063. <https://doi.org/10.1016/j.csda.2013.02.005>
 
-Lütkepohl, H. (2007). *New introduction to multiple time series analysis*. Berlin: Springer.
+Lütkepohl, H. (2007). *New introduction to multiple time series analysis* (2nd ed.). Berlin: Springer.
 
 Pesaran, H. H., & Shin, Y. (1998). Generalized impulse response analysis in linear multivariate models. *Economics Letters, 58*, 17-29. <https://doi.org/10.1016/S0165-1765(97)00214-0>
 

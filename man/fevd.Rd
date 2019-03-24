@@ -11,7 +11,7 @@ fevd(object, response = NULL, n.ahead = 5, type = "oir",
 \method{plot}{bvarfevd}(x, ...)
 }
 \arguments{
-\item{object}{an object of class "bvar", usually, a result of a call to \code{\link{bvar}}
+\item{object}{an object of class \code{"bvar"}, usually, a result of a call to \code{\link{bvar}}
 or \code{\link{bvec_to_bvar}}.}
 
 \item{response}{name of the response variable.}
@@ -23,12 +23,12 @@ Possible choices are orthogonalised \code{oir} (default) and generalised \code{g
 
 \item{normalise_gir}{logical. Should the GIR-based FEVD be normalised?}
 
-\item{x}{an object of class "bvarfevd", usually, a result of a call to \code{\link{irf}}.}
+\item{x}{an object of class "bvarfevd", usually, a result of a call to \code{\link{fevd}}.}
 
 \item{...}{further graphical parameters.}
 }
 \value{
-A time-series object of class "bvarfevd".
+A time-series object of class \code{"bvarfevd"}.
 }
 \description{
 Produces the forecast error variance decomposition of a Bayesian VAR model.
@@ -37,7 +37,7 @@ A plot function for objects of class "bvarfevd".
 }
 \details{
 The function produces forecast error variance decompositions (FEVD) for the VAR model
-\deqn{y_t = \sum_{i = 1}^{p} A_{i} y_{t-i} + u_t,}
+\deqn{y_t = \sum_{i = 1}^{p} A_{i} y_{t-i} + A_0^{-1} u_t,}
 with \eqn{u_t \sim N(0, \Sigma)}.
 
 If the FEVD is based on the orthogonalised impulse resonse (OIR), the FEVD will be calculated as
@@ -47,9 +47,16 @@ where \eqn{\Phi_i} is the forecast error impulse response for the \eqn{i}th peri
 matrix \eqn{\Sigma}, \eqn{e_j} is a selection vector for the response variable and
 \eqn{e_k} a selection vector for the impulse variable.
 
-If \code{type = "gir"}, the FEVD will be
+If \code{type = "sir"}, the structural FEVD will be
+calculated as \deqn{\omega^{SIR}_{jk, h} = \frac{\sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i A_0^{-1} \Sigma^{\frac{1}{2}} e_k )^2}{\sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i A_0^{-1}  \Sigma A_0^{-1\prime} \Phi_i^{\prime} e_j )},}
+where \eqn{\sigma_{jj}} is the diagonal element of the \eqn{j}th variable of the variance covariance matrix.
+
+If \code{type = "gir"}, the generalised FEVD will be
 calculated as \deqn{\omega^{GIR}_{jk, h} = \frac{\sigma^{-1}_{jj} \sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i \Sigma e_k )^2}{\sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i \Sigma \Phi_i^{\prime} e_j )},}
 where \eqn{\sigma_{jj}} is the diagonal element of the \eqn{j}th variable of the variance covariance matrix.
+
+If \code{type = "sgir"}, the structural generalised FEVD will be
+calculated as \deqn{\omega^{SGIR}_{jk, h} = \frac{\sigma^{-1}_{jj} \sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i A_0^{-1} \Sigma e_k )^2}{\sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i A_0^{-1} \Sigma A_0^{-1\prime} \Phi_i^{\prime} e_j )}}.
 
 Since GIR-based FEVDs do not add up to unity, they can be normalised by setting \code{normalise_gir = TRUE}.
 }

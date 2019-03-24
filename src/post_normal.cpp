@@ -26,6 +26,28 @@
 //' where \eqn{Y} is a \eqn{K \times T} matrix of the endogenous variables and \eqn{X} is an \eqn{M \times T} matrix of
 //' the explanatory variables.
 //' 
+//' @examples
+//' # Prepare data
+//' data("e1")
+//' data <- diff(log(e1))
+//' temp <- gen_var(data, p = 2, deterministic = "const")
+//' y <- temp$Y
+//' x <- temp$Z
+//' k <- nrow(y)
+//' t <- ncol(y)
+//' m <- k * nrow(x)
+//' 
+//' # Priors
+//' a_mu_prior <- matrix(0, m)
+//' a_v_i_prior <- diag(0.1, m)
+//' 
+//' # Initial value of inverse Sigma
+//' sigma_i <- solve(tcrossprod(y) / t)
+//' 
+//' # Draw parameters
+//' a <- post_normal(y = y, x = x, sigma_i = sigma_i,
+//'                  a_prior = a_mu_prior, v_i_prior = a_v_i_prior)
+//' 
 //' @return A vector.
 //' 
 //' @references

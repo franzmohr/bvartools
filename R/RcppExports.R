@@ -183,6 +183,28 @@ post_coint_kls <- function(y, beta, w, sigma_i, v_i, p_tau_i, g_i, x = NULL, gam
 #' where \eqn{Y} is a \eqn{K \times T} matrix of the endogenous variables and \eqn{X} is an \eqn{M \times T} matrix of
 #' the explanatory variables.
 #' 
+#' @examples
+#' # Prepare data
+#' data("e1")
+#' data <- diff(log(e1))
+#' temp <- gen_var(data, p = 2, deterministic = "const")
+#' y <- temp$Y
+#' x <- temp$Z
+#' k <- nrow(y)
+#' t <- ncol(y)
+#' m <- k * nrow(x)
+#' 
+#' # Priors
+#' a_mu_prior <- matrix(0, m)
+#' a_v_i_prior <- diag(0.1, m)
+#' 
+#' # Initial value of inverse Sigma
+#' sigma_i <- solve(tcrossprod(y) / t)
+#' 
+#' # Draw parameters
+#' a <- post_normal(y = y, x = x, sigma_i = sigma_i,
+#'                  a_prior = a_mu_prior, v_i_prior = a_v_i_prior)
+#' 
 #' @return A vector.
 #' 
 #' @references
@@ -218,6 +240,29 @@ post_normal <- function(y, x, sigma_i, a_prior, v_i_prior) {
 #' and the posterior mean by
 #' \deqn{\overline{a} = \overline{V} \left[ \underline{V}^{-1} \underline{a} + \sum_{t=1}^{T} Z_{t}^{\prime} \Sigma_{t}^{-1} y_{t}  \right].}
 #' 
+#' @examples
+#' # Prepare data
+#' data("e1")
+#' data <- diff(log(e1))
+#' temp <- gen_var(data, p = 2, deterministic = "const")
+#' y <- temp$Y
+#' x <- temp$Z
+#' k <- nrow(y)
+#' z <- kronecker(t(x), diag(1, k))
+#' t <- ncol(y)
+#' m <- k * nrow(x)
+#' 
+#' # Priors
+#' a_mu_prior <- matrix(0, m)
+#' a_v_i_prior <- diag(0.1, m)
+#' 
+#' # Initial value of inverse Sigma
+#' sigma_i <- solve(tcrossprod(y) / t)
+#'
+#' # Draw parameters
+#' a <- post_normal_sur(y = y, z = z, sigma_i = sigma_i,
+#'                      a_prior = a_mu_prior, v_i_prior = a_v_i_prior)
+#' 
 #' @return A vector.
 #' 
 post_normal_sur <- function(y, z, sigma_i, a_prior, v_i_prior) {
@@ -248,6 +293,48 @@ post_normal_sur <- function(y, z, sigma_i, a_prior, v_i_prior) {
 #' @return A named list containing two components:
 #' \item{V_i}{an \eqn{M \times M} inverse prior covariance matrix.}
 #' \item{lambda}{an M-dimensional vector of inclusion parameters.}
+#' 
+#' @examples
+#' # Prepare data
+#' data("e1")
+#' data <- diff(log(e1))
+#' temp <- gen_var(data, p = 2, deterministic = "const")
+#' y <- temp$Y
+#' x <- temp$Z
+#' k <- nrow(y)
+#' t <- ncol(y)
+#' m <- k * nrow(x)
+#' 
+#' # OLS estimates for semiautomatic approach
+#' ols <- tcrossprod(y, x) %*% solve(tcrossprod(x))
+#' # OLS error covariance matrix
+#' sigma_ols <- tcrossprod(y - ols %*% x) / (t - nrow(x))
+#' # Covariance matrix
+#' cov_ols <- kronecker(solve(tcrossprod(x)), sigma_ols)
+#' # Standard errors
+#' se_ols <- matrix(sqrt(diag(cov_ols))) # OLS standard errors
+#' 
+#' # SSVS priors
+#' tau0 <- se_ols * 0.1 # If excluded
+#' tau1 <- se_ols * 10 # If included
+#' 
+#' # Prior for inclusion parameter
+#' prob_prior <- matrix(0.5, m)
+#' 
+#' # Priors
+#' a_mu_prior <- matrix(0, m)
+#' a_v_i_prior <- diag(c(tau1^2), m)
+#' 
+#' # Initial value of Sigma
+#' sigma_i <- solve(sigma_ols)
+#' 
+#' # Draw parameters
+#' a <- post_normal(y = y, x = x, sigma_i = sigma_i,
+#'                  a_prior = a_mu_prior, v_i_prior = a_v_i_prior)
+#' 
+#' # Run SSVS
+#' lambda <- ssvs(a = a, tau0 = tau0, tau1 = tau1,
+#'                prob_prior = prob_prior)
 #' 
 #' @references
 #' 

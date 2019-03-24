@@ -36,7 +36,7 @@ This example covers the estimation of a simple Bayesian VAR (BVAR) model. For fu
 
 ### Data
 
-To illustrate the estimation process the dataset E1 from Lütkepohl (2006) is used. It contains data on West German fixed investment, disposable income and consumption expenditures in billions of DM from 1960Q1 to 1982Q4.
+To illustrate the estimation process the dataset E1 from Lütkepohl (2007) is used. It contains data on West German fixed investment, disposable income and consumption expenditures in billions of DM from 1960Q1 to 1982Q4.
 
 ```{r data, fig.align='center', fig.height=5, fig.width=4.5}
 library(bvartools)
@@ -58,13 +58,15 @@ y <- data$Y[, 1:73]
 x <- data$Z[, 1:73]
 ```
 
-As in Lütkepohl (2006) only the first 73 observations are used.
+As in Lütkepohl (2007) only the first 73 observations are used.
 
 ### Estimation
 
 The following code sets up a simple Gibbs sampler algorithm.
 
 ```{r usage, message = FALSE, eval = TRUE}
+set.seed(1234567)
+
 iter <- 15000 # Number of iterations of the Gibbs sampler
 burnin <- 5000 # Number of burn-in draws
 store <- iter - burnin
@@ -128,7 +130,7 @@ dimnames(Sigma) <- list(dimnames(y)[[1]], dimnames(y)[[1]]) # Rename matrix dime
 Sigma # Print
 ```
 
-The means of the coefficient draws are very close to the results of the frequentist estimatior in Lütkepohl (2006).
+The means of the coefficient draws are very close to the results of the frequentist estimatior in Lütkepohl (2007).
 
 ### `bvar` objects
 
@@ -187,7 +189,7 @@ plot(bvar_fevd, main = "FEVD of consumption")
 
 Eddelbuettel, D., & Sanderson C. (2014). RcppArmadillo: Accelerating R with high-performance C++ linear algebra. *Computational Statistics and Data Analysis, 71*, 1054-1063. <https://doi.org/10.1016/j.csda.2013.02.005>
 
-Lütkepohl, H. (2007). *New introduction to multiple time series analysis*. Berlin: Springer.
+Lütkepohl, H. (2007). *New introduction to multiple time series analysis* (2nd ed.). Berlin: Springer.
 
 Pesaran, H. H., & Shin, Y. (1998). Generalized impulse response analysis in linear multivariate models. *Economics Letters, 58*, 17-29. <https://doi.org/10.1016/S0165-1765(97)00214-0>
 

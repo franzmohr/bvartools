@@ -33,6 +33,48 @@
 //' 
 //' @return A \eqn{M \times T+1} matrix of state vector draws.
 //' 
+//' @examples
+//' 
+//' # Prepare data
+//' data("e1")
+//' data <- diff(log(e1))
+//' temp <- gen_var(data, p = 2, deterministic = "const")
+//' y <- temp$Y
+//' x <- temp$Z
+//' k <- nrow(y)
+//' z <- kronecker(t(x), diag(1, k))
+//' t <- ncol(y)
+//' m <- k * nrow(x)
+//' 
+//' # Priors
+//' a_mu_prior <- matrix(0, m)
+//' a_v_i_prior <- diag(0.1, m)
+//' 
+//' a_Q <- diag(.0001, m)
+//' 
+//' # Initial value of Sigma
+//' sigma <- tcrossprod(y) / t
+//' sigma_i <- solve(sigma)
+//' 
+//' # Initial values for Kalman filter
+//' y_init <- y * 0
+//' a_filter <- matrix(0, m, t + 1)
+//' 
+//' # Initialise the Kalman filter
+//' for (i in 1:t) {
+//'   y_init[, i] <- y[, i] - z[(i - 1) * k + 1:k,] %*% a_filter[, i]
+//' }
+//' a_init <- post_normal_sur(y = y_init, z = z, sigma_i = sigma_i,
+//'                           a_prior = a_mu_prior, v_i_prior = a_v_i_prior)
+//' y_filter <- y - matrix(a_init, k) %*% x
+//' 
+//' # Kalman filter and backward smoother
+//' a_filter <- kalman_dk(y = y_filter, z = z, sigma_u = sigma,
+//'                       sigma_v = a_Q, B = diag(1, m),
+//'                       a_init = matrix(0, m), P_init = a_Q)
+//'                       
+//' a <- a_filter + matrix(a_init, m, t + 1)
+//' 
 //' @references
 //' 
 //' Durbin, J., & Koopman, S. J. (2002). A simple and efficient simulation smoother for

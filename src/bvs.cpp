@@ -29,6 +29,38 @@
 //' 
 //' @return A matrix of inclusion parameters on its diagonal.
 //' 
+//' @examples
+//' # Prepare data
+//' data("e1")
+//' data <- diff(log(e1))
+//' temp <- gen_var(data, p = 2, deterministic = "const")
+//' y <- temp$Y
+//' x <- temp$Z
+//' z <- kronecker(t(x), diag(1, nrow(y)))
+//' t <- ncol(y)
+//' m <- nrow(y) * nrow(x)
+//' 
+//' # Priors
+//' a_mu_prior <- matrix(0, m)
+//' a_v_i_prior <- diag(0.1, m)
+//' 
+//' # Prior for inclusion parameter
+//' prob_prior <- matrix(0.5, m)
+//' 
+//' # Initial value of Sigma
+//' sigma <- tcrossprod(y) / t
+//' sigma_i <- solve(sigma)
+//' 
+//' lambda <- diag(1, m)
+//' 
+//' z_bvs <- z %*% lambda
+//' 
+//' a <- post_normal_sur(y = y, z = z_bvs, sigma_i = sigma_i,
+//'                      a_prior = a_mu_prior, v_i_prior = a_v_i_prior)
+//'
+//' lambda <- bvs(y = y, z = z, a = a, lambda = lambda,
+//'               sigma_i = sigma_i, prob_prior = prob_prior)
+//' 
 //' @references
 //' 
 //' Korobilis, D. (2013). VAR forecasting using Bayesian variable selection. \emph{Journal of Applied Econometrics, 28}(2), 204--230. \url{https://doi.org/10.1002/jae.1271}

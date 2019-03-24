@@ -80,6 +80,29 @@ The final draws of \eqn{\alpha} and \eqn{\beta} are calculated using
 \eqn{\beta = B (B^{\prime} B)^{-\frac{1}{2}}} and
 \eqn{\alpha = A (B^{\prime} B)^{\frac{1}{2}}}.
 }
+\examples{
+# Prepare data
+data("e6")
+temp <- gen_vec(e6, p = 0)
+y <- temp$Y
+ect <- temp$W
+
+k <- nrow(y)
+t <- ncol(y)
+
+# Initial value of Sigma
+sigma <- tcrossprod(y) / t
+sigma_i <- solve(sigma)
+
+# Initial values of beta
+beta <- matrix(c(1, -4), k)
+
+# Draw parameters
+coint <- post_coint_kls(y = y, beta = beta, w = ect,
+                        sigma_i = sigma_i, v_i = 0, p_tau_i = diag(1, 1),
+                        g_i = sigma_i)
+
+}
 \references{
 Koop, G., León-González, R., & Strachan R. W. (2010). Efficient posterior
 simulation for cointegrated models with priors on the cointegration space.

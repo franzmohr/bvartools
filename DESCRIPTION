@@ -1,5 +1,5 @@
 Package: bvartools
-Title: Functions for Bayesian Inference of Vector Autoregressive Models
+Title: Bayesian Inference of Vector Autoregressive Models
 Version: 0.0.1
 Date: 2019-03-08
 Authors@R: person("Franz X.", "Mohr", email = "bvartools@outlook.com", role = c("aut","cre"))

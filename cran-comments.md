@@ -16,4 +16,4 @@ win-builder (devel)
 ## R CMD check results
 
 * NOTE: New submission
-* NOTE: checking installed package size ... installed size is  8.0Mb sub-directories of 1Mb or more: libs 7.1Mb
+* NOTE: checking installed package size ... installed size is  7.7Mb sub-directories of 1Mb or more: libs 6.9Mb

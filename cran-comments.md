@@ -1,7 +1,7 @@
 ## Resubmission
 This is a resubmission. In this version I have:
 
-* Shortened the calculation time for the vignettes
+* Shortened the calculation time required for the vignettes
 
 In former resubmissions I have:
 

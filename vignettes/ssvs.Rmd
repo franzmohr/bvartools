@@ -79,8 +79,8 @@ a <- matrix(0, m)
 a_v_i_prior <- diag(1 / c(tau1)^2, m) # Inverse of the prior covariance matrix
 
 # Data containers for posterior draws
-iter <- 50000 # Number of total Gibs sampler draws
-burnin <- 10000 # Number of burn-in draws
+iter <- 15000 # Number of total Gibs sampler draws
+burnin <- 5000 # Number of burn-in draws
 
 store <- iter - burnin
 draws_a <- matrix(NA, m, store)

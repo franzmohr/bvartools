@@ -167,6 +167,12 @@ bvec_est <- bvec(y = y, w = w, x = x,
                Sigma = draws_sigma)
 ```
 
+Posterior draws can be thinned with function `thin`:
+
+```{r thin}
+bvec_est <- thin(bvec_est, thin = 5)
+```
+
 The function `bvec_to_bvar` can be used to transform the VEC model into a VAR in levels:
 
 ```{r vec2var}

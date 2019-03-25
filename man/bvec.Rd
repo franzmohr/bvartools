@@ -69,10 +69,10 @@ unrestricted deterministic terms.}
 }
 \details{
 For the VECX model
-\deqn{A_0 \Delta y_t = \Pi^{+} \begin{pmatrix} y_{t-1} \\ x_{t-1} \\ d^{R}_{t-1} \end{pmatrix} +
+\deqn{\Delta y_t = \Pi^{+} \begin{pmatrix} y_{t-1} \\ x_{t-1} \\ d^{R}_{t-1} \end{pmatrix} +
 \sum_{i = 1}^{p-1} \Gamma_i \Delta y_{t-i} +
 \sum_{i = 0}^{s-1} \Upsilon_i \Delta x_{t-i} +
-C^{UR} d^{UR}_t + u_t}
+C^{UR} d^{UR}_t + A_0^{-1} u_t}
 the function collects the S draws of a Gibbs sampler (after the burn-in phase) in a standardised object,
 where \eqn{\Delta y_t} is a K-dimensional vector of differenced endogenous variables
 and \eqn{A_0} is a \eqn{K \times K} matrix of structural coefficients.

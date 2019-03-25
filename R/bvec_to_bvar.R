@@ -8,9 +8,14 @@
 #' 
 #' @export
 bvec_to_bvar <- function(object) {
+  if (!any(class(object) %in% "bvec")) {
+    stop("Argument 'object' must be of class 'bvec'.")
+  }
   draws <- nrow(object$Pi)
   k <- NROW(object$y)
   
+  specs <- attr(object$Pi, "mcpar")
+
   if (!is.null(object$Gamma)) {
     p <- NCOL(object$Gamma) / k^2
     p <- p + 1
@@ -30,7 +35,7 @@ bvec_to_bvar <- function(object) {
       A[, draw] <- matrix(object$Pi[draw, ], k) + matrix(diag(1, k), k)
     }
   }
-
+  
   if (!is.null(object$Ypsilon)) {
     m <- NCOL(object$Pi_x)
     s <- NCOL(object$Ypsilon) / (k * m)
@@ -41,7 +46,7 @@ bvec_to_bvar <- function(object) {
     
     B <- matrix(NA, k * m * (s + 1), draws)
     for (draw in 1:draws){
-        B[, draw] <- cbind(matrix(object$Pi_x[draw, ], k), matrix(object$Ypsilon[draw, ], k)) %*% W
+      B[, draw] <- cbind(matrix(object$Pi_x[draw, ], k), matrix(object$Ypsilon[draw, ], k)) %*% W
     }
   } else {
     B <- NULL
@@ -186,6 +191,21 @@ bvec_to_bvar <- function(object) {
     attr(y, "ts_info") <- stats::tsp(ts_temp)
   }
   
-  result <- bvar(data = data, exogen = exogen, y = y, x = x, A0 = A0, A = A, B = B, C = C, Sigma = Sigma)
-  return(result)
+  object <- bvar(data = data, exogen = exogen, y = y, x = x, A0 = A0, A = A, B = B, C = C, Sigma = Sigma)
+  
+  attr(object$A, "mcpar") <- specs
+  if(!is.null(object$A0)) {
+    attr(object$A0, "mcpar") <- specs
+  }
+  if(!is.null(object$B)) {
+    attr(object$B, "mcpar") <- specs
+  }
+  if(!is.null(object$C)) {
+    attr(object$C, "mcpar") <- specs
+  }
+  if(!is.null(object$Sigma)) {
+    attr(object$Sigma, "mcpar") <- specs
+  }
+  
+  return(object)
 }

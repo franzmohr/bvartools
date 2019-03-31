@@ -100,10 +100,10 @@ for (draw in 1:iter) {
   alpha <- temp$alpha
   beta <- temp$beta
   Pi <- temp$Pi
-  Gamma <- temp$Gamma
+  gamma <- temp$Gamma
   
   # Draw variance-covariance matrix
-  u <- y - Pi %*% w - Gamma %*% x
+  u <- y - Pi %*% w - matrix(gamma, k) %*% x
   u_sigma_scale_post <- solve(tcrossprod(u) + v_i * alpha %*% tcrossprod(crossprod(beta, p_tau_i) %*% beta, alpha))
   u_sigma_i <- matrix(rWishart(1, u_sigma_df_post, u_sigma_scale_post)[,, 1], k)
   u_sigma <- solve(u_sigma_i)
@@ -116,7 +116,7 @@ for (draw in 1:iter) {
     draws_alpha[, draw - burnin] <- alpha
     draws_beta[, draw - burnin] <- beta
     draws_pi[, draw - burnin] <- Pi
-    draws_gamma[, draw - burnin] <- Gamma
+    draws_gamma[, draw - burnin] <- gamma
     draws_sigma[, draw - burnin] <- u_sigma
   }
 }

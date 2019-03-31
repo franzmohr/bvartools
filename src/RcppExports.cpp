@@ -75,6 +75,26 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// post_coint_kls_sur
+Rcpp::List post_coint_kls_sur(arma::mat y, arma::mat beta, arma::mat w, arma::mat sigma_i, double v_i, arma::mat p_tau_i, arma::mat g_i, Rcpp::Nullable<Rcpp::NumericMatrix> x, Rcpp::Nullable<Rcpp::NumericVector> gamma_mu_prior, Rcpp::Nullable<Rcpp::NumericMatrix> gamma_V_i_prior);
+RcppExport SEXP _bvartools_post_coint_kls_sur(SEXP ySEXP, SEXP betaSEXP, SEXP wSEXP, SEXP sigma_iSEXP, SEXP v_iSEXP, SEXP p_tau_iSEXP, SEXP g_iSEXP, SEXP xSEXP, SEXP gamma_mu_priorSEXP, SEXP gamma_V_i_priorSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type y(ySEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type beta(betaSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type w(wSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type sigma_i(sigma_iSEXP);
+    Rcpp::traits::input_parameter< double >::type v_i(v_iSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type p_tau_i(p_tau_iSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type g_i(g_iSEXP);
+    Rcpp::traits::input_parameter< Rcpp::Nullable<Rcpp::NumericMatrix> >::type x(xSEXP);
+    Rcpp::traits::input_parameter< Rcpp::Nullable<Rcpp::NumericVector> >::type gamma_mu_prior(gamma_mu_priorSEXP);
+    Rcpp::traits::input_parameter< Rcpp::Nullable<Rcpp::NumericMatrix> >::type gamma_V_i_prior(gamma_V_i_priorSEXP);
+    rcpp_result_gen = Rcpp::wrap(post_coint_kls_sur(y, beta, w, sigma_i, v_i, p_tau_i, g_i, x, gamma_mu_prior, gamma_V_i_prior));
+    return rcpp_result_gen;
+END_RCPP
+}
 // post_normal
 arma::vec post_normal(arma::mat y, arma::mat x, arma::mat sigma_i, arma::vec a_prior, arma::mat v_i_prior);
 RcppExport SEXP _bvartools_post_normal(SEXP ySEXP, SEXP xSEXP, SEXP sigma_iSEXP, SEXP a_priorSEXP, SEXP v_i_priorSEXP) {
@@ -126,6 +146,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_bvartools_ir", (DL_FUNC) &_bvartools_ir, 5},
     {"_bvartools_kalman_dk", (DL_FUNC) &_bvartools_kalman_dk, 7},
     {"_bvartools_post_coint_kls", (DL_FUNC) &_bvartools_post_coint_kls, 10},
+    {"_bvartools_post_coint_kls_sur", (DL_FUNC) &_bvartools_post_coint_kls_sur, 10},
     {"_bvartools_post_normal", (DL_FUNC) &_bvartools_post_normal, 5},
     {"_bvartools_post_normal_sur", (DL_FUNC) &_bvartools_post_normal_sur, 5},
     {"_bvartools_ssvs", (DL_FUNC) &_bvartools_ssvs, 5},

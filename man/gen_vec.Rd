@@ -67,6 +67,11 @@ where
 \eqn{X} is a \eqn{(K(p - 1) + Ms + N^{UR}) \times T} matrix of differenced regressor variables
 and unrestricted deterministic terms. \eqn{U} is a \eqn{K \times T} matrix of errors.
 }
+\examples{
+data("e6")
+data <- gen_vec(e6, p = 4, const = "unrestricted", season = "unrestricted")
+
+}
 \references{
 Lütkepohl, H. (2007). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
 }

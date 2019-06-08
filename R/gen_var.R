@@ -40,6 +40,12 @@
 #' \item{Y}{a matrix of endogenous variables.}
 #' \item{Z}{a matrix of regressor variables.}
 #' 
+#' @examples
+#' data("e1")
+#' e1 <- diff(log(e1))
+#' 
+#' data <- gen_var(e1, p = 2, deterministic = "const")
+#' 
 #' @references
 #' 
 #' Lütkepohl, H. (2007). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.

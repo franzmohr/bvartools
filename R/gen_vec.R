@@ -50,10 +50,13 @@
 #' \item{W}{a matrix of variables in the cointegration term.}
 #' \item{X}{a matrix of non-cointegration regressors.}
 #' 
+#' @examples 
+#' data("e6")
+#' data <- gen_vec(e6, p = 4, const = "unrestricted", season = "unrestricted")
+#' 
 #' @references
 #' 
 #' Lütkepohl, H. (2007). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
-#' 
 #' @export
 gen_vec <- function(data, p = 2, exogen = NULL, s = 2, const = NULL, trend = NULL, seasonal = NULL) {
   if (!"ts" %in% class(data)) {

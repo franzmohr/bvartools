@@ -1,10 +1,11 @@
 ## Resubmission
 This is a resubmission. In this version I have:
 
-* Shortened the calculation time required for the vignettes
+* Added executeable examples in Rd-files of exported functions
 
 In former resubmissions I have:
 
+* Shortened the calculation time required for the vignettes
 * Omitted the redundant part "Functions for" in the title
 * Added small executeable examples in Rd-files of functions, which are used for simulation. Functions which build on the output of computationally intensive simulations are covered in the vignettes.
 * Rewritten the Description field in DESCRIPTION

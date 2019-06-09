@@ -59,7 +59,6 @@ generates the matrices \eqn{Y} and \eqn{Z}.
 \examples{
 data("e1")
 e1 <- diff(log(e1))
-
 data <- gen_var(e1, p = 2, deterministic = "const")
 
 }

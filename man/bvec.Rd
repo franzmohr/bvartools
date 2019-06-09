@@ -103,8 +103,10 @@ x <- data$X
 # Reset random number generator for reproducibility
 set.seed(1234567)
 
-iter <- 4000 # Number of iterations of the Gibbs sampler
-burnin <- 1000 # Number of burn-in draws
+iter <- 500 # Number of iterations of the Gibbs sampler
+# Chosen number of iterations should be much higher, e.g. 30000.
+
+burnin <- 100 # Number of burn-in draws
 store <- iter - burnin
 
 r <- 1 # Set rank

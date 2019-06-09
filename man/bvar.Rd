@@ -97,8 +97,10 @@ x <- data$Z[, 1:73]
 
 set.seed(1234567)
 
-iter <- 3000 # Number of iterations of the Gibbs sampler
-burnin <- 1000 # Number of burn-in draws
+iter <- 500 # Number of iterations of the Gibbs sampler
+# Chosen number of iterations should be much higher, e.g. 30000.
+
+burnin <- 100 # Number of burn-in draws
 store <- iter - burnin
 
 t <- ncol(y) # Number of observations
@@ -144,7 +146,6 @@ bvar_est <- bvar(y = y, x = x, A = draws_a[1:18,],
                  C = draws_a[19:21, ], Sigma = draws_sigma)
 data("e1")
 e1 <- diff(log(e1))
-
 data <- gen_var(e1, p = 2, deterministic = "const")
 
 y <- data$Y[, 1:73]
@@ -152,8 +153,10 @@ x <- data$Z[, 1:73]
 
 set.seed(1234567)
 
-iter <- 3000 # Number of iterations of the Gibbs sampler
-burnin <- 1000 # Number of burn-in draws
+iter <- 500 # Number of iterations of the Gibbs sampler
+# Chosen number of iterations should be much higher, e.g. 30000.
+
+burnin <- 100 # Number of burn-in draws
 store <- iter - burnin
 
 t <- ncol(y) # Number of observations

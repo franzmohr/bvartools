@@ -1,7 +1,7 @@
 ## Resubmission
 This is a resubmission. In this version I have:
 
-* Added executeable examples in Rd-files of exported functions
+* Added executeable examples for all exported functions
 
 In former resubmissions I have:
 
@@ -12,10 +12,10 @@ In former resubmissions I have:
 * Reformated the references in the Description field in DESCRIPTION
 
 ## Test environments
-ubuntu 14.04 (on travis-ci), R-devel, R 3.5.2, R 3.4.4, R 3.3.3
+ubuntu 14.04 (on travis-ci), R-devel, R 3.6.0, R 3.5.3, R 3.4.4, R 3.3.3
 win-builder (devel)
 
 ## R CMD check results
 
 * NOTE: New submission
-* NOTE: checking installed package size ... installed size is  7.7Mb sub-directories of 1Mb or more: libs 6.9Mb
+* NOTE: checking installed package size ... installed size is  9.0Mb sub-directories of 1Mb or more: libs 8.2Mb

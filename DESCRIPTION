@@ -1,7 +1,7 @@
 Package: bvartools
 Title: Bayesian Inference of Vector Autoregressive Models
 Version: 0.0.1
-Date: 2019-06-08
+Date: 2019-06-09
 Authors@R: person("Franz X.", "Mohr", email = "bvartools@outlook.com", role = c("aut","cre"))
 Description: Assists in the set-up of algorithms for Bayesian inference of vector autoregressive (VAR) models. Functions for posterior simulation, forecasting, impulse response analysis and forecast error variance decomposition are largely based on the introductory texts of Koop and Korobilis (2010) <doi:10.1561/0800000013> and Luetkepohl (2007, ISBN: 9783540262398). 
 License: GPL (>= 2)

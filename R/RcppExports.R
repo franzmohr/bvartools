@@ -266,7 +266,7 @@ post_coint_kls <- function(y, beta, w, sigma_i, v_i, p_tau_i, g_i, x = NULL, gam
 #' @param w a \eqn{M \times T} matrix of variables in the cointegration term.
 #' @param x  a \eqn{KT \times NK} matrix of differenced regressors and unrestricted deterministic terms.
 #' @param sigma_i the inverse of the constant \eqn{K \times K} error variance-covariance matrix.
-#' For time varying variance-covariance matrics a \eqn{KT \times K} can be specified.
+#' For time varying variance-covariance matrics a \eqn{KT \times K} can be provided.
 #' @param v_i a numeric between 0 and 1 specifying the shrinkage of the cointegration space prior.
 #' @param p_tau_i an inverted \eqn{M \times M} matrix specifying the central location
 #' of the cointegration space prior of \eqn{sp(\beta)}.
@@ -320,7 +320,6 @@ post_coint_kls <- function(y, beta, w, sigma_i, v_i, p_tau_i, g_i, x = NULL, gam
 #' \item{Gamma}{a draw of the \eqn{K \times N} coefficient matrix for non-cointegration parameters.}
 #' 
 #' @examples
-#' # Prepare data
 #' data("e6")
 #' temp <- gen_vec(e6, p = 0)
 #' y <- temp$Y
@@ -328,7 +327,6 @@ post_coint_kls <- function(y, beta, w, sigma_i, v_i, p_tau_i, g_i, x = NULL, gam
 #' 
 #' k <- nrow(y)
 #' t <- ncol(y)
-#' ect <- kronecker(t(ect), diag(1, k))
 #' 
 #' # Initial value of Sigma
 #' sigma <- tcrossprod(y) / t
@@ -417,7 +415,7 @@ post_normal <- function(y, x, sigma_i, a_prior, v_i_prior) {
 #' @param y a \eqn{K \times T} matrix of endogenous variables.
 #' @param z a \eqn{KT \times M} matrix of explanatory variables.
 #' @param sigma_i the inverse of the constant \eqn{K \times K} error variance-covariance matrix.
-#' For time varying variance-covariance matrics a \eqn{KT \times K} can be specified.
+#' For time varying variance-covariance matrics a \eqn{KT \times K} can be provided.
 #' @param a_prior a \eqn{M x 1} numeric vector of prior means.
 #' @param v_i_prior the inverse of the \eqn{M x M} prior covariance matrix.
 #' 

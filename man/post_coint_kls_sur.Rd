@@ -15,7 +15,7 @@ post_coint_kls_sur(y, beta, w, sigma_i, v_i, p_tau_i, g_i, x = NULL,
 \item{w}{a \eqn{M \times T} matrix of variables in the cointegration term.}
 
 \item{sigma_i}{the inverse of the constant \eqn{K \times K} error variance-covariance matrix.
-For time varying variance-covariance matrics a \eqn{KT \times K} can be specified.}
+For time varying variance-covariance matrics a \eqn{KT \times K} can be provided.}
 
 \item{v_i}{a numeric between 0 and 1 specifying the shrinkage of the cointegration space prior.}
 
@@ -83,7 +83,6 @@ The final draws of \eqn{\alpha} and \eqn{\beta} are calculated using
 \eqn{\alpha = A (B^{\prime} B)^{\frac{1}{2}}}.
 }
 \examples{
-# Prepare data
 data("e6")
 temp <- gen_vec(e6, p = 0)
 y <- temp$Y
@@ -91,7 +90,6 @@ ect <- temp$W
 
 k <- nrow(y)
 t <- ncol(y)
-ect <- kronecker(t(ect), diag(1, k))
 
 # Initial value of Sigma
 sigma <- tcrossprod(y) / t

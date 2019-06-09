@@ -12,7 +12,7 @@ post_normal_sur(y, z, sigma_i, a_prior, v_i_prior)
 \item{z}{a \eqn{KT \times M} matrix of explanatory variables.}
 
 \item{sigma_i}{the inverse of the constant \eqn{K \times K} error variance-covariance matrix.
-For time varying variance-covariance matrics a \eqn{KT \times K} can be specified.}
+For time varying variance-covariance matrics a \eqn{KT \times K} can be provided.}
 
 \item{a_prior}{a \eqn{M x 1} numeric vector of prior means.}
 

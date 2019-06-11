@@ -13,8 +13,14 @@ The package `bvartools` implements some common functions used for Bayesian infer
 -   Further functions such as `predict`, `irf`, `fevd` for forecasting, impulse response analysis and forecast error variance decomposition, respectively.
 -   Computationally intensive functions - such as for posterior simulation - are written in C++ using the `RcppArmadillo` package of Eddelbuettel and Sanderson (2014).[1]
 
+Similar packages worth checking out are - [BVAR](https://cran.r-project.org/package=BVAR) - [bvarsv](https://cran.r-project.org/package=bvarsv) - [BMR](https://github.com/kthohr/BMR).
+
 Installation
 ------------
+
+``` r
+install.packages("bvartools")
+```
 
 ### Development version
 

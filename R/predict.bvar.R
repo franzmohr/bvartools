@@ -147,8 +147,10 @@ predict.bvar <- function(object, ..., n.ahead = 10, new_x = NULL, new_D = NULL, 
         A0_i <- solve(matrix(object$A0[draw, ], k))
       }
       pred[1:k, i + 1] <- matrix(A[draw, ], k) %*% pred[, i] + A0_i %*% u
-      for (j in 1:(p - 1)) {
-        pred[j * k + 1:k, i + 1] <- pred[(j - 1) * k + 1:k, i]
+      if (p > 1) {
+        for (j in 1:(p - 1)) {
+          pred[j * k + 1:k, i + 1] <- pred[(j - 1) * k + 1:k, i]
+        } 
       }
     }
     result[,, draw] <- pred[1:k, -1]

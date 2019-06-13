@@ -1,3 +1,7 @@
-# bvartools 0.0.1.9000
+# bvartools 0.0.2
 
-* Added a `NEWS.md` file to track changes to the package.
+* Fix a bug in predict function
+
+# bvartools 0.0.1
+
+* Initial release

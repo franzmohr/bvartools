@@ -198,8 +198,8 @@ fevd <- function(object, response = NULL, n.ahead = 5, type = "oir", normalise_g
     }
   }
   
-  dimnames(result) <- list(NULL, dimnames(object$y)[[2]])
   result <- stats::ts(result, start = 0, frequency = 1)
+  dimnames(result) <- list(NULL, dimnames(object$y)[[1]])
   
   class(result) <- append("bvarfevd", class(result))
   return(result)

@@ -1,6 +1,7 @@
 # bvartools 0.0.2
 
-* Fix a bug in predict function
+* predict allows for p = 1
+* Add legend to plot.bvarfevd
 
 # bvartools 0.0.1
 

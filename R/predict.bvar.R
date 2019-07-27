@@ -92,7 +92,11 @@ predict.bvar <- function(object, ..., n.ahead = 10, new_x = NULL, new_D = NULL, 
   t <- ncol(object$y)
   A <- object$A
   p <- object$specifications$lags["p"]
-  tot <- k * p
+  if (p == 0) {
+    tot <- k
+  } else {
+    tot <- k * p
+  }
   
   if (!is.null(object$B)) {
     A <- cbind(A, object$B)
@@ -123,21 +127,37 @@ predict.bvar <- function(object, ..., n.ahead = 10, new_x = NULL, new_D = NULL, 
     struct <- TRUE
   }
   
-  pos_y <- 1:(k * p)
   pred <- matrix(NA, tot, n.ahead + 1)
-  pred[pos_y, 1] <- object$y[, t:(t - p + 1)]
+  if (p > 0) {
+    pos_y <- 1:(k * p)
+    pred[pos_y, 1] <- object$y[, t:(t - p + 1)]
+  } else {
+    pos_y <- 1:k
+    pred[pos_y, 1] <- object$y[, t]
+  }
   if (!is.null(new_x)) {
     pos_x <- k * p + 1:m
     pred[pos_x, ] <- cbind(object$x[pos_x, t], t(new_x))
   }
   if (!is.null(object$C)) {
-    pos_d <- (tot - n + 1):tot
-    pred[pos_d, ] <- cbind(object$x[pos_d, t], t(new_D))
+    pos_d_pred <- (tot - n + 1):tot 
+    if (p == 0) {
+      pos_d_object <- (tot - k - n + 1):(tot - k) 
+    } else {
+      pos_d_object <- pos_d_pred
+    }
+    pred[pos_d_pred, ] <- cbind(object$x[pos_d_object, t], t(new_D))
   }
   
   A0_i <- diag(1, k)
   draws <- nrow(A)
   result <- array(NA, dim = c(k, n.ahead, draws))
+  
+  if (p == 0) {
+    pos_pred <- (k + 1):tot
+  } else {
+    pos_pred <- 1:tot 
+  }
   
   for (draw in 1:draws) {
     for (i in 1:n.ahead) {
@@ -146,7 +166,7 @@ predict.bvar <- function(object, ..., n.ahead = 10, new_x = NULL, new_D = NULL, 
       if (struct) {
         A0_i <- solve(matrix(object$A0[draw, ], k))
       }
-      pred[1:k, i + 1] <- matrix(A[draw, ], k) %*% pred[, i] + A0_i %*% u
+      pred[1:k, i + 1] <- matrix(A[draw, ], k) %*% pred[pos_pred, i] + A0_i %*% u
       if (p > 1) {
         for (j in 1:(p - 1)) {
           pred[j * k + 1:k, i + 1] <- pred[(j - 1) * k + 1:k, i]

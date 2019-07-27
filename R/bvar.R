@@ -106,13 +106,13 @@ bvar <- function(data = NULL, exogen = NULL, y = NULL, x = NULL,
                  C = NULL, Sigma = NULL) {
 
   result <- NULL
-  if (is.null(y) | is.null(A)) {
-    stop("At least arguments 'y' and 'A' must be specified.")
-  }
-  if(!is.null(y)) {
+  if (is.null(y)) {
+    stop("At least argument 'y' must be specified.")
+  } else {
     result$y <- y
     k <- NROW(y)
   }
+  
   if(!is.null(A)) {
     result$A <- coda::mcmc(t(A))
     n_a <- ncol(result$A)
@@ -121,7 +121,10 @@ bvar <- function(data = NULL, exogen = NULL, y = NULL, x = NULL,
     } else {
       stop("Row number of argument 'A' is not a multiple of the number of endogenous variables.")
     }
+  } else {
+    p <- 0
   }
+  
   if(!is.null(data)) {
     result$data <- data
   }

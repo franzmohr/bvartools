@@ -136,40 +136,48 @@ Rcpp::List post_coint_kls(arma::mat y, arma::mat beta, arma::mat w, arma::mat si
   }
   V_ag_post = arma::inv(V_ag_post + V_ag_prior);
   arma::vec mu_ag_post = V_ag_post * (mu_ag_prior + arma::reshape(sigma_i * y * arma::trans(Z), k_ag, 1));
-  
+
   arma::mat U_ag;
   arma::vec s_ag;
   arma::eig_sym(s_ag, U_ag, V_ag_post);
   arma::mat ag_sqrt = U_ag * arma::diagmat(sqrt(s_ag)) * arma::trans(U_ag);
   arma::vec z_ag = arma::randn<arma::vec>(k_ag);
   arma::mat ag = mu_ag_post + ag_sqrt * z_ag;
-  
+
   arma::mat alpha = arma::reshape(ag.rows(0, k_a - 1), k, r);
-  
+
   arma::mat g;
   if (incl_x) {
     g = ag.rows(k_a, k_ag - 1);
     y = y - arma::reshape(g, k, k_x) * X;
   }
   
+  // Obtain beta
+  
+  // arma::mat alpha_sq = arma::trans(alpha) * alpha;
+  // arma::mat U;
+  // arma::vec s;
+  // arma::eig_sym(s, U, alpha_sq);
+  // arma::mat alpha_sqrt = U * arma::diagmat(sqrt(s)) * arma::trans(U);
+  // arma::mat A = alpha * arma::inv(alpha_sqrt);
   arma::mat A = alpha * arma::inv(arma::sqrtmat_sympd(arma::trans(alpha) * alpha));
   arma::mat S_B_post = arma::kron(arma::trans(A) * sigma_i * A, w * arma::trans(w));
   S_B_post = S_B_post + arma::kron(arma::trans(A) * g_i * A, v_i * p_tau_i);
   S_B_post = arma::inv(S_B_post);
   arma::vec mu_B_post = S_B_post * arma::reshape(w * arma::trans(y) * sigma_i * A, k_b, 1);
   
-  arma::mat U_B;
+  arma::mat U_B, V_B;
   arma::vec s_B;
-  arma::eig_sym(s_B, U_B, S_B_post);
-  arma::mat B_sqrt = U_B * arma::diagmat(sqrt(s_B)) * arma::trans(U_B);
+  arma::svd(U_B, s_B, V_B, S_B_post);
+  arma::mat B_sqrt = U_B * arma::diagmat(sqrt(s_B)) * arma::trans(V_B);
   arma::vec z_B = arma::randn<arma::vec>(k_b);
   arma::mat B = arma::reshape(mu_B_post + B_sqrt * z_B, w.n_rows, r);
-  
+
   arma::mat BB_sqrt = arma::sqrtmat_sympd(arma::trans(B) * B);
   alpha = A * BB_sqrt;
   beta = B * arma::inv(BB_sqrt);
   arma::mat Pi = alpha * arma::trans(beta);
-  
+
   return Rcpp::List::create(Rcpp::Named("alpha") = alpha,
                             Rcpp::Named("beta") = beta,
                             Rcpp::Named("Pi") = Pi,

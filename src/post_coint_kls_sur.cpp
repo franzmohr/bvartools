@@ -191,8 +191,9 @@ Rcpp::List post_coint_kls_sur(arma::mat y, arma::mat beta, arma::mat w, arma::ma
   V_post = arma::inv(arma::kron(arma::trans(A) * g_i * A, v_i * p_tau_i) + ZHZ);
   mu_post = V_post * ZHy;
   
-  arma::eig_sym(s, U, V_post);
-  arma::mat B = mu_post + U * arma::diagmat(sqrt(s)) * arma::trans(U) * arma::randn<arma::vec>(k_b);
+  arma::mat V;
+  arma::svd(U, s, V, V_post);
+  arma::mat B = mu_post + U * arma::diagmat(sqrt(s)) * arma::trans(V) * arma::randn<arma::vec>(k_b);
   B = arma::reshape(B, w.n_rows, r);
   
   arma::mat BB_sqrt = arma::sqrtmat_sympd(arma::trans(B) * B);

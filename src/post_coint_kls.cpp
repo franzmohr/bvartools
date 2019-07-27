@@ -153,14 +153,7 @@ Rcpp::List post_coint_kls(arma::mat y, arma::mat beta, arma::mat w, arma::mat si
   }
   
   // Obtain beta
-  
-  // arma::mat alpha_sq = arma::trans(alpha) * alpha;
-  // arma::mat U;
-  // arma::vec s;
-  // arma::eig_sym(s, U, alpha_sq);
-  // arma::mat alpha_sqrt = U * arma::diagmat(sqrt(s)) * arma::trans(U);
-  // arma::mat A = alpha * arma::inv(alpha_sqrt);
-  arma::mat A = alpha * arma::inv(arma::sqrtmat_sympd(arma::trans(alpha) * alpha));
+  arma::mat A = alpha * arma::sqrtmat_sympd(arma::inv(arma::trans(alpha) * alpha));
   arma::mat S_B_post = arma::kron(arma::trans(A) * sigma_i * A, w * arma::trans(w));
   S_B_post = S_B_post + arma::kron(arma::trans(A) * g_i * A, v_i * p_tau_i);
   S_B_post = arma::inv(S_B_post);

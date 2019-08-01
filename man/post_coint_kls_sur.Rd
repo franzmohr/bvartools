@@ -22,7 +22,9 @@ For time varying variance-covariance matrics a \eqn{KT \times K} can be provided
 \item{p_tau_i}{an inverted \eqn{M \times M} matrix specifying the central location
 of the cointegration space prior of \eqn{sp(\beta)}.}
 
-\item{g_i}{a \eqn{K \times K} or \eqn{KT \times K} matrix.}
+\item{g_i}{a \eqn{K \times K} or \eqn{KT \times K} matrix. If the matrix is \eqn{KT \times K},
+the function will automatically produce a \eqn{K \times K} matrix containing the means of the
+time varying \eqn{K \times K} covariance matrix.}
 
 \item{x}{a \eqn{KT \times NK} matrix of differenced regressors and unrestricted deterministic terms.}
 

@@ -100,7 +100,7 @@ Rcpp::List post_coint_kls(arma::mat y, arma::mat beta, arma::mat w, arma::mat si
                           Rcpp::Nullable<Rcpp::NumericMatrix> x = R_NilValue, 
                           Rcpp::Nullable<Rcpp::NumericVector> gamma_mu_prior = R_NilValue,
                           Rcpp::Nullable<Rcpp::NumericMatrix> gamma_V_i_prior = R_NilValue){
-  
+
   int k = y.n_rows;
   int r = beta.n_cols;
   int k_a = k * r;

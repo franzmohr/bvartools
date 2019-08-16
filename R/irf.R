@@ -113,12 +113,16 @@
 irf <- function(object, impulse = NULL, response = NULL, n.ahead = 5,
                 ci = .95, type = "feir", cumulative = FALSE) {
   
+  if (!type %in% c("feir", "oir", "gir")) {
+    stop("Argument 'type' not known.")
+  }
+  
   if (!"bvar" %in% class(object)) {
     stop("Object must be of class 'bvar'.")
   }
   
   if (is.null(object$y) | is.null(dimnames(object$y)[[1]])) {
-    stop("The argument 'object' must include a named matrix of endogenous variables.")
+    stop("Argument 'object' must include a named matrix of endogenous variables.")
   }
 
   need_A0 <- FALSE

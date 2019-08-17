@@ -113,7 +113,7 @@
 irf <- function(object, impulse = NULL, response = NULL, n.ahead = 5,
                 ci = .95, type = "feir", cumulative = FALSE) {
   
-  if (!type %in% c("feir", "oir", "gir")) {
+  if (!type %in% c("feir", "oir", "gir", "sir", "sgir")) {
     stop("Argument 'type' not known.")
   }
   

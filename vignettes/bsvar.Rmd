@@ -166,7 +166,6 @@ Posterior draws can be thinned with function `thin`:
 bvar_est <- thin(bvar_est, thin = 5)
 ```
 
-
 ## Forecasts
 
 Forecasts with credible bands can be obtained with the function `predict`. If the model contains deterministic terms, new values can be provided in the argument `new_D`. If no values are provided, the function sets them to zero. The number of rows of `new_D` must be the same as the argument `n.ahead`.

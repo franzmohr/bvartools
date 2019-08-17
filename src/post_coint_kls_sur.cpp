@@ -126,7 +126,6 @@ Rcpp::List post_coint_kls_sur(arma::mat y, arma::mat beta, arma::mat w, arma::ma
     G_i = g_i;
   }
   
-  int k_x = 0;
   int k_g = 0;
   bool incl_x = false;
   arma::mat X, Gamma_V_i_prior;
@@ -137,7 +136,6 @@ Rcpp::List post_coint_kls_sur(arma::mat y, arma::mat beta, arma::mat w, arma::ma
     Gamma_mu_prior = Rcpp::as<arma::vec>(gamma_mu_prior);
     Gamma_V_i_prior = Rcpp::as<arma::mat>(gamma_V_i_prior);
     k_g = X.n_cols;
-    k_x = k_g / k;
   }
   int k_ag = k_a + k_g;
   

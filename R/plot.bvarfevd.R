@@ -74,7 +74,7 @@
 #' @rdname fevd
 plot.bvarfevd <- function(x, ...) {
   par_orig <- graphics::par("mar")
-  par(mar = c(5.1, 4.1, 4.1, 7.1))
+  graphics::par(mar = c(5.1, 4.1, 4.1, 7.1))
   graphics::barplot(t(x), ylab = "Percentage", xlab = "Period", names.arg = stats::time(x))
   graphics::par(mar = par_orig)
   legend_names <- dimnames(x)[[2]]

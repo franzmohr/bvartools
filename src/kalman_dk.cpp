@@ -89,9 +89,9 @@ arma::mat kalman_dk(arma::mat y, arma::mat z,
                     arma::mat sigma_u, arma::mat sigma_v,
                     arma::mat B, arma::vec a_init, arma::mat P_init) {
   
-  int k = y.n_rows;
+  arma::uword k = y.n_rows;
   int t = y.n_cols;
-  int nvars = z.n_cols;
+  arma::uword nvars = z.n_cols;
   
   arma::mat sigma_u_temp = arma::zeros<arma::mat>(k * t, k);
   if (sigma_u.n_rows == k){

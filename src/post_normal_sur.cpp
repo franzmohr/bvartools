@@ -55,7 +55,7 @@
 arma::vec post_normal_sur(arma::mat y ,arma::mat z, arma::mat sigma_i,
                           arma::vec a_prior, arma::mat v_i_prior) {
   
-  int n = y.n_rows;
+  arma::uword n = y.n_rows;
   int t = y.n_cols;
   int nvars = z.n_cols;
   bool const_var = true;

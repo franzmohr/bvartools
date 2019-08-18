@@ -24,7 +24,7 @@ The package `bvartools` implements some common functions used for Bayesian infer
 -   Further functions such as `predict`, `irf`, `fevd` for forecasting, impulse response analysis and forecast error variance decomposition, respectively.
 - Computationally intensive functions - such as for posterior simulation - are written in C++ using the `RcppArmadillo` package of Eddelbuettel and Sanderson (2014).[^cpp]
 
-This vignette provides the code to set up and estimate a basic Bayesian VAR (BVAR) model with the `bvartools` package. For this illustration the dataset E1 from Lütkepohl (2007) is used. It contains data on West German fixed investment, disposable income and consumption expenditures in billions of DM from 1960Q1 to 1982Q4.
+This vignette provides the code to set up and estimate a basic Bayesian VAR (BVAR) model with the `bvartools` package.[^further] For this illustration the dataset E1 from Lütkepohl (2007) is used. It contains data on West German fixed investment, disposable income and consumption expenditures in billions of DM from 1960Q1 to 1982Q4.
 
 ```{r data, fig.align='center', fig.height=5, fig.width=4.5}
 library(bvartools)
@@ -229,3 +229,5 @@ Pesaran, H. H., & Shin, Y. (1998). Generalized impulse response analysis in line
 Sanderson, C., & Curtin, R. (2016). Armadillo: a template-based C++ library for linear algebra. *Journal of Open Source Software, 1*(2), 26. <https://doi.org/10.21105/joss.00026>
 
 [^cpp]: `RcppArmadillo` is the `Rcpp` bridge to the open source 'Armadillo' library of Sanderson and Curtin (2016).
+
+[^further]: Further examples about the use of the `bvartools` package are available at <https://www.r-econometrics.com/timeseriesintro/>.

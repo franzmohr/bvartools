@@ -1,15 +1,10 @@
-## Resubmission
-This is a resubmission. In this version I have:
+## Update
+This is an update to a previously published package. In this version I have:
 
-* Added executeable examples for all exported functions
-
-In former resubmissions I have:
-
-* Shortened the calculation time required for the vignettes
-* Omitted the redundant part "Functions for" in the title
-* Added small executeable examples in Rd-files of functions, which are used for simulation. Functions which build on the output of computationally intensive simulations are covered in the vignettes.
-* Rewritten the Description field in DESCRIPTION
-* Reformated the references in the Description field in DESCRIPTION
+* Updated vignettes.
+* Added function `ssvs_prior`.
+* Added function `minnesota_prior`.
+* Enhanced the functionality of the functions irf, post_coint_kls_sur, bvar, plot.bvarfevd and predict.
 
 ## Test environments
 ubuntu 14.04 (on travis-ci), R-devel, R 3.6.0, R 3.5.3, R 3.4.4, R 3.3.3
@@ -17,5 +12,4 @@ win-builder (devel)
 
 ## R CMD check results
 
-* NOTE: New submission
-* NOTE: checking installed package size ... installed size is  9.0Mb sub-directories of 1Mb or more: libs 8.2Mb
+* NOTE: checking installed package size ... installed size is  9.3Mb sub-directories of 1Mb or more: libs 8.5Mb

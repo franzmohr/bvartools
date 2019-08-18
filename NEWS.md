@@ -1,5 +1,8 @@
 # bvartools 0.0.2
 
+* Updated vignette `ssvs` after the introduction of function `ssvs_prior`.
+* Added `ssvs_prior` for the calculation of prior matrices for the SSVS algorithm.
+* Added `minnesota_prior` for the calculation of the Minnesota prior.
 * Use unsigned integers for indices in Cpp code to address warnings during installation.
 * Better error handling in `irf`.
 * In `post_coint_kls_sur` the prior matrix `g_i` can be time varying.

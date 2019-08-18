@@ -266,7 +266,11 @@ bvec_to_bvar <- function(object) {
   if (!is.null(object$x)) {
     x_det_names <- c(x_det_names, dimnames(object$x)[[1]][-(1:(k * (p - 1) + m * s))])
     x_temp <- matrix(object$x[-(1:(k * (p - 1) + m * s)),], n_c)
-    x_det <- rbind(x_det, x_temp)
+    if (is.null(x_det)) {
+      x_det <- x_temp
+    } else {
+      x_det <- rbind(x_det, x_temp) 
+    }
     dimnames(x_det) <- list(x_det_names, NULL)
     x <- rbind(x, x_det)
   }

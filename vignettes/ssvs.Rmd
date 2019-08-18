@@ -54,13 +54,9 @@ m <- k * nrow(x) # Number of estimated coefficients
 a_mu_prior <- matrix(0, m) # Vector of prior means
 
 # SSVS priors (semiautomatic approach)
-ols <- tcrossprod(y, x) %*% solve(tcrossprod(x)) # OLS estimates
-sigma_ols <- tcrossprod(y - ols %*% x) / (t - nrow(x)) # OLS error covariance matrix
-cov_ols <- kronecker(solve(tcrossprod(x)), sigma_ols)
-se_ols <- matrix(sqrt(diag(cov_ols))) # OLS standard errors
-
-tau0 <- se_ols * 0.1 # Prior if excluded
-tau1 <- se_ols * 10 # Prior if included
+vs_prior <- ssvs_prior(data, semiautomatic = c(.1, 10))
+tau0 <- vs_prior$tau0
+tau1 <- vs_prior$tau1
 
 # Prior for inclusion parameter
 prob_prior <- matrix(0.5, m)

@@ -57,10 +57,14 @@
 #' @references
 #' 
 #' Lütkepohl, H. (2007). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
+#' 
 #' @export
 gen_vec <- function(data, p = 2, exogen = NULL, s = 2, const = NULL, trend = NULL, seasonal = NULL) {
   if (!"ts" %in% class(data)) {
     stop("Argument 'data' must be an object of class 'ts'.")
+  }
+  if (p < 1) {
+    stop("Argument 'p' must be at least 1.")
   }
   if (is.null(dimnames(data))) {
     tsp_temp <- stats::tsp(data)
@@ -70,6 +74,11 @@ gen_vec <- function(data, p = 2, exogen = NULL, s = 2, const = NULL, trend = NUL
   }
   data_name <- dimnames(data)[[2]]
   k <- NCOL(data)
+  
+  model <- NULL
+  model$endogenous <- list("variables" = dimnames(data)[[2]],
+                           "lags" = 1)
+  model$type <- "VEC"
   
   diff_y <- diff(data)
   temp_name <- paste("d.", data_name, sep = "")
@@ -100,7 +109,8 @@ gen_vec <- function(data, p = 2, exogen = NULL, s = 2, const = NULL, trend = NUL
     for (i in 1:(p - 1)) {
       temp <- cbind(temp, stats::lag(diff_y, -i))
       temp_name <- c(temp_name, paste("d", data_name, i, sep = "."))
-    } 
+    }
+    model$endogenous$lags <- p
   }
   
   # Lags of exogenous variables
@@ -114,6 +124,8 @@ gen_vec <- function(data, p = 2, exogen = NULL, s = 2, const = NULL, trend = NUL
         temp_name <- c(temp_name, paste("d", exog_name, i, sep = "."))
       } 
     }
+    model$exogen <- list("variables" = dimnames(exogen)[[2]],
+                         "lags" = s)
   }
   
   temp <- stats::na.omit(temp)
@@ -127,16 +139,21 @@ gen_vec <- function(data, p = 2, exogen = NULL, s = 2, const = NULL, trend = NUL
   x <- matrix(temp[, -(1:(k + n_ect))], t)
   x_names <- temp_name[-(1:(k + n_ect))]
   
+  det_name_r <- NULL
+  det_name_ur <- NULL
+  
   if (!is.null(const)) {
     if (const == "restricted") {
       ect <- cbind(ect, 1)
       ect_names <- c(ect_names, "const") 
+      det_name_r <- c(det_name_r, "const") 
       n_ect <- n_ect + 1
     }
     
     if (const == "unrestricted") {
       x <- cbind(x, 1)
-      x_names <- c(x_names, "const") 
+      x_names <- c(x_names, "const")
+      det_name_ur <- c(det_name_ur, "const") 
     }
   }
   
@@ -144,12 +161,14 @@ gen_vec <- function(data, p = 2, exogen = NULL, s = 2, const = NULL, trend = NUL
     if (trend == "restricted") {
       ect <- cbind(ect, 1:t)
       ect_names <- c(ect_names, "trend")
+      det_name_r <- c(det_name_r, "trend") 
       n_ect <- n_ect + 1
     }
     
     if (trend == "unrestricted") {
       x <- cbind(x, 1:t)
       x_names <- c(x_names, "trend")
+      det_name_ur <- c(det_name_ur, "trend") 
     }
   }
   
@@ -173,21 +192,32 @@ gen_vec <- function(data, p = 2, exogen = NULL, s = 2, const = NULL, trend = NUL
     if (seasonal == "restricted") {
       ect <- cbind(ect, seas)
       ect_names <- c(ect_names, s_name)
+      det_name_r <- c(det_name_r, s_name)
       n_ect <- n_ect + freq - 1
     }
     
     if (seasonal == "unrestricted") {
       x <- cbind(x, seas)
       x_names <- c(x_names, s_name)
+      det_name_ur <- c(det_name_ur, s_name) 
     }
   }
   
+  if (length(det_name_r) > 0) {
+    model$deterministic$restricted <- det_name_r
+  }
+  if (length(det_name_ur) > 0) {
+    model$deterministic$unrestricted <- det_name_ur
+  }
+  
   temp <- cbind(y, ect, x)
-
+  
   y <- matrix(t(temp[, 1:k]), k, dimnames = list(y_names, NULL))
   attr(y, "ts_info") <- ts_info
+  
   ect <- matrix(t(temp[, k + 1:n_ect]), n_ect,
                 dimnames = list(ect_names, NULL))
+  
   if (length(x_names) > 0) {
     x <- matrix(t(temp[, -(1:(k + n_ect))]), length(x_names),
                 dimnames = list(x_names, NULL)) 
@@ -197,6 +227,9 @@ gen_vec <- function(data, p = 2, exogen = NULL, s = 2, const = NULL, trend = NUL
   
   result <- list("Y" = y,
                  "W" = ect,
-                 "X" = x)
+                 "X" = x,
+                 "model" = model)
+  
+  class(result) <- append("bvarmodel", class(result))
   return(result)
 }

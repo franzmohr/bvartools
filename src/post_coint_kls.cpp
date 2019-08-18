@@ -67,7 +67,7 @@
 //' @examples
 //' # Prepare data
 //' data("e6")
-//' temp <- gen_vec(e6, p = 0)
+//' temp <- gen_vec(e6, p = 1)
 //' y <- temp$Y
 //' ect <- temp$W
 //' 

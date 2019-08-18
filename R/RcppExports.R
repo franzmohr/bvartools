@@ -226,7 +226,7 @@ kalman_dk <- function(y, z, sigma_u, sigma_v, B, a_init, P_init) {
 #' @examples
 #' # Prepare data
 #' data("e6")
-#' temp <- gen_vec(e6, p = 0)
+#' temp <- gen_vec(e6, p = 1)
 #' y <- temp$Y
 #' ect <- temp$W
 #' 
@@ -323,7 +323,7 @@ post_coint_kls <- function(y, beta, w, sigma_i, v_i, p_tau_i, g_i, x = NULL, gam
 #' 
 #' @examples
 #' data("e6")
-#' temp <- gen_vec(e6, p = 0)
+#' temp <- gen_vec(e6, p = 1)
 #' y <- temp$Y
 #' ect <- temp$W
 #' 

@@ -38,7 +38,7 @@ Calculates the Minnesota prior for a VAR model.
 \details{
 The function calculates the Minnesota prior of a VAR model. For the endogenous variable
 \eqn{i} the prior variance of the \eqn{l}th lag of regressor \eqn{j} is obtained as
-\deqn{ {\left( \frac{\kappa_0}{l} \right)}^2 \text{ for own lags of endogenous variables,}}
+\deqn{ {\left( \frac{\kappa_0}{l} \right)}^2} 
 where \eqn{\sigma_{i}} is the residual standard deviation of variable \eqn{i} of an unrestricted
 OLS estimate of the model. For exogenous variables \eqn{\sigma_{i}} corresponds to the standard
 deviation of the original series.

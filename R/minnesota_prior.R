@@ -19,15 +19,10 @@
 #' 
 #' @details The function calculates the Minnesota prior of a VAR model. For the endogenous variable
 #' \eqn{i} the prior variance of the \eqn{l}th lag of regressor \eqn{j} is obtained as
-#' 
-#' \deqn{ \left( \frac{\kappa_{0}}{l} \right)^2}
-# \ \text{for own lags of endogenous variables,}} 
-#' \deqn{ \left( \frac{\kappa_{0} \kappa_{1}}{l} \frac{\sigma_{i}}{\sigma_{j}} \right)^2}
-#  \ \text{for endogenous variables other than own lags,}}
-#' \deqn{ \left( \frac{\kappa_{0} \kappa_{2}}{l} \frac{\sigma_{i}}{\sigma_{j}} \right)^2}
-#  \ \text{for exogenous variables,}}
-#' \deqn{ (\kappa_{0} \kappa_{3})^2}
-# \ \text{for deterministic terms,}}
+#' \deqn{ \left( \frac{\kappa_{0}}{l} \right)^2 \textrm{ for own lags of endogenous variables,}} 
+#' \deqn{ \left( \frac{\kappa_{0} \kappa_{1}}{l} \frac{\sigma_{i}}{\sigma_{j}} \right)^2 \textrm{ for endogenous variables other than own lags,}}
+#' \deqn{ \left( \frac{\kappa_{0} \kappa_{2}}{l} \frac{\sigma_{i}}{\sigma_{j}} \right)^2 \textrm{ for exogenous variables,}}
+#' \deqn{ (\kappa_{0} \kappa_{3})^2 \textrm{ for deterministic terms,}}
 #' where \eqn{\sigma_{i}} is the residual standard deviation of variable \eqn{i} of an unrestricted
 #' OLS estimate of the model. For exogenous variables \eqn{\sigma_{i}} corresponds to the standard
 #' deviation of the original series.

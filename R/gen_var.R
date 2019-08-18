@@ -63,7 +63,12 @@ gen_var <- function(data, p = 2, exogen = NULL, s = 2, deterministic = "const", 
   data_name <- dimnames(data)[[2]]
   temp_name <- data_name
   k <- NCOL(data)
-
+  
+  model <- NULL
+  model$endogenous <- list("variables" = dimnames(data)[[2]],
+                           "lags" = 0)
+  model$type <- "VAR"
+  
   # Lags of endogenous variables
   temp <- data
   if (p >= 1) {
@@ -71,8 +76,9 @@ gen_var <- function(data, p = 2, exogen = NULL, s = 2, deterministic = "const", 
       temp <- cbind(temp, stats::lag(data, -i))
       temp_name <- c(temp_name, paste(data_name, i, sep = "."))
     }
+    model$endogenous$lags <- p
   }
-
+  
   # Lags of exogenous variables
   if (!is.null(exogen)) {
     if (!"ts" %in% class(exogen)) {
@@ -86,24 +92,29 @@ gen_var <- function(data, p = 2, exogen = NULL, s = 2, deterministic = "const", 
     }
     data_name <- dimnames(exogen)[[2]]
     if (s >= 0) {
-    for (i in 0:s) {
-      temp <- cbind(temp, stats::lag(exogen, -i))
-      temp_name <- c(temp_name, paste(data_name, i, sep = "."))
+      for (i in 0:s) {
+        temp <- cbind(temp, stats::lag(exogen, -i))
+        temp_name <- c(temp_name, paste(data_name, i, sep = "."))
+      }
     }
-    }
+    model$exogen <- list("variables" = dimnames(exogen)[[2]],
+                         "lags" = s)
   }
   
   temp <- stats::na.omit(temp)
   t <- nrow(temp)
+  det_name <- NULL
   
   if (deterministic %in% c("const", "both")) {
     temp <- cbind(temp, 1)
-    temp_name <- c(temp_name, "const") 
+    temp_name <- c(temp_name, "const")
+    det_name <- c(det_name, "const")
   }
   
   if (deterministic %in% c("trend", "both")) {
     temp <- cbind(temp, 1:t)
-    temp_name <- c(temp_name, "trend") 
+    temp_name <- c(temp_name, "trend")
+    det_name <- c(det_name, "trend")
   }
   
   if (seasonal) {
@@ -118,15 +129,25 @@ gen_var <- function(data, p = 2, exogen = NULL, s = 2, deterministic = "const", 
         s_temp[pos[i]] <- 1
         temp <- cbind(temp, rep(s_temp, length.out = t))
         temp_name <- c(temp_name, paste("season.", i, sep = ""))
+        det_name <- c(det_name, paste("season.", i, sep = ""))
       }
     }
   }
   
+  if (length(det_name) > 0) {
+    model$deterministic <- det_name
+  }
+  
   y <- matrix(t(temp[, 1:k]), k, dimnames = list(temp_name[1:k], NULL))
   attr(y, "ts_info") <- stats::tsp(temp)
+  
   x <- matrix(t(temp[, -(1:k)]), length(temp_name) - k,
-                dimnames = list(temp_name[-(1:k)], NULL))
+              dimnames = list(temp_name[-(1:k)], NULL))
+  
   result <- list("Y" = y,
-                 "Z" = x)
+                 "Z" = x,
+                 "model" = model)
+  
+  class(result) <- append("bvarmodel", class(result))
   return(result)
 }

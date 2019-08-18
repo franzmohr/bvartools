@@ -8,7 +8,8 @@ minnesota_prior(object, kappa0 = 2, kappa1 = 0.5, kappa2 = 0.5,
   kappa3 = 5, max_var = NULL, coint_var = FALSE)
 }
 \arguments{
-\item{object}{an object of class \code{"bvarmodel"}, usually, a result of a call to \code{\link{gen_var}}.}
+\item{object}{an object of class \code{"bvarmodel"}, usually, a result of a call to \code{\link{gen_var}}
+or \code{\link{gen_vec}}.}
 
 \item{kappa0}{a numeric specifying the prior standard deviation of coefficients that correspond to
 own lags of endogenous variables.}
@@ -22,8 +23,8 @@ variables relative to argument \code{kappa0}.}
 \item{kappa3}{a numeric specifying the size of the prior standard deviations of deterministic
 terms relative to argument \code{kappa0}.}
 
-\item{max_var}{a positive numeric specifying the maximum prior variance that is allowed.
-If \code{NULL} (default), the prior variances are not limited.}
+\item{max_var}{a positive numeric specifying the maximum prior variance that is allowed for
+coefficients of non-deterministic variables. If \code{NULL} (default), the prior variances are not limited.}
 
 \item{coint_var}{a logical specifying whether the model is a cointegrated VAR model,
 for which the prior means of first own lags should be set to one.}
@@ -37,15 +38,14 @@ Calculates the Minnesota prior for a VAR model.
 \details{
 The function calculates the Minnesota prior of a VAR model. For the endogenous variable
 \eqn{i} the prior variance of the \eqn{l}th lag of regressor \eqn{j} is obtained as
-\deqn{ \left( \dfrac{\kappa_0}{l} \right)^2 \text{ for own lags of endogenous variables,}}
-\deqn{ \left( \dfrac{\kappa_0 \kappa_1}{l} \dfrac{\sigma_{i}}{\sigma_{j}} \right)^2 \text{ for endogenous variables other than own lags,}}
-\deqn{ \left( \dfrac{\kappa_0 \kappa_2}{l} \dfrac{\sigma_{i}}{\sigma_{j}} \right)^2  \text{ for exogenous variables,}}
-\deqn{ \left( \kappa_3 \sigma_{i} \right)^2 \text{ for deterministic terms,}}
+\deqn{ {\left( \frac{\kappa_0}{l} \right)}^2 \text{ for own lags of endogenous variables,}}
 where \eqn{\sigma_{i}} is the residual standard deviation of variable \eqn{i} of an unrestricted
 OLS estimate of the model. For exogenous variables \eqn{\sigma_{i}} corresponds to the standard
 deviation of the original series.
 
-For VEC models the function only provides priors for the non-cointegration part of the model.
+For VEC models the function only provides priors for the non-cointegration part of the model. The
+residual standard errors \eqn{\sigma_i} are based on an unrestricted OLS regression of the
+endogenous variables on the error correction term and the non-cointegration regressors.
 }
 \examples{
 

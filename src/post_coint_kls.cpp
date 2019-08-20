@@ -106,6 +106,10 @@ Rcpp::List post_coint_kls(arma::mat y, arma::mat beta, arma::mat w, arma::mat si
   int k_a = k * r;
   int k_b = w.n_rows * r;
   
+  if (p_tau_i.n_cols != w.n_rows) {
+    Rcpp::stop("'p_tau_i' must have the same number of rows and columns as the number of variables in the error correction term.");
+  }
+  
   int k_x = 0;
   int k_g = 0;
   bool incl_x = false;

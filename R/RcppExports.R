@@ -329,6 +329,7 @@ post_coint_kls <- function(y, beta, w, sigma_i, v_i, p_tau_i, g_i, x = NULL, gam
 #' 
 #' k <- nrow(y)
 #' t <- ncol(y)
+#' m <- nrow(ect)
 #' 
 #' # Initial value of Sigma
 #' sigma <- tcrossprod(y) / t
@@ -339,7 +340,7 @@ post_coint_kls <- function(y, beta, w, sigma_i, v_i, p_tau_i, g_i, x = NULL, gam
 #' 
 #' # Draw parameters
 #' coint <- post_coint_kls_sur(y = y, beta = beta, w = ect,
-#'                             sigma_i = sigma_i, v_i = 0, p_tau_i = diag(1, 1),
+#'                             sigma_i = sigma_i, v_i = 0, p_tau_i = diag(1, m),
 #'                             g_i = sigma_i)
 #' 
 #' @references

@@ -92,6 +92,7 @@ ect <- temp$W
 
 k <- nrow(y)
 t <- ncol(y)
+m <- nrow(ect)
 
 # Initial value of Sigma
 sigma <- tcrossprod(y) / t
@@ -102,7 +103,7 @@ beta <- matrix(c(1, -4), k)
 
 # Draw parameters
 coint <- post_coint_kls_sur(y = y, beta = beta, w = ect,
-                            sigma_i = sigma_i, v_i = 0, p_tau_i = diag(1, 1),
+                            sigma_i = sigma_i, v_i = 0, p_tau_i = diag(1, m),
                             g_i = sigma_i)
 
 }

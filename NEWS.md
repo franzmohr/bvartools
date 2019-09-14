@@ -1,3 +1,9 @@
+# bvartools 0.0.3
+
+* Fix detection of deterministic terms in `bvec_to_bvar`.
+* Adapt vignette `bvec`.
+* Add `loglik_normal` for the calculation of a multivariate normal log-likelihood.
+
 # bvartools 0.0.2
 
 * Updated vignette `ssvs` after the introduction of function `ssvs_prior`.

@@ -263,8 +263,8 @@ bvec_to_bvar <- function(object) {
     }
   }
   
-  if (!is.null(object$x)) {
-    x_det_names <- c(x_det_names, dimnames(object$x)[[1]][-(1:(k * (p - 1) + m * s))])
+  if (!is.null(object$x) & n_c > 0) {
+    x_det_names <- c(x_det_names, dimnames(object$x)[[1]][-(1:(k * (p - 1) + m * s))]) 
     x_temp <- matrix(object$x[-(1:(k * (p - 1) + m * s)),], n_c)
     if (is.null(x_det)) {
       x_det <- x_temp

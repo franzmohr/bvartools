@@ -95,8 +95,8 @@ u_sigma_scale_prior <- diag(0, k) # Prior covariance matrix
 u_sigma_df_post <- t + u_sigma_df_prior # Posterior degrees of freedom
 
 # Initial values
-u_sigma_i <- diag(.00001, k)
-u_sigma <- solve(u_sigma_i)
+u_sigma <- diag(.00001, k)
+u_sigma_i <- solve(u_sigma)
 
 # Data containers for posterior draws
 draws_a <- matrix(NA, m, store)

@@ -46,7 +46,7 @@ x <- data$X
 
 ```{r flat prior}
 # Reset random number generator for reproducibility
-set.seed(1234567)
+set.seed(7654321)
 
 iter <- 10000 # Number of iterations of the Gibbs sampler
 burnin <- 5000 # Number of burn-in draws
@@ -68,7 +68,8 @@ a_mu_prior <- matrix(0, k_x * k) # Vector of prior parameter means
 a_v_i_prior <- diag(0, k_x * k) # Inverse of the prior covariance matrix
 
 v_i <- 0
-p_tau_i <- diag(1, k_w)
+p_tau_i <- matrix(0, k_w, k_w)
+p_tau_i[1:r, 1:r] <- diag(1, r)
 
 u_sigma_df_prior <- r # Prior degrees of freedom
 u_sigma_scale_prior <- diag(0, k) # Prior covariance matrix
@@ -77,7 +78,7 @@ u_sigma_df_post <- t + u_sigma_df_prior # Posterior degrees of freedom
 # Initial values
 beta <- matrix(c(1, -4), k_w, r)
 
-u_sigma_i <- diag(.0001, k)
+u_sigma_i <- diag(.00001, k)
 u_sigma <- solve(u_sigma_i)
 
 g_i <- u_sigma_i
@@ -133,7 +134,7 @@ round(Gamma, 3) # Print
 ```
 
 ```{r beta}
-beta <- rowMeans(t(t(draws_beta) / t(draws_beta)[, 1])) # Obtain means for every row
+beta <- apply(t(draws_beta) / t(draws_beta)[, 1], 2, mean) # Obtain means for every row
 beta <- matrix(beta, k_w) # Transform mean vector into a matrix
 beta <- round(beta, 3) # Round values
 dimnames(beta) <- list(dimnames(w)[[1]], NULL) # Rename matrix dimensions

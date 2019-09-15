@@ -29,13 +29,13 @@
 //' 
 // [[Rcpp::export]]
 arma::vec loglik_normal(arma::mat u, arma::mat sigma) {
-  arma::uword k = u.n_rows;
+  int k = u.n_rows;
   int t = u.n_cols;
   
   arma::vec result = arma::zeros<arma::vec>(t);
   double part_b, part_c;
   double part_a = -k / 2 * log(arma::datum::pi);
-  if (sigma.n_rows > k) {
+  if (sigma.n_rows > u.n_rows) {
     for (int i = 0; i < t; i++){
       part_b = -log(arma::det(sigma.rows(i * k, (i + 1) * k - 1))) / 2;
       part_c = -arma::as_scalar(trans(u.col(i)) * arma::inv(sigma.rows(i * k, (i + 1) * k - 1)) * u.col(i)) / 2;

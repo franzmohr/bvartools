@@ -14,6 +14,9 @@
 #' (default), orthogonalised \code{"oir"}, structural \code{"sir"}, generalised \code{"gir"},
 #' and structural generalised \code{"sgir"} impulse responses.
 #' @param cumulative logical specifying whether a cumulative IRF should be calculated.
+#' @param keep_draws logical specifying whether the function should return all draws of
+#' the posterior impulse response function. Defaults to \code{FALSE} so that
+#' the median and the credible intervals of the posterior draws are returned.
 #' 
 #' @details The function produces different types of impulse responses for the VAR model
 #' \deqn{y_t = \sum_{i = 1}^{p} A_{i} y_{t-i} + A_0^{-1} u_t,}
@@ -35,7 +38,7 @@
 #' one in its \eqn{j^{th}} element and zero otherwise. If the \code{"bvar"} object does not contain draws
 #' of \eqn{A_0}, it is assumed to be an identity matrix.
 #' 
-#' @return A time-series object of class \code{"bvarirf"}.
+#' @return A time-series object of class \code{"bvarirf"} and if \code{keep_draws = TRUE} a simple matrix.
 #' 
 #' @examples
 #' data("e1")
@@ -101,7 +104,7 @@
 #' 
 #' # Plot
 #' plot(IR, main = "Forecast Error Impulse Response", xlab = "Period", ylab = "Response")
-
+#'
 #' 
 #' @references
 #' 
@@ -111,7 +114,7 @@
 #' 
 #' @export
 irf <- function(object, impulse = NULL, response = NULL, n.ahead = 5,
-                ci = .95, type = "feir", cumulative = FALSE) {
+                ci = .95, type = "feir", cumulative = FALSE, keep_draws = FALSE) {
   
   if (!type %in% c("feir", "oir", "gir", "sir", "sgir")) {
     stop("Argument 'type' not known.")
@@ -176,10 +179,12 @@ irf <- function(object, impulse = NULL, response = NULL, n.ahead = 5,
     freq <- 1
   }
   
-  ci_low <- (1 - ci) / 2
-  ci_high <- 1 - ci_low
-  pr <- c(ci_low, .5, ci_high)
-  result <- stats::ts(t(apply(result, 2, stats::quantile, probs = pr)), start = 0, frequency = freq)
+  if (!keep_draws) {
+    ci_low <- (1 - ci) / 2
+    ci_high <- 1 - ci_low
+    pr <- c(ci_low, .5, ci_high)
+    result <- stats::ts(t(apply(result, 2, stats::quantile, probs = pr)), start = 0, frequency = freq) 
+  }
   
   class(result) <- append("bvarirf", class(result))
   return(result)

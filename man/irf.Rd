@@ -6,7 +6,7 @@
 \title{Impulse Response Function}
 \usage{
 irf(object, impulse = NULL, response = NULL, n.ahead = 5,
-  ci = 0.95, type = "feir", cumulative = FALSE)
+  ci = 0.95, type = "feir", cumulative = FALSE, keep_draws = FALSE)
 
 \method{plot}{bvarirf}(x, ...)
 }
@@ -29,12 +29,16 @@ and structural generalised \code{"sgir"} impulse responses.}
 
 \item{cumulative}{logical specifying whether a cumulative IRF should be calculated.}
 
+\item{keep_draws}{logical specifying whether the function should return all draws of
+the posterior impulse response function. Defaults to \code{FALSE} so that
+the median and the credible intervals of the posterior draws are returned.}
+
 \item{x}{an object of class "bvarirf", usually, a result of a call to \code{\link{irf}}.}
 
 \item{...}{further graphical parameters.}
 }
 \value{
-A time-series object of class \code{"bvarirf"}.
+A time-series object of class \code{"bvarirf"} and if \code{keep_draws = TRUE} a simple matrix.
 }
 \description{
 Computes the impulse response coefficients of an object of class \code{"bvar"} for
@@ -127,6 +131,7 @@ IR <- irf(bvar_est, impulse = "income", response = "cons", n.ahead = 8)
 
 # Plot
 plot(IR, main = "Forecast Error Impulse Response", xlab = "Period", ylab = "Response")
+
 
 data("e1")
 e1 <- diff(log(e1))

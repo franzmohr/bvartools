@@ -17,7 +17,7 @@
 //' of the cointegration space prior of \eqn{sp(\beta)}.
 //' @param g_i a \eqn{K \times K} matrix.
 //' @param gamma_mu_prior a \eqn{KN \times 1} prior mean vector of non-cointegration coefficients.
-//' @param gamma_V_i_prior an inverted \eqn{KN \times KN} prior covariance matrix of non-cointegration coefficients.
+//' @param gamma_v_i_prior an inverted \eqn{KN \times KN} prior covariance matrix of non-cointegration coefficients.
 //' 
 //' @details The function produces posterior draws of the coefficient
 //' matrices \eqn{\alpha}, \eqn{\beta} and \eqn{\Gamma} for the model
@@ -82,9 +82,8 @@
 //' beta <- matrix(c(1, -4), k)
 //' 
 //' # Draw parameters
-//' coint <- post_coint_kls(y = y, beta = beta, w = ect,
-//'                         sigma_i = sigma_i, v_i = 0, p_tau_i = diag(1, k),
-//'                         g_i = sigma_i)
+//' coint <- post_coint_kls(y = y, beta = beta, w = ect, sigma_i = sigma_i,
+//'                         v_i = 0, p_tau_i = diag(1, k), g_i = sigma_i)
 //' 
 //' @references
 //' 
@@ -99,7 +98,7 @@ Rcpp::List post_coint_kls(arma::mat y, arma::mat beta, arma::mat w, arma::mat si
                           arma::mat g_i,
                           Rcpp::Nullable<Rcpp::NumericMatrix> x = R_NilValue, 
                           Rcpp::Nullable<Rcpp::NumericVector> gamma_mu_prior = R_NilValue,
-                          Rcpp::Nullable<Rcpp::NumericMatrix> gamma_V_i_prior = R_NilValue){
+                          Rcpp::Nullable<Rcpp::NumericMatrix> gamma_v_i_prior = R_NilValue){
 
   int k = y.n_rows;
   int r = beta.n_cols;
@@ -112,6 +111,7 @@ Rcpp::List post_coint_kls(arma::mat y, arma::mat beta, arma::mat w, arma::mat si
   
   int k_x = 0;
   int k_g = 0;
+  int k_mu, k_v;
   bool incl_x = false;
   arma::mat X, Gamma_V_i_prior;
   arma::vec Gamma_mu_prior;
@@ -119,9 +119,17 @@ Rcpp::List post_coint_kls(arma::mat y, arma::mat beta, arma::mat w, arma::mat si
     incl_x = true;
     X = Rcpp::as<arma::mat>(x);
     Gamma_mu_prior = Rcpp::as<arma::vec>(gamma_mu_prior);
-    Gamma_V_i_prior = Rcpp::as<arma::mat>(gamma_V_i_prior);
+    Gamma_V_i_prior = Rcpp::as<arma::mat>(gamma_v_i_prior);
     k_x = X.n_rows;
     k_g = k * k_x;
+    k_mu = Gamma_mu_prior.n_rows;
+    k_v = Gamma_V_i_prior.n_rows;
+    if (k_g != k_mu) {
+      Rcpp::stop("Argument 'gamma_mu_prior' does not contain the required amount of elements.");
+    }
+    if (k_g != k_v) {
+      Rcpp::stop("Argument 'gamma_v_i_prior' does not contain the required amount of elements.");
+    }
   }
   
   int k_ag = k_a + k_g;

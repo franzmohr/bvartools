@@ -20,7 +20,7 @@
 //' the function will automatically produce a \eqn{K \times K} matrix containing the means of the
 //' time varying \eqn{K \times K} covariance matrix.
 //' @param gamma_mu_prior a \eqn{KN \times 1} prior mean vector of non-cointegration coefficients.
-//' @param gamma_V_i_prior an inverted \eqn{KN \times KN} prior covariance matrix of non-cointegration coefficients.
+//' @param gamma_v_i_prior an inverted \eqn{KN \times KN} prior covariance matrix of non-cointegration coefficients.
 //' 
 //' @details The function produces posterior draws of the coefficient
 //' matrices \eqn{\alpha}, \eqn{\beta} and \eqn{\Gamma} for the model
@@ -102,7 +102,7 @@ Rcpp::List post_coint_kls_sur(arma::mat y, arma::mat beta, arma::mat w, arma::ma
                               arma::mat g_i,
                               Rcpp::Nullable<Rcpp::NumericMatrix> x = R_NilValue, 
                               Rcpp::Nullable<Rcpp::NumericVector> gamma_mu_prior = R_NilValue,
-                              Rcpp::Nullable<Rcpp::NumericMatrix> gamma_V_i_prior = R_NilValue){
+                              Rcpp::Nullable<Rcpp::NumericMatrix> gamma_v_i_prior = R_NilValue){
 
   arma::uword k = y.n_rows;
   int t = y.n_cols;
@@ -131,14 +131,23 @@ Rcpp::List post_coint_kls_sur(arma::mat y, arma::mat beta, arma::mat w, arma::ma
   
   int k_g = 0;
   bool incl_x = false;
+  int k_mu, k_v;
   arma::mat X, Gamma_V_i_prior;
   arma::vec Gamma_mu_prior;
   if (x.isNotNull()) {
     incl_x = true;
     X = Rcpp::as<arma::mat>(x);
     Gamma_mu_prior = Rcpp::as<arma::vec>(gamma_mu_prior);
-    Gamma_V_i_prior = Rcpp::as<arma::mat>(gamma_V_i_prior);
+    Gamma_V_i_prior = Rcpp::as<arma::mat>(gamma_v_i_prior);
     k_g = X.n_cols;
+    k_mu = Gamma_mu_prior.n_rows;
+    k_v = Gamma_V_i_prior.n_rows;
+    if (k_g != k_mu) {
+      Rcpp::stop("Argument 'gamma_mu_prior' does not contain the required amount of elements.");
+    }
+    if (k_g != k_v) {
+      Rcpp::stop("Argument 'gamma_v_i_prior' does not contain the required amount of elements.");
+    }
   }
   int k_ag = k_a + k_g;
   

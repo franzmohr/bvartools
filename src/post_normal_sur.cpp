@@ -58,6 +58,15 @@ arma::vec post_normal_sur(arma::mat y ,arma::mat z, arma::mat sigma_i,
   arma::uword n = y.n_rows;
   int t = y.n_cols;
   int nvars = z.n_cols;
+  int n_mu = a_prior.n_rows;
+  int n_v = v_i_prior.n_rows;
+  if (nvars != n_mu) {
+    Rcpp::stop("Argument 'a_prior' does not contain the required amount of elements.");
+  }
+  if (nvars != n_v) {
+    Rcpp::stop("Argument 'v_i_prior' does not contain the required amount of elements.");
+  }
+  
   bool const_var = true;
   arma::mat S_i = arma::zeros<arma::mat>(n * t, n * t);
   if (sigma_i.n_rows > n) {

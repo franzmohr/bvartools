@@ -57,6 +57,14 @@
 // [[Rcpp::export]]
 arma::vec post_normal(arma::mat y, arma::mat x, arma::mat sigma_i, arma::vec a_prior, arma::mat v_i_prior) {
   int m = y.n_rows * x.n_rows;
+  int n_mu = a_prior.n_rows;
+  int n_v = v_i_prior.n_rows;
+  if (m != n_mu) {
+    Rcpp::stop("Argument 'a_prior' does not contain the required amount of elements.");
+  }
+  if (m != n_v) {
+    Rcpp::stop("Argument 'v_i_prior' does not contain the required amount of elements.");
+  }
   
   arma::mat v_post = arma::inv(v_i_prior + arma::kron(x * arma::trans(x), sigma_i));
   arma::vec a_post = v_post * (v_i_prior * a_prior + vectorise(sigma_i * y * arma::trans(x)));

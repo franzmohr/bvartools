@@ -5,7 +5,7 @@
 \title{Posterior Draw for Cointegration Models}
 \usage{
 post_coint_kls_sur(y, beta, w, sigma_i, v_i, p_tau_i, g_i, x = NULL,
-  gamma_mu_prior = NULL, gamma_V_i_prior = NULL)
+  gamma_mu_prior = NULL, gamma_v_i_prior = NULL)
 }
 \arguments{
 \item{y}{a \eqn{K \times T} matrix of differenced endogenous variables.}
@@ -30,7 +30,7 @@ time varying \eqn{K \times K} covariance matrix.}
 
 \item{gamma_mu_prior}{a \eqn{KN \times 1} prior mean vector of non-cointegration coefficients.}
 
-\item{gamma_V_i_prior}{an inverted \eqn{KN \times KN} prior covariance matrix of non-cointegration coefficients.}
+\item{gamma_v_i_prior}{an inverted \eqn{KN \times KN} prior covariance matrix of non-cointegration coefficients.}
 }
 \value{
 A named list containing the following elements:

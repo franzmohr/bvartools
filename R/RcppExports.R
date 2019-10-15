@@ -206,7 +206,7 @@ loglik_normal <- function(u, sigma) {
 #' of the cointegration space prior of \eqn{sp(\beta)}.
 #' @param g_i a \eqn{K \times K} matrix.
 #' @param gamma_mu_prior a \eqn{KN \times 1} prior mean vector of non-cointegration coefficients.
-#' @param gamma_V_i_prior an inverted \eqn{KN \times KN} prior covariance matrix of non-cointegration coefficients.
+#' @param gamma_v_i_prior an inverted \eqn{KN \times KN} prior covariance matrix of non-cointegration coefficients.
 #' 
 #' @details The function produces posterior draws of the coefficient
 #' matrices \eqn{\alpha}, \eqn{\beta} and \eqn{\Gamma} for the model
@@ -271,9 +271,8 @@ loglik_normal <- function(u, sigma) {
 #' beta <- matrix(c(1, -4), k)
 #' 
 #' # Draw parameters
-#' coint <- post_coint_kls(y = y, beta = beta, w = ect,
-#'                         sigma_i = sigma_i, v_i = 0, p_tau_i = diag(1, k),
-#'                         g_i = sigma_i)
+#' coint <- post_coint_kls(y = y, beta = beta, w = ect, sigma_i = sigma_i,
+#'                         v_i = 0, p_tau_i = diag(1, k), g_i = sigma_i)
 #' 
 #' @references
 #' 
@@ -281,8 +280,8 @@ loglik_normal <- function(u, sigma) {
 #' simulation for cointegrated models with priors on the cointegration space.
 #' \emph{Econometric Reviews, 29}(2), 224-242. \url{https://doi.org/10.1080/07474930903382208}
 #' 
-post_coint_kls <- function(y, beta, w, sigma_i, v_i, p_tau_i, g_i, x = NULL, gamma_mu_prior = NULL, gamma_V_i_prior = NULL) {
-    .Call(`_bvartools_post_coint_kls`, y, beta, w, sigma_i, v_i, p_tau_i, g_i, x, gamma_mu_prior, gamma_V_i_prior)
+post_coint_kls <- function(y, beta, w, sigma_i, v_i, p_tau_i, g_i, x = NULL, gamma_mu_prior = NULL, gamma_v_i_prior = NULL) {
+    .Call(`_bvartools_post_coint_kls`, y, beta, w, sigma_i, v_i, p_tau_i, g_i, x, gamma_mu_prior, gamma_v_i_prior)
 }
 
 #' Posterior Draw for Cointegration Models
@@ -304,7 +303,7 @@ post_coint_kls <- function(y, beta, w, sigma_i, v_i, p_tau_i, g_i, x = NULL, gam
 #' the function will automatically produce a \eqn{K \times K} matrix containing the means of the
 #' time varying \eqn{K \times K} covariance matrix.
 #' @param gamma_mu_prior a \eqn{KN \times 1} prior mean vector of non-cointegration coefficients.
-#' @param gamma_V_i_prior an inverted \eqn{KN \times KN} prior covariance matrix of non-cointegration coefficients.
+#' @param gamma_v_i_prior an inverted \eqn{KN \times KN} prior covariance matrix of non-cointegration coefficients.
 #' 
 #' @details The function produces posterior draws of the coefficient
 #' matrices \eqn{\alpha}, \eqn{\beta} and \eqn{\Gamma} for the model
@@ -379,8 +378,8 @@ post_coint_kls <- function(y, beta, w, sigma_i, v_i, p_tau_i, g_i, x = NULL, gam
 #' simulation for cointegrated models with priors on the cointegration space.
 #' \emph{Econometric Reviews, 29}(2), 224-242. \url{https://doi.org/10.1080/07474930903382208}
 #' 
-post_coint_kls_sur <- function(y, beta, w, sigma_i, v_i, p_tau_i, g_i, x = NULL, gamma_mu_prior = NULL, gamma_V_i_prior = NULL) {
-    .Call(`_bvartools_post_coint_kls_sur`, y, beta, w, sigma_i, v_i, p_tau_i, g_i, x, gamma_mu_prior, gamma_V_i_prior)
+post_coint_kls_sur <- function(y, beta, w, sigma_i, v_i, p_tau_i, g_i, x = NULL, gamma_mu_prior = NULL, gamma_v_i_prior = NULL) {
+    .Call(`_bvartools_post_coint_kls_sur`, y, beta, w, sigma_i, v_i, p_tau_i, g_i, x, gamma_mu_prior, gamma_v_i_prior)
 }
 
 #' Posterior Draw from a Normal Distribution

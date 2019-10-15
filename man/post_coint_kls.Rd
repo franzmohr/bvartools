@@ -5,7 +5,7 @@
 \title{Posterior Draw for Cointegration Models}
 \usage{
 post_coint_kls(y, beta, w, sigma_i, v_i, p_tau_i, g_i, x = NULL,
-  gamma_mu_prior = NULL, gamma_V_i_prior = NULL)
+  gamma_mu_prior = NULL, gamma_v_i_prior = NULL)
 }
 \arguments{
 \item{y}{a \eqn{K \times T} matrix of differenced endogenous variables.}
@@ -27,7 +27,7 @@ of the cointegration space prior of \eqn{sp(\beta)}.}
 
 \item{gamma_mu_prior}{a \eqn{KN \times 1} prior mean vector of non-cointegration coefficients.}
 
-\item{gamma_V_i_prior}{an inverted \eqn{KN \times KN} prior covariance matrix of non-cointegration coefficients.}
+\item{gamma_v_i_prior}{an inverted \eqn{KN \times KN} prior covariance matrix of non-cointegration coefficients.}
 }
 \value{
 A named list containing the following elements:
@@ -99,9 +99,8 @@ sigma_i <- solve(sigma)
 beta <- matrix(c(1, -4), k)
 
 # Draw parameters
-coint <- post_coint_kls(y = y, beta = beta, w = ect,
-                        sigma_i = sigma_i, v_i = 0, p_tau_i = diag(1, k),
-                        g_i = sigma_i)
+coint <- post_coint_kls(y = y, beta = beta, w = ect, sigma_i = sigma_i,
+                        v_i = 0, p_tau_i = diag(1, k), g_i = sigma_i)
 
 }
 \references{

@@ -1,5 +1,7 @@
 # bvartools 0.0.3
 
+* `irf` contains the new argument `keep_draws`.
+* Additional checks in `post_normal`, `post_normal_sur`, `post_coint_kls` and `post_coint_kls_sur`.
 * Fix detection of deterministic terms in `bvec_to_bvar`.
 * Adapt vignette `bvec`.
 * Add `loglik_normal` for the calculation of a multivariate normal log-likelihood.

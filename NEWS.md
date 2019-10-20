@@ -1,5 +1,7 @@
 # bvartools 0.0.3
 
+* Add function `chan_jeliazkov` as an alternative to `kalman_dk`.
+* Update documentation in `kalman_dk`.
 * `irf` contains the new argument `keep_draws`.
 * Additional checks in `post_normal`, `post_normal_sur`, `post_coint_kls` and `post_coint_kls_sur`.
 * Fix detection of deterministic terms in `bvec_to_bvar`.

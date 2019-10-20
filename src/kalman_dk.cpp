@@ -8,9 +8,9 @@
 //' 
 //' @param y a \eqn{K \times T} matrix of endogenous variables.
 //' @param z a \eqn{KT \times M} matrix of explanatory variables.
-//' @param sigma_u the inverse of the constant \eqn{K \times K} error variance-covariance matrix.
+//' @param sigma_u the constant \eqn{K \times K} error variance-covariance matrix.
 //' For time varying variance-covariance matrices a \eqn{KT \times K} can be specified.
-//' @param sigma_v the inverse of the constant \eqn{M \times M} coefficient variance-covariance matrix.
+//' @param sigma_v the constant \eqn{M \times M} coefficient variance-covariance matrix.
 //' For time varying variance-covariance matrices a \eqn{MT \times M} can be specified.
 //' @param B an \eqn{M \times M} autocorrelation matrix of the transition equation.
 //' @param a_init an M-dimensional vector of initial states.

@@ -63,8 +63,7 @@
 #' 
 #' @references
 #' 
-#' Chan, J. C. C., & Jeliazkov, I. (2009). Efficient simulation and integrated likelihood
-#' estimation in state space models. \emph{International Journal of Mathematical Modelling
-#' and Numerical Optimisation, 1}(1/2), 101--120. \url{https://doi.org/10.1504/ijmmno.2009.030090}
+#' Chan, J., Koop, G., Poirier, D. J., & Tobias J. L. (2019). \emph{Bayesian econometric methods}
+#' (2nd ed.). Cambridge: Cambridge University Press.
 #' 
 "us_macrodata"

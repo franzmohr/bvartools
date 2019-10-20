@@ -11,10 +11,10 @@ kalman_dk(y, z, sigma_u, sigma_v, B, a_init, P_init)
 
 \item{z}{a \eqn{KT \times M} matrix of explanatory variables.}
 
-\item{sigma_u}{the inverse of the constant \eqn{K \times K} error variance-covariance matrix.
+\item{sigma_u}{the constant \eqn{K \times K} error variance-covariance matrix.
 For time varying variance-covariance matrices a \eqn{KT \times K} can be specified.}
 
-\item{sigma_v}{the inverse of the constant \eqn{M \times M} coefficient variance-covariance matrix.
+\item{sigma_v}{the constant \eqn{M \times M} coefficient variance-covariance matrix.
 For time varying variance-covariance matrices a \eqn{MT \times M} can be specified.}
 
 \item{B}{an \eqn{M \times M} autocorrelation matrix of the transition equation.}

@@ -44,3 +44,27 @@
 #' Lütkepohl, H. (2007). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
 #' 
 "e6"
+
+#' US macroeconomic data
+#'
+#' The dataset contains quarterly time series for the US CPI inflation rate, unemployment rate, and
+#' Fed Funds rate from 1959Q2 to 2007Q4. It was produced from file "US_macrodata.csv" of the datasets associated
+#' with Chan, Koop, Poirier and Tobias (2019). Raw data are available at
+#' \url{https://web.ics.purdue.edu/~jltobias/second_edition/Chapter20/code_for_exercise_1/US_macrodata.csv}.
+#' 
+#' @usage data("us_macrodata")
+#' 
+#' @format A named time-series object with 195 rows and 3 variables:
+#' \describe{
+#'   \item{Dp}{CPI inflation rate.}
+#'   \item{u}{unemployment rate.}
+#'   \item{r}{Fed Funds rate.}
+#' }
+#' 
+#' @references
+#' 
+#' Chan, J. C. C., & Jeliazkov, I. (2009). Efficient simulation and integrated likelihood
+#' estimation in state space models. \emph{International Journal of Mathematical Modelling
+#' and Numerical Optimisation, 1}(1/2), 101--120. \url{https://doi.org/10.1504/ijmmno.2009.030090}
+#' 
+"us_macrodata"

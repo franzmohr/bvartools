@@ -113,8 +113,8 @@
 #' Pesaran, H. H., Shin, Y. (1998). Generalized impulse response analysis in linear multivariate models. \emph{Economics Letters, 58}, 17-29.
 #' 
 #' @export
-irf <- function(object, impulse = NULL, response = NULL, n.ahead = 5,
-                ci = .95, type = "feir", cumulative = FALSE, keep_draws = FALSE) {
+irf <- function(object, impulse = NULL, response = NULL, n.ahead = 5, ci = .95,
+                type = "feir", cumulative = FALSE, keep_draws = FALSE) {
   
   if (!type %in% c("feir", "oir", "gir", "sir", "sgir")) {
     stop("Argument 'type' not known.")
@@ -138,7 +138,7 @@ irf <- function(object, impulse = NULL, response = NULL, n.ahead = 5,
   
   if (type %in% c("oir", "gir", "sgir")) {
     if (is.null(object$Sigma)) {
-      stop("OIR, GIR, SGIR require that draws of 'Sigma' are contained in the 'bvar' object.")
+      stop("OIR, GIR, SGIR require that the 'bvar' object contains draws of 'Sigma'.")
     }
     need_Sigma <- TRUE
   } else {
@@ -164,8 +164,9 @@ irf <- function(object, impulse = NULL, response = NULL, n.ahead = 5,
     }
     A[[i]] <- temp
   }
-
-  result <- lapply(A, .ir, h = n.ahead, type = type, impulse = impulse, response = response)
+  
+  result <- lapply(A, .ir, h = n.ahead, type = type,
+                   impulse = impulse, response = response)
   
   result <- t(matrix(unlist(result), n.ahead + 1))
   

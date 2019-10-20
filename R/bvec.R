@@ -160,8 +160,6 @@
 #'                  Gamma = draws_gamma[1:k_nondet,],
 #'                  C = draws_gamma[(k_nondet + 1):nrow(draws_gamma),],
 #'                  Sigma = draws_sigma)
-
-
 #' 
 #' @export
 bvec <- function(data = NULL, exogen = NULL, y = NULL, w = NULL, x = NULL,

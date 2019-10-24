@@ -139,9 +139,9 @@ bvec_to_bvar <- function(object) {
     }
   }
   
-  if (!is.null(object$Ypsilon)) {
-    m <- NCOL(object$Pi_x)
-    s <- NCOL(object$Ypsilon) / (k * m)
+  if (!is.null(object$Upsilon)) {
+    m <- NCOL(object$Pi_x) / k
+    s <- NCOL(object$Upsilon) / (k * m)
     W <- diag(-1, m * (s + 1))
     W[1:m, 1:m] <- 0
     W[1:m, m + 1:m] <- diag(1, m)
@@ -149,7 +149,7 @@ bvec_to_bvar <- function(object) {
     
     B <- matrix(NA, k * m * (s + 1), draws)
     for (draw in 1:draws){
-      B[, draw] <- cbind(matrix(object$Pi_x[draw, ], k), matrix(object$Ypsilon[draw, ], k)) %*% W
+      B[, draw] <- cbind(matrix(object$Pi_x[draw, ], k), matrix(object$Upsilon[draw, ], k)) %*% W
     }
   } else {
     B <- NULL

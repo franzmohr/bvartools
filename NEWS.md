@@ -1,12 +1,13 @@
 # bvartools 0.0.3
 
-* Add function `chan_jeliazkov` as an alternative to `kalman_dk`.
-* Update documentation in `kalman_dk`.
+* Fixed conversion of exogenous regressors in `bvec_to_bvar`.
+* Added function `chan_jeliazkov` as an alternative to `kalman_dk`.
+* Updated documentation in `kalman_dk`.
 * `irf` contains the new argument `keep_draws`.
 * Additional checks in `post_normal`, `post_normal_sur`, `post_coint_kls` and `post_coint_kls_sur`.
-* Fix detection of deterministic terms in `bvec_to_bvar`.
+* Fixed detection of deterministic terms in `bvec_to_bvar`.
 * Adapt vignette `bvec`.
-* Add `loglik_normal` for the calculation of a multivariate normal log-likelihood.
+* Added `loglik_normal` for the calculation of a multivariate normal log-likelihood.
 
 # bvartools 0.0.2
 

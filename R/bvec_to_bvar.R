@@ -114,6 +114,7 @@ bvec_to_bvar <- function(object) {
   if (!any(class(object) %in% "bvec")) {
     stop("Argument 'object' must be of class 'bvec'.")
   }
+  
   draws <- nrow(object$Pi)
   k <- NROW(object$y)
   
@@ -271,6 +272,9 @@ bvec_to_bvar <- function(object) {
     } else {
       x_det <- rbind(x_det, x_temp) 
     }
+  }
+  
+  if (!is.null(x_det)) {
     dimnames(x_det) <- list(x_det_names, NULL)
     x <- rbind(x, x_det)
   }

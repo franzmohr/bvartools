@@ -118,28 +118,6 @@ for (draw in 1:iter) {
 }
 ```
 
-Obtain point estimates as the mean of the posterior draws
-
-```{r A}
-A <- rowMeans(draws_a) # Obtain means for every row
-A <- matrix(A, k) # Transform mean vector into a matrix
-A <- round(A, 3) # Round values
-dimnames(A) <- list(dimnames(y)[[1]], dimnames(x)[[1]]) # Rename matrix dimensions
-
-A # Print
-```
-
-```{r Sigma}
-Sigma <- rowMeans(draws_sigma) # Obtain means for every row
-Sigma <- matrix(Sigma, k) # Transform mean vector into a matrix
-Sigma <- round(Sigma * 10^4, 2) # Round values
-dimnames(Sigma) <- list(dimnames(y)[[1]], dimnames(y)[[1]]) # Rename matrix dimensions
-
-Sigma # Print
-```
-
-The means of the coefficient draws are very close to the results of the frequentist estimatior in Lütkepohl (2007).
-
 ### `bvar` objects
 
 The `bvar` function can be used to collect relevant output of the Gibbs sampler in a standardised object, which can be used by further functions such as `predict` to obtain forecasts or `irf` for impulse respons analysis.
@@ -148,6 +126,12 @@ The `bvar` function can be used to collect relevant output of the Gibbs sampler 
 bvar_est <- bvar(y = y, x = x, A = draws_a[1:18,],
                  C = draws_a[19:21, ], Sigma = draws_sigma)
 ```
+
+```{r summary}
+summary(bvar_est)
+```
+
+The means of the posterior draws are very close to the results of the frequentist estimatior in Lütkepohl (2007).
 
 ### Forecasts
 

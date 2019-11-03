@@ -68,7 +68,6 @@ arma::vec post_normal_sur(arma::mat y ,arma::mat z, arma::mat sigma_i,
   }
   
   bool const_var = true;
-  arma::mat S_i = arma::zeros<arma::mat>(n * t, n * t);
   if (sigma_i.n_rows > n) {
     const_var = false;
   }
@@ -77,9 +76,11 @@ arma::vec post_normal_sur(arma::mat y ,arma::mat z, arma::mat sigma_i,
   arma::mat ZHZ = arma::zeros<arma::mat>(nvars, nvars);
   arma::mat ZHy = arma::zeros<arma::mat>(nvars, 1);
   
+  arma::mat S_i;
   if (const_var) {
     ZHi = arma::trans(z) * arma::kron(arma::eye<arma::mat>(t, t), sigma_i);
   } else {
+    S_i = arma::zeros<arma::mat>(n * t, n * t);
     for (int i = 0; i < t; i++){
       S_i.submat(i * n, i * n, (i + 1) * n - 1, (i + 1) * n - 1) = sigma_i.rows(i * n, (i + 1) * n - 1);
     }

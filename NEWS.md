@@ -1,7 +1,8 @@
 # bvartools 0.0.3
 
-* Fixed conversion of exogenous regressors in `bvec_to_bvar`.
-* Added function `chan_jeliazkov` as an alternative to `kalman_dk`.
+* Added `summary` functions.
+* Fixed conversion and collection of exogenous regressors in `bvec_to_bvar`.
+* Added function `chan_jeliazkov` as an alternative to `kalman_dk` for state space models.
 * Updated documentation in `kalman_dk`.
 * `irf` contains the new argument `keep_draws`.
 * Additional checks in `post_normal`, `post_normal_sur`, `post_coint_kls` and `post_coint_kls_sur`.

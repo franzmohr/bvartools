@@ -15,9 +15,9 @@ data("us_macrodata")
 }
 \description{
 The dataset contains quarterly time series for the US CPI inflation rate, unemployment rate, and
-Fed Funds rate from 1959Q2 to 2007Q4. It was produced from file "US_macrodata.csv" of the datasets associated
+Fed Funds rate from 1959Q2 to 2013Q4. It was produced from file "US_macrodata1.csv" of the datasets associated
 with Chan, Koop, Poirier and Tobias (2019). Raw data are available at
-\url{https://web.ics.purdue.edu/~jltobias/second_edition/Chapter20/code_for_exercise_1/US_macrodata.csv}.
+\url{https://web.ics.purdue.edu/~jltobias/second_edition/Chapter20/code_for_exercise_7/US_macrodata1.csv}.
 }
 \references{
 Chan, J., Koop, G., Poirier, D. J., & Tobias J. L. (2019). \emph{Bayesian econometric methods}

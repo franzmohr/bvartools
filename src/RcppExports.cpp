@@ -24,17 +24,18 @@ BEGIN_RCPP
 END_RCPP
 }
 // chan_jeliazkov
-arma::mat chan_jeliazkov(arma::mat y, arma::mat z, arma::mat sigma_i, arma::mat q_i, arma::vec a0);
-RcppExport SEXP _bvartools_chan_jeliazkov(SEXP ySEXP, SEXP zSEXP, SEXP sigma_iSEXP, SEXP q_iSEXP, SEXP a0SEXP) {
+Rcpp::List chan_jeliazkov(arma::mat y, arma::sp_mat z, arma::sp_mat sigma_i, arma::sp_mat b, arma::sp_mat q_i, arma::vec a0);
+RcppExport SEXP _bvartools_chan_jeliazkov(SEXP ySEXP, SEXP zSEXP, SEXP sigma_iSEXP, SEXP bSEXP, SEXP q_iSEXP, SEXP a0SEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< arma::mat >::type y(ySEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type z(zSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type sigma_i(sigma_iSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type q_i(q_iSEXP);
+    Rcpp::traits::input_parameter< arma::sp_mat >::type z(zSEXP);
+    Rcpp::traits::input_parameter< arma::sp_mat >::type sigma_i(sigma_iSEXP);
+    Rcpp::traits::input_parameter< arma::sp_mat >::type b(bSEXP);
+    Rcpp::traits::input_parameter< arma::sp_mat >::type q_i(q_iSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type a0(a0SEXP);
-    rcpp_result_gen = Rcpp::wrap(chan_jeliazkov(y, z, sigma_i, q_i, a0));
+    rcpp_result_gen = Rcpp::wrap(chan_jeliazkov(y, z, sigma_i, b, q_i, a0));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -170,7 +171,7 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_bvartools_bvs", (DL_FUNC) &_bvartools_bvs, 7},
-    {"_bvartools_chan_jeliazkov", (DL_FUNC) &_bvartools_chan_jeliazkov, 5},
+    {"_bvartools_chan_jeliazkov", (DL_FUNC) &_bvartools_chan_jeliazkov, 6},
     {"_bvartools_ir", (DL_FUNC) &_bvartools_ir, 5},
     {"_bvartools_kalman_dk", (DL_FUNC) &_bvartools_kalman_dk, 7},
     {"_bvartools_loglik_normal", (DL_FUNC) &_bvartools_loglik_normal, 2},

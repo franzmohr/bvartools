@@ -6,11 +6,14 @@
 //' A simplified implementation of the algorithm of Chan and Jeliazkov (2009).
 //' 
 //' @param y a \eqn{K \times T} matrix of endogenous variables.
-//' @param z a \eqn{KT \times M} matrix of explanatory variables.
-//' @param sigma_i the inverse of the constant \eqn{K \times K} error variance-covariance matrix.
-//' For time varying variance-covariance matrices a \eqn{KT \times K} can be specified.
-//' @param q_i the inverse of the constant \eqn{M \times M} coefficient variance-covariance matrix.
-//' For time varying variance-covariance matrices a \eqn{MT \times M} can be specified.
+//' @param z a sparse \eqn{KT \times MT} matrix of explanatory variables.
+//' @param sigma_i a sparse \eqn{KT \times KT} inverse variance-covariance matrix of the measuresment
+//' equation. For constant matrices \eqn{\Sigma^{-1}} the matrix corresponds to
+//' \eqn{I_{T} \times \Sigma^{-1}}. Otherwise, the matrix is block diagonal.
+//' @param b a sparse \eqn{MT \times MT} block diagonal difference matrix of the state equation.
+//' @param q_i a sparse diagonal \eqn{MT \times MT} inverse variance-covariance matrix of the state
+//' equation. For constant matrices \eqn{Q^{-1}} the matrix corresponds to
+//' \eqn{I_{T} \times Q^{-1}}.
 //' @param a0 an M-dimensional vector of initial states.
 //' 
 //' @details The function uses a simplified version of the algorithm of of Chan and Jeliazkov (2009)
@@ -29,29 +32,50 @@
 //' @return A \eqn{M \times T} matrix of state vector draws.
 //' 
 //' @examples
-//' # Load data and transform it
-//' data("e1")
-//' e1 <- diff(log(e1[, c("cons", "income")]))
 //' 
-//' # Create model
-//' model_data <- gen_var(e1, p = 2, deterministic = "const")
-//' y <- matrix(model_data$Y["cons", ], 1)
-//' x <- rbind(model_data$Y["income", ], model_data$Z)
+//' library(Matrix) # For sparse matrices
 //' 
-//' tt <- NCOL(y) # Number of periods
-//' k <- NROW(y) # Number of endogenous variables
+//' data("us_macrodata")
+//' us_macrodata <- us_macrodata[time(us_macrodata) < 1990, ]
+//' us_macrodata <- ts(us_macrodata, start = c(1959, 2), frequency = 4)
 //' 
-//' z <- kronecker(t(x), diag(1, k)) # Matrix of regressors
+//' temp <- gen_var(us_macrodata, p = 2)
+//' y <- temp$Y
+//' x <- temp$Z
 //' 
-//' # Initial values
-//' b0 <- matrix(tcrossprod(y, x) %*% solve(tcrossprod(x)))
-//' epsilon <- matrix(matrix(y) - z %*% b0, k)
-//' sigma <- tcrossprod(epsilon) / tt
-//' sigma_i <- solve(sigma)
-//' q_i <- diag(100, k * nrow(x))
+//' k <- NROW(y)
+//' tt <- NCOL(y)
+//' m <- NROW(x) * k
 //' 
+//' z <- matrix(0, k * tt, m * tt)
+//' for (i in 1:tt) {
+//'   z[(i - 1) * k + 1:k, (i - 1) * m + 1:m] <- kronecker(t(x[, i]), diag(1, k))
+//' }
+//' z <- Matrix(z, sparse = TRUE)
+//' 
+//' # Initial state
+//' b0 <- tcrossprod(y, x) %*% solve(tcrossprod(x))
+//' u <- y - b0 %*% x
+//' b0 <- matrix(b0)
+//' 
+//' # Initial variance-covariance matrix
+//' sigma_i <- solve(tcrossprod(u) / tt)
+//' sigma_i <- kronecker(diag(1, tt), sigma_i)
+//' sigma_i <- Matrix(sigma_i, sparse = TRUE)
+//' 
+//' # Initial variances of the state equation
+//' q_i <- diag(1 / .001, m)
+//' q_i <- kronecker(diag(1, tt), q_i)
+//' q_i <- Matrix(q_i, sparse = TRUE)
+//' 
+//' # Differences matrix of state equation
+//' h <- diag(1, tt * m)
+//' diag(h[-(1:m), -(((tt - 1) * m):(tt * m))]) <- -1
+//' h <- Matrix(h, sparse = TRUE)
+//' 
+//' # Draw states
 //' b <- chan_jeliazkov(y = y, z = z, sigma_i = sigma_i,
-//'                     q_i = q_i, a0 = b0)
+//'                     b = h, q_i = q_i, a0 = b0)
 //' 
 //' @references
 //' 
@@ -63,53 +87,23 @@
 //' (2nd ed.). Cambridge: Cambridge University Press.
 //' 
 // [[Rcpp::export]]
-arma::mat chan_jeliazkov(arma::mat y, arma::mat z,
-                    arma::mat sigma_i, arma::mat q_i,
-                    arma::vec a0) {
+Rcpp::List chan_jeliazkov(arma::mat y, arma::sp_mat z, arma::sp_mat sigma_i,
+                         arma::sp_mat b, arma::sp_mat q_i, arma::vec a0) {
   
   arma::uword k = y.n_rows;
   int tt = y.n_cols;
-  arma::uword nvars = z.n_cols;
+  int nvars = z.n_cols / tt;
   
-  // Prepare Z
-  arma::sp_mat Z = arma::zeros<arma::sp_mat>(k * tt, nvars * tt);
-  for (int i = 0; i < tt; i++){
-    Z.submat(i * k, i * nvars, (i + 1) * k - 1, (i + 1) * nvars - 1) = z.rows(i * k, (i + 1) * k - 1);
-  }
-  
-  // Prepare Sigma
-  arma::sp_mat S_i;
-  if (sigma_i.n_rows == k){
-    S_i = arma::sp_mat(arma::kron(arma::eye(tt, tt), sigma_i));
-  } else {
-    S_i = arma::zeros<arma::sp_mat>(k * tt, k * tt);
-    for (int i = 0; i < tt; i++){
-      S_i.submat(i * k, i * k, (i + 1) * k - 1, (i + 1) * k - 1) = sigma_i.rows(i * k, (i + 1) * k - 1);
-    }
-  }
-  
-  // Prepare Q
-  arma::sp_mat Q_i;
-  if (q_i.n_rows == nvars){
-    Q_i = arma::sp_mat(arma::kron(arma::eye(tt, tt), q_i));
-  } else {
-    Q_i = arma::zeros<arma::sp_mat>(nvars * tt, nvars * tt);
-    for (int i = 0; i < tt; i++){
-      Q_i.submat(i * nvars, i * nvars, (i + 1) * nvars - 1, (i + 1) * nvars - 1) = q_i.rows(i * nvars, (i + 1) * nvars - 1);
-    }
-  }
-  
-  // Prepare B
-  arma::sp_mat B = arma::eye<arma::sp_mat>(tt * nvars, tt * nvars);
-  B.diag(-nvars) += -1;
-  
-  arma::sp_mat HQiH = arma::trans(B) * Q_i * B;
-  arma::sp_mat Zsi = arma::trans(Z) * S_i;
-  arma::sp_mat K = HQiH + Zsi * Z;
-  arma::vec b0 = arma::kron(arma::ones<arma::vec>(tt), a0);
-  arma::vec mu = arma::spsolve(K, HQiH * b0 + Zsi * arma::reshape(y, k * tt, 1), "lapack");
+  y = arma::reshape(y, k * tt, 1);
+  arma::sp_mat HQiH = arma::trans(b) * q_i * b;
+  arma::sp_mat Zsi = arma::trans(z) * sigma_i;
+  arma::sp_mat K = HQiH + Zsi * z;
+  arma::vec mu = arma::spsolve(K, HQiH * arma::kron(arma::ones<arma::vec>(tt), a0) + Zsi * y, "lapack");
   arma::mat Kd(K);
   arma::sp_mat A = arma::sp_mat(arma::trans(arma::chol(Kd, "lower")));
-  arma::vec a = mu + arma::spsolve(A, arma::randn<arma::vec>(nvars * tt), "lapack");
-  return arma::reshape(a, nvars, tt);
+  arma::mat a = mu + arma::spsolve(A, arma::randn<arma::vec>(nvars * tt), "lapack");
+  arma::mat u = arma::reshape(y - z * a, k, tt);
+  
+  return Rcpp::List::create(Rcpp::Named("a") = arma::join_rows(a0, arma::reshape(a, nvars, tt)),
+                            Rcpp::Named("u") = u);
 }

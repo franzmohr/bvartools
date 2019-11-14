@@ -1,5 +1,6 @@
 # bvartools 0.0.3
 
+* Added `inclusion_prior` for the calculation of inclusion probability priors as used in `bvs` and `ssvs`.
 * Added `summary` functions.
 * Fixed conversion and collection of exogenous regressors in `bvec_to_bvar`.
 * Added function `chan_jeliazkov` as an alternative to `kalman_dk` for state space models.

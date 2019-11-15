@@ -17,11 +17,11 @@
 #' 
 #' @details Prior inclusion probabilities \eqn{\underline{\pi}_1} are calculated as
 #' \tabular{c l}{
-#' \eqn{\frac{\kappa_1}{r}} & \text{for own lags of endogenous variables,} \\
-#' \eqn{\frac{\kappa_2}{r}} & \text{for other endogenous variables,} \\
-#' \eqn{\frac{\kappa_3}{1 + r}} & \text{for exogenous variables,}\\
-#' \eqn{\kappa_{4}} & \text{for deterministic variables,} 
-#' \end{align}}
+#' \eqn{\frac{\kappa_1}{r}} \tab for own lags of endogenous variables, \cr
+#' \eqn{\frac{\kappa_2}{r}} \tab for other endogenous variables, \cr
+#' \eqn{\frac{\kappa_3}{1 + r}} \tab for exogenous variables, \cr
+#' \eqn{\kappa_{4}} \tab for deterministic variables, 
+#' }
 #' for lag \eqn{r} with \eqn{\kappa_1}, \eqn{\kappa_2}, \eqn{\kappa_3}, \eqn{\kappa_4} as the first, second,
 #' thrid and forth element in \code{kappa}, respectively.
 #' 

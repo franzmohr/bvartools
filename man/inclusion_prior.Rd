@@ -34,7 +34,7 @@ George et al. (2008) and Bayesian variable selection (BVS) à la Korobilis (2013
 }
 \details{
 Prior inclusion probabilities \eqn{\underline{\pi}_1} are calculated as
-\tabular{c l}{
+\tabular{cl}{
 \eqn{\frac{\kappa_1}{r}} \tab for own lags of endogenous variables, \cr
 \eqn{\frac{\kappa_2}{r}} \tab for other endogenous variables, \cr
 \eqn{\frac{\kappa_3}{1 + r}} \tab for exogenous variables, \cr

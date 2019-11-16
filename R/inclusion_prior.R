@@ -16,7 +16,7 @@
 #' be included in the BVS algorithm does not include deterministic terms.
 #' 
 #' @details Prior inclusion probabilities \eqn{\underline{\pi}_1} are calculated as
-#' \tabular{c l}{
+#' \tabular{cl}{
 #' \eqn{\frac{\kappa_1}{r}} \tab for own lags of endogenous variables, \cr
 #' \eqn{\frac{\kappa_2}{r}} \tab for other endogenous variables, \cr
 #' \eqn{\frac{\kappa_3}{1 + r}} \tab for exogenous variables, \cr

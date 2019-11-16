@@ -4,14 +4,17 @@
 \alias{inclusion_prior}
 \title{Prior Inclusion Probabilities}
 \usage{
-inclusion_prior(object, prob = 0.5, minnesota_like = FALSE,
-  kappa = c(0.8, 0.5, 0.5, 0.8), exclude_deterministics = TRUE)
+inclusion_prior(object, prob = 0.5, exclude_deterministics = TRUE,
+  minnesota_like = FALSE, kappa = c(0.8, 0.5, 0.5, 0.8))
 }
 \arguments{
 \item{object}{an object of class \code{"bvarmodel"}, usually, a result of a call to \code{\link{gen_var}}
 or \code{\link{gen_vec}}.}
 
 \item{prob}{a numeric specifying the prior inclusion probability of all model parameters.}
+
+\item{exclude_deterministics}{logical. If \code{TRUE} (default), the vector of the positions of
+included variables does not include the positions of deterministic terms.}
 
 \item{minnesota_like}{logical. If \code{TRUE}, the prior inclusion probabilities of the
 parameters are calculated in a similar way as the Minnesota prior. See 'Details'.}
@@ -20,9 +23,6 @@ parameters are calculated in a similar way as the Minnesota prior. See 'Details'
 of coefficients that correspond to own lags of endogenous variables, to endogenous variables,
 which do not correspond to own lags, to exogenous variables and deterministic terms, respectively.
 Only used if \code{minnesota_like = TRUE}. See 'Details'.}
-
-\item{exclude_deterministics}{logical. If \code{TRUE} (default), the vector of variables, which should
-be included in the BVS algorithm does not include deterministic terms.}
 }
 \value{
 A list containing a matrix of prior inclusion probabilities and an integer vector
@@ -33,7 +33,8 @@ Prior inclusion probabilities as required for stochastic search variable selecti
 George et al. (2008) and Bayesian variable selection (BVS) à la Korobilis (2013).
 }
 \details{
-Prior inclusion probabilities \eqn{\underline{\pi}_1} are calculated as
+If \code{minnesota_like = TRUE}, prior inclusion probabilities \eqn{\underline{\pi}_1}
+are calculated as
 \tabular{cl}{
 \eqn{\frac{\kappa_1}{r}} \tab for own lags of endogenous variables, \cr
 \eqn{\frac{\kappa_2}{r}} \tab for other endogenous variables, \cr
@@ -41,7 +42,17 @@ Prior inclusion probabilities \eqn{\underline{\pi}_1} are calculated as
 \eqn{\kappa_{4}} \tab for deterministic variables, 
 }
 for lag \eqn{r} with \eqn{\kappa_1}, \eqn{\kappa_2}, \eqn{\kappa_3}, \eqn{\kappa_4} as the first, second,
-thrid and forth element in \code{kappa}, respectively.
+third and forth element in \code{kappa}, respectively.
+
+For vector error correction models the function generates prior inclusion probabilities for differenced
+variables and unrestricted deterministc terms as described above. For variables in the error
+correction term prior inclusion probabilites are calculated as
+\tabular{cl}{
+\eqn{\kappa_1} \tab fow own levels of endogenous variables, \cr
+\eqn{\kappa_2} \tab for levels of other endogenous variables, \cr
+\eqn{\kappa_3} \tab for levels of exogenous variables, \cr
+\eqn{\kappa_4} \tab for deterministic variables.
+}
 }
 \examples{
 

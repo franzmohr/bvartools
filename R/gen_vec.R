@@ -60,6 +60,21 @@
 #' 
 #' @export
 gen_vec <- function(data, p = 2, exogen = NULL, s = 2, const = NULL, trend = NULL, seasonal = NULL) {
+  if (!is.null(const)) {
+    if (!const %in% c("restricted", "unrestricted")) {
+      stop("Specified value for argument 'const' is not valid.")
+    }
+  }
+  if (!is.null(trend)) {
+    if (!trend %in% c("restricted", "unrestricted")) {
+      stop("Specified value for argument 'trend' is not valid.")
+    }
+  }
+  if (!is.null(seasonal)) {
+    if (!seasonal %in% c("restricted", "unrestricted")) {
+      stop("Specified value for argument 'seasonal' is not valid.")
+    }
+  }
   if (!"ts" %in% class(data)) {
     stop("Argument 'data' must be an object of class 'ts'.")
   }

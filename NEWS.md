@@ -1,5 +1,6 @@
 # bvartools 0.0.3
 
+* Add additional checks to `gen_vec`.
 * Added `inclusion_prior` for the calculation of inclusion probability priors as used in `bvs` and `ssvs`.
 * Added `summary` functions.
 * Fixed conversion and collection of exogenous regressors in `bvec_to_bvar`.

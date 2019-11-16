@@ -55,7 +55,7 @@ sigma_ols <- tcrossprod(y - ols \%*\% x) / (t - nrow(x))
 # Covariance matrix
 cov_ols <- kronecker(solve(tcrossprod(x)), sigma_ols)
 # Standard errors
-se_ols <- matrix(sqrt(diag(cov_ols))) # OLS standard errors
+se_ols <- matrix(sqrt(diag(cov_ols)))
 
 # SSVS priors
 tau0 <- se_ols * 0.1 # If excluded

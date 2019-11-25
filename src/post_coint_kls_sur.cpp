@@ -104,6 +104,10 @@ Rcpp::List post_coint_kls_sur(arma::mat y, arma::mat beta, arma::mat w, arma::ma
                               Rcpp::Nullable<Rcpp::NumericVector> gamma_mu_prior = R_NilValue,
                               Rcpp::Nullable<Rcpp::NumericMatrix> gamma_v_i_prior = R_NilValue){
 
+  if (sigma_i.has_nan()) {
+    Rcpp::stop("Argument 'sigma_i' contains NAs.");
+  }  
+  
   arma::uword k = y.n_rows;
   int t = y.n_cols;
   int r = beta.n_cols;

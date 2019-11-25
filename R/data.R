@@ -67,3 +67,27 @@
 #' (2nd ed.). Cambridge: Cambridge University Press.
 #' 
 "us_macrodata"
+
+#' UK macroeconomic data
+#'
+#' The dataset contains quarterly time series for the UK inflation rate, unemployment rate, and
+#' interest rate from 1957Q2 to 2009Q3. It was produced from file "Data_UK.txt" of the dataset associated
+#' with Koop, León-González, and Strachan (2011). Raw data are available at
+#' \url{http://www3.grips.ac.jp/~rlg/Code_to_Share.zip}.
+#' 
+#' @usage data("uk_macrodata")
+#' 
+#' @format A named time-series object with 210 rows and 3 variables:
+#' \describe{
+#'   \item{Dp}{inflation rate.}
+#'   \item{u}{unemployment rate.}
+#'   \item{r}{Fed Funds rate.}
+#' }
+#' 
+#' @references
+#' 
+#' 
+#' Koop, G., León-González, R., & Strachan, R. (2011). Bayesian inference in a time varying
+#' cointegration model. \emph{Journal of Econometrics, 165}(2), 210--220.
+#' 
+"uk_macrodata"

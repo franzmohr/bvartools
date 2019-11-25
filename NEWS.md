@@ -1,5 +1,6 @@
 # bvartools 0.0.3
 
+* New data sets `uk_macrodata` and `us_macrodata`.
 * Add additional checks to `gen_vec`.
 * Added `inclusion_prior` for the calculation of inclusion probability priors as used in `bvs` and `ssvs`.
 * Added `summary` functions.

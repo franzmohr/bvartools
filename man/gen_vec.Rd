@@ -4,8 +4,15 @@
 \alias{gen_vec}
 \title{Vector Error Correction Model Input}
 \usage{
-gen_vec(data, p = 2, exogen = NULL, s = 2, const = NULL,
-  trend = NULL, seasonal = NULL)
+gen_vec(
+  data,
+  p = 2,
+  exogen = NULL,
+  s = 2,
+  const = NULL,
+  trend = NULL,
+  seasonal = NULL
+)
 }
 \arguments{
 \item{data}{a time-series object of endogenous variables.}

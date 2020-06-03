@@ -4,8 +4,14 @@
 \alias{gen_var}
 \title{Vector Autoregressive Model Input}
 \usage{
-gen_var(data, p = 2, exogen = NULL, s = 2, deterministic = "const",
-  seasonal = FALSE)
+gen_var(
+  data,
+  p = 2,
+  exogen = NULL,
+  s = 2,
+  deterministic = "const",
+  seasonal = FALSE
+)
 }
 \arguments{
 \item{data}{a time-series object of endogenous variables.}

@@ -122,7 +122,7 @@ gen_var <- function(data, p = 2, exogen = NULL, s = 2, deterministic = "const", 
     if (freq == 1) {
       warning("The frequency of the provided data is 1. No seasonal dummmies are generated.")
     } else {
-      pos <- which(floor(stats::time(temp)) == stats::time(temp))[1]
+      pos <- which(stats::cycle(temp) == 1)[1]
       pos <- rep(1:freq, 2)[pos:(pos + (freq - 2))]
       for (i in 1:(freq - 1)) {
         s_temp <- rep(0, freq)

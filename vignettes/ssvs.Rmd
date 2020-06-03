@@ -117,15 +117,13 @@ for (draw in 1:iter) {
 }
 ```
 
-The output of a Gibbs sampler with SSVS can be further analysed in the usual way. Therefore, point estimates can be obtained by calculating the means of the parameters' posterior draws:
+The output of a Gibbs sampler with SSVS can be further analysed in the usual way. With the `bvartools` package the posterior draws can be colleced in a `bvar` object and the `summary` function provides summary statistics:
 
 ```{r}
-A <- rowMeans(draws_a) # Obtain means for every parameter
-A <- matrix(A, k) # Transform mean vector into matrix
-A <- round(A, 3) # Round values
-dimnames(A) <- list(dimnames(y)[[1]], dimnames(x)[[1]]) # Rename matrix dimensions
+bvar_est <- bvar(y = y, x = x, A = draws_a[1:36,],
+                 C = draws_a[37:39, ], Sigma = draws_sigma)
 
-t(A) # Print
+summary(bvar_est)
 ```
 
 It is also possible to obtain the posterior inclusion probabilites of each variable by calculating the means of their posterior draws. As can be seen in the output below, only few variables appear to be relevant in the VAR(4) model, because most inclusion probabilities are relatively low. The inclusion probabilities of the constant terms are 100 percent, because they were excluded from SSVS.
@@ -183,22 +181,13 @@ for (draw in 1:iter) {
 The means of the posterior draws are similar to the OLS estimates in Lütkepohl (2007, Section 5.2.10):
 
 ```{r}
-A <- rowMeans(draws_a) # Obtain means for every row
-A <- matrix(A, k) # Transform mean vector into a matrix
-A <- round(A, 3) # Round values
-dimnames(A) <- list(dimnames(y)[[1]], dimnames(x)[[1]]) # Rename matrix dimensions
+bvar_est <- bvar(y = y, x = x, A = draws_a[1:36,],
+                 C = draws_a[37:39, ], Sigma = draws_sigma)
 
-t(A) # Print
+summary(bvar_est)
 ```
 
 ## Evaluation
-
-The `bvar` function can be used to collect relevant output of the Gibbs sampler into a standardised object, which can be used by further functions such as `predict` to obtain forecasts or `irf` for impulse respons analysis.
-
-```{r bvar-object}
-bvar_est <- bvar(y = y, x = x, A = draws_a[1:36,],
-                 C = draws_a[37:39, ], Sigma = draws_sigma)
-```
 
 Posterior draws can be thinned with function `thin`:
 
@@ -208,6 +197,8 @@ bvar_est <- thin(bvar_est, thin = 5)
 
 
 ### Forecasts
+
+The `bvar` object can also be used to produce forecasts with `predict` or impulse respones with the `irf` function.
 
 Forecasts with credible bands can be obtained with the function `predict`. If the model contains deterministic terms, new values can be provided in the argument `new_D`. If no values are provided, the function sets them to zero. The number of rows of `new_D` must be the same as the argument `n.ahead`.
 

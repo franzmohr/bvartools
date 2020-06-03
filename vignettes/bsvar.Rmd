@@ -29,9 +29,9 @@ e1 <- diff(log(e1))
 plot(e1) # Plot the series
 ```
 
-The considered model is a structural VAR(2) with a constant term and structural coefficients in the errors:
+The considered model is a structural VAR(2) with a constant term:
 
-$$y_t =  v + \sum_{i = 1}^{2} A_i y_{t-i} + A_0^{-1} u_t.$$
+$$A_0 y_t =  v + \sum_{i = 1}^{2} A_i y_{t-i} + u_t.$$
 
 $y_t$ is a $K$-dimensional vector of endogenous variables in period $t$, $A_i$ is a $K \times K$ coefficient matrix of lagged values of $y_t$, $u_t \sim \Sigma$ is an error term with zero mean and diagonal variance matrix $\Sigma$. $A_0$ is a lower triangular matrix with ones on the main diagonal.
 
@@ -42,89 +42,91 @@ y <- data$Y[, 1:73]
 x <- data$Z[, 1:73]
 ```
 
-
 ## Estimation
 
 The following code is a Gibbs sampler for a Bayesian structural VAR model with non-informative priors.
 
-```{r flat prior}
-# Reset random number generator for reproducibility
-set.seed(1234567)
 
+```{r}
+tt <- ncol(y) # Number of observations
+k <- nrow(y) # Number of endogenous variables
+m <- k * nrow(x) # Number of estimated coefficients
+k0 <- k * (k - 1) / 2 # Number of structural coefficients
+n <- k0 + m # Total number of estimated coefficients
+```
+
+Use rather uninformative priors
+
+```{r}
+# Set (uninformative) priors
+a_mu_prior <- matrix(0, n) # Vector of prior parameter means
+a_v_i_prior <- diag(0, n) # Inverse of the prior covariance matrix
+
+sigma_shape_prior <- matrix(0, k) # Prior degrees of freedom
+sigma_shape_post <- sigma_shape_prior + tt / 2
+sigma_rate_prior <- matrix(0, k)
+```
+
+Initial values
+
+```{r}
+a0 <- diag(1, k) # Matrix of structural coefficients
+
+ols <- tcrossprod(y, x) %*% solve(tcrossprod(x)) # Reduced form OLS estimate
+u <- y - ols %*% x # OLS residuals
+ols_vcov <- tcrossprod(u) / tt # OLS variance-covariance matrix
+
+sigma_i <- diag(1, k)
+diag(sigma_i) <- 1 / diag(ols_vcov)
+
+z <- kronecker(t(x), diag(1, k))
+z <- cbind(z, matrix(0, k * tt, k0))
+for (j in 2:k) {
+  for (i in 1:tt) {
+    z[(i - 1) * k + j, m + (j - 2) * (j - 1) / 2 + 1:(j - 1)] <- -y[1:(j - 1), i]
+  }
+}
+```
+
+
+```{r}
 iter <- 10000 # Number of iterations of the Gibbs sampler
 burnin <- 5000 # Number of burn-in draws
 store <- iter - burnin
 
-t <- ncol(y) # Number of observations
-k <- nrow(y) # Number of endogenous variables
-m <- k * nrow(x) # Number of estimated coefficients
-k0 <- k * (k - 1) / 2 # Number of structural coefficients
-
-# Set (uninformative) priors
-a_mu_prior <- matrix(0, m) # Vector of prior parameter means
-a_v_i_prior <- diag(0, m) # Inverse of the prior covariance matrix
-
-a0_mu_prior <- matrix(0, k0) # Vector of prior parameter means
-a0_v_i_prior <- diag(0, k0) # Inverse of the prior covariance matrix
-
-sigma_df_prior <- 0 # Prior degrees of freedom
-sigma_scale_prior <- rep(0, k)
-sigma_df_post <- t + sigma_df_prior
-
-# Initial values
-a0 <- diag(1, k)
-omega_i <- rWishart(1, t, solve(tcrossprod(y)))[,, 1]
-omega <- solve(omega_i)
-sigma_i <- diag(1, k)
-diag(sigma_i) <- diag(omega_i)
-sigma <- solve(sigma_i)
-
 # Data containers for posterior draws
 draws_a <- matrix(NA, m, store)
 draws_a0 <- matrix(NA, k^2, store)
-draws_omega <- matrix(NA, k^2, store)
+draws_sigma <- matrix(NA, k^2, store)
+
+# Reset random number generator for reproducibility
+set.seed(1234567)
 
 # Start Gibbs sampler
 for (draw in 1:iter) {
   # Draw conditional mean parameters
-  a <- post_normal(y, x, omega_i, a_mu_prior, a_v_i_prior)
+  a <- post_normal_sur(y, z, sigma_i, a_mu_prior, a_v_i_prior)
   
-  # Structural coefficients
-  y_tilde <- y - matrix(a, k) %*% x # Obtain residuals
-  for (j in 2:k) {
-   # Preparing the data
-   y_tilde_temp <- matrix(y_tilde[j, ], 1)
-   x0_temp <- matrix(-y_tilde[1:(j - 1),], j - 1)
-   a0_sigma_i_temp <-  matrix(sigma_i[j, j])
-   pos_temp <- (j - 1) * (j - 2) / 2 + 1:(j - 1)
-   mu_temp <- matrix(a0_mu_prior[pos_temp,])
-   v_i_temp <- matrix(a0_v_i_prior[pos_temp, pos_temp], j - 1)
-   
-   # Draw structural coefficients
-   a0_temp <- post_normal(y = y_tilde_temp, x = x0_temp, sigma_i = a0_sigma_i_temp,
-                          a_prior = mu_temp, v_i_prior = v_i_temp)
-   
-   # Update A0 matrix
-   a0[j, 1:(j - 1)] <- a0_temp
+  # Update matrix of structural coefficients
+  for (i in 2:k) {
+    a0[i, 1:(i - 1)] <- a[m + (i - 2) * (i - 1) / 2 + 1:(i - 1),]
   }
+  
+  # Errors
+  y_hat <- y - matrix(z %*% a, k) # Obtain residuals
   
   # Draw variances
-  y_star <- a0 %*% y_tilde
-  sigma_scale_post <- sigma_scale_prior + rowSums(y_star^2)
+  y_hat_sq <- y_hat^2
+  sigma_rate_post <- sigma_rate_prior + rowSums(y_hat_sq) / 2
   for (j in 1:k) {
-    sigma_i[j, j] <- rgamma(1, shape = sigma_df_post / 2, rate = sigma_scale_post[j] / 2)
+    sigma_i[j, j] <- rgamma(1, shape = sigma_shape_post[j,], rate = sigma_rate_post[j,])
   }
-  sigma <- solve(sigma_i)
-  
-  a0_i <- solve(a0)
-  omega <- a0_i %*% tcrossprod(sigma, a0_i) 
-  omega_i <- solve(omega)
   
   # Store draws
   if (draw > burnin) {
-    draws_a[, draw - burnin] <- a
+    draws_a[, draw - burnin] <- a[1:m,]
     draws_a0[, draw - burnin] <- a0
-    draws_omega[, draw - burnin] <- sigma
+    draws_sigma[, draw - burnin] <- solve(sigma_i)
   }
 }
 ```
@@ -157,7 +159,7 @@ The `bvar` function can be used to collect relevant output of the Gibbs sampler 
 
 ```{r bvar-object}
 bvar_est <- bvar(y = y, x = x, A = draws_a[1:18,], C = draws_a[19:21, ],
-                 A0 = draws_a0, Sigma = draws_omega)
+                 A0 = draws_a0, Sigma = draws_sigma)
 ```
 
 Posterior draws can be thinned with function `thin`:

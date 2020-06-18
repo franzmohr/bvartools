@@ -5,8 +5,7 @@
 \alias{plot.bvarfevd}
 \title{Forecast Error Variance Decomposition}
 \usage{
-fevd(object, response = NULL, n.ahead = 5, type = "oir",
-  normalise_gir = FALSE)
+fevd(object, response = NULL, n.ahead = 5, type = "oir", normalise_gir = FALSE)
 
 \method{plot}{bvarfevd}(x, ...)
 }

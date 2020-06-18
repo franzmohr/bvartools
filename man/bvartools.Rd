@@ -3,7 +3,6 @@
 \docType{package}
 \name{bvartools}
 \alias{bvartools}
-\alias{bvartools-package}
 \title{bvartools: Bayesian Inference of Vector Autoregressive Models}
 \description{
 A collection of R and C++ functions, which assist in the set-up of algorithms

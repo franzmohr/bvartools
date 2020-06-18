@@ -4,19 +4,21 @@
 \name{e1}
 \alias{e1}
 \title{West German economic time series data}
-\format{A named time-series object with 92 rows and 3 variables:
+\format{
+A named time-series object with 92 rows and 3 variables:
 \describe{
   \item{invest}{fixed investment.}
   \item{income}{disposable income.}
   \item{cons}{consumption expenditures.}
-}}
+}
+}
 \usage{
 data("e1")
 }
 \description{
-The dataset contains quarterly, seasonally adjusted time series for West German fixed investment, disposable
+The data set contains quarterly, seasonally adjusted time series for West German fixed investment, disposable
 income, and consumption expenditures in billions of DM from 1960Q1 to 1982Q4. It was produced
-from file E1 of the datasets associated with Lütkepohl (2007). Raw data are available at
+from file E1 of the data sets associated with Lütkepohl (2007). Raw data are available at
 \url{http://www.jmulti.de/download/datasets/e1.dat} and were originally obtained from
 Deutsche Bundesbank.
 }

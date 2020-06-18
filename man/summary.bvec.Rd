@@ -7,8 +7,7 @@
 \usage{
 \method{summary}{bvec}(object, ci = 0.95, ...)
 
-\method{print}{summary.bvec}(x, digits = max(3L, getOption("digits") -
-  3L), ...)
+\method{print}{summary.bvec}(x, digits = max(3L, getOption("digits") - 3L), ...)
 }
 \arguments{
 \item{object}{an object of class \code{"bvec"}, usually, a result of a call to

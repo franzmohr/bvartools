@@ -4,8 +4,15 @@
 \alias{minnesota_prior}
 \title{Minnesota Prior}
 \usage{
-minnesota_prior(object, kappa0 = 2, kappa1 = 0.5, kappa2 = 0.5,
-  kappa3 = 5, max_var = NULL, coint_var = FALSE)
+minnesota_prior(
+  object,
+  kappa0 = 2,
+  kappa1 = 0.5,
+  kappa2 = 0.5,
+  kappa3 = 5,
+  max_var = NULL,
+  coint_var = FALSE
+)
 }
 \arguments{
 \item{object}{an object of class \code{"bvarmodel"}, usually, a result of a call to \code{\link{gen_var}}

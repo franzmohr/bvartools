@@ -4,10 +4,23 @@
 \alias{bvec}
 \title{Bayesian Vector Error Correction Objects}
 \usage{
-bvec(data = NULL, exogen = NULL, y = NULL, w = NULL, x = NULL,
-  alpha = NULL, beta = NULL, Pi = NULL, Pi_x = NULL, Pi_d = NULL,
-  A0 = NULL, Gamma = NULL, Upsilon = NULL, C = NULL,
-  Sigma = NULL)
+bvec(
+  data = NULL,
+  exogen = NULL,
+  y = NULL,
+  w = NULL,
+  x = NULL,
+  alpha = NULL,
+  beta = NULL,
+  Pi = NULL,
+  Pi_x = NULL,
+  Pi_d = NULL,
+  A0 = NULL,
+  Gamma = NULL,
+  Upsilon = NULL,
+  C = NULL,
+  Sigma = NULL
+)
 }
 \arguments{
 \item{data}{the original time-series object of endogenous variables.}

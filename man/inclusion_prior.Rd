@@ -4,8 +4,13 @@
 \alias{inclusion_prior}
 \title{Prior Inclusion Probabilities}
 \usage{
-inclusion_prior(object, prob = 0.5, exclude_deterministics = TRUE,
-  minnesota_like = FALSE, kappa = c(0.8, 0.5, 0.5, 0.8))
+inclusion_prior(
+  object,
+  prob = 0.5,
+  exclude_deterministics = TRUE,
+  minnesota_like = FALSE,
+  kappa = c(0.8, 0.5, 0.5, 0.8)
+)
 }
 \arguments{
 \item{object}{an object of class \code{"bvarmodel"}, usually, a result of a call to \code{\link{gen_var}}

@@ -7,8 +7,7 @@
 \usage{
 \method{summary}{bvar}(object, ci = 0.95, ...)
 
-\method{print}{summary.bvar}(x, digits = max(3L, getOption("digits") -
-  3L), ...)
+\method{print}{summary.bvar}(x, digits = max(3L, getOption("digits") - 3L), ...)
 }
 \arguments{
 \item{object}{an object of class \code{"bvar"}, usually, a result of a call to

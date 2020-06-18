@@ -4,17 +4,19 @@
 \name{e6}
 \alias{e6}
 \title{German interest and inflation rate data}
-\format{A named time-series object with 107 rows and 2 variables:
+\format{
+A named time-series object with 107 rows and 2 variables:
 \describe{
   \item{R}{nominal long-term interest rate (Umlaufsrendite).}
   \item{Dp}{\eqn{\Delta} log of GDP deflator.}
-}}
+}
+}
 \usage{
 data("e6")
 }
 \description{
-The dataset contains quarterly, seasonally unadjusted time series for German long-term interest
-and inflation rates from 1972Q2 to 1998Q4. It was produced from file E6 of the datasets associated
+The data set contains quarterly, seasonally unadjusted time series for German long-term interest
+and inflation rates from 1972Q2 to 1998Q4. It was produced from file E6 of the data sets associated
 with Lütkepohl (2007). Raw data are available at \url{http://www.jmulti.de/download/datasets/e6.dat}
 and were originally obtained from Deutsche Bundesbank and Deutsches Institut für Wirtschaftsforschung.
 }

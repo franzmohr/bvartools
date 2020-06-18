@@ -69,95 +69,6 @@ bvs <- function(y, z, a, lambda, sigma_i, prob_prior, include = NULL) {
     .Call(`_bvartools_bvs`, y, z, a, lambda, sigma_i, prob_prior, include)
 }
 
-#' Algorithm of Chan and Jeliazkov (2009)
-#' 
-#' A simplified implementation of the algorithm of Chan and Jeliazkov (2009).
-#' 
-#' @param y a \eqn{K \times T} matrix of endogenous variables.
-#' @param z a sparse \eqn{KT \times MT} matrix of explanatory variables.
-#' @param sigma_i a sparse \eqn{KT \times KT} inverse variance-covariance matrix of the measuresment
-#' equation. For constant matrices \eqn{\Sigma^{-1}} the matrix corresponds to
-#' \eqn{I_{T} \times \Sigma^{-1}}. Otherwise, the matrix is block diagonal.
-#' @param b a sparse \eqn{MT \times MT} block diagonal difference matrix of the state equation.
-#' @param q_i a sparse diagonal \eqn{MT \times MT} inverse variance-covariance matrix of the state
-#' equation. For constant matrices \eqn{Q^{-1}} the matrix corresponds to
-#' \eqn{I_{T} \times Q^{-1}}.
-#' @param a0 an M-dimensional vector of initial states.
-#' 
-#' @details The function uses a simplified version of the algorithm of of Chan and Jeliazkov (2009)
-#' to produce a draw of the state vector \eqn{a_t} for \eqn{t = 1,...,T} for a state space model
-#' with measurement equation
-#' \deqn{y_t = Z_t a_t + u_t}
-#' and transition equation 
-#' \deqn{a_{t} = a_{t - 1} + v_t,}
-#' where \eqn{u_t \sim N(0, \Sigma_{t})} and \eqn{v_t \sim N(0, Q_{t})}.
-#' \eqn{y_t} is a K-dimensional vector of endogenous variables and
-#' \eqn{Z_t = z_t^{\prime} \otimes I_K} is a \eqn{K \times M} matrix of regressors with
-#' \eqn{z_t} as a vector of regressors.
-#' 
-#' The implementation follows the depiction in chapter 20 of Chan, Koop, Poirier and Tobias (2019).
-#' 
-#' @return A \eqn{M \times T} matrix of state vector draws.
-#' 
-#' @examples
-#' 
-#' library(Matrix) # For sparse matrices
-#' 
-#' data("us_macrodata")
-#' us_macrodata <- us_macrodata[time(us_macrodata) < 1990, ]
-#' us_macrodata <- ts(us_macrodata, start = c(1959, 2), frequency = 4)
-#' 
-#' temp <- gen_var(us_macrodata, p = 2)
-#' y <- temp$Y
-#' x <- temp$Z
-#' 
-#' k <- NROW(y)
-#' tt <- NCOL(y)
-#' m <- NROW(x) * k
-#' 
-#' z <- matrix(0, k * tt, m * tt)
-#' for (i in 1:tt) {
-#'   z[(i - 1) * k + 1:k, (i - 1) * m + 1:m] <- kronecker(t(x[, i]), diag(1, k))
-#' }
-#' z <- Matrix(z, sparse = TRUE)
-#' 
-#' # Initial state
-#' b0 <- tcrossprod(y, x) %*% solve(tcrossprod(x))
-#' u <- y - b0 %*% x
-#' b0 <- matrix(b0)
-#' 
-#' # Initial variance-covariance matrix
-#' sigma_i <- solve(tcrossprod(u) / tt)
-#' sigma_i <- kronecker(diag(1, tt), sigma_i)
-#' sigma_i <- Matrix(sigma_i, sparse = TRUE)
-#' 
-#' # Initial variances of the state equation
-#' q_i <- diag(1 / .001, m)
-#' q_i <- kronecker(diag(1, tt), q_i)
-#' q_i <- Matrix(q_i, sparse = TRUE)
-#' 
-#' # Differences matrix of state equation
-#' h <- diag(1, tt * m)
-#' diag(h[-(1:m), -(((tt - 1) * m):(tt * m))]) <- -1
-#' h <- Matrix(h, sparse = TRUE)
-#' 
-#' # Draw states
-#' b <- chan_jeliazkov(y = y, z = z, sigma_i = sigma_i,
-#'                     b = h, q_i = q_i, a0 = b0)
-#' 
-#' @references
-#' 
-#' Chan, J. C. C., & Jeliazkov, I. (2009). Efficient simulation and integrated likelihood
-#' estimation in state space models. \emph{International Journal of Mathematical Modelling
-#' and Numerical Optimisation, 1}(1/2), 101--120. \url{https://doi.org/10.1504/ijmmno.2009.030090}
-#' 
-#' Chan, J., Koop, G., Poirier, D. J., & Tobias J. L. (2019). \emph{Bayesian econometric methods}
-#' (2nd ed.). Cambridge: Cambridge University Press.
-#' 
-chan_jeliazkov <- function(y, z, sigma_i, b, q_i, a0) {
-    .Call(`_bvartools_chan_jeliazkov`, y, z, sigma_i, b, q_i, a0)
-}
-
 .ir <- function(A, h, type, impulse, response) {
     .Call(`_bvartools_ir`, A, h, type, impulse, response)
 }
@@ -253,6 +164,10 @@ kalman_dk <- function(y, z, sigma_u, sigma_v, B, a_init, P_init) {
 #' 
 #' @param u a \eqn{K \times T} matrix of residuals.
 #' @param sigma a \eqn{K \times K} or \eqn{KT \times K} variance-covariance matrix.
+#' 
+#' @details The log-likelihood is calculated for each vector in period \eqn{t} as
+#' \deqn{-\frac{K}{2} \ln 2\pi - \frac{1}{2} \ln |\Sigma_t| -\frac{1}{2} u_t^\prime \Sigma_t^{-1} u_t},
+#' where \eqn{u_t = y_t - \mu_t}.
 #' 
 #' @examples
 #' data("e1")
@@ -380,7 +295,7 @@ post_coint_kls <- function(y, beta, w, sigma_i, v_i, p_tau_i, g_i, x = NULL, gam
 #' non-cointegration coefficients from a normal density.
 #' 
 #' @param y a \eqn{K \times T} matrix of differenced endogenous variables.
-#' @param beta a \eqn{M \times r} cointegration matrix \eqn{\beta}.
+#' @param beta a \eqn{M \times r} cointegration matrix \eqn{\beta}, where \eqn{\beta^{\prime} \beta = I}.
 #' @param w a \eqn{M \times T} matrix of variables in the cointegration term.
 #' @param x  a \eqn{KT \times NK} matrix of differenced regressors and unrestricted deterministic terms.
 #' @param sigma_i the inverse of the constant \eqn{K \times K} error variance-covariance matrix.
@@ -392,7 +307,11 @@ post_coint_kls <- function(y, beta, w, sigma_i, v_i, p_tau_i, g_i, x = NULL, gam
 #' the function will automatically produce a \eqn{K \times K} matrix containing the means of the
 #' time varying \eqn{K \times K} covariance matrix.
 #' @param gamma_mu_prior a \eqn{KN \times 1} prior mean vector of non-cointegration coefficients.
-#' @param gamma_v_i_prior an inverted \eqn{KN \times KN} prior covariance matrix of non-cointegration coefficients.
+#' @param gamma_v_i_prior an inverted \eqn{KN \times KN} prior covariance matrix of
+#' non-cointegration coefficients.
+#' @param svd logical. If \code{TRUE} the singular value decomposition is used to determine
+#' the root of the posterior covariance matrix. Default is \code{FALSE} which means
+#' that the eigenvalue decomposition is used.
 #' 
 #' @details The function produces posterior draws of the coefficient
 #' matrices \eqn{\alpha}, \eqn{\beta} and \eqn{\Gamma} for the model
@@ -467,8 +386,8 @@ post_coint_kls <- function(y, beta, w, sigma_i, v_i, p_tau_i, g_i, x = NULL, gam
 #' simulation for cointegrated models with priors on the cointegration space.
 #' \emph{Econometric Reviews, 29}(2), 224-242. \url{https://doi.org/10.1080/07474930903382208}
 #' 
-post_coint_kls_sur <- function(y, beta, w, sigma_i, v_i, p_tau_i, g_i, x = NULL, gamma_mu_prior = NULL, gamma_v_i_prior = NULL) {
-    .Call(`_bvartools_post_coint_kls_sur`, y, beta, w, sigma_i, v_i, p_tau_i, g_i, x, gamma_mu_prior, gamma_v_i_prior)
+post_coint_kls_sur <- function(y, beta, w, sigma_i, v_i, p_tau_i, g_i, x = NULL, gamma_mu_prior = NULL, gamma_v_i_prior = NULL, svd = FALSE) {
+    .Call(`_bvartools_post_coint_kls_sur`, y, beta, w, sigma_i, v_i, p_tau_i, g_i, x, gamma_mu_prior, gamma_v_i_prior, svd)
 }
 
 #' Posterior Draw from a Normal Distribution
@@ -539,6 +458,9 @@ post_normal <- function(y, x, sigma_i, a_prior, v_i_prior) {
 #' For time varying variance-covariance matrics a \eqn{KT \times K} can be provided.
 #' @param a_prior a \eqn{M x 1} numeric vector of prior means.
 #' @param v_i_prior the inverse of the \eqn{M x M} prior covariance matrix.
+#' @param svd logical. If \code{TRUE} the singular value decomposition is used to determine
+#' the root of the posterior covariance matrix. Default is \code{FALSE} which means
+#' that the eigenvalue decomposition is used.
 #' 
 #' @details The function produces a posterior draw of the coefficient vector \eqn{a} for the model
 #' \deqn{y_{t} = Z_{t} a + u_{t},}
@@ -578,8 +500,8 @@ post_normal <- function(y, x, sigma_i, a_prior, v_i_prior) {
 #' 
 #' @return A vector.
 #' 
-post_normal_sur <- function(y, z, sigma_i, a_prior, v_i_prior) {
-    .Call(`_bvartools_post_normal_sur`, y, z, sigma_i, a_prior, v_i_prior)
+post_normal_sur <- function(y, z, sigma_i, a_prior, v_i_prior, svd = FALSE) {
+    .Call(`_bvartools_post_normal_sur`, y, z, sigma_i, a_prior, v_i_prior, svd)
 }
 
 #' Stochastic Search Variable Selection

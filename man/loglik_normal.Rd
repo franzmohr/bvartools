@@ -14,6 +14,11 @@ loglik_normal(u, sigma)
 \description{
 Calculates the log-likelihood of a multivariate normal distribution.
 }
+\details{
+The log-likelihood is calculated for each vector in period \eqn{t} as
+\deqn{-\frac{K}{2} \ln 2\pi - \frac{1}{2} \ln |\Sigma_t| -\frac{1}{2} u_t^\prime \Sigma_t^{-1} u_t},
+where \eqn{u_t = y_t - \mu_t}.
+}
 \examples{
 data("e1")
 e1 <- diff(log(e1))

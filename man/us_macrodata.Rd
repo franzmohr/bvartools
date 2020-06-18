@@ -4,20 +4,22 @@
 \name{us_macrodata}
 \alias{us_macrodata}
 \title{US macroeconomic data}
-\format{A named time-series object with 195 rows and 3 variables:
+\format{
+A named time-series object with 195 rows and 3 variables:
 \describe{
   \item{Dp}{CPI inflation rate.}
   \item{u}{unemployment rate.}
   \item{r}{Fed Funds rate.}
-}}
+}
+}
 \usage{
 data("us_macrodata")
 }
 \description{
-The dataset contains quarterly time series for the US CPI inflation rate, unemployment rate, and
-Fed Funds rate from 1959Q2 to 2013Q4. It was produced from file "US_macrodata1.csv" of the datasets associated
+The data set contains quarterly time series for the US CPI inflation rate, unemployment rate, and
+Fed Funds rate from 1959Q2 to 2007Q4. It was produced from file "US_macrodata.csv" of the data sets associated
 with Chan, Koop, Poirier and Tobias (2019). Raw data are available at
-\url{https://web.ics.purdue.edu/~jltobias/second_edition/Chapter20/code_for_exercise_7/US_macrodata1.csv}.
+\url{https://web.ics.purdue.edu/~jltobias/second_edition/Chapter20/code_for_exercise_1/US_macrodata.csv}.
 }
 \references{
 Chan, J., Koop, G., Poirier, D. J., & Tobias J. L. (2019). \emph{Bayesian econometric methods}

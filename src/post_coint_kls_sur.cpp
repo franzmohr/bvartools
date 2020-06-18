@@ -8,7 +8,7 @@
 //' non-cointegration coefficients from a normal density.
 //' 
 //' @param y a \eqn{K \times T} matrix of differenced endogenous variables.
-//' @param beta a \eqn{M \times r} cointegration matrix \eqn{\beta}.
+//' @param beta a \eqn{M \times r} cointegration matrix \eqn{\beta}, where \eqn{\beta^{\prime} \beta = I}.
 //' @param w a \eqn{M \times T} matrix of variables in the cointegration term.
 //' @param x  a \eqn{KT \times NK} matrix of differenced regressors and unrestricted deterministic terms.
 //' @param sigma_i the inverse of the constant \eqn{K \times K} error variance-covariance matrix.
@@ -20,7 +20,11 @@
 //' the function will automatically produce a \eqn{K \times K} matrix containing the means of the
 //' time varying \eqn{K \times K} covariance matrix.
 //' @param gamma_mu_prior a \eqn{KN \times 1} prior mean vector of non-cointegration coefficients.
-//' @param gamma_v_i_prior an inverted \eqn{KN \times KN} prior covariance matrix of non-cointegration coefficients.
+//' @param gamma_v_i_prior an inverted \eqn{KN \times KN} prior covariance matrix of
+//' non-cointegration coefficients.
+//' @param svd logical. If \code{TRUE} the singular value decomposition is used to determine
+//' the root of the posterior covariance matrix. Default is \code{FALSE} which means
+//' that the eigenvalue decomposition is used.
 //' 
 //' @details The function produces posterior draws of the coefficient
 //' matrices \eqn{\alpha}, \eqn{\beta} and \eqn{\Gamma} for the model
@@ -102,7 +106,8 @@ Rcpp::List post_coint_kls_sur(arma::mat y, arma::mat beta, arma::mat w, arma::ma
                               arma::mat g_i,
                               Rcpp::Nullable<Rcpp::NumericMatrix> x = R_NilValue, 
                               Rcpp::Nullable<Rcpp::NumericVector> gamma_mu_prior = R_NilValue,
-                              Rcpp::Nullable<Rcpp::NumericMatrix> gamma_v_i_prior = R_NilValue){
+                              Rcpp::Nullable<Rcpp::NumericMatrix> gamma_v_i_prior = R_NilValue,
+                              bool svd = false){
 
   if (sigma_i.has_nan()) {
     Rcpp::stop("Argument 'sigma_i' contains NAs.");
@@ -183,14 +188,18 @@ Rcpp::List post_coint_kls_sur(arma::mat y, arma::mat beta, arma::mat w, arma::ma
   }
   ZHZ = ZHi * z;
   ZHy = ZHi * arma::vectorise(y);
-  arma::mat V_post = arma::inv(V_ag_prior + ZHZ);
-  arma::vec mu_post = V_post * (V_ag_prior * mu_ag_prior + ZHy);
+  arma::mat V_post_i = arma::inv(V_ag_prior + ZHZ);
+  arma::vec mu_post = V_post_i * (V_ag_prior * mu_ag_prior + ZHy);
   
-  arma::vec s = arma::zeros<arma::vec>(k_ag);
-  arma::mat U = arma::zeros<arma::mat>(k_ag, k_ag);
-  arma::eig_sym(s, U, V_post);
-  
-  arma::mat ag = mu_post + U * arma::diagmat(sqrt(s)) * arma::trans(U) * arma::randn<arma::vec>(k_ag);
+  arma::vec s;
+  arma::mat U, V;
+  if (svd) {
+    arma::svd(U, s, V, V_post_i);
+  } else {
+    arma::eig_sym(s, U, V_post_i);
+    V = U;
+  }
+  arma::mat ag = mu_post + U * arma::diagmat(sqrt(s)) * arma::trans(V) * arma::randn<arma::vec>(k_ag);
   
   arma::mat alpha = arma::reshape(ag.rows(0, k_a - 1), k, r);
     
@@ -215,11 +224,10 @@ Rcpp::List post_coint_kls_sur(arma::mat y, arma::mat beta, arma::mat w, arma::ma
   ZHZ = ZHi * z;
   ZHy = ZHi * arma::vectorise(y);
   
-  V_post = arma::inv(arma::kron(arma::trans(A) * G_i * A, v_i * p_tau_i) + ZHZ);
-  mu_post = V_post * ZHy;
+  V_post_i = arma::inv(arma::kron(arma::trans(A) * G_i * A, v_i * p_tau_i) + ZHZ);
+  mu_post = V_post_i * ZHy;
   
-  arma::mat V;
-  arma::svd(U, s, V, V_post);
+  arma::svd(U, s, V, V_post_i);
   arma::mat B = mu_post + U * arma::diagmat(arma::sqrt(s)) * arma::trans(V) * arma::randn<arma::vec>(k_b);
   B = arma::reshape(B, w.n_rows, r);
   

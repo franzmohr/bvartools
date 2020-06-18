@@ -12,6 +12,9 @@
 //' For time varying variance-covariance matrics a \eqn{KT \times K} can be provided.
 //' @param a_prior a \eqn{M x 1} numeric vector of prior means.
 //' @param v_i_prior the inverse of the \eqn{M x M} prior covariance matrix.
+//' @param svd logical. If \code{TRUE} the singular value decomposition is used to determine
+//' the root of the posterior covariance matrix. Default is \code{FALSE} which means
+//' that the eigenvalue decomposition is used.
 //' 
 //' @details The function produces a posterior draw of the coefficient vector \eqn{a} for the model
 //' \deqn{y_{t} = Z_{t} a + u_{t},}
@@ -52,8 +55,8 @@
 //' @return A vector.
 //' 
 // [[Rcpp::export]]
-arma::vec post_normal_sur(arma::mat y ,arma::mat z, arma::mat sigma_i,
-                          arma::vec a_prior, arma::mat v_i_prior) {
+arma::mat post_normal_sur(arma::mat y ,arma::mat z, arma::mat sigma_i,
+                          arma::vec a_prior, arma::mat v_i_prior, bool svd = false) {
   
   if (sigma_i.has_nan()) {
     Rcpp::stop("Argument 'sigma_i' contains NAs.");
@@ -93,12 +96,17 @@ arma::vec post_normal_sur(arma::mat y ,arma::mat z, arma::mat sigma_i,
   ZHZ = ZHi * z;
   ZHy = ZHi * arma::vectorise(y);
   
-  arma::mat V_post = arma::inv(v_i_prior + ZHZ);
-  arma::vec mu_post = V_post * (v_i_prior * a_prior + ZHy);
+  arma::mat V_post_i = arma::inv(v_i_prior + ZHZ);
+  arma::vec mu_post =  V_post_i * (v_i_prior * a_prior + ZHy);
 
   arma::vec s;
-  arma::mat U;
-  arma::eig_sym(s, U, V_post);
+  arma::mat U, V;
+  if (svd) {
+    arma::svd(U, s, V, V_post_i);
+  } else {
+    arma::eig_sym(s, U, V_post_i);
+    V = U;
+  }
   
-  return mu_post + U * arma::diagmat(sqrt(s)) * arma::trans(U) * arma::randn<arma::vec>(nvars);
+  return mu_post + U * arma::diagmat(sqrt(s)) * arma::trans(V) * arma::randn<arma::vec>(nvars);
 }

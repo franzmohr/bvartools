@@ -23,22 +23,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// chan_jeliazkov
-Rcpp::List chan_jeliazkov(arma::mat y, arma::sp_mat z, arma::sp_mat sigma_i, arma::sp_mat b, arma::sp_mat q_i, arma::vec a0);
-RcppExport SEXP _bvartools_chan_jeliazkov(SEXP ySEXP, SEXP zSEXP, SEXP sigma_iSEXP, SEXP bSEXP, SEXP q_iSEXP, SEXP a0SEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type y(ySEXP);
-    Rcpp::traits::input_parameter< arma::sp_mat >::type z(zSEXP);
-    Rcpp::traits::input_parameter< arma::sp_mat >::type sigma_i(sigma_iSEXP);
-    Rcpp::traits::input_parameter< arma::sp_mat >::type b(bSEXP);
-    Rcpp::traits::input_parameter< arma::sp_mat >::type q_i(q_iSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type a0(a0SEXP);
-    rcpp_result_gen = Rcpp::wrap(chan_jeliazkov(y, z, sigma_i, b, q_i, a0));
-    return rcpp_result_gen;
-END_RCPP
-}
 // ir
 arma::vec ir(Rcpp::List A, int h, std::string type, int impulse, int response);
 RcppExport SEXP _bvartools_ir(SEXP ASEXP, SEXP hSEXP, SEXP typeSEXP, SEXP impulseSEXP, SEXP responseSEXP) {
@@ -104,8 +88,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // post_coint_kls_sur
-Rcpp::List post_coint_kls_sur(arma::mat y, arma::mat beta, arma::mat w, arma::mat sigma_i, double v_i, arma::mat p_tau_i, arma::mat g_i, Rcpp::Nullable<Rcpp::NumericMatrix> x, Rcpp::Nullable<Rcpp::NumericVector> gamma_mu_prior, Rcpp::Nullable<Rcpp::NumericMatrix> gamma_v_i_prior);
-RcppExport SEXP _bvartools_post_coint_kls_sur(SEXP ySEXP, SEXP betaSEXP, SEXP wSEXP, SEXP sigma_iSEXP, SEXP v_iSEXP, SEXP p_tau_iSEXP, SEXP g_iSEXP, SEXP xSEXP, SEXP gamma_mu_priorSEXP, SEXP gamma_v_i_priorSEXP) {
+Rcpp::List post_coint_kls_sur(arma::mat y, arma::mat beta, arma::mat w, arma::mat sigma_i, double v_i, arma::mat p_tau_i, arma::mat g_i, Rcpp::Nullable<Rcpp::NumericMatrix> x, Rcpp::Nullable<Rcpp::NumericVector> gamma_mu_prior, Rcpp::Nullable<Rcpp::NumericMatrix> gamma_v_i_prior, bool svd);
+RcppExport SEXP _bvartools_post_coint_kls_sur(SEXP ySEXP, SEXP betaSEXP, SEXP wSEXP, SEXP sigma_iSEXP, SEXP v_iSEXP, SEXP p_tau_iSEXP, SEXP g_iSEXP, SEXP xSEXP, SEXP gamma_mu_priorSEXP, SEXP gamma_v_i_priorSEXP, SEXP svdSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -119,7 +103,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::Nullable<Rcpp::NumericMatrix> >::type x(xSEXP);
     Rcpp::traits::input_parameter< Rcpp::Nullable<Rcpp::NumericVector> >::type gamma_mu_prior(gamma_mu_priorSEXP);
     Rcpp::traits::input_parameter< Rcpp::Nullable<Rcpp::NumericMatrix> >::type gamma_v_i_prior(gamma_v_i_priorSEXP);
-    rcpp_result_gen = Rcpp::wrap(post_coint_kls_sur(y, beta, w, sigma_i, v_i, p_tau_i, g_i, x, gamma_mu_prior, gamma_v_i_prior));
+    Rcpp::traits::input_parameter< bool >::type svd(svdSEXP);
+    rcpp_result_gen = Rcpp::wrap(post_coint_kls_sur(y, beta, w, sigma_i, v_i, p_tau_i, g_i, x, gamma_mu_prior, gamma_v_i_prior, svd));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -139,8 +124,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // post_normal_sur
-arma::vec post_normal_sur(arma::mat y, arma::mat z, arma::mat sigma_i, arma::vec a_prior, arma::mat v_i_prior);
-RcppExport SEXP _bvartools_post_normal_sur(SEXP ySEXP, SEXP zSEXP, SEXP sigma_iSEXP, SEXP a_priorSEXP, SEXP v_i_priorSEXP) {
+arma::mat post_normal_sur(arma::mat y, arma::mat z, arma::mat sigma_i, arma::vec a_prior, arma::mat v_i_prior, bool svd);
+RcppExport SEXP _bvartools_post_normal_sur(SEXP ySEXP, SEXP zSEXP, SEXP sigma_iSEXP, SEXP a_priorSEXP, SEXP v_i_priorSEXP, SEXP svdSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -149,7 +134,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::mat >::type sigma_i(sigma_iSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type a_prior(a_priorSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type v_i_prior(v_i_priorSEXP);
-    rcpp_result_gen = Rcpp::wrap(post_normal_sur(y, z, sigma_i, a_prior, v_i_prior));
+    Rcpp::traits::input_parameter< bool >::type svd(svdSEXP);
+    rcpp_result_gen = Rcpp::wrap(post_normal_sur(y, z, sigma_i, a_prior, v_i_prior, svd));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -171,14 +157,13 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_bvartools_bvs", (DL_FUNC) &_bvartools_bvs, 7},
-    {"_bvartools_chan_jeliazkov", (DL_FUNC) &_bvartools_chan_jeliazkov, 6},
     {"_bvartools_ir", (DL_FUNC) &_bvartools_ir, 5},
     {"_bvartools_kalman_dk", (DL_FUNC) &_bvartools_kalman_dk, 7},
     {"_bvartools_loglik_normal", (DL_FUNC) &_bvartools_loglik_normal, 2},
     {"_bvartools_post_coint_kls", (DL_FUNC) &_bvartools_post_coint_kls, 10},
-    {"_bvartools_post_coint_kls_sur", (DL_FUNC) &_bvartools_post_coint_kls_sur, 10},
+    {"_bvartools_post_coint_kls_sur", (DL_FUNC) &_bvartools_post_coint_kls_sur, 11},
     {"_bvartools_post_normal", (DL_FUNC) &_bvartools_post_normal, 5},
-    {"_bvartools_post_normal_sur", (DL_FUNC) &_bvartools_post_normal_sur, 5},
+    {"_bvartools_post_normal_sur", (DL_FUNC) &_bvartools_post_normal_sur, 6},
     {"_bvartools_ssvs", (DL_FUNC) &_bvartools_ssvs, 5},
     {NULL, NULL, 0}
 };

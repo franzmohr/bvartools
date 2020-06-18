@@ -4,8 +4,18 @@
 \alias{post_coint_kls}
 \title{Posterior Draw for Cointegration Models}
 \usage{
-post_coint_kls(y, beta, w, sigma_i, v_i, p_tau_i, g_i, x = NULL,
-  gamma_mu_prior = NULL, gamma_v_i_prior = NULL)
+post_coint_kls(
+  y,
+  beta,
+  w,
+  sigma_i,
+  v_i,
+  p_tau_i,
+  g_i,
+  x = NULL,
+  gamma_mu_prior = NULL,
+  gamma_v_i_prior = NULL
+)
 }
 \arguments{
 \item{y}{a \eqn{K \times T} matrix of differenced endogenous variables.}

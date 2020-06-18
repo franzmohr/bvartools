@@ -4,13 +4,24 @@
 \alias{post_coint_kls_sur}
 \title{Posterior Draw for Cointegration Models}
 \usage{
-post_coint_kls_sur(y, beta, w, sigma_i, v_i, p_tau_i, g_i, x = NULL,
-  gamma_mu_prior = NULL, gamma_v_i_prior = NULL)
+post_coint_kls_sur(
+  y,
+  beta,
+  w,
+  sigma_i,
+  v_i,
+  p_tau_i,
+  g_i,
+  x = NULL,
+  gamma_mu_prior = NULL,
+  gamma_v_i_prior = NULL,
+  svd = FALSE
+)
 }
 \arguments{
 \item{y}{a \eqn{K \times T} matrix of differenced endogenous variables.}
 
-\item{beta}{a \eqn{M \times r} cointegration matrix \eqn{\beta}.}
+\item{beta}{a \eqn{M \times r} cointegration matrix \eqn{\beta}, where \eqn{\beta^{\prime} \beta = I}.}
 
 \item{w}{a \eqn{M \times T} matrix of variables in the cointegration term.}
 
@@ -30,7 +41,12 @@ time varying \eqn{K \times K} covariance matrix.}
 
 \item{gamma_mu_prior}{a \eqn{KN \times 1} prior mean vector of non-cointegration coefficients.}
 
-\item{gamma_v_i_prior}{an inverted \eqn{KN \times KN} prior covariance matrix of non-cointegration coefficients.}
+\item{gamma_v_i_prior}{an inverted \eqn{KN \times KN} prior covariance matrix of
+non-cointegration coefficients.}
+
+\item{svd}{logical. If \code{TRUE} the singular value decomposition is used to determine
+the root of the posterior covariance matrix. Default is \code{FALSE} which means
+that the eigenvalue decomposition is used.}
 }
 \value{
 A named list containing the following elements:

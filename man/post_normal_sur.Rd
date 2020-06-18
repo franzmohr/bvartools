@@ -4,7 +4,7 @@
 \alias{post_normal_sur}
 \title{Posterior Draw from a Normal Distribution}
 \usage{
-post_normal_sur(y, z, sigma_i, a_prior, v_i_prior)
+post_normal_sur(y, z, sigma_i, a_prior, v_i_prior, svd = FALSE)
 }
 \arguments{
 \item{y}{a \eqn{K \times T} matrix of endogenous variables.}
@@ -17,6 +17,10 @@ For time varying variance-covariance matrics a \eqn{KT \times K} can be provided
 \item{a_prior}{a \eqn{M x 1} numeric vector of prior means.}
 
 \item{v_i_prior}{the inverse of the \eqn{M x M} prior covariance matrix.}
+
+\item{svd}{logical. If \code{TRUE} the singular value decomposition is used to determine
+the root of the posterior covariance matrix. Default is \code{FALSE} which means
+that the eigenvalue decomposition is used.}
 }
 \value{
 A vector.

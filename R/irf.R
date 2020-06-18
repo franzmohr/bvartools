@@ -153,14 +153,14 @@ irf <- function(object, impulse = NULL, response = NULL, n.ahead = 5, ci = .95,
   k <- NROW(object$y)
   store <- nrow(object$A)
   
-  A <- c()
+  A <- NULL
   for (i in 1:store) {
     temp <- list(A = matrix(object$A[i, ], k))
     if (need_Sigma) {
       temp$Sigma <- matrix(object$Sigma[i, ], k)
     }
     if (need_A0) {
-      temp$A0 = matrix(object$A0[i, ], k) 
+      temp$A0 <- matrix(object$A0[i, ], k)
     }
     A[[i]] <- temp
   }

@@ -5,8 +5,16 @@
 \alias{plot.bvarirf}
 \title{Impulse Response Function}
 \usage{
-irf(object, impulse = NULL, response = NULL, n.ahead = 5,
-  ci = 0.95, type = "feir", cumulative = FALSE, keep_draws = FALSE)
+irf(
+  object,
+  impulse = NULL,
+  response = NULL,
+  n.ahead = 5,
+  ci = 0.95,
+  type = "feir",
+  cumulative = FALSE,
+  keep_draws = FALSE
+)
 
 \method{plot}{bvarirf}(x, ...)
 }

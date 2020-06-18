@@ -1,16 +1,16 @@
 # bvartools 0.0.3
 
-* New data sets `uk_macrodata` and `us_macrodata`.
-* Add additional checks to `gen_vec`.
-* Added `inclusion_prior` for the calculation of inclusion probability priors as used in `bvs` and `ssvs`.
+* Fixed error message when creating seasonal dummies with `gen_var` and `gen_vec`.
+* New data set `us_macrodata`.
+* Add additional checks in `gen_vec`.
+* Added `inclusion_prior` for the calculation of inclusion probability priors as used by `bvs` and `ssvs`.
 * Added `summary` functions.
 * Fixed conversion and collection of exogenous regressors in `bvec_to_bvar`.
-* Added function `chan_jeliazkov` as an alternative to `kalman_dk` for state space models.
-* Updated documentation in `kalman_dk`.
-* `irf` contains the new argument `keep_draws`.
-* Additional checks in `post_normal`, `post_normal_sur`, `post_coint_kls` and `post_coint_kls_sur`.
 * Fixed detection of deterministic terms in `bvec_to_bvar`.
-* Adapt vignette `bvec`.
+* Updated documentation in `kalman_dk`.
+* `irf` contains a new argument `keep_draws`.
+* Additional checks in `post_normal`, `post_normal_sur`, `post_coint_kls` and `post_coint_kls_sur`.
+* Adapt vignette `bvec`.  
 * Added `loglik_normal` for the calculation of a multivariate normal log-likelihood.
 
 # bvartools 0.0.2

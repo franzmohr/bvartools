@@ -1,8 +1,8 @@
 #' West German economic time series data
 #'
-#' The dataset contains quarterly, seasonally adjusted time series for West German fixed investment, disposable
+#' The data set contains quarterly, seasonally adjusted time series for West German fixed investment, disposable
 #' income, and consumption expenditures in billions of DM from 1960Q1 to 1982Q4. It was produced
-#' from file E1 of the datasets associated with Lütkepohl (2007). Raw data are available at
+#' from file E1 of the data sets associated with Lütkepohl (2007). Raw data are available at
 #' \url{http://www.jmulti.de/download/datasets/e1.dat} and were originally obtained from
 #' Deutsche Bundesbank.
 #' 
@@ -23,8 +23,8 @@
 
 #' German interest and inflation rate data
 #'
-#' The dataset contains quarterly, seasonally unadjusted time series for German long-term interest
-#' and inflation rates from 1972Q2 to 1998Q4. It was produced from file E6 of the datasets associated
+#' The data set contains quarterly, seasonally unadjusted time series for German long-term interest
+#' and inflation rates from 1972Q2 to 1998Q4. It was produced from file E6 of the data sets associated
 #' with Lütkepohl (2007). Raw data are available at \url{http://www.jmulti.de/download/datasets/e6.dat}
 #' and were originally obtained from Deutsche Bundesbank and Deutsches Institut für Wirtschaftsforschung.
 #' 
@@ -47,10 +47,10 @@
 
 #' US macroeconomic data
 #'
-#' The dataset contains quarterly time series for the US CPI inflation rate, unemployment rate, and
-#' Fed Funds rate from 1959Q2 to 2013Q4. It was produced from file "US_macrodata1.csv" of the datasets associated
+#' The data set contains quarterly time series for the US CPI inflation rate, unemployment rate, and
+#' Fed Funds rate from 1959Q2 to 2007Q4. It was produced from file "US_macrodata.csv" of the data sets associated
 #' with Chan, Koop, Poirier and Tobias (2019). Raw data are available at
-#' \url{https://web.ics.purdue.edu/~jltobias/second_edition/Chapter20/code_for_exercise_7/US_macrodata1.csv}.
+#' \url{https://web.ics.purdue.edu/~jltobias/second_edition/Chapter20/code_for_exercise_1/US_macrodata.csv}.
 #' 
 #' @usage data("us_macrodata")
 #' 
@@ -67,27 +67,3 @@
 #' (2nd ed.). Cambridge: Cambridge University Press.
 #' 
 "us_macrodata"
-
-#' UK macroeconomic data
-#'
-#' The dataset contains quarterly time series for the UK inflation rate, unemployment rate, and
-#' interest rate from 1957Q2 to 2009Q3. It was produced from file "Data_UK.txt" of the dataset associated
-#' with Koop, León-González, and Strachan (2011). Raw data are available at
-#' \url{http://www3.grips.ac.jp/~rlg/Code_to_Share.zip}.
-#' 
-#' @usage data("uk_macrodata")
-#' 
-#' @format A named time-series object with 210 rows and 3 variables:
-#' \describe{
-#'   \item{Dp}{inflation rate.}
-#'   \item{u}{unemployment rate.}
-#'   \item{r}{Fed Funds rate.}
-#' }
-#' 
-#' @references
-#' 
-#' 
-#' Koop, G., León-González, R., & Strachan, R. (2011). Bayesian inference in a time varying
-#' cointegration model. \emph{Journal of Econometrics, 165}(2), 210--220.
-#' 
-"uk_macrodata"

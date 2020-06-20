@@ -1,8 +1,9 @@
 # bvartools 0.0.3
 
+* Refined function `minnesota_prior` and added additional functionaliy.
 * Fixed error message when creating seasonal dummies with `gen_var` and `gen_vec`.
 * New data set `us_macrodata`.
-* Add additional checks in `gen_vec`.
+* Added additional checks in `gen_vec`.
 * Added `inclusion_prior` for the calculation of inclusion probability priors as used by `bvs` and `ssvs`.
 * Added `summary` functions.
 * Fixed conversion and collection of exogenous regressors in `bvec_to_bvar`.

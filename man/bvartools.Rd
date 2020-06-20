@@ -25,8 +25,8 @@ and Sanderson (2014).
 }
 }
 \references{
-Sanderson, C., & Curtin, R. (2016). Armadillo: a template-based C++ library for linear algebra.
-\emph{Journal of Open Source Software, 1}(2), 26. \url{http://dx.doi.org/10.21105/joss.00026}
+Chan, J., Koop, G., Poirier, D. J., & Tobias, J. L. (2020). \emph{Bayesian Econometric Methods}
+(2nd ed.). Cambridge: University Press.
 
 Durbin, J., & Koopman, S. J. (2002). A simple and efficient simulation smoother for
 state space time series analysis. \emph{Biometrika, 89}(3), 603--615.
@@ -53,6 +53,9 @@ Korobilis, D. (2013). VAR forecasting using Bayesian variable selection.
 \url{https://doi.org/10.1002/jae.1271}
 
 Lütkepohl, H. (2007). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
+
+Sanderson, C., & Curtin, R. (2016). Armadillo: a template-based C++ library for linear algebra.
+\emph{Journal of Open Source Software, 1}(2), 26. \url{http://dx.doi.org/10.21105/joss.00026}
 }
 \author{
 Franz X. Mohr

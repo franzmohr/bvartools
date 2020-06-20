@@ -58,8 +58,7 @@ The function calculates the Minnesota prior of a VAR model. For the endogenous v
 \deqn{ \frac{\kappa_{0} \kappa_{2}}{l^2} \frac{\sigma_{i}^2}{\sigma_{j}^2} \textrm{ for exogenous variables,}}
 \deqn{ \kappa_{0} \kappa_{3} \sigma_{i}^2 \textrm{ for deterministic terms,}}
 where \eqn{\sigma_{i}} is the residual standard deviation of variable \eqn{i} of an unrestricted
-LS estimate. For exogenous variables \eqn{\sigma_{i}} corresponds to the sample standard
-deviation.
+LS estimate. For exogenous variables \eqn{\sigma_{i}} is the sample standard deviation.
 
 For VEC models the function only provides priors for the non-cointegration part of the model. The
 residual standard errors \eqn{\sigma_i} are based on an unrestricted LS regression of the

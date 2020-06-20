@@ -29,8 +29,7 @@
 #' \deqn{ \frac{\kappa_{0} \kappa_{2}}{l^2} \frac{\sigma_{i}^2}{\sigma_{j}^2} \textrm{ for exogenous variables,}}
 #' \deqn{ \kappa_{0} \kappa_{3} \sigma_{i}^2 \textrm{ for deterministic terms,}}
 #' where \eqn{\sigma_{i}} is the residual standard deviation of variable \eqn{i} of an unrestricted
-#' LS estimate. For exogenous variables \eqn{\sigma_{i}} corresponds to the sample standard
-#' deviation.
+#' LS estimate. For exogenous variables \eqn{\sigma_{i}} is the sample standard deviation.
 #' 
 #' For VEC models the function only provides priors for the non-cointegration part of the model. The
 #' residual standard errors \eqn{\sigma_i} are based on an unrestricted LS regression of the
@@ -105,7 +104,8 @@ minnesota_prior <- function(object, kappa0 = 2, kappa1 = .5, kappa2 = NULL, kapp
   
   V <- matrix(rep(NA, tot_par), k) # Set up matrix for variances
   
-  
+  # Obtain OLS sigma
+  ols_sigma <- y %*% (diag(1, tt) - t(x) %*% solve(tcrossprod(x)) %*% x) %*% t(y) / (tt - nrow(x))
   
   # Determine positions of deterministic terms for calculation of sigma
   pos_det <- NULL
@@ -123,7 +123,7 @@ minnesota_prior <- function(object, kappa0 = 2, kappa1 = .5, kappa2 = NULL, kapp
     }
   }
   
-  # Obtain sigma
+  # Obtain sigmas for V_i
   if (sigma == "AR") { # Univariate AR
     s_endo <- diag(0, k)
     for (i in 1:k) {
@@ -139,14 +139,12 @@ minnesota_prior <- function(object, kappa0 = 2, kappa1 = .5, kappa2 = NULL, kapp
       }
       y_temp <- matrix(y[i, ], 1)
       x_temp <- matrix(x[pos, ], length(pos))
-      s_endo[i, i] <- y_temp %*% (diag(1, tt) - t(x_temp) %*% solve(tcrossprod(x_temp)) %*% x_temp) %*% t(y_temp) / tt
+      s_endo[i, i] <- y_temp %*% (diag(1, tt) - t(x_temp) %*% solve(tcrossprod(x_temp)) %*% x_temp) %*% t(y_temp) / (tt - length(pos))
     }
   }
   if (sigma == "VAR") { # VAR model
-    s_endo <- y %*% (diag(1, tt) - t(x) %*% solve(tcrossprod(x)) %*% x) %*% t(y) / tt
+    s_endo <- ols_sigma
   }
-  
-  sigma <- s_endo 
   s_endo <- sqrt(diag(s_endo)) # Residual standard deviations (OLS)
   
   # Endogenous variables
@@ -216,7 +214,7 @@ minnesota_prior <- function(object, kappa0 = 2, kappa1 = .5, kappa2 = NULL, kapp
   
   result <- list("mu" = mu,
                  "v_i" = v_i,
-                 "sigma_i" = solve(sigma))
+                 "sigma_i" = solve(ols_sigma))
   
   return(result)
 }

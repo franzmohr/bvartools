@@ -8,10 +8,9 @@
 #' variables (\eqn{\tau_0}) as its first element and unrestricted variables (\eqn{\tau_1})
 #' as its second. Default is \code{c(0.05, 10)}.
 #' @param semiautomatic an optional numeric vector of two elements containing the factors by which
-#' the standard errors associated with an unconstrained least squares estimate of the country
-#' VARX model are multiplied to obtain the prior standard errors of restricted (\eqn{\tau_0})
-#' and unrestricted (\eqn{\tau_1}) variables. This is the semiautomatic approach
-#' described in George et al. (2008).
+#' the standard errors associated with an unconstrained least squares estimate of the VAR model are
+#' multiplied to obtain the prior standard errors of restricted (\eqn{\tau_0}) and unrestricted
+#' (\eqn{\tau_1}) variables. This is the semiautomatic approach described in George et al. (2008).
 #' 
 #' @return A list containing the vectors of prior standard deviations for restricted
 #' and unrestricted variables, respectively.

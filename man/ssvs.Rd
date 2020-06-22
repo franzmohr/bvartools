@@ -9,14 +9,17 @@ ssvs(a, tau0, tau1, prob_prior, include = NULL)
 \arguments{
 \item{a}{an M-dimensional vector of coefficient draws.}
 
-\item{tau0}{an M-dimensional vector of prior standard deviations for restricted variables.}
+\item{tau0}{an M-dimensional vector of prior standard deviations for restricted
+coefficients in vector \code{a}.}
 
-\item{tau1}{an M-dimensional vector of prior standard deviations for unrestricted variables.}
+\item{tau1}{an M-dimensional vector of prior standard deviations for unrestricted
+coefficients in vector \code{a}.}
 
-\item{prob_prior}{an M-dimensional vector of prior inclusion probabilites.}
+\item{prob_prior}{an M-dimensional vector of prior inclusion probabilites for the coefficients
+in vector \code{a}.}
 
-\item{include}{an integer vector specifying the positions of variables, which should be
-included in the SSVS algorithm. If \code{NULL} (default), SSVS will be applied to all variables.}
+\item{include}{an integer vector specifying the positions of coefficients in vector \code{a}, which should be
+included in the SSVS algorithm. If \code{NULL} (default), SSVS will be applied to all coefficients.}
 }
 \value{
 A named list containing two components:

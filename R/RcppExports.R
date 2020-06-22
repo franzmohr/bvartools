@@ -510,11 +510,14 @@ post_normal_sur <- function(y, z, sigma_i, a_prior, v_i_prior, svd = FALSE) {
 #' to produce a draw of the precision matrix of the coefficients in a VAR model.
 #' 
 #' @param a an M-dimensional vector of coefficient draws.
-#' @param tau0 an M-dimensional vector of prior standard deviations for restricted variables.
-#' @param tau1 an M-dimensional vector of prior standard deviations for unrestricted variables.
-#' @param prob_prior an M-dimensional vector of prior inclusion probabilites.
-#' @param include an integer vector specifying the positions of variables, which should be
-#' included in the SSVS algorithm. If \code{NULL} (default), SSVS will be applied to all variables.
+#' @param tau0 an M-dimensional vector of prior standard deviations for restricted
+#' coefficients in vector \code{a}.
+#' @param tau1 an M-dimensional vector of prior standard deviations for unrestricted
+#' coefficients in vector \code{a}.
+#' @param prob_prior an M-dimensional vector of prior inclusion probabilites for the coefficients
+#' in vector \code{a}.
+#' @param include an integer vector specifying the positions of coefficients in vector \code{a}, which should be
+#' included in the SSVS algorithm. If \code{NULL} (default), SSVS will be applied to all coefficients.
 #' 
 #' @details The function employs stochastic search variable selection (SSVS) as proposed
 #' by George et al. (2008) to produce a draw of the diagonal inverse prior covariance matrix

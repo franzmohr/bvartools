@@ -1,5 +1,6 @@
 # bvartools 0.0.3
 
+* Replacec output element in function `ssvs` from `V_i` to `v_i`.
 * Refined function `minnesota_prior` and added additional functionaliy.
 * Fixed error message when creating seasonal dummies with `gen_var` and `gen_vec`.
 * New data set `us_macrodata`.

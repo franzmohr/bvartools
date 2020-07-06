@@ -106,7 +106,7 @@ for (draw in 1:iter) {
   
   # Draw inclusion parameters and update priors
   temp <- ssvs(a, tau0, tau1, prob_prior, include = 1:36)
-  a_v_i_prior <- temp$V_i # Update prior
+  a_v_i_prior <- temp$v_i # Update prior
   
   # Store draws
   if (draw > burnin) {

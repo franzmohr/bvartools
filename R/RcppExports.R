@@ -529,7 +529,7 @@ post_normal_sur <- function(y, z, sigma_i, a_prior, v_i_prior, svd = FALSE) {
 #' and the error term is \eqn{u_t \sim \Sigma}.
 #' 
 #' @return A named list containing two components:
-#' \item{V_i}{an \eqn{M \times M} inverse prior covariance matrix.}
+#' \item{v_i}{an \eqn{M \times M} inverse prior covariance matrix.}
 #' \item{lambda}{an M-dimensional vector of inclusion parameters.}
 #' 
 #' @examples
@@ -540,13 +540,13 @@ post_normal_sur <- function(y, z, sigma_i, a_prior, v_i_prior, svd = FALSE) {
 #' y <- temp$Y
 #' x <- temp$Z
 #' k <- nrow(y)
-#' t <- ncol(y)
+#' tt <- ncol(y)
 #' m <- k * nrow(x)
 #' 
 #' # OLS estimates for semiautomatic approach
 #' ols <- tcrossprod(y, x) %*% solve(tcrossprod(x))
 #' # OLS error covariance matrix
-#' sigma_ols <- tcrossprod(y - ols %*% x) / (t - nrow(x))
+#' sigma_ols <- tcrossprod(y - ols %*% x) / (tt - nrow(x))
 #' # Covariance matrix
 #' cov_ols <- kronecker(solve(tcrossprod(x)), sigma_ols)
 #' # Standard errors

@@ -5,6 +5,7 @@
 #' @param object an object of class \code{"bvar"}, usually, a result of a call to
 #' \code{\link{bvar}} or \code{\link{bvec_to_bvar}}.
 #' @param ci a numeric between 0 and 1 specifying the probability of the credible band.
+#' Defaults to 0.95.
 #' @param x an object of class \code{"summary.bvar"}, usually, a result of a call to
 #' \code{\link{summary.bvar}}.
 #' @param digits the number of significant digits to use when printing.
@@ -20,8 +21,10 @@
 #'
 #' @export
 summary.bvar <- function(object, ci = .95, ...){
+  # Number of endogenous variables
   k <- object$specifications$dims
   
+  # Obtain variable names
   dim_names <- list(NULL, NULL)
   if (!is.null(object$y)) {
     dim_names[[1]] <- dimnames(object$y)[[1]]

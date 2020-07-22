@@ -5,6 +5,7 @@
 #' @param object an object of class \code{"bvec"}, usually, a result of a call to
 #' \code{\link{bvec}}.
 #' @param ci a numeric between 0 and 1 specifying the probability of the credible band.
+#' Defaults to 0.95.
 #' @param x an object of class \code{"summary.bvec"}, usually, a result of a call to
 #' \code{\link{summary.bvec}}.
 #' @param digits the number of significant digits to use when printing.
@@ -20,16 +21,18 @@
 #'
 #' @export
 summary.bvec <- function(object, ci = .95, ...){
+  # Number of endogenous variables
   k <- object$specifications$dims
   
+  # Extract variable names
   dim_names <- list(NULL, NULL)
-  
   if (!is.null(object$y)) {
     y_names <- dimnames(object$y)[[1]]
   } else {
     y_names <- paste("d.y", 1:k, sep = "")
   }
   
+  # Extract names of ECT-variables
   if (!is.null(object$w)) {
     w_names <- dimnames(object$w)[[1]]
   } else {
@@ -42,6 +45,7 @@ summary.bvec <- function(object, ci = .95, ...){
     }
   }
   
+  # Names of non-cointegration regressors
   if (!is.null(object$x)) {
     x_names <- dimnames(object$x)[[1]]
   } else {
@@ -107,7 +111,7 @@ summary.bvec <- function(object, ci = .95, ...){
     median <- cbind(median, matrix(temp$quantiles[, 2], k))
     q_high <- cbind(q_high, matrix(temp$quantiles[, 3], k))
   }
-
+  
   if (!is.null(object$Gamma)) {
     temp <- summary(object$Gamma, quantiles = c(ci_low, .5, ci_high))
     means <- cbind(means, matrix(temp$statistics[, "Mean"], k))

@@ -4,12 +4,13 @@
 #' @rdname summary.bvec
 print.summary.bvec <- function(x, digits = max(3L, getOption("digits") - 3L), ...){
   
+  k <- x$specifications$dims
+  
   cat("\nModel:\n\n",
-      paste("y ~ ",paste(dimnames(x$coefficients$means)[[2]],
+      paste("y ~ ", paste(dimnames(x$coefficients$means)[[2]],
                          collapse = " + "),
             sep = ""), "\n", sep = "")
   
-  k <- x$specifications$dims
   y_names <- dimnames(x$coefficients$means)[[1]]
   
   if (!is.null(x$coefficients)) {

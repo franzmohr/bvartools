@@ -54,7 +54,7 @@ store <- iter - burnin
 
 r <- 1 # Set rank
 
-t <- ncol(y) # Number of observations
+tt <- ncol(y) # Number of observations
 k <- nrow(y) # Number of endogenous variables
 k_w <- nrow(w) # Number of regressors in error correction term
 k_x <- nrow(x) # Number of differenced regressors and unrestrictec deterministic terms
@@ -73,7 +73,7 @@ p_tau_i[1:r, 1:r] <- diag(1, r)
 
 sigma_df_prior <- k + r # Prior degrees of freedom
 sigma_scale_prior <- diag(0, k) # Prior covariance matrix
-sigma_df_post <- t + sigma_df_prior # Posterior degrees of freedom
+sigma_df_post <- tt + sigma_df_prior # Posterior degrees of freedom
 
 # Initial values
 beta <- matrix(0, k_w, r)
@@ -123,16 +123,7 @@ for (draw in 1:iter) {
 }
 ```
 
-Obtain point estimates as the mean of the parameter draws:
-
-```{r}
-Gamma <- rowMeans(draws_gamma) # Obtain means for every row
-Gamma <- matrix(Gamma, k) # Transform mean vector into a matrix
-Gamma <- round(Gamma, 3) # Round values
-dimnames(Gamma) <- list(dimnames(y)[[1]], dimnames(x)[[1]]) # Rename matrix dimensions
-
-round(Gamma, 3) # Print
-```
+Obtain point estimates of cointegration variables:
 
 ```{r beta}
 beta <- apply(t(draws_beta) / t(draws_beta)[, 1], 2, mean) # Obtain means for every row
@@ -143,14 +134,6 @@ dimnames(beta) <- list(dimnames(w)[[1]], NULL) # Rename matrix dimensions
 beta # Print
 ```
 
-```{r}
-Sigma <- rowMeans(draws_sigma) # Obtain means for every row
-Sigma <- matrix(Sigma, k) # Transform mean vector into a matrix
-Sigma <- round(Sigma * 10^4, 2) # Round values
-dimnames(Sigma) <- list(dimnames(y)[[1]], dimnames(y)[[1]]) # Rename matrix dimensions
-
-Sigma # Print
-```
 
 ## `bvec` objects
 
@@ -168,6 +151,12 @@ bvec_est <- bvec(y = y, w = w, x = x,
                Sigma = draws_sigma)
 ```
 
+Obtain summaries of posterior draws
+
+```{r}
+summary(bvec_est)
+```
+
 Posterior draws can be thinned with function `thin`:
 
 ```{r thin}
@@ -179,6 +168,7 @@ The function `bvec_to_bvar` can be used to transform the VEC model into a VAR in
 ```{r vec2var}
 bvar_form <- bvec_to_bvar(bvec_est)
 ```
+
 
 ## Forecasts
 

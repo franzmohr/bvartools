@@ -22,6 +22,8 @@ Similar packages worth checking out are
 - [BVAR](https://cran.r-project.org/package=BVAR)
 - [bvarsv](https://cran.r-project.org/package=bvarsv)
 - [bvar](https://github.com/nk027/bvar)
+- [bvarr](https://github.com/bdemeshev/bvarr)
+- [bvars](https://github.com/joergrieger/bvars)
 - [mfbvar](https://github.com/ankargren/mfbvar)
 - [BMR](https://github.com/kthohr/BMR)
 

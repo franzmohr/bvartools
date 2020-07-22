@@ -30,6 +30,8 @@ Similar packages worth checking out are
   - [BVAR](https://cran.r-project.org/package=BVAR)
   - [bvarsv](https://cran.r-project.org/package=bvarsv)
   - [bvar](https://github.com/nk027/bvar)
+  - [bvarr](https://github.com/bdemeshev/bvarr)
+  - [bvars](https://github.com/joergrieger/bvars)
   - [mfbvar](https://github.com/ankargren/mfbvar)
   - [BMR](https://github.com/kthohr/BMR)
 
@@ -161,22 +163,14 @@ summary(bvar_est)
     ## 
     ## Variable: invest 
     ## 
-    ##             Mean      SD  Naive SD Time-series SD     2.5%      50%
-    ## invest.1 -0.3210 0.12910 0.0012910      0.0012963 -0.57576 -0.32234
-    ## income.1  0.1468 0.56920 0.0056920      0.0056920 -0.97536  0.14389
-    ## cons.1    0.9661 0.68461 0.0068461      0.0066912 -0.37530  0.95599
-    ## invest.2 -0.1601 0.12744 0.0012744      0.0013199 -0.40851 -0.16121
-    ## income.2  0.1036 0.55673 0.0055673      0.0055673 -0.98186  0.09850
-    ## cons.2    0.9359 0.69796 0.0069796      0.0069975 -0.43081  0.92389
-    ## const    -0.0166 0.01774 0.0001774      0.0001774 -0.05164 -0.01661
-    ##             97.5%
-    ## invest.1 -0.06704
-    ## income.1  1.27628
-    ## cons.1    2.32208
-    ## invest.2  0.09073
-    ## income.2  1.22167
-    ## cons.2    2.32856
-    ## const     0.01778
+    ##             Mean      SD  Naive SD Time-series SD     2.5%      50%    97.5%
+    ## invest.1 -0.3210 0.12910 0.0012910      0.0012963 -0.57576 -0.32234 -0.06704
+    ## income.1  0.1468 0.56920 0.0056920      0.0056920 -0.97536  0.14389  1.27628
+    ## cons.1    0.9661 0.68461 0.0068461      0.0066912 -0.37530  0.95599  2.32208
+    ## invest.2 -0.1601 0.12744 0.0012744      0.0013199 -0.40851 -0.16121  0.09073
+    ## income.2  0.1036 0.55673 0.0055673      0.0055673 -0.98186  0.09850  1.22167
+    ## cons.2    0.9359 0.69796 0.0069796      0.0069975 -0.43081  0.92389  2.32856
+    ## const    -0.0166 0.01774 0.0001774      0.0001774 -0.05164 -0.01661  0.01778
     ## 
     ## Variable: income 
     ## 
@@ -218,26 +212,26 @@ summary(bvar_est)
     ## 
     ## Variance-covariance matrix:
     ## 
-    ##                    Mean        SD  Naive SD Time-series SD       2.5%
-    ## invest_invest 2.267e-03 4.118e-04 4.118e-06      4.615e-06  1.605e-03
-    ## invest_income 7.688e-05 7.493e-05 7.493e-07      8.259e-07 -6.562e-05
-    ## invest_cons   1.317e-04 6.171e-05 6.171e-07      6.961e-07  2.122e-05
-    ## income_invest 7.688e-05 7.493e-05 7.493e-07      8.259e-07 -6.562e-05
-    ## income_income 1.461e-04 2.673e-05 2.673e-07      2.928e-07  1.033e-04
-    ## income_cons   6.547e-05 1.732e-05 1.732e-07      1.923e-07  3.635e-05
-    ## cons_invest   1.317e-04 6.171e-05 6.171e-07      6.961e-07  2.122e-05
-    ## cons_income   6.547e-05 1.732e-05 1.732e-07      1.923e-07  3.635e-05
-    ## cons_cons     9.499e-05 1.723e-05 1.723e-07      1.922e-07  6.693e-05
-    ##                     50%     97.5%
-    ## invest_invest 2.215e-03 0.0031925
-    ## invest_income 7.406e-05 0.0002346
-    ## invest_cons   1.291e-04 0.0002631
-    ## income_invest 7.406e-05 0.0002346
-    ## income_income 1.428e-04 0.0002078
-    ## income_cons   6.381e-05 0.0001053
-    ## cons_invest   1.291e-04 0.0002631
-    ## cons_income   6.381e-05 0.0001053
-    ## cons_cons     9.285e-05 0.0001338
+    ##                    Mean        SD  Naive SD Time-series SD       2.5%       50%
+    ## invest_invest 2.267e-03 4.118e-04 4.118e-06      4.615e-06  1.605e-03 2.215e-03
+    ## invest_income 7.688e-05 7.493e-05 7.493e-07      8.259e-07 -6.562e-05 7.406e-05
+    ## invest_cons   1.317e-04 6.171e-05 6.171e-07      6.961e-07  2.122e-05 1.291e-04
+    ## income_invest 7.688e-05 7.493e-05 7.493e-07      8.259e-07 -6.562e-05 7.406e-05
+    ## income_income 1.461e-04 2.673e-05 2.673e-07      2.928e-07  1.033e-04 1.428e-04
+    ## income_cons   6.547e-05 1.732e-05 1.732e-07      1.923e-07  3.635e-05 6.381e-05
+    ## cons_invest   1.317e-04 6.171e-05 6.171e-07      6.961e-07  2.122e-05 1.291e-04
+    ## cons_income   6.547e-05 1.732e-05 1.732e-07      1.923e-07  3.635e-05 6.381e-05
+    ## cons_cons     9.499e-05 1.723e-05 1.723e-07      1.922e-07  6.693e-05 9.285e-05
+    ##                   97.5%
+    ## invest_invest 0.0031925
+    ## invest_income 0.0002346
+    ## invest_cons   0.0002631
+    ## income_invest 0.0002346
+    ## income_income 0.0002078
+    ## income_cons   0.0001053
+    ## cons_invest   0.0002631
+    ## cons_income   0.0001053
+    ## cons_cons     0.0001338
 
 The means of the posterior draws are very close to the results of the
 frequentist estimatior in Lütkepohl (2007).

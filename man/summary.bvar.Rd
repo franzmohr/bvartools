@@ -13,7 +13,8 @@
 \item{object}{an object of class \code{"bvar"}, usually, a result of a call to
 \code{\link{bvar}} or \code{\link{bvec_to_bvar}}.}
 
-\item{ci}{a numeric between 0 and 1 specifying the probability of the credible band.}
+\item{ci}{a numeric between 0 and 1 specifying the probability of the credible band.
+Defaults to 0.95.}
 
 \item{...}{further arguments passed to or from other methods.}
 

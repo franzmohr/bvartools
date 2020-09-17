@@ -9,20 +9,26 @@ gen_vec(
   p = 2,
   exogen = NULL,
   s = 2,
+  r = NULL,
   const = NULL,
   trend = NULL,
-  seasonal = NULL
+  seasonal = NULL,
+  structural = FALSE,
+  iterations = 50000,
+  burnin = 5000
 )
 }
 \arguments{
 \item{data}{a time-series object of endogenous variables.}
 
-\item{p}{an integer of the lag order of the series (levels) in the VAR.}
+\item{p}{an integer vector of the lag order of the series in the (levels) VAR.}
 
 \item{exogen}{an optional time-series object of external regressors.}
 
-\item{s}{an optional integer of the lag order of the exogenous variables of the series
-(levels) in the VAR.}
+\item{s}{an optional integer vector of the lag order of the exogenous variables of the series
+in the (levels) VAR.}
+
+\item{r}{an integer vector of the cointegration rank.}
 
 \item{const}{a character specifying whether a constant term enters the error correction
 term (\code{"restricted"}) or the non-cointegration term as an \code{"unrestricted"} variable.
@@ -36,19 +42,32 @@ If \code{NULL} (default) no constant term will be added.}
 correction term (\code{"restricted"}) or in the non-cointegreation term as \code{"unrestricted"}
 variables. If \code{NULL} (default) no seasonal terms will be added. The amount of dummy variables depends
 on the frequency of the time-series object provided in \code{data}.}
+
+\item{structural}{logical indicating whether data should be prepared for the estimation of a
+structural VAR model.}
+
+\item{iterations}{an integer of MCMC draws excluding burn-in draws (defaults
+to 50000).}
+
+\item{burnin}{an integer of MCMC draws used to initialize the sampler
+(defaults to 5000). These draws do not enter the computation of posterior
+moments, forecasts etc.}
 }
 \value{
-A list containing the following elements:
-\item{Y}{a matrix of differenced dependent variables.}
-\item{W}{a matrix of variables in the cointegration term.}
-\item{X}{a matrix of non-cointegration regressors.}
+An object of class \code{'bvecmodel'}, which contains the following elements:
+\item{data}{A list of data objects, which can be used for posterior simulation. Element
+\code{Y} is a time-series object of dependent variables. Element \code{W} is a timer-series
+object of variables in the cointegration term and element \code{X} is a time-series
+object of variables that do not enter the cointegration term. Element \code{SUR} contains a
+matrix of element \code{X} in its SUR form.}
+\item{model}{A list of model specifications.}
 }
 \description{
 \code{gen_vec} produces the input for the estimation of a vector error correction (VEC) model.
 }
 \details{
-The function produces the variable matrices of a vector error correction (VEC)
-model, which can also include exogenous variables:
+The function produces the variable matrices of vector error correction (VEC)
+models, which can also include exogenous variables:
 \deqn{\Delta y_t = \Pi w_t + \sum_{i=1}^{p-1} \Gamma_i \Delta y_{t - i} + 
 \sum_{i=0}^{s-1} \Upsilon_i \Delta x_{t - i} +
 C^{UR} d^{UR}_t + u_t,}
@@ -66,19 +85,18 @@ that do not enter the cointegration term.
 order of exogenous variables of the corresponding VAR model.
 \eqn{u_t} is a \eqn{K \times 1} error term.
 
-In matrix notation the above model can be re-written as
-\deqn{Y = \Pi W + \Gamma X + U,}
-where
-\eqn{Y} is a \eqn{K \times T} matrix of differenced endogenous variables,
-\eqn{W} is a \eqn{(K + M + N^{R}) \times T} matrix of variables in the cointegration term,
-\eqn{X} is a \eqn{(K(p - 1) + Ms + N^{UR}) \times T} matrix of differenced regressor variables
-and unrestricted deterministic terms. \eqn{U} is a \eqn{K \times T} matrix of errors.
+If an integer vector is provided as argument \code{p}, \code{s} or \code{r}, the function will
+produce a distinct model for all possible combinations of those specifications.
 }
 \examples{
+
+# Load data
 data("e6")
+
+# Generate model data
 data <- gen_vec(e6, p = 4, const = "unrestricted", season = "unrestricted")
 
 }
 \references{
-Lütkepohl, H. (2007). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
+Lütkepohl, H. (2006). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
 }

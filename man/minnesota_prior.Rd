@@ -45,7 +45,7 @@ if they appear in the model.}
 }
 \value{
 A list containing a matrix of prior means and the precision matrix of the cofficients and the
-inverse variance-covariance matrix of the error term.
+inverse variance-covariance matrix of the error term, which was obtained by an LS estimation.
 }
 \description{
 Calculates the Minnesota prior for a VAR model.
@@ -66,7 +66,7 @@ endogenous variables on the error correction term and the non-cointegration regr
 }
 \examples{
 
-# Prepare data
+# Load data
 data("e1")
 data <- diff(log(e1))
 
@@ -81,5 +81,5 @@ prior <- minnesota_prior(object)
 Chan, J., Koop, G., Poirier, D. J., & Tobias, J. L. (2020). \emph{Bayesian Econometric Methods}
 (2nd ed.). Cambridge: University Press.
 
-Lütkepohl, H. (2007). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
+Lütkepohl, H. (2006). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
 }

@@ -8,44 +8,61 @@ gen_var(
   data,
   p = 2,
   exogen = NULL,
-  s = 2,
+  s = NULL,
   deterministic = "const",
-  seasonal = FALSE
+  seasonal = FALSE,
+  structural = FALSE,
+  iterations = 50000,
+  burnin = 5000
 )
 }
 \arguments{
 \item{data}{a time-series object of endogenous variables.}
 
-\item{p}{an integer of the lag order (default is \code{p = 2}).}
+\item{p}{an integer vector of the lag order (default is \code{p = 2}).}
 
 \item{exogen}{an optional time-series object of external regressors.}
 
-\item{s}{an optional integer of the lag order of the exogenous variables (default is \code{s = 2}).}
+\item{s}{an optional integer vector of the lag order of the external regressors (default is \code{s = 2}).}
 
 \item{deterministic}{a character specifying which deterministic terms should
-be included. Available values are \code{"none"}, \code{"const"} (default),
-\code{"trend"}, and \code{"both"}.}
+be included. Available values are \code{"none"}, \code{"const"} (default) for an intercept,
+\code{"trend"} for a linear trend, and \code{"both"} for an intercept with a linear trend.}
 
 \item{seasonal}{logical. If \code{TRUE}, seasonal dummy variables are
-generated. The amount of dummies depends on the frequency of the
+generated as additional deterministic terms. The amount of dummies depends on the frequency of the
 time-series object provided in \code{data}.}
+
+\item{structural}{logical indicating whether data should be prepared for the estimation of a
+structural VAR model.}
+
+\item{iterations}{an integer of MCMC draws excluding burn-in draws (defaults
+to 50000).}
+
+\item{burnin}{an integer of MCMC draws used to initialize the sampler
+(defaults to 5000). These draws do not enter the computation of posterior
+moments, forecasts etc.}
 }
 \value{
-A list containing the following elements:
-\item{Y}{a matrix of endogenous variables.}
-\item{Z}{a matrix of regressor variables.}
+An object of class \code{'bvarmodel'}, which contains the following elements:
+\item{data}{A list of data objects, which can be used for posterior simulation. Element
+\code{Y} is a time-series object of dependent variables. Element \code{Z} is a time-series
+object of the regressors and element \code{SUR} is the corresponding matrix of regressors
+in SUR form.}
+\item{model}{A list of model specifications.}
 }
 \description{
 \code{gen_var} produces the input for the estimation of a vector autoregressive (VAR) model.
 }
 \details{
-The function produces the variable matrices of a vector autoregressive (VAR)
-model, which can also include exogenous variables:
-\deqn{y_t = \sum_{i=1}^{p} A_i y_{t - i} +
+The function produces the data matrices for vector autoregressive (VAR)
+models, which can also include unmodelled, non-deterministic variables:
+\deqn{A_0 y_t = \sum_{i=1}^{p} A_i y_{t - i} +
 \sum_{i=0}^{s} B_i x_{t - i} +
 C D_t + u_t,}
 where
 \eqn{y_t} is a K-dimensional vector of endogenous variables,
+\eqn{A_0} is a \eqn{K \times K} coefficient matrix of contemporaneous endogenous variables,
 \eqn{A_i} is a \eqn{K \times K} coefficient matrix of endogenous variables,
 \eqn{x_t} is an M-dimensional vector of exogenous regressors and
 \eqn{B_i} its corresponding \eqn{K \times M} coefficient matrix.
@@ -54,20 +71,19 @@ where
 \eqn{p} is the lag order of endogenous variables, \eqn{s} is the lag
 order of exogenous variables, and \eqn{u_t} is an error term.
 
-In matrix notation the above model can be written as
-\deqn{Y = P Z + U,}
-where
-\eqn{Y} is a \eqn{K \times T} matrix of endogenous variables,
-\eqn{Z} is a \eqn{Kp + M(1+s) + N \times T} matrix of regressor variables,
-and \eqn{U} is a \eqn{K \times T} matrix of errors. The function \code{gen_var}
-generates the matrices \eqn{Y} and \eqn{Z}.
+If an integer vector is provided as argument \code{p} or \code{s}, the function will
+produce a distinct model for all possible combinations of those specifications.
 }
 \examples{
-data("e1")
+
+# Load data
+data("e1") 
 e1 <- diff(log(e1))
-data <- gen_var(e1, p = 2, deterministic = "const")
+
+# Generate model data
+data <- gen_var(e1, p = 0:2, deterministic = "const")
 
 }
 \references{
-Lütkepohl, H. (2007). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
+Lütkepohl, H. (2006). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
 }

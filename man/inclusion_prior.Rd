@@ -63,10 +63,9 @@ correction term prior inclusion probabilites are calculated as
 
 # Prepare data
 data("e1")
-data <- diff(log(e1))
 
 # Generate model input
-object <- gen_var(data)
+object <- gen_var(e1)
 
 # Obtain inclusion prior
 pi_prior <- inclusion_prior(object)

@@ -30,28 +30,23 @@
 //' \item{lambda}{an M-dimensional vector of inclusion parameters.}
 //' 
 //' @examples
-//' # Prepare data
+//' 
+//' # Load data
 //' data("e1")
 //' data <- diff(log(e1))
+//' 
+//' # Generate model data
 //' temp <- gen_var(data, p = 2, deterministic = "const")
-//' y <- temp$Y
-//' x <- temp$Z
+//' y <- t(temp$data$Y)
+//' x <- t(temp$data$Z)
 //' k <- nrow(y)
 //' tt <- ncol(y)
 //' m <- k * nrow(x)
 //' 
-//' # OLS estimates for semiautomatic approach
-//' ols <- tcrossprod(y, x) %*% solve(tcrossprod(x))
-//' # OLS error covariance matrix
-//' sigma_ols <- tcrossprod(y - ols %*% x) / (tt - nrow(x))
-//' # Covariance matrix
-//' cov_ols <- kronecker(solve(tcrossprod(x)), sigma_ols)
-//' # Standard errors
-//' se_ols <- matrix(sqrt(diag(cov_ols)))
-//' 
-//' # SSVS priors
-//' tau0 <- se_ols * 0.1 # If excluded
-//' tau1 <- se_ols * 10 # If included
+//' # Obtain SSVS priors using the semiautomatic approach
+//' priors <- ssvs_prior(temp, semiautomatic = c(0.1, 10))
+//' tau0 <- priors$tau0
+//' tau1 <- priors$tau1
 //' 
 //' # Prior for inclusion parameter
 //' prob_prior <- matrix(0.5, m)
@@ -61,7 +56,7 @@
 //' a_v_i_prior <- diag(c(tau1^2), m)
 //' 
 //' # Initial value of Sigma
-//' sigma_i <- solve(sigma_ols)
+//' sigma_i <- solve(tcrossprod(y) / tt)
 //' 
 //' # Draw parameters
 //' a <- post_normal(y = y, x = x, sigma_i = sigma_i,

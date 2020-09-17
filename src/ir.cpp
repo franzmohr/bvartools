@@ -19,24 +19,15 @@ arma::vec ir(Rcpp::List A, int h, std::string type, int impulse, int response) {
     p = coef.n_cols;
   }
   
-  arma::mat A_temp = arma::zeros<arma::mat>(k, h * k);
-  A_temp.cols(0, p - 1) = coef.cols(0, p - 1); 
+  arma::mat Sigma, temp;
+  arma::mat P = arma::eye<arma::mat>(k, k);
   
-  arma::mat P, Sigma, temp;
-  
-  arma::mat phi = arma::zeros<arma::mat>((h + 1) * k, k);
-  arma::mat phi_temp = arma::eye<arma::mat>(k, k);
-  phi.rows(0, k - 1) = phi_temp;
-  arma::vec theta = arma::zeros<arma::vec>(h + 1);
-  
-  if (type == fe) {
-    theta(0) = arma::as_scalar(phi(response - 1, impulse - 1));
-  }
   if (type == oir) {
     P = arma::trans(arma::chol(Rcpp::as<arma::mat>(A["Sigma"])));
   }
   if (type == sir) {
     P = arma::inv(Rcpp::as<arma::mat>(A["A0"]));
+    //coef = P * coef;
   }
   if (type == gir) {
     Sigma = Rcpp::as<arma::mat>(A["Sigma"]);
@@ -44,26 +35,34 @@ arma::vec ir(Rcpp::List A, int h, std::string type, int impulse, int response) {
   }
   if (type == sgir) {
     Sigma = Rcpp::as<arma::mat>(A["Sigma"]);
-    P = arma::inv(Rcpp::as<arma::mat>(A["A0"])) * Sigma / sqrt(arma::as_scalar(Sigma(impulse - 1, impulse - 1)));
+    P = arma::inv(Rcpp::as<arma::mat>(A["A0"]));
+    //coef = P * coef;
+    P = P * Sigma / sqrt(arma::as_scalar(Sigma(impulse - 1, impulse - 1)));
   }
-  if (type != fe) {
-    temp = phi_temp * P;
-    theta(0) = arma::as_scalar(temp(response - 1, impulse - 1));
-  }
+
+  arma::mat phi = arma::zeros<arma::mat>((h + 1) * k, k);
+  arma::mat phi_temp = arma::eye<arma::mat>(k, k);
+  phi.rows(0, k - 1) = phi_temp;
+  arma::vec theta = arma::zeros<arma::vec>(h + 1);
+  
+  // Initial value of theta
+  temp = phi_temp * P;
+  theta(0) = arma::as_scalar(temp(response - 1, impulse - 1));
+  
+  arma::mat A_temp = arma::zeros<arma::mat>(k, h * k);
+  A_temp.cols(0, p - 1) = coef.cols(0, p - 1);
   
   for (int i = 1; i <= h; i++) {
+    // FEIR
     phi_temp.zeros();
     for (int j = 1; j <= i; j++) {
       phi_temp = phi_temp + phi.rows((i - j) * k, (i - j + 1) * k - 1) * A_temp.cols((j - 1) * k, j * k - 1);
     }
     phi.rows(i * k, (i + 1) * k - 1) = phi_temp;
     
-    if (type == fe) {
-      theta(i) = arma::as_scalar(phi_temp(response - 1, impulse - 1));
-    } else {
-      temp = phi_temp * P;
-      theta(i) = arma::as_scalar(temp(response - 1, impulse - 1));
-    }
+    // Potential transformation of FEIR
+    temp = phi_temp * P;
+    theta(i) = arma::as_scalar(temp(response - 1, impulse - 1));
   }
 
   return theta;

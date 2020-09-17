@@ -5,41 +5,37 @@
 \title{Bayesian Vector Error Correction Objects}
 \usage{
 bvec(
-  data = NULL,
-  exogen = NULL,
-  y = NULL,
-  w = NULL,
-  x = NULL,
+  y,
   alpha = NULL,
   beta = NULL,
+  r = NULL,
   Pi = NULL,
   Pi_x = NULL,
   Pi_d = NULL,
-  A0 = NULL,
+  w = NULL,
+  w_x = NULL,
+  w_d = NULL,
   Gamma = NULL,
   Upsilon = NULL,
   C = NULL,
-  Sigma = NULL
+  x = NULL,
+  x_x = NULL,
+  x_d = NULL,
+  A0 = NULL,
+  Sigma = NULL,
+  data = NULL,
+  exogen = NULL
 )
 }
 \arguments{
-\item{data}{the original time-series object of endogenous variables.}
-
-\item{exogen}{the original time-series object of unmodelled variables.}
-
-\item{y}{a \eqn{K \times T} matrix of differenced endogenous variables,
+\item{y}{a time-series object of differenced endogenous variables,
 usually, a result of a call to \code{\link{gen_vec}}.}
-
-\item{w}{a \eqn{(K + M + N^{R}) \times T} matrix of variables in the
-cointegration term, usually, a result of a call to \code{\link{gen_vec}}.}
-
-\item{x}{a \eqn{(K(p - 1) + Ms + N^{UR}) \times T} matrix of differenced regressors
-of \eqn{y} and \eqn{x}, and unrestricted deterministic terms, usually,
-a result of a call to \code{\link{gen_vec}}.}
 
 \item{alpha}{a \eqn{Kr \times S} matrix of MCMC coefficient draws of the loading matrix \eqn{\alpha}.}
 
 \item{beta}{a \eqn{((K + M + N^{R})r) \times S} matrix of MCMC coefficient draws of cointegration matrix \eqn{\beta}.}
+
+\item{r}{an integer of the rank of the cointegration matrix.}
 
 \item{Pi}{a \eqn{K^2 \times S} matrix of MCMC coefficient draws of endogenous varaibles in the cointegration matrix.}
 
@@ -47,46 +43,99 @@ a result of a call to \code{\link{gen_vec}}.}
 
 \item{Pi_d}{a \eqn{KN^{R} \times S} matrix of MCMC coefficient draws of restricted deterministic terms.}
 
-\item{A0}{a \eqn{K^2 \times S} matrix of MCMC coefficient draws of structural parameters.}
+\item{w}{a time-series object of lagged endogenous variables in levels, which enter the
+cointegration term, usually, a result of a call to \code{\link{gen_vec}}.}
 
-\item{Gamma}{a \eqn{(p-1)K^2 \times S} matrix of MCMC coefficient draws of differenced lagged endogenous variables.}
+\item{w_x}{a time-series object of lagged unmodelled, non-deterministic variables in levels, which enter the
+cointegration term, usually, a result of a call to \code{\link{gen_vec}}.}
 
-\item{Upsilon}{an \eqn{sMK \times S} matrix of MCMC coefficient draws of differenced unmodelled variables.}
+\item{w_d}{a time-series object of deterministic terms, which enter the
+cointegration term, usually, a result of a call to \code{\link{gen_vec}}.}
 
-\item{C}{an \eqn{KN^{UR} \times S} matrix of MCMC coefficient draws of unrestricted deterministic terms.}
+\item{Gamma}{a \eqn{(p-1)K^2 \times S} matrix of MCMC coefficient draws of differenced lagged endogenous variables or
+a named list, where element \code{coeffs} contains a \eqn{(p - 1)K^2 \times S} matrix of MCMC coefficient draws
+of lagged differenced endogenous variables and element \code{lambda} contains the corresponding draws of inclusion
+parameters in case variable selection algorithms were employed.}
 
-\item{Sigma}{a \eqn{K^2 \times S} matrix of variance-covariance MCMC draws.}
+\item{Upsilon}{an \eqn{sMK \times S} matrix of MCMC coefficient draws of differenced unmodelled, non-deterministic variables or
+a named list, where element \code{coeffs} contains a \eqn{sMK \times S} matrix of MCMC coefficient draws of
+unmodelled, non-deterministic variables and element \code{lambda} contains the corresponding draws of inclusion
+parameters in case variable selection algorithms were employed.}
+
+\item{C}{an \eqn{KN^{UR} \times S} matrix of MCMC coefficient draws of unrestricted deterministic terms or
+a named list, where element \code{coeffs} contains a \eqn{KN^{UR} \times S} matrix of MCMC coefficient draws of
+deterministic terms and element \code{lambda} contains the corresponding draws of inclusion
+parameters in case variable selection algorithms were employed.}
+
+\item{x}{a time-series object of \eqn{K(p - 1)} differenced endogenous variables.}
+
+\item{x_x}{a time-series object of \eqn{Ms} differenced unmodelled regressors.}
+
+\item{x_d}{a time-series object of \eqn{N^{UR}} deterministic terms that do not enter the
+cointegration term.}
+
+\item{A0}{either a \eqn{K^2 \times S} matrix of MCMC coefficient draws of structural parameters or
+a named list, where element \code{coeffs} contains a \eqn{K^2 \times S} matrix of MCMC coefficient
+draws of structural parameters and element \code{lambda} contains the corresponding draws of inclusion
+parameters in case variable selection algorithms were employed.}
+
+\item{Sigma}{a \eqn{K^2 \times S} matrix of MCMC draws for the error variance-covariance matrix or
+a named list, where element \code{coeffs} contains a \eqn{K^2 \times S} matrix of MCMC draws for the
+error variance-covariance matrix and element \code{lambda} contains the corresponding draws of inclusion
+parameters in case variable selection algorithms were employed to the covariances.}
+
+\item{data}{the original time-series object of endogenous variables.}
+
+\item{exogen}{the original time-series object of unmodelled variables.}
 }
 \value{
-An object of class "gvec" containing the following components, if specified:
+An object of class \code{"gvec"} containing the following components, if specified:
 \item{data}{the original time-series object of endogenous variables.}
 \item{exogen}{the original time-series object of unmodelled variables.}
-\item{y}{a \eqn{K \times T} matrix of differenced endogenous variables.}
-\item{w}{a \eqn{(K + M + N^{R}) \times T} matrix of variables in the cointegration term.}
-\item{x}{a \eqn{((p - 1)K + sM + N^{UR}) \times T} matrix of differenced regressor variables and
-unrestricted deterministic terms.}
+\item{y}{a time-series object of differenced endogenous variables.}
+\item{w}{a time-series object of lagged endogenous variables in levels, which enter the
+cointegration term.}
+\item{w_x}{a time-series object of lagged unmodelled, non-deterministic variables in levels, which enter the
+cointegration term.}
+\item{w_d}{a time-series object of deterministic terms, which enter the
+cointegration term.}
+\item{x}{a time-series object of \eqn{K(p - 1)} differenced endogenous variables}
+\item{x_x}{a time-series object of \eqn{Ms} differenced unmodelled regressors.}
+\item{x_d}{a time-series object of \eqn{N^{UR}} deterministic terms that do not enter the
+cointegration term.}
 \item{A0}{an \eqn{S \times K^2} "mcmc" object of coefficient draws of structural parameters.}
+\item{A0_lambda}{an \eqn{S \times K^2} "mcmc" object of inclusion parameters for coefficients
+corresponding to structural parameters.}
 \item{alpha}{an \eqn{S \times Kr} "mcmc" object of coefficient draws of loading parameters.}
 \item{beta}{an \eqn{S \times ((K + M + N^{R})r)} "mcmc" object of coefficient draws of cointegration parameters.}
 \item{Pi}{an \eqn{S \times K^2} "mcmc" object of coefficient draws of endogenous variables in the cointegration matrix.}
 \item{Pi_x}{an \eqn{S \times KM} "mcmc" object of coefficient draws of unmodelled, non-deterministic variables in the cointegration matrix.}
 \item{Pi_d}{an \eqn{S \times KN^{R}} "mcmc" object of coefficient draws of unrestricted deterministic variables in the cointegration matrix.}
 \item{Gamma}{an \eqn{S \times (p-1)K^2} "mcmc" object of coefficient draws of differenced lagged endogenous variables.}
+\item{Gamma_lamba}{an \eqn{S \times (p-1)K^2} "mcmc" object of inclusion parameters for coefficients
+corresponding to differenced lagged endogenous variables.}
 \item{Upsilon}{an \eqn{S \times sMK} "mcmc" object of coefficient draws of differenced unmodelled variables.}
-\item{C}{an \eqn{S \times KN^{UR}} "mcmc" object of coefficient draws of deterministic terms.}
+\item{Upsilon_lambda}{an \eqn{S \times sMK} "mcmc" object of inclusion parameters for coefficients
+corresponding to differenced unmodelled, non-deterministic variables.}
+\item{C}{an \eqn{S \times KN^{UR}} "mcmc" object of coefficient draws of deterministic terms that
+do not enter the cointegration term.}
+\item{C_lambda}{an \eqn{S \times KN^{UR}} "mcmc" object of inclusion parameters for coefficients
+corresponding to deterministic terms, that do not enter the conitegration term.}
 \item{Sigma}{an \eqn{S \times K^2} "mcmc" object of variance-covariance draws.}
+\item{Sigma_lambda}{an \eqn{S \times K^2} "mcmc" object inclusion parameters for the variance-covariance
+matrix.}
 \item{specifications}{a list containing information on the model specification.}
 }
 \description{
-`bvec` is used to create objects of class "bvec".
+`bvec` is used to create objects of class \code{"bvec"}.
 }
 \details{
-For the VECX model
-\deqn{\Delta y_t = \Pi^{+} \begin{pmatrix} y_{t-1} \\ x_{t-1} \\ d^{R}_{t-1} \end{pmatrix} +
+For the vector error correction model with unmodelled exogenous variables (VECX) 
+\deqn{A_0 \Delta y_t = \Pi^{+} \begin{pmatrix} y_{t-1} \\ x_{t-1} \\ d^{R}_{t-1} \end{pmatrix} +
 \sum_{i = 1}^{p-1} \Gamma_i \Delta y_{t-i} +
 \sum_{i = 0}^{s-1} \Upsilon_i \Delta x_{t-i} +
-C^{UR} d^{UR}_t + A_0^{-1} u_t}
-the function collects the S draws of a Gibbs sampler (after the burn-in phase) in a standardised object,
+C^{UR} d^{UR}_t + u_t}
+the function collects the \eqn{S} draws of a Gibbs sampler in a standardised object,
 where \eqn{\Delta y_t} is a K-dimensional vector of differenced endogenous variables
 and \eqn{A_0} is a \eqn{K \times K} matrix of structural coefficients.
 \eqn{\Pi^{+} = \left[ \Pi, \Pi^{x}, \Pi^{d} \right]} is
@@ -106,25 +155,28 @@ The draws of the different coefficient matrices provided in \code{alpha}, \code{
 \code{C} and \code{Sigma} have to correspond to the same MCMC iteration.
 }
 \examples{
-data("e6")
-data <- gen_vec(e6, p = 4, const = "unrestricted", season = "unrestricted")
 
-y <- data$Y
-w <- data$W
-x <- data$X
+# Load data
+data("e6")
+# Generate model
+data <- gen_vec(e6, p = 4, r = 1, const = "unrestricted", season = "unrestricted")
+# Obtain data matrices
+y <- t(data$data$Y)
+w <- t(data$data$W)
+x <- t(data$data$X)
 
 # Reset random number generator for reproducibility
 set.seed(1234567)
 
-iter <- 500 # Number of iterations of the Gibbs sampler
+iterations <- 400 # Number of iterations of the Gibbs sampler
 # Chosen number of iterations should be much higher, e.g. 30000.
 
 burnin <- 100 # Number of burn-in draws
-store <- iter - burnin
+draws <- iterations + burnin
 
 r <- 1 # Set rank
 
-t <- ncol(y) # Number of observations
+tt <- ncol(y) # Number of observations
 k <- nrow(y) # Number of endogenous variables
 k_w <- nrow(w) # Number of regressors in error correction term
 k_x <- nrow(x) # Number of differenced regressors and unrestrictec deterministic terms
@@ -142,25 +194,22 @@ p_tau_i <- diag(1, k_w)
 
 u_sigma_df_prior <- r # Prior degrees of freedom
 u_sigma_scale_prior <- diag(0, k) # Prior covariance matrix
-u_sigma_df_post <- t + u_sigma_df_prior # Posterior degrees of freedom
+u_sigma_df_post <- tt + u_sigma_df_prior # Posterior degrees of freedom
 
 # Initial values
 beta <- matrix(c(1, -4), k_w, r)
-
-u_sigma_i <- diag(.0001, k)
-u_sigma <- solve(u_sigma_i)
-
+u_sigma_i <- diag(1 / .0001, k)
 g_i <- u_sigma_i
 
 # Data containers
-draws_alpha <- matrix(NA, k_alpha, store)
-draws_beta <- matrix(NA, k_beta, store)
-draws_pi <- matrix(NA, k * k_w, store)
-draws_gamma <- matrix(NA, k_gamma, store)
-draws_sigma <- matrix(NA, k^2, store)
+draws_alpha <- matrix(NA, k_alpha, iterations)
+draws_beta <- matrix(NA, k_beta, iterations)
+draws_pi <- matrix(NA, k * k_w, iterations)
+draws_gamma <- matrix(NA, k_gamma, iterations)
+draws_sigma <- matrix(NA, k^2, iterations)
 
 # Start Gibbs sampler
-for (draw in 1:iter) {
+for (draw in 1:draws) {
   # Draw conditional mean parameters
   temp <- post_coint_kls(y = y, beta = beta, w = w, x = x, sigma_i = u_sigma_i,
                          v_i = v_i, p_tau_i = p_tau_i, g_i = g_i,
@@ -195,7 +244,9 @@ for (draw in 1:iter) {
 k_nondet <- (k_x - 4) * k
 
 # Generate bvec object
-bvec_est <- bvec(y = y, w = w, x = x,
+bvec_est <- bvec(y = data$data$Y, w = data$data$W,
+                 x = data$data$X[, 1:6],
+                 x_d = data$data$X[, 7:10],
                  Pi = draws_pi,
                  Gamma = draws_gamma[1:k_nondet,],
                  C = draws_gamma[(k_nondet + 1):nrow(draws_gamma),],

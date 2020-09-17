@@ -27,14 +27,17 @@
 //' the explanatory variables.
 //' 
 //' @examples
-//' # Prepare data
+//' 
+//' # Load data
 //' data("e1")
 //' data <- diff(log(e1))
+//' 
+//' # Generate model data
 //' temp <- gen_var(data, p = 2, deterministic = "const")
-//' y <- temp$Y
-//' x <- temp$Z
+//' y <- t(temp$data$Y)
+//' x <- t(temp$data$Z)
 //' k <- nrow(y)
-//' t <- ncol(y)
+//' tt <- ncol(y)
 //' m <- k * nrow(x)
 //' 
 //' # Priors
@@ -42,7 +45,7 @@
 //' a_v_i_prior <- diag(0.1, m)
 //' 
 //' # Initial value of inverse Sigma
-//' sigma_i <- solve(tcrossprod(y) / t)
+//' sigma_i <- solve(tcrossprod(y) / tt)
 //' 
 //' # Draw parameters
 //' a <- post_normal(y = y, x = x, sigma_i = sigma_i,
@@ -52,13 +55,22 @@
 //' 
 //' @references
 //' 
-//' Lütkepohl, H. (2007). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
+//' Lütkepohl, H. (2006). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
 //' 
 // [[Rcpp::export]]
 arma::vec post_normal(arma::mat y, arma::mat x, arma::mat sigma_i, arma::vec a_prior, arma::mat v_i_prior) {
   
   if (sigma_i.has_nan()) {
     Rcpp::stop("Argument 'sigma_i' contains NAs.");
+  }
+  if (y.n_cols < y.n_rows) {
+    Rcpp::stop("Argument 'y' contains more variables than observations."); 
+  }
+  if (x.n_cols < x.n_rows) {
+    Rcpp::stop("Argument 'x' contains more variables than observations."); 
+  }
+  if (y.n_cols != x.n_cols) {
+    Rcpp::stop("Arguments 'x' and 'y' contain different amounts of observations."); 
   }
   
   int m = y.n_rows * x.n_rows;

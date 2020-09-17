@@ -3,23 +3,31 @@
 #' \code{gen_var} produces the input for the estimation of a vector autoregressive (VAR) model.
 #' 
 #' @param data a time-series object of endogenous variables.
-#' @param p an integer of the lag order (default is \code{p = 2}).
+#' @param p an integer vector of the lag order (default is \code{p = 2}).
 #' @param exogen an optional time-series object of external regressors.
-#' @param s an optional integer of the lag order of the exogenous variables (default is \code{s = 2}).
+#' @param s an optional integer vector of the lag order of the external regressors (default is \code{s = 2}).
 #' @param deterministic a character specifying which deterministic terms should
-#' be included. Available values are \code{"none"}, \code{"const"} (default),
-#' \code{"trend"}, and \code{"both"}.
+#' be included. Available values are \code{"none"}, \code{"const"} (default) for an intercept,
+#' \code{"trend"} for a linear trend, and \code{"both"} for an intercept with a linear trend.
 #' @param seasonal logical. If \code{TRUE}, seasonal dummy variables are
-#' generated. The amount of dummies depends on the frequency of the
+#' generated as additional deterministic terms. The amount of dummies depends on the frequency of the
 #' time-series object provided in \code{data}.
+#' @param structural logical indicating whether data should be prepared for the estimation of a
+#' structural VAR model.
+#' @param iterations an integer of MCMC draws excluding burn-in draws (defaults
+#' to 50000).
+#' @param burnin an integer of MCMC draws used to initialize the sampler
+#' (defaults to 5000). These draws do not enter the computation of posterior
+#' moments, forecasts etc.
 #' 
-#' @details The function produces the variable matrices of a vector autoregressive (VAR)
-#' model, which can also include exogenous variables:
-#' \deqn{y_t = \sum_{i=1}^{p} A_i y_{t - i} +
+#' @details The function produces the data matrices for vector autoregressive (VAR)
+#' models, which can also include unmodelled, non-deterministic variables:
+#' \deqn{A_0 y_t = \sum_{i=1}^{p} A_i y_{t - i} +
 #' \sum_{i=0}^{s} B_i x_{t - i} +
 #' C D_t + u_t,}
 #' where
 #' \eqn{y_t} is a K-dimensional vector of endogenous variables,
+#' \eqn{A_0} is a \eqn{K \times K} coefficient matrix of contemporaneous endogenous variables,
 #' \eqn{A_i} is a \eqn{K \times K} coefficient matrix of endogenous variables,
 #' \eqn{x_t} is an M-dimensional vector of exogenous regressors and
 #' \eqn{B_i} its corresponding \eqn{K \times M} coefficient matrix.
@@ -28,81 +36,120 @@
 #' \eqn{p} is the lag order of endogenous variables, \eqn{s} is the lag
 #' order of exogenous variables, and \eqn{u_t} is an error term.
 #' 
-#' In matrix notation the above model can be written as
-#' \deqn{Y = P Z + U,}
-#' where
-#' \eqn{Y} is a \eqn{K \times T} matrix of endogenous variables,
-#' \eqn{Z} is a \eqn{Kp + M(1+s) + N \times T} matrix of regressor variables,
-#' and \eqn{U} is a \eqn{K \times T} matrix of errors. The function \code{gen_var}
-#' generates the matrices \eqn{Y} and \eqn{Z}.
+#' If an integer vector is provided as argument \code{p} or \code{s}, the function will
+#' produce a distinct model for all possible combinations of those specifications.
 #' 
-#' @return A list containing the following elements:
-#' \item{Y}{a matrix of endogenous variables.}
-#' \item{Z}{a matrix of regressor variables.}
+#' @return An object of class \code{'bvarmodel'}, which contains the following elements:
+#' \item{data}{A list of data objects, which can be used for posterior simulation. Element
+#' \code{Y} is a time-series object of dependent variables. Element \code{Z} is a time-series
+#' object of the regressors and element \code{SUR} is the corresponding matrix of regressors
+#' in SUR form.}
+#' \item{model}{A list of model specifications.}
 #' 
 #' @examples
-#' data("e1")
+#' 
+#' # Load data
+#' data("e1") 
 #' e1 <- diff(log(e1))
-#' data <- gen_var(e1, p = 2, deterministic = "const")
+#' 
+#' # Generate model data
+#' data <- gen_var(e1, p = 0:2, deterministic = "const")
 #' 
 #' @references
 #' 
-#' Lütkepohl, H. (2007). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
+#' Lütkepohl, H. (2006). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
 #' 
 #' @export
-gen_var <- function(data, p = 2, exogen = NULL, s = 2, deterministic = "const", seasonal = FALSE) {
+gen_var <- function(data, p = 2, exogen = NULL, s = NULL,
+                    deterministic = "const", seasonal = FALSE,
+                    structural = FALSE,
+                    iterations = 50000, burnin = 5000) {
+  
+  # Dev conditions
+  # rm(list = ls()[which(ls() != "data")]); p = 1:3; s = 0:3; deterministic = "none"; seasonal = FALSE; iterations = 1000; burnin = 100; structural = FALSE
+  
+  # Check data ----
   if (!"ts" %in% class(data)) {
-    stop("Data must be an object of class 'ts'.")
+    stop("Argument 'data' must be an object of class 'ts'.")
   }
+  
+  if (!is.null(exogen)) {
+    if (!"ts" %in% class(exogen)) {
+      stop("Argument 'exogen' must be an object of class 'ts'.")
+    }
+  }
+  
+  if (seasonal & !deterministic %in% c("const", "both")) {
+    stop("Argument 'deterministic' must be either 'const' or 'both' when using 'seasonal = TRUE'.")
+  }
+  
+  if (0 %in% p & is.null(exogen) & deterministic == "none" & !structural) {
+    stop("Current specification would result in a model with no regressors.")
+  }
+  
+  # Endogenous variables ----
   if (is.null(dimnames(data))) {
     tsp_temp <- stats::tsp(data)
     data <- stats::ts(as.matrix(data), class = c("mts", "ts", "matrix"))
     stats::tsp(data) <- tsp_temp
     dimnames(data)[[2]] <- "y"
   }
+  
+  if (NCOL(data) == 1 & structural) {
+    stop("Model must contain at least two endogenous variables for structural analysis.")
+  }
+  
   data_name <- dimnames(data)[[2]]
-  temp_name <- data_name
   k <- NCOL(data)
+  p_max <- max(p)
   
   model <- NULL
-  model$endogenous <- list("variables" = dimnames(data)[[2]],
-                           "lags" = 0)
   model$type <- "VAR"
+  model$endogen <- list("variables" = dimnames(data)[[2]],
+                        "lags" = 0)
   
-  # Lags of endogenous variables
   temp <- data
-  if (p >= 1) {
-    for (i in 1:p) {
+  temp_name <- data_name
+  if (p_max >= 1) {
+    for (i in 1:p_max) {
       temp <- cbind(temp, stats::lag(data, -i))
       temp_name <- c(temp_name, paste(data_name, i, sep = "."))
     }
-    model$endogenous$lags <- p
   }
   
-  # Lags of exogenous variables
+  # Exogenous variables ---- 
   if (!is.null(exogen)) {
-    if (!"ts" %in% class(exogen)) {
-      stop("Argument 'exogen' must be an object of class 'ts'.")
-    }
+    use_exo <- TRUE
     if (is.null(dimnames(exogen))) {
       tsp_temp <- stats::tsp(exogen)
       exogen <- stats::ts(as.matrix(exogen), class = c("mts", "ts", "matrix"))
       stats::tsp(exogen) <- tsp_temp
       dimnames(exogen)[[2]] <- "x"
     }
-    data_name <- dimnames(exogen)[[2]]
-    if (s >= 0) {
-      for (i in 0:s) {
+    exo_name <- dimnames(exogen)[[2]]
+    m <- length(exo_name)
+    s_max <- max(s)
+    
+    temp <- cbind(temp, exogen)
+    temp_name <- c(temp_name, paste(exo_name, 0, sep = "."))
+    if (s_max > 0) {
+      for (i in 1:s_max) {
         temp <- cbind(temp, stats::lag(exogen, -i))
-        temp_name <- c(temp_name, paste(data_name, i, sep = "."))
-      }
+        temp_name <- c(temp_name, paste(exo_name, i, sep = "."))
+      } 
     }
+    
     model$exogen <- list("variables" = dimnames(exogen)[[2]],
-                         "lags" = s)
+                         "lags" = 0)
+  } else {
+    use_exo <- FALSE
+    s <- 0
+    s_max <- 0
+    m <- 0
   }
   
   temp <- stats::na.omit(temp)
-  t <- nrow(temp)
+  tt <- nrow(temp)
   det_name <- NULL
   
   if (deterministic %in% c("const", "both")) {
@@ -112,7 +159,7 @@ gen_var <- function(data, p = 2, exogen = NULL, s = 2, deterministic = "const", 
   }
   
   if (deterministic %in% c("trend", "both")) {
-    temp <- cbind(temp, 1:t)
+    temp <- cbind(temp, 1:tt)
     temp_name <- c(temp_name, "trend")
     det_name <- c(det_name, "trend")
   }
@@ -127,26 +174,86 @@ gen_var <- function(data, p = 2, exogen = NULL, s = 2, deterministic = "const", 
       for (i in 1:(freq - 1)) {
         s_temp <- rep(0, freq)
         s_temp[pos[i]] <- 1
-        temp <- cbind(temp, rep(s_temp, length.out = t))
+        temp <- cbind(temp, rep(s_temp, length.out = tt))
         temp_name <- c(temp_name, paste("season.", i, sep = ""))
         det_name <- c(det_name, paste("season.", i, sep = ""))
       }
     }
   }
   
+  use_det <- FALSE
   if (length(det_name) > 0) {
     model$deterministic <- det_name
+    use_det <- TRUE
   }
   
-  y <- matrix(t(temp[, 1:k]), k, dimnames = list(temp_name[1:k], NULL))
-  attr(y, "ts_info") <- stats::tsp(temp)
+  model$structural <- FALSE
+  if (structural) {
+    model$structural <- TRUE
+  }
   
-  x <- matrix(t(temp[, -(1:k)]), length(temp_name) - k,
-              dimnames = list(temp_name[-(1:k)], NULL))
+  model$iterations <- iterations
+  model$burnin <- burnin
   
-  result <- list("Y" = y,
-                 "Z" = x,
-                 "model" = model)
+  # Is equal across all models
+  y <- stats::ts(as.matrix(temp[, 1:k]), class = c("mts", "ts", "matrix"))
+  stats::tsp(y) <- stats::tsp(temp)
+  dimnames(y)[[2]] <- temp_name[1:k]
+ 
+  if (structural & k > 1) {
+    y_structural <- kronecker(-y, diag(1, k))
+    pos <- NULL
+    for (j in 1:k) {
+      pos <- c(pos, (j - 1) * k + 1:j)
+    }
+    y_structural <- y_structural[, -pos]
+  }
+  
+  result <- NULL
+  for (i in p) {
+    for (j in s) {
+      pos <- NULL
+      model_i <- model
+      if (i >= 1) {
+        pos <- c(pos, k + 1:(k * i))
+        model_i$endogen$lags <- i
+      }  
+      if (use_exo) {
+        pos <- c(pos, k + k * p_max + 1:(m * (j + 1)))
+        model_i$exogen$lags <- j
+      }
+      if (use_det) {
+        pos <- c(pos, k + k * p_max + m * (s_max + 1) + 1:length(det_name))
+      }
+      
+      if (length(pos) > 0 | structural) {
+        x <- NULL
+        z <- NULL
+        if (length(pos) > 0) {
+          x <- stats::ts(as.matrix(temp[, pos]), class = c("mts", "ts", "matrix")) 
+          stats::tsp(x) <- stats::tsp(temp)
+          dimnames(x)[[2]] <- temp_name[pos]
+          
+          z <- kronecker(x, diag(1, k))
+        }
+        if (structural) {
+          z <- cbind(z, y_structural)
+        }
+        
+        result_i <- list("data" = list("Y" = y,
+                                       #"Z" = matrix(t(temp[, pos]), length(pos), dimnames = list(temp_name[pos], NULL))),
+                                       "Z" = x,
+                                       "SUR" = z),
+                         "model" = model_i)
+        
+        result <- c(result, list(result_i)) 
+      }
+    }
+  }
+  
+  if (length(result) == 1) {
+    result <- result[[1]]
+  }
   
   class(result) <- append("bvarmodel", class(result))
   return(result)

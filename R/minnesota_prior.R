@@ -36,18 +36,18 @@
 #' endogenous variables on the error correction term and the non-cointegration regressors.
 #' 
 #' @return A list containing a matrix of prior means and the precision matrix of the cofficients and the
-#' inverse variance-covariance matrix of the error term.
+#' inverse variance-covariance matrix of the error term, which was obtained by an LS estimation.
 #' 
 #' @references
 #' 
 #' Chan, J., Koop, G., Poirier, D. J., & Tobias, J. L. (2020). \emph{Bayesian Econometric Methods}
 #' (2nd ed.). Cambridge: University Press.
 #' 
-#' Lütkepohl, H. (2007). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
+#' Lütkepohl, H. (2006). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
 #' 
 #' @examples
 #' 
-#' # Prepare data
+#' # Load data
 #' data("e1")
 #' data <- diff(log(e1))
 #' 
@@ -60,6 +60,9 @@
 #' @export
 minnesota_prior <- function(object, kappa0 = 2, kappa1 = .5, kappa2 = NULL, kappa3 = 5,
                             max_var = NULL, coint_var = FALSE, sigma = "AR") {
+  
+  # Dev specs
+  # rm(list = ls()[-which(ls() == "object")]);  kappa0 = .5; kappa1 = .5; kappa2 = NULL; kappa3 = 200; max_var = NULL; coint_var = FALSE; sigma = "AR"
   
   if (any(c(kappa0, kappa1, kappa2, kappa3) <= 0)) {
     stop("Kappa arguments must be positive.")
@@ -75,25 +78,25 @@ minnesota_prior <- function(object, kappa0 = 2, kappa1 = .5, kappa2 = NULL, kapp
     stop("Argument 'sigma' must be either 'AR' or 'VAR'.")
   }
   
-  y <- object$Y
+  y <- t(object$data$Y)
   type <- object$model$type
   if (type == "VAR") {
-    x <- object$Z 
+    x <- t(object$data$Z)
   }
   
   n_ect <- 0
   if (type == "VEC") {
-    if (!is.null(object$X)) {
-      x <- rbind(object$W, object$X)
+    if (!is.null(object$data$X)) {
+      x <- t(cbind(object$data$W, object$data$X))
     } else {
-      x <- object$W 
+      x <- t(object$W)
     }
-    n_ect <- NROW(object$W)
+    n_ect <- NCOL(object$data$W)
   }
   k <- NROW(y)
   tt <- NCOL(y)
   tot_par <- k * NROW(x)
-  p <- object$model$endogenous$lags
+  p <- object$model$endogen$lags
   if (type == "VEC") {
     p <- p - 1
   }
@@ -114,7 +117,7 @@ minnesota_prior <- function(object, kappa0 = 2, kappa1 = .5, kappa2 = NULL, kapp
   pos_det <- NULL
   if (!is.null(object$model$deterministic)) {
     if (type == "VAR") {
-      pos_det <- k * p + s * m + 1:length(object$model$deterministic) 
+      pos_det <- k * p + (s + 1) * m + 1:length(object$model$deterministic) 
     }
     if (type == "VEC") {
       if (!is.null(object$model$deterministic$restricted)) {
@@ -129,20 +132,28 @@ minnesota_prior <- function(object, kappa0 = 2, kappa1 = .5, kappa2 = NULL, kapp
   # Obtain sigmas for V_i
   if (sigma == "AR") { # Univariate AR
     s_endo <- diag(0, k)
-    for (i in 1:k) {
-      if (type == "VAR") {
-        pos <- c(i + k * ((1:p) - 1), pos_det)
-      }
-      if (type == "VEC") {
-        if (p > 0) {
-          pos <- c(i, n_ect + i + k * ((1:p) - 1), pos_det)
-        } else {
-          pos <- c(i, pos_det)
+    if (p > 0 | !is.null(pos_det)) {
+      for (i in 1:k) {
+        if (type == "VAR") {
+          if (p > 0) {
+            pos <- c(i + k * ((1:p) - 1), pos_det) 
+          } else {
+            pos <- pos_det
+          }
         }
-      }
-      y_temp <- matrix(y[i, ], 1)
-      x_temp <- matrix(x[pos, ], length(pos))
-      s_endo[i, i] <- y_temp %*% (diag(1, tt) - t(x_temp) %*% solve(tcrossprod(x_temp)) %*% x_temp) %*% t(y_temp) / (tt - length(pos))
+        if (type == "VEC") {
+          if (p > 0) {
+            pos <- c(i, n_ect + i + k * ((1:p) - 1), pos_det)
+          } else {
+            pos <- c(i, pos_det)
+          }
+        }
+        y_temp <- matrix(y[i, ], 1)
+        x_temp <- matrix(x[pos,], length(pos))
+        s_endo[i, i] <- y_temp %*% (diag(1, tt) - t(x_temp) %*% solve(tcrossprod(x_temp)) %*% x_temp) %*% t(y_temp) / (tt - length(pos))
+      } 
+    } else {
+      diag(s_endo) <- apply(matrix(y, k), 1, stats::var)
     }
   }
   if (sigma == "VAR") { # VAR model
@@ -170,15 +181,15 @@ minnesota_prior <- function(object, kappa0 = 2, kappa1 = .5, kappa2 = NULL, kapp
     if (type == "VEC") {
       s <- s - 1
     }
-    s_exo <- sqrt(apply(x[p * k + 1:m,], 1, stats::var))
-    for (r in 1:s) {
+    s_exo <- sqrt(apply(matrix(x[p * k + 1:m,], m), 1, stats::var))
+    for (r in 1:(s + 1)) {
       for (l in 1:k) {
         for (j in 1:m) {
           # Note that in the loop r starts at 1, so that this is equivalent to l + 1
           if (!is.null(kappa2)) {
             V[l, n_ect + p * k + (r - 1) * m + j] <- kappa0 * kappa2 / r^2 * s_endo[l]^2 / s_exo[j]^2 
           } else {
-            V[l, n_ect + p * k + (r - 1) * m + j] <- kappa0 * kappa3 * s_endo^2
+            V[l, n_ect + p * k + (r - 1) * m + j] <- kappa0 * kappa3 * s_endo[l]^2
           }
         }
       }
@@ -202,7 +213,7 @@ minnesota_prior <- function(object, kappa0 = 2, kappa1 = .5, kappa2 = NULL, kapp
   # Drop cointegration priors
   if (type == "VEC") {
     V <- V[, -(1:n_ect)]
-    tot_par <- k * NROW(object$X)
+    tot_par <- k * NCOL(object$data$X)
   }
   
   # Prior means
@@ -212,12 +223,29 @@ minnesota_prior <- function(object, kappa0 = 2, kappa1 = .5, kappa2 = NULL, kapp
   }
   mu <- matrix(mu)
   
+  V <- matrix(V)
+  
+  # Structural parameters
+  if (object$model$structural & k > 1) {
+    mu <- rbind(mu, matrix(0, k * (k - 1) / 2))
+    
+    V_struct <- matrix(NA, k, k)
+    for (j in 1:(k - 1)) {
+      V_struct[(j + 1):k, j] <- kappa0 * kappa1 * s_endo[(j + 1):k]^2 / s_endo[j]^2  
+    }
+    V_struct <- matrix(V_struct[lower.tri(V_struct)])
+    V <- rbind(V, V_struct)
+  }
+  
   # Prior precision
   v_i <- diag(c(1 / V))
   
   result <- list("mu" = mu,
-                 "v_i" = v_i,
-                 "sigma_i" = solve(ols_sigma))
+                 "v_i" = v_i)
+  
+  if (!object$model$structural) {
+   result$sigma_i = solve(ols_sigma) 
+  }
   
   return(result)
 }

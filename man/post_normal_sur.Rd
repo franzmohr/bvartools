@@ -44,23 +44,25 @@ and the posterior mean by
 \deqn{\overline{a} = \overline{V} \left[ \underline{V}^{-1} \underline{a} + \sum_{t=1}^{T} Z_{t}^{\prime} \Sigma_{t}^{-1} y_{t}  \right].}
 }
 \examples{
-# Prepare data
+
+# Load data
 data("e1")
 data <- diff(log(e1))
+
+# Generate model data
 temp <- gen_var(data, p = 2, deterministic = "const")
-y <- temp$Y
-x <- temp$Z
+y <- t(temp$data$Y)
+z <- temp$data$SUR
 k <- nrow(y)
-z <- kronecker(t(x), diag(1, k))
-t <- ncol(y)
-m <- k * nrow(x)
+tt <- ncol(y)
+m <- ncol(z)
 
 # Priors
 a_mu_prior <- matrix(0, m)
 a_v_i_prior <- diag(0.1, m)
 
 # Initial value of inverse Sigma
-sigma_i <- solve(tcrossprod(y) / t)
+sigma_i <- solve(tcrossprod(y) / tt)
 
 # Draw parameters
 a <- post_normal_sur(y = y, z = z, sigma_i = sigma_i,

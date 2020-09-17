@@ -22,49 +22,76 @@
 #' @export
 summary.bvec <- function(object, ci = .95, ...){
   # Number of endogenous variables
-  k <- object$specifications$dims
+  k <- object$specifications$dims["K"]
   
   # Extract variable names
   dim_names <- list(NULL, NULL)
   if (!is.null(object$y)) {
-    y_names <- dimnames(object$y)[[1]]
+    y_names <- dimnames(object$y)[[2]]
   } else {
     y_names <- paste("d.y", 1:k, sep = "")
   }
   
   # Extract names of ECT-variables
-  if (!is.null(object$w)) {
-    w_names <- dimnames(object$w)[[1]]
-  } else {
-    w_names <- paste("l.y", 1:k, ".l1", sep = "")
-    if (!is.null(object$Pi_x)) {
-      w_names <- c(w_names, paste("l.x", 1:(NCOL(object$Pi_x) / k), ".l1", sep = ""))
-    }
-    if (!is.null(object$Pi_d)) {
-      w_names <- c(w_names, paste("l.det", 1:(NCOL(object$Pi_d) / k), ".l1", sep = ""))
-    }
+  w_names <- NULL
+  if (!is.null(object[["Pi"]])) {
+    if (!is.null(object[["w"]])) {
+      w_names <- dimnames(object[["w"]])[[2]]
+    } else {
+      w_names <- paste("l.y", 1:k, ".l1", sep = "")
+    } 
+  }
+  if (!is.null(object[["Pi_x"]])) {
+    if (!is.null(object[["w_x"]])) {
+      w_names <- c(w_names, dimnames(object[["w_x"]])[[2]])
+    } else {
+      if (!is.null(object[["P_x"]])) {
+        w_names <- c(w_names, paste("l.x", 1:(NCOL(object[["P_x"]]) / k), ".l1", sep = ""))
+      }
+    } 
+  }
+  if (!is.null(object[["Pi_d"]])) {
+    if (!is.null(object[["w_d"]])) {
+      w_names <- c(w_names, dimnames(object[["w_d"]])[[2]])
+    } else {
+      if (!is.null(object[["Pi_d"]])) {
+        w_names <- c(w_names, paste("l.det", 1:(NCOL(object[["Pi_d"]]) / k), ".l1", sep = ""))
+      }
+    } 
   }
   
   # Names of non-cointegration regressors
-  if (!is.null(object$x)) {
-    x_names <- dimnames(object$x)[[1]]
+  x_names <- NULL
+  if (!is.null(object[["x"]])) {
+    x_names <- dimnames(object[["x"]])[[2]]
   } else {
     x_names <- NULL
-    if (!is.null(object$Gamma)) {
-      m <- NCOL(object$Gamma) / k
+    if (!is.null(object[["Gamma"]])) {
+      m <- NCOL(object[["Gamma"]]) / k
       p <- m / k
       for (i in 1:p) {
         x_names <- c(x_names, paste(y_names, ".l", i, sep = ""))
       }
     }
-    if (!is.null(object$Upsilon)) {
-      m <- NCOL(object$Upsilon) / k
+  }
+  if (!is.null(object[["x_x"]])) {
+    x_names <- c(x_names, dimnames(object[["x_x"]])[[2]])
+  } else {
+    if (!is.null(object[["Upsilon"]])) {
+      m <- NCOL(object[["Upsilon"]]) / k
       x_names <- c(x_names, paste("d.x", 1:m, sep = ""))
     }
-    if (!is.null(object$C)) {
-      m <- NCOL(object$C) / k
+  }
+  if (!is.null(object[["x_d"]])) {
+    x_names <- c(x_names, dimnames(object[["x_d"]])[[2]])
+  } else {
+    if (!is.null(object[["C"]])) {
+      m <- NCOL(object[["C"]]) / k
       x_names <- c(x_names, paste("det", 1:m, sep = ""))
     }
+  }
+  if (!is.null(object[["A0"]])) {
+    x_names <- c(x_names, y_names)
   }
   
   # Non-error coefficients
@@ -79,70 +106,42 @@ summary.bvec <- function(object, ci = .95, ...){
   q_low <- NULL
   q_high <- NULL
   
-  if (!is.null(object$Pi)) {
-    temp <- summary(object$Pi, quantiles = c(ci_low, .5, ci_high))
-    means <- cbind(means, matrix(temp$statistics[, "Mean"], k))
-    sds <- cbind(sds, matrix(temp$statistics[, "SD"], k))
-    naive_sd <- cbind(naive_sd, matrix(temp$statistics[, "Naive SE"], k))
-    ts_sd <- cbind(ts_sd, matrix(temp$statistics[, "Time-series SE"], k))
-    q_low <- cbind(q_low, matrix(temp$quantiles[, 1], k))
-    median <- cbind(median, matrix(temp$quantiles[, 2], k))
-    q_high <- cbind(q_high, matrix(temp$quantiles[, 3], k))
+  use_incl <- FALSE
+  if (any(grepl("lambda", names(object)))) {
+    use_incl <- TRUE
+    incl <- NULL
   }
   
-  if (!is.null(object$Pi_x)) {
-    temp <- summary(object$Pi_x, quantiles = c(ci_low, .5, ci_high))
-    means <- cbind(means, matrix(temp$statistics[, "Mean"], k))
-    sds <- cbind(sds, matrix(temp$statistics[, "SD"], k))
-    naive_sd <- cbind(naive_sd, matrix(temp$statistics[, "Naive SE"], k))
-    ts_sd <- cbind(ts_sd, matrix(temp$statistics[, "Time-series SE"], k))
-    q_low <- cbind(q_low, matrix(temp$quantiles[, 1], k))
-    median <- cbind(median, matrix(temp$quantiles[, 2], k))
-    q_high <- cbind(q_high, matrix(temp$quantiles[, 3], k))
-  }
-  
-  if (!is.null(object$Pi_d)) {
-    temp <- summary(object$Pi_d, quantiles = c(ci_low, .5, ci_high))
-    means <- cbind(means, matrix(temp$statistics[, "Mean"], k))
-    sds <- cbind(sds, matrix(temp$statistics[, "SD"], k))
-    naive_sd <- cbind(naive_sd, matrix(temp$statistics[, "Naive SE"], k))
-    ts_sd <- cbind(ts_sd, matrix(temp$statistics[, "Time-series SE"], k))
-    q_low <- cbind(q_low, matrix(temp$quantiles[, 1], k))
-    median <- cbind(median, matrix(temp$quantiles[, 2], k))
-    q_high <- cbind(q_high, matrix(temp$quantiles[, 3], k))
-  }
-  
-  if (!is.null(object$Gamma)) {
-    temp <- summary(object$Gamma, quantiles = c(ci_low, .5, ci_high))
-    means <- cbind(means, matrix(temp$statistics[, "Mean"], k))
-    sds <- cbind(sds, matrix(temp$statistics[, "SD"], k))
-    naive_sd <- cbind(naive_sd, matrix(temp$statistics[, "Naive SE"], k))
-    ts_sd <- cbind(ts_sd, matrix(temp$statistics[, "Time-series SE"], k))
-    q_low <- cbind(q_low, matrix(temp$quantiles[, 1], k))
-    median <- cbind(median, matrix(temp$quantiles[, 2], k))
-    q_high <- cbind(q_high, matrix(temp$quantiles[, 3], k))
-  }
-  
-  if (!is.null(object$Upsilon)) {
-    temp <- summary(object$Upsilon, quantiles = c(ci_low, .5, ci_high))
-    means <- cbind(means, matrix(temp$statistics[, "Mean"], k))
-    sds <- cbind(sds, matrix(temp$statistics[, "SD"], k))
-    naive_sd <- cbind(naive_sd, matrix(temp$statistics[, "Naive SE"], k))
-    ts_sd <- cbind(ts_sd, matrix(temp$statistics[, "Time-series SE"], k))
-    q_low <- cbind(q_low, matrix(temp$quantiles[, 1], k))
-    median <- cbind(median, matrix(temp$quantiles[, 2], k))
-    q_high <- cbind(q_high, matrix(temp$quantiles[, 3], k))
-  }
-  
-  if (!is.null(object$C)) {
-    temp <- summary(object$C, quantiles = c(ci_low, .5, ci_high))
-    means <- cbind(means, matrix(temp$statistics[, "Mean"], k))
-    sds <- cbind(sds, matrix(temp$statistics[, "SD"], k))
-    naive_sd <- cbind(naive_sd, matrix(temp$statistics[, "Naive SE"], k))
-    ts_sd <- cbind(ts_sd, matrix(temp$statistics[, "Time-series SE"], k))
-    q_low <- cbind(q_low, matrix(temp$quantiles[, 1], k))
-    median <- cbind(median, matrix(temp$quantiles[, 2], k))
-    q_high <- cbind(q_high, matrix(temp$quantiles[, 3], k))
+  vars <- c("Pi", "Pi_x", "Pi_d", "Gamma", "Upsilon", "C", "A0")
+  for (i in vars) {
+    if (!is.null(object[[i]])) {
+      temp <- summary(object[[i]], quantiles = c(ci_low, .5, ci_high))
+      if ("numeric" %in% class(temp$statistics)) {
+        means <- cbind(means, matrix(temp$statistics["Mean"], k))
+        sds <- cbind(sds, matrix(temp$statistics["SD"], k))
+        naive_sd <- cbind(naive_sd, matrix(temp$statistics["Naive SE"], k))
+        ts_sd <- cbind(ts_sd, matrix(temp$statistics["Time-series SE"], k))
+        q_low <- cbind(q_low, matrix(temp$quantiles[1], k))
+        median <- cbind(median, matrix(temp$quantiles[2], k))
+        q_high <- cbind(q_high, matrix(temp$quantiles[3], k)) 
+      } else {
+        means <- cbind(means, matrix(temp$statistics[, "Mean"], k))
+        sds <- cbind(sds, matrix(temp$statistics[, "SD"], k))
+        naive_sd <- cbind(naive_sd, matrix(temp$statistics[, "Naive SE"], k))
+        ts_sd <- cbind(ts_sd, matrix(temp$statistics[, "Time-series SE"], k))
+        q_low <- cbind(q_low, matrix(temp$quantiles[, 1], k))
+        median <- cbind(median, matrix(temp$quantiles[, 2], k))
+        q_high <- cbind(q_high, matrix(temp$quantiles[, 3], k)) 
+      }
+      if (use_incl) {
+        var_temp <- paste0(i, "_lambda")
+        if (var_temp %in% names(object)) {
+          incl <- cbind(incl, matrix(colMeans(object[[var_temp]]), k))
+        } else {
+          incl <- cbind(incl, matrix(rep(NA_real_, ncol(object[[i]])), k))
+        }
+      }
+    }
   }
   
   if (!is.null(means)) {
@@ -164,18 +163,32 @@ summary.bvec <- function(object, ci = .95, ...){
                                      q_lower = q_low,
                                      q_upper = q_high))
   
+  if (use_incl) {
+    result$coefficients$lambda = incl
+  }
+  
   # Error coefficients
   dim_names <- list(y_names, y_names)
   
-  if (!is.null(object$Sigma)) {
+  if (!is.null(object[["Sigma"]])) {
     temp <- summary(object$Sigma, quantiles = c(ci_low, .5, ci_high))
-    means <- matrix(temp$statistics[, "Mean"], k)
-    sds <- matrix(temp$statistics[, "SD"], k)
-    naive_sd <- matrix(temp$statistics[, "Naive SE"], k)
-    ts_sd <- matrix(temp$statistics[, "Time-series SE"], k)
-    q_low <- matrix(temp$quantiles[, 1], k)
-    median <- matrix(temp$quantiles[, 2], k)
-    q_high <- matrix(temp$quantiles[, 3], k)
+    if (k == 1) {
+      means <- matrix(temp$statistics["Mean"], k)
+      sds <- matrix(temp$statistics["SD"], k)
+      naive_sd <- matrix(temp$statistics["Naive SE"], k)
+      ts_sd <- matrix(temp$statistics["Time-series SE"], k)
+      q_low <- matrix(temp$quantiles[1], k)
+      median <- matrix(temp$quantiles[2], k)
+      q_high <- matrix(temp$quantiles[3], k)
+    } else {
+      means <- matrix(temp$statistics[, "Mean"], k)
+      sds <- matrix(temp$statistics[, "SD"], k)
+      naive_sd <- matrix(temp$statistics[, "Naive SE"], k)
+      ts_sd <- matrix(temp$statistics[, "Time-series SE"], k)
+      q_low <- matrix(temp$quantiles[, 1], k)
+      median <- matrix(temp$quantiles[, 2], k)
+      q_high <- matrix(temp$quantiles[, 3], k)
+    }
     
     dimnames(means) <- dim_names
     dimnames(sds) <- dim_names
@@ -192,6 +205,15 @@ summary.bvec <- function(object, ci = .95, ...){
                          tssd = ts_sd,
                          q_lower = q_low,
                          q_upper = q_high)
+    
+    if ("Sigma_lambda" %in% names(object)) {
+      incl <- diag(NA_real_, k)
+      means <- colMeans(object$Sigma_lambda)
+      incl[upper.tri(incl)] <- means
+      incl[lower.tri(incl)] <- means
+      dimnames(incl) <- dim_names
+      result$sigma$lambda = incl
+    }
   }
   
   result$specifications <- object$specifications

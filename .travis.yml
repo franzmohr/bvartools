@@ -1,6 +1,5 @@
 language: r
 cache: packages
-dist: trusty
 
 branches:
   only:

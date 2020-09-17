@@ -20,33 +20,40 @@ knitr::opts_chunk$set(
 
 A general drawback of vector autoregressive (VAR) models is that the number of estimated coefficients increases disproportionately with the number of lags. Therefore, fewer information per parameter is available for the estimation as the number of lags increases. In the Bayesian VAR literature one approach to mitigate this so-called *curse of dimensionality* is *stochastic search variable selection* (SSVS) as proposed by George et al. (2008). The basic idea of SSVS is to assign commonly used prior variances to parameters, which should be included in a model, and prior variances close to zero to irrelevant parameters. By that, relevant parameters are estimated in the usual way and posterior draws of irrelevant variables are close to zero so that they have no significant effect on forecasts and impulse responses. This is achieved by adding a hierarchial prior to the model, where the relevance of a variable is assessed in each step of the sampling algorithm.[^koop]
 
-This vignette presents code for the estimation of a Bayesian vector autoregressive (BVAR) model with SSVS. It uses [dataset E1](http://www.jmulti.de/download/datasets/e1.dat) from Lütkepohl (2007), which contains data on West German fixed investment, disposable income and consumption expenditures in billions of DM from 1960Q1 to 1982Q4. Following a related example in Lütkepohl (2007, Section 5.2.10) only the first 71 observations of a VAR(4) model are used. The `bvartools` package can be used to load the data and generate the data matrices:
+Korobilis (2013) proposes a similar appraoch to variable selection, which can also be applied to timy varying parameter models. The approach is implemented in `bvartools` as function `bvs`, which can be easily added to a standard Gibbs sampling algorithm. It is also implemented in the posterior simulation algorithm of the package an can be specified analogously to the last section of this introduction, where the use of the built-in SSVS sampler is described.
+
+This vignette presents code for Bayesian inference of a vector autoregressive (BVAR) model using stochastic search variable selection. It uses [dataset E1](http://www.jmulti.de/download/datasets/e1.dat) from Lütkepohl (2007), which contains data on West German fixed investment, disposable income and consumption expenditures in billions of DM from 1960Q1 to 1982Q4. Following a related example in Lütkepohl (2007, Section 5.2.10) only the first 71 observations of a VAR(4) model are used. The `bvartools` package can be used to load the data and generate the data matrices for the model.
 
 ```{r data, fig.align='center', fig.height=5, fig.width=4.5}
-# devtools::install_github("franzmohr/bvartools")
 library(bvartools)
 
 # Load and transform data
 data("e1")
 e1 <- diff(log(e1))
 
-# Generate VAR
-data <- gen_var(e1, p = 4, deterministic = "const")
+# Shorten time series
+e1 <- window(e1, end = c(1978, 4))
 
-# Get data matrices
-y <- data$Y[, 1:71]
-x <- data$Z[, 1:71]
+# Generate VAR
+data <- gen_var(e1, p = 4, deterministic = "const",
+                iterations = 10000, burnin = 5000)
 ```
 
-## Estimation
+`bvartools` allows to estimate BVAR models with SSVS either by using algorithms that were written by the researchers themselves or by using the built-in posterior simulation algorithm. The first approach is presented in the following section. The latter approach is illustrated at the end of this introduction.
 
-The prior variances of the parameters are set in accordance with the semiautomatic approach described in George et al. (2008). Hence, the prior variance of the $i$th parameter is set to $\tau_{1,i}^2 = (10 \hat{\sigma}_i)^2$ if this parameter should be included in the model and to $\tau_{0,i}^2 = (0.1 \hat{\sigma}_i)^2$ if it should be excluded. $\hat{\sigma}_i$ is the standard error associated with the unconstrained least squares estimate of parameter $i$. For all variables the prior inclusion probabilities are set to 0.5. The prior of the error variance-covariance matrix is uninformative.
+## Inference based on a user-written algorithm
+
+The prior variances of the parameters are set in accordance with the semiautomatic approach described in George et al. (2008). Hence, the prior variance of the $i$th parameter is set to $\tau_{1,i}^2 = (10 \hat{\sigma}_i)^2$ if this parameter should be included in the model and to $\tau_{0,i}^2 = (0.1 \hat{\sigma}_i)^2$ if it should be excluded. $\hat{\sigma}_i$ is the standard error associated with the unconstrained least squares estimate of parameter $i$. For all variables the prior inclusion probabilities are set to 0.5. The necessary calculations can be done with function `ssvs_prior`. The prior of the error variance-covariance matrix is uninformative and, in constrast to George et al. (2008), SSVS is not applied to the covariances.
 
 ```{r}
 # Reset random number generator for reproducibility
 set.seed(1234567)
 
-t <- ncol(y) # Number of observations
+# Get data matrices
+y <- t(data$data$Y)
+x <- t(data$data$Z)
+
+tt <- ncol(y) # Number of observations
 k <- nrow(y) # Number of endogenous variables
 m <- k * nrow(x) # Number of estimated coefficients
 
@@ -63,8 +70,8 @@ prob_prior <- matrix(0.5, m)
 
 # Prior for variance-covariance matrix
 u_sigma_df_prior <- 0 # Prior degrees of freedom
-u_sigma_scale_prior <- diag(0, k) # Prior covariance matrix
-u_sigma_df_post <- t + u_sigma_df_prior # Posterior degrees of freedom
+u_sigma_scale_prior <- diag(0.00001, k) # Prior covariance matrix
+u_sigma_df_post <- tt + u_sigma_df_prior # Posterior degrees of freedom
 ```
 
 The initial parameter values are set to zero and their corresponding prior variances are set to $\tau_1^2$, which implies that all parameters should be estimated relatively freely in the first step of the Gibbs sampler.
@@ -75,23 +82,20 @@ a <- matrix(0, m)
 a_v_i_prior <- diag(1 / c(tau1)^2, m) # Inverse of the prior covariance matrix
 
 # Data containers for posterior draws
-iter <- 15000 # Number of total Gibs sampler draws
+iterations <- 10000 # Number of total Gibs sampler draws
 burnin <- 5000 # Number of burn-in draws
+draws <- iterations + burnin # Total number of draws
 
-store <- iter - burnin
-draws_a <- matrix(NA, m, store)
-draws_lambda <- matrix(NA, m, store)
-draws_sigma <- matrix(NA, k^2, store)
+draws_a <- matrix(NA, m, iterations)
+draws_lambda <- matrix(NA, m, iterations)
+draws_sigma <- matrix(NA, k^2, iterations)
 ```
 
 SSVS can be added to a standard Gibbs sampler algorithm for VAR models in a straightforward manner. The `ssvs` function can be used to obtain a draw of inclusion parameters and its corresponding inverted prior variance matrix. It requires the current draw of parameters, standard errors $\tau_0$ and $\tau_1$, and prior inclusion probabilities as arguments. In this example constant terms are excluded from SSVS, which is achieved by specifying `include = 1:36`. Hence, only parameters 1 to 36 are considered by the function and the remaining three parameters have prior variances that correspond to their values in $\tau_1^2$.
 
 ```{r}
-# Reset random number generator for reproducibility
-set.seed(1234567)
-
 # Start Gibbs sampler
-for (draw in 1:iter) {
+for (draw in 1:draws) {
   # Draw variance-covariance matrix
   u <- y - matrix(a, k) %*% x # Obtain residuals
   # Scale posterior
@@ -117,27 +121,24 @@ for (draw in 1:iter) {
 }
 ```
 
-The output of a Gibbs sampler with SSVS can be further analysed in the usual way. With the `bvartools` package the posterior draws can be colleced in a `bvar` object and the `summary` function provides summary statistics:
+The output of a Gibbs sampler with SSVS can be further analysed in the usual way. With the `bvartools` package the posterior draws can be collected in a `bvar` object and the `summary` method provides summary statistics. It is also possible to add information on the inclusion parameters to the `bvar` object by providing a named list as an argument. The list must contain an element `coeffs`, which contains the MCMC draws of the coefficients, and element `lambda` contains the corresponding draw of the inclusion parameter.
 
 ```{r}
-bvar_est <- bvar(y = y, x = x, A = draws_a[1:36,],
-                 C = draws_a[37:39, ], Sigma = draws_sigma)
+bvar_est <- bvar(y = data$data$Y, x = data$data$Z,
+                 A = list(coeffs = draws_a[1:36,],
+                          lambda = draws_lambda[1:36,]),
+                 C = list(coeffs = draws_a[37:39, ],
+                          lambda = draws_lambda[37:39,]),
+                 Sigma = draws_sigma)
 
-summary(bvar_est)
+bvar_summary <- summary(bvar_est)
+
+bvar_summary
 ```
 
-It is also possible to obtain the posterior inclusion probabilites of each variable by calculating the means of their posterior draws. As can be seen in the output below, only few variables appear to be relevant in the VAR(4) model, because most inclusion probabilities are relatively low. The inclusion probabilities of the constant terms are 100 percent, because they were excluded from SSVS.
+The inclusion probabilities of the constant terms are 100 percent, because they were excluded from SSVS.
 
-```{r}
-lambda <- rowMeans(draws_lambda) # Obtain means for every row
-lambda <- matrix(lambda, k) # Transform mean vector into a matrix
-lambda <- round(lambda, 2) # Round values
-dimnames(lambda) <- list(dimnames(y)[[1]], dimnames(x)[[1]]) # Rename matrix dimensions
-
-t(lambda) # Print
-```
-
-Given these values, the researcher could proceed in the usual way and obtain forecasts and impulse responses based on the output of the Gibbs sampler. The advantage of this approach is that it does not only take into account parameter uncertainty, but also model uncertainty. This can be illustrated by the histogram of the posterior draws of the 6th coefficient, which describes the relationship between the first lag of income and the current value of consumption.
+Using the results from above the researcher could proceed in the usual way and obtain forecasts and impulse responses based on the output of the Gibbs sampler. The advantage of this approach is that it does not only take into account parameter uncertainty, but also model uncertainty. This can be illustrated by the histogram of the posterior draws of the 6th coefficient, which describes the relationship between the first lag of income and the current value of consumption.
 
 ```{r, fig.height=3.5, fig.width=4.5}
 hist(draws_a[6,], main = "Consumption ~ First lag of income", xlab = "Value of posterior draw")
@@ -145,22 +146,25 @@ hist(draws_a[6,], main = "Consumption ~ First lag of income", xlab = "Value of p
 
 A non-negligible mass of some 23 percent, i.e. 1 - 0.67, of the parameter draws is concentrated around zero. This is the result of SSVS, where posterior draws are close to zero if a constant is assessed to be irrelevant during an iteration of the Gibbs sampler and, therefore, $\tau_{0,6}^2$ is used as its prior variance. On the other hand, about 67 percent of the draws are dispersed around a positive value, where SSVS suggests to include the variable in the model and the larger value $\tau_{1,6}^2$ is used as prior variance. Model uncertainty is then described by the two peaks and parameter uncertainty by the dispersion of the posterior draws around them.
 
-However, if the researcher prefers not want to work with a model, where the relevance of a variable can change from one step of the sampling algorithm to another, a different approach would be to work only with a highly probable model. This can be done with a further simulation, where very tight priors are used for irrelevant variables and relatively uninformative priors for relevant parameters. In this example, coefficients with a posterior inclusion probability of above 40 percent are considered to be relevant.[^threshold] The prior variance is set to 0.00001 for irrelevant and to 9 for relevant variables. No additional SSVS step is required. Everything else remains unchanged.
+However, if the researcher prefers not to work with a model, where the relevance of a variable can change from one step of the sampling algorithm to the next, a different approach would be to work only with a highly probable model. This can be done with a further simulation, where very tight priors are used for irrelevant variables and relatively uninformative priors for relevant parameters. In this example, coefficients with a posterior inclusion probability of above 40 percent are considered to be relevant.[^threshold] The prior variance is set to 0.00001 for irrelevant and to 9 for relevant variables. No additional SSVS step is required. Everything else remains unchanged.
 
 ```{r}
+# Get inclusion probabilities
+lambda <- bvar_summary$coefficients$lambda
+
 # Select variables that should be included
 include_var <- c(lambda >= .4)
 
 # Update prior variances
-diag(a_v_i_prior)[!include_var] <- 100000 # Very tight prior close to zero
+diag(a_v_i_prior)[!include_var] <- 1 / 0.00001 # Very tight prior close to zero
 diag(a_v_i_prior)[include_var] <- 1 / 9 # Relatively uninformative prior
 
 # Data containers for posterior draws
-draws_a <- matrix(NA, m, store)
-draws_sigma <- matrix(NA, k^2, store)
+draws_a <- matrix(NA, m, iterations)
+draws_sigma <- matrix(NA, k^2, iterations)
 
 # Start Gibbs sampler
-for (draw in 1:iter) {
+for (draw in 1:draws) {
   # Draw conditional mean parameters
   a <- post_normal(y, x, u_sigma_i, a_mu_prior, a_v_i_prior)
   
@@ -181,46 +185,40 @@ for (draw in 1:iter) {
 The means of the posterior draws are similar to the OLS estimates in Lütkepohl (2007, Section 5.2.10):
 
 ```{r}
-bvar_est <- bvar(y = y, x = x, A = draws_a[1:36,],
+bvar_est <- bvar(y = data$data$Y, x = data$data$Z, A = draws_a[1:36,],
                  C = draws_a[37:39, ], Sigma = draws_sigma)
 
 summary(bvar_est)
 ```
 
-## Evaluation
+Forecasts, impulse responses and variance decompositions can be obtained in the usual manner.
 
-Posterior draws can be thinned with function `thin`:
+## Using the built-in simulation algorithm of `bvartools`
 
-```{r thin}
-bvar_est <- thin(bvar_est, thin = 5)
+Priors can be added to object `data` using function `add_priors`. To use the same specification as above, argument `ssvs` is a named list, where element `inprior` contains the prior probability that a coefficient enters a model, element `semiautomatic` contains the factors used to obtain $tau_0$ and $tau_1$ based on the semiautomatic approach of George et al. (2008) and `exclude_det = TRUE` tells the algorithm to exclude deterministic terms from the SSVS algorithm.
+
+```{r, eval = FALSE}
+# Obtain priors
+model_with_priors <- add_priors(data,
+                                ssvs = list(inprior = 0.5, semiautomatic = c(0.01, 10), exclude_det = TRUE),
+                                sigma = list(df = 0, scale = 0.00001))
 ```
 
+Posterior draws can be obtained using function `draw_posterior`. It will recognise the specifications of the model based on the content of object `model_with_priors` and produce the respective draws from the posterior.
 
-### Forecasts
-
-The `bvar` object can also be used to produce forecasts with `predict` or impulse respones with the `irf` function.
-
-Forecasts with credible bands can be obtained with the function `predict`. If the model contains deterministic terms, new values can be provided in the argument `new_D`. If no values are provided, the function sets them to zero. The number of rows of `new_D` must be the same as the argument `n.ahead`.
-
-```{r forecasts, fig.width=5.5, fig.height=5.5}
-bvar_pred <- predict(bvar_est, n.ahead = 10, new_D = rep(1, 10))
-
-plot(bvar_pred)
+```{r, message = FALSE, warning = FALSE, eval = FALSE}
+ssvs_est <- draw_posterior(model_with_priors)
 ```
 
-### Impulse response analysis
-
-```{r oir, fig.width=5.5, fig.height=4.5}
-OIR <- irf(bvar_est, impulse = "income", response = "cons", n.ahead = 8, type = "oir")
-
-plot(OIR, main = "Orthogonalised Impulse Response", xlab = "Period", ylab = "Response")
-```
+The output of `draw_posterior` is an object of class `bvar`. Thus, further analytical steps can be done as described above.
 
 ## References
 
 George, E. I., Sun, D., & Ni, S. (2008). Bayesian stochastic search for VAR model restrictions. *Journal of Econometrics, 142*(1), 553-580. <https://doi.org/10.1016/j.jeconom.2007.08.017>
 
 Koop, G., & Korobilis, D. (2010). Bayesian multivariate time series methods for empirical macroeconomics. *Foundations and trends in econometrics, 3*(4), 267-358. <https://dx.doi.org/10.1561/0800000013>
+
+Korobilis, D. (2013). VAR forecasting using Bayesian variable selection. *Journal of Applied Econometrics, 28*(2), 204-230. <https://doi.org/10.1002/jae.1271>
 
 Lütkepohl, H. (2007). *New introduction to multiple time series analysis* (2nd ed.). Berlin: Springer.
 

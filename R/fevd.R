@@ -11,8 +11,9 @@
 #' @param normalise_gir logical. Should the GIR-based FEVD be normalised?
 #' 
 #' @details The function produces forecast error variance decompositions (FEVD) for the VAR model
-#' \deqn{y_t = \sum_{i = 1}^{p} A_{i} y_{t-i} + A_0^{-1} u_t,}
-#' with \eqn{u_t \sim N(0, \Sigma)}.
+#' \deqn{A_0 y_t = \sum_{i = 1}^{p} A_{i} y_{t-i} + u_t,}
+#' with \eqn{u_t \sim N(0, \Sigma)}. For non-structural models matrix \eqn{A_0} is set to the identiy matrix
+#' and can therefore be omitted, where not relevant.
 #' 
 #' If the FEVD is based on the orthogonalised impulse resonse (OIR), the FEVD will be calculated as
 #' \deqn{\omega^{OIR}_{jk, h} = \frac{\sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i P e_k )^2}{\sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i \Sigma \Phi_i^{\prime} e_j )},}
@@ -22,7 +23,7 @@
 #' \eqn{e_k} a selection vector for the impulse variable.
 #'
 #' If \code{type = "sir"}, the structural FEVD will be
-#' calculated as \deqn{\omega^{SIR}_{jk, h} = \frac{\sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i A_0^{-1} \Sigma^{\frac{1}{2}} e_k )^2}{\sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i A_0^{-1}  \Sigma A_0^{-1\prime} \Phi_i^{\prime} e_j )},}
+#' calculated as \deqn{\omega^{SIR}_{jk, h} = \frac{\sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i A_0^{-1} e_k )^2}{\sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i A_0^{-1} A_0^{-1\prime} \Phi_i^{\prime} e_j )},}
 #' where \eqn{\sigma_{jj}} is the diagonal element of the \eqn{j}th variable of the variance covariance matrix.
 #'
 #' If \code{type = "gir"}, the generalised FEVD will be
@@ -35,88 +36,49 @@
 #' Since GIR-based FEVDs do not add up to unity, they can be normalised by setting \code{normalise_gir = TRUE}.
 #' 
 #' @return A time-series object of class \code{"bvarfevd"}.
-
+#' 
 #' @examples
+#' 
+#' # Load data
 #' data("e1")
-#' e1 <- diff(log(e1))
+#' e1 <- diff(log(e1)) * 100
 #' 
-#' data <- gen_var(e1, p = 2, deterministic = "const")
+#' # Generate models
+#' model <- gen_var(e1, p = 2, deterministic = 2,
+#'                  iterations = 100, burnin = 10)
 #' 
-#' y <- data$Y[, 1:73]
-#' x <- data$Z[, 1:73]
+#' # Add priors
+#' model <- add_priors(model)
 #' 
-#' set.seed(1234567)
+#' # Obtain posterior draws
+#' object <- draw_posterior(model)
 #' 
-#' iter <- 500 # Number of iterations of the Gibbs sampler
-#' # Chosen number of iterations should be much higher, e.g. 30000.
-#' 
-#' burnin <- 100 # Number of burn-in draws
-#' store <- iter - burnin
-#' 
-#' t <- ncol(y) # Number of observations
-#' k <- nrow(y) # Number of endogenous variables
-#' m <- k * nrow(x) # Number of estimated coefficients
-#' 
-#' # Set (uninformative) priors
-#' a_mu_prior <- matrix(0, m) # Vector of prior parameter means
-#' a_v_i_prior <- diag(0, m) # Inverse of the prior covariance matrix
-#' 
-#' u_sigma_df_prior <- 0 # Prior degrees of freedom
-#' u_sigma_scale_prior <- diag(0, k) # Prior covariance matrix
-#' u_sigma_df_post <- t + u_sigma_df_prior # Posterior degrees of freedom
-#' 
-#' # Initial values
-#' u_sigma_i <- diag(.00001, k)
-#' u_sigma <- solve(u_sigma_i)
-#' 
-#' # Data containers for posterior draws
-#' draws_a <- matrix(NA, m, store)
-#' draws_sigma <- matrix(NA, k^2, store)
-#' 
-#' # Start Gibbs sampler
-#' for (draw in 1:iter) {
-#'   # Draw conditional mean parameters
-#'   a <- post_normal(y, x, u_sigma_i, a_mu_prior, a_v_i_prior)
-#' 
-#' # Draw variance-covariance matrix
-#' u <- y - matrix(a, k) %*% x # Obtain residuals
-#' u_sigma_scale_post <- solve(u_sigma_scale_prior + tcrossprod(u))
-#' u_sigma_i <- matrix(rWishart(1, u_sigma_df_post, u_sigma_scale_post)[,, 1], k)
-#' u_sigma <- solve(u_sigma_i) # Invert Sigma_i to obtain Sigma
-#' 
-#' # Store draws
-#' if (draw > burnin) {
-#'   draws_a[, draw - burnin] <- a
-#'   draws_sigma[, draw - burnin] <- u_sigma
-#'   }
-#' }
-#' 
-#' # Generate bvar object
-#' bvar_est <- bvar(y = y, x = x, A = draws_a[1:18,],
-#'                  C = draws_a[19:21, ], Sigma = draws_sigma)
-#' 
-#' # Generate forecast error variance decomposition (FEVD)
-#' bvar_fevd <- fevd(bvar_est, response = "cons")
+#' # Obtain FEVD
+#' vd <- fevd(object, response = "cons")
 #' 
 #' # Plot FEVD
-#' plot(bvar_fevd, main = "FEVD of consumption")
-
+#' plot(vd)
+#' 
 #' @references
 #' 
-#' Lütkepohl, H. (2007). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
+#' Lütkepohl, H. (2006). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
 #' 
 #' Pesaran, H. H., & Shin, Y. (1998). Generalized impulse response analysis in linear multivariate models. \emph{Economics Letters, 58}, 17-29.
 #' 
 #' @export
 fevd <- function(object, response = NULL, n.ahead = 5, type = "oir", normalise_gir = FALSE) {
+  
+  # Dev specs
+  # rm(list = ls()[-which(ls() == "object")]); response = "invest"; n.ahead = 20; type = "oir"; normalise_gir = FALSE
+  
   if (!"bvar" %in% class(object)) {
     stop("Object must be of class 'bvar'.")
   }
-  if (is.null(object$y) | is.null(dimnames(object$y)[[1]])) {
-    stop("The argument 'object' must include a named matrix of endogenous variables.")
+  if (is.null(object$y) | is.null(dimnames(object$y)[[2]])) {
+    stop("Argument 'object' must include a named matrix of endogenous variables.")
   }
   if (is.null(object$Sigma)) {
-    stop("The 'bvar' object must include draws of the variance-covariance matrix Sigma.")
+    stop("Argument 'object' must include draws of the variance-covariance matrix Sigma.")
   }
   if (!type %in% c("oir", "sir", "gir", "sgir")) {
     stop("The specified type of the used impulse response is not known.")
@@ -124,73 +86,46 @@ fevd <- function(object, response = NULL, n.ahead = 5, type = "oir", normalise_g
   if(is.null(response)) {
     stop("Please provide a valid response variable.")
   }
+  if (is.null(object[["A"]]) & !type %in% c("sir", "sgir")) {
+    stop("Variance decompositions only supported for models with p > 0, i.e. argument 'object' must contain element 'A', or structural models.")
+  }
   
-  k <- nrow(object$y)
-
+  need_A0 <- FALSE
   if (type %in% c("sgir", "sir")) {
     if (is.null(object$A0)) {
-      stop("Structural impulse responses require that draws of 'A0' are contained in the 'bvar' object.")
+      stop("Structural FEVD requires that draws of 'A0' are contained in the 'bvar' object.")
     }
-    A0_i <- solve(matrix(colMeans(object$A0), k))
-  } else {
-    A0_i <- diag(1, k)
+    need_A0 <- TRUE
   }
-    
-  A_temp <- matrix(colMeans(object$A), k)
-  A <- matrix(0, k, k * n.ahead)
-  A[, 1:ncol(A_temp)] <- A_temp
-  phi <- matrix(0, k * (1 + ncol(A) / k), k)
-  phi[1:k, 1:k] <- diag(1, k)
-  for (i in 1:(n.ahead)) {
-    phi_temp <- matrix(0, k, k)
-    for (j in 1:i) {
-      phi_temp = phi_temp + phi[(i - j) * k + 1:k,] %*% A[, (j - 1) * k + 1:k];
-    }
-    phi[i * k + 1:k,] <- phi_temp
-  }
-  Sigma <- matrix(colMeans(object$Sigma), k)
   
-  response <- which(dimnames(object$y)[[1]] == response)
+  response <- which(dimnames(object$y)[[2]] == response)
   if (length(response) == 0){stop("Response variable not available.")}
   
-  ej_t <- matrix(0, 1, k)
-  ej_t[,response] <- 1
-  
-  if (type == "oir") {
-    P <- t(chol(Sigma))
-  }
-  if (type == "sir") {
-    P <- A0_i %*% sqrt(Sigma)
-  }
-  if (type %in% c("gir", "sgir")) {
-    P <- A0_i %*% Sigma
+  k <- ncol(object$y)
+  if (!is.null(object[["A"]])) {
+    store <- NROW(object[["A"]]) # Number of draws 
+  } else {
+    store <- NROW(object[["A0"]])
   }
   
-  numerator <- matrix(NA, k, n.ahead + 1)
-  numerator[, 1] <- (ej_t %*% phi[1:k, ] %*% P)^2
-  for (i in 2:(n.ahead + 1)) {
-    numerator[, i] <- numerator[, i - 1] + (ej_t %*% phi[(i - 1) * k + 1:k, ] %*% P)^2
+  A <- NULL
+  for (i in 1:store) {
+    temp <- NULL
+    if (!is.null(object[["A"]])) {
+      temp[["A"]] <- matrix(object[["A"]][i, ], k)
+    } else {
+      temp[["A"]] <- matrix(0, k, k)
+    }
+    temp[["Sigma"]] <- matrix(object[["Sigma"]][i, ], k)
+    if (need_A0) {
+      temp[["A0"]] <- matrix(object[["A0"]][i, ], k)
+    }
+    A[[i]] <- temp
   }
   
-  if (type == "gir") {
-    numerator <- numerator / Sigma[response, response]
-  }
+  phi <- lapply(A, .vardecomp, h = n.ahead, type = type, response = response)
   
-  P <- NULL
-  if (type %in% c("gir", "oir")) {
-    P <- Sigma
-  }
-  if (type %in% c("sgir", "sir")) {
-    P <- A0_i %*% tcrossprod(Sigma, A0_i)
-  }
-  
-  mse <- rep(NA, n.ahead + 1)
-  mse[1] <- ej_t %*% phi[1:k,] %*% P %*% t(phi[1:k,]) %*% t(ej_t)
-  for (i in 2:(n.ahead + 1)) {
-    mse[i] <- mse[i - 1] + ej_t %*% phi[(i - 1) * k + 1:k,] %*% P %*% t(phi[(i - 1) * k + 1:k,]) %*% t(ej_t)
-  }
-
-  result <- apply(numerator, 1, function(x, y) {x / y}, y = mse)
+  result <- matrix(rowMeans(matrix(unlist(phi), (n.ahead + 1) * k)), n.ahead + 1)
   
   if (type %in% c("gir", "sgir")) {
     if (normalise_gir) {
@@ -199,7 +134,7 @@ fevd <- function(object, response = NULL, n.ahead = 5, type = "oir", normalise_g
   }
   
   result <- stats::ts(result, start = 0, frequency = 1)
-  dimnames(result) <- list(NULL, dimnames(object$y)[[1]])
+  dimnames(result) <- list(NULL, dimnames(object$y)[[2]]) # Name columns
   
   class(result) <- append("bvarfevd", class(result))
   return(result)

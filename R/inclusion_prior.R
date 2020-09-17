@@ -52,10 +52,9 @@
 #' 
 #' # Prepare data
 #' data("e1")
-#' data <- diff(log(e1))
 #' 
 #' # Generate model input
-#' object <- gen_var(data)
+#' object <- gen_var(e1)
 #' 
 #' # Obtain inclusion prior
 #' pi_prior <- inclusion_prior(object)
@@ -75,14 +74,14 @@ inclusion_prior <- function(object, prob = .5, exclude_deterministics = TRUE,
     } 
   }
   
-  y <- object$Y
+  y <- t(object$data$Y)
   tt <- NCOL(y)
   
-  k <- length(object$model$endogenous$variables)
+  k <- length(object$model$endogen$variables)
   m <- 0
   n <- 0
   n_res <- 0
-  p <- object$model$endogenous$lags
+  p <- object$model$endogen$lags
   s <- 0
   n_pi <- 0
   
@@ -92,27 +91,36 @@ inclusion_prior <- function(object, prob = .5, exclude_deterministics = TRUE,
   }
 
   if (object$model$type == "VAR") {
-    x <- object$Z 
+    x <- t(object$data$Z)
     if (!is.null(object$model$deterministic)) {
       n <- length(object$model$deterministic)
     }
   }
   
   if (object$model$type == "VEC") {
-    if (!is.null(object$X)) {
-      x <- rbind(object$W, object$X)
+    if (!is.null(object$data$X)) {
+      if (object$model$rank == 0) {
+        x <- t(object$data$X)
+      } else {
+        x <- t(cbind(object$data$W, object$data$X))
+      }
     } else {
-      x <- object$W
+      x <- t(object$data$W)
     }
-    if (!is.null(object$model$deterministic$restricted)) {
-      n_res <- length(object$model$deterministic$restricted)
+    
+    if (object$model$rank != 0) {
+      if (!is.null(object$model$deterministic$restricted)) {
+        n_res <- length(object$model$deterministic$restricted)
+      } 
     }
     if (!is.null(object$model$deterministic$unrestricted)) {
       n <- n + length(object$model$deterministic$unrestricted)
     }
     p <- p - 1
     s <- s - 1
-    n_pi <- k + m + n_res
+    if (object$model$rank != 0) {
+      n_pi <- k + m + n_res
+    }
   }
   
   result <- matrix(NA, k, NROW(x))
@@ -120,17 +128,19 @@ inclusion_prior <- function(object, prob = .5, exclude_deterministics = TRUE,
   
   if (minnesota_like) {
     if (object$model$type == "VEC") {
-      result[, 1:k] <- kappa[2]
-      if (k > 1) {
-        diag(result[, 1:k]) <- kappa[1] 
-      } else {
-        result[, 1] <- kappa[1]
-      }
-      if (m > 0) {
-        result[, k + 1:m] <- kappa[3]
-      }
-      if (n_res > 0) {
-        result[, k + m + 1:n_res] <- kappa[4]
+      if (object$model$rank == 0) {
+        result[, 1:k] <- kappa[2]
+        if (k > 1) {
+          diag(result[, 1:k]) <- kappa[1] 
+        } else {
+          result[, 1] <- kappa[1]
+        }
+        if (m > 0) {
+          result[, k + 1:m] <- kappa[3]
+        }
+        if (n_res > 0) {
+          result[, k + m + 1:n_res] <- kappa[4]
+        } 
       }
     }
     if (p > 0) {
@@ -148,7 +158,7 @@ inclusion_prior <- function(object, prob = .5, exclude_deterministics = TRUE,
       result[, n_pi + p * k + 1:m] <- kappa[3]
       if (s > 0) {
         for (i in 1:s) {
-          result[, n_pi + p * k + m + (i - 1) * k + 1:k] <- kappa[3] / (1 + i)
+          result[, n_pi + p * k + m + (i - 1) * m + 1:m] <- kappa[3] / (1 + i)
         }
       }
     }
@@ -161,23 +171,28 @@ inclusion_prior <- function(object, prob = .5, exclude_deterministics = TRUE,
   }
   
   result <- matrix(result)
+  if (object$model$structural & k > 1) {
+    result <- rbind(result, matrix(prob, k * (k - 1) / 2))
+    include <- rbind(include, matrix(k * NROW(x) + 1:(k * (k - 1) / 2)))
+  }
   
+  # Exclude deterministics from variables selection algorithm
   if ((n > 0 | n_res > 0) & exclude_deterministics) {
     if (object$model$type == "VAR") {
       pos_det <- k * (k * p + (s + 1) * m) + 1:(k * n) 
     }
     if (object$model$type == "VEC") {
       pos_det <- NULL
-      if (n_res > 0) {
+      if (n_res > 0 & n_pi > 0) {
         pos_det <- c(pos_det, k * (k + m) + 1:(k * n_res))
       }
       if (n > 0) {
-        pos_det <- c(pos_det, k * (n_pi + k * p + (s + 1) * m) + 1:(k * n))
+        pos_det <- c(pos_det, k * (n_pi + k * p + m * (s + 1)) + 1:(k * n))
       }
     }
     include <- matrix(include[-pos_det, ])
     if (NROW(include) == 0) {
-      warning("Deterministic terms are excluded from BVS and no further parameters are estimated.")
+      warning("Deterministic terms are excluded from the variable selection algorithm and no further parameters are estimated.")
     }
   }
   

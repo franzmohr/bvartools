@@ -1,12 +1,12 @@
 Package: bvartools
 Title: Bayesian Inference of Vector Autoregressive Models
-Version: 0.0.3.9000
-Date: 2020-07-22
+Version: 0.0.3.9001
+Date: 2020-09-15
 Authors@R: person("Franz X.", "Mohr", email = "bvartools@outlook.com", role = c("aut","cre"))
-Description: Assists in the set-up of algorithms for Bayesian inference of vector autoregressive (VAR) models. Functions for posterior simulation, forecasting, impulse response analysis and forecast error variance decomposition are largely based on the introductory texts of Koop and Korobilis (2010) <doi:10.1561/0800000013> and Luetkepohl (2007, ISBN: 9783540262398). 
+Description: Assists in the set-up of algorithms for Bayesian inference of vector autoregressive (VAR) models. Functions for posterior simulation, forecasting, impulse response analysis and forecast error variance decomposition are largely based on the introductory texts of Chan, Koop, Poirier and Tobias (2019, ISBN: 9781108437493), Koop and Korobilis (2010) <doi:10.1561/0800000013> and Luetkepohl (2006, ISBN: 9783540262398). 
 License: GPL (>= 2)
 Depends: R (>= 3.3.0)
-Imports: coda, grDevices, graphics, Matrix, Rcpp (>= 0.12.14), stats
+Imports: coda, grDevices, graphics, Matrix, methods, parallel, Rcpp (>= 0.12.14), stats
 LinkingTo: Rcpp, RcppArmadillo
 Encoding: UTF-8
 RoxygenNote: 7.1.1
@@ -16,11 +16,15 @@ Suggests: knitr, rmarkdown
 VignetteBuilder: knitr
 Collate: 
     'RcppExports.R'
+    'add_priors.R'
     'bvar.R'
+    'bvarpost.R'
     'bvartools.R'
     'bvec.R'
     'bvec_to_bvar.R'
+    'bvecpost.R'
     'data.R'
+    'draw_posterior.R'
     'fevd.R'
     'gen_var.R'
     'gen_vec.R'
@@ -36,5 +40,9 @@ Collate:
     'summary.bvec.R'
     'print.summary.bvec.R'
     'ssvs_prior.R'
-    'thin.R'
+    'summary.bvarlist.R'
+    'thin_posterior.R'
+    'thin_posterior.bvar.R'
+    'thin_posterior.bvarlist.R'
+    'thin_posterior.bvec.R'
     'zzz.R'

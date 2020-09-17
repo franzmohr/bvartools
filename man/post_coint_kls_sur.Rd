@@ -101,17 +101,20 @@ The final draws of \eqn{\alpha} and \eqn{\beta} are calculated using
 \eqn{\alpha = A (B^{\prime} B)^{\frac{1}{2}}}.
 }
 \examples{
-data("e6")
-temp <- gen_vec(e6, p = 1)
-y <- temp$Y
-ect <- temp$W
 
-k <- nrow(y)
-t <- ncol(y)
-m <- nrow(ect)
+# Load data
+data("e6")
+
+# Generate model data
+temp <- gen_vec(e6, p = 1, r = 1)
+y <- t(temp$data$Y)
+ect <- t(temp$data$W)
+
+k <- nrow(y) # Endogenous variables
+tt <- ncol(y) # Number of observations
 
 # Initial value of Sigma
-sigma <- tcrossprod(y) / t
+sigma <- tcrossprod(y) / tt
 sigma_i <- solve(sigma)
 
 # Initial values of beta
@@ -119,7 +122,7 @@ beta <- matrix(c(1, -4), k)
 
 # Draw parameters
 coint <- post_coint_kls_sur(y = y, beta = beta, w = ect,
-                            sigma_i = sigma_i, v_i = 0, p_tau_i = diag(1, m),
+                            sigma_i = sigma_i, v_i = 0, p_tau_i = diag(1, nrow(ect)),
                             g_i = sigma_i)
 
 }

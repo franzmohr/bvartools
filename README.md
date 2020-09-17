@@ -125,10 +125,17 @@ Note that the function is also capable of generating more than one
 model. For example, specifying `p = 0:2` would result in three models.
 
 ### Adding model priors
+<<<<<<< HEAD
 
 Function `add_priors` produces priors for the specified model(s) in
 object `model` and augments the object accordingly.
 
+=======
+
+Function `add_priors` produces priors for the specified model(s) in
+object `model` and augments the object accordingly.
+
+>>>>>>> 4e91b8136bf688ebd736590c83446277240aa84d
 ``` r
 model_with_priors <- add_priors(model,
                                 coef = list(v_i = 0, v_i_det = 0),
@@ -145,11 +152,15 @@ The output of `add_priors` can be used as the input for user-written
 algorithms for posterior simulation. However, `bvartools` also comes
 with built-in posterior simulation functions, which can be directly
 applied to the output of the prior specification step by using function
+<<<<<<< HEAD
 `draw_posterior`:
 
 ``` r
 bvar_est <- draw_posterior(model_with_priors)
 ```
+=======
+`draw_posterior`.
+>>>>>>> 4e91b8136bf688ebd736590c83446277240aa84d
 
 The following code sets up a simple Gibbs sampler algorithm.
 
@@ -160,10 +171,17 @@ set.seed(1234567)
 iterations <- 10000 # Number of saved iterations of the Gibbs sampler
 burnin <- 5000 # Number of burn-in draws
 draws <- iterations + burnin # Total number of MCMC draws
+<<<<<<< HEAD
 
 y <- t(model_with_priors$data$Y)
 x <- t(model_with_priors$data$Z)
 
+=======
+
+y <- t(model_with_priors$data$Y)
+x <- t(model_with_priors$data$Z)
+
+>>>>>>> 4e91b8136bf688ebd736590c83446277240aa84d
 tt <- ncol(y) # Number of observations
 k <- nrow(y) # Number of endogenous variables
 m <- k * nrow(x) # Number of estimated coefficients

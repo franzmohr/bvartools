@@ -70,10 +70,17 @@ library(bvartools)
 # Load data
 data("e1")
 e1 <- diff(log(e1)) * 100
+<<<<<<< HEAD
 
 # Reduce number of oberservations
 e1 <- window(e1, end = c(1978, 4))
 
+=======
+
+# Reduce number of oberservations
+e1 <- window(e1, end = c(1978, 4))
+
+>>>>>>> 4e91b8136bf688ebd736590c83446277240aa84d
 # Plot the series
 plot(e1)
 ```
@@ -81,12 +88,21 @@ plot(e1)
 ### Setting up a model
 
 The `gen_var` function produces an object, which contains information on the specification of the VAR model that should be estimated. The following code specifies a VAR(2) model with an intercept term. The number of iterations and burn-in draws is already specified at this stage.
+<<<<<<< HEAD
 
 ```{r}
 model <- gen_var(e1, p = 2, deterministic = "const",
                  iterations = 5000, burnin = 1000)
 ```
 
+=======
+
+```{r}
+model <- gen_var(e1, p = 2, deterministic = "const",
+                 iterations = 5000, burnin = 1000)
+```
+
+>>>>>>> 4e91b8136bf688ebd736590c83446277240aa84d
 Note that the function is also capable of generating more than one model. For example, specifying `p = 0:2` would result in three models.
 
 ### Adding model priors
@@ -103,12 +119,16 @@ If researchers want to fine-tune individual prior specifications, this can be do
 
 ### Estimation
 
+<<<<<<< HEAD
 The output of `add_priors` can be used as the input for user-written algorithms for posterior simulation. However, `bvartools` also comes with built-in posterior simulation functions, which can be directly applied to the output of the prior specification step by using function `draw_posterior`:
 
 ```{r, eval = FALSE}
 bvar_est <- draw_posterior(model_with_priors)
 ```
 
+=======
+The output of `add_priors` can be used as the input for user-written algorithms for posterior simulation. However, `bvartools` also comes with built-in posterior simulation functions, which can be directly applied to the output of the prior specification step by using function `draw_posterior`.
+>>>>>>> 4e91b8136bf688ebd736590c83446277240aa84d
 
 The following code sets up a simple Gibbs sampler algorithm.
 

@@ -26,7 +26,7 @@ where $\Pi = \alpha \beta^{\prime}$ with cointegration rank $r$, $u_t \sim N(0, 
 
 ## Data
 
-To illustrate the workflow of the analysis, data set E6 from Lütkepohl (2007) is used, which contains data on German long-term interest rates and inflation from 1972Q2 to 1998Q4.
+To illustrate the workflow of the analysis, data set E6 from Lütkepohl (2006) is used, which contains data on German long-term interest rates and inflation from 1972Q2 to 1998Q4.
 
 ```{r data, fig.align='center', fig.height=5, fig.width=4.5}
 library(bvartools)
@@ -214,14 +214,14 @@ summary(bvar_form)
 
 ### Forecasts
 
-Forecasts with credible bands can be obtained with the function `predict`. If the model contains deterministic terms, new values can be provided in the argument `new_D`. If no values are provided, the function sets them to zero. For the current model, seasonal dummies need to be provided. They are taken from the original series. The number of rows of `new_D` must be the same as the argument `n.ahead`.
+Forecasts with credible bands can be obtained with the function `predict`. If the model contains deterministic terms, new values can be provided in the argument `new_d`. If no values are provided, the function sets them to zero. For the current model, seasonal dummies need to be provided. They are taken from the original series. The number of rows of `new_d` must be the same as the argument `n.ahead`.
 
 ```{r forecasts, fig.width=5.5, fig.height=5.5}
 # Generate deterministc terms for function predict
 new_d <- data$data$X[3 + 1:10, c("const", "season.1", "season.2", "season.3")]
 
 # Genrate forecasts
-bvar_pred <- predict(bvar_form, n.ahead = 10, new_D = new_d)
+bvar_pred <- predict(bvar_form, n.ahead = 10, new_d = new_d)
 
 # Plot forecasts
 plot(bvar_pred)
@@ -248,6 +248,6 @@ plot(bvar_fevd_oir, main = "OIR-based FEVD of inflation")
 
 Koop, G., León-González, R., & Strachan R. W. (2010). Efficient posterior simulation for cointegrated models with priors on the cointegration space. *Econometric Reviews, 29*(2), 224-242. <https://doi.org/10.1080/07474930903382208>
 
-Lütkepohl, H. (2007). *New introduction to multiple time series analysis* (2nd ed.). Berlin: Springer.
+Lütkepohl, H. (2006). *New introduction to multiple time series analysis* (2nd ed.). Berlin: Springer.
 
 Pesaran, H. H., & Shin, Y. (1998). Generalized impulse response analysis in linear multivariate models, *Economics Letters, 58*, 17-29. <https://doi.org/10.1016/S0165-1765(97)00214-0>

@@ -17,7 +17,7 @@ bvar(
   Sigma = NULL
 )
 
-\method{predict}{bvar}(object, ..., n.ahead = 10, new_x = NULL, new_D = NULL, ci = 0.95)
+\method{predict}{bvar}(object, ..., n.ahead = 10, new_x = NULL, new_d = NULL, ci = 0.95)
 }
 \arguments{
 \item{data}{the original time-series object of endogenous variables.}
@@ -64,7 +64,7 @@ parameters in case variable selection algorithms were employed to the covariance
 
 \item{new_x}{a matrix of new non-deterministic, exogenous variables. Must have \code{n.ahead} rows.}
 
-\item{new_D}{a matrix of new deterministic variables. Must have \code{n.ahead} rows.}
+\item{new_d}{a matrix of new deterministic variables. Must have \code{n.ahead} rows.}
 
 \item{ci}{a numeric between 0 and 1 specifying the probability mass covered by the
 credible intervals. Defaults to 0.95.}
@@ -198,7 +198,7 @@ model <- add_priors(model)
 object <- draw_posterior(model)
 
 # Generate forecasts
-bvar_pred <- predict(object, n.ahead = 10, new_D = rep(1, 10))
+bvar_pred <- predict(object, n.ahead = 10, new_d = rep(1, 10))
 
 # Plot forecasts
 plot(bvar_pred)

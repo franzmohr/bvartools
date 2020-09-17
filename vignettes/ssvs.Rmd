@@ -22,7 +22,7 @@ A general drawback of vector autoregressive (VAR) models is that the number of e
 
 Korobilis (2013) proposes a similar appraoch to variable selection, which can also be applied to timy varying parameter models. The approach is implemented in `bvartools` as function `bvs`, which can be easily added to a standard Gibbs sampling algorithm. It is also implemented in the posterior simulation algorithm of the package an can be specified analogously to the last section of this introduction, where the use of the built-in SSVS sampler is described.
 
-This vignette presents code for Bayesian inference of a vector autoregressive (BVAR) model using stochastic search variable selection. It uses [dataset E1](http://www.jmulti.de/download/datasets/e1.dat) from Lütkepohl (2007), which contains data on West German fixed investment, disposable income and consumption expenditures in billions of DM from 1960Q1 to 1982Q4. Following a related example in Lütkepohl (2007, Section 5.2.10) only the first 71 observations of a VAR(4) model are used. The `bvartools` package can be used to load the data and generate the data matrices for the model.
+This vignette presents code for Bayesian inference of a vector autoregressive (BVAR) model using stochastic search variable selection. It uses [dataset E1](http://www.jmulti.de/download/datasets/e1.dat) from Lütkepohl (2006), which contains data on West German fixed investment, disposable income and consumption expenditures in billions of DM from 1960Q1 to 1982Q4. Following a related example in Lütkepohl (2006, Section 5.2.10) only the first 71 observations of a VAR(4) model are used. The `bvartools` package can be used to load the data and generate the data matrices for the model.
 
 ```{r data, fig.align='center', fig.height=5, fig.width=4.5}
 library(bvartools)
@@ -182,7 +182,7 @@ for (draw in 1:draws) {
 }
 ```
 
-The means of the posterior draws are similar to the OLS estimates in Lütkepohl (2007, Section 5.2.10):
+The means of the posterior draws are similar to the OLS estimates in Lütkepohl (2006, Section 5.2.10):
 
 ```{r}
 bvar_est <- bvar(y = data$data$Y, x = data$data$Z, A = draws_a[1:36,],
@@ -214,14 +214,16 @@ The output of `draw_posterior` is an object of class `bvar`. Thus, further analy
 
 ## References
 
+Chan, J., Koop, G., Poirier, D. J., & Tobias, J. L. (2019). *Bayesian Econometric Methods* (2nd ed.). Cambridge: University Press.
+
 George, E. I., Sun, D., & Ni, S. (2008). Bayesian stochastic search for VAR model restrictions. *Journal of Econometrics, 142*(1), 553-580. <https://doi.org/10.1016/j.jeconom.2007.08.017>
 
 Koop, G., & Korobilis, D. (2010). Bayesian multivariate time series methods for empirical macroeconomics. *Foundations and trends in econometrics, 3*(4), 267-358. <https://dx.doi.org/10.1561/0800000013>
 
 Korobilis, D. (2013). VAR forecasting using Bayesian variable selection. *Journal of Applied Econometrics, 28*(2), 204-230. <https://doi.org/10.1002/jae.1271>
 
-Lütkepohl, H. (2007). *New introduction to multiple time series analysis* (2nd ed.). Berlin: Springer.
+Lütkepohl, H. (2006). *New introduction to multiple time series analysis* (2nd ed.). Berlin: Springer.
 
 [^koop]: See Koop and Korobilis (2010) for an introduction to Bayesian VAR modelling and SSVS.
 
-[^threshold]: This threshold value is usually set to 50 percent. 40 percent is chosen, because it yields similar results as the restricted model in Lütkepohl (2007, Section 5.2.10).
+[^threshold]: This threshold value is usually set to 50 percent. 40 percent is chosen, because it yields similar results as the restricted model in Lütkepohl (2006, Section 5.2.10).

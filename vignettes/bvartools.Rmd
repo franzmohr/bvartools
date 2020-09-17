@@ -42,7 +42,7 @@ For Bayesian inference of *cointegrated VAR models* the package implements the a
 
 This introduction to `bvartools` provides the code to set up and estimate a basic Bayesian VAR (BVAR) model.[^further] The first part covers a basic workflow, where the standard posterior simulation algorithm of the package is employed for Bayesian inference. The second part presents a workflow for a posterior algorithm as it could be implemented by a researcher.
 
-For both illustrations the data set E1 from Lütkepohl (2007) is used. It contains data on West German fixed investment, disposable income and consumption expenditures in billions of DM from 1960Q1 to 1982Q4. Like in the textbook only the first 73 observations of the log-differenced series are used.
+For both illustrations the data set E1 from Lütkepohl (2006) is used. It contains data on West German fixed investment, disposable income and consumption expenditures in billions of DM from 1960Q1 to 1982Q4. Like in the textbook only the first 73 observations of the log-differenced series are used.
 
 ```{r data, fig.align='center', fig.height=5, fig.width=4.5}
 library(bvartools)
@@ -127,10 +127,10 @@ bvar_est <- thin_posterior(bvar_est, thin = 10)
 
 ### Forecasts
 
-Forecasts with credible bands can be obtained with the function `predict`. If the model contains deterministic terms, new values can be provided in the argument `new_D`. If no values are provided, the function sets them to zero. The number of rows of `new_D` must be the same as the argument `n.ahead`.
+Forecasts with credible bands can be obtained with the function `predict`. If the model contains deterministic terms, new values can be provided in the argument `new_d`. If no values are provided, the function sets them to zero. The number of rows of `new_d` must be the same as the argument `n.ahead`.
 
 ```{r forecasts, fig.width=5.5, fig.height=5.5}
-bvar_pred <- predict(bvar_est, n.ahead = 10, new_D = rep(1, 10))
+bvar_pred <- predict(bvar_est, n.ahead = 10, new_d = rep(1, 10))
 
 plot(bvar_pred)
 ```
@@ -276,6 +276,8 @@ summary(bvar_est_two)
 
 ## References
 
+Chan, J., Koop, G., Poirier, D. J., & Tobias, J. L. (2019). *Bayesian Econometric Methods* (2nd ed.). Cambridge: University Press.
+
 Eddelbuettel, D., & Sanderson C. (2014). RcppArmadillo: Accelerating R with high-performance C++ linear algebra. *Computational Statistics and Data Analysis, 71*, 1054-1063. <https://doi.org/10.1016/j.csda.2013.02.005>
 
 George, E. I., Sun, D., & Ni, S. (2008). Bayesian stochastic search for VAR model restrictions. *Journal of Econometrics, 142*(1), 553-580. <https://doi.org/10.1016/j.jeconom.2007.08.017>
@@ -284,7 +286,7 @@ Koop, G., Pesaran, M. H., & Potter, S.M. (1996). Impulse response analysis in no
 
 Korobilis, D. (2013). VAR forecasting using Bayesian variable selection. *Journal of Applied Econometrics, 28*(2), 204-230. <https://doi.org/10.1002/jae.1271>
 
-Lütkepohl, H. (2007). *New introduction to multiple time series analysis* (2nd ed.). Berlin: Springer.
+Lütkepohl, H. (2006). *New introduction to multiple time series analysis* (2nd ed.). Berlin: Springer.
 
 Pesaran, H. H., & Shin, Y. (1998). Generalized impulse response analysis in linear multivariate models. *Economics Letters, 58*(1), 17-29. <https://doi.org/10.1016/S0165-1765(97)00214-0>
 

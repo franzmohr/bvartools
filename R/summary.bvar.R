@@ -27,7 +27,7 @@ summary.bvar <- function(object, ci = .95, ...){
   # Obtain variable names
   dim_names <- list(NULL, NULL)
   if (!is.null(object$y)) {
-    dim_names[[1]] <- dimnames(object$y)[[2]]
+    dim_names[[1]] <- dimnames(object[["y"]])[[2]]
   } else {
     dim_names[[1]] <- paste("y", 1:k, sep = "")
   }

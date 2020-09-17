@@ -214,14 +214,14 @@ summary(bvar_form)
 
 ### Forecasts
 
-Forecasts with credible bands can be obtained with the function `predict`. If the model contains deterministic terms, new values can be provided in the argument `new_D`. If no values are provided, the function sets them to zero. For the current model, seasonal dummies need to be provided. They are taken from the original series. The number of rows of `new_D` must be the same as the argument `n.ahead`.
+Forecasts with credible bands can be obtained with the function `predict`. If the model contains deterministic terms, new values can be provided in the argument `new_d`. If no values are provided, the function sets them to zero. For the current model, seasonal dummies need to be provided. They are taken from the original series. The number of rows of `new_d` must be the same as the argument `n.ahead`.
 
 ```{r forecasts, fig.width=5.5, fig.height=5.5}
 # Generate deterministc terms for function predict
 new_d <- data$data$X[3 + 1:10, c("const", "season.1", "season.2", "season.3")]
 
 # Genrate forecasts
-bvar_pred <- predict(bvar_form, n.ahead = 10, new_D = new_d)
+bvar_pred <- predict(bvar_form, n.ahead = 10, new_d = new_d)
 
 # Plot forecasts
 plot(bvar_pred)

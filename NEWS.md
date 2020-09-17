@@ -9,6 +9,7 @@
 * Function `bvar` and `summary.bvar` can deal with inclusion parameters.
 * Added funtion `add_priors` for easier construction of prior matrices for multiple models.
 * `gen_var` and `gen_vec` can produce multiple models.
+* Changed all argument names of `predict.bvar` to lower cases.
 
 # bvartools 0.0.3
 

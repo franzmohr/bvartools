@@ -6,7 +6,7 @@
 #' \code{\link{bvar}} or \code{\link{bvec_to_bvar}}.
 #' @param n.ahead number of steps ahead at which to predict.
 #' @param new_x a matrix of new non-deterministic, exogenous variables. Must have \code{n.ahead} rows.
-#' @param new_D a matrix of new deterministic variables. Must have \code{n.ahead} rows.
+#' @param new_d a matrix of new deterministic variables. Must have \code{n.ahead} rows.
 #' @param ci a numeric between 0 and 1 specifying the probability mass covered by the
 #' credible intervals. Defaults to 0.95.
 #' @param ... additional arguments.
@@ -36,7 +36,7 @@
 #' object <- draw_posterior(model)
 #' 
 #' # Generate forecasts
-#' bvar_pred <- predict(object, n.ahead = 10, new_D = rep(1, 10))
+#' bvar_pred <- predict(object, n.ahead = 10, new_d = rep(1, 10))
 #' 
 #' # Plot forecasts
 #' plot(bvar_pred)
@@ -47,11 +47,11 @@
 #' 
 #' @export
 #' @rdname bvar
-predict.bvar <- function(object, ..., n.ahead = 10, new_x = NULL, new_D = NULL, ci = .95) {
+predict.bvar <- function(object, ..., n.ahead = 10, new_x = NULL, new_d = NULL, ci = .95) {
   
   # Dev specs
-  # n.ahead = 10; new_x = NULL; new_D = NULL; ci = .95
-  # new_D <- rep(1, 10)
+  # n.ahead = 10; new_x = NULL; new_d = NULL; ci = .95
+  # new_d <- rep(1, 10)
   
   k <- object$specifications$dims["K"]
   tt <- nrow(object[["y"]])
@@ -88,11 +88,11 @@ predict.bvar <- function(object, ..., n.ahead = 10, new_x = NULL, new_D = NULL, 
     A <- cbind(A, object[["C"]])
     n <- ncol(object[["C"]]) / k
     tot <- tot + n
-    if (is.null(new_D)) {
-      new_D <- matrix(0, n.ahead, n)
+    if (is.null(new_d)) {
+      new_d <- matrix(0, n.ahead, n)
     }
-    if (NROW(new_D) != n.ahead) {
-      stop("Length of argument 'new_D' must be equal to 'n.ahead'.")
+    if (NROW(new_d) != n.ahead) {
+      stop("Length of argument 'new_d' must be equal to 'n.ahead'.")
     }
   }
   
@@ -117,7 +117,7 @@ predict.bvar <- function(object, ..., n.ahead = 10, new_x = NULL, new_D = NULL, 
       pos_d_object <- pos_d_pred
     }
     tt_pos <- stats::time(object[["x"]]) == stats::time(object[["y"]])[tt] # Necessary for BVEC models
-    pred[pos_d_pred, ] <- cbind(matrix(object[["x"]][tt_pos, pos_d_object], length(pos_d_object)), t(new_D))
+    pred[pos_d_pred, ] <- cbind(matrix(object[["x"]][tt_pos, pos_d_object], length(pos_d_object)), t(new_d))
   }
   
   A0_i <- diag(1, k)
@@ -139,12 +139,12 @@ predict.bvar <- function(object, ..., n.ahead = 10, new_x = NULL, new_D = NULL, 
   for (draw in 1:draws) {
     
     if (struct) {
-      A0_i <- solve(matrix(object$A0[draw, ], k))
+      A0_i <- solve(matrix(object[["A0"]][draw, ], k))
     }
     
     for (i in 1:n.ahead) {
       # Generate error
-      temp <- eigen(matrix(object$Sigma[draw, ], k))
+      temp <- eigen(matrix(object[["Sigma"]][draw, ], k))
       u <- temp$vectors %*% diag(sqrt(temp$values), k) %*% t(temp$vectors) %*% stats::rnorm(k)
       
       # Prediction step

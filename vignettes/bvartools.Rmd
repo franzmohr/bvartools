@@ -127,10 +127,10 @@ bvar_est <- thin_posterior(bvar_est, thin = 10)
 
 ### Forecasts
 
-Forecasts with credible bands can be obtained with the function `predict`. If the model contains deterministic terms, new values can be provided in the argument `new_D`. If no values are provided, the function sets them to zero. The number of rows of `new_D` must be the same as the argument `n.ahead`.
+Forecasts with credible bands can be obtained with the function `predict`. If the model contains deterministic terms, new values can be provided in the argument `new_d`. If no values are provided, the function sets them to zero. The number of rows of `new_d` must be the same as the argument `n.ahead`.
 
 ```{r forecasts, fig.width=5.5, fig.height=5.5}
-bvar_pred <- predict(bvar_est, n.ahead = 10, new_D = rep(1, 10))
+bvar_pred <- predict(bvar_est, n.ahead = 10, new_d = rep(1, 10))
 
 plot(bvar_pred)
 ```

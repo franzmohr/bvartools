@@ -1,5 +1,6 @@
 # bvartools 0.1.0
 
+* Omitted package `Matrix` from "Imports"" in DESCRIPTION, which caused a note in version 0.0.3.
 * Added function `bvarpost` for posterior simulation of BVAR models.
 * Added function `bvecpost` for posterior simulation of BVEC models.
 * Added function `draw_posterior` for estimation of multiple models.

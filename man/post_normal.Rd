@@ -40,14 +40,17 @@ where \eqn{Y} is a \eqn{K \times T} matrix of the endogenous variables and \eqn{
 the explanatory variables.
 }
 \examples{
-# Prepare data
+
+# Load data
 data("e1")
 data <- diff(log(e1))
+
+# Generate model data
 temp <- gen_var(data, p = 2, deterministic = "const")
-y <- temp$Y
-x <- temp$Z
+y <- t(temp$data$Y)
+x <- t(temp$data$Z)
 k <- nrow(y)
-t <- ncol(y)
+tt <- ncol(y)
 m <- k * nrow(x)
 
 # Priors
@@ -55,7 +58,7 @@ a_mu_prior <- matrix(0, m)
 a_v_i_prior <- diag(0.1, m)
 
 # Initial value of inverse Sigma
-sigma_i <- solve(tcrossprod(y) / t)
+sigma_i <- solve(tcrossprod(y) / tt)
 
 # Draw parameters
 a <- post_normal(y = y, x = x, sigma_i = sigma_i,
@@ -63,5 +66,5 @@ a <- post_normal(y = y, x = x, sigma_i = sigma_i,
 
 }
 \references{
-Lütkepohl, H. (2007). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
+Lütkepohl, H. (2006). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
 }

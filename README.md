@@ -8,22 +8,49 @@ status](https://travis-ci.org/franzmohr/bvartools.svg?branch=master)](https://tr
 
 ## Overview
 
-The package `bvartools` implements some common functions used for
-Bayesian inference for mulitvariate time series models. It should give
-researchers maximum freedom in setting up an MCMC algorithm in R and
-keep calculation time limited at the same time. This is achieved by
-implementing posterior simulation functions in C++. Its main features
-are
+The package `bvartools` implements functions for Bayesian inference of
+linear vector autoregressive (VAR) models. It separates a typical BVAR
+analysis workflow into multiple steps:
 
-  - The `bvar` and `bvec` function collects the output of a Gibbs
-    sampler in standardised objects, which can be used for further
-    analyses
-  - Further functions such as `predict`, `irf`, `fevd` for forecasting,
-    impulse response analysis and forecast error variance decomposition,
-    respectively.
-  - Computationally intensive functions - such as for posterior
-    simulation - are written in C++ using the `RcppArmadillo` package of
-    Eddelbuettel and Sanderson (2014).\[1\]
+  - *Model set-up*: Produces data matrices for given lag orders and
+    model types, which can be used for posterior simulation.
+  - *Prior specification*: Generates prior matrices for a given model.
+  - *Estimation*: Researchers can choose to use the posterior algorithms
+    of the package or use their own algorithms.
+  - *Standardising model output*: Combines the output of the estimation
+    step into standardised objects for subsequent steps of the analyis.
+  - *Evaluation*: Produces summary statistics, forecasts, impulse
+    responses and forecast error variance decompositions.
+
+In each step researchers are provided with the opportunitiy to fine-tune
+a model according to their specific requirements or to use the default
+framework for commonly used models and priors. Since version 0.1.0 the
+package comes with posterior simulation functions that do not require to
+implement any further simulation algorithms. For Bayesian inference of
+*stationary VAR models* the package covers
+
+  - Standard BVAR models with independent normal-Wishart priors
+  - BVAR models employing stochastic search variable selection à la
+    Gerorge, Sun and Ni (2008)
+  - BVAR models employing Bayesian variable selection à la Korobilis
+    (2013)
+  - Structural BVAR models, where the structural coefficients are
+    estimated from contemporary endogenous variables (A-model)
+
+For Bayesian inference of *cointegrated VAR models* the package
+implements the algorithm of Koop, León-González and Strachan (2010)
+\[KLS\] – which places identification restrictions on the cointegration
+space – in the following variants
+
+  - The BVEC model as presented in Koop et al. (2010)
+  - The KLS model employing stochastic search variable selection à la
+    Gerorge, Sun and Ni (2008)
+  - The KLS modol employing Bayesian variable selection à la Korobilis
+    (2013)
+  - Structural BVEC models, where the structural coefficients are
+    estimated from contemporaneous endogenous variables (A-model).
+    However, no further restrictions are made regarding the
+    cointegration term.
 
 Similar packages worth checking out are
 
@@ -60,69 +87,100 @@ Bayesian variable selection (BVS) see the vignettes of the package and
 ### Data
 
 To illustrate the estimation process the dataset E1 from Lütkepohl
-(2007) is used. It contains data on West German fixed investment,
+(2006) is used. It contains data on West German fixed investment,
 disposable income and consumption expenditures in billions of DM from
-1960Q1 to 1982Q4.
+1960Q1 to 1982Q4. Like in the textbook only the first 73 observations of
+the log-differenced series are used.
 
 ``` r
 library(bvartools)
 
+# Load data
 data("e1")
-e1 <- diff(log(e1))
+e1 <- diff(log(e1)) * 100
 
-plot(e1) # Plot the series
+# Reduce number of oberservations
+e1 <- window(e1, end = c(1978, 4))
+
+# Plot the series
+plot(e1)
 ```
 
 <img src="README_files/figure-gfm/data-1.png" style="display: block; margin: auto;" />
 
-### Prepare data for estimation
+### Setting up a model
 
-The `gen_var` function produces the inputs `y` and `x` for the BVAR
-estimator, where `y` is the matrix of dependent variables and `x` is the
-matrix of regressors.
+The `gen_var` function produces an object, which contains information on
+the specification of the VAR model that should be estimated. The
+following code specifies a VAR(2) model with an intercept term. The
+number of iterations and burn-in draws is already specified at this
+stage.
 
 ``` r
-data <- gen_var(e1, p = 2, deterministic = "const")
-
-y <- data$Y[, 1:73]
-x <- data$Z[, 1:73]
+model <- gen_var(e1, p = 2, deterministic = "const",
+                 iterations = 5000, burnin = 1000)
 ```
 
-As in Lütkepohl (2007) only the first 73 observations are used.
+Note that the function is also capable of generating more than one
+model. For example, specifying `p = 0:2` would result in three models.
+
+### Adding model priors
+
+Function `add_priors` produces priors for the specified model(s) in
+object `model` and augments the object accordingly.
+
+``` r
+model_with_priors <- add_priors(model,
+                                coef = list(v_i = 0, v_i_det = 0),
+                                sigma = list(df = 1, scale = .0001))
+```
+
+If researchers want to fine-tune individual prior specifications, this
+can be done by directly accessing the respective elements in object
+`model_with_priors`.
 
 ### Estimation
+
+The output of `add_priors` can be used as the input for user-written
+algorithms for posterior simulation. However, `bvartools` also comes
+with built-in posterior simulation functions, which can be directly
+applied to the output of the prior specification step by using function
+`draw_posterior`.
 
 The following code sets up a simple Gibbs sampler algorithm.
 
 ``` r
+# Reset random number generator for reproducibility
 set.seed(1234567)
 
-iter <- 15000 # Number of iterations of the Gibbs sampler
+iterations <- 10000 # Number of saved iterations of the Gibbs sampler
 burnin <- 5000 # Number of burn-in draws
-store <- iter - burnin
+draws <- iterations + burnin # Total number of MCMC draws
 
-t <- ncol(y) # Number of observations
+y <- t(model_with_priors$data$Y)
+x <- t(model_with_priors$data$Z)
+
+tt <- ncol(y) # Number of observations
 k <- nrow(y) # Number of endogenous variables
 m <- k * nrow(x) # Number of estimated coefficients
 
 # Set (uninformative) priors
-a_mu_prior <- matrix(0, m) # Vector of prior parameter means
-a_v_i_prior <- diag(0, m) # Inverse of the prior covariance matrix
+a_mu_prior <- model_with_priors$priors$coefficients$mu # Vector of prior parameter means
+a_v_i_prior <- model_with_priors$priors$coefficients$v_i # Inverse of the prior covariance matrix
 
-u_sigma_df_prior <- 0 # Prior degrees of freedom
-u_sigma_scale_prior <- diag(0, k) # Prior covariance matrix
-u_sigma_df_post <- t + u_sigma_df_prior # Posterior degrees of freedom
+u_sigma_df_prior <- model_with_priors$priors$sigma$df # Prior degrees of freedom
+u_sigma_scale_prior <- model_with_priors$priors$sigma$scale # Prior covariance matrix
+u_sigma_df_post <- tt + u_sigma_df_prior # Posterior degrees of freedom
 
 # Initial values
-u_sigma_i <- diag(.00001, k)
-u_sigma <- solve(u_sigma_i)
+u_sigma_i <- diag(1 / .00001, k)
 
 # Data containers for posterior draws
-draws_a <- matrix(NA, m, store)
-draws_sigma <- matrix(NA, k^2, store)
+draws_a <- matrix(NA, m, iterations)
+draws_sigma <- matrix(NA, k^2, iterations)
 
 # Start Gibbs sampler
-for (draw in 1:iter) {
+for (draw in 1:draws) {
   # Draw conditional mean parameters
   a <- post_normal(y, x, u_sigma_i, a_mu_prior, a_v_i_prior)
   
@@ -142,15 +200,20 @@ for (draw in 1:iter) {
 
 ### `bvar` objects
 
-The `bvar` function can be used to collect relevant output of the Gibbs
-sampler in a standardised object, which can be used by further functions
-such as `predict` to obtain forecasts or `irf` for impulse respons
-analysis.
+Function `bvar` can be used to collect relevant output of the Gibbs
+sampler in a standardised object, which can be used by further
+applications such as `predict` to obtain forecasts or `irf` for impulse
+respons analysis.
 
 ``` r
-bvar_est <- bvar(y = y, x = x, A = draws_a[1:18,],
-                 C = draws_a[19:21, ], Sigma = draws_sigma)
+bvar_est <- bvar(y = model_with_priors$data$Y,
+                 x = model_with_priors$data$Z,
+                 A = draws_a[1:18,],
+                 C = draws_a[19:21, ],
+                 Sigma = draws_sigma)
 ```
+
+Summary statistics can be obained in the usual manner:
 
 ``` r
 summary(bvar_est)
@@ -163,78 +226,60 @@ summary(bvar_est)
     ## 
     ## Variable: invest 
     ## 
-    ##             Mean      SD  Naive SD Time-series SD     2.5%      50%    97.5%
-    ## invest.1 -0.3210 0.12910 0.0012910      0.0012963 -0.57576 -0.32234 -0.06704
-    ## income.1  0.1468 0.56920 0.0056920      0.0056920 -0.97536  0.14389  1.27628
-    ## cons.1    0.9661 0.68461 0.0068461      0.0066912 -0.37530  0.95599  2.32208
-    ## invest.2 -0.1601 0.12744 0.0012744      0.0013199 -0.40851 -0.16121  0.09073
-    ## income.2  0.1036 0.55673 0.0055673      0.0055673 -0.98186  0.09850  1.22167
-    ## cons.2    0.9359 0.69796 0.0069796      0.0069975 -0.43081  0.92389  2.32856
-    ## const    -0.0166 0.01774 0.0001774      0.0001774 -0.05164 -0.01661  0.01778
+    ##             Mean     SD Naive SD Time-series SD    2.5%     50%    97.5%
+    ## invest.1 -0.3210 0.1280 0.001280       0.001286 -0.5734 -0.3216 -0.06831
+    ## income.1  0.1472 0.5654 0.005654       0.005654 -0.9602  0.1439  1.26083
+    ## cons.1    0.9662 0.6768 0.006768       0.006778 -0.3453  0.9560  2.32034
+    ## invest.2 -0.1600 0.1263 0.001263       0.001305 -0.4049 -0.1612  0.08747
+    ## income.2  0.1036 0.5519 0.005519       0.005439 -0.9653  0.1010  1.19676
+    ## cons.2    0.9348 0.6894 0.006894       0.006894 -0.4165  0.9283  2.28239
+    ## const    -1.6637 1.7556 0.017556       0.017556 -5.1131 -1.6428  1.81572
     ## 
     ## Variable: income 
     ## 
-    ##               Mean       SD  Naive SD Time-series SD      2.5%       50%
-    ## invest.1  0.043536 0.033070 3.307e-04      3.356e-04 -0.021750  0.043455
-    ## income.1 -0.152419 0.143312 1.433e-03      1.443e-03 -0.435520 -0.151075
-    ## cons.1    0.286935 0.173352 1.734e-03      1.734e-03 -0.055373  0.286012
-    ## invest.2  0.049782 0.032382 3.238e-04      3.238e-04 -0.014160  0.049723
-    ## income.2  0.018945 0.139841 1.398e-03      1.398e-03 -0.255458  0.017515
-    ## cons.2   -0.008832 0.172217 1.722e-03      1.722e-03 -0.346456 -0.009778
-    ## const     0.015782 0.004494 4.494e-05      4.569e-05  0.007125  0.015761
-    ##            97.5%
-    ## invest.1 0.10836
-    ## income.1 0.12729
-    ## cons.1   0.63148
-    ## invest.2 0.11349
-    ## income.2 0.29004
-    ## cons.2   0.32871
-    ## const    0.02462
+    ##               Mean      SD  Naive SD Time-series SD     2.5%       50%  97.5%
+    ## invest.1  0.043539 0.03283 0.0003283      0.0003340 -0.02134  0.043640 0.1078
+    ## income.1 -0.152587 0.14272 0.0014272      0.0014354 -0.43484 -0.152102 0.1278
+    ## cons.1    0.287003 0.17215 0.0017215      0.0017583 -0.05264  0.284572 0.6301
+    ## invest.2  0.049836 0.03215 0.0003215      0.0003215 -0.01315  0.049738 0.1135
+    ## income.2  0.019209 0.13846 0.0013846      0.0013846 -0.25074  0.020273 0.2888
+    ## cons.2   -0.008994 0.17079 0.0017079      0.0017079 -0.34237 -0.009633 0.3335
+    ## const     1.577324 0.44978 0.0044978      0.0044978  0.69837  1.573286 2.4624
     ## 
     ## Variable: cons 
     ## 
-    ##               Mean       SD  Naive SD Time-series SD      2.5%       50%
-    ## invest.1 -0.002661 0.026741 2.674e-04      2.674e-04 -0.055640 -0.002423
-    ## income.1  0.223297 0.117474 1.175e-03      1.175e-03 -0.001396  0.222052
-    ## cons.1   -0.262860 0.140987 1.410e-03      1.410e-03 -0.543567 -0.262607
-    ## invest.2  0.033769 0.026286 2.629e-04      2.629e-04 -0.017495  0.034067
-    ## income.2  0.354436 0.112782 1.128e-03      1.111e-03  0.130712  0.355690
-    ## cons.2   -0.019983 0.139373 1.394e-03      1.361e-03 -0.291804 -0.019175
-    ## const     0.012909 0.003664 3.664e-05      3.664e-05  0.005685  0.012894
-    ##            97.5%
-    ## invest.1 0.04963
-    ## income.1 0.45050
-    ## cons.1   0.01277
-    ## invest.2 0.08634
-    ## income.2 0.57461
-    ## cons.2   0.25449
-    ## const    0.02012
+    ##               Mean      SD  Naive SD Time-series SD      2.5%       50%
+    ## invest.1 -0.002623 0.02648 0.0002648      0.0002648 -0.054699 -0.002433
+    ## income.1  0.223178 0.11668 0.0011668      0.0011668 -0.003841  0.222297
+    ## cons.1   -0.263006 0.13888 0.0013888      0.0013888 -0.539179 -0.262530
+    ## invest.2  0.033789 0.02612 0.0002612      0.0002612 -0.017709  0.033990
+    ## income.2  0.354398 0.11138 0.0011138      0.0011302  0.131559  0.356159
+    ## cons.2   -0.020351 0.13878 0.0013878      0.0013661 -0.294508 -0.019763
+    ## const     1.292296 0.35786 0.0035786      0.0035786  0.590719  1.290012
+    ##             97.5%
+    ## invest.1 0.049704
+    ## income.1 0.449267
+    ## cons.1   0.007515
+    ## invest.2 0.085769
+    ## income.2 0.571058
+    ## cons.2   0.254939
+    ## const    2.006569
     ## 
     ## Variance-covariance matrix:
     ## 
-    ##                    Mean        SD  Naive SD Time-series SD       2.5%       50%
-    ## invest_invest 2.267e-03 4.118e-04 4.118e-06      4.615e-06  1.605e-03 2.215e-03
-    ## invest_income 7.688e-05 7.493e-05 7.493e-07      8.259e-07 -6.562e-05 7.406e-05
-    ## invest_cons   1.317e-04 6.171e-05 6.171e-07      6.961e-07  2.122e-05 1.291e-04
-    ## income_invest 7.688e-05 7.493e-05 7.493e-07      8.259e-07 -6.562e-05 7.406e-05
-    ## income_income 1.461e-04 2.673e-05 2.673e-07      2.928e-07  1.033e-04 1.428e-04
-    ## income_cons   6.547e-05 1.732e-05 1.732e-07      1.923e-07  3.635e-05 6.381e-05
-    ## cons_invest   1.317e-04 6.171e-05 6.171e-07      6.961e-07  2.122e-05 1.291e-04
-    ## cons_income   6.547e-05 1.732e-05 1.732e-07      1.923e-07  3.635e-05 6.381e-05
-    ## cons_cons     9.499e-05 1.723e-05 1.723e-07      1.922e-07  6.693e-05 9.285e-05
-    ##                   97.5%
-    ## invest_invest 0.0031925
-    ## invest_income 0.0002346
-    ## invest_cons   0.0002631
-    ## income_invest 0.0002346
-    ## income_income 0.0002078
-    ## income_cons   0.0001053
-    ## cons_invest   0.0002631
-    ## cons_income   0.0001053
-    ## cons_cons     0.0001338
+    ##                  Mean     SD Naive SD Time-series SD    2.5%     50%  97.5%
+    ## invest_invest 22.3072 4.0178 0.040178       0.044990 15.8399 21.7999 31.327
+    ## invest_income  0.7561 0.7313 0.007313       0.008046 -0.6330  0.7286  2.294
+    ## invest_cons    1.2956 0.6022 0.006022       0.006781  0.2157  1.2701  2.576
+    ## income_invest  0.7561 0.7313 0.007313       0.008046 -0.6330  0.7286  2.294
+    ## income_income  1.4378 0.2610 0.002610       0.002854  1.0191  1.4057  2.038
+    ## income_cons    0.6442 0.1690 0.001690       0.001873  0.3596  0.6280  1.032
+    ## cons_invest    1.2956 0.6022 0.006022       0.006781  0.2157  1.2701  2.576
+    ## cons_income    0.6442 0.1690 0.001690       0.001873  0.3596  0.6280  1.032
+    ## cons_cons      0.9348 0.1681 0.001681       0.001872  0.6610  0.9141  1.312
 
 The means of the posterior draws are very close to the results of the
-frequentist estimatior in Lütkepohl (2007).
+frequentist estimatior in Lütkepohl (2006).
 
 ### Forecasts
 
@@ -244,7 +289,7 @@ argument `new_D`, which must be of the same length as the argument
 `n.ahead`.
 
 ``` r
-bvar_pred <- predict(bvar_est, n.ahead = 10, new_D = rep(1, 10))
+bvar_pred <- predict(bvar_est, n.ahead = 5, new_D = rep(1, 5))
 
 plot(bvar_pred)
 ```
@@ -310,6 +355,3 @@ in linear multivariate models. *Economics Letters, 58*, 17-29.
 Sanderson, C., & Curtin, R. (2016). Armadillo: a template-based C++
 library for linear algebra. *Journal of Open Source Software, 1*(2), 26.
 <https://doi.org/10.21105/joss.00026>
-
-1.  `RcppArmadillo` is the `Rcpp` bridge to the open source ‘Armadillo’
-    library of Sanderson and Curtin (2016).

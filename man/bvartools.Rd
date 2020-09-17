@@ -5,12 +5,12 @@
 \alias{bvartools}
 \title{bvartools: Bayesian Inference of Vector Autoregressive Models}
 \description{
-A collection of R and C++ functions, which assist in the set-up of algorithms
-for Bayesian inference of vector autoregressive (VAR) models.
+A collection of R and C++ functions, which assist in the Bayesian inference of
+vector autoregressive (VAR) and vector error correction (VEC) models.
 }
 \details{
 The package \code{bvartools} implements some common functions used for Bayesian
-inference for mulitvariate time series models. It should give researchers
+inference for linear, multivariate time series models. It should give researchers
 maximum freedom in setting up MCMC algorithms in R and keep calculation time
 limited at the same time. This is achieved by implementing posterior simulation
 functions in C++. Its main features are
@@ -22,10 +22,11 @@ impulse response analysis and forecast error variance decomposition, respectivel
 \item Computationally intensive functions - such as for posterior
 simulation - are written in C++ using the \code{RcppArmadillo} package of Eddelbuettel
 and Sanderson (2014).
+\item Posterior simulation functions for commonly used Gibbs sampler algorithms.
 }
 }
 \references{
-Chan, J., Koop, G., Poirier, D. J., & Tobias, J. L. (2020). \emph{Bayesian Econometric Methods}
+Chan, J., Koop, G., Poirier, D. J., & Tobias, J. L. (2019). \emph{Bayesian Econometric Methods}
 (2nd ed.). Cambridge: University Press.
 
 Durbin, J., & Koopman, S. J. (2002). A simple and efficient simulation smoother for
@@ -52,7 +53,7 @@ Korobilis, D. (2013). VAR forecasting using Bayesian variable selection.
 \emph{Journal of Applied Econometrics, 28}(2), 204--230.
 \url{https://doi.org/10.1002/jae.1271}
 
-Lütkepohl, H. (2007). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
+Lütkepohl, H. (2006). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
 
 Sanderson, C., & Curtin, R. (2016). Armadillo: a template-based C++ library for linear algebra.
 \emph{Journal of Open Source Software, 1}(2), 26. \url{http://dx.doi.org/10.21105/joss.00026}

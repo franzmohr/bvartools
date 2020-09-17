@@ -2,39 +2,42 @@
 % Please edit documentation in R/bvec_to_bvar.R
 \name{bvec_to_bvar}
 \alias{bvec_to_bvar}
-\title{Transform a VECM to VAR in levels}
+\title{Transform a VEC Model to a VAR in Levels}
 \usage{
 bvec_to_bvar(object)
 }
 \arguments{
-\item{object}{an object of class "bvec".}
+\item{object}{an object of class \code{"bvec"}.}
 }
 \value{
-An object of class "bvar".
+An object of class \code{"bvar"}.
 }
 \description{
-An object of class "bvec" is transformed to a VAR in level representation.
+An object of class \code{"bvec"} is transformed to a VAR in level representation.
 }
 \examples{
-data("e6")
-data <- gen_vec(e6, p = 4, const = "unrestricted", season = "unrestricted")
 
-y <- data$Y
-w <- data$W
-x <- data$X
+# Load data
+data("e6")
+# Generate model
+data <- gen_vec(e6, p = 4, r = 1, const = "unrestricted", season = "unrestricted")
+# Obtain data matrices
+y <- t(data$data$Y)
+w <- t(data$data$W)
+x <- t(data$data$X)
 
 # Reset random number generator for reproducibility
 set.seed(1234567)
 
-iter <- 500 # Number of iterations of the Gibbs sampler
+iterations <- 400 # Number of iterations of the Gibbs sampler
 # Chosen number of iterations should be much higher, e.g. 30000.
 
 burnin <- 100 # Number of burn-in draws
-store <- iter - burnin
+draws <- iterations + burnin
 
 r <- 1 # Set rank
 
-t <- ncol(y) # Number of observations
+tt <- ncol(y) # Number of observations
 k <- nrow(y) # Number of endogenous variables
 k_w <- nrow(w) # Number of regressors in error correction term
 k_x <- nrow(x) # Number of differenced regressors and unrestrictec deterministic terms
@@ -52,25 +55,22 @@ p_tau_i <- diag(1, k_w)
 
 u_sigma_df_prior <- r # Prior degrees of freedom
 u_sigma_scale_prior <- diag(0, k) # Prior covariance matrix
-u_sigma_df_post <- t + u_sigma_df_prior # Posterior degrees of freedom
+u_sigma_df_post <- tt + u_sigma_df_prior # Posterior degrees of freedom
 
 # Initial values
 beta <- matrix(c(1, -4), k_w, r)
-
-u_sigma_i <- diag(.0001, k)
-u_sigma <- solve(u_sigma_i)
-
+u_sigma_i <- diag(1 / .0001, k)
 g_i <- u_sigma_i
 
 # Data containers
-draws_alpha <- matrix(NA, k_alpha, store)
-draws_beta <- matrix(NA, k_beta, store)
-draws_pi <- matrix(NA, k * k_w, store)
-draws_gamma <- matrix(NA, k_gamma, store)
-draws_sigma <- matrix(NA, k^2, store)
+draws_alpha <- matrix(NA, k_alpha, iterations)
+draws_beta <- matrix(NA, k_beta, iterations)
+draws_pi <- matrix(NA, k * k_w, iterations)
+draws_gamma <- matrix(NA, k_gamma, iterations)
+draws_sigma <- matrix(NA, k^2, iterations)
 
 # Start Gibbs sampler
-for (draw in 1:iter) {
+for (draw in 1:draws) {
   # Draw conditional mean parameters
   temp <- post_coint_kls(y = y, beta = beta, w = w, x = x, sigma_i = u_sigma_i,
                          v_i = v_i, p_tau_i = p_tau_i, g_i = g_i,
@@ -105,14 +105,16 @@ for (draw in 1:iter) {
 k_nondet <- (k_x - 4) * k
 
 # Generate bvec object
-bvec_est <- bvec(y = y, w = w, x = x,
+bvec_est <- bvec(y = data$data$Y, w = data$data$W,
+                 x = data$data$X[, 1:6],
+                 x_d = data$data$X[, 7:10],
                  Pi = draws_pi,
                  Gamma = draws_gamma[1:k_nondet,],
                  C = draws_gamma[(k_nondet + 1):nrow(draws_gamma),],
                  Sigma = draws_sigma)
 
 # Thin posterior draws
-bvec_est <- thin(bvec_est, thin = 5)
+bvec_est <- thin_posterior(bvec_est, thin = 5)
 
 # Transfrom VEC output to VAR output
 bvar_form <- bvec_to_bvar(bvec_est)

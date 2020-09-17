@@ -36,30 +36,48 @@
 #' @export
 ssvs_prior <- function(object, tau = c(0.05, 10), semiautomatic = NULL) {
   
-  y <- object$Y
+  y <- t(object$data$Y)
   if (object$model$type == "VAR") {
-    x <- object$Z 
+    x <- t(object$data$Z)
   }
   if (object$model$type == "VEC") {
-    if (!is.null(object$X)) {
-      x <- rbind(object$W, object$X)
+    if (!is.null(object$data$X)) {
+      if (object$model$rank == 0) {
+        x <- t(object$data$X)
+      } else {
+        x <- t(cbind(object$data$W, object$data$X)) 
+      }
     } else {
-      x <- object$W 
+      x <- t(object$data$W)
     }
   }
   
   tt <- NCOL(y)
-  tot_par <- NROW(y) * NROW(x)
+  k <- NROW(y)
+  tot_par <- k * NROW(x)
+  if (object$model$structural) {
+    tot_par <- tot_par + k * (k - 1) / 2
+  }
   
   if (!is.null(semiautomatic)) {
+    
     # Semiautomatic approach
     ols <- tcrossprod(y, x) %*% solve(tcrossprod(x)) # OLS estimates
     sigma_ols <- tcrossprod(y - ols %*% x) / (tt - nrow(x)) # OLS error covariance matrix
-    cov_ols <- kronecker(solve(tcrossprod(x)), sigma_ols)
+    cov_ols <- kronecker(solve(tcrossprod(x)), sigma_ols) # Sqrt of diagonal elements are the t-ratios
     se_ols <- matrix(sqrt(diag(cov_ols))) # OLS standard errors
     
     tau0 <- se_ols * semiautomatic[1] # Prior if excluded
     tau1 <- se_ols * semiautomatic[2] # Prior if included
+    
+    if (object$model$structural) {
+      warning("Semiautomatic approach not available for structural variables. Using values of argument 'tau' instead.")
+      
+      tau0 <- rbind(tau0, matrix(tau[1], k * (k - 1) / 2))
+      tau1 <- rbind(tau1, matrix(tau[2], k * (k - 1) / 2))
+    }
+    
+    # Add structural variables here
   } else {
     tau0 <- matrix(rep(tau[1], tot_par))
     tau1 <- matrix(rep(tau[2], tot_par))

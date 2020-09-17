@@ -65,17 +65,20 @@
 //' \item{Gamma}{a draw of the \eqn{K \times N} coefficient matrix for non-cointegration parameters.}
 //' 
 //' @examples
-//' # Prepare data
-//' data("e6")
-//' temp <- gen_vec(e6, p = 1)
-//' y <- temp$Y
-//' ect <- temp$W
 //' 
-//' k <- nrow(y)
-//' t <- ncol(y)
+//' # Load data
+//' data("e6")
+//' 
+//' # Generate model data
+//' temp <- gen_vec(e6, p = 1, r = 1)
+//' y <- t(temp$data$Y)
+//' ect <- t(temp$data$W)
+//' 
+//' k <- nrow(y) # Endogenous variables
+//' tt <- ncol(y) # Number of observations
 //' 
 //' # Initial value of Sigma
-//' sigma <- tcrossprod(y) / t
+//' sigma <- tcrossprod(y) / tt
 //' sigma_i <- solve(sigma)
 //' 
 //' # Initial values of beta

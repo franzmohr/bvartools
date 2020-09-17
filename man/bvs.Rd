@@ -43,15 +43,19 @@ where \eqn{u_t \sim N(0, \Sigma_{t})}.
 \eqn{x_t} as a vector of regressors.
 }
 \examples{
-# Prepare data
+
+# Load data
 data("e1")
-data <- diff(log(e1))
+data <- diff(log(e1)) * 100
+
+# Generate model data
 temp <- gen_var(data, p = 2, deterministic = "const")
-y <- temp$Y
-x <- temp$Z
-z <- kronecker(t(x), diag(1, nrow(y)))
-t <- ncol(y)
-m <- nrow(y) * nrow(x)
+
+y <- t(temp$data$Y)
+z <- temp$data$SUR
+
+tt <- ncol(y)
+m <- ncol(z)
 
 # Priors
 a_mu_prior <- matrix(0, m)
@@ -61,7 +65,7 @@ a_v_i_prior <- diag(0.1, m)
 prob_prior <- matrix(0.5, m)
 
 # Initial value of Sigma
-sigma <- tcrossprod(y) / t
+sigma <- tcrossprod(y) / tt
 sigma_i <- solve(sigma)
 
 lambda <- diag(1, m)

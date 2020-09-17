@@ -24,21 +24,36 @@ bvar(
 
 \item{exogen}{the original time-series object of unmodelled variables.}
 
-\item{y}{a \eqn{K \times T} matrix of endogenous variables,
+\item{y}{a time-series object of endogenous variables,
 usually, a result of a call to \code{\link{gen_var}}.}
 
-\item{x}{a \eqn{(pK + (1+s)M + N) \times T} matrix of regressor variables, usually, a result of a
+\item{x}{a time-series object of \eqn{(pK + (1+s)M + N)} regressor variables, usually, a result of a
 call to \code{\link{gen_var}}.}
 
-\item{A0}{a \eqn{K^2 \times S} matrix of MCMC coefficient draws of structural parameters.}
+\item{A0}{either a \eqn{K^2 \times S} matrix of MCMC coefficient draws of structural parameters or
+a named list, where element \code{coeffs} contains a \eqn{K^2 \times S} matrix of MCMC coefficient
+draws of structural parameters and element \code{lambda} contains the corresponding draws of inclusion
+parameters in case variable selection algorithms were employed.}
 
-\item{A}{a \eqn{pK^2 \times S} matrix of MCMC coefficient draws of lagged endogenous variables.}
+\item{A}{either a \eqn{pK^2 \times S} matrix of MCMC coefficient draws of lagged endogenous variables or
+a named list, where element \code{coeffs} contains a \eqn{pK^2 \times S} matrix of MCMC coefficient draws
+of lagged endogenous variables and element \code{lambda} contains the corresponding draws of inclusion
+parameters in case variable selection algorithms were employed.}
 
-\item{B}{a \eqn{((1 + s)MK) \times S} matrix of MCMC coefficient draws of unmodelled, non-deterministic variables.}
+\item{B}{either a \eqn{((1 + s)MK) \times S} matrix of MCMC coefficient draws of unmodelled, non-deterministic variables
+or a named list, where element \code{coeffs} contains a \eqn{((1 + s)MK) \times S} matrix of MCMC coefficient draws of
+unmodelled, non-deterministic variables and element \code{lambda} contains the corresponding draws of inclusion
+parameters in case variable selection algorithms were employed.}
 
-\item{C}{an \eqn{KN \times S} matrix of MCMC coefficient draws of deterministic terms.}
+\item{C}{either a \eqn{KN \times S} matrix of MCMC coefficient draws of deterministic terms or
+a named list, where element \code{coeffs} contains a \eqn{KN \times S} matrix of MCMC coefficient draws of
+deterministic terms and element \code{lambda} contains the corresponding draws of inclusion
+parameters in case variable selection algorithms were employed.}
 
-\item{Sigma}{a \eqn{K^2 \times S} matrix of variance-covariance MCMC draws.}
+\item{Sigma}{a \eqn{K^2 \times S} matrix of MCMC draws for the error variance-covariance matrix or
+a named list, where element \code{coeffs} contains a \eqn{K^2 \times S} matrix of MCMC draws for the
+error variance-covariance matrix and element \code{lambda} contains the corresponding draws of inclusion
+parameters in case variable selection algorithms were employed to the covariances.}
 
 \item{object}{an object of class \code{"bvar"}, usually, a result of a call to
 \code{\link{bvar}} or \code{\link{bvec_to_bvar}}.}
@@ -55,22 +70,27 @@ call to \code{\link{gen_var}}.}
 credible intervals. Defaults to 0.95.}
 }
 \value{
-An object of class "bvar" containing the following components, if specified:
+An object of class \code{"bvar"} containing the following components, if specified:
 \item{data}{the original time-series object of endogenous variables.}
 \item{exogen}{the original time-series object of unmodelled variables.}
 \item{y}{a \eqn{K \times T} matrix of endogenous variables.}
 \item{x}{a \eqn{(pK + (1+s)M + N) \times T} matrix of regressor variables.}
 \item{A0}{an \eqn{S \times K^2} "mcmc" object of coefficient draws of structural parameters.}
+\item{A0_lambda}{an \eqn{S \times K^2} "mcmc" object of inclusion parameters for structural parameters.}
 \item{A}{an \eqn{S \times pK^2} "mcmc" object of coefficient draws of lagged endogenous variables.}
+\item{A_lambda}{an \eqn{S \times pK^2} "mcmc" object of inclusion parameters for lagged endogenous variables.}
 \item{B}{an \eqn{S \times ((1 + s)MK)} "mcmc" object of coefficient draws of unmodelled, non-deterministic variables.}
+\item{B_lambda}{an \eqn{S \times ((1 + s)MK)} "mcmc" object of inclusion parameters for unmodelled, non-deterministic variables.}
 \item{C}{an \eqn{S \times NK} "mcmc" object of coefficient draws of deterministic terms.}
+\item{C_lambda}{an \eqn{S \times NK} "mcmc" object of inclusion parameters for deterministic terms.}
 \item{Sigma}{an \eqn{S \times K^2} "mcmc" object of variance-covariance draws.}
+\item{Sigma_lambda}{an \eqn{S \times K^2} "mcmc" object of inclusion parameters for error covariances.}
 \item{specifications}{a list containing information on the model specification.}
 
 A time-series object of class \code{"bvarprd"}.
 }
 \description{
-\code{bvar} is used to create objects of class "bvar".
+\code{bvar} is used to create objects of class \code{"bvar"}.
 
 Forecasting a Bayesian VAR object of class \code{"bvar"} with credible bands.
 }
@@ -88,134 +108,102 @@ and \eqn{C} its corresponding coefficient matrix.
 \eqn{u_t} is an error term with \eqn{u_t \sim N(0, \Sigma_u)}.
 
 The draws of the different coefficient matrices provided in \code{A0}, \code{A},
-\code{B}, \code{C} and \code{Sigma} have to correspond to the same MCMC iteration.
+\code{B}, \code{C} and \code{Sigma} have to correspond to the same MCMC iterations.
 
 For the VAR model
-\deqn{y_t = \sum_{i = 1}^{p} A_{i} y_{t-i} + \sum_{i = 0}^{s} B_{i} x_{t-i} + C D_t + A_0^{-1} u_t,}
+\deqn{A_0 y_t = \sum_{i = 1}^{p} A_{i} y_{t-i} + \sum_{i = 0}^{s} B_{i} x_{t-i} + C D_t + u_t,}
 with \eqn{u_t \sim N(0, \Sigma)} the function produces \code{n.ahead} forecasts.
 }
 \examples{
+
+# Get data
 data("e1")
 e1 <- diff(log(e1))
+e1 <- window(e1, end = c(1978, 4))
 
+# Generate model data
 data <- gen_var(e1, p = 2, deterministic = "const")
 
-y <- data$Y[, 1:73]
-x <- data$Z[, 1:73]
+# Add priors
+model <- add_priors(data,
+                    coef = list(v_i = 0, v_i_det = 0),
+                    sigma = list(df = 0, scale = .00001))
 
+# Set RNG seed for reproducibility 
 set.seed(1234567)
 
-iter <- 500 # Number of iterations of the Gibbs sampler
-# Chosen number of iterations should be much higher, e.g. 30000.
-
+iterations <- 400 # Number of iterations of the Gibbs sampler
+# Chosen number of iterations and burnin should be much higher.
 burnin <- 100 # Number of burn-in draws
-store <- iter - burnin
+draws <- iterations + burnin # Total number of MCMC draws
 
-t <- ncol(y) # Number of observations
+y <- t(model$data$Y)
+x <- t(model$data$Z)
+tt <- ncol(y) # Number of observations
 k <- nrow(y) # Number of endogenous variables
 m <- k * nrow(x) # Number of estimated coefficients
 
-# Set (uninformative) priors
-a_mu_prior <- matrix(0, m) # Vector of prior parameter means
-a_v_i_prior <- diag(0, m) # Inverse of the prior covariance matrix
+# Priors
+a_mu_prior <- model$priors$coefficients$mu # Vector of prior parameter means
+a_v_i_prior <- model$priors$coefficients$v_i # Inverse of the prior covariance matrix
 
-u_sigma_df_prior <- 0 # Prior degrees of freedom
-u_sigma_scale_prior <- diag(0, k) # Prior covariance matrix
-u_sigma_df_post <- t + u_sigma_df_prior # Posterior degrees of freedom
+u_sigma_df_prior <- model$priors$sigma$df # Prior degrees of freedom
+u_sigma_scale_prior <- model$priors$sigma$scale # Prior covariance matrix
+u_sigma_df_post <- tt + u_sigma_df_prior # Posterior degrees of freedom
 
 # Initial values
-u_sigma_i <- diag(.00001, k)
-u_sigma <- solve(u_sigma_i)
+u_sigma_i <- diag(1 / .00001, k)
 
 # Data containers for posterior draws
-draws_a <- matrix(NA, m, store)
-draws_sigma <- matrix(NA, k^2, store)
+draws_a <- matrix(NA, m, iterations)
+draws_sigma <- matrix(NA, k^2, iterations)
 
 # Start Gibbs sampler
-for (draw in 1:iter) {
-  # Draw conditional mean parameters
-  a <- post_normal(y, x, u_sigma_i, a_mu_prior, a_v_i_prior)
+for (draw in 1:draws) {
+ # Draw conditional mean parameters
+ a <- post_normal(y, x, u_sigma_i, a_mu_prior, a_v_i_prior)
 
-# Draw variance-covariance matrix
-u <- y - matrix(a, k) \%*\% x # Obtain residuals
-u_sigma_scale_post <- solve(u_sigma_scale_prior + tcrossprod(u))
-u_sigma_i <- matrix(rWishart(1, u_sigma_df_post, u_sigma_scale_post)[,, 1], k)
-u_sigma <- solve(u_sigma_i) # Invert Sigma_i to obtain Sigma
+ # Draw variance-covariance matrix
+ u <- y - matrix(a, k) \%*\% x # Obtain residuals
+ u_sigma_scale_post <- solve(u_sigma_scale_prior + tcrossprod(u))
+ u_sigma_i <- matrix(rWishart(1, u_sigma_df_post, u_sigma_scale_post)[,, 1], k)
 
-# Store draws
-if (draw > burnin) {
+ # Store draws
+ if (draw > burnin) {
   draws_a[, draw - burnin] <- a
-  draws_sigma[, draw - burnin] <- u_sigma
-  }
+  draws_sigma[, draw - burnin] <- solve(u_sigma_i)
+ }
 }
 
 # Generate bvar object
-bvar_est <- bvar(y = y, x = x, A = draws_a[1:18,],
-                 C = draws_a[19:21, ], Sigma = draws_sigma)
+bvar_est <- bvar(y = model$data$Y, x = model$data$Z,
+                 A = draws_a[1:18,], C = draws_a[19:21, ],
+                 Sigma = draws_sigma)
+                 
+
+# Load data
 data("e1")
-e1 <- diff(log(e1))
-data <- gen_var(e1, p = 2, deterministic = "const")
+e1 <- diff(log(e1)) * 100
+e1 <- window(e1, end = c(1978, 4))
 
-y <- data$Y[, 1:73]
-x <- data$Z[, 1:73]
+# Generate model data
+model <- gen_var(e1, p = 2, deterministic = 2,
+                 iterations = 100, burnin = 10)
+# Chosen number of iterations and burnin should be much higher.
 
-set.seed(1234567)
+# Add prior specifications
+model <- add_priors(model)
 
-iter <- 500 # Number of iterations of the Gibbs sampler
-# Chosen number of iterations should be much higher, e.g. 30000.
-
-burnin <- 100 # Number of burn-in draws
-store <- iter - burnin
-
-t <- ncol(y) # Number of observations
-k <- nrow(y) # Number of endogenous variables
-m <- k * nrow(x) # Number of estimated coefficients
-
-# Set (uninformative) priors
-a_mu_prior <- matrix(0, m) # Vector of prior parameter means
-a_v_i_prior <- diag(0, m) # Inverse of the prior covariance matrix
-
-u_sigma_df_prior <- 0 # Prior degrees of freedom
-u_sigma_scale_prior <- diag(0, k) # Prior covariance matrix
-u_sigma_df_post <- t + u_sigma_df_prior # Posterior degrees of freedom
-
-# Initial values
-u_sigma_i <- diag(.00001, k)
-u_sigma <- solve(u_sigma_i)
-
-# Data containers for posterior draws
-draws_a <- matrix(NA, m, store)
-draws_sigma <- matrix(NA, k^2, store)
-
-# Start Gibbs sampler
-for (draw in 1:iter) {
-  # Draw conditional mean parameters
-  a <- post_normal(y, x, u_sigma_i, a_mu_prior, a_v_i_prior)
-
-# Draw variance-covariance matrix
-u <- y - matrix(a, k) \%*\% x # Obtain residuals
-u_sigma_scale_post <- solve(u_sigma_scale_prior + tcrossprod(u))
-u_sigma_i <- matrix(rWishart(1, u_sigma_df_post, u_sigma_scale_post)[,, 1], k)
-u_sigma <- solve(u_sigma_i) # Invert Sigma_i to obtain Sigma
-
-# Store draws
-if (draw > burnin) {
-  draws_a[, draw - burnin] <- a
-  draws_sigma[, draw - burnin] <- u_sigma
-  }
-}
-
-# Generate bvar object
-bvar_est <- bvar(y = y, x = x, A = draws_a[1:18,],
-                 C = draws_a[19:21, ], Sigma = draws_sigma)
+# Obtain posterior draws
+object <- draw_posterior(model)
 
 # Generate forecasts
-bvar_pred <- predict(bvar_est, n.ahead = 10, new_D = rep(1, 10))
+bvar_pred <- predict(object, n.ahead = 10, new_D = rep(1, 10))
 
 # Plot forecasts
 plot(bvar_pred)
 
 }
 \references{
-Lütkepohl, H. (2007). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
+Lütkepohl, H. (2006). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
 }

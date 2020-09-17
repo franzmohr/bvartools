@@ -1,3 +1,15 @@
+# bvartools 0.1.0
+
+* Added function `bvarpost` for posterior simulation of BVAR models.
+* Added function `bvecpost` for posterior simulation of BVEC models.
+* Added function `draw_posterior` for estimation of multiple models.
+* Fixed erroneous calculation of structural forecast error variance decompositions.
+* More specification checks and increased robustness against erroneous model specificaions.
+* Function `fevd` calculates FEVDs based on means of posterior draws of FEVDs and not based on the means of the coefficient draws.
+* Function `bvar` and `summary.bvar` can deal with inclusion parameters.
+* Added funtion `add_priors` for easier construction of prior matrices for multiple models.
+* `gen_var` and `gen_vec` can produce multiple models.
+
 # bvartools 0.0.3
 
 * Changed all argument names of `post_normal`, `post_normal_sur`, `post_coint_kls` and `post_coint_kls_sur` to lower case letters.

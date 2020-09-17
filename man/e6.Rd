@@ -25,6 +25,6 @@ The data cover West Germany until 1990Q2 and all of Germany aferwards. The value
 the last month of a quarter.
 }
 \references{
-Lütkepohl, H. (2007). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
+Lütkepohl, H. (2006). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
 }
 \keyword{datasets}

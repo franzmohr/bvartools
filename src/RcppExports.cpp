@@ -6,6 +6,28 @@
 
 using namespace Rcpp;
 
+// bvaralg
+Rcpp::List bvaralg(Rcpp::List object);
+RcppExport SEXP _bvartools_bvaralg(SEXP objectSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
+    rcpp_result_gen = Rcpp::wrap(bvaralg(object));
+    return rcpp_result_gen;
+END_RCPP
+}
+// bvecalg
+Rcpp::List bvecalg(Rcpp::List object);
+RcppExport SEXP _bvartools_bvecalg(SEXP objectSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
+    rcpp_result_gen = Rcpp::wrap(bvecalg(object));
+    return rcpp_result_gen;
+END_RCPP
+}
 // bvs
 arma::mat bvs(arma::mat y, arma::mat z, arma::mat a, arma::mat lambda, arma::mat sigma_i, arma::vec prob_prior, Rcpp::Nullable<Rcpp::IntegerVector> include);
 RcppExport SEXP _bvartools_bvs(SEXP ySEXP, SEXP zSEXP, SEXP aSEXP, SEXP lambdaSEXP, SEXP sigma_iSEXP, SEXP prob_priorSEXP, SEXP includeSEXP) {
@@ -154,8 +176,24 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// vardecomp
+arma::mat vardecomp(Rcpp::List A, int h, std::string type, int response);
+RcppExport SEXP _bvartools_vardecomp(SEXP ASEXP, SEXP hSEXP, SEXP typeSEXP, SEXP responseSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type A(ASEXP);
+    Rcpp::traits::input_parameter< int >::type h(hSEXP);
+    Rcpp::traits::input_parameter< std::string >::type type(typeSEXP);
+    Rcpp::traits::input_parameter< int >::type response(responseSEXP);
+    rcpp_result_gen = Rcpp::wrap(vardecomp(A, h, type, response));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_bvartools_bvaralg", (DL_FUNC) &_bvartools_bvaralg, 1},
+    {"_bvartools_bvecalg", (DL_FUNC) &_bvartools_bvecalg, 1},
     {"_bvartools_bvs", (DL_FUNC) &_bvartools_bvs, 7},
     {"_bvartools_ir", (DL_FUNC) &_bvartools_ir, 5},
     {"_bvartools_kalman_dk", (DL_FUNC) &_bvartools_kalman_dk, 7},
@@ -165,6 +203,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_bvartools_post_normal", (DL_FUNC) &_bvartools_post_normal, 5},
     {"_bvartools_post_normal_sur", (DL_FUNC) &_bvartools_post_normal_sur, 6},
     {"_bvartools_ssvs", (DL_FUNC) &_bvartools_ssvs, 5},
+    {"_bvartools_vardecomp", (DL_FUNC) &_bvartools_vardecomp, 4},
     {NULL, NULL, 0}
 };
 

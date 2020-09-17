@@ -11,13 +11,15 @@
 //' where \eqn{u_t = y_t - \mu_t}.
 //' 
 //' @examples
+//' 
+//' # Load data
 //' data("e1")
 //' e1 <- diff(log(e1))
 //' 
 //' # Generate VAR model
 //' data <- gen_var(e1, p = 2, deterministic = "const")
-//' y <- data$Y
-//' x <- data$Z
+//' y <- t(data$data$Y)
+//' x <- t(data$data$Z)
 //'
 //' # LS estimate
 //' ols <- tcrossprod(y, x) %*% solve(tcrossprod(x))

@@ -6,7 +6,7 @@
 \title{Impulse Response Function}
 \usage{
 irf(
-  object,
+  x,
   impulse = NULL,
   response = NULL,
   n.ahead = 5,
@@ -19,8 +19,7 @@ irf(
 \method{plot}{bvarirf}(x, ...)
 }
 \arguments{
-\item{object}{an object of class \code{"bvar"}, usually, a result of a call to
-\code{\link{bvar}} or \code{\link{bvec_to_bvar}}.}
+\item{x}{an object of class "bvarirf", usually, a result of a call to \code{\link{irf}}.}
 
 \item{impulse}{name of the impulse variable.}
 
@@ -41,8 +40,6 @@ and structural generalised \code{"sgir"} impulse responses.}
 the posterior impulse response function. Defaults to \code{FALSE} so that
 the median and the credible intervals of the posterior draws are returned.}
 
-\item{x}{an object of class "bvarirf", usually, a result of a call to \code{\link{irf}}.}
-
 \item{...}{further graphical parameters.}
 }
 \value{
@@ -56,7 +53,7 @@ A plot function for objects of class "bvarirf".
 }
 \details{
 The function produces different types of impulse responses for the VAR model
-\deqn{y_t = \sum_{i = 1}^{p} A_{i} y_{t-i} + A_0^{-1} u_t,}
+\deqn{A_0 y_t = \sum_{i = 1}^{p} A_{i} y_{t-i} + u_t,}
 with \eqn{u_t \sim N(0, \Sigma)}.
 
 Forecast error impulse responses \eqn{\Phi_i} are obtained by recursions
@@ -64,8 +61,7 @@ Forecast error impulse responses \eqn{\Phi_i} are obtained by recursions
 with \eqn{\Phi_0 = I_K}.
 
 Orthogonalised impulse responses \eqn{\Theta^o_i} are calculated as \eqn{\Theta^o_i = \Phi_i P},
-where P is the lower triangular Choleski decomposition of \eqn{\Sigma}. \eqn{A_0} is assumed to
-be an identity matrix.
+where P is the lower triangular Choleski decomposition of \eqn{\Sigma}.
 
 Structural impulse responses \eqn{\Theta^s_i} are calculated as \eqn{\Theta^s_i = \Phi_i A_0^{-1}}.
 
@@ -76,138 +72,53 @@ one in its \eqn{j^{th}} element and zero otherwise. If the \code{"bvar"} object 
 of \eqn{A_0}, it is assumed to be an identity matrix.
 }
 \examples{
+
+# Load data
 data("e1")
-e1 <- diff(log(e1))
+e1 <- diff(log(e1)) * 100
 
-data <- gen_var(e1, p = 2, deterministic = "const")
+# Generate model data
+model <- gen_var(e1, p = 2, deterministic = 2,
+                 iterations = 100, burnin = 10)
+# Chosen number of iterations and burnin should be much higher.
 
-y <- data$Y[, 1:73]
-x <- data$Z[, 1:73]
+# Add prior specifications
+model <- add_priors(model)
 
-set.seed(1234567)
+# Obtain posterior draws
+object <- draw_posterior(model)
 
-iter <- 500 # Number of iterations of the Gibbs sampler
-# Chosen number of iterations should be much higher, e.g. 30000.
+# Obtain IR
+ir <- irf(object, impulse = "invest", response = "cons")
 
-burnin <- 100 # Number of burn-in draws
-store <- iter - burnin
-
-t <- ncol(y) # Number of observations
-k <- nrow(y) # Number of endogenous variables
-m <- k * nrow(x) # Number of estimated coefficients
-
-# Set (uninformative) priors
-a_mu_prior <- matrix(0, m) # Vector of prior parameter means
-a_v_i_prior <- diag(0, m) # Inverse of the prior covariance matrix
-
-u_sigma_df_prior <- 0 # Prior degrees of freedom
-u_sigma_scale_prior <- diag(0, k) # Prior covariance matrix
-u_sigma_df_post <- t + u_sigma_df_prior # Posterior degrees of freedom
-
-# Initial values
-u_sigma_i <- diag(.00001, k)
-u_sigma <- solve(u_sigma_i)
-
-# Data containers for posterior draws
-draws_a <- matrix(NA, m, store)
-draws_sigma <- matrix(NA, k^2, store)
-
-# Start Gibbs sampler
-for (draw in 1:iter) {
-  # Draw conditional mean parameters
-  a <- post_normal(y, x, u_sigma_i, a_mu_prior, a_v_i_prior)
-
-# Draw variance-covariance matrix
-u <- y - matrix(a, k) \%*\% x # Obtain residuals
-u_sigma_scale_post <- solve(u_sigma_scale_prior + tcrossprod(u))
-u_sigma_i <- matrix(rWishart(1, u_sigma_df_post, u_sigma_scale_post)[,, 1], k)
-u_sigma <- solve(u_sigma_i) # Invert Sigma_i to obtain Sigma
-
-# Store draws
-if (draw > burnin) {
-  draws_a[, draw - burnin] <- a
-  draws_sigma[, draw - burnin] <- u_sigma
-  }
-}
-
-# Generate bvar object
-bvar_est <- bvar(y = y, x = x, A = draws_a[1:18,],
-                 C = draws_a[19:21, ], Sigma = draws_sigma)
-
-# Generate impulse response
-IR <- irf(bvar_est, impulse = "income", response = "cons", n.ahead = 8)
-
-# Plot
-plot(IR, main = "Forecast Error Impulse Response", xlab = "Period", ylab = "Response")
+# Plot IR
+plot(ir)
 
 
+
+# Load data
 data("e1")
-e1 <- diff(log(e1))
+e1 <- diff(log(e1)) * 100
 
-data <- gen_var(e1, p = 2, deterministic = "const")
+# Generate model data
+model <- gen_var(e1, p = 2, deterministic = 2,
+                 iterations = 100, burnin = 10)
 
-y <- data$Y[, 1:73]
-x <- data$Z[, 1:73]
+# Add prior specifications
+model <- add_priors(model)
 
-set.seed(1234567)
+# Add posterior specifications
+object <- draw_posterior(model)
 
-iter <- 500 # Number of iterations of the Gibbs sampler
-# Chosen number of iterations should be much higher, e.g. 30000.
+# Calculate IR
+ir <- irf(object, impulse = "invest", response = "cons")
 
-burnin <- 100 # Number of burn-in draws
-store <- iter - burnin
-
-t <- ncol(y) # Number of observations
-k <- nrow(y) # Number of endogenous variables
-m <- k * nrow(x) # Number of estimated coefficients
-
-# Set (uninformative) priors
-a_mu_prior <- matrix(0, m) # Vector of prior parameter means
-a_v_i_prior <- diag(0, m) # Inverse of the prior covariance matrix
-
-u_sigma_df_prior <- 0 # Prior degrees of freedom
-u_sigma_scale_prior <- diag(0, k) # Prior covariance matrix
-u_sigma_df_post <- t + u_sigma_df_prior # Posterior degrees of freedom
-
-# Initial values
-u_sigma_i <- diag(.00001, k)
-u_sigma <- solve(u_sigma_i)
-
-# Data containers for posterior draws
-draws_a <- matrix(NA, m, store)
-draws_sigma <- matrix(NA, k^2, store)
-
-# Start Gibbs sampler
-for (draw in 1:iter) {
-  # Draw conditional mean parameters
-  a <- post_normal(y, x, u_sigma_i, a_mu_prior, a_v_i_prior)
-
-# Draw variance-covariance matrix
-u <- y - matrix(a, k) \%*\% x # Obtain residuals
-u_sigma_scale_post <- solve(u_sigma_scale_prior + tcrossprod(u))
-u_sigma_i <- matrix(rWishart(1, u_sigma_df_post, u_sigma_scale_post)[,, 1], k)
-u_sigma <- solve(u_sigma_i) # Invert Sigma_i to obtain Sigma
-
-# Store draws
-if (draw > burnin) {
-  draws_a[, draw - burnin] <- a
-  draws_sigma[, draw - burnin] <- u_sigma
-  }
-}
-
-# Generate bvar object
-bvar_est <- bvar(y = y, x = x, A = draws_a[1:18,],
-                 C = draws_a[19:21, ], Sigma = draws_sigma)
-
-# Generate impulse response
-IR <- irf(bvar_est, impulse = "income", response = "cons", n.ahead = 8)
-
-# Plot
-plot(IR, main = "Forecast Error Impulse Response", xlab = "Period", ylab = "Response")
+# Plot IR
+plot(ir)
 
 }
 \references{
-Lütkepohl, H. (2007). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
+Lütkepohl, H. (2006). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
 
 Pesaran, H. H., Shin, Y. (1998). Generalized impulse response analysis in linear multivariate models. \emph{Economics Letters, 58}, 17-29.
 }

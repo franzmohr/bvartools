@@ -36,8 +36,9 @@ A plot function for objects of class "bvarfevd".
 }
 \details{
 The function produces forecast error variance decompositions (FEVD) for the VAR model
-\deqn{y_t = \sum_{i = 1}^{p} A_{i} y_{t-i} + A_0^{-1} u_t,}
-with \eqn{u_t \sim N(0, \Sigma)}.
+\deqn{A_0 y_t = \sum_{i = 1}^{p} A_{i} y_{t-i} + u_t,}
+with \eqn{u_t \sim N(0, \Sigma)}. For non-structural models matrix \eqn{A_0} is set to the identiy matrix
+and can therefore be omitted, where not relevant.
 
 If the FEVD is based on the orthogonalised impulse resonse (OIR), the FEVD will be calculated as
 \deqn{\omega^{OIR}_{jk, h} = \frac{\sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i P e_k )^2}{\sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i \Sigma \Phi_i^{\prime} e_j )},}
@@ -47,7 +48,7 @@ matrix \eqn{\Sigma}, \eqn{e_j} is a selection vector for the response variable a
 \eqn{e_k} a selection vector for the impulse variable.
 
 If \code{type = "sir"}, the structural FEVD will be
-calculated as \deqn{\omega^{SIR}_{jk, h} = \frac{\sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i A_0^{-1} \Sigma^{\frac{1}{2}} e_k )^2}{\sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i A_0^{-1}  \Sigma A_0^{-1\prime} \Phi_i^{\prime} e_j )},}
+calculated as \deqn{\omega^{SIR}_{jk, h} = \frac{\sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i A_0^{-1} e_k )^2}{\sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i A_0^{-1} A_0^{-1\prime} \Phi_i^{\prime} e_j )},}
 where \eqn{\sigma_{jj}} is the diagonal element of the \eqn{j}th variable of the variance covariance matrix.
 
 If \code{type = "gir"}, the generalised FEVD will be
@@ -60,135 +61,52 @@ calculated as \deqn{\omega^{SGIR}_{jk, h} = \frac{\sigma^{-1}_{jj} \sum_{i = 0}^
 Since GIR-based FEVDs do not add up to unity, they can be normalised by setting \code{normalise_gir = TRUE}.
 }
 \examples{
+
+# Load data
 data("e1")
-e1 <- diff(log(e1))
+e1 <- diff(log(e1)) * 100
 
-data <- gen_var(e1, p = 2, deterministic = "const")
+# Generate models
+model <- gen_var(e1, p = 2, deterministic = 2,
+                 iterations = 100, burnin = 10)
 
-y <- data$Y[, 1:73]
-x <- data$Z[, 1:73]
+# Add priors
+model <- add_priors(model)
 
-set.seed(1234567)
+# Obtain posterior draws
+object <- draw_posterior(model)
 
-iter <- 500 # Number of iterations of the Gibbs sampler
-# Chosen number of iterations should be much higher, e.g. 30000.
-
-burnin <- 100 # Number of burn-in draws
-store <- iter - burnin
-
-t <- ncol(y) # Number of observations
-k <- nrow(y) # Number of endogenous variables
-m <- k * nrow(x) # Number of estimated coefficients
-
-# Set (uninformative) priors
-a_mu_prior <- matrix(0, m) # Vector of prior parameter means
-a_v_i_prior <- diag(0, m) # Inverse of the prior covariance matrix
-
-u_sigma_df_prior <- 0 # Prior degrees of freedom
-u_sigma_scale_prior <- diag(0, k) # Prior covariance matrix
-u_sigma_df_post <- t + u_sigma_df_prior # Posterior degrees of freedom
-
-# Initial values
-u_sigma_i <- diag(.00001, k)
-u_sigma <- solve(u_sigma_i)
-
-# Data containers for posterior draws
-draws_a <- matrix(NA, m, store)
-draws_sigma <- matrix(NA, k^2, store)
-
-# Start Gibbs sampler
-for (draw in 1:iter) {
-  # Draw conditional mean parameters
-  a <- post_normal(y, x, u_sigma_i, a_mu_prior, a_v_i_prior)
-
-# Draw variance-covariance matrix
-u <- y - matrix(a, k) \%*\% x # Obtain residuals
-u_sigma_scale_post <- solve(u_sigma_scale_prior + tcrossprod(u))
-u_sigma_i <- matrix(rWishart(1, u_sigma_df_post, u_sigma_scale_post)[,, 1], k)
-u_sigma <- solve(u_sigma_i) # Invert Sigma_i to obtain Sigma
-
-# Store draws
-if (draw > burnin) {
-  draws_a[, draw - burnin] <- a
-  draws_sigma[, draw - burnin] <- u_sigma
-  }
-}
-
-# Generate bvar object
-bvar_est <- bvar(y = y, x = x, A = draws_a[1:18,],
-                 C = draws_a[19:21, ], Sigma = draws_sigma)
-
-# Generate forecast error variance decomposition (FEVD)
-bvar_fevd <- fevd(bvar_est, response = "cons")
+# Obtain FEVD
+vd <- fevd(object, response = "cons")
 
 # Plot FEVD
-plot(bvar_fevd, main = "FEVD of consumption")
+plot(vd)
+
+
+# Load data
 data("e1")
-e1 <- diff(log(e1))
+e1 <- diff(log(e1)) * 100
 
-data <- gen_var(e1, p = 2, deterministic = "const")
+# Generate model data
+model <- gen_var(e1, p = 2, deterministic = 2,
+                 iterations = 100, burnin = 10)
+# Chosen number of iterations and burnin should be much higher.
 
-y <- data$Y[, 1:73]
-x <- data$Z[, 1:73]
+# Add prior specifications
+model <- add_priors(model)
 
-set.seed(1234567)
+# Obtain posterior draws
+object <- draw_posterior(model)
 
-iter <- 500 # Number of iterations of the Gibbs sampler
-# Chosen number of iterations should be much higher, e.g. 30000.
+# Obtain FEVD
+vd <- fevd(object, response = "cons")
 
-burnin <- 100 # Number of burn-in draws
-store <- iter - burnin
+# Plot
+plot(vd)
 
-t <- ncol(y) # Number of observations
-k <- nrow(y) # Number of endogenous variables
-m <- k * nrow(x) # Number of estimated coefficients
-
-# Set (uninformative) priors
-a_mu_prior <- matrix(0, m) # Vector of prior parameter means
-a_v_i_prior <- diag(0, m) # Inverse of the prior covariance matrix
-
-u_sigma_df_prior <- 0 # Prior degrees of freedom
-u_sigma_scale_prior <- diag(0, k) # Prior covariance matrix
-u_sigma_df_post <- t + u_sigma_df_prior # Posterior degrees of freedom
-
-# Initial values
-u_sigma_i <- diag(.00001, k)
-u_sigma <- solve(u_sigma_i)
-
-# Data containers for posterior draws
-draws_a <- matrix(NA, m, store)
-draws_sigma <- matrix(NA, k^2, store)
-
-# Start Gibbs sampler
-for (draw in 1:iter) {
-  # Draw conditional mean parameters
-  a <- post_normal(y, x, u_sigma_i, a_mu_prior, a_v_i_prior)
-
-# Draw variance-covariance matrix
-u <- y - matrix(a, k) \%*\% x # Obtain residuals
-u_sigma_scale_post <- solve(u_sigma_scale_prior + tcrossprod(u))
-u_sigma_i <- matrix(rWishart(1, u_sigma_df_post, u_sigma_scale_post)[,, 1], k)
-u_sigma <- solve(u_sigma_i) # Invert Sigma_i to obtain Sigma
-
-# Store draws
-if (draw > burnin) {
-  draws_a[, draw - burnin] <- a
-  draws_sigma[, draw - burnin] <- u_sigma
-  }
-}
-
-# Generate bvar object
-bvar_est <- bvar(y = y, x = x, A = draws_a[1:18,],
-                 C = draws_a[19:21, ], Sigma = draws_sigma)
-
-# Generate forecast error variance decomposition (FEVD)
-bvar_fevd <- fevd(bvar_est, response = "cons")
-
-# Plot FEVD
-plot(bvar_fevd, main = "FEVD of consumption")
 }
 \references{
-Lütkepohl, H. (2007). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
+Lütkepohl, H. (2006). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
 
 Pesaran, H. H., & Shin, Y. (1998). Generalized impulse response analysis in linear multivariate models. \emph{Economics Letters, 58}, 17-29.
 }

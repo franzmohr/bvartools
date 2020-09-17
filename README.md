@@ -349,6 +349,19 @@ with high-performance C++ linear algebra. *Computational Statistics and
 Data Analysis, 71*, 1054-1063.
 <https://doi.org/10.1016/j.csda.2013.02.005>
 
+George, E. I., Sun, D., & Ni, S. (2008). Bayesian stochastic search for
+VAR model restrictions. *Journal of Econometrics, 142*(1), 553-580.
+<https://doi.org/10.1016/j.jeconom.2007.08.017>
+
+Koop, G., León-González, R., & Strachan R. W. (2010). Efficient
+posterior simulation for cointegrated models with priors on the
+cointegration space. *Econometric Reviews, 29*(2), 224-242.
+<https://doi.org/10.1080/07474930903382208>
+
+Korobilis, D. (2013). VAR forecasting using Bayesian variable selection.
+*Journal of Applied Econometrics, 28*(2), 204-230.
+<https://doi.org/10.1002/jae.1271>
+
 Lütkepohl, H. (2006). *New introduction to multiple time series
 analysis* (2nd ed.). Berlin: Springer.
 

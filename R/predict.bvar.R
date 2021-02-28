@@ -5,7 +5,9 @@
 #' @param object an object of class \code{"bvar"}, usually, a result of a call to
 #' \code{\link{bvar}} or \code{\link{bvec_to_bvar}}.
 #' @param n.ahead number of steps ahead at which to predict.
-#' @param new_x a matrix of new non-deterministic, exogenous variables. Must have \code{n.ahead} rows.
+#' @param new_x an object of class \code{ts} of new non-deterministic, exogenous variables.
+#' The object must have the same frequency as the time series in \code{object[["x"]]} and must contain
+#' at least all necessary observations for the predicted period.
 #' @param new_d a matrix of new deterministic variables. Must have \code{n.ahead} rows.
 #' @param ci a numeric between 0 and 1 specifying the probability mass covered by the
 #' credible intervals. Defaults to 0.95.
@@ -78,10 +80,32 @@ predict.bvar <- function(object, ..., n.ahead = 10, new_x = NULL, new_d = NULL, 
     tot <- tot + m
     if (is.null(new_x)) {
       new_x <- matrix(0, n.ahead, m)
+    } else {
+      s <- m / NCOL(new_x) - 1
+      fstx <- stats::time(object[["y"]])[tt - s + 1]
+      
+      # Prepare ts object
+      if (is.null(dimnames(new_x))) {
+        tsp_temp <- stats::tsp(new_x)
+        new_x <- stats::ts(as.matrix(new_x), class = c("mts", "ts", "matrix"))
+        stats::tsp(new_x) <- tsp_temp
+        dimnames(new_x)[[2]] <- "x"
+      }
+      
+      new_x <- stats::ts(new_x[stats::time(new_x) >= fstx, ], start = fstx, frequency = stats::tsp(new_x)[3])
+      if (s > 0) {
+        temp <- new_x
+        for (i in 1:s) {
+          temp <- cbind(temp, stats::lag(new_x, -i))
+        }
+        new_x <- stats::na.omit(temp)
+        dimnames(new_x)[[2]] <- NULL
+      }
     }
-    if (NROW(new_x) != n.ahead) {
-      stop("Length of argument 'new_x' must be equal to 'n.ahead'.")
+    if (NROW(new_x) < n.ahead) {
+      stop("Longer time series required for argument 'new_x'.")
     }
+    new_x <- new_x[1:n.ahead,]
   }
   
   if (!is.null(object[["C"]])) {

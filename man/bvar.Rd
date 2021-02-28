@@ -62,7 +62,9 @@ parameters in case variable selection algorithms were employed to the covariance
 
 \item{n.ahead}{number of steps ahead at which to predict.}
 
-\item{new_x}{a matrix of new non-deterministic, exogenous variables. Must have \code{n.ahead} rows.}
+\item{new_x}{an object of class \code{ts} of new non-deterministic, exogenous variables.
+The object must have the same frequency as the time series in \code{object[["x"]]} and must contain
+at least all necessary observations for the predicted period.}
 
 \item{new_d}{a matrix of new deterministic variables. Must have \code{n.ahead} rows.}
 

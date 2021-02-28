@@ -1,3 +1,9 @@
+# bvartools 0.1.1
+
+* `predict` requires to specify an object of class `ts` as input for argument `exogen`.
+* Additioal argument checks for `add_priors`.
+* Updated documentation `minnesota_prior` and `add_prior`.
+
 # bvartools 0.1.0
 
 * Omitted package `Matrix` from "Imports"" in DESCRIPTION, which caused a note in version 0.0.3.

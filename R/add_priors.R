@@ -34,7 +34,7 @@
 #'   For the endogenous variable \eqn{i} the prior variance of the \eqn{l}th lag of regressor \eqn{j} is obtained as
 #'   \deqn{ \frac{\kappa_{0}}{l^2} \textrm{ for own lags of endogenous variables,}} 
 #'   \deqn{ \frac{\kappa_{0} \kappa_{1}}{l^2} \frac{\sigma_{i}^2}{\sigma_{j}^2} \textrm{ for endogenous variables other than own lags,}}
-#'   \deqn{ \frac{\kappa_{0} \kappa_{2}}{l^2} \frac{\sigma_{i}^2}{\sigma_{j}^2} \textrm{ for exogenous variables,}}
+#'   \deqn{ \frac{\kappa_{0} \kappa_{2}}{(l+1)^2} \frac{\sigma_{i}^2}{\sigma_{j}^2} \textrm{ for exogenous variables,}}
 #'   \deqn{ \kappa_{0} \kappa_{3} \sigma_{i}^2 \textrm{ for deterministic terms,}}
 #'   where \eqn{\sigma_{i}} is the residual standard deviation of variable \eqn{i} of an unrestricted
 #'   LS estimate. For exogenous variables \eqn{\sigma_{i}} is the sample standard deviation.
@@ -296,6 +296,9 @@ add_priors <- function(object,
         use_bvs_error <- TRUE 
       }
     }
+    if (coef$v_i == 0 | (coef$v_i_det == 0 & !bvs$exclude_det)) {
+      warning("Using BVS with an uninformative prior is not recommended.")
+    }
   }
   
   if (use_ssvs & use_bvs) {
@@ -432,7 +435,6 @@ add_priors <- function(object,
       if (object[[i]]$model$type == "VEC") {
         object[[i]]$priors$noncointegration <- list(mu = mu)
       }
-      
       
       # Prior covariances
       if (minnesota) {

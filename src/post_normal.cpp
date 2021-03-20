@@ -63,12 +63,12 @@ arma::vec post_normal(arma::mat y, arma::mat x, arma::mat sigma_i, arma::vec a_p
   if (sigma_i.has_nan()) {
     Rcpp::stop("Argument 'sigma_i' contains NAs.");
   }
-  if (y.n_cols < y.n_rows) {
-    Rcpp::stop("Argument 'y' contains more variables than observations."); 
-  }
-  if (x.n_cols < x.n_rows) {
-    Rcpp::stop("Argument 'x' contains more variables than observations."); 
-  }
+  // if (y.n_cols < y.n_rows) {
+  //   Rcpp::stop("Argument 'y' contains more variables than observations."); 
+  // }
+  // if (x.n_cols < x.n_rows) {
+  //   Rcpp::stop("Argument 'x' contains more variables than observations."); 
+  // }
   if (y.n_cols != x.n_cols) {
     Rcpp::stop("Arguments 'x' and 'y' contain different amounts of observations."); 
   }

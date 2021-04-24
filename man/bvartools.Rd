@@ -53,7 +53,7 @@ Korobilis, D. (2013). VAR forecasting using Bayesian variable selection.
 \emph{Journal of Applied Econometrics, 28}(2), 204--230.
 \url{https://doi.org/10.1002/jae.1271}
 
-Lütkepohl, H. (2006). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
+Lütkepohl, H. (2007). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
 
 Sanderson, C., & Curtin, R. (2016). Armadillo: a template-based C++ library for linear algebra.
 \emph{Journal of Open Source Software, 1}(2), 26. \url{http://dx.doi.org/10.21105/joss.00026}

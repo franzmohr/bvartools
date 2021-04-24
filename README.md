@@ -52,6 +52,10 @@ space – in the following variants
     However, no further restrictions are made regarding the
     cointegration term.
 
+For Bayesian inference of *dynamic factor models* the package implements
+the althorithm used in the textbook of Chan, Koop, Poirer and Tobias
+(2019).
+
 Similar packages worth checking out are
 
   - [BVAR](https://cran.r-project.org/package=BVAR)

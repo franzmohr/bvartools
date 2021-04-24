@@ -103,11 +103,12 @@ e1 <- diff(log(e1)) * 100
 # Generate model data
 model <- gen_var(e1, p = 2, deterministic = 2,
                  iterations = 100, burnin = 10)
+# Number of iterations and burnin should be much higher.
 
 # Add prior specifications
 model <- add_priors(model)
 
-# Add posterior specifications
+# Optain posterior draws
 object <- draw_posterior(model)
 
 # Calculate IR

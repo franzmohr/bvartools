@@ -40,6 +40,8 @@ For Bayesian inference of *cointegrated VAR models* the package implements the a
 * The KLS modol employing Bayesian variable selection à la Korobilis (2013)
 * Structural BVEC models, where the structural coefficients are estimated from contemporaneous endogenous variables (A-model). However, no further restrictions are made regarding the cointegration term.
 
+For Bayesian inference of *dynamic factor models* the package implements the althorithm used in the textbook of Chan, Koop, Poirer and Tobias (2019).
+
 This introduction to `bvartools` provides the code to set up and estimate a basic Bayesian VAR (BVAR) model.[^further] The first part covers a basic workflow, where the standard posterior simulation algorithm of the package is employed for Bayesian inference. The second part presents a workflow for a posterior algorithm as it could be implemented by a researcher.
 
 For both illustrations the data set E1 from Lütkepohl (2006) is used. It contains data on West German fixed investment, disposable income and consumption expenditures in billions of DM from 1960Q1 to 1982Q4. Like in the textbook only the first 73 observations of the log-differenced series are used.

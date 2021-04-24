@@ -81,6 +81,10 @@ bvs <- function(y, z, a, lambda, sigma_i, prob_prior, include = NULL) {
     .Call(`_bvartools_bvs`, y, z, a, lambda, sigma_i, prob_prior, include)
 }
 
+.dfmalg <- function(object) {
+    .Call(`_bvartools_dfmalg`, object)
+}
+
 .ir <- function(A, h, type, impulse, response) {
     .Call(`_bvartools_ir`, A, h, type, impulse, response)
 }

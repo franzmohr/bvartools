@@ -43,8 +43,8 @@
 #' 
 #' # Create model
 #' model <- gen_var(e1, p = 2, deterministic = "const",
-#'                  iterations = 100, burnin = 10)
-#' # Chosen number of iterations and burnin should be much higher.
+#'                  iterations = 50, burnin = 10)
+#' # Number of iterations and burnin should be much higher.
 #' 
 #' # Add priors
 #' model <- add_priors(model)

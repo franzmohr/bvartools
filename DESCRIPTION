@@ -1,7 +1,7 @@
 Package: bvartools
 Title: Bayesian Inference of Vector Autoregressive Models
-Version: 0.1.0.9000
-Date: 2020-09-15
+Version: 0.2.0
+Date: 2021-04-25
 Authors@R: person("Franz X.", "Mohr", email = "bvartools@outlook.com", role = c("aut","cre"))
 Description: Assists in the set-up of algorithms for Bayesian inference of vector autoregressive (VAR) models. Functions for posterior simulation, forecasting, impulse response analysis and forecast error variance decomposition are largely based on the introductory texts of Chan, Koop, Poirier and Tobias (2019, ISBN: 9781108437493), Koop and Korobilis (2010) <doi:10.1561/0800000013> and Luetkepohl (2006, ISBN: 9783540262398). 
 License: GPL (>= 2)
@@ -17,6 +17,9 @@ VignetteBuilder: knitr
 Collate: 
     'RcppExports.R'
     'add_priors.R'
+    'add_priors.bvarmodel.R'
+    'add_priors.bvecmodel.R'
+    'add_priors.dfmodel.R'
     'bvar.R'
     'bvarpost.R'
     'bvartools.R'
@@ -24,8 +27,11 @@ Collate:
     'bvec_to_bvar.R'
     'bvecpost.R'
     'data.R'
+    'dfm.R'
+    'dfmpost.R'
     'draw_posterior.R'
     'fevd.R'
+    'gen_dfm.R'
     'gen_var.R'
     'gen_vec.R'
     'inclusion_prior.R'
@@ -34,6 +40,7 @@ Collate:
     'plot.bvarfevd.R'
     'plot.bvarirf.R'
     'plot.bvarprd.R'
+    'plot.dfm.R'
     'predict.bvar.R'
     'summary.bvar.R'
     'print.summary.bvar.R'
@@ -41,8 +48,10 @@ Collate:
     'print.summary.bvec.R'
     'ssvs_prior.R'
     'summary.bvarlist.R'
+    'summary.dfm.R'
     'thin_posterior.R'
     'thin_posterior.bvar.R'
     'thin_posterior.bvarlist.R'
     'thin_posterior.bvec.R'
+    'thin_posterior.dfm.R'
     'zzz.R'

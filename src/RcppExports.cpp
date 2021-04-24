@@ -45,6 +45,17 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// dfmalg
+Rcpp::List dfmalg(Rcpp::List object);
+RcppExport SEXP _bvartools_dfmalg(SEXP objectSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
+    rcpp_result_gen = Rcpp::wrap(dfmalg(object));
+    return rcpp_result_gen;
+END_RCPP
+}
 // ir
 arma::vec ir(Rcpp::List A, int h, std::string type, int impulse, int response);
 RcppExport SEXP _bvartools_ir(SEXP ASEXP, SEXP hSEXP, SEXP typeSEXP, SEXP impulseSEXP, SEXP responseSEXP) {
@@ -195,6 +206,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_bvartools_bvaralg", (DL_FUNC) &_bvartools_bvaralg, 1},
     {"_bvartools_bvecalg", (DL_FUNC) &_bvartools_bvecalg, 1},
     {"_bvartools_bvs", (DL_FUNC) &_bvartools_bvs, 7},
+    {"_bvartools_dfmalg", (DL_FUNC) &_bvartools_dfmalg, 1},
     {"_bvartools_ir", (DL_FUNC) &_bvartools_ir, 5},
     {"_bvartools_kalman_dk", (DL_FUNC) &_bvartools_kalman_dk, 7},
     {"_bvartools_loglik_normal", (DL_FUNC) &_bvartools_loglik_normal, 2},

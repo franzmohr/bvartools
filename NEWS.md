@@ -1,8 +1,11 @@
-# bvartools 0.1.1
+# bvartools 0.2.0
 
+* Changed `thin_posterior` to a generic function and added methods for BVAR, BVEC and dynamic factor model input.
+* Changed `add_prior` to a generic function and added methods for BVAR, BVEC and dynamic factor model input.
+* Added funcionality to estimate dynamic factor models (DFM).
 * `predict` requires to specify an object of class `ts` as input for argument `exogen`.
-* Additioal argument checks for `add_priors`.
-* Updated documentation `minnesota_prior` and `add_prior`.
+* Additioal argument checks for `add_priors` methods.
+* Updated documentation in `minnesota_prior` and for `add_prior` methods.
 
 # bvartools 0.1.0
 

@@ -2,7 +2,7 @@
 #' 
 #' \code{gen_dfm} produces the input for the estimation of a dynamic factor model (DFM).
 #' 
-#' @param x a time-series object of endogenous variables.
+#' @param x a time-series object of stationary endogenous variables.
 #' @param p an integer vector of the lag order of the measurement equation. See 'Details'.
 #' @param n an integer vector of the number of factors. See 'Details'.
 #' @param iterations an integer of MCMC draws excluding burn-in draws (defaults

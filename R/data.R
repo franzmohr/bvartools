@@ -16,7 +16,7 @@
 #' (2nd ed.). Cambridge: Cambridge University Press.
 #' 
 #' McCracken, M. W., & Ng, S. (2016). FRED-MD: A monthly database for macroeconomic research.
-#' \emph{Journal of Business & Economic Statistics 34}(4), 574-589. \url{https://doi.org/10.1080/07350015.2015.1086655}
+#' \emph{Journal of Business & Economic Statistics 34}(4), 574-589. \doi{10.1080/07350015.2015.1086655}
 #' 
 #' 
 #' 

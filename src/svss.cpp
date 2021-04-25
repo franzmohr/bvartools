@@ -70,7 +70,7 @@
 //' 
 //' George, E. I., Sun, D., & Ni, S. (2008). Bayesian stochastic search for VAR model
 //' restrictions. \emph{Journal of Econometrics, 142}(1), 553--580.
-//' \url{https://doi.org/10.1016/j.jeconom.2007.08.017}
+//' \doi{10.1016/j.jeconom.2007.08.017}
 //' 
 // [[Rcpp::export]]
   Rcpp::List ssvs(arma::vec a, arma::vec tau0, arma::vec tau1, arma::vec prob_prior,

@@ -31,15 +31,15 @@
 #' 
 #' George, E. I., Sun, D., & Ni, S. (2008). Bayesian stochastic search for VAR model
 #' restrictions. \emph{Journal of Econometrics, 142}(1), 553--580.
-#' \url{https://doi.org/10.1016/j.jeconom.2007.08.017}
+#' \doi{10.1016/j.jeconom.2007.08.017}
 #' 
 #' Koop, G., León-González, R., & Strachan R. W. (2010). Efficient posterior
 #' simulation for cointegrated models with priors on the cointegration space.
 #' \emph{Econometric Reviews, 29}(2), 224--242.
-#' \url{https://doi.org/10.1080/07474930903382208}
+#' \doi{10.1080/07474930903382208}
 #' 
 #' Korobilis, D. (2013). VAR forecasting using Bayesian variable selection.
-#' \emph{Journal of Applied Econometrics, 28}(2), 204--230. \url{https://doi.org/10.1002/jae.1271}
+#' \emph{Journal of Applied Econometrics, 28}(2), 204--230. \doi{10.1002/jae.1271}
 #' 
 #' @examples
 #' 

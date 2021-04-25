@@ -7,7 +7,7 @@
 gen_dfm(x, p = 2, n = 1, iterations = 50000, burnin = 5000)
 }
 \arguments{
-\item{x}{a time-series object of endogenous variables.}
+\item{x}{a time-series object of stationary endogenous variables.}
 
 \item{p}{an integer vector of the lag order of the measurement equation. See 'Details'.}
 

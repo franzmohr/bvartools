@@ -75,7 +75,7 @@
 #' 
 #' @references
 #' 
-#' Korobilis, D. (2013). VAR forecasting using Bayesian variable selection. \emph{Journal of Applied Econometrics, 28}(2), 204--230. \url{https://doi.org/10.1002/jae.1271}
+#' Korobilis, D. (2013). VAR forecasting using Bayesian variable selection. \emph{Journal of Applied Econometrics, 28}(2), 204--230. \doi{10.1002/jae.1271}
 #' 
 bvs <- function(y, z, a, lambda, sigma_i, prob_prior, include = NULL) {
     .Call(`_bvartools_bvs`, y, z, a, lambda, sigma_i, prob_prior, include)
@@ -172,7 +172,7 @@ bvs <- function(y, z, a, lambda, sigma_i, prob_prior, include = NULL) {
 #' 
 #' Jarociński, M. (2015). A note on implementing the Durbin and Koopman simulation
 #' smoother. \emph{Computational Statistics and Data Analysis, 91}, 1--3.
-#' \url{https://doi.org/10.1016/j.csda.2015.05.001}
+#' \doi{10.1016/j.csda.2015.05.001}
 #' 
 kalman_dk <- function(y, z, sigma_u, sigma_v, B, a_init, P_init) {
     .Call(`_bvartools_kalman_dk`, y, z, sigma_u, sigma_v, B, a_init, P_init)
@@ -305,7 +305,7 @@ loglik_normal <- function(u, sigma) {
 #' 
 #' Koop, G., León-González, R., & Strachan R. W. (2010). Efficient posterior
 #' simulation for cointegrated models with priors on the cointegration space.
-#' \emph{Econometric Reviews, 29}(2), 224-242. \url{https://doi.org/10.1080/07474930903382208}
+#' \emph{Econometric Reviews, 29}(2), 224-242. \doi{10.1080/07474930903382208}
 #' 
 post_coint_kls <- function(y, beta, w, sigma_i, v_i, p_tau_i, g_i, x = NULL, gamma_mu_prior = NULL, gamma_v_i_prior = NULL) {
     .Call(`_bvartools_post_coint_kls`, y, beta, w, sigma_i, v_i, p_tau_i, g_i, x, gamma_mu_prior, gamma_v_i_prior)
@@ -410,7 +410,7 @@ post_coint_kls <- function(y, beta, w, sigma_i, v_i, p_tau_i, g_i, x = NULL, gam
 #' 
 #' Koop, G., León-González, R., & Strachan R. W. (2010). Efficient posterior
 #' simulation for cointegrated models with priors on the cointegration space.
-#' \emph{Econometric Reviews, 29}(2), 224-242. \url{https://doi.org/10.1080/07474930903382208}
+#' \emph{Econometric Reviews, 29}(2), 224-242. \doi{10.1080/07474930903382208}
 #' 
 post_coint_kls_sur <- function(y, beta, w, sigma_i, v_i, p_tau_i, g_i, x = NULL, gamma_mu_prior = NULL, gamma_v_i_prior = NULL, svd = FALSE) {
     .Call(`_bvartools_post_coint_kls_sur`, y, beta, w, sigma_i, v_i, p_tau_i, g_i, x, gamma_mu_prior, gamma_v_i_prior, svd)
@@ -604,7 +604,7 @@ post_normal_sur <- function(y, z, sigma_i, a_prior, v_i_prior, svd = FALSE) {
 #' 
 #' George, E. I., Sun, D., & Ni, S. (2008). Bayesian stochastic search for VAR model
 #' restrictions. \emph{Journal of Econometrics, 142}(1), 553--580.
-#' \url{https://doi.org/10.1016/j.jeconom.2007.08.017}
+#' \doi{10.1016/j.jeconom.2007.08.017}
 #' 
 ssvs <- function(a, tau0, tau1, prob_prior, include = NULL) {
     .Call(`_bvartools_ssvs`, a, tau0, tau1, prob_prior, include)

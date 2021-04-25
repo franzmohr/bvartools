@@ -34,29 +34,29 @@
 #' 
 #' Eddelbuettel, D., & Sanderson C. (2014). RcppArmadillo: Accelerating R with high-performance
 #' C++ linear algebra. \emph{Computational Statistics and Data Analysis, 71}, 1054--1063.
-#' \url{http://dx.doi.org/10.1016/j.csda.2013.02.005}
+#' \doi{10.1016/j.csda.2013.02.005}
 #' 
 #' George, E. I., Sun, D., & Ni, S. (2008). Bayesian stochastic search for VAR model
 #' restrictions. \emph{Journal of Econometrics, 142}(1), 553--580.
-#' \url{https://doi.org/10.1016/j.jeconom.2007.08.017}
+#' \doi{10.1016/j.jeconom.2007.08.017}
 #' 
 #' Koop, G, & Korobilis, D. (2010), Bayesian multivariate time series Methods for empirical
 #' macroeconomics, \emph{Foundations and Trends in Econometrics, 3}(4), 267--358.
-#' \url{http://dx.doi.org/10.1561/0800000013}
+#' \doi{10.1561/0800000013}
 #' 
 #' Koop, G., León-González, R., & Strachan R. W. (2010). Efficient posterior
 #' simulation for cointegrated models with priors on the cointegration space.
 #' \emph{Econometric Reviews, 29}(2), 224--242.
-#' \url{https://doi.org/10.1080/07474930903382208}
+#' \doi{10.1080/07474930903382208}
 #' 
 #' Korobilis, D. (2013). VAR forecasting using Bayesian variable selection.
 #' \emph{Journal of Applied Econometrics, 28}(2), 204--230.
-#' \url{https://doi.org/10.1002/jae.1271}
+#' \doi{10.1002/jae.1271}
 #' 
 #' Lütkepohl, H. (2007). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
 #' 
 #' Sanderson, C., & Curtin, R. (2016). Armadillo: a template-based C++ library for linear algebra.
-#' \emph{Journal of Open Source Software, 1}(2), 26. \url{http://dx.doi.org/10.21105/joss.00026}
+#' \emph{Journal of Open Source Software, 1}(2), 26. \doi{10.21105/joss.00026}
 #' 
 #' @useDynLib bvartools, .registration = TRUE
 #' @importFrom Rcpp sourceCpp

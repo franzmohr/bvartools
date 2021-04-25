@@ -97,5 +97,5 @@ state space time series analysis. \emph{Biometrika, 89}(3), 603--615.
 
 Jarociński, M. (2015). A note on implementing the Durbin and Koopman simulation
 smoother. \emph{Computational Statistics and Data Analysis, 91}, 1--3.
-\url{https://doi.org/10.1016/j.csda.2015.05.001}
+\doi{10.1016/j.csda.2015.05.001}
 }

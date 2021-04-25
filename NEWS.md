@@ -6,6 +6,7 @@
 * `predict` requires to specify an object of class `ts` as input for argument `exogen`.
 * Additioal argument checks for `add_priors` methods.
 * Updated documentation in `minnesota_prior` and for `add_prior` methods.
+* Using \doi instead of \url in documentation
 
 # bvartools 0.1.0
 

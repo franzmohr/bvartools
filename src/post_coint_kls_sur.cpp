@@ -100,7 +100,7 @@
 //' 
 //' Koop, G., León-González, R., & Strachan R. W. (2010). Efficient posterior
 //' simulation for cointegrated models with priors on the cointegration space.
-//' \emph{Econometric Reviews, 29}(2), 224-242. \url{https://doi.org/10.1080/07474930903382208}
+//' \emph{Econometric Reviews, 29}(2), 224-242. \doi{10.1080/07474930903382208}
 //' 
 // [[Rcpp::export]]
 Rcpp::List post_coint_kls_sur(arma::mat y, arma::mat beta, arma::mat w, arma::mat sigma_i,

@@ -82,7 +82,7 @@ Rcpp::List bvecalg(Rcpp::List object) {
   bool ssvs = false;
   bool bvs = false;
   bool vs_covar = false;
-
+  
   // OLS estimates for initial values
   arma::mat gamma = arma::zeros<arma::mat>(n_tot, 1);
   arma::mat u = arma::reshape(yvec - z * gamma, k, tt);
@@ -169,7 +169,7 @@ Rcpp::List bvecalg(Rcpp::List object) {
   arma::vec a_prior_incl, a_varsel_include, a_varsel_include_draw;
   arma::mat a_lambda;
   int a_varsel_n, a_varsel_pos;
-
+  
   // Priors - Coefficient - SSVS
   Rcpp::List a_pr_ssvs;
   arma::vec post_a_incl, a_tau0, a_tau1, a_tau0sq, a_tau1sq, a_u0, a_u1;
@@ -200,7 +200,7 @@ Rcpp::List bvecalg(Rcpp::List object) {
   arma::mat a_AG, a_theta0, a_theta1, z_bvs;
   arma::vec a_bvs_lprior_0, a_bvs_lprior_1, a_bvs_l0_res, a_bvs_l1_res, a_randu;
   double a_l0, a_l1, a_bayes, a_bayes_rand;
-
+  
   if (std::find(prcoeff_names.begin(), prcoeff_names.end(), "bvs") != prcoeff_names.end()) {
     if (n_tot - n_alpha > 0) {
       bvs = true;
@@ -223,7 +223,7 @@ Rcpp::List bvecalg(Rcpp::List object) {
   }
   
   varsel = ssvs || bvs;
-
+  
   // Priors - Errors
   double prior_sigma_df, post_sigma_df, sigma_prior_shape, sigma_post_shape, sigma_post_scale_j;
   arma::mat sigma_prior_rate, sigma_prior_scale, psi_prior_Vi, psi_prior_Vi_j, sse, u_vec;
@@ -245,7 +245,7 @@ Rcpp::List bvecalg(Rcpp::List object) {
   Rcpp::List psi_pr;
   arma::mat Psi;
   arma::vec psi_u0, psi_u1, psi_prior_incl, psi_post_incl;
-
+  
   // Priors - Errors - SSVS
   int psi_pos1, psi_pos2;
   double psi_lambda_draw;
@@ -263,11 +263,11 @@ Rcpp::List bvecalg(Rcpp::List object) {
     psi_lambda = arma::ones<arma::vec>(k * (k - 1) / 2);
     psi_u0 = psi_tau0 * 0;
     psi_u1 = psi_tau1 * 0;
-
+    
     Psi = arma::eye<arma::mat>(k, k);
     Psi.diag() = sqrt(sigma_i.diag());
   }
-
+  
   // Priors - Errors - BVS
   arma::mat cov_lambda, diag_omega_i, omega_i, psi, psi_post_mu, psi_post_V, psi_prior_mu, z_covar, z_covar_bvs;
   arma::mat cov_AG, cov_bvs_l0_res, cov_bvs_l1_res, cov_bvs_lprior_0, cov_bvs_lprior_1, cov_theta0, cov_theta1;
@@ -285,14 +285,14 @@ Rcpp::List bvecalg(Rcpp::List object) {
     z_covar_bvs = z_covar;
     cov_lambda = arma::eye<arma::mat>(n_a0, n_a0);
     omega_i = arma::diagmat(sigma_i.diag());
-
+    
     Psi = arma::eye<arma::mat>(k, k);
   }
-
+  
   if (vs_covar && k == 1) {
     Rcpp::stop("Not allowed to apply BVS or SSVS to covariances when there is only one endogenous variable.");
   }
-
+  
   if (vs_covar && structural) {
     Rcpp::stop("Not allowed to apply BVS or SSVS to covariances when a structural model is estimated.");
   }
@@ -302,7 +302,7 @@ Rcpp::List bvecalg(Rcpp::List object) {
   int burnin = Rcpp::as<int>(model["burnin"]);
   int draws = iter + burnin;
   int pos_draw = 0;
-
+  
   arma::mat draws_a = arma::zeros<arma::mat>(n_tot, iter);
   
   arma::mat draws_alpha;
@@ -327,11 +327,11 @@ Rcpp::List bvecalg(Rcpp::List object) {
   // return bla;
   
   for (int draw = 0; draw < draws; draw++) {
-
+    
     if (draw % 1000 == 0) { // Check for user interuption ever now and then
       Rcpp::checkUserInterrupt();
     }
-
+    
     // Draw error
     if (use_rr) {
       u_vec = yvec - arma::vectorise(pi * w) - z.cols(n_alpha, n_tot - 1) * gamma.rows(n_alpha, n_tot - 1); 
@@ -343,110 +343,110 @@ Rcpp::List bvecalg(Rcpp::List object) {
       
       sse = u * u.t();
       
-        if (vs_covar) {
-
-          if (ssvs) {
-            for (int i = 0; i < k; i++) {
-
-              psi_pos1 = i * (i - 1) / 2;
-              psi_pos2 = (i + 1) * i / 2 - 1;
-
-                if (i > 0) {
-                  psi_prior_Vi_j = psi_prior_Vi.submat(psi_pos1, psi_pos1, psi_pos2, psi_pos2);
-                  sse_j = sse.submat(0, 0, i - 1, i - 1);
-                  s_j = sse.submat(0, i, i - 1, i);
-                  psi_post_V_j = arma::inv(psi_prior_Vi_j + sse_j);
-                  psi_post_mu_j = -arma::as_scalar(Psi(i, i)) * psi_post_V_j * s_j;
-                  psi_j = arma::mvnrnd(psi_post_mu_j, psi_post_V_j);
-                  Psi.submat(0, i, i - 1, i) = psi_j;
-
-                  // Obtain inclusion posterior
-                  psi_u0.subvec(psi_pos1, psi_pos2) = 1 / psi_tau0.subvec(psi_pos1, psi_pos2) % arma::exp(-(arma::square(psi_j) / (2 * psi_tau0sq.subvec(psi_pos1, psi_pos2)))) % (1 - psi_prior_incl.subvec(psi_pos1, psi_pos2));
-                  psi_u1.subvec(psi_pos1, psi_pos2) = 1 / psi_tau1.subvec(psi_pos1, psi_pos2) % arma::exp(-(arma::square(psi_j) / (2 * psi_tau1sq.subvec(psi_pos1, psi_pos2)))) % psi_prior_incl.subvec(psi_pos1, psi_pos2);
-                  psi_post_incl = psi_u1.subvec(psi_pos1, psi_pos2) / (psi_u0.subvec(psi_pos1, psi_pos2) + psi_u1.subvec(psi_pos1, psi_pos2));
-
-                  // Draw inclusion parameters in random order
-                  for (int j = 0; j < i; j++){
-                    psi_lambda_draw = Rcpp::as<double>(Rcpp::rbinom(1, 1, psi_post_incl(j)));
-                    psi_lambda(psi_pos1 + j) = psi_lambda_draw;
-                    if (psi_lambda_draw == 0) {
-                      psi_prior_Vi(psi_pos1 + j, psi_pos1 + j) = 1 / psi_tau0sq(psi_pos1 + j);
-                    } else {
-                      psi_prior_Vi(psi_pos1 + j, psi_pos1 + j) = 1 / psi_tau1sq(psi_pos1 + j);
-                    }
-                  }
-                }
-                // Draw variances
-                if (i == 0) {
-                  sigma_post_scale_j = 1 / arma::as_scalar(sigma_prior_rate(0, 0) + sse(0, 0) / 2);
-                } else {
-                  sigma_post_scale_j = 1 / arma::as_scalar(sigma_prior_rate(i, i) + (sse(i, i) - s_j.t() * psi_post_V_j * s_j) / 2);
-                }
-
-                Psi(i, i) =  sqrt(arma::randg<double>(arma::distr_param(sigma_post_shape, sigma_post_scale_j)));
-              }
-            sigma_i = Psi * Psi.t();
-          }
-
-          if (bvs) {
-
-            for (int j = 0; j < tt; j++) {
-              for (int l = 1; l < k; l++) {
-                z_covar_bvs.submat(j * k + l, l * (l - 1) / 2, j * k + l, (l + 1) * l / 2 - 1) = -arma::trans(u.submat(0, j, l - 1, j));
-              }
-            }
-            z_covar = z_covar_bvs * cov_lambda;
-            diag_omega_i = arma::kron(diag_tt, omega_i);
-            psi_post_V = arma::inv(psi_prior_Vi + arma::trans(z_covar) * diag_omega_i *  z_covar);
-            psi_post_mu = psi_post_V * (psi_prior_Vi * psi_prior_mu + arma::trans(z_covar) * diag_omega_i * u_vec);
-            psi = arma::mvnrnd(psi_post_mu, psi_post_V);
-
-            // Add BVS here
-            z_covar = z_covar_bvs;
-            cov_AG = cov_lambda * psi;
-            for (int j = 0; j < n_a0; j++){
-              cov_randu = arma::log(arma::randu<arma::vec>(1));
-              if (cov_lambda(j, j) == 1 && cov_randu(0) >= cov_bvs_lprior_1(j)){continue;}
-              if (cov_lambda(j, j) == 0 && cov_randu(0) >= cov_bvs_lprior_0(j)){continue;}
-              if ((cov_lambda(j, j) == 1 && cov_randu(0) < cov_bvs_lprior_1(j)) || (cov_lambda(j, j) == 0 && cov_randu(0) < cov_bvs_lprior_0(j))){
-                cov_theta0 = cov_AG;
-                cov_theta1 = cov_AG;
-                cov_theta1.row(j) = psi.row(j);
-                cov_theta0.row(j) = 0;
-                cov_bvs_l0_res = u_vec - z_covar * cov_theta0;
-                cov_bvs_l1_res = u_vec - z_covar * cov_theta1;
-                cov_l0 = -arma::as_scalar(trans(cov_bvs_l0_res) * diag_omega_i * cov_bvs_l0_res) / 2 + arma::as_scalar(cov_bvs_lprior_0(j));
-                cov_l1 = -arma::as_scalar(trans(cov_bvs_l1_res) * diag_omega_i * cov_bvs_l1_res) / 2 + arma::as_scalar(cov_bvs_lprior_1(j));
-                cov_bayes = cov_l1 - cov_l0;
-                cov_bayes_rand = arma::as_scalar(arma::log(arma::randu<arma::vec>(1)));
-                if (cov_bayes >= cov_bayes_rand){
-                  cov_lambda(j, j) = 1;
-                } else {
-                  cov_lambda(j, j) = 0;
-                }
-              }
-            }
-            psi = cov_lambda * psi;
-
-            for (int j = 1; j < k; j++) {
-              Psi.submat(j, 0, j, j - 1) = arma::trans(psi.submat(j * (j - 1) / 2, 0, (j + 1) * j / 2 - 1, 0));
-            }
-            u = Psi * u;
-            sse = u * u.t();
-
-            // Draw variances
-            for (int j = 0; j < k; j++) {
-              omega_i(j, j) = arma::randg<double>(arma::distr_param(sigma_post_shape, 1 / arma::as_scalar(sigma_prior_rate(j, j) + sse(j, j) / 2)));
-            }
-
-            sigma_i = arma::trans(Psi) * omega_i * Psi;
-          }
-
-        } else {
+      if (vs_covar) {
+        
+        if (ssvs) {
           for (int i = 0; i < k; i++) {
-            sigma_i(i, i) = arma::randg<double>(arma::distr_param(sigma_post_shape, 1 / arma::as_scalar(sigma_prior_rate(i, i) + sse(i, i) / 2)));
-          } 
+            
+            psi_pos1 = i * (i - 1) / 2;
+            psi_pos2 = (i + 1) * i / 2 - 1;
+            
+            if (i > 0) {
+              psi_prior_Vi_j = psi_prior_Vi.submat(psi_pos1, psi_pos1, psi_pos2, psi_pos2);
+              sse_j = sse.submat(0, 0, i - 1, i - 1);
+              s_j = sse.submat(0, i, i - 1, i);
+              psi_post_V_j = arma::inv(psi_prior_Vi_j + sse_j);
+              psi_post_mu_j = -arma::as_scalar(Psi(i, i)) * psi_post_V_j * s_j;
+              psi_j = arma::mvnrnd(psi_post_mu_j, psi_post_V_j);
+              Psi.submat(0, i, i - 1, i) = psi_j;
+              
+              // Obtain inclusion posterior
+              psi_u0.subvec(psi_pos1, psi_pos2) = 1 / psi_tau0.subvec(psi_pos1, psi_pos2) % arma::exp(-(arma::square(psi_j) / (2 * psi_tau0sq.subvec(psi_pos1, psi_pos2)))) % (1 - psi_prior_incl.subvec(psi_pos1, psi_pos2));
+              psi_u1.subvec(psi_pos1, psi_pos2) = 1 / psi_tau1.subvec(psi_pos1, psi_pos2) % arma::exp(-(arma::square(psi_j) / (2 * psi_tau1sq.subvec(psi_pos1, psi_pos2)))) % psi_prior_incl.subvec(psi_pos1, psi_pos2);
+              psi_post_incl = psi_u1.subvec(psi_pos1, psi_pos2) / (psi_u0.subvec(psi_pos1, psi_pos2) + psi_u1.subvec(psi_pos1, psi_pos2));
+              
+              // Draw inclusion parameters in random order
+              for (int j = 0; j < i; j++){
+                psi_lambda_draw = Rcpp::as<double>(Rcpp::rbinom(1, 1, psi_post_incl(j)));
+                psi_lambda(psi_pos1 + j) = psi_lambda_draw;
+                if (psi_lambda_draw == 0) {
+                  psi_prior_Vi(psi_pos1 + j, psi_pos1 + j) = 1 / psi_tau0sq(psi_pos1 + j);
+                } else {
+                  psi_prior_Vi(psi_pos1 + j, psi_pos1 + j) = 1 / psi_tau1sq(psi_pos1 + j);
+                }
+              }
+            }
+            // Draw variances
+            if (i == 0) {
+              sigma_post_scale_j = 1 / arma::as_scalar(sigma_prior_rate(0, 0) + sse(0, 0) / 2);
+            } else {
+              sigma_post_scale_j = 1 / arma::as_scalar(sigma_prior_rate(i, i) + (sse(i, i) - s_j.t() * psi_post_V_j * s_j) / 2);
+            }
+            
+            Psi(i, i) =  sqrt(arma::randg<double>(arma::distr_param(sigma_post_shape, sigma_post_scale_j)));
+          }
+          sigma_i = Psi * Psi.t();
         }
+        
+        if (bvs) {
+          
+          for (int j = 0; j < tt; j++) {
+            for (int l = 1; l < k; l++) {
+              z_covar_bvs.submat(j * k + l, l * (l - 1) / 2, j * k + l, (l + 1) * l / 2 - 1) = -arma::trans(u.submat(0, j, l - 1, j));
+            }
+          }
+          z_covar = z_covar_bvs * cov_lambda;
+          diag_omega_i = arma::kron(diag_tt, omega_i);
+          psi_post_V = arma::inv(psi_prior_Vi + arma::trans(z_covar) * diag_omega_i *  z_covar);
+          psi_post_mu = psi_post_V * (psi_prior_Vi * psi_prior_mu + arma::trans(z_covar) * diag_omega_i * u_vec);
+          psi = arma::mvnrnd(psi_post_mu, psi_post_V);
+          
+          // Add BVS here
+          z_covar = z_covar_bvs;
+          cov_AG = cov_lambda * psi;
+          for (int j = 0; j < n_a0; j++){
+            cov_randu = arma::log(arma::randu<arma::vec>(1));
+            if (cov_lambda(j, j) == 1 && cov_randu(0) >= cov_bvs_lprior_1(j)){continue;}
+            if (cov_lambda(j, j) == 0 && cov_randu(0) >= cov_bvs_lprior_0(j)){continue;}
+            if ((cov_lambda(j, j) == 1 && cov_randu(0) < cov_bvs_lprior_1(j)) || (cov_lambda(j, j) == 0 && cov_randu(0) < cov_bvs_lprior_0(j))){
+              cov_theta0 = cov_AG;
+              cov_theta1 = cov_AG;
+              cov_theta1.row(j) = psi.row(j);
+              cov_theta0.row(j) = 0;
+              cov_bvs_l0_res = u_vec - z_covar * cov_theta0;
+              cov_bvs_l1_res = u_vec - z_covar * cov_theta1;
+              cov_l0 = -arma::as_scalar(trans(cov_bvs_l0_res) * diag_omega_i * cov_bvs_l0_res) / 2 + arma::as_scalar(cov_bvs_lprior_0(j));
+              cov_l1 = -arma::as_scalar(trans(cov_bvs_l1_res) * diag_omega_i * cov_bvs_l1_res) / 2 + arma::as_scalar(cov_bvs_lprior_1(j));
+              cov_bayes = cov_l1 - cov_l0;
+              cov_bayes_rand = arma::as_scalar(arma::log(arma::randu<arma::vec>(1)));
+              if (cov_bayes >= cov_bayes_rand){
+                cov_lambda(j, j) = 1;
+              } else {
+                cov_lambda(j, j) = 0;
+              }
+            }
+          }
+          psi = cov_lambda * psi;
+          
+          for (int j = 1; j < k; j++) {
+            Psi.submat(j, 0, j, j - 1) = arma::trans(psi.submat(j * (j - 1) / 2, 0, (j + 1) * j / 2 - 1, 0));
+          }
+          u = Psi * u;
+          sse = u * u.t();
+          
+          // Draw variances
+          for (int j = 0; j < k; j++) {
+            omega_i(j, j) = arma::randg<double>(arma::distr_param(sigma_post_shape, 1 / arma::as_scalar(sigma_prior_rate(j, j) + sse(j, j) / 2)));
+          }
+          
+          sigma_i = arma::trans(Psi) * omega_i * Psi;
+        }
+        
+      } else {
+        for (int i = 0; i < k; i++) {
+          sigma_i(i, i) = arma::randg<double>(arma::distr_param(sigma_post_shape, 1 / arma::as_scalar(sigma_prior_rate(i, i) + sse(i, i) / 2)));
+        } 
+      }
     } else {
       // Wishart
       if (use_rr) {
@@ -523,33 +523,33 @@ Rcpp::List bvecalg(Rcpp::List object) {
         gamma = a_lambda * gamma;
       }
     }
-  
-  if (use_rr) {
-    // Reparameterise alpha
-    alpha = arma::reshape(gamma.rows(0, n_alpha - 1), k, r);
-    Alpha = alpha * arma::inv(arma::sqrtmat_sympd(alpha.t() * alpha));
     
-    // Draw Beta
-    y_beta = yvec - z.cols(n_alpha, n_tot - 1) * gamma.rows(n_alpha, n_tot - 1);
-    for (int i = 0; i < tt; i++){
-      z_beta.rows(i * k, (i + 1) * k - 1) = arma::kron(Alpha, arma::trans(w.col(i)));
-    }
+    if (use_rr) {
+      // Reparameterise alpha
+      alpha = arma::reshape(gamma.rows(0, n_alpha - 1), k, r);
+      Alpha = alpha * arma::inv(arma::sqrtmat_sympd(alpha.t() * alpha));
+      
+      // Draw Beta
+      y_beta = yvec - z.cols(n_alpha, n_tot - 1) * gamma.rows(n_alpha, n_tot - 1);
+      for (int i = 0; i < tt; i++){
+        z_beta.rows(i * k, (i + 1) * k - 1) = arma::kron(Alpha, arma::trans(w.col(i)));
+      }
+      
+      post_beta_Vi = arma::solve(arma::kron(Alpha.t() * sigma_i * Alpha, coint_v_i * p_tau_i) + arma::trans(z_beta) * diag_sigma_i * z_beta, diag_beta);
+      post_beta_mu = post_beta_Vi * (arma::trans(z_beta) * diag_sigma_i * y_beta);
+      Beta = arma::reshape(arma::mvnrnd(post_beta_mu, post_beta_Vi), n_w, r);
+      
+      // Final cointegration values
+      BB_sqrt = arma::sqrtmat_sympd(arma::trans(Beta) * Beta);
+      alpha = Alpha * BB_sqrt;
+      beta = Beta * arma::inv(BB_sqrt);
+      pi = alpha * beta.t();
+    } 
     
-    post_beta_Vi = arma::solve(arma::kron(Alpha.t() * sigma_i * Alpha, coint_v_i * p_tau_i) + arma::trans(z_beta) * diag_sigma_i * z_beta, diag_beta);
-    post_beta_mu = post_beta_Vi * (arma::trans(z_beta) * diag_sigma_i * y_beta);
-    Beta = arma::reshape(arma::mvnrnd(post_beta_mu, post_beta_Vi), n_w, r);
-    
-    // Final cointegration values
-    BB_sqrt = arma::sqrtmat_sympd(arma::trans(Beta) * Beta);
-    alpha = Alpha * BB_sqrt;
-    beta = Beta * arma::inv(BB_sqrt);
-    pi = alpha * beta.t();
-  } 
-  
     // Store draws
     if (draw >= burnin) {
       pos_draw = draw - burnin;
-
+      
       draws_a.col(pos_draw) = gamma;
       if (use_rr) {
         draws_alpha.col(pos_draw) = arma::vectorise(alpha);
@@ -572,87 +572,77 @@ Rcpp::List bvecalg(Rcpp::List object) {
         }
       }
     }
-   } // End loop
+  } // End loop
   
   // Rcpp::List bla = Rcpp::List::create(Rcpp::Named("test") = sigma_i);
   // return bla;
-  
-  Rcpp::Nullable<Rcpp::NumericMatrix> res_a0 = R_NilValue;
-  Rcpp::Nullable<Rcpp::NumericMatrix> res_alpha = R_NilValue;
-  Rcpp::Nullable<Rcpp::NumericMatrix> res_beta = R_NilValue;
-  Rcpp::Nullable<Rcpp::NumericMatrix> res_pi = R_NilValue;
-  Rcpp::Nullable<Rcpp::NumericMatrix> res_pi_exo = R_NilValue;
-  Rcpp::Nullable<Rcpp::NumericMatrix> res_pi_det = R_NilValue;
-  Rcpp::Nullable<Rcpp::NumericMatrix> res_gamma = R_NilValue;
-  Rcpp::Nullable<Rcpp::NumericMatrix> res_upsilon = R_NilValue;
-  Rcpp::Nullable<Rcpp::NumericMatrix> res_ur = R_NilValue;
-  Rcpp::Nullable<Rcpp::NumericMatrix> res_sigma = R_NilValue;
+  Rcpp::List posteriors = Rcpp::List::create(Rcpp::Named("a0") = R_NilValue,
+                                             Rcpp::Named("alpha") = R_NilValue,
+                                             Rcpp::Named("beta") = R_NilValue,
+                                             Rcpp::Named("pi") = R_NilValue,
+                                             Rcpp::Named("pi_exo") = R_NilValue,
+                                             Rcpp::Named("pi_d") = R_NilValue,
+                                             Rcpp::Named("gamma") = R_NilValue,
+                                             Rcpp::Named("upsilon") = R_NilValue,
+                                             Rcpp::Named("c") = R_NilValue,
+                                             Rcpp::Named("sigma") = R_NilValue);
   
   if (use_rr) {
-    res_alpha = Rcpp::wrap(draws_alpha);
-    res_beta = Rcpp::wrap(draws_beta);
-    res_pi = Rcpp::wrap(draws_pi.rows(0, k * k - 1));
+    posteriors["alpha"] = Rcpp::wrap(draws_alpha);
+    posteriors["beta"] = Rcpp::wrap(draws_beta);
+    posteriors["pi"] = Rcpp::wrap(draws_pi.rows(0, k * k - 1));
     if (m > 0) {
-      res_pi_exo = Rcpp::wrap(draws_pi.rows(k * k, k * (k + m) - 1));
+      posteriors["pi_exo"] = Rcpp::wrap(draws_pi.rows(k * k, k * (k + m) - 1));
     }
     if (n_r > 0) {
-      res_pi_det = Rcpp::wrap(draws_pi.rows(k * (k + m), k * (k + m + n_r) - 1));
+      posteriors["pi_d"] = Rcpp::wrap(draws_pi.rows(k * (k + m), k * (k + m + n_r) - 1));
     }
   }
   
   if (n_gamma > 0) {
     if (varsel) {
-      res_gamma = Rcpp::wrap(Rcpp::List::create(Rcpp::Named("coeffs") = draws_a.rows(n_alpha, n_alpha + n_gamma - 1),
-                                            Rcpp::Named("lambda") = draws_a_lambda.rows(n_alpha, n_alpha + n_gamma - 1)));
+      posteriors["gamma"] = Rcpp::wrap(Rcpp::List::create(Rcpp::Named("coeffs") = draws_a.rows(n_alpha, n_alpha + n_gamma - 1),
+                                                          Rcpp::Named("lambda") = draws_a_lambda.rows(n_alpha, n_alpha + n_gamma - 1)));
     } else {
-      res_gamma = Rcpp::wrap(draws_a.rows(n_alpha, n_alpha + n_gamma - 1));
+      posteriors["gamma"] = Rcpp::wrap(draws_a.rows(n_alpha, n_alpha + n_gamma - 1));
     }
   }
-   if (n_upsilon > 0) {
+  if (n_upsilon > 0) {
     if (varsel) {
-      res_upsilon = Rcpp::wrap(Rcpp::List::create(Rcpp::Named("coeffs") = draws_a.rows(n_alpha + n_gamma, n_alpha + n_gamma + n_upsilon - 1),
-                                            Rcpp::Named("lambda") = draws_a_lambda.rows(n_alpha + n_gamma, n_alpha + n_gamma + n_upsilon - 1)));
+      posteriors["upsilon"] = Rcpp::wrap(Rcpp::List::create(Rcpp::Named("coeffs") = draws_a.rows(n_alpha + n_gamma, n_alpha + n_gamma + n_upsilon - 1),
+                                                            Rcpp::Named("lambda") = draws_a_lambda.rows(n_alpha + n_gamma, n_alpha + n_gamma + n_upsilon - 1)));
     } else {
-       res_upsilon = Rcpp::wrap(draws_a.rows(n_alpha + n_gamma, n_alpha + n_gamma + n_upsilon - 1));
+      posteriors["upsilon"] = Rcpp::wrap(draws_a.rows(n_alpha + n_gamma, n_alpha + n_gamma + n_upsilon - 1));
     }
-   }
-   if (n_ur > 0) {
+  }
+  if (n_ur > 0) {
     if (varsel) {
-      res_ur = Rcpp::wrap(Rcpp::List::create(Rcpp::Named("coeffs") = draws_a.rows(n_alpha + n_gamma + n_upsilon, n_alpha + n_gamma + n_upsilon + n_c_ur - 1),
-                                            Rcpp::Named("lambda") = draws_a_lambda.rows(n_alpha + n_gamma + n_upsilon, n_alpha + n_gamma + n_upsilon + n_c_ur - 1)));
+      posteriors["c"] = Rcpp::wrap(Rcpp::List::create(Rcpp::Named("coeffs") = draws_a.rows(n_alpha + n_gamma + n_upsilon, n_alpha + n_gamma + n_upsilon + n_c_ur - 1),
+                                                      Rcpp::Named("lambda") = draws_a_lambda.rows(n_alpha + n_gamma + n_upsilon, n_alpha + n_gamma + n_upsilon + n_c_ur - 1)));
     } else {
-      res_ur = Rcpp::wrap(draws_a.rows(n_alpha + n_gamma + n_upsilon, n_alpha + n_gamma + n_upsilon + n_c_ur - 1));
+      posteriors["c"] = Rcpp::wrap(draws_a.rows(n_alpha + n_gamma + n_upsilon, n_alpha + n_gamma + n_upsilon + n_c_ur - 1));
     }
-   }
-   if (n_a0 > 0) {
+  }
+  if (n_a0 > 0) {
     if (varsel) {
-      res_a0 = Rcpp::wrap(Rcpp::List::create(Rcpp::Named("coeffs") = draws_a.rows(n_alpha + n_gamma + n_upsilon + n_c_ur, n_alpha + n_gamma + n_upsilon + n_c_ur + n_a0 - 1),
-                                            Rcpp::Named("lambda") = draws_a_lambda.rows(n_alpha + n_gamma + n_upsilon + n_c_ur, n_alpha + n_gamma + n_upsilon + n_c_ur + n_a0 - 1)));
+      posteriors["a0"] = Rcpp::wrap(Rcpp::List::create(Rcpp::Named("coeffs") = draws_a.rows(n_alpha + n_gamma + n_upsilon + n_c_ur, n_alpha + n_gamma + n_upsilon + n_c_ur + n_a0 - 1),
+                                                       Rcpp::Named("lambda") = draws_a_lambda.rows(n_alpha + n_gamma + n_upsilon + n_c_ur, n_alpha + n_gamma + n_upsilon + n_c_ur + n_a0 - 1)));
     } else {
-       res_a0 = Rcpp::wrap(draws_a.rows(n_alpha + n_gamma + n_upsilon + n_c_ur, n_alpha + n_gamma + n_upsilon + n_c_ur + n_a0 - 1));
+      posteriors["a0"] = Rcpp::wrap(draws_a.rows(n_alpha + n_gamma + n_upsilon + n_c_ur, n_alpha + n_gamma + n_upsilon + n_c_ur + n_a0 - 1));
     }
-   }
-
+  }
+  
   if (vs_covar) {
-    res_sigma = Rcpp::wrap(Rcpp::List::create(Rcpp::Named("coeffs") = draws_sigma,
-                                              Rcpp::Named("lambda") = draws_cov_lambda));
+    posteriors["sigma"] = Rcpp::wrap(Rcpp::List::create(Rcpp::Named("coeffs") = draws_sigma,
+                                                        Rcpp::Named("lambda") = draws_cov_lambda));
   } else {
-     res_sigma = Rcpp::wrap(draws_sigma);
+    posteriors["sigma"] = Rcpp::wrap(draws_sigma);
   }
-
+  
   Rcpp::List result = Rcpp::List::create(Rcpp::Named("data") = object["data"],
                                          Rcpp::Named("model") = object["model"],
                                          Rcpp::Named("priors") = object["priors"],
-                                         Rcpp::Named("posteriors") = Rcpp::List::create(Rcpp::Named("a0") = res_a0,
-                                                                                        Rcpp::Named("alpha") = res_alpha,
-                                                                                        Rcpp::Named("beta") = res_beta,
-                                                                                        Rcpp::Named("pi") = res_pi,
-                                                                                        Rcpp::Named("pi_exo") = res_pi_exo,
-                                                                                        Rcpp::Named("pi_d") = res_pi_det,
-                                                                                        Rcpp::Named("gamma") = res_gamma,
-                                                                                        Rcpp::Named("upsilon") = res_upsilon,
-                                                                                        Rcpp::Named("c") = res_ur,
-                                                                                        Rcpp::Named("sigma") = res_sigma));
+                                         Rcpp::Named("posteriors") = posteriors);
   
   return result;
 }

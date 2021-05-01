@@ -1,3 +1,7 @@
+# bvartools 0.2.1
+
+* Changed the generation of the output object in the Gibbs sampler functionss `bvaralg` and `bvecalg` to make them more stable for especially large output.
+
 # bvartools 0.2.0
 
 * Changed `thin_posterior` to a generic function and added methods for BVAR, BVEC and dynamic factor model input.

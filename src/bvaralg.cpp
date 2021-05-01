@@ -112,7 +112,7 @@ Rcpp::List bvaralg(Rcpp::List object) {
   arma::mat a_AG, a_theta0, a_theta1, z_bvs;
   arma::vec a_bvs_lprior_0, a_bvs_lprior_1, a_bvs_l0_res, a_bvs_l1_res, a_randu;
   double a_l0, a_l1, a_bayes, a_bayes_rand;
-
+  
   if (std::find(prcoeff_names.begin(), prcoeff_names.end(), "bvs") != prcoeff_names.end()) {
     bvs = true;
     a_pr_bvs = priors_coefficients["bvs"];
@@ -217,7 +217,7 @@ Rcpp::List bvaralg(Rcpp::List object) {
   if (vs_covar) {
     draws_cov_lambda = arma::zeros<arma::mat>(k * (k - 1) / 2, iter);
   }
-
+  
   for (int draw = 0; draw < draws; draw++) {
     
     if (draw % 1000 == 0) { // Check for user interuption ever now and then
@@ -335,7 +335,7 @@ Rcpp::List bvaralg(Rcpp::List object) {
       if (use_gamma) {
         sse = u * u.t();
         for (int i = 0; i < k; i++) {
-              sigma_i(i, i) = arma::randg<double>(arma::distr_param(sigma_post_shape, 1 / arma::as_scalar(sigma_prior_rate(i, i) + sse(i, i) / 2)));
+          sigma_i(i, i) = arma::randg<double>(arma::distr_param(sigma_post_shape, 1 / arma::as_scalar(sigma_prior_rate(i, i) + sse(i, i) / 2)));
         }
       } else {
         sigma_i = arma::wishrnd(arma::solve(sigma_prior_scale + u * u.t(), diag_k), post_sigma_df);  
@@ -430,62 +430,57 @@ Rcpp::List bvaralg(Rcpp::List object) {
       }
     }
   } // End loop
-
-  Rcpp::Nullable<Rcpp::NumericMatrix> res_a0 = R_NilValue;  
-  Rcpp::Nullable<Rcpp::NumericMatrix> res_a = R_NilValue;
-  Rcpp::Nullable<Rcpp::NumericMatrix> res_b = R_NilValue;
-  Rcpp::Nullable<Rcpp::NumericMatrix> res_c = R_NilValue;
-  Rcpp::Nullable<Rcpp::NumericMatrix> res_sigma = R_NilValue;
-  arma::mat sigma_lambda;
+  
+  Rcpp::List posteriors = Rcpp::List::create(Rcpp::Named("a0") = R_NilValue,
+                                             Rcpp::Named("a") = R_NilValue,
+                                             Rcpp::Named("b") = R_NilValue,
+                                             Rcpp::Named("c") = R_NilValue,
+                                             Rcpp::Named("sigma") = R_NilValue);
   
   if (n_a > 0) {
     if (varsel) {
-      res_a = Rcpp::wrap(Rcpp::List::create(Rcpp::Named("coeffs") = draws_a.rows(0, n_a - 1),
-                                            Rcpp::Named("lambda") = draws_a_lambda.rows(0, n_a - 1)));
+      posteriors["a"] = Rcpp::wrap(Rcpp::List::create(Rcpp::Named("coeffs") = draws_a.rows(0, n_a - 1),
+                                                      Rcpp::Named("lambda") = draws_a_lambda.rows(0, n_a - 1)));
     } else {
-      res_a = Rcpp::wrap(draws_a.rows(0, n_a - 1));
+      posteriors["a"] = Rcpp::wrap(draws_a.rows(0, n_a - 1));
     }
   }
   if (n_b > 0) {
     if (varsel) {
-      res_b = Rcpp::wrap(Rcpp::List::create(Rcpp::Named("coeffs") = draws_a.rows(n_a, n_a + n_b - 1),
-                                            Rcpp::Named("lambda") = draws_a_lambda.rows(n_a, n_a + n_b - 1)));
+      posteriors["b"] = Rcpp::wrap(Rcpp::List::create(Rcpp::Named("coeffs") = draws_a.rows(n_a, n_a + n_b - 1),
+                                                      Rcpp::Named("lambda") = draws_a_lambda.rows(n_a, n_a + n_b - 1)));
     } else {
-      res_b = Rcpp::wrap(draws_a.rows(n_a, n_a + n_b - 1));
+      posteriors["b"] = Rcpp::wrap(draws_a.rows(n_a, n_a + n_b - 1));
     }
   }
   if (n_c > 0) {
     if (varsel) {
-      res_c = Rcpp::wrap(Rcpp::List::create(Rcpp::Named("coeffs") = draws_a.rows(n_a + n_b, n_a + n_b + n_c - 1),
-                                            Rcpp::Named("lambda") = draws_a_lambda.rows(n_a + n_b, n_a + n_b + n_c - 1)));
+      posteriors["c"] = Rcpp::wrap(Rcpp::List::create(Rcpp::Named("coeffs") = draws_a.rows(n_a + n_b, n_a + n_b + n_c - 1),
+                                                      Rcpp::Named("lambda") = draws_a_lambda.rows(n_a + n_b, n_a + n_b + n_c - 1)));
     } else {
-      res_c = Rcpp::wrap(draws_a.rows(n_a + n_b, n_a + n_b + n_c - 1));
+      posteriors["c"] = Rcpp::wrap(draws_a.rows(n_a + n_b, n_a + n_b + n_c - 1));
     }
   }
   if (n_a0 > 0) {
     if (varsel) {
-      res_a0 = Rcpp::wrap(Rcpp::List::create(Rcpp::Named("coeffs") = draws_a.rows(n_a + n_b + n_c, n_a + n_b + n_c + n_a0 - 1),
-                                            Rcpp::Named("lambda") = draws_a_lambda.rows(n_a + n_b + n_c, n_a + n_b + n_c + n_a0 - 1)));
+      posteriors["a0"] = Rcpp::wrap(Rcpp::List::create(Rcpp::Named("coeffs") = draws_a.rows(n_a + n_b + n_c, n_a + n_b + n_c + n_a0 - 1),
+                                                       Rcpp::Named("lambda") = draws_a_lambda.rows(n_a + n_b + n_c, n_a + n_b + n_c + n_a0 - 1)));
     } else {
-      res_a0 = Rcpp::wrap(draws_a.rows(n_a + n_b + n_c, n_a + n_b + n_c + n_a0 - 1));
+      posteriors["a0"] = Rcpp::wrap(draws_a.rows(n_a + n_b + n_c, n_a + n_b + n_c + n_a0 - 1));
     }
   }
   
   if (vs_covar) {
-    res_sigma = Rcpp::wrap(Rcpp::List::create(Rcpp::Named("coeffs") = draws_sigma,
-                                              Rcpp::Named("lambda") = draws_cov_lambda));
+    posteriors["sigma"] = Rcpp::wrap(Rcpp::List::create(Rcpp::Named("coeffs") = draws_sigma,
+                                                        Rcpp::Named("lambda") = draws_cov_lambda));
   } else {
-    res_sigma = Rcpp::wrap(draws_sigma);
+    posteriors["sigma"] = Rcpp::wrap(draws_sigma);
   }
   
   Rcpp::List result = Rcpp::List::create(Rcpp::Named("data") = object["data"],
                                          Rcpp::Named("model") = object["model"],
                                          Rcpp::Named("priors") = object["priors"],
-                                         Rcpp::Named("posteriors") = Rcpp::List::create(Rcpp::Named("a0") = res_a0,
-                                                                                        Rcpp::Named("a") = res_a,
-                                                                                        Rcpp::Named("b") = res_b,
-                                                                                        Rcpp::Named("c") = res_c,
-                                                                                        Rcpp::Named("sigma") = res_sigma));
-  return result;
+                                         Rcpp::Named("posteriors") = posteriors);
   
+  return result;
 }

@@ -4,10 +4,13 @@
 \alias{plot.bvarprd}
 \title{Plotting Forecasts of BVAR Models}
 \usage{
-\method{plot}{bvarprd}(x, ...)
+\method{plot}{bvarprd}(x, n.pre = NULL, ...)
 }
 \arguments{
 \item{x}{an object of class "bvarprd", usually, a result of a call to \code{\link{predict.bvar}}.}
+
+\item{n.pre}{number of plotted observations that precede the forecasts. If \code{NULL} (default),
+all available obervations will be plotted.}
 
 \item{...}{further graphical parameters.}
 }
@@ -31,7 +34,7 @@ model <- add_priors(model)
 object <- draw_posterior(model)
 
 # Calculate forecasts
-pred <- predict(object, new_D = rep(1, 10))
+pred <- predict(object, new_d = rep(1, 10))
 
 # Plot forecasts
 plot(pred)

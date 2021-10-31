@@ -9,6 +9,9 @@
 #' @param type type of the impulse responses used to calculate forecast error variable decompositions.
 #' Possible choices are orthogonalised \code{oir} (default) and generalised \code{gir} impulse responses.
 #' @param normalise_gir logical. Should the GIR-based FEVD be normalised?
+#' @param period integer. Index of the period of a TVP VAR, for which FEVDs should be generated.
+#' Only used for TVP models. Default is \code{NULL} so that only the most recent time period
+#' is used.
 #' 
 #' @details The function produces forecast error variance decompositions (FEVD) for the VAR model
 #' \deqn{A_0 y_t = \sum_{i = 1}^{p} A_{i} y_{t-i} + u_t,}
@@ -66,10 +69,10 @@
 #' Pesaran, H. H., & Shin, Y. (1998). Generalized impulse response analysis in linear multivariate models. \emph{Economics Letters, 58}, 17-29.
 #' 
 #' @export
-fevd <- function(object, response = NULL, n.ahead = 5, type = "oir", normalise_gir = FALSE) {
+fevd <- function(object, response = NULL, n.ahead = 5, type = "oir", normalise_gir = FALSE, period = NULL) {
   
   # Dev specs
-  # rm(list = ls()[-which(ls() == "object")]); response = "invest"; n.ahead = 20; type = "oir"; normalise_gir = FALSE
+  # rm(list = ls()[-which(ls() == "object")]); response = "u"; n.ahead = 20; type = "sir"; normalise_gir = FALSE; period <- NULL
   
   if (!"bvar" %in% class(object)) {
     stop("Object must be of class 'bvar'.")
@@ -102,23 +105,55 @@ fevd <- function(object, response = NULL, n.ahead = 5, type = "oir", normalise_g
   if (length(response) == 0){stop("Response variable not available.")}
   
   k <- ncol(object$y)
-  if (!is.null(object[["A"]])) {
-    store <- NROW(object[["A"]]) # Number of draws 
-  } else {
-    store <- NROW(object[["A0"]])
+  tt <- NROW(object$y)
+  tvp <- object[["specifications"]][["tvp"]]
+  if (any(unlist(tvp))) {
+    if (is.null(period)) {
+      period <- tt
+    } else {
+      if (period > tt | period < 1) {
+        stop("Implausible specification of argument 'period'.")
+      }
+    }
+  }
+  
+  store <- NA
+  vars <- c("A0", "A", "B", "C", "Sigma")
+  for (i in vars) {
+    if (is.na(store)) {
+      if (!is.null(object[[i]])) {
+        if (object[["specifications"]][["tvp"]][[i]]) {
+          store <- nrow(object[[i]][[1]])
+        } else {
+          store <- nrow(object[[i]]) 
+        }
+      }   
+    }
   }
   
   A <- NULL
   for (i in 1:store) {
     temp <- NULL
     if (!is.null(object[["A"]])) {
-      temp[["A"]] <- matrix(object[["A"]][i, ], k)
+      if (object[["specifications"]][["tvp"]][["A"]]) {
+        temp[["A"]] <- matrix(object[["A"]][[period]][i, ], k)
+      } else {
+        temp[["A"]] <- matrix(object[["A"]][i, ], k) 
+      }
     } else {
       temp[["A"]] <- matrix(0, k, k)
     }
-    temp[["Sigma"]] <- matrix(object[["Sigma"]][i, ], k)
+    if (object[["specifications"]][["tvp"]][["Sigma"]]) {
+      temp[["Sigma"]] <- matrix(object[["Sigma"]][[period]][i, ], k)
+    } else {
+      temp[["Sigma"]] <- matrix(object[["Sigma"]][i, ], k) 
+    }
     if (need_A0) {
-      temp[["A0"]] <- matrix(object[["A0"]][i, ], k)
+      if (object[["specifications"]][["tvp"]][["A0"]]) {
+        temp[["A0"]] <- matrix(object[["A0"]][[period]][i, ], k)
+      } else {
+        temp[["A0"]] <- matrix(object[["A0"]][i, ], k) 
+      }
     }
     A[[i]] <- temp
   }

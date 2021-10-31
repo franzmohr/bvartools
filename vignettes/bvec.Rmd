@@ -197,7 +197,7 @@ bvec_est <- draw_posterior(data)
 Posterior draws can be thinned with function `thin`:
 
 ```{r thin}
-bvec_est <- thin_posterior(bvec_est, thin = 5)
+bvec_est <- thin(bvec_est, thin = 5)
 ```
 
 The function `bvec_to_bvar` can be used to transform the VEC model into a VAR in levels:

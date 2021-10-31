@@ -4,6 +4,7 @@
 #' 
 #' @param x an object of class \code{"dfm"}.
 #' @param thin an integer specifying the thinning interval between successive values of posterior draws.
+#' @param ... further arguments passed to or from other methods.
 #' 
 #' @examples 
 #' 
@@ -26,12 +27,12 @@
 #' object <- draw_posterior(model)
 #' 
 #' # Plot factors
-#' object <- thin_posterior(object, thin = 2)
+#' object <- thin(object, thin = 2)
 #' 
 #' @return An object of class \code{"dfm"}.
 #' 
 #' @export
-thin_posterior.dfm <- function(x, thin = 10) {
+thin.dfm <- function(x, thin = 10, ...) {
   
   draws <- NA
   if (!is.null(x[["lambda"]])) {

@@ -5,7 +5,7 @@
 \alias{print.summary.bvar}
 \title{Summarising Bayesian VAR Coefficients}
 \usage{
-\method{summary}{bvar}(object, ci = 0.95, ...)
+\method{summary}{bvar}(object, ci = 0.95, period = NULL, ...)
 
 \method{print}{summary.bvar}(x, digits = max(3L, getOption("digits") - 3L), ...)
 }
@@ -15,6 +15,10 @@
 
 \item{ci}{a numeric between 0 and 1 specifying the probability of the credible band.
 Defaults to 0.95.}
+
+\item{period}{integer. Index of the period of a TVP VAR, for which a summery should be generated.
+Only used for TVP models. Default is \code{NULL} so that only the most recent time period
+is used.}
 
 \item{...}{further arguments passed to or from other methods.}
 

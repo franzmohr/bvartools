@@ -55,7 +55,7 @@ predict.bvar <- function(object, ..., n.ahead = 10, new_x = NULL, new_d = NULL, 
   # n.ahead = 10; new_x = NULL; new_d = NULL; ci = .95
   # new_d <- rep(1, 10)
   
-  k <- object$specifications$dims["K"]
+  k <- object[["specifications"]][["dims"]][["K"]]
   tt <- nrow(object[["y"]])
   
   if (is.null(object[["A0"]])) {
@@ -68,15 +68,27 @@ predict.bvar <- function(object, ..., n.ahead = 10, new_x = NULL, new_d = NULL, 
   p <- 0
   tot <- k
   
+  tvp <- object[["specifications"]][["tvp"]]
+  
   if (!is.null(object[["A"]])) {
-    A <- cbind(A, object[["A"]])
-    p <- ncol(object[["A"]]) / k^2
+    if (tvp[["A"]]) {
+      A <- cbind(A, object[["A"]][[tt]])
+      p <- ncol(object[["A"]][[1]]) / k^2
+    } else {
+      A <- cbind(A, object[["A"]])  
+      p <- ncol(object[["A"]]) / k^2
+    }
     tot <- tot + k * (p - 1)
   }
   
   if (!is.null(object[["B"]])) {
-    A <- cbind(A, object[["B"]])
-    m <- ncol(object[["B"]]) / k
+    if (tvp[["B"]]) {
+      A <- cbind(A, object[["B"]][[tt]])
+      m <- ncol(object[["B"]][[1]]) / k
+    } else {
+      A <- cbind(A, object[["B"]])
+      m <- ncol(object[["B"]]) / k 
+    }
     tot <- tot + m
     if (is.null(new_x)) {
       new_x <- matrix(0, n.ahead, m)
@@ -109,8 +121,13 @@ predict.bvar <- function(object, ..., n.ahead = 10, new_x = NULL, new_d = NULL, 
   }
   
   if (!is.null(object[["C"]])) {
-    A <- cbind(A, object[["C"]])
-    n <- ncol(object[["C"]]) / k
+    if (tvp[["C"]]) {
+      A <- cbind(A, object[["C"]][[tt]])
+      n <- ncol(object[["C"]][[1]]) / k
+    } else {
+      A <- cbind(A, object[["C"]])
+      n <- ncol(object[["C"]]) / k 
+    }
     tot <- tot + n
     if (is.null(new_d)) {
       new_d <- matrix(0, n.ahead, n)
@@ -145,11 +162,17 @@ predict.bvar <- function(object, ..., n.ahead = 10, new_x = NULL, new_d = NULL, 
   }
   
   A0_i <- diag(1, k)
-  if (!is.null(A)) {
-    draws <- nrow(A) 
-  } else {
-    if (struct) {
-      draws <- nrow(object[["A0"]]) 
+  draws <- NA
+  vars <- c("A0", "A", "B", "C", "Sigma")
+  for (i in vars) {
+    if (is.na(draws)) {
+      if (!is.null(object[[i]])) {
+        if (object[["specifications"]][["tvp"]][[i]]) {
+          draws <- nrow(object[[i]][[1]])
+        } else {
+          draws <- nrow(object[[i]]) 
+        }
+      }   
     }
   }
   result <- array(NA, dim = c(k, n.ahead, draws))
@@ -163,7 +186,11 @@ predict.bvar <- function(object, ..., n.ahead = 10, new_x = NULL, new_d = NULL, 
   for (draw in 1:draws) {
     
     if (struct) {
-      A0_i <- solve(matrix(object[["A0"]][draw, ], k))
+      if (tvp[["A0"]]) {
+        A0_i <- solve(matrix(object[["A0"]][[tt]][draw, ], k))
+      } else {
+        A0_i <- solve(matrix(object[["A0"]][draw, ], k)) 
+      }
     }
     
     for (i in 1:n.ahead) {
@@ -175,7 +202,7 @@ predict.bvar <- function(object, ..., n.ahead = 10, new_x = NULL, new_d = NULL, 
       if (is.null(A)) {
         pred[1:k, i + 1] <- pred[, i] + A0_i %*% u 
       } else {
-        pred[1:k, i + 1] <- A0_i %*% matrix(A[draw, ], k) %*% pred[pos_pred, i] + A0_i %*% u
+        pred[1:k, i + 1] <- A0_i %*% matrix(A[draw, ], k) %*% pred[pos_pred, i]+ A0_i %*% u
       }
       
       # Update matrix of predictors

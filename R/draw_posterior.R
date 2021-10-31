@@ -5,19 +5,7 @@
 #' @param object a list of model specifications, which should be passed on
 #' to function \code{FUN}. Usually, the output of a call to \code{\link{gen_var}},
 #' \code{\link{gen_vec}} or \code{\link{gen_dfm}} in combination with \code{\link{add_priors}}.
-#' @param FUN the function to be applied to each list element in argument \code{object}.
-#' If \code{NULL} (default), the internal functions \code{\link{bvarpost}} is used for
-#' VAR model, \code{\link{bvecpost}} for VEC models and \code{\link{dfmpost}} for dynamic
-#' factor models.
-#' @param mc.cores the number of cores to use, i.e. at most how many child
-#' processes will be run simultaneously. The option is initialized from
-#' environment variable MC_CORES if set. Must be at least one, and
-#' parallelization requires at least two cores.
-#' 
-#' @return For multiple models a list of objects of class \code{bvarlist}.
-#' For a single model the object has the class of the output of the applied posterior
-#' simulation function. In case the package's own functions are used, this will
-#' be \code{"bvar"}, \code{"bvec"} or \code{"dfm"}.
+#' @param ... arguments passed forward to method.
 #' 
 #' @examples
 #' 
@@ -37,60 +25,6 @@
 #' object <- draw_posterior(model)
 #' 
 #' @export
-draw_posterior <- function(object, FUN = NULL, mc.cores = NULL){
-  
-  # rm(list = ls()[-which(ls() == "object")]); FUN = NULL; mc.cores = NULL
-  
-  # Check if it's only one model
-  only_one_model <- FALSE
-  if ("data" %in% names(object)) {
-    object <- list(object)
-    only_one_model <- TRUE
-  }
-  
-  # Print estimation information
-  cat("Estimating models...\n")
-  if (is.null(mc.cores)) {
-    object <- lapply(object, .posterior_helper, use = FUN)
-  } else {
-    object <- parallel::mclapply(object, .posterior_helper, use = FUN,
-                                 mc.cores = mc.cores, mc.preschedule = FALSE)
-  }
-  
-  if (only_one_model) {
-    object <- object[[1]]
-  } else {
-    class(object) <- append("bvarlist", class(object)) 
-  }
-  
-  return(object)
-}
-
-# Helper function to implement try() functionality
-.posterior_helper <- function(object, use) {
-  
-  if (is.null(use)) {
-    # Apply functions of the package
-    if (object$model$type == "DFM"){
-      object <- try(dfmpost(object))
-    } else {
-      if (object$model$type == "VAR"){
-        object <- try(bvarpost(object))
-      } else {
-        if (object$model$type == "VEC") {
-          object <- try(bvecpost(object))
-        }    
-      } 
-    }
-  } else {
-    # Apply own function
-    object <- try(use(object))
-  }
-  
-  # Produce something if estimation fails
-  if (inherits(object, "try-error")) {
-    object <- c(object, list(coefficients = NULL))
-  }
-  
-  return(object)
+draw_posterior <- function(object, ...){
+  UseMethod("draw_posterior")
 }

@@ -6,6 +6,9 @@
 #' \code{\link{bvar}} or \code{\link{bvec_to_bvar}}.
 #' @param ci a numeric between 0 and 1 specifying the probability of the credible band.
 #' Defaults to 0.95.
+#' @param period integer. Index of the period of a TVP VAR, for which a summery should be generated.
+#' Only used for TVP models. Default is \code{NULL} so that only the most recent time period
+#' is used.
 #' @param x an object of class \code{"summary.bvar"}, usually, a result of a call to
 #' \code{\link{summary.bvar}}.
 #' @param digits the number of significant digits to use when printing.
@@ -20,13 +23,28 @@
 #' \item{specifications}{a list containing information on the model specification.}
 #'
 #' @export
-summary.bvar <- function(object, ci = .95, ...){
+summary.bvar <- function(object, ci = .95, period = NULL, ...){
+  
   # Number of endogenous variables
-  k <- object$specifications$dims["K"]
+  k <- object[["specifications"]][["dims"]][["K"]]
+  tt <- NROW(object[["y"]])
+  tvp <- object[["specifications"]][["tvp"]]
+  if (any(unlist(tvp))) {
+    if (is.null(period)) {
+      period <- tt
+    } else {
+      if (period > tt | period < 1) {
+        stop("Implausible specification of argument 'period'.")
+      }
+    }
+    period_long <- stats::time(object[["y"]])[period]
+  } else {
+    period_long <- NULL
+  }
   
   # Obtain variable names
   dim_names <- list(NULL, NULL)
-  if (!is.null(object$y)) {
+  if (!is.null(object[["y"]])) {
     dim_names[[1]] <- dimnames(object[["y"]])[[2]]
   } else {
     dim_names[[1]] <- paste("y", 1:k, sep = "")
@@ -36,10 +54,14 @@ summary.bvar <- function(object, ci = .95, ...){
   m <- n <- o <- tot <- 0
   x_names <- NULL
   if (!is.null(object[["A"]])) {
-    m <- NCOL(object[["A"]]) / k
+    if (tvp[["A"]]) {
+      m <- NCOL(object[["A"]][[1]]) / k
+    } else {
+      m <- NCOL(object[["A"]]) / k 
+    }
     p <- m / k
     tot <- tot + m
-    if (!is.null(object$x)) {
+    if (!is.null(object[["x"]])) {
       x_names <- c(x_names, dimnames(object[["x"]])[[2]][1:m])
     } else {
       for (i in 1:p) {
@@ -48,16 +70,24 @@ summary.bvar <- function(object, ci = .95, ...){
     }
   }
   if (!is.null(object[["B"]])) {
-    n <- NCOL(object[["B"]]) / k
+    if (tvp[["B"]]) {
+      n <- NCOL(object[["B"]][[1]]) / k
+    } else {
+      n <- NCOL(object[["B"]]) / k
+    }
     tot <- tot + n
-    if (!is.null(object$x)) {
+    if (!is.null(object[["x"]])) {
       x_names <- c(x_names, dimnames(object[["x"]])[[2]][m + 1:n])
     } else {
       x_names <- c(x_names, paste("x", 1:n, sep = ""))
     }
   }
   if (!is.null(object[["C"]])) {
-    o <- NCOL(object[["C"]]) / k
+    if (tvp[["C"]]) {
+      o <- NCOL(object[["C"]][[1]]) / k
+    } else {
+      o <- NCOL(object[["C"]]) / k 
+    }
     tot <- tot + o
     if (!is.null(object[["x"]])) {
       x_names <- c(x_names, dimnames(object[["x"]])[[2]][m + n + 1:o])
@@ -91,7 +121,11 @@ summary.bvar <- function(object, ci = .95, ...){
   vars <- c("A", "B", "C", "A0")
   for (i in vars) {
     if (!is.null(object[[i]])) {
-      temp <- summary(object[[i]], quantiles = c(ci_low, .5, ci_high))
+      if (tvp[[i]]) {
+        temp <- summary(object[[i]][[period]], quantiles = c(ci_low, .5, ci_high))
+      } else {
+        temp <- summary(object[[i]], quantiles = c(ci_low, .5, ci_high)) 
+      }
       if ("numeric" %in% class(temp$statistics)) {
         means <- cbind(means, matrix(temp$statistics["Mean"], k))
         sds <- cbind(sds, matrix(temp$statistics["SD"], k))
@@ -142,14 +176,18 @@ summary.bvar <- function(object, ci = .95, ...){
                                      q_upper = q_high))
   
   if (use_incl) {
-    result$coefficients$lambda = incl
+    result[["coefficients"]][["lambda"]] = incl
   }
   
   dim_names <- list(dim_names[[1]], dim_names[[1]])
   
   # Error coefficients
-  if (!is.null(object$Sigma)) {
-    temp <- summary(object$Sigma, quantiles = c(ci_low, .5, ci_high))
+  if (!is.null(object[["Sigma"]])) {
+    if (tvp[["Sigma"]]) {
+      temp <- summary(object[["Sigma"]][[period]], quantiles = c(ci_low, .5, ci_high))
+    } else {
+      temp <- summary(object[["Sigma"]], quantiles = c(ci_low, .5, ci_high)) 
+    }
     if (k == 1) {
       means <- matrix(temp$statistics["Mean"], k)
       sds <- matrix(temp$statistics["SD"], k)
@@ -177,26 +215,24 @@ summary.bvar <- function(object, ci = .95, ...){
     dimnames(median) <- dim_names
     dimnames(q_high) <- dim_names
     
-    result$sigma <- list(means = means,
-                         median = median,
-                         sd = sds,
-                         naivesd = naive_sd,
-                         tssd = ts_sd,
-                         q_lower = q_low,
-                         q_upper = q_high)
+    result[["sigma"]] <- list(means = means,
+                              median = median,
+                              sd = sds,
+                              naivesd = naive_sd,
+                              tssd = ts_sd,
+                              q_lower = q_low,
+                              q_upper = q_high)
     
     if ("Sigma_lambda" %in% names(object)) {
-      incl <- diag(NA_real_, k)
-      means <- colMeans(object$Sigma_lambda)
-      incl[upper.tri(incl)] <- means
-      incl[lower.tri(incl)] <- means
+      incl <- matrix(colMeans(object[["Sigma_lambda"]]), k)
       dimnames(incl) <- dim_names
-      result$sigma$lambda = incl
+      result[["sigma"]][["lambda"]] = incl
     }
   }
   
-  result$specifications <- object$specifications
-  result$specifications$ci <- paste(c(ci_low, ci_high) * 100, "%", sep = "")
+  result[["specifications"]] <- object[["specifications"]]
+  result[["specifications"]][["ci"]] <- paste(c(ci_low, ci_high) * 100, "%", sep = "")
+  result[["specifications"]][["period"]] <- period_long
   
   class(result) <- "summary.bvar"
   return(result)

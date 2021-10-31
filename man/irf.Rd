@@ -11,9 +11,11 @@ irf(
   response = NULL,
   n.ahead = 5,
   ci = 0.95,
+  shock = 1,
   type = "feir",
   cumulative = FALSE,
-  keep_draws = FALSE
+  keep_draws = FALSE,
+  period = NULL
 )
 
 \method{plot}{bvarirf}(x, ...)
@@ -39,6 +41,10 @@ and structural generalised \code{"sgir"} impulse responses.}
 \item{keep_draws}{logical specifying whether the function should return all draws of
 the posterior impulse response function. Defaults to \code{FALSE} so that
 the median and the credible intervals of the posterior draws are returned.}
+
+\item{period}{integer. Index of the period of a TVP VAR, for which IRFs should be generated.
+Only used for TVP models. Default is \code{NULL} so that only the most recent time period
+is used.}
 
 \item{...}{further graphical parameters.}
 }

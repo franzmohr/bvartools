@@ -2,6 +2,7 @@
 // [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::export(.ir)]]
 arma::vec ir(Rcpp::List A, int h, std::string type, int impulse, int response) {
+  
   arma::mat coef = Rcpp::as<arma::mat>(A["A"]);
   
   int k = coef.n_rows;
@@ -21,23 +22,26 @@ arma::vec ir(Rcpp::List A, int h, std::string type, int impulse, int response) {
   
   arma::mat Sigma, temp;
   arma::mat P = arma::eye<arma::mat>(k, k);
+  arma::mat norm_error;
   
+  if (type == fe) {
+    P = P * Rcpp::as<double>(A["shock"]);
+  }
   if (type == oir) {
     P = arma::trans(arma::chol(Rcpp::as<arma::mat>(A["Sigma"])));
+    P = P * arma::diagmat(1 / arma::vectorise(P.diag())) * Rcpp::as<double>(A["shock"]);
   }
   if (type == sir) {
-    P = arma::inv(Rcpp::as<arma::mat>(A["A0"]));
-    //coef = P * coef;
+    P = arma::solve(Rcpp::as<arma::mat>(A["A0"]), arma::eye<arma::mat>(k, k)) * Rcpp::as<double>(A["shock"]);
   }
   if (type == gir) {
     Sigma = Rcpp::as<arma::mat>(A["Sigma"]);
-    P = Sigma / sqrt(arma::as_scalar(Sigma(impulse - 1, impulse - 1)));
+    P = Sigma / arma::as_scalar(Sigma(impulse - 1, impulse - 1)) * Rcpp::as<double>(A["shock"]);
   }
   if (type == sgir) {
     Sigma = Rcpp::as<arma::mat>(A["Sigma"]);
-    P = arma::inv(Rcpp::as<arma::mat>(A["A0"]));
-    //coef = P * coef;
-    P = P * Sigma / sqrt(arma::as_scalar(Sigma(impulse - 1, impulse - 1)));
+    P = arma::solve(Rcpp::as<arma::mat>(A["A0"]), arma::eye<arma::mat>(k, k));
+    P = P * Sigma / arma::as_scalar(Sigma(impulse - 1, impulse - 1)) * Rcpp::as<double>(A["shock"]);
   }
 
   arma::mat phi = arma::zeros<arma::mat>((h + 1) * k, k);

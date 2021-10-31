@@ -5,7 +5,14 @@
 \alias{plot.bvarfevd}
 \title{Forecast Error Variance Decomposition}
 \usage{
-fevd(object, response = NULL, n.ahead = 5, type = "oir", normalise_gir = FALSE)
+fevd(
+  object,
+  response = NULL,
+  n.ahead = 5,
+  type = "oir",
+  normalise_gir = FALSE,
+  period = NULL
+)
 
 \method{plot}{bvarfevd}(x, ...)
 }
@@ -21,6 +28,10 @@ or \code{\link{bvec_to_bvar}}.}
 Possible choices are orthogonalised \code{oir} (default) and generalised \code{gir} impulse responses.}
 
 \item{normalise_gir}{logical. Should the GIR-based FEVD be normalised?}
+
+\item{period}{integer. Index of the period of a TVP VAR, for which FEVDs should be generated.
+Only used for TVP models. Default is \code{NULL} so that only the most recent time period
+is used.}
 
 \item{x}{an object of class "bvarfevd", usually, a result of a call to \code{\link{fevd}}.}
 

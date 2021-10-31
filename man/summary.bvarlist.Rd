@@ -2,7 +2,7 @@
 % Please edit documentation in R/summary.bvarlist.R
 \name{summary.bvarlist}
 \alias{summary.bvarlist}
-\title{Summarising Bayesian VAR Models}
+\title{Summarising Bayesian VAR or VEC Models}
 \usage{
 \method{summary}{bvarlist}(object, ...)
 }
@@ -24,5 +24,8 @@ The log-likelihood for the calculation of the information criteria is obtained b
 where \eqn{u_t = y_t - \mu_t}. The Akaike, Bayesian and Hannan–Quinn (HQ) information criteria are calculated as
 \deqn{AIC = 2 (Kp + Ms + N) - 2 LL},
 \deqn{BIC = (Kp + Ms + N) ln(T) - 2 LL} and 
-\deqn{HQ = 2  (Kp + Ms + N) ln(ln(T)) - 2 LL}, respectively.
+\deqn{HQ = 2  (Kp + Ms + N) ln(ln(T)) - 2 LL}, respectively,
+where \eqn{K} is the number of endogenous variables, \eqn{p} the number of lags of endogenous variables,
+\eqn{M} the number of exogenous variables, \eqn{s} the number of lags of exogenous variables,
+\eqn{N} the number of deterministic terms and \eqn{T} the number of observations.
 }

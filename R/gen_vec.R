@@ -20,6 +20,13 @@
 #' on the frequency of the time-series object provided in \code{data}.
 #' @param structural logical indicating whether data should be prepared for the estimation of a
 #' structural VAR model.
+#' @param tvp logical indicating whether the model parameters are time varying.
+#' @param sv logical indicating whether time varying error variances should be estimated using
+#' stochastic volatility algorithms.
+# @param tvp a character vector specifying which parts of the model should be time varying.
+# Possible elements are \code{"none"} (default), \code{"A0"}, \code{"alpha"}, \code{"beta"},
+# \code{"Gamma"}, \code{"Upsilon"}, \code{"C"}, \code{"Sigma"}, \code{"all"}.
+#' @param fcst integer. Number of observations saved for forecasting evaluation.
 #' @param iterations an integer of MCMC draws excluding burn-in draws (defaults
 #' to 50000).
 #' @param burnin an integer of MCMC draws used to initialize the sampler
@@ -28,8 +35,8 @@
 #' 
 #' @details The function produces the variable matrices of vector error correction (VEC)
 #' models, which can also include exogenous variables:
-#' \deqn{\Delta y_t = \Pi w_t + \sum_{i=1}^{p-1} \Gamma_i \Delta y_{t - i} + 
-#' \sum_{i=0}^{s-1} \Upsilon_i \Delta x_{t - i} +
+#' \deqn{\Delta y_t = \Pi w_t + \sum_{i=1}^{p-1} \Gamma_{i} \Delta y_{t - i} + 
+#' \sum_{i=0}^{s-1} \Upsilon_{i} \Delta x_{t - i} +
 #' C^{UR} d^{UR}_t + u_t,}
 #' where
 #' \eqn{\Delta y_t} is a \eqn{K \times 1} vector of differenced endogenous variables,
@@ -47,6 +54,10 @@
 #' 
 #' If an integer vector is provided as argument \code{p}, \code{s} or \code{r}, the function will
 #' produce a distinct model for all possible combinations of those specifications.
+#' 
+#' If \code{tvp} is \code{TRUE}, the respective coefficients
+#' of the above model are assumed to be time varying. If \code{sv} is \code{TRUE},
+#' the diagonal elements of the error covariance matrix are assumed to be time varying.
 #' 
 #' @return An object of class \code{'bvecmodel'}, which contains the following elements:
 #' \item{data}{A list of data objects, which can be used for posterior simulation. Element
@@ -69,8 +80,11 @@
 #' Lütkepohl, H. (2006). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
 #' 
 #' @export
-gen_vec <- function(data, p = 2, exogen = NULL, s = 2, r = NULL, const = NULL, trend = NULL,
-                    seasonal = NULL, structural = FALSE, iterations = 50000, burnin = 5000) {
+gen_vec <- function(data, p = 2, exogen = NULL, s = 2, r = NULL,
+                    const = NULL, trend = NULL, seasonal = NULL,
+                    structural = FALSE, tvp = FALSE, sv = FALSE,
+                    fcst = NULL,
+                    iterations = 50000, burnin = 5000) {
   
   # rm(list = ls()[which(ls() != "data")]); p = 1:3; r = NULL; exogen = NULL; s = 1:2; const = "unrestricted"; trend = NULL; seasonal = "unrestricted"; structural = FALSE; iterations = 50000; burnin = 5000
   
@@ -87,17 +101,17 @@ gen_vec <- function(data, p = 2, exogen = NULL, s = 2, r = NULL, const = NULL, t
   
   if (!is.null(const)) {
     if (!const %in% c("restricted", "unrestricted")) {
-      stop("Specified value for argument 'const' is not valid.")
+      stop("Specification for argument 'const' is not valid.")
     }
   }
   if (!is.null(trend)) {
     if (!trend %in% c("restricted", "unrestricted")) {
-      stop("Specified value for argument 'trend' is not valid.")
+      stop("Specification for argument 'trend' is not valid.")
     }
   }
   if (!is.null(seasonal)) {
     if (!seasonal %in% c("restricted", "unrestricted")) {
-      stop("Specified value for argument 'seasonal' is not valid.")
+      stop("Specification for argument 'seasonal' is not valid.")
     } else {
       if (is.null(const)) {
         stop("If argument 'seasonal' is specified, argument 'const' must be specified as well.")
@@ -106,10 +120,10 @@ gen_vec <- function(data, p = 2, exogen = NULL, s = 2, r = NULL, const = NULL, t
   }
   
   if (0 %in% p) {
-    stop("Argument 'p' must be at least 1.")
+    stop("Argument 'p' must be at least 1 for any error correction model.")
   }
   if (0 %in% s) {
-    stop("Argument 's' must be at least 1.")
+    stop("Argument 's' must be at least 1 for any error correction model.")
   }
   
   if (is.null(dimnames(data))) {
@@ -129,10 +143,11 @@ gen_vec <- function(data, p = 2, exogen = NULL, s = 2, r = NULL, const = NULL, t
   p_max <- max(p)
   
   model <- NULL
-  model$type <- "VEC"
-  model$endogen <- list("variables" = dimnames(data)[[2]],
-                        "lags" = 1)
+  model[["type"]] <- "VEC"
+  model[["endogen"]] <- list("variables" = dimnames(data)[[2]],
+                             "lags" = 1)
   
+  # Differenced endogenous variables
   diff_y <- diff(data)
   temp_name <- paste("d.", data_name, sep = "")
   temp <- diff_y
@@ -141,6 +156,7 @@ gen_vec <- function(data, p = 2, exogen = NULL, s = 2, r = NULL, const = NULL, t
   temp <- cbind(temp, stats::lag(data, -1))
   temp_name <- c(temp_name, paste("l.", data_name, sep = ""))
   
+  # Exogenous ECT variables
   if (!is.null(exogen)) {
     use_exo <- TRUE
     if (is.null(dimnames(exogen))) {
@@ -158,8 +174,8 @@ gen_vec <- function(data, p = 2, exogen = NULL, s = 2, r = NULL, const = NULL, t
     temp_name <- c(temp_name, paste("l.", exog_name, sep = ""))
     n_ect <- n_ect + m
     
-    model$exogen <- list("variables" = dimnames(exogen)[[2]],
-                         "lags" = 1)
+    model[["exogen"]] <- list("variables" = dimnames(exogen)[[2]],
+                              "lags" = 1)
   } else {
     use_exo <- FALSE
     s <- 0
@@ -171,34 +187,62 @@ gen_vec <- function(data, p = 2, exogen = NULL, s = 2, r = NULL, const = NULL, t
   if (p_max > 1) {
     for (i in 1:(p_max - 1)) {
       temp <- cbind(temp, stats::lag(diff_y, -i))
-      temp_name <- c(temp_name, paste0("d.", data_name, ".l", i))
+      if (nchar(p_max) > 2) {
+        i_temp <- paste0(c(rep(0, nchar(p_max) - nchar(i)), i), collapse = "")
+      } else {
+        i_temp <- paste0(c(rep(0, 2 - nchar(i)), i), collapse = "")
+      }
+      temp_name <- c(temp_name, paste0("d.", data_name, ".l", i_temp))
     }
   }
   
-  # Lags of exogenous variables
+  # Lags of differenecd exogenous variables
   if (use_exo) {
     # Add exogen s = 0
     diff_exog <- diff(exogen)
     temp <- cbind(temp, diff_exog)
-    temp_name <- c(temp_name, paste0("d.", exog_name, ".l0"))
+    if (nchar(s_max) > 2) {
+      i_temp <- rep(0, nchar(s_max))
+    } else {
+      i_temp <- rep(0, 2)
+    }
+    i_temp <- paste0(i_temp, collapse = "")
+    temp_name <- c(temp_name, paste0("d.", exog_name, ".l", i_temp))
     if (s_max > 1) {
       for (i in 1:(s_max - 1)) {
         temp <- cbind(temp, stats::lag(diff_exog, -i))
-        temp_name <- c(temp_name, paste0("d.", exog_name, ".l", i))
+        if (nchar(s_max) > 2) {
+          i_temp <- paste0(c(rep(0, nchar(s_max) - nchar(i)), i), collapse = "")
+        } else {
+          i_temp <- paste0(c(rep(0, 2 - nchar(i)), i), collapse = "")
+        }
+        temp_name <- c(temp_name, paste0("d.", exog_name, ".l", i_temp))
       } 
     }
   }
   
   temp <- stats::na.omit(temp)
-  tt <- nrow(temp)
   ts_info <- stats::tsp(temp)
   
+  # Final endogenous variables
   y <- stats::ts(as.matrix(temp[, 1:k]), class = c("mts", "ts", "matrix"))
   stats::tsp(y) <- ts_info
   dimnames(y)[[2]] <- temp_name[1:k]
   
+  # Forecast samples
+  fcst_y <- NULL
+  if (!is.null(fcst)) {
+    fcst_y <- stats::window(y, start = stats::time(y)[nrow(y) - fcst + 1])
+    y <- stats::window(y, end = stats::time(y)[nrow(y) - fcst])
+    temp <- stats::window(temp, end = stats::time(temp)[nrow(temp) - fcst])
+    ts_info <- stats::tsp(temp)
+  }
+  
+  tt <- nrow(temp)
+  
   ect <- matrix(temp[, k + 1:n_ect], tt)
   ect_names <- temp_name[k + 1:n_ect]
+  
   x <- matrix(temp[, -(1:(k + n_ect))], tt)
   x_names <- temp_name[-(1:(k + n_ect))]
   
@@ -273,12 +317,12 @@ gen_vec <- function(data, p = 2, exogen = NULL, s = 2, r = NULL, const = NULL, t
   use_det_r <- FALSE
   if (length(det_name_r) > 0) {
     use_det_r <- TRUE
-    model$deterministic$restricted <- det_name_r
+    model[["deterministic"]][["restricted"]] <- det_name_r
   }
   use_det_ur <- FALSE
   if (length(det_name_ur) > 0) {
     use_det_ur <- TRUE
-    model$deterministic$unrestricted <- det_name_ur
+    model[["deterministic"]][["unrestricted"]] <- det_name_ur
   }
   
   if (is.null(r)) {
@@ -292,15 +336,28 @@ gen_vec <- function(data, p = 2, exogen = NULL, s = 2, r = NULL, const = NULL, t
       stop("Argument 'rank' must be smaller than or equal to the number of endogenous variables.")
     }
   }
-  model$rank = 0
+  model[["rank"]] = 0
   
-  model$structural <- FALSE
-  if (structural) {
-    model$structural <- TRUE
+  if (class(structural) == "logical") {
+    model[["structural"]] <- structural
+  } else {
+    stop("Argument 'structural' must be of class 'logical'.")
   }
   
-  model$iterations <- iterations
-  model$burnin <- burnin
+  # TVP specifications ----
+  if (class(tvp) == "logical") {
+    model[["tvp"]] <- tvp 
+  } else {
+    stop("Argument 'tvp' must be of class 'logical'.")
+  }
+  if (class(sv) == "logical") {
+    model[["sv"]] <- sv
+  } else {
+    stop("Argument 'sv' must be of class 'logical'.")
+  }
+  
+  model[["iterations"]] <- iterations
+  model[["burnin"]] <- burnin
   
   ect <- stats::ts(as.matrix(ect), class = c("mts", "ts", "matrix"))
   stats::tsp(ect) <- ts_info
@@ -314,13 +371,14 @@ gen_vec <- function(data, p = 2, exogen = NULL, s = 2, r = NULL, const = NULL, t
     x <- NULL
   }
   
+  y_A0 <- NULL
   if (structural & k > 1) {
-    y_structural <- kronecker(-y, diag(1, k))
+    y_A0 <- kronecker(-y, diag(1, k))
     pos <- NULL
     for (j in 1:k) {
       pos <- c(pos, (j - 1) * k + 1:j)
     }
-    y_structural <- y_structural[, -pos]
+    y_A0 <- y_A0[, -pos]
   }
   
   result <- NULL
@@ -329,46 +387,44 @@ gen_vec <- function(data, p = 2, exogen = NULL, s = 2, r = NULL, const = NULL, t
       for (rank in r) {
         pos <- NULL
         model_i <- model
-        
         if (i > 1) {
           pos <- c(pos, 1:(k * (i - 1)))
-          model_i$endogen$lags <- i
+          model_i[["endogen"]][["lags"]] <- i
         }
-        
         if (use_exo) {
           pos <- c(pos, k * (p_max - 1) + 1:(m * j))
-          model_i$exogen$lags <- j
+          model_i[["exogen"]][["lags"]] <- j
         }
-        
         if (use_det_ur) {
           pos <- c(pos, k * (p_max - 1) + m * s_max + 1:n_det_ur)
         }
         
-        if (rank == 0 & length(pos) == 0) {
+        if (rank == 0 & length(pos) == 0 & !structural) {
           warning("Model with zero cointegration rank and no non-cointegration regressors is skipped.")
           next
         }
         
-        model_i$rank = rank
+        model_i[["rank"]] = rank
         X <- NULL
-        Z <- NULL
+        z <- NULL
         if (length(pos) > 0) {
           X <- stats::ts(as.matrix(x[, pos]), class = c("mts", "ts", "matrix")) 
           stats::tsp(X) <- ts_info
           dimnames(X)[[2]] <- x_names[pos]
-          Z <- kronecker(cbind(ect, X), diag(1, k))
-        } else {
-          Z <- kronecker(ect, diag(1, k))
         }
         
-        if (structural) {
-          Z <- cbind(Z, y_structural)
+        z <- kronecker(cbind(ect, X), diag(1, k))
+        
+        if (!is.null(y_A0)) {
+          z <- cbind(z, y_A0)
         }
+        dimnames(z) <- NULL
         
         result_i <- list("data" = list("Y" = y,
                                        "W" = ect,
                                        "X" = X,
-                                       "SUR" = Z),
+                                       "SUR" = z, 
+                                       "TEST" = fcst_y),
                          "model" = model_i)
         
         result <- c(result, list(result_i)) 
@@ -376,10 +432,13 @@ gen_vec <- function(data, p = 2, exogen = NULL, s = 2, r = NULL, const = NULL, t
     }
   }
   
-  if (length(result) == 1) {
-    result <- result[[1]]
+  if (!is.null(result)) {
+    if (length(result) == 1) {
+      result <- result[[1]]
+    }
+    class(result) <- append("bvecmodel", class(result))  
+  } else {
+    warning("Specification results in no output.")
   }
-  
-  class(result) <- append("bvecmodel", class(result))
   return(result)
 }

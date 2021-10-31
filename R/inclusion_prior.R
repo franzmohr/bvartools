@@ -92,6 +92,7 @@ inclusion_prior <- function(object, prob = .5, exclude_deterministics = TRUE,
 
   if (object$model$type == "VAR") {
     x <- t(object$data$Z)
+    tot_par <- ncol(object[["data"]][["SUR"]])
     if (!is.null(object$model$deterministic)) {
       n <- length(object$model$deterministic)
     }
@@ -107,6 +108,7 @@ inclusion_prior <- function(object, prob = .5, exclude_deterministics = TRUE,
     } else {
       x <- t(object$data$W)
     }
+    tot_par <- ncol(object[["data"]][["SUR"]])
     
     if (object$model$rank != 0) {
       if (!is.null(object$model$deterministic$restricted)) {
@@ -171,7 +173,7 @@ inclusion_prior <- function(object, prob = .5, exclude_deterministics = TRUE,
   }
   
   result <- matrix(result)
-  if (object$model$structural & k > 1) {
+  if (object[["model"]][["structural"]]) {
     result <- rbind(result, matrix(prob, k * (k - 1) / 2))
     include <- rbind(include, matrix(k * NROW(x) + 1:(k * (k - 1) / 2)))
   }

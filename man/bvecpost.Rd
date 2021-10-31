@@ -7,7 +7,7 @@
 bvecpost(object)
 }
 \arguments{
-\item{object}{an object of class \code{"bvarmodel"}, usually, a result of a call to \code{\link{gen_var}}
+\item{object}{an object of class \code{"bvecmodel"}, usually, a result of a call to \code{\link{gen_vec}}
 in combination with \code{\link{add_priors}}.}
 }
 \description{
@@ -15,7 +15,7 @@ Produces draws from the posterior distributions of Bayesian VEC models.
 }
 \details{
 The function implements a posterior simulation algorithm, which
-places identifying restrictions on the cointegration space. Th algorithm is also able to employ
+places identifying restrictions on the cointegration space. The algorithm is also able to employ
 stochastic search variable selection (SSVS) as proposed by Geroge et al. (2008) or Bayesian
 variable selection (BVS) as proposed in Korobilis (2013). Both SSVS and BVS can also be applied to the
 covariances of the error term. However, the algorithms cannot be applied to cointegration related
@@ -30,8 +30,8 @@ The function also supports structural BVEC models, where the structural coeffici
 contemporary endogenous variables, which corresponds to the so-called (A-model). Currently, only
 specifications are supported, where the structural matrix contains ones on its diagonal and all lower
 triangular elements are freely estimated. Since posterior draws are obtained based on the SUR form of
-the VAR model, the structural coefficients are drawn jointly with the other coefficients. No identifying
-restrictionare are made regarding the cointegration matrix.
+the VEC model, the structural coefficients are drawn jointly with the other coefficients. No identifying
+restrictions are made regarding the cointegration matrix.
 }
 \examples{
 
@@ -63,6 +63,10 @@ Koop, G., León-González, R., & Strachan R. W. (2010). Efficient posterior
 simulation for cointegrated models with priors on the cointegration space.
 \emph{Econometric Reviews, 29}(2), 224--242.
 \doi{10.1080/07474930903382208}
+
+Koop, G., León-González, R., & Strachan R. W. (2011). Bayesian inference in
+a time varying cointegration model. \emph{Journal of Econometrics, 165}(2), 210--220.
+\doi{10.1016/j.jeconom.2011.07.007}
 
 Korobilis, D. (2013). VAR forecasting using Bayesian variable selection.
 \emph{Journal of Applied Econometrics, 28}(2), 204--230. \doi{10.1002/jae.1271}

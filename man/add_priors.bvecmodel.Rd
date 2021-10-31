@@ -2,20 +2,20 @@
 % Please edit documentation in R/add_priors.bvecmodel.R
 \name{add_priors.bvecmodel}
 \alias{add_priors.bvecmodel}
-\title{Add Priors to Model}
+\title{Add Priors to Vector Error Correction Model}
 \usage{
 \method{add_priors}{bvecmodel}(
   object,
-  coef = list(v_i = 1, v_i_det = 0.1),
-  coint = list(v_i = 0, p_tau_i = 1),
-  sigma = list(df = "k", scale = 1),
+  coef = list(v_i = 1, v_i_det = 0.1, shape = 3, rate = 1e-04, rate_det = 0.01),
+  coint = list(v_i = 0, p_tau_i = 1, shape = 3, rate = 1e-04, rho = c(0.999, 1)),
+  sigma = list(df = "k", scale = 1, mu = 0, v_i = 0.01, sigma_h = 0.05),
   ssvs = NULL,
   bvs = NULL,
   ...
 )
 }
 \arguments{
-\item{object}{a list, usually, the output of a call to \code{\link{gen_var}} or \code{\link{gen_vec}}.}
+\item{object}{a list, usually, the output of a call to \code{\link{gen_vec}}.}
 
 \item{coef}{a named list of prior specifications for the coefficients of the
 models. For the default specification all prior means are set to zero and the diagonal elements of
@@ -24,15 +24,14 @@ terms. For deterministic coefficients the prior variances are set to 10 via \cod
 The variances need to be specified as precisions, i.e. as inverses of the variances.
 For further specifications such as the Minnesota prior see 'Details'.}
 
-\item{coint}{a named list of prior specifications for cointegration coefficients of
-country-specific VEC models. See 'Details'.}
+\item{coint}{a named list of prior specifications for cointegration coefficients of VEC models. See 'Details'.}
 
 \item{sigma}{a named list of prior specifications for the error variance-covariance matrix
-of the country models. For the default specification of an inverse Wishart distribution
-the prior degrees of freedom are set to the number of endogenous variables and
-the prior variances to 1. See 'Details'.}
+of the models. For the default specification of an inverse Wishart distribution
+the prior degrees of freedom are set to the number of endogenous variables plus the rank of
+the cointegration matrix. The prior variance is to 1. See 'Details'.}
 
-\item{ssvs}{optional; a named list of prior specifications for the SSVS algorithm. See 'Details'.}
+\item{ssvs}{optional; a named list of prior specifications for the SSVS algorithm. Not allowed for TVP models. See 'Details'.}
 
 \item{bvs}{optional; a named list of prior specifications for the BVS algorithm. See 'Details'.}
 
@@ -43,21 +42,18 @@ A list of country models.
 }
 \description{
 Adds prior specifications to a list of models, which was produced by
-function \code{\link{gen_var}} or \code{\link{gen_vec}}.
+function \code{\link{gen_vec}}.
 }
 \details{
-Argument \code{coef} can contain the following elements
+Argument \code{coef} contains the following elements
 \describe{
   \item{\code{v_i}}{a numeric specifying the prior precision of the coefficients. Default is 1.}
-  \item{\code{v_i_det}}{a numeric specifying the prior precision of coefficients corresponding to deterministic terms. Default is 0.1.}
-  \item{\code{coint_var}}{a logical specifying whether the prior mean of the first own lag of an
-  endogenous variable in a VAR model should be set to 1. Default is \code{FALSE}.}
-  \item{\code{const}}{a numeric or character specifying the prior mean of coefficients, which correspond
-  to the intercept. If a numeric is provided, all prior means are set to this value.
-  If \code{const = "mean"}, the means of the series of endogenous variables are used as prior means.
+  \item{\code{v_i_det}}{a numeric specifying the prior precision of coefficients that correspond to deterministic terms. Default is 0.1.}
+  \item{\code{const}}{a character specifying the prior mean of coefficients, which correspond
+  to the intercept. If \code{const = "mean"}, the means of the series of endogenous variables are used as prior means.
   If \code{const = "first"}, the first values of the series of endogenous variables are used as prior means.}
   \item{\code{minnesota}}{a list of length 4 containing parameters for the calculation of
-  the Minnesota prior, where the element names are \code{kappa0}, \code{kappa1}, \code{kappa2} and \code{kappa3}.
+  the Minnesota prior, where the element names must be \code{kappa0}, \code{kappa1}, \code{kappa2} and \code{kappa3}.
   For the endogenous variable \eqn{i} the prior variance of the \eqn{l}th lag of regressor \eqn{j} is obtained as
   \deqn{ \frac{\kappa_{0}}{l^2} \textrm{ for own lags of endogenous variables,}} 
   \deqn{ \frac{\kappa_{0} \kappa_{1}}{l^2} \frac{\sigma_{i}^2}{\sigma_{j}^2} \textrm{ for endogenous variables other than own lags,}}
@@ -66,41 +62,58 @@ Argument \code{coef} can contain the following elements
   where \eqn{\sigma_{i}} is the residual standard deviation of variable \eqn{i} of an unrestricted
   LS estimate. For exogenous variables \eqn{\sigma_{i}} is the sample standard deviation.
   
-  For VEC models the function only provides priors for the non-cointegration part of the model. The
-  residual standard errors \eqn{\sigma_i} are based on an unrestricted LS regression of the
+  The function only provides priors for the non-cointegration part of the model, although
+  the residual standard errors \eqn{\sigma_i} are based on an unrestricted LS regression of the
   endogenous variables on the error correction term and the non-cointegration regressors.}
   \item{\code{max_var}}{a numeric specifying the maximum prior variance that is allowed for
   non-deterministic coefficients.}
+  \item{\code{shape}}{an integer specifying the prior degrees of freedom of the error term of the state equation. Default is 3.}
+  \item{\code{rate}}{a numeric specifying the prior error variance of the state equation. Default is 0.0001.}
+  \item{\code{rate_det}}{a numeric specifying the prior error variance of the state equation corresponding to deterministic terms. Default is 0.01.}
 }
-If \code{minnesota} is specified, \code{v_i} and \code{v_i_det} are ignored.
+If \code{minnesota} is specified, elements \code{v_i} and \code{v_i_det} are ignored.
 
 Argument \code{coint} can contain the following elements:
 \describe{
-  \item{\code{coint_v_i}}{numeric between 0 and 1 specifying the shrinkage of the cointegration space prior. Default is 0.}
-  \item{\code{coint_p_tau_i}}{numeric of the diagonal elements of the inverse prior matrix of
-the central location of the cointegration space \eqn{sp(\beta)}. Default is 1.}
+  \item{\code{v_i}}{numeric between 0 and 1 specifying the shrinkage of the cointegration space prior. Default is 0.}
+  \item{\code{p_tau_i}}{numeric of the diagonal elements of the inverse prior matrix of
+  the central location of the cointegration space \eqn{sp(\beta)}. Default is 1.}
+  \item{\code{shape}}{an integer specifying the prior degrees of freedom of the error term of the state equation
+  of the loading matrix \eqn{\alpha}. Default is 3.}
+  \item{\code{rate}}{a numeric specifying the prior variance of error term of the state equation
+  of the loading matrix \eqn{\alpha}. Default is 0.0001.}
+  \item{\code{rho}}{a vector of length 2 containing the lower and upper bound of the autocorrelation coefficient
+  of the state equation of \eqn{\beta}. Default is \code{c(.999, 1)}.}
 }
 
 Argument \code{sigma} can contain the following elements:
 \describe{
   \item{\code{df}}{an integer or character specifying the prior degrees of freedom of the error term. Only
-  used, if the prior is invese Wishart.
-  Default is \code{"k"}, which indicates the amout of endogenous variables in the respective country model.
+  used, if the prior is inverse Wishart.
+  Default is \code{"k"}, which indicates the amount of endogenous variables in the respective model.
   \code{"k + 3"} can be used to set the prior to the amount of endogenous variables plus 3. If an integer
   is provided, the degrees of freedom are set to this value in all models.
-  If a VEC model is estimated, the rank \eqn{r} of the cointegration matrix
-  is automatically added.}
+  In all cases the rank \eqn{r} of the cointegration matrix is automatically added.}
   \item{\code{scale}}{a numeric specifying the prior error variance of endogenous variables.
   Default is 1.}
   \item{\code{shape}}{a numeric or character specifying the prior shape parameter of the error term. Only
-  used, if the prior is inverse gamma.
-  Default is \code{"k"}, which indicates the amout of endogenous variables in the respective country model.
-  \code{"k + 3"} can be used to set the prior to the amount of endogenous variables plus 3. If a numeric
-  is provided, the shape parameters are set to this value in all models.
-  If a VEC model is estimated, the rank \eqn{r} of the cointegration matrix
-  is automatically added.}
+  used, if the prior is inverse gamma or if time varying volatilities are estimated.
+  For models with constant volatility the default is \code{"k"}, which indicates the amount of endogenous
+  variables in the respective country model. \code{"k + 3"} can be used to set the prior to the amount of
+  endogenous variables plus 3. If a numeric is provided, the shape parameters are set to this value in all
+  models. For models with time varying volatility this prior refers to the error variance of the state
+  equation.}
   \item{\code{rate}}{a numeric specifying the prior rate parameter of the error term. Only used, if the
-  prior is inverse gamma.}
+  prior is inverse gamma or if time varying volatilities are estimated. For models with time varying
+  volatility this prior refers to the error variance of the state equation.}
+  \item{\code{mu}}{numeric of the prior mean of the initial state of the log-volatilities.
+  Only used for models with time varying volatility.}
+  \item{\code{v_i}}{numeric of the prior precision of the initial state of the log-volatilities.
+  Only used for models with time varying volatility.}
+  \item{\code{sigma_h}}{numeric of the initial draw for the variance of the log-volatilities.
+  Only used for models with time varying volatility.}
+  \item{\code{covar}}{logical indicating whether error covariances should be estimated. Only used
+  in combination with an inverse gamma prior or stochastic volatility.}
 }
 \code{df} and \code{scale} must be specified for an inverse Wishart prior. \code{shape} and \code{rate}
 are required for an inverse gamma prior. For structural models only a gamma prior specification
@@ -109,18 +122,18 @@ is allowed.
 Argument \code{ssvs} can contain the following elements:
 \describe{
   \item{\code{inprior}}{a numeric between 0 and 1 specifying the prior probability
-  of a variable to be included in the model. Default is 0.5.}
+  of a variable to be included in the model.}
   \item{\code{tau}}{a numeric vector of two elements containing the prior standard errors
   of restricted variables (\eqn{\tau_0}) as its first element and unrestricted variables (\eqn{\tau_1})
-  as its second. Default is \code{c(0.05, 10)}.}
+  as its second.}
   \item{\code{semiautomatic}}{an numeric vector of two elements containing the
   factors by which the standard errors associated with an unconstrained least squares
-  estimate of the VAR model are multiplied to obtain the prior standard errors
+  estimate of the model are multiplied to obtain the prior standard errors
   of restricted (\eqn{\tau_0}) and unrestricted (\eqn{\tau_1}) variables, respectively.
   This is the semiautomatic approach described in George et al. (2008).}
   \item{\code{covar}}{logical indicating if SSVS should also be applied to the error covariance matrix
   as in George et al. (2008).}
-  \item{\code{exclude_det}}{logical indicating if deterministic terms should be exempted from the SSVS algorithm.}
+  \item{\code{exclude_det}}{logical indicating if deterministic terms should be excluded from the SSVS algorithm.}
   \item{\code{minnesota}}{a numeric vector of length 4 containing parameters for the calculation of
   the Minnesota-like inclusion priors. See below.}
 }
@@ -131,12 +144,12 @@ The argument \code{bvs} can contain the following elements
   \item{\code{inprior}}{a numeric between 0 and 1 specifying the prior probability
   of a variable to be included in the model.}
   \item{\code{covar}}{logical indicating if BVS should also be applied to the error covariance matrix.}
-  \item{\code{exclude_det}}{logical indicating if deterministic terms should be exempted from the BVS algorithm.}
+  \item{\code{exclude_det}}{logical indicating if deterministic terms should be excluded from the BVS algorithm.}
   \item{\code{minnesota}}{a numeric vector of length 4 containing parameters for the calculation of
   the Minnesota-like inclusion priors. See below.}
 }
 
-If either \code{ssvs$minnesota} or \code{bvs$minnesota} is specified, prior inclusion probabilites
+If either \code{ssvs$minnesota} or \code{bvs$minnesota} is specified, prior inclusion probabilities
 are calculated in a Minnesota-like fashion as
 \tabular{cl}{
 \eqn{\frac{\kappa_1}{l}} \tab for own lags of endogenous variables, \cr
@@ -149,10 +162,9 @@ third and forth element in \code{ssvs$minnesota} or \code{bvs$minnesota}, respec
 }
 \examples{
 
-data("e1")
-e1 <- diff(log(e1)) * 100
+data("e6")
 
-model <- gen_var(e1, p = 2, deterministic = 2,
+model <- gen_var(e6, p = 2, deterministic = 2,
                  iterations = 100, burnin = 10)
 
 model <- add_priors(model)
@@ -165,6 +177,15 @@ Chan, J., Koop, G., Poirier, D. J., & Tobias J. L. (2019). \emph{Bayesian econom
 George, E. I., Sun, D., & Ni, S. (2008). Bayesian stochastic search for VAR model
 restrictions. \emph{Journal of Econometrics, 142}(1), 553--580.
 \doi{10.1016/j.jeconom.2007.08.017}
+
+Koop, G., León-González, R., & Strachan R. W. (2010). Efficient posterior
+simulation for cointegrated models with priors on the cointegration space.
+\emph{Econometric Reviews, 29}(2), 224--242.
+\doi{10.1080/07474930903382208}
+
+Koop, G., León-González, R., & Strachan R. W. (2011). Bayesian inference in
+a time varying cointegration model. \emph{Journal of Econometrics, 165}(2), 210--220.
+\doi{10.1016/j.jeconom.2011.07.007}
 
 Korobilis, D. (2013). VAR forecasting using Bayesian variable selection.
 \emph{Journal of Applied Econometrics, 28}(2), 204--230. \doi{10.1002/jae.1271}

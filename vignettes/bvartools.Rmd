@@ -97,6 +97,20 @@ If researchers prefer to use their own posterior algorithms, this can be done by
 
 If multiple models should be estimated, the function allows to make use of parallel computing by specifying argument `mc.cores`.
 
+### Inspect posterior draws
+
+Posterior draws can be visually inspected by using the `plot` function. By default, it produces a series of histograms of all estimated coefficients.
+
+```{r, message=FALSE, warning=FALSE, fig.align='center', fig.height=5, fig.width=10}
+plot(bvar_est)
+```
+
+Alternatively, the trace plot of the post-burnin draws can be draws by adding the argument `type = "trace"`:
+
+```{r, message=FALSE, warning=FALSE, fig.align='center', fig.height=5, fig.width=10}
+plot(bvar_est, type = "trace")
+```
+
 ### Summary statistics
 
 Summary statistics can be obtained in the usual way using the `summary` method.
@@ -124,7 +138,7 @@ round(A_freq, 3)
 The MCMC series in object `est_bvar` can be thinned using
 
 ```{r}
-bvar_est <- thin_posterior(bvar_est, thin = 10)
+bvar_est <- thin(bvar_est, thin = 10)
 ```
 
 ### Forecasts

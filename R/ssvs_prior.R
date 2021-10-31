@@ -36,48 +36,60 @@
 #' @export
 ssvs_prior <- function(object, tau = c(0.05, 10), semiautomatic = NULL) {
   
+  if (object[["model"]][["sv"]]) {
+    stop("SSVS cannot be used with models with stochastic volatility.")
+  }
+  
+  if (object[["model"]][["tvp"]]) {
+    stop("SSVS cannot be used with models with time varying parameter.")
+  }
+  
   y <- t(object$data$Y)
+  tt <- NCOL(y)
+  k <- NROW(y)
+  
   if (object$model$type == "VAR") {
     x <- t(object$data$Z)
+    z <- object$data$SUR
   }
   if (object$model$type == "VEC") {
     if (!is.null(object$data$X)) {
       if (object$model$rank == 0) {
         x <- t(object$data$X)
+        n_w <- 0
       } else {
         x <- t(cbind(object$data$W, object$data$X)) 
+        n_w <- NCOL(object$data$W)
       }
     } else {
       x <- t(object$data$W)
+      n_w <- NCOL(object$data$W)
     }
+    z <- object$data$SUR
   }
   
-  tt <- NCOL(y)
-  k <- NROW(y)
-  tot_par <- k * NROW(x)
-  if (object$model$structural) {
-    tot_par <- tot_par + k * (k - 1) / 2
-  }
+  tot_par <- NCOL(z)
+  covar <- tot_par > k * NROW(x)
   
   if (!is.null(semiautomatic)) {
     
     # Semiautomatic approach
-    ols <- tcrossprod(y, x) %*% solve(tcrossprod(x)) # OLS estimates
-    sigma_ols <- tcrossprod(y - ols %*% x) / (tt - nrow(x)) # OLS error covariance matrix
+    ols <- tcrossprod(y, x) %*% solve(tcrossprod(x))
+    u <- y - ols %*% x
+    sigma_ols <- tcrossprod(u) / (tt - nrow(x)) # OLS error covariance matrix
     cov_ols <- kronecker(solve(tcrossprod(x)), sigma_ols) # Sqrt of diagonal elements are the t-ratios
     se_ols <- matrix(sqrt(diag(cov_ols))) # OLS standard errors
     
     tau0 <- se_ols * semiautomatic[1] # Prior if excluded
     tau1 <- se_ols * semiautomatic[2] # Prior if included
     
-    if (object$model$structural) {
-      warning("Semiautomatic approach not available for structural variables. Using values of argument 'tau' instead.")
+    if (covar) {
+      warning("Semiautomatic approach to SSVS not available for covariance coefficients yet. Using values of argument 'tau' instead.")
       
       tau0 <- rbind(tau0, matrix(tau[1], k * (k - 1) / 2))
       tau1 <- rbind(tau1, matrix(tau[2], k * (k - 1) / 2))
     }
     
-    # Add structural variables here
   } else {
     tau0 <- matrix(rep(tau[1], tot_par))
     tau1 <- matrix(rep(tau[2], tot_par))

@@ -131,90 +131,167 @@
 bvar <- function(data = NULL, exogen = NULL, y = NULL, x = NULL,
                  A0 = NULL, A = NULL, B = NULL,
                  C = NULL, Sigma = NULL) {
-
+  
   result <- NULL
   if (is.null(y)) {
     stop("At least argument 'y' must be specified.")
   } else {
-    result$y <- y
+    result[["y"]] <- y
     k <- NCOL(y)
+    tt <- NROW(y)
+  }
+  
+  tvp_a0 <- FALSE
+  tvp_a <- FALSE
+  tvp_b <- FALSE
+  tvp_c <- FALSE
+  tvp_sigma <- FALSE
+  
+  structural <- FALSE
+  
+  if(!is.null(A0)) {
+    if (is.list(A0)) {
+      if ("coeffs" %in% names(A0)) {
+        n_a0 <- nrow(A0[["coeffs"]])
+      }
+    } else {
+      n_a0 <- nrow(A0)
+    }
+    if (n_a0 / tt >= 1) {
+      tvp_a0 <- TRUE
+      n_a0 <- n_a0 / tt
+    }
+    if (n_a0 %% (k * k) != 0) {
+      stop("Row number of coefficient draws of 'A0' is not k^2 or multiples thereof.")
+    }
+    structural <- TRUE
   }
   
   if(!is.null(A)) {
-    if ("list" %in% class(A)) {
-      result$A <- coda::mcmc(t(A$coeffs))
-      result$A_lambda <- coda::mcmc(t(A$lambda))
+    if (is.list(A)) {
+      if ("coeffs" %in% names(A)) {
+        n_a <- nrow(A[["coeffs"]])
+      }
     } else {
-      result$A <- coda::mcmc(t(A)) 
+      n_a <- nrow(A)
     }
-    n_a <- ncol(result$A)
+    if ((n_a / tt) %% k^2 == 0 & n_a / tt >= 1) {
+      tvp_a <- TRUE
+      n_a <- n_a / tt
+    }
+  }
+  
+  if(!is.null(B)) {
+    if (is.null(x) & is.null(exogen)) {
+      stop("Please specify either argument 'x' or 'exogen' when using exogenous regressors.")
+    }
+    if (is.list(B)) {
+      if ("coeffs" %in% names(B)) {
+        n_b <- nrow(B[["coeffs"]])
+      }
+    } else {
+      n_b <- nrow(B)
+    }
+    if ((n_b / tt) %% k == 0) {
+      tvp_b <- TRUE
+      n_b <- n_b / tt
+    }
+  }
+  
+  if(!is.null(C)) {
+    if (is.list(C)) {
+      if ("coeffs" %in% names(C)) {
+        n_c <- NROW(C[["coeffs"]])
+      }
+    } else {
+      n_c <- NROW(C)
+    }
+    if ((n_c / tt) %% k == 0 & n_c / tt >= 1) {
+      tvp_c <- TRUE
+      n_c <- n_c / tt
+    }
+  }
+  
+  if(!is.null(Sigma)) {
+    if (is.list(Sigma)) {
+      if ("coeffs" %in% names(Sigma)) {
+        n_sigma <- nrow(Sigma[["coeffs"]])
+      }
+    } else {
+      n_sigma <- nrow(Sigma)
+    }
+    if ((n_sigma / tt) %% k == 0 & n_sigma / tt >= 1) {
+      tvp_sigma <- TRUE
+      n_sigma <- n_sigma / tt
+    }
+    if (n_sigma %% (k * k) != 0) {
+      stop("Row number of coefficient draws of 'Sigma' is not k^2 or multiples thereof.")
+    }
+  }
+  
+  # Data objects ----
+  if(!is.null(data)) {
+    result[["data"]] <- data
+  }
+  if(!is.null(exogen)) {
+    result[["exogen"]] <- exogen
+  }
+  if(!is.null(x)) {
+    result[["x"]] <- x
+  }
+  
+  # Parameters - A0 ----
+  if(!is.null(A0)) {
+    result <- c(result, .bvar_fill_helper(A0, tvp_a0, n_a0, tt, "A0"))
+  }
+  
+  # Parameters - A ----
+  if(!is.null(A)) {
     if (n_a %% k == 0) {
       p <- n_a / k^2 
     } else {
       stop("Row number of argument 'A' is not a multiple of the number of endogenous variables.")
     }
+    result <- c(result, .bvar_fill_helper(A, tvp_a, n_a, tt, "A"))
   } else {
     p <- 0
   }
   
-  if(!is.null(data)) {
-    result$data <- data
-  }
-  if(!is.null(exogen)) {
-    result$exogen <- exogen
-  }
-  if(!is.null(x)) {
-    result$x <- x
-  }
-  if(!is.null(A0)) {
-    if ("list" %in% class(A0)) {
-      result$A0 <- coda::mcmc(t(A0$coeffs))
-      result$A0_lambda <- coda::mcmc(t(A0$lambda))
-    } else {
-      result$A0 <- coda::mcmc(t(A0)) 
-    }
-  }
+  # Parameters - B ----
+  m <- 0
+  s <- 0
   if(!is.null(B)) {
-    if ("list" %in% class(B)) {
-      result$B <- coda::mcmc(t(B$coeffs))
-      result$B_lambda <- coda::mcmc(t(B$lambda))
-    } else {
-      result$B <- coda::mcmc(t(B)) 
-    }
-  }
-  if(!is.null(C)) {
-    if ("list" %in% class(C)) {
-      result$C <- coda::mcmc(t(C$coeffs))
-      result$C_lambda <- coda::mcmc(t(C$lambda))
-    } else {
-      result$C <- coda::mcmc(t(C)) 
-    }
-  }
-  if(!is.null(Sigma)) {
-    if ("list" %in% class(Sigma)) {
-      result$Sigma <- coda::mcmc(t(Sigma$coeffs))
-      result$Sigma_lambda <- coda::mcmc(t(Sigma$lambda))
-    } else {
-      result$Sigma <- coda::mcmc(t(Sigma)) 
-    }
-  }
-  
-  result$specifications <- list("dims" = c("K" = k),
-                                "lags" = c("p" = p))
-  
-  if(!is.null(B)) {
+    result <- c(result, .bvar_fill_helper(B, tvp_b, n_b, tt, "B"))
     if (!is.null(exogen)) {
       m <- NCOL(exogen)
-      n_b <- ncol(result$B)
-      if (n_b %% k == 0) {
-        s <- n_b / (m * k) 
-      } else {
-        stop("Row number of argument 'B' is not a multiple of the number of endogenous variables.")
-      }
-      result$specifications$dims["M"] <- m
-      result$specifications$lags["s"] <- s
+      s <- n_b / (k * m) - 1 
+    }
+    if (!is.null(x)) {
+      x_names <- dimnames(x)[[2]][k * p + 1:(n_b / k)]
+      x_lags <- as.numeric(substring(x_names, unlist(gregexpr(".l", x_names)) + 2, nchar(x_names)))
+      m <- sum(x_lags == 0)
+      s <- max(x_lags)
     }
   }
+  
+  # Parameters - C ----
+  if(!is.null(C)) {
+    result <- c(result, .bvar_fill_helper(C, tvp_c, n_c, tt, "C"))
+  }
+  
+  # Parameters - Sigma ----
+  if(!is.null(Sigma)) {
+    result <- c(result, .bvar_fill_helper(Sigma, tvp_sigma, k * k, tt, "Sigma"))
+  }
+  
+  result[["specifications"]] <- list("dims" = list("K" = k, "M" = m),
+                                     "lags" = list("p" = p, "s" = s),
+                                     "tvp" = list("A0" = tvp_a0,
+                                                  "A" = tvp_a,
+                                                  "B" = tvp_b,
+                                                  "C" = tvp_c,
+                                                  "Sigma" = tvp_sigma),
+                                     "structural" = structural)
   
   class(result) <- "bvar"
   return(result)

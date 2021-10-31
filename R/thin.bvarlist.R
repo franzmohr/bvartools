@@ -4,6 +4,7 @@
 #' 
 #' @param x an object of class \code{"bvarlist"}.
 #' @param thin an integer specifying the thinning interval between successive values of posterior draws.
+#' @param ... further arguments passed to or from other methods.
 #' 
 #' @examples 
 #' 
@@ -22,15 +23,15 @@
 #' object <- draw_posterior(model)
 #' 
 #' # Thin
-#' object <- thin_posterior(object)
+#' object <- thin(object)
 #' 
 #' @return An object of class \code{"bvarlist"}.
 #' 
 #' @export
-thin_posterior.bvarlist <- function(x, thin = 10) {
+thin.bvarlist <- function(x, thin = 10, ...) {
   
   for (i in 1:length(x)) {
-    x[[i]] <- thin_posterior(x[[i]], thin = thin)
+    x[[i]] <- thin(x[[i]], thin = thin)
   }
  
   return(x)

@@ -2,7 +2,10 @@
 % Please edit documentation in R/add_priors.R
 \name{add_priors}
 \alias{add_priors}
-\title{Add Priors to Model}
+\title{Add Priors to Bayesian Models
+ 
+A generic function used to generate prior specifications for a list of models. The
+function invokes particular methods which depend on the class of the first argument.}
 \usage{
 add_priors(object, ...)
 }
@@ -12,7 +15,10 @@ add_priors(object, ...)
 \item{...}{arguments passed forward to method.}
 }
 \description{
-Adds prior specifications to a list of models.
+Add Priors to Bayesian Models
+ 
+A generic function used to generate prior specifications for a list of models. The
+function invokes particular methods which depend on the class of the first argument.
 }
 \examples{
 

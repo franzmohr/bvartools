@@ -4,28 +4,14 @@
 \alias{draw_posterior}
 \title{Posterior Simulation}
 \usage{
-draw_posterior(object, FUN = NULL, mc.cores = NULL)
+draw_posterior(object, ...)
 }
 \arguments{
 \item{object}{a list of model specifications, which should be passed on
 to function \code{FUN}. Usually, the output of a call to \code{\link{gen_var}},
 \code{\link{gen_vec}} or \code{\link{gen_dfm}} in combination with \code{\link{add_priors}}.}
 
-\item{FUN}{the function to be applied to each list element in argument \code{object}.
-If \code{NULL} (default), the internal functions \code{\link{bvarpost}} is used for
-VAR model, \code{\link{bvecpost}} for VEC models and \code{\link{dfmpost}} for dynamic
-factor models.}
-
-\item{mc.cores}{the number of cores to use, i.e. at most how many child
-processes will be run simultaneously. The option is initialized from
-environment variable MC_CORES if set. Must be at least one, and
-parallelization requires at least two cores.}
-}
-\value{
-For multiple models a list of objects of class \code{bvarlist}.
-For a single model the object has the class of the output of the applied posterior
-simulation function. In case the package's own functions are used, this will
-be \code{"bvar"}, \code{"bvec"} or \code{"dfm"}.
+\item{...}{arguments passed forward to method.}
 }
 \description{
 Forwards model input to posterior simulation functions.

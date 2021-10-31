@@ -4,12 +4,44 @@
 #' @rdname summary.bvec
 print.summary.bvec <- function(x, digits = max(3L, getOption("digits") - 3L), ...){
   
+  # Title
+  title_text <- "\nBayesian "
+  tvp <- any(unlist(x[["specifications"]][["tvp"]])[c("A0", "Pi", "Pi_x", "Pi_d", "Gamma", "Upsilon", "C")])
+  if (tvp) {
+    title_text <- paste0(title_text, "TVP-")
+  }
+  if (x[["specifications"]][["tvp"]][["Sigma"]]) {
+    title_text <- paste0(title_text, "SV-")
+  }
+  if (x[["specifications"]][["structural"]]) {
+    title_text <- paste0(title_text, "S")
+  }
+  title_text <- paste0(title_text, "VEC model")
+  p_text <- paste0("p = ", x[["specifications"]][["lags"]][["p"]])
+  s_text <- NULL
+  if (x[["specifications"]][["dims"]][["M"]] > 0) {
+    s_text <- paste0("s = ", x[["specifications"]][["lags"]][["s"]])
+  }
+  if (any(!is.null(c(p_text, s_text)))) {
+    lag_text <- paste0(c(p_text, s_text), collapse = " and ")
+  } else {
+    lag_text <- NULL
+  }
+  title_text <- paste0(c(title_text, lag_text), collapse = " with ")
+  
+  cat(title_text, "\n")
+  
   cat("\nModel:\n\n",
-      paste("y ~ ", paste(dimnames(x$coefficients$means)[[2]],
+      paste("d.y ~ ", paste(dimnames(x$coefficients$means)[[2]],
                          collapse = " + "),
             sep = ""), "\n", sep = "")
   
-  k <- x$specifications$dims["K"]
+  
+  if (!is.null(x[["specifications"]][["period"]])) {
+    cat("\nPeriod:", x[["specifications"]][["period"]], "\n")
+  }
+  
+  k <- x[["specifications"]][["dims"]][["K"]]
   y_names <- dimnames(x$coefficients$means)[[1]]
   
   if (!is.null(x$coefficients)) {

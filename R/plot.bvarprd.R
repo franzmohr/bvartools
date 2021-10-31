@@ -3,6 +3,8 @@
 #' A plot function for objects of class \code{"bvarprd"}.
 #' 
 #' @param x an object of class "bvarprd", usually, a result of a call to \code{\link{predict.bvar}}.
+#' @param n.pre number of plotted observations that precede the forecasts. If \code{NULL} (default),
+#' all available obervations will be plotted.
 #' @param ... further graphical parameters.
 #' 
 #' @examples
@@ -22,13 +24,13 @@
 #' object <- draw_posterior(model)
 #' 
 #' # Calculate forecasts
-#' pred <- predict(object, new_D = rep(1, 10))
+#' pred <- predict(object, new_d = rep(1, 10))
 #' 
 #' # Plot forecasts
 #' plot(pred)
 #' 
 #' @export
-plot.bvarprd <- function(x, ...) {
+plot.bvarprd <- function(x, n.pre = NULL, ...) {
   y <- x$y
   tt <- nrow(y)
   var_names <- dimnames(y)[[2]]
@@ -38,6 +40,12 @@ plot.bvarprd <- function(x, ...) {
     n_ahead <- nrow(x$fcst[[i]])
     temp <- cbind(y[, i], x$fcst[[i]])
     temp[tt, 2:4] <- y[tt, i]
+    if (!is.null(n.pre)) {
+      if (n.pre < tt) {
+        temp <- temp[-c(1:(tt - n.pre)), ] 
+      }
+      temp <- stats::ts(temp, end = stats::tsp(x$fcst[[i]])[2], frequency = stats::tsp(x$fcst[[i]])[3])
+    }
     stats::plot.ts(temp, plot.type = "single", lty = c(1, 2, 1, 2), main = i, ylab = "")
   }
   graphics::par(mfcol = c(1, 1))

@@ -4,15 +4,57 @@
 #' @rdname summary.bvar
 print.summary.bvar <- function(x, digits = max(3L, getOption("digits") - 3L), ...){
   
+  # Title
+  title_text <- "\nBayesian " 
+  tvp <- any(unlist(x[["specifications"]][["tvp"]])[c("A0", "A", "B", "C")])
+  if (tvp) {
+    title_text <- paste0(title_text, "TVP-")
+  }
+  if (x[["specifications"]][["tvp"]][["Sigma"]]) {
+    title_text <- paste0(title_text, "SV-")
+  }
+  if (x[["specifications"]][["structural"]]) {
+    title_text <- paste0(title_text, "S")
+  }
+  title_text <- paste0(title_text, "VAR model")
+  p_text <- paste0("p = ", x[["specifications"]][["lags"]][["p"]])
+  s_text <- NULL
+  if (x[["specifications"]][["dims"]][["M"]] > 0) {
+    s_text <- paste0("s = ", x[["specifications"]][["lags"]][["s"]])
+  }
+  if (any(!is.null(c(p_text, s_text)))) {
+    lag_text <- paste0(c(p_text, s_text), collapse = " and ")
+  } else {
+    lag_text <- NULL
+  }
+  title_text <- paste0(c(title_text, lag_text), collapse = " with ")
+  
+  cat(title_text, "\n")
+  
+  # Model
+  
+  if (is.null(x$coefficients$means)) {
+    regressors <- "nothing"
+    use_a <- FALSE
+  } else {
+    regressors <- paste(dimnames(x$coefficients$means)[[2]], collapse = " + ")
+    use_a <- TRUE
+  }
+  
   cat("\nModel:\n\n",
-      paste("y ~ ", paste(dimnames(x$coefficients$means)[[2]],
-                          collapse = " + "),
+      paste("y ~ ", regressors,
             sep = ""), "\n", sep = "")
   
-  k <- x$specifications$dims["K"]
-  y_names <- dimnames(x$coefficients$means)[[1]]
+  if (!is.null(x[["specifications"]][["period"]])) {
+    cat("\nPeriod:", x[["specifications"]][["period"]], "\n")
+  }
   
-  if (!is.null(x$coefficients)) {
+  k <- x[["specifications"]][["dims"]][["K"]]
+  y_names <- dimnames(x$sigma$means)[[1]]
+  
+  # Coefficients per endogenous variable
+  
+  if (use_a) {
     for (i in 1:k) {
       temp <- cbind(x$coefficients$means[i, ],
                     x$coefficients$sd[i, ],
@@ -37,7 +79,11 @@ print.summary.bvar <- function(x, digits = max(3L, getOption("digits") - 3L), ..
       cat("\nVariable:", y_names[i], "\n\n")
       print.default(temp, quote = FALSE, right = TRUE, digits = digits)
     } 
+  } else {
+    cat("\n\nNo regressors.\n\n")
   }
+  
+  # Error covariance matrix
   
   if (!is.null(x$sigma)) {
     x_names <- NULL

@@ -1,6 +1,15 @@
 # bvartools 0.2.1
 
-* Changed the generation of the output object in the Gibbs sampler functionss `bvaralg` and `bvecalg` to make them more stable for especially large output.
+* Added functionality for the simulation of models with time varying parameters, both for VAR and VEC models.
+* Added functionality for the simulation of models with stochastic volatility, both for VAR and VEC models.
+* Added a plot function for classes `bvar` and `bvec` for visual inspection of posterior draws.
+* Changed the generation of the output object in the Gibbs sampler functions `bvaralg` and `bvecalg` to make them more stable for especially large output.
+* Changed `draw_posterior` to a generic function and added the corresponding methods for BVAR, BVEC and DFM input.
+* Corrected typos in documentation.
+* `thin_posterior` methods were renamed to `thin` and are now methods of `coda::thin`.
+* Function `irf` allows to specify the size of a shock.
+* Fixed a bug in `ssvs_prior` concerning BVEC models.
+* Fixed a bug with the prior in the BVEC algorithm.
 
 # bvartools 0.2.0
 

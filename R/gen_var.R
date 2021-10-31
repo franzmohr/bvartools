@@ -14,6 +14,12 @@
 #' time-series object provided in \code{data}.
 #' @param structural logical indicating whether data should be prepared for the estimation of a
 #' structural VAR model.
+#' @param tvp logical indicating whether the model parameters are time varying.
+#' @param sv logical indicating whether time varying error variances should be estimated using
+#' stochastic volatility algorithms.
+# @param tvp a character vector specifying which parts of the model should be time varying.
+# Possible elements are \code{"none"} (default), \code{"TVP"}, \code{"SV"} and \code{"all"}.
+#' @param fcst integer. Number of observations saved for forecasting evaluation.
 #' @param iterations an integer of MCMC draws excluding burn-in draws (defaults
 #' to 50000).
 #' @param burnin an integer of MCMC draws used to initialize the sampler
@@ -39,6 +45,10 @@
 #' If an integer vector is provided as argument \code{p} or \code{s}, the function will
 #' produce a distinct model for all possible combinations of those specifications.
 #' 
+#' If \code{tvp} is \code{TRUE}, the respective coefficients
+#' of the above model are assumed to be time varying. If \code{sv} is \code{TRUE},
+#' the diagonal elements of the error covariance matrix are assumed to be time varying.
+#' 
 #' @return An object of class \code{'bvarmodel'}, which contains the following elements:
 #' \item{data}{A list of data objects, which can be used for posterior simulation. Element
 #' \code{Y} is a time-series object of dependent variables. Element \code{Z} is a time-series
@@ -62,11 +72,12 @@
 #' @export
 gen_var <- function(data, p = 2, exogen = NULL, s = NULL,
                     deterministic = "const", seasonal = FALSE,
-                    structural = FALSE,
+                    structural = FALSE, tvp = FALSE, sv = FALSE,
+                    fcst = NULL,
                     iterations = 50000, burnin = 5000) {
   
   # Dev conditions
-  # rm(list = ls()[which(ls() != "data")]); p = 1:3; s = 0:3; deterministic = "none"; seasonal = FALSE; iterations = 1000; burnin = 100; structural = FALSE
+  # rm(list = ls()[which(ls() != "data")]); p = 0; s = 0; exogen = NULL;deterministic = "none"; seasonal = FALSE; iterations = 1000; burnin = 100; structural = FALSE; tvp = FALSE; sv = FALSE; fcst = NULL
   
   # Check data ----
   if (!"ts" %in% class(data)) {
@@ -81,10 +92,6 @@ gen_var <- function(data, p = 2, exogen = NULL, s = NULL,
   
   if (seasonal & !deterministic %in% c("const", "both")) {
     stop("Argument 'deterministic' must be either 'const' or 'both' when using 'seasonal = TRUE'.")
-  }
-  
-  if (0 %in% p & is.null(exogen) & deterministic == "none" & !structural) {
-    stop("Current specification would result in a model with no regressors.")
   }
   
   # Endogenous variables ----
@@ -104,16 +111,21 @@ gen_var <- function(data, p = 2, exogen = NULL, s = NULL,
   p_max <- max(p)
   
   model <- NULL
-  model$type <- "VAR"
-  model$endogen <- list("variables" = dimnames(data)[[2]],
-                        "lags" = 0)
+  model[["type"]] <- "VAR"
+  model[["endogen"]] <- list("variables" = dimnames(data)[[2]],
+                             "lags" = 0)
   
   temp <- data
   temp_name <- data_name
   if (p_max >= 1) {
     for (i in 1:p_max) {
       temp <- cbind(temp, stats::lag(data, -i))
-      temp_name <- c(temp_name, paste(data_name, i, sep = "."))
+      if (nchar(p_max) > 2) {
+        i_temp <- paste0(c(rep(0, nchar(p_max) - nchar(i)), i), collapse = "")
+      } else {
+        i_temp <- paste0(c(rep(0, 2 - nchar(i)), i), collapse = "")
+      }
+      temp_name <- c(temp_name, paste0(data_name, ".", i_temp))
     }
   }
   
@@ -131,16 +143,27 @@ gen_var <- function(data, p = 2, exogen = NULL, s = NULL,
     s_max <- max(s)
     
     temp <- cbind(temp, exogen)
-    temp_name <- c(temp_name, paste(exo_name, 0, sep = "."))
+    if (nchar(s_max) > 2) {
+      i_temp <- rep(0, nchar(s_max))
+    } else {
+      i_temp <- rep(0, 2)
+    }
+    i_temp <- paste0(i_temp, collapse = "")
+    temp_name <- c(temp_name, paste0(exo_name, ".l", i_temp))
     if (s_max > 0) {
       for (i in 1:s_max) {
         temp <- cbind(temp, stats::lag(exogen, -i))
-        temp_name <- c(temp_name, paste(exo_name, i, sep = "."))
+        if (nchar(s_max) > 2) {
+          i_temp <- paste0(c(rep(0, nchar(s_max) - nchar(i)), i), collapse = "")
+        } else {
+          i_temp <- paste0(c(rep(0, 2 - nchar(i)), i), collapse = "")
+        }
+        temp_name <- c(temp_name, paste0(exo_name, ".l", i_temp))
       } 
     }
     
-    model$exogen <- list("variables" = dimnames(exogen)[[2]],
-                         "lags" = 0)
+    model[["exogen"]] <- list("variables" = dimnames(exogen)[[2]],
+                              "lags" = 0)
   } else {
     use_exo <- FALSE
     s <- 0
@@ -183,30 +206,50 @@ gen_var <- function(data, p = 2, exogen = NULL, s = NULL,
   
   use_det <- FALSE
   if (length(det_name) > 0) {
-    model$deterministic <- det_name
+    model[["deterministic"]] <- det_name
     use_det <- TRUE
   }
   
-  model$structural <- FALSE
-  if (structural) {
-    model$structural <- TRUE
+  if (class(structural) == "logical") {
+    model[["structural"]] <- structural
+  } else {
+    stop("Argument 'structural' must be of class 'logical'.")
   }
   
-  model$iterations <- iterations
-  model$burnin <- burnin
+  # TVP specifications ----
+  if (class(tvp) == "logical") {
+    model[["tvp"]] <- tvp 
+  } else {
+    stop("Argument 'tvp' must be of class 'logical'.")
+  }
+  if (class(sv) == "logical") {
+    model[["sv"]] <- sv
+  } else {
+    stop("Argument 'sv' must be of class 'logical'.")
+  }
+  
+  model[["iterations"]] <- iterations
+  model[["burnin"]] <- burnin
   
   # Is equal across all models
   y <- stats::ts(as.matrix(temp[, 1:k]), class = c("mts", "ts", "matrix"))
   stats::tsp(y) <- stats::tsp(temp)
   dimnames(y)[[2]] <- temp_name[1:k]
- 
+  
+  fcst_y <- NULL
+  if (!is.null(fcst)) {
+    fcst_y <- stats::window(y, start = stats::time(y)[nrow(y) - fcst + 1])
+    y <- stats::window(y, end = stats::time(y)[nrow(y) - fcst])
+  }
+  
+  y_A0 <- NULL
   if (structural & k > 1) {
-    y_structural <- kronecker(-y, diag(1, k))
+    y_A0 <- kronecker(-y, diag(1, k))
     pos <- NULL
     for (j in 1:k) {
       pos <- c(pos, (j - 1) * k + 1:j)
     }
-    y_structural <- y_structural[, -pos]
+    y_A0 <- y_A0[, -pos]
   }
   
   result <- NULL
@@ -216,38 +259,42 @@ gen_var <- function(data, p = 2, exogen = NULL, s = NULL,
       model_i <- model
       if (i >= 1) {
         pos <- c(pos, k + 1:(k * i))
-        model_i$endogen$lags <- i
+        model_i[["endogen"]][["lags"]] <- i
       }  
       if (use_exo) {
         pos <- c(pos, k + k * p_max + 1:(m * (j + 1)))
-        model_i$exogen$lags <- j
+        model_i[["exogen"]][["lags"]] <- j
       }
       if (use_det) {
         pos <- c(pos, k + k * p_max + m * (s_max + 1) + 1:length(det_name))
       }
       
-      if (length(pos) > 0 | structural) {
-        x <- NULL
-        z <- NULL
-        if (length(pos) > 0) {
-          x <- stats::ts(as.matrix(temp[, pos]), class = c("mts", "ts", "matrix")) 
-          stats::tsp(x) <- stats::tsp(temp)
-          dimnames(x)[[2]] <- temp_name[pos]
-          
-          z <- kronecker(x, diag(1, k))
-        }
-        if (structural) {
-          z <- cbind(z, y_structural)
+      x <- NULL
+      z <- NULL
+      if (length(pos) > 0) {
+        x <- stats::ts(as.matrix(temp[, pos]), class = c("mts", "ts", "matrix")) 
+        stats::tsp(x) <- stats::tsp(temp)
+        dimnames(x)[[2]] <- temp_name[pos]
+        
+        if (!is.null(fcst)) {
+          x <- stats::window(x, end = stats::time(x)[nrow(x) - fcst])
         }
         
-        result_i <- list("data" = list("Y" = y,
-                                       #"Z" = matrix(t(temp[, pos]), length(pos), dimnames = list(temp_name[pos], NULL))),
-                                       "Z" = x,
-                                       "SUR" = z),
-                         "model" = model_i)
-        
-        result <- c(result, list(result_i)) 
+        z <- kronecker(x, diag(1, k))
       }
+      
+      if (!is.null(y_A0)) {
+        z <- cbind(z, y_A0)
+      }
+      
+      result_i <- list("data" = list("Y" = y,
+                                     "Z" = x,
+                                     "SUR" = z,
+                                     "TEST" = fcst_y),
+                       "model" = model_i)
+      
+      result <- c(result, list(result_i)) 
+      
     }
   }
   
@@ -255,6 +302,6 @@ gen_var <- function(data, p = 2, exogen = NULL, s = NULL,
     result <- result[[1]]
   }
   
-  class(result) <- append("bvarmodel", class(result))
+  class(result) <- append("bvarmodel", class(result)) 
   return(result)
 }

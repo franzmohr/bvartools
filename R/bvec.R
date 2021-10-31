@@ -22,7 +22,12 @@
 #' draws of structural parameters and element \code{lambda} contains the corresponding draws of inclusion
 #' parameters in case variable selection algorithms were employed.
 #' @param alpha a \eqn{Kr \times S} matrix of MCMC coefficient draws of the loading matrix \eqn{\alpha}.
-#' @param beta a \eqn{((K + M + N^{R})r) \times S} matrix of MCMC coefficient draws of cointegration matrix \eqn{\beta}.
+#' @param beta a \eqn{Kr \times S} matrix of MCMC coefficient draws of cointegration matrix \eqn{\beta}
+#' corresponding to the endogenous variables of the model.
+#' @param beta_x a \eqn{Mr \times S} matrix of MCMC coefficient draws of cointegration matrix \eqn{\beta}
+#' corresponding to unmodelled, non-deterministic variables.
+#' @param beta_d a \eqn{N^{R}r \times S} matrix of MCMC coefficient draws of cointegration matrix \eqn{\beta}
+#' corresponding to restricted deterministic terms.
 #' @param Pi a \eqn{K^2 \times S} matrix of MCMC coefficient draws of endogenous varaibles in the cointegration matrix.
 #' @param Pi_x a \eqn{KM \times S} matrix of MCMC coefficient draws of unmodelled, non-deterministic variables in the cointegration matrix.
 #' @param Pi_d a \eqn{KN^{R} \times S} matrix of MCMC coefficient draws of restricted deterministic terms.
@@ -85,10 +90,15 @@
 #' \item{A0_lambda}{an \eqn{S \times K^2} "mcmc" object of inclusion parameters for coefficients
 #' corresponding to structural parameters.}
 #' \item{alpha}{an \eqn{S \times Kr} "mcmc" object of coefficient draws of loading parameters.}
-#' \item{beta}{an \eqn{S \times ((K + M + N^{R})r)} "mcmc" object of coefficient draws of cointegration parameters.}
+#' \item{beta}{an \eqn{S \times ((K + M + N^{R})r)} "mcmc" object of coefficient draws of cointegration parameters
+#' corresponding to the endogenous variables of the model.}
+#' \item{beta_x}{an \eqn{S \times KM} "mcmc" object of coefficient draws of cointegration parameters
+#' corresponding to unmodelled, non-deterministic variables.}
+#' \item{beta_d}{an \eqn{S \times KN^{R}} "mcmc" object of coefficient draws of cointegration parameters
+#' corresponding to restricted deterministic variables.}
 #' \item{Pi}{an \eqn{S \times K^2} "mcmc" object of coefficient draws of endogenous variables in the cointegration matrix.}
 #' \item{Pi_x}{an \eqn{S \times KM} "mcmc" object of coefficient draws of unmodelled, non-deterministic variables in the cointegration matrix.}
-#' \item{Pi_d}{an \eqn{S \times KN^{R}} "mcmc" object of coefficient draws of unrestricted deterministic variables in the cointegration matrix.}
+#' \item{Pi_d}{an \eqn{S \times KN^{R}} "mcmc" object of coefficient draws of restricted deterministic variables in the cointegration matrix.}
 #' \item{Gamma}{an \eqn{S \times (p-1)K^2} "mcmc" object of coefficient draws of differenced lagged endogenous variables.}
 #' \item{Gamma_lamba}{an \eqn{S \times (p-1)K^2} "mcmc" object of inclusion parameters for coefficients
 #' corresponding to differenced lagged endogenous variables.}
@@ -203,22 +213,21 @@
 #'                  Sigma = draws_sigma)
 #' 
 #' @export
-bvec <- function(y, alpha = NULL, beta = NULL, r = NULL,
-                 Pi = NULL,
-                 Pi_x = NULL, Pi_d = NULL,
+bvec <- function(y, alpha = NULL, beta = NULL, beta_x = NULL, beta_d = NULL, r = NULL,
+                 Pi = NULL, Pi_x = NULL, Pi_d = NULL,
                  w = NULL, w_x = NULL, w_d = NULL,
                  Gamma = NULL, Upsilon = NULL, C = NULL,
                  x = NULL, x_x = NULL, x_d = NULL, 
                  A0 = NULL, Sigma = NULL,
                  data = NULL, exogen = NULL) {
-
+  
   result <- NULL
   if (is.null(Pi) & is.null(Pi_x) & is.null(Pi_d) & is.null(r)) {
     stop("If arguments 'Pi', 'Pi_x' and 'Pi_d' are not specified, at least argument 'r' must be set to zero.")
   }
-  if (is.null(Pi) & is.null(Pi_x) & is.null(Pi_d) & !is.null(r)) {
+  if (is.null(beta) & is.null(beta_x) & is.null(beta_d) &is.null(Pi) & is.null(Pi_x) & is.null(Pi_d) & !is.null(r)) {
     if (r > 0) {
-      stop("Non of the arguments 'Pi', 'Pi_x' and 'Pi_d' is specified although 'r' is larger than zero.") 
+      stop("Non of the arguments 'beta', 'beta_x', 'beta_d', 'Pi', 'Pi_x' and 'Pi_d' is specified although 'r' is larger than zero.") 
     }
   }
   if (is.null(r)) {
@@ -228,104 +237,269 @@ bvec <- function(y, alpha = NULL, beta = NULL, r = NULL,
   if (!"ts" %in% class(y)) {
     stop("'Argument 'y' must be of class 'ts'.")
   }
-  result$y <- y
+  result[["y"]] <- y
   k <- NCOL(y)
+  tt <- NROW(y)
   
   if(!is.null(w)) {
     if (!"ts" %in% class(w)) {
       stop("'Argument 'w' must be of class 'ts'.")
     }
-    result$w <- w
+    result[["w"]] <- w
   }
   
-  m <- NULL
-  s <- NULL
+  m <- 0
+  s <- 0
   if(!is.null(w_x)) {
     if (!"ts" %in% class(w_x)) {
       stop("'Argument 'w_x' must be of class 'ts'.")
     }
-    result$w_x <- w_x
-    m <- ncol(w_x)
+    result[["w_x"]] <- w_x
+    m <- NCOL(w_x)
   }
   
+  k_detr <- NULL
   if(!is.null(w_d)) {
     if (!"ts" %in% class(w_d)) {
       stop("'Argument 'w_d' must be of class 'ts'.")
     }
     result$w_d <- w_d
+    k_detr <- NCOL(w_d)
   }
   
   if(!is.null(x)) {
     if (!"ts" %in% class(x)) {
       stop("'Argument 'x' must be of class 'ts'.")
     }
-    result$x <- x
+    result[["x"]] <- x
   }
   
   if(!is.null(x_x)) {
     if (!"ts" %in% class(x_x)) {
       stop("'Argument 'x_x' must be of class 'ts'.")
     }
-    result$x_x <- x_x
+    result[["x_x"]] <- x_x
   }
   
   if(!is.null(x_d)) {
     if (!"ts" %in% class(x_d)) {
       stop("'Argument 'x_d' must be of class 'ts'.")
     }
-    result$x_d <- x_d
+    result[["x_d"]] <- x_d
   }
   
+  tvp_a0 <- FALSE
+  tvp_alpha <- FALSE
+  tvp_beta <- FALSE
+  tvp_pi <- FALSE
+  tvp_gamma <- FALSE
+  tvp_upsilon <- FALSE
+  tvp_c <- FALSE
+  tvp_sigma <- FALSE
+  
+  structural <- FALSE
   if(!is.null(A0)) {
-    if ("list" %in% class(A0)) {
-      result[["A0"]] <- coda::mcmc(t(A0$coeffs))
-      result[["A0_lambda"]] <- coda::mcmc(t(A0$lambda))
+    if (is.list(A0)) {
+      if ("coeffs" %in% names(A0)) {
+        n_a0 <- nrow(A0[["coeffs"]])
+      }
     } else {
-      result[["A0"]] <- coda::mcmc(t(A0)) 
+      n_a0 <- nrow(A0)
     }
-    if (NCOL(result[["A0"]]) != k^2) {
-      stop("Row number of argument 'A0' is not the square of the number of endogenous variables.")
+    if (n_a0 / tt >= 1) {
+      tvp_a0 <- TRUE
+      n_a0 <- n_a0 / tt
     }
+    if (n_a0 %% (k * k) != 0) {
+      stop("Row number of coefficient draws of 'A0' is not k^2 or multiples thereof.")
+    }
+    structural <- TRUE
   }
   
   if(!is.null(alpha)) {
-    if ("list" %in% class(alpha)) {
-      result[["alpha"]] <- coda::mcmc(t(alpha$coeffs))
-      result[["alpha_lambda"]] <- coda::mcmc(t(alpha$lambda))
+    if (is.list(alpha)) {
+      if ("coeffs" %in% names(alpha)) {
+        n_alpha <- nrow(alpha[["coeffs"]])
+      }
     } else {
-      result[["alpha"]] <- coda::mcmc(t(alpha)) 
+      n_alpha <- nrow(alpha)
+    }
+    if ((n_alpha / tt) %% k == 0 & n_alpha / (k * r) / tt == 1) {
+      tvp_alpha <- TRUE
+      n_alpha <- n_alpha / tt
     }
   }
   
   if(!is.null(beta)) {
-    if ("list" %in% class(beta)) {
-      result[["beta"]] <- coda::mcmc(t(beta$coeffs))
-      result[["beta_lambda"]] <- coda::mcmc(t(beta$lambda))
+    if (is.list(beta)) {
+      if ("coeffs" %in% names(beta)) {
+        n_beta <- nrow(beta[["coeffs"]])
+      }
     } else {
-      result[["beta"]] <- coda::mcmc(t(beta)) 
+      n_beta <- nrow(beta)
+    }
+    if ((n_beta / tt) %% k == 0 & n_beta / tt >= 1) {
+      tvp_beta <- TRUE
+      n_beta <- n_beta / tt
     }
   }
   
   if(!is.null(Pi)) {
-    if ("list" %in% class(Pi)) {
-      result[["Pi"]] <- coda::mcmc(t(Pi$coeffs))
-      result[["Pi_lambda"]] <- coda::mcmc(t(Pi$lambda))
+    if (is.list(Pi)) {
+      if ("coeffs" %in% names(Pi)) {
+        n_pi <- nrow(Pi[["coeffs"]])
+      }
     } else {
-      result[["Pi"]] <- coda::mcmc(t(Pi)) 
+      n_pi <- nrow(Pi)
     }
-    if (NCOL(result[["Pi"]]) != k^2) {
-      stop("Row number of argument 'Pi' is not the square of the number of endogenous variables.")
+    if ((n_pi / tt) %% k == 0 & n_pi / tt >= 1) {
+      tvp_pi <- TRUE
+      n_pi <- n_pi / tt
+    }
+  } else {
+    tvp_pi <- tvp_alpha | tvp_beta 
+  }
+  
+  if(!is.null(Gamma)) {
+    if (is.list(Gamma)) {
+      if ("coeffs" %in% names(Gamma)) {
+        n_gamma <- nrow(Gamma[["coeffs"]])
+      }
+    } else {
+      n_gamma <- nrow(Gamma)
+    }
+    if ((n_gamma / tt) %% k == 0 & n_gamma / tt >= 1) {
+      tvp_gamma <- TRUE
+      n_gamma <- n_gamma / tt
+    }
+  }
+  
+  if(!is.null(Upsilon)) {
+    if (is.list(Upsilon)) {
+      if ("coeffs" %in% names(Upsilon)) {
+        n_upsilon <- nrow(Upsilon[["coeffs"]])
+      }
+    } else {
+      n_upsilon <- nrow(Upsilon)
+    }
+    if ((n_upsilon / tt) %% k == 0 & n_upsilon / tt >= 1) {
+      tvp_upsilon <- TRUE
+      n_upsilon <- n_upsilon / tt
+    }
+  }
+  
+  if(!is.null(C)) {
+    if (is.list(C)) {
+      if ("coeffs" %in% names(C)) {
+        n_c <- NROW(C[["coeffs"]])
+      }
+    } else {
+      n_c <- NROW(C)
+    }
+    if ((n_c / tt) %% k == 0 & n_c / tt >= 1) {
+      tvp_c <- TRUE
+      n_c <- n_c / tt
+    }
+  }
+  
+  if(!is.null(Sigma)) {
+    if (is.list(Sigma)) {
+      if ("coeffs" %in% names(Sigma)) {
+        n_sigma <- nrow(Sigma[["coeffs"]])
+      }
+    } else {
+      n_sigma <- nrow(Sigma)
+    }
+    if ((n_sigma / tt) %% k == 0 & n_sigma / tt >= 1) {
+      tvp_sigma <- TRUE
+      n_sigma <- n_sigma / tt
+    }
+    if (n_sigma %% (k * k) != 0) {
+      stop("Row number of coefficient draws of 'Sigma' is not k^2 or multiples thereof.")
+    }
+  }
+  
+  # Data objects ----
+  if(!is.null(data)) {
+    result[["data"]] <- data
+  }
+  if(!is.null(exogen)) {
+    result[["exogen"]] <- exogen
+  }
+  
+  if(!is.null(A0)) {
+    result <- c(result, .bvar_fill_helper(A0, tvp_a0, n_a0, tt, "A0"))
+  }
+  
+  # Parameters - alpha ----
+  if(!is.null(alpha)) {
+    result <- c(result, .bvar_fill_helper(alpha, tvp_alpha, r * k, tt, "alpha"))
+  }
+  
+  # beta
+  if(!is.null(beta)) {
+    result <- c(result, .bvar_fill_helper(beta, tvp_beta, r * k, tt, "beta"))
+  }
+  
+  # beta - exogenous
+  if(!is.null(beta_x)) {
+    result <- c(result, .bvar_fill_helper(beta_x, tvp_beta, r * m, tt, "beta_x"))
+  }
+  
+  # beta - deterministic
+  if(!is.null(beta_d)) {
+    result <- c(result, .bvar_fill_helper(beta_d, tvp_beta,  r * k_detr, tt, "beta_d"))
+  }
+  
+  if(!is.null(Pi)) {
+    result <- c(result, .bvar_fill_helper(Pi, tvp_pi, k * k, tt, "Pi"))
+  } else {
+    # If alpha and beta are provided, calculate Pi
+    if (!is.null(alpha) & !is.null(beta)) {
+      
+      if (is.list(result[["alpha"]])) {
+        draws <- NROW(result[["alpha"]][[1]])  
+      } else {
+        draws <- NROW(result[["alpha"]])
+      }
+      
+      if (!is.list(result[["alpha"]]) & !is.list(result[["beta"]])) {
+        result[["Pi"]] <- coda::mcmc(matrix(NA, draws, k * k))
+        for (draw in 1:draws) {
+          result[["Pi"]][draw, ] <- matrix(result[["alpha"]][draw,], k) %*% t(matrix(result[["beta"]][draw, ], k))
+        }
+      } else {
+        result[["Pi"]] <- list()
+        for (i in 1:tt) {
+          pi_temp <- matrix(NA, draws, k * k)
+          for (draw in 1:draws) {
+            if (is.list(result[["alpha"]])) {
+              alpha_temp <- matrix(result[["alpha"]][[i]][draw,], k)  
+            } else {
+              alpha_temp <- matrix(result[["alpha"]][draw,], k)
+            }
+            if (is.list(result[["beta"]])) {
+              beta_temp <- matrix(result[["beta"]][[i]][draw, ], k)
+            } else {
+              beta_temp <- matrix(result[["beta"]][draw, ], k)
+            }
+            pi_temp[draw, ] <- alpha_temp %*% t(beta_temp)
+          }
+          result[["Pi"]][[i]] <- coda::mcmc(pi_temp)
+        }
+      }
     }
   }
   
   if(!is.null(Pi_x)) {
-    if ("list" %in% class(Pi_x)) {
-      result[["Pi_x"]] <- coda::mcmc(t(Pi_x$coeffs))
-      result[["Pi_x_lambda"]] <- coda::mcmc(t(Pi_x$lambda))
+    
+    result <- c(result, .bvar_fill_helper(Pi_x, tvp_pi, k * m, tt, "Pi_x"))
+    
+    if (is.list(result[["Pi_x"]])) {
+      n_x <- NCOL(result[["Pi_x"]][[1]])    
     } else {
-      result[["Pi_x"]] <- coda::mcmc(t(Pi_x)) 
+      n_x <- NCOL(result[["Pi_x"]])
     }
-    n_x <- NCOL(result[["Pi_x"]])
     if (n_x %% k == 0) {
       if (is.null(m)) {
         m <- n_x / k 
@@ -334,51 +508,115 @@ bvec <- function(y, alpha = NULL, beta = NULL, r = NULL,
       stop("Row number of argument 'Pi_x' is not a multiple of the number of endogenous variables.")
     }
     s <- 0
+  } else {
+    # If alpha and beta_x are provided, calculate Pi_x
+    if (!is.null(alpha) & !is.null(beta_x)) {
+      
+      if (is.list(result[["alpha"]])) {
+        draws <- NROW(result[["alpha"]][[1]])  
+      } else {
+        draws <- NROW(result[["alpha"]])
+      }
+      
+      if (!is.list(result[["alpha"]]) & !is.list(result[["beta_x"]])) {
+        result[["Pi_x"]] <- coda::mcmc(matrix(NA, draws, k * m))
+        for (draw in 1:draws) {
+          result[["Pi_x"]][draw, ] <- matrix(result[["alpha"]][draw,], k) %*% t(matrix(result[["beta_x"]][draw, ], m))
+        }
+      } else {
+        result[["Pi_x"]] <- list()  
+        for (i in 1:tt) {
+          pi_temp <- matrix(NA, draws, k * m)
+          for (draw in 1:draws) {
+            if (is.list(result[["alpha"]])) {
+              alpha_temp <- matrix(result[["alpha"]][[i]][draw,], k)  
+            } else {
+              alpha_temp <- matrix(result[["alpha"]][draw,], k)
+            }
+            if (is.list(result[["beta_x"]])) {
+              beta_temp <- matrix(result[["beta_x"]][[i]][draw, ], m)
+            } else {
+              beta_temp <- matrix(result[["beta_x"]][draw, ], m)
+            }
+            pi_temp[draw, ] <- alpha_temp %*% t(beta_temp)
+          }
+          result[["Pi_x"]][[i]] <- coda::mcmc(pi_temp)
+        }
+      }
+    }
   }
   
   if(!is.null(Pi_d)) {
-    if ("list" %in% class(Pi_d)) {
-      result[["Pi_d"]] <- coda::mcmc(t(Pi_d$coeffs))
-      result[["Pi_d_lambda"]] <- coda::mcmc(t(Pi_d$lambda))
+    
+    result <- c(result, .bvar_fill_helper(Pi_d, tvp_pi, k * k_detr, tt, "Pi_d"))
+    
+    if (is.list(result[["Pi_d"]])) {
+      n_c_r <- NCOL(result[["Pi_d"]][[1]])
     } else {
-      result[["Pi_d"]] <- coda::mcmc(t(Pi_d)) 
+      n_c_r <- NCOL(result[["Pi_d"]]) 
     }
-    n_c_r <- NCOL(result[["Pi_d"]])
     if (n_c_r %% k == 0) {
       n_r <- n_c_r / k
     } else {
       stop("Row number of argument 'Pi_d' is not a multiple of the number of endogenous variables.")
     }
+  } else {
+    # If alpha and beta_d are provided, calculate Pi_d
+    if (!is.null(alpha) & !is.null(beta_d)) {
+      
+      if (is.list(result[["alpha"]])) {
+        draws <- NROW(result[["alpha"]][[1]])  
+      } else {
+        draws <- NROW(result[["alpha"]])
+      }
+      
+      if (!is.list(result[["alpha"]]) & !is.list(result[["beta_d"]])) {
+        result[["Pi_d"]] <- coda::mcmc(matrix(NA, draws, k * k_detr))
+        for (draw in 1:draws) {
+          result[["Pi_d"]][draw, ] <- matrix(result[["alpha"]][draw,], k) %*% t(matrix(result[["beta_d"]][draw, ], k_detr))
+        }
+      } else {
+        result[["Pi_d"]] <- list()  
+        for (i in 1:tt) {
+          pi_temp <- matrix(NA, draws, k * k_detr)
+          for (draw in 1:draws) {
+            if (is.list(result[["alpha"]])) {
+              alpha_temp <- matrix(result[["alpha"]][[i]][draw,], k)  
+            } else {
+              alpha_temp <- matrix(result[["alpha"]][draw,], k)
+            }
+            if (is.list(result[["beta_d"]])) {
+              beta_temp <- matrix(result[["beta_d"]][[i]][draw, ], k_detr)
+            } else {
+              beta_temp <- matrix(result[["beta_d"]][draw, ], k_detr)
+            }
+            pi_temp[draw, ] <- alpha_temp %*% t(beta_temp)
+          }
+          result[["Pi_d"]][[i]] <- coda::mcmc(pi_temp)
+        }
+      }
+    }
   }
   
   if(!is.null(Gamma)) {
-    if ("list" %in% class(Gamma)) {
-      result[["Gamma"]] <- coda::mcmc(t(Gamma$coeffs))
-      result[["Gamma_lambda"]] <- coda::mcmc(t(Gamma$lambda))
-    } else {
-      result[["Gamma"]] <- coda::mcmc(t(Gamma)) 
-    }
-    n_gamma <- NCOL(result[["Gamma"]])
+    
     if (n_gamma %% k == 0) {
       p <- n_gamma / k^2
     } else {
       stop("Row number of argument 'Gamma' is not a multiple of the number of endogenous variables.")
     }
+    result <- c(result, .bvar_fill_helper(Gamma, tvp_gamma, n_gamma, tt, "Gamma"))
   } else {
     p <- 0
   }
   
   if(!is.null(Upsilon)) {
-    if ("list" %in% class(Upsilon)) {
-      result[["Upsilon"]] <- coda::mcmc(t(Upsilon$coeffs))
-      result[["Upsilon_lambda"]] <- coda::mcmc(t(Upsilon$lambda))
-    } else {
-      result[["Upsilon"]] <- coda::mcmc(t(Upsilon))
-    }
-    n_x <- NCOL(result[["Upsilon"]])
-    if (n_x %% k == 0) {
+    
+    result <- c(result, .bvar_fill_helper(Upsilon, tvp_upsilon, n_upsilon, tt, "Upsilon"))
+    
+    if (n_upsilon %% k == 0) {
       if (!is.null(m)) {
-        s <- n_x / k / m - 1  
+        s <- n_upsilon / k / m - 1  
       }
     } else {
       stop("Row number of argument 'Upsilon' is not a multiple of the number of endogenous variables.")
@@ -389,36 +627,27 @@ bvec <- function(y, alpha = NULL, beta = NULL, r = NULL,
   }
   
   if(!is.null(C)) {
-    if ("list" %in% class(C)) {
-      result[["C"]] <- coda::mcmc(t(C$coeffs))
-      result[["C_lambda"]] <- coda::mcmc(t(C$lambda))
-    } else {
-      result[["C"]] <- coda::mcmc(t(C))
-    }
-    n_x <- NCOL(result[["C"]])
-    if (n_x %% k == 0) {
-      n_ur <- n_x / k
-    } else {
-      stop("Row number of argument 'C' is not a multiple of the number of endogenous variables.")
-    }
+    result <- c(result, .bvar_fill_helper(C, tvp_c, n_c, tt, "C"))
   }
   
   if(!is.null(Sigma)) {
-    if ("list" %in% class(Sigma)) {
-      result[["Sigma"]] <- coda::mcmc(t(Sigma$coeffs))
-      result[["Sigma_lambda"]] <- coda::mcmc(t(Sigma$lambda))
-    } else {
-      result[["Sigma"]] <- coda::mcmc(t(Sigma))
-    }
-    n_x <- NCOL(result[["Sigma"]])
-    if (n_x != k^2) {
-      stop("Row number of argument 'Sigma' is not a multiple of the number of endogenous variables.")
-    }
+    result <- c(result, .bvar_fill_helper(Sigma, tvp_sigma, k * k, tt, "Sigma"))
   }
   
-  result$specifications <- list("dims" = c("K" = k, "M" = m),
-                                "lags" = c("p" = p + 1, "s" = s),
-                                "rank" = r)
+  result[["specifications"]] <- list("dims" = list("K" = k, "M" = m),
+                                     "lags" = list("p" = p + 1, "s" = s),
+                                     "rank" = r,
+                                     "tvp" = list("A0" = tvp_a0,
+                                                  "alpha" = tvp_alpha,
+                                                  "beta" = tvp_beta,
+                                                  "Pi" = tvp_pi,
+                                                  "Pi_x" = tvp_pi,
+                                                  "Pi_d" = tvp_pi,
+                                                  "Gamma" = tvp_gamma,
+                                                  "Upsilon" = tvp_upsilon,
+                                                  "C" = tvp_c,
+                                                  "Sigma" = tvp_sigma),
+                                     "structural" = structural)
   
   class(result) <- "bvec"
   return(result)

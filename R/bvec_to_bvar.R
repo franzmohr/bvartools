@@ -120,46 +120,96 @@ bvec_to_bvar <- function(object) {
   
   draws <- NULL
   specs <- NULL
-  if (!is.null(object[["Pi"]])) {
-    draws <- nrow(object[["Pi"]])
-    specs <- attr(object[["Pi"]], "mcpar")
-  }
-  vars <- c("Pi_x", "Pi_d", "Gamma", "Upsilon", "C", "A0")
+  vars <- c("Pi", "Pi_x", "Pi_d", "Gamma", "Upsilon", "C", "A0")
   for (i in vars) {
     if (is.null(draws)) {
       if (!is.null(object[[i]])) {
-        draws <- nrow(object[[i]])
+        if (is.list(object[[i]])) {
+          draws <- nrow(object[[i]][[1]])
+        } else {
+          draws <- nrow(object[[i]]) 
+        }
       }
     }
     if (is.null(specs)) {
-      specs <- attr(object[[i]], "mcpar")
+      if (is.list(object[[i]])) {
+        specs <- attr(object[[i]][[1]], "mcpar")
+      } else {
+        specs <- attr(object[[i]], "mcpar")
+      }
     }
   }
   
   k <- NCOL(object[["y"]])
+  tt <- NROW(object[["y"]])
+  tvp <- object[["specifications"]][["tvp"]]
+  p <- object[["specifications"]][["lags"]][["p"]]
+  r <- object[["specifications"]][["rank"]]
   
-  p <- NULL
   A <- NULL
   if (!is.null(object[["Gamma"]])) {
-    p <- NCOL(object[["Gamma"]]) / k^2
-    p <- p + 1
+    
     W <- diag(-1, k * p)
     W[1:k, 1:k] <- diag(1, k)
     W[-(1:k), -(k * (p - 1) + 1:k)] <- W[-(1:k),-(k * (p - 1) + 1:k)] + diag(k * (p - 1))
     J <- matrix(0, k, k * p)
     J[1:k, 1:k] <- diag(1, k)
     
-    A <- matrix(NA, k^2 * p, draws)
-    for (draw in 1:draws) {
-      A[, draw] <- cbind(matrix(object[["Pi"]][draw, ], k), matrix(object[["Gamma"]][draw, ], k)) %*% W + J
+    n_gamma <- k * k * p
+    
+    if (!tvp[["Pi"]] & !tvp[["Gamma"]]) {
+      
+      A <- matrix(NA, n_gamma, draws)
+      for (draw in 1:draws) {
+        if (is.null(object[["Pi"]])) {
+          A[, draw] <- cbind(matrix(0, k, k), matrix(object[["Gamma"]][draw, ], k)) %*% W + J
+        } else {
+          A[, draw] <- cbind(matrix(object[["Pi"]][draw, ], k), matrix(object[["Gamma"]][draw, ], k)) %*% W + J 
+        }
+      } 
+      
+    } else {
+      
+      A <- matrix(NA, n_gamma * tt, draws)
+      pi_temp <- matrix(0, k, k)
+      for (draw in 1:draws) {
+        for (i in 1:tt) {
+          if (!is.null(object[["Pi"]])) {
+            if (tvp[["Pi"]]) {
+              pi_temp <- matrix(object[["Pi"]][[i]][draw, ], k)
+            } else {
+              pi_temp <- matrix(object[["Pi"]][draw, ], k)
+            }
+          }
+          if (tvp[["Gamma"]]) {
+            gamma_temp <- matrix(object[["Gamma"]][[i]][draw, ], k)
+          } else {
+            gamma_temp <- matrix(object[["Gamma"]][draw, ], k)
+          }
+          A[(i - 1) * n_gamma + 1:n_gamma, draw] <- cbind(pi_temp, gamma_temp) %*% W + J 
+        }
+      }
+      
     }
+    
   } else {
     if (!is.null(object[["Pi"]])) {
-      A <- matrix(NA, k^2, draws)
-      for (draw in 1:draws) {
-        A[, draw] <- matrix(object[["Pi"]][draw, ], k) + matrix(diag(1, k), k)
+      n_a <- k * k
+      if (tvp[["Pi"]]) {
+        A <- matrix(NA, n_a * tt, draws)
+        for (draw in 1:draws) {
+          for (i in 1:tt) {
+            A[(i - 1) * n_a + 1:n_a, draw] <- matrix(object[["Pi"]][[i]][draw, ], k) + matrix(diag(1, k), k)
+          }
+        }
+      } else {
+        A <- matrix(NA, n_a, draws)
+        for (draw in 1:draws) {
+          A[, draw] <- matrix(object[["Pi"]][draw, ], k) + matrix(diag(1, k), k)
+        } 
       }
-      p <- 1
+    } else {
+      A <- matrix(0, k * k, draws)
     }
   }
   
@@ -167,16 +217,49 @@ bvec_to_bvar <- function(object) {
   m <- 0
   s <- 0
   if (!is.null(object[["Upsilon"]])) {
-    m <- NCOL(object[["Pi_x"]]) / k
-    s <- NCOL(object[["Upsilon"]]) / (k * m)
+    
+    m <- object[["specifications"]][["dims"]][["M"]]
+    s <- object[["specifications"]][["lags"]][["s"]]
+    
     W <- diag(-1, m * (s + 1))
     W[1:m, 1:m] <- 0
     W[1:m, m + 1:m] <- diag(1, m)
     W[-(1:m), 1:(m * s)] <- W[-(1:m), 1:(m * s)] + diag(1, m * s)
     
-    B <- matrix(NA, k * m * (s + 1), draws)
-    for (draw in 1:draws){
-      B[, draw] <- cbind(matrix(object[["Pi_x"]][draw, ], k), matrix(object[["Upsilon"]][draw, ], k)) %*% W
+    n_b <- k * m * (s + 1)
+    
+    if (!tvp[["Pi_x"]] & !tvp[["Upsilon"]]) {
+      
+      B <- matrix(NA, n_b, draws)
+      for (draw in 1:draws){
+        if (!is.null(object[["Pi_x"]])) {
+          B[, draw] <- cbind(matrix(object[["Pi_x"]][draw, ], k), matrix(object[["Upsilon"]][draw, ], k)) %*% W 
+        } else {
+          B[, draw] <- cbind(matrix(0, k, m), matrix(object[["Upsilon"]][draw, ], k)) %*% W 
+        }
+      } 
+      
+    } else {
+      
+      B <- matrix(NA, n_b * tt, draws)
+      pix_temp <- matrix(0, k, m)
+      for (draw in 1:draws){
+        for (i in 1:tt) {
+          if (!is.null(object[["Pi_x"]])) {
+            if (tvp[["Pi_x"]]) {
+              pix_temp <- matrix(object[["Pi_x"]][[i]][draw, ], k)
+            } else {
+              pix_temp <- matrix(object[["Pi_x"]][draw, ], k)
+            } 
+          }
+          if (tvp[["Upsilon"]]) {
+            ups_temp <- matrix(object[["Upsilon"]][[i]][draw, ], k)
+          } else {
+            ups_temp <- matrix(object[["Upsilon"]][draw, ], k)
+          }
+          B[(i - 1) * n_b + 1:n_b, draw] <- cbind(pix_temp, ups_temp) %*% W 
+        }
+      }
     }
   }
   
@@ -190,28 +273,26 @@ bvec_to_bvar <- function(object) {
   }
   tsp_temp <- stats::tsp(y)
   
-  if (!is.null(p)) {
-    if (p > 1) {
-      y_diff <- matrix(object[["x"]][1,], k) # Get first observations
-      y_diff <- matrix(y_diff[,(p - 1):1], k) # Reverse order
-      y_diff <- cbind(y_diff, matrix(object[["y"]][1, ], k))
-      y_level <- y_diff * NA
-      y_level[, p] <- y[1, ] - y_diff[, p]
-      for (i in (p - 1):1){
-        y_level[, i] <- y_level[, i + 1] - y_diff[, i]
-      }
-      y <- stats::ts(rbind(t(y_level), y))
-    } else {
-      if (!is.null(object[["w"]])) {
-        y <- rbind(object[["w"]][1, ], y)
-      }
-    } 
+  if (p > 1) {
+    y_diff <- matrix(object[["x"]][1,], k) # Get first observations
+    y_diff <- matrix(y_diff[,(p - 1):1], k) # Reverse order
+    y_diff <- cbind(y_diff, matrix(object[["y"]][1, ], k))
+    y_level <- y_diff * NA
+    y_level[, p] <- y[1, ] - y_diff[, p]
+    for (i in (p - 1):1){
+      y_level[, i] <- y_level[, i + 1] - y_diff[, i]
+    }
+    y <- rbind(t(y_level), y)
+  } else {
+    if (!is.null(object[["w"]])) {
+      y <- rbind(object[["w"]][1, ], y)
+    }
   }
   
   if (m > 0) {
     x_names <- dimnames(object[["x_x"]])[[2]][1:m]
     x_names <- gsub("d.", "", x_names)
-    x_names <- gsub(".l0", "", x_names)
+    x_names <- substring(x_names, 1, unlist(gregexpr(".l", x_names))[1] - 1)
     if (s > 0) {
       x0 <- matrix(object[["x_x"]][, 1:m], NROW(object[["x_x"]]))
       x0 <- x0 + object[["w_x"]]
@@ -219,12 +300,24 @@ bvec_to_bvar <- function(object) {
       x_diff <- matrix(x_diff[, s:1], m)
       x_level <- x_diff * NA
       x_level[, s] <- x0[1, ] - x_diff[, s]
-      for (i in (s - 1):1){
-        x_level[, i] <- x_level[, i + 1] - x_diff[, i]
+      if (s > 1) {
+        for (i in (s - 1):1){
+          x_level[, i] <- x_level[, i + 1] - x_diff[, i]
+        } 
       }
-      x <- stats::ts(rbind(t(x_level), x0))
+      x <- rbind(t(x_level), x0)
     }
   }
+  
+  if (NROW(y) < NROW(x)) {
+    y <- rbind(matrix(NA, NROW(x) - NROW(y), k), y)
+  }
+  if (NROW(y) > NROW(x)) {
+    x <- rbind(matrix(NA, NROW(y) - NROW(x), m), x)
+  }
+  
+  y <- stats::ts(y)
+  x <- stats::ts(x)
   
   # Generate bvar data matrices
   temp <- y
@@ -232,15 +325,30 @@ bvec_to_bvar <- function(object) {
   if (!is.null(p)) {
     for (i in 1:p) {
       temp <- cbind(temp, stats::lag(y, -i))
-      temp_names <- c(temp_names, paste(y_names, i, sep = ".l"))
+      if (nchar(p) > 2) {
+        i_temp <- paste0(c(rep(0, nchar(p) - nchar(i)), i), collapse = "")
+      } else {
+        i_temp <- paste0(c(rep(0, 2 - nchar(i)), i), collapse = "")
+      }
+      temp_names <- c(temp_names, paste0(y_names, ".l", i_temp))
     } 
   }
   if (m > 0) {
     temp <- cbind(temp, x)
-    temp_names <- c(temp_names, paste(x_names, 0, sep = ".l"))
+    if (nchar(s) > 2) {
+      i_temp <- paste0(rep(0, nchar(s)), collapse = "")
+    } else {
+      i_temp <- paste0(rep(0, 2), collapse = "")
+    }
+    temp_names <- c(temp_names, paste0("exo.", x_names, ".l", i_temp))
     for (i in 1:s) {
       temp <- cbind(temp, stats::lag(x, -i))
-      temp_names <- c(temp_names, paste(x_names, i, sep = ".l"))
+      if (nchar(s) > 2) {
+        i_temp <- paste0(c(rep(0, nchar(s) - nchar(i)), i), collapse = "")
+      } else {
+        i_temp <- paste0(c(rep(0, 2 - nchar(i)), i), collapse = "")
+      }
+      temp_names <- c(temp_names, paste0("exo.", x_names, ".l", i_temp))
     }
   }
   
@@ -251,16 +359,24 @@ bvec_to_bvar <- function(object) {
   dimnames(y) <- list(NULL, y_names)
   
   x <- NULL
-  if (!is.null(p)) {
-    if (p > 0 & !is.null(object[["Pi"]])) {
-      x <- stats::ts(as.matrix(temp[, -(1:k)]), class = c("mts", "ts", "matrix"),
-                     end = tsp_temp[2], frequency = tsp_temp[3])
-      dimnames(x) <- list(NULL, temp_names[-(1:k)]) 
-    } 
+  if (p > 0 | m > 0) {
+    x <- stats::ts(as.matrix(temp[, -(1:k)]), class = c("mts", "ts", "matrix"),
+                   end = tsp_temp[2], frequency = tsp_temp[3])
+    dimnames(x) <- list(NULL, temp_names[-(1:k)])
   }
   
   if (!is.null(object[["A0"]])) {
-    A0 <- t(object[["A0"]])
+    if (tvp[["A0"]]) {
+      n_a0 <- k * k
+      A0 <- matrix(NA, n_a0 * tt, draws)
+      for (i in 1:tt) {
+        for (draw in 1:draws) {
+          A0[(i - 1) * n_a0 + 1:n_a0, draw] <- object[["A0"]][[i]][draw, ]
+        }
+      }
+    } else {
+      A0 <- t(object[["A0"]]) 
+    }
   } else {
     A0 <- NULL
   }
@@ -271,9 +387,23 @@ bvec_to_bvar <- function(object) {
   x_det <- NULL
   x_det_names <- NULL
   if (!is.null(object[["Pi_d"]])) {
-    n <- NCOL(object[["Pi_d"]]) / k
+    if (tvp[["Pi_d"]]) {
+      n <- NCOL(object[["Pi_d"]][[1]]) / k
+    } else {
+      n <- NCOL(object[["Pi_d"]]) / k
+    }
     n_Pi_d <- n
-    C <- t(object[["Pi_d"]])
+    if (tvp[["Pi_d"]]) {
+      n_pi <- k * n_Pi_d
+      C <- matrix(NA, n_pi * tt, draws)
+      for (i in 1:tt) {
+        for (draw in 1:draws) {
+          C[(i - 1) * n_pi + 1:n_pi, draw] <- object[["Pi_d"]][[i]][draw, ]
+        }
+      }
+    } else {
+      C <- t(object[["Pi_d"]]) 
+    }
     if (!is.null(object[["w_d"]])) {
       x_det_names <- dimnames(object[["w_d"]])[[2]]
       x_det <- object[["w_d"]]
@@ -281,13 +411,31 @@ bvec_to_bvar <- function(object) {
   }
   
   n_c <- 0
+  C_ur <- NULL
   if (!is.null(object[["C"]])) {
-    n_c <- NCOL(object[["C"]]) / k
-    n <- n + n_c
-    if (!is.null(C)) {
-      C <- rbind(C, t(object[["C"]]))
+    if (tvp[["C"]]) {
+      n_c <- NCOL(object[["C"]][[1]]) / k
     } else {
-      C <- t(object[["C"]])
+      n_c <- NCOL(object[["C"]]) / k 
+    }
+    n <- n + n_c
+    
+    if (tvp[["C"]]) {
+      n_c_ur <- k * n_c
+      C_ur <- matrix(NA, n_c_ur * tt, draws)
+      for (i in 1:tt) {
+        for (draw in 1:draws) {
+          C_ur[(i - 1) * n_c_ur + 1:n_c_ur, draw] <- object[["C"]][[i]][draw, ]
+        }
+      }
+    } else {
+      C_ur <- t(object[["C"]]) 
+    }
+    
+    if (!is.null(C)) {
+      C <- rbind(C, C_ur)
+    } else {
+      C <- C_ur
     }
   }
   
@@ -308,7 +456,17 @@ bvec_to_bvar <- function(object) {
   }
   
   if (!is.null(object[["Sigma"]])) {
-    Sigma <- t(object$Sigma)
+    if (tvp[["Sigma"]]) {
+      n_sigma <- k * k
+      Sigma <- matrix(NA, n_sigma * tt, draws)
+      for (i in 1:tt) {
+        for (draw in 1:draws) {
+          Sigma[(i - 1) * n_sigma + 1:n_sigma, draw] <- object[["Sigma"]][[i]][draw, ]
+        }
+      }
+    } else {
+      Sigma <- t(object[["Sigma"]]) 
+    }
   } else {
     Sigma <- NULL
   }
@@ -330,8 +488,14 @@ bvec_to_bvar <- function(object) {
   vars <- c("A", "B", "C", "Sigma", "A0")
   for (i in vars) {
     if(!is.null(object[[i]])) {
-      attr(object[[i]], "mcpar") <- specs
-    } 
+      if (object[["specifications"]][["tvp"]][[i]]) {
+        for (j in 1:tt) {
+          attr(object[[i]][[j]], "mcpar") <- specs
+        }
+      } else {
+        attr(object[[i]], "mcpar") <- specs 
+      }
+    }
   }
   
   return(object)

@@ -4,6 +4,7 @@
 #' 
 #' @param x an object of class \code{"bvec"}.
 #' @param thin an integer specifying the thinning interval between successive values of posterior draws.
+#' @param ... further arguments passed to or from other methods.
 #' 
 #' @examples 
 #' 
@@ -22,23 +23,24 @@
 #' object <- draw_posterior(model)
 #' 
 #' # Thin
-#' object <- thin_posterior(object)
+#' object <- thin(object)
 #' 
 #' @return An object of class \code{"bvec"}.
 #' 
 #' @export
-thin_posterior.bvec <- function(x, thin = 10) {
+thin.bvec <- function(x, thin = 10, ...) {
   
   draws <- NA
-  if (!is.null(x[["Pi"]])) {
-    draws <- nrow(x[["Pi"]])
-  }
-  vars <- c("Pi_x", "Pi_d", "Gamma", "Upsilon", "C", "A0")
+  vars <- c("Pi", "Pi_x", "Pi_d", "Gamma", "Upsilon", "C", "A0")
   for (i in vars) {
     if (is.na(draws)) {
       if (!is.null(x[[i]])) {
-        draws <- nrow(x[[i]])
-      }
+        if (x[["specifications"]][["tvp"]][[i]]) {
+          draws <- nrow(x[[i]][[1]])
+        } else {
+          draws <- nrow(x[[i]]) 
+        }
+      }   
     }
   }
   
@@ -46,10 +48,23 @@ thin_posterior.bvec <- function(x, thin = 10) {
   start <- pos_thin[1]
   end <- pos_thin[length(pos_thin)]
   
-  vars <- c("alpha", "beta", "Pi", "Pi_x", "Pi_d", "Gamma", "Upsilon", "C", "A0", "Sigma")
+  vars <- c("alpha",
+            "beta", "beta_x", "beta_d",
+            "Pi", "Pi_x", "Pi_d",
+            "Gamma", "Gamma_sigma", "Gamma_lambda",
+            "Upsilon", "Upsilon_sigma", "Upsilon_lambda",
+            "C", "C_sigma", "C_lambda",
+            "A0", "A0_sigma", "A0_lambda",
+            "Sigma")
   for (i in vars) {
     if (!is.null(x[[i]])) {
-      x[[i]] <- coda::mcmc(as.matrix(x[[i]][pos_thin,]), start = start, end = end, thin = thin) 
+      if (is.list(x[[i]])) {
+        for (j in 1:length(x[[i]])) {
+          x[[i]][[j]] <- coda::mcmc(as.matrix(x[[i]][[j]][pos_thin,]), start = start, end = end, thin = thin)  
+        }
+      } else {
+        x[[i]] <- coda::mcmc(as.matrix(x[[i]][pos_thin,]), start = start, end = end, thin = thin)  
+      }
     }
   }
   

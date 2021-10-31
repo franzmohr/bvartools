@@ -1,4 +1,4 @@
-#' Summarising Bayesian VAR Models
+#' Summarising Bayesian VAR or VEC Models
 #'
 #' summary method for class \code{"bvarlist"}.
 #'
@@ -11,7 +11,10 @@
 #' where \eqn{u_t = y_t - \mu_t}. The Akaike, Bayesian and Hannan–Quinn (HQ) information criteria are calculated as
 #' \deqn{AIC = 2 (Kp + Ms + N) - 2 LL},
 #' \deqn{BIC = (Kp + Ms + N) ln(T) - 2 LL} and 
-#' \deqn{HQ = 2  (Kp + Ms + N) ln(ln(T)) - 2 LL}, respectively.
+#' \deqn{HQ = 2  (Kp + Ms + N) ln(ln(T)) - 2 LL}, respectively,
+#' where \eqn{K} is the number of endogenous variables, \eqn{p} the number of lags of endogenous variables,
+#' \eqn{M} the number of exogenous variables, \eqn{s} the number of lags of exogenous variables,
+#' \eqn{N} the number of deterministic terms and \eqn{T} the number of observations.
 #'
 #' @return \code{summary.bvarlist} returns a table of class \code{"summary.bvarlist"}.
 #'
@@ -35,19 +38,25 @@ summary.bvarlist <- function(object, ...){
   
   for (i in 1:n_models) {
     
-    tt <- nrow(object[[i]][["y"]])
-    k <- object[[i]]$specifications$dims["K"]
-    p <- object[[i]]$specifications$lags["p"]
+    tvp <- any(unlist(object[[i]][["specifications"]][["tvp"]]))
+    sv <- object[[i]][["specifications"]][["tvp"]][["Sigma"]]
+    tt <- NROW(object[[i]][["y"]])
+    k <- object[[i]][["specifications"]][["dims"]][["K"]]
+    p <- object[[i]][["specifications"]][["lags"]][["p"]]
     endo_vars <- c(endo_vars, dimnames(object[[i]][["y"]])[[2]])
     
     teststats[i, "p"] <- p
-    teststats[i, "s"] <- object[[i]]$specifications$lags["s"]
+    teststats[i, "s"] <- object[[i]][["specifications"]][["lags"]]["s"]
     
-    temp_pars <- NULL
+    if (tvp) {
+      temp_pars <- list()
+      length(temp_pars) <- tt
+    } else {
+      temp_pars <- NULL
+    }
     x <- NULL
     
     if ("bvar" %in% class(object[[i]])) {
-      
       type <- "VAR"
       x <- t(object[[i]][["x"]])
       tot_pars <- NCOL(object[[i]][["x"]])
@@ -56,7 +65,13 @@ summary.bvarlist <- function(object, ...){
       vars <- c("A", "B", "C")
       for (j in vars) {
         if (!is.null(object[[i]][[j]])) {
-          temp_pars <- cbind(temp_pars, object[[i]][[j]])
+          if (is.list(object[[i]][[j]])) {
+            for (period in 1:tt) {
+              temp_pars[[period]] <- cbind(temp_pars[[period]], object[[i]][[j]][[period]]) 
+            }
+          } else {
+            temp_pars <- cbind(temp_pars, object[[i]][[j]]) 
+          }
         }
       }
     }
@@ -80,7 +95,15 @@ summary.bvarlist <- function(object, ...){
       vars <- c("Pi", "Pi_x", "Pi_d", "Gamma", "Upsilon", "C")
       for (j in vars) {
         if (!is.null(object[[i]][[j]])) {
-          temp_pars <- cbind(temp_pars, object[[i]][[j]])
+          
+          if (is.list(object[[i]][[j]])) {
+            for (period in 1:tt) {
+              temp_pars[[period]] <- cbind(temp_pars[[period]], object[[i]][[j]][[period]]) 
+            }
+          } else {
+            temp_pars <- cbind(temp_pars, object[[i]][[j]]) 
+          }
+          
           if (j == "Pi") {
             x <- cbind(x, object[[i]][["w"]])
             ect_vars <- c(ect_vars, dimnames(object[[i]][["w"]])[[2]])
@@ -97,7 +120,7 @@ summary.bvarlist <- function(object, ...){
             x <- cbind(x, object[[i]][["x"]])
             exog_vars <- c(exog_vars, dimnames(object[[i]][["x"]])[[2]])
           }
-          if (j == "Upsilon_x") {
+          if (j == "Upsilon") {
             x <- cbind(x, object[[i]][["x_x"]])
             exog_vars <- c(exog_vars, dimnames(object[[i]][["x_x"]])[[2]])
           }
@@ -112,31 +135,47 @@ summary.bvarlist <- function(object, ...){
       x <- t(x)
     }
     
-    draws <- nrow(temp_pars)
+    if (tvp) {
+      draws <- nrow(temp_pars[[1]])
+    } else {
+      draws <- nrow(temp_pars) 
+    }
     LL <- matrix(NA, tt, draws) # Get LogLik
+    y <- t(object[[i]][["y"]])
+    u <- y * 0
+    if (sv) {
+      sigma <- matrix(NA_real_, k * tt, k)
+    } else {
+      sigma <- matrix(NA_real_, k, k)
+    }
     
     for (j in 1:draws) {
       # Residuals
-      if (type == "VAR") {
-        u <- t(object[[i]][["y"]]) - matrix(temp_pars[j, ], k) %*% x
+      if (tvp) {
+        for (period in 1:tt) {
+          u[, period] <- y[, period] - matrix(temp_pars[[period]][j, ], k) %*% x[, period] 
+        }
+      } else {
+        u <- y - matrix(temp_pars[j, ], k) %*% x
       }
-      if (type == "VEC") {
-        u <- t(object[[i]][["y"]]) - matrix(temp_pars[j, ], k) %*% x
+      
+      if (sv) {
+        for (period in 1:tt) {
+          sigma[(period - 1) * k + 1:k,] <- matrix(object[[i]][["Sigma"]][[period]][j,], k)
+        }
+      } else {
+        sigma <- matrix(object[[i]][["Sigma"]][j,], k)
       }
-      # Sigma
-      sigma <- matrix(object[[i]]$Sigma[j,], k)
+      
       # LogLik
       LL[, j] <- loglik_normal(u, sigma)
     }
     
-    ll <- colSums(LL)
-    aic <- 2 * tot_pars - 2 * ll
-    bic <- log(tt) * tot_pars - 2 * ll
-    hq <- 2 * log(log(tt)) * tot_pars - 2 * ll
-    teststats[i, "LL"] <- mean(ll)
-    teststats[i, "AIC"] <- mean(aic)
-    teststats[i, "BIC"] <- mean(bic)
-    teststats[i, "HQ"] <- mean(hq)
+    ll <- sum(rowMeans(LL))
+    teststats[i, "LL"] <- ll
+    teststats[i, "AIC"] <- 2 * tot_pars - 2 * ll
+    teststats[i, "BIC"] <- log(tt) * tot_pars - 2 * ll
+    teststats[i, "HQ"] <- 2 * log(log(tt)) * tot_pars - 2 * ll
   }
   
   endo_vars <- unique(endo_vars)
@@ -150,12 +189,5 @@ summary.bvarlist <- function(object, ...){
   # Omit unnecessary columns
   teststats <- teststats[, which(!apply(teststats, 2, function(x) {all(is.na(x))}))]
   
-  # result <- list(model = list(endogen = endo_vars,
-  #                             ect = ect_vars,
-  #                             exogen = exog_vars),
-  #                teststats = teststats)
-  result <- teststats
-  
-  # class(result) <- "summary.bvarlist"
-  return(result)
+  return(teststats)
 }

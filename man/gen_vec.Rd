@@ -14,6 +14,9 @@ gen_vec(
   trend = NULL,
   seasonal = NULL,
   structural = FALSE,
+  tvp = FALSE,
+  sv = FALSE,
+  fcst = NULL,
   iterations = 50000,
   burnin = 5000
 )
@@ -46,6 +49,13 @@ on the frequency of the time-series object provided in \code{data}.}
 \item{structural}{logical indicating whether data should be prepared for the estimation of a
 structural VAR model.}
 
+\item{tvp}{logical indicating whether the model parameters are time varying.}
+
+\item{sv}{logical indicating whether time varying error variances should be estimated using
+stochastic volatility algorithms.}
+
+\item{fcst}{integer. Number of observations saved for forecasting evaluation.}
+
 \item{iterations}{an integer of MCMC draws excluding burn-in draws (defaults
 to 50000).}
 
@@ -68,8 +78,8 @@ matrix of element \code{X} in its SUR form.}
 \details{
 The function produces the variable matrices of vector error correction (VEC)
 models, which can also include exogenous variables:
-\deqn{\Delta y_t = \Pi w_t + \sum_{i=1}^{p-1} \Gamma_i \Delta y_{t - i} + 
-\sum_{i=0}^{s-1} \Upsilon_i \Delta x_{t - i} +
+\deqn{\Delta y_t = \Pi w_t + \sum_{i=1}^{p-1} \Gamma_{i} \Delta y_{t - i} + 
+\sum_{i=0}^{s-1} \Upsilon_{i} \Delta x_{t - i} +
 C^{UR} d^{UR}_t + u_t,}
 where
 \eqn{\Delta y_t} is a \eqn{K \times 1} vector of differenced endogenous variables,
@@ -87,6 +97,10 @@ order of exogenous variables of the corresponding VAR model.
 
 If an integer vector is provided as argument \code{p}, \code{s} or \code{r}, the function will
 produce a distinct model for all possible combinations of those specifications.
+
+If \code{tvp} is \code{TRUE}, the respective coefficients
+of the above model are assumed to be time varying. If \code{sv} is \code{TRUE},
+the diagonal elements of the error covariance matrix are assumed to be time varying.
 }
 \examples{
 

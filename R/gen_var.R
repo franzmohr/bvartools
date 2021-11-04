@@ -15,10 +15,8 @@
 #' @param structural logical indicating whether data should be prepared for the estimation of a
 #' structural VAR model.
 #' @param tvp logical indicating whether the model parameters are time varying.
-#' @param sv logical indicating whether time varying error variances should be estimated using
-#' stochastic volatility algorithms.
-# @param tvp a character vector specifying which parts of the model should be time varying.
-# Possible elements are \code{"none"} (default), \code{"TVP"}, \code{"SV"} and \code{"all"}.
+#' @param sv logical indicating whether time varying error variances should be estimated by
+#' employing a stochastic volatility algorithm.
 #' @param fcst integer. Number of observations saved for forecasting evaluation.
 #' @param iterations an integer of MCMC draws excluding burn-in draws (defaults
 #' to 50000).
@@ -67,6 +65,9 @@
 #' 
 #' @references
 #' 
+#' Chan, J., Koop, G., Poirier, D. J., & Tobias, J. L. (2019). \emph{Bayesian Econometric Methods}
+#' (2nd ed.). Cambridge: University Press.
+#' 
 #' Lütkepohl, H. (2006). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
 #' 
 #' @export
@@ -75,9 +76,6 @@ gen_var <- function(data, p = 2, exogen = NULL, s = NULL,
                     structural = FALSE, tvp = FALSE, sv = FALSE,
                     fcst = NULL,
                     iterations = 50000, burnin = 5000) {
-  
-  # Dev conditions
-  # rm(list = ls()[which(ls() != "data")]); p = 0; s = 0; exogen = NULL;deterministic = "none"; seasonal = FALSE; iterations = 1000; burnin = 100; structural = FALSE; tvp = FALSE; sv = FALSE; fcst = NULL
   
   # Check data ----
   if (!"ts" %in% class(data)) {

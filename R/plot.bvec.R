@@ -57,7 +57,7 @@ plot.bvec <- function(x, ci = 0.95, type = "hist", ...) {
   y_names <- dimnames(x[["y"]])[[2]]
   x_names <- .get_regressor_names_vec(x, add_block = TRUE)
   lab_size <- .05
-  mar_orig <- par("mar")
+  mar_orig <- graphics::par("mar")
   
   n_tot <- 0
   if ("Pi" %in% names(x)) {

@@ -3,73 +3,23 @@
 \name{fevd}
 \alias{fevd}
 \alias{plot.bvarfevd}
-\title{Forecast Error Variance Decomposition}
+\title{Forecast Error Variance Decomposition
+ 
+A generic function used to calculate forecast error varianc decompositions.}
 \usage{
-fevd(
-  object,
-  response = NULL,
-  n.ahead = 5,
-  type = "oir",
-  normalise_gir = FALSE,
-  period = NULL
-)
+fevd(object, ...)
 
 \method{plot}{bvarfevd}(x, ...)
 }
 \arguments{
-\item{object}{an object of class \code{"bvar"}, usually, a result of a call to \code{\link{bvar}}
-or \code{\link{bvec_to_bvar}}.}
-
-\item{response}{name of the response variable.}
-
-\item{n.ahead}{number of steps ahead.}
-
-\item{type}{type of the impulse responses used to calculate forecast error variable decompositions.
-Possible choices are orthogonalised \code{oir} (default) and generalised \code{gir} impulse responses.}
-
-\item{normalise_gir}{logical. Should the GIR-based FEVD be normalised?}
-
-\item{period}{integer. Index of the period of a TVP VAR, for which FEVDs should be generated.
-Only used for TVP models. Default is \code{NULL} so that only the most recent time period
-is used.}
-
-\item{x}{an object of class "bvarfevd", usually, a result of a call to \code{\link{fevd}}.}
+\item{object}{an object of class \code{"bvar"}.}
 
 \item{...}{further graphical parameters.}
-}
-\value{
-A time-series object of class \code{"bvarfevd"}.
+
+\item{x}{an object of class "bvarfevd", usually, a result of a call to \code{\link{fevd}}.}
 }
 \description{
-Produces the forecast error variance decomposition of a Bayesian VAR model.
-
 A plot function for objects of class "bvarfevd".
-}
-\details{
-The function produces forecast error variance decompositions (FEVD) for the VAR model
-\deqn{A_0 y_t = \sum_{i = 1}^{p} A_{i} y_{t-i} + u_t,}
-with \eqn{u_t \sim N(0, \Sigma)}. For non-structural models matrix \eqn{A_0} is set to the identiy matrix
-and can therefore be omitted, where not relevant.
-
-If the FEVD is based on the orthogonalised impulse resonse (OIR), the FEVD will be calculated as
-\deqn{\omega^{OIR}_{jk, h} = \frac{\sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i P e_k )^2}{\sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i \Sigma \Phi_i^{\prime} e_j )},}
-where \eqn{\Phi_i} is the forecast error impulse response for the \eqn{i}th period,
-\eqn{P} is the lower triangular Choleski decomposition of the variance-covariance
-matrix \eqn{\Sigma}, \eqn{e_j} is a selection vector for the response variable and
-\eqn{e_k} a selection vector for the impulse variable.
-
-If \code{type = "sir"}, the structural FEVD will be
-calculated as \deqn{\omega^{SIR}_{jk, h} = \frac{\sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i A_0^{-1} e_k )^2}{\sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i A_0^{-1} A_0^{-1\prime} \Phi_i^{\prime} e_j )},}
-where \eqn{\sigma_{jj}} is the diagonal element of the \eqn{j}th variable of the variance covariance matrix.
-
-If \code{type = "gir"}, the generalised FEVD will be
-calculated as \deqn{\omega^{GIR}_{jk, h} = \frac{\sigma^{-1}_{jj} \sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i \Sigma e_k )^2}{\sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i \Sigma \Phi_i^{\prime} e_j )},}
-where \eqn{\sigma_{jj}} is the diagonal element of the \eqn{j}th variable of the variance covariance matrix.
-
-If \code{type = "sgir"}, the structural generalised FEVD will be
-calculated as \deqn{\omega^{SGIR}_{jk, h} = \frac{\sigma^{-1}_{jj} \sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i A_0^{-1} \Sigma e_k )^2}{\sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i A_0^{-1} \Sigma A_0^{-1\prime} \Phi_i^{\prime} e_j )}}.
-
-Since GIR-based FEVDs do not add up to unity, they can be normalised by setting \code{normalise_gir = TRUE}.
 }
 \examples{
 
@@ -115,9 +65,4 @@ vd <- fevd(object, response = "cons")
 # Plot
 plot(vd)
 
-}
-\references{
-Lütkepohl, H. (2006). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
-
-Pesaran, H. H., & Shin, Y. (1998). Generalized impulse response analysis in linear multivariate models. \emph{Economics Letters, 58}, 17-29.
 }

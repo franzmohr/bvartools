@@ -51,8 +51,8 @@ structural VAR model.}
 
 \item{tvp}{logical indicating whether the model parameters are time varying.}
 
-\item{sv}{logical indicating whether time varying error variances should be estimated using
-stochastic volatility algorithms.}
+\item{sv}{logical indicating whether time varying error variances should be estimated by
+employing a stochastic volatility algorithm.}
 
 \item{fcst}{integer. Number of observations saved for forecasting evaluation.}
 

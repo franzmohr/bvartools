@@ -195,7 +195,7 @@ data("e1")
 e1 <- diff(log(e1)) * 100
 
 # Generate model
-model <- gen_var(e1, p = 1:2, deterministic = 2,
+model <- gen_var(e1, p = 1, deterministic = 2,
                  iterations = 100, burnin = 10)
 # Chosen number of iterations and burn-in should be much higher.
 

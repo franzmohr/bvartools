@@ -17,7 +17,7 @@
 #' e1 <- diff(log(e1)) * 100
 #' 
 #' # Generate model
-#' model <- gen_var(e1, p = 1:2, deterministic = 2,
+#' model <- gen_var(e1, p = 1, deterministic = 2,
 #'                  iterations = 100, burnin = 10)
 #' # Chosen number of iterations and burn-in should be much higher.
 #' 
@@ -58,7 +58,7 @@ plot.bvar <- function(x, ci = 0.95, type = "hist", ...) {
   y_names <- dimnames(x[["y"]])[[2]]
   x_names <- .get_regressor_names_var(x, add_block = TRUE)
   lab_size <- .05
-  mar_orig <- par("mar")
+  mar_orig <- graphics::par("mar")
   
   n_tot <- 0
   if ("A" %in% names(x)) {

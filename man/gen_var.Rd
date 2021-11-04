@@ -41,8 +41,8 @@ structural VAR model.}
 
 \item{tvp}{logical indicating whether the model parameters are time varying.}
 
-\item{sv}{logical indicating whether time varying error variances should be estimated using
-stochastic volatility algorithms.}
+\item{sv}{logical indicating whether time varying error variances should be estimated by
+employing a stochastic volatility algorithm.}
 
 \item{fcst}{integer. Number of observations saved for forecasting evaluation.}
 
@@ -99,5 +99,8 @@ data <- gen_var(e1, p = 0:2, deterministic = "const")
 
 }
 \references{
+Chan, J., Koop, G., Poirier, D. J., & Tobias, J. L. (2019). \emph{Bayesian Econometric Methods}
+(2nd ed.). Cambridge: University Press.
+
 Lütkepohl, H. (2006). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
 }

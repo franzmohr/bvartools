@@ -173,6 +173,7 @@ bvec_est <- bvec(y = data$data$Y,
                  x = data$data$X[, 1:6],
                  x_d = data$data$X[, -(1:6)],
                  Pi = draws_pi,
+                 r = 1,
                  Gamma = draws_gamma[1:k_nondet,],
                  C = draws_gamma[(k_nondet + 1):nrow(draws_gamma),],
                  Sigma = draws_sigma)

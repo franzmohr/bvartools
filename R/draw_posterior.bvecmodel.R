@@ -47,7 +47,7 @@
 #' object <- draw_posterior(model)
 #' 
 #' @export
-draw_posterior.bvecmodel <- function(object, FUN = NULL, mc.cores = NULL){
+draw_posterior.bvecmodel <- function(object, FUN = NULL, mc.cores = NULL, ...){
   
   # Check if it's only one model
   only_one_model <- FALSE

@@ -105,7 +105,7 @@
 #'                  Sigma = draws_sigma)
 #' 
 #' # Thin posterior draws
-#' bvec_est <- thin_posterior(bvec_est, thin = 5)
+#' bvec_est <- thin(bvec_est, thin = 5)
 #' 
 #' # Transfrom VEC output to VAR output
 #' bvar_form <- bvec_to_bvar(bvec_est)
@@ -307,17 +307,23 @@ bvec_to_bvar <- function(object) {
       }
       x <- rbind(t(x_level), x0)
     }
+  } else {
+    x <- NULL
   }
   
-  if (NROW(y) < NROW(x)) {
-    y <- rbind(matrix(NA, NROW(x) - NROW(y), k), y)
-  }
-  if (NROW(y) > NROW(x)) {
-    x <- rbind(matrix(NA, NROW(y) - NROW(x), m), x)
+  if (!is.null(x)) {
+    if (NROW(y) < NROW(x)) {
+      y <- rbind(matrix(NA, NROW(x) - NROW(y), k), y)
+    }
+    if (NROW(y) > NROW(x)) {
+      x <- rbind(matrix(NA, NROW(y) - NROW(x), m), x)
+    } 
   }
   
   y <- stats::ts(y)
-  x <- stats::ts(x)
+  if (!is.null(x)) {
+    x <- stats::ts(x) 
+  }
   
   # Generate bvar data matrices
   temp <- y

@@ -5,6 +5,7 @@
 * Added a plot function for classes `bvar` and `bvec` for visual inspection of posterior draws.
 * Changed the generation of the output object in the Gibbs sampler functions `bvaralg` and `bvecalg` to make them more stable for especially large output.
 * Changed `draw_posterior` to a generic function and added the corresponding methods for BVAR, BVEC and DFM input.
+* Changed `irf` and `fevd` to generic functions.
 * Corrected typos in documentation.
 * `thin_posterior` methods were renamed to `thin` and are now methods of `coda::thin`.
 * Function `irf` allows to specify the size of a shock.

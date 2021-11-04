@@ -21,11 +21,8 @@
 #' @param structural logical indicating whether data should be prepared for the estimation of a
 #' structural VAR model.
 #' @param tvp logical indicating whether the model parameters are time varying.
-#' @param sv logical indicating whether time varying error variances should be estimated using
-#' stochastic volatility algorithms.
-# @param tvp a character vector specifying which parts of the model should be time varying.
-# Possible elements are \code{"none"} (default), \code{"A0"}, \code{"alpha"}, \code{"beta"},
-# \code{"Gamma"}, \code{"Upsilon"}, \code{"C"}, \code{"Sigma"}, \code{"all"}.
+#' @param sv logical indicating whether time varying error variances should be estimated by
+#' employing a stochastic volatility algorithm.
 #' @param fcst integer. Number of observations saved for forecasting evaluation.
 #' @param iterations an integer of MCMC draws excluding burn-in draws (defaults
 #' to 50000).

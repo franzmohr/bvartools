@@ -7,7 +7,7 @@ output:
 # bvartools
 
 [![CRAN status](https://www.r-pkg.org/badges/version/bvartools)](https://cran.r-project.org/package=bvartools)
-[![Travis build status](https://travis-ci.org/franzmohr/bvartools.svg?branch=master)](https://travis-ci.org/franzmohr/bvartools)
+[![Travis build status](https://app.travis-ci.com/franzmohr/bvartools.svg?branch=master)](https://app.travis-ci.com/franzmohr/bvartools)
 
 ## Overview
 
@@ -25,13 +25,17 @@ In each step researchers are provided with the opportunitiy to fine-tune a model
 * BVAR models employing stochastic search variable selection à la Gerorge, Sun and Ni (2008)
 * BVAR models employing Bayesian variable selection à la Korobilis (2013)
 * Structural BVAR models, where the structural coefficients are estimated from contemporary endogenous variables (A-model)
+* Stochastic volatility (SV) of the errors à la Kim, Shephard and Chip (1998)
+* Time varying parameter models (TVP-VAR)
 
 For Bayesian inference of *cointegrated VAR models* the package implements the algorithm of Koop, León-González and Strachan (2010) [KLS] -- which places identification restrictions on the cointegration space -- in the following variants
 
-* The BVEC model as presented in Koop et al. (2010)
+* The BVEC model as presented in Koop, León-González and Strachan (2010)
 * The KLS model employing stochastic search variable selection à la Gerorge, Sun and Ni (2008)
 * The KLS modol employing Bayesian variable selection à la Korobilis (2013)
 * Structural BVEC models, where the structural coefficients are estimated from contemporaneous endogenous variables (A-model). However, no further restrictions are made regarding the cointegration term.
+* Stochastic volatility (SV) of the errors à la Kim, Shephard and Chip (1998)
+* Time varying parameter models (TVP-VEC) à la Koop, León-González and Strachan (2011)
 
 For Bayesian inference of *dynamic factor models* the package implements the althorithm used in the textbook of Chan, Koop, Poirer and Tobias (2019).
 
@@ -182,6 +186,37 @@ summary(bvar_est)
 
 The means of the posterior draws are very close to the results of the frequentist estimatior in Lütkepohl (2006).
 
+### Inspect posterior draws
+
+Posterior draws can be visually inspected by using the `plot` function. By default, it produces a series of histograms of all estimated coefficients.
+
+```{r, message=FALSE, warning=FALSE, fig.align='center', fig.height=5, fig.width=10}
+plot(bvar_est)
+```
+
+Alternatively, the trace plot of the post-burnin draws can be draws by adding the argument `type = "trace"`:
+
+```{r, message=FALSE, warning=FALSE, fig.align='center', fig.height=5, fig.width=10}
+plot(bvar_est, type = "trace")
+```
+
+### Summary statistics
+
+Summary statistics can be obtained in the usual way using the `summary` method.
+
+```{r}
+summary(bvar_est)
+```
+
+### Thin results
+
+The MCMC series in object `est_bvar` can be thinned using
+
+```{r}
+bvar_est <- thin(bvar_est, thin = 10)
+```
+
+
 ### Forecasts
 
 Forecasts can be obtained with the function `predict`. If the model contains deterministic terms, new values have to be provided in the argument `new_D`, which must be of the same length as the argument `n.ahead`.
@@ -232,7 +267,11 @@ Eddelbuettel, D., & Sanderson C. (2014). RcppArmadillo: Accelerating R with high
 
 George, E. I., Sun, D., & Ni, S. (2008). Bayesian stochastic search for VAR model restrictions. *Journal of Econometrics, 142*(1), 553-580. <https://doi.org/10.1016/j.jeconom.2007.08.017>
 
+Kim, S., Shephard, N., & Chib, S. (1998). Stochastic volatility: Likelihood inference and comparison with ARCH models. *Review of Economic Studies 65*(3), 361-396.
+
 Koop, G., León-González, R., & Strachan R. W. (2010). Efficient posterior simulation for cointegrated models with priors on the cointegration space. *Econometric Reviews, 29*(2), 224-242. <https://doi.org/10.1080/07474930903382208>
+
+Koop, G., León-González, R., & Strachan R. W. (2011). Bayesian inference in a time varying cointegration model. *Journal of Econometrics, 165*(2), 210-220. <https://doi.org/10.1016/j.jeconom.2011.07.007>
 
 Korobilis, D. (2013). VAR forecasting using Bayesian variable selection. *Journal of Applied Econometrics, 28*(2), 204-230. <https://doi.org/10.1002/jae.1271>
 

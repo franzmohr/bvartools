@@ -22,23 +22,27 @@ The package `bvartools` implements functions for Bayesian inference of linear ve
 
 * *Model set-up*: Produces data matrices for given lag orders and model types, which can be used for posterior simulation.
 * *Prior specification*: Generates prior matrices for a given model.
-* *Estimation*: Researchers can choose to use the posterior algorithms of the package or use their own algorithms.
+* *Estimation*: Researchers can choose to use the posterior simulation algorithms of the package or use their own algorithms.
 * *Standardising model output*: Combines the output of the estimation step into standardised objects for subsequent steps of the analyis.
 * *Evaluation*: Produces summary statistics, forecasts, impulse responses and forecast error variance decompositions.
 
-In each step researchers are provided with the opportunitiy to fine-tune a model according to their specific requirements or to use the default framework for commonly used models and priors. Since version 0.1.0 the package comes with posterior simulation functions that do not require to implement any further simulation algorithms. For Bayesian inference of *stationary VAR models* the package covers
+In each step researchers can fine-tune a model according to their specific requirements or they can simply use the default framework for commonly used models and priors. Since version 0.1.0 the package comes with posterior simulation functions that do not require to implement any further simulation algorithms. For Bayesian inference of *stationary VAR models* the package covers
 
 * Standard BVAR models with independent normal-Wishart priors
 * BVAR models employing stochastic search variable selection à la Gerorge, Sun and Ni (2008)
 * BVAR models employing Bayesian variable selection à la Korobilis (2013)
 * Structural BVAR models, where the structural coefficients are estimated from contemporary endogenous variables (A-model)
+* Stochastic volatility (SV) of the errors à la Kim, Shephard and Chip (1998)
+* Time varying parameter models (TVP-VAR)
 
 For Bayesian inference of *cointegrated VAR models* the package implements the algorithm of Koop, León-González and Strachan (2010) [KLS] -- which places identification restrictions on the cointegration space -- in the following variants
 
-* The BVEC model as presented in Koop et al. (2010)
+* The BVEC model as presented in Koop, León-González and Strachan (2010)
 * The KLS model employing stochastic search variable selection à la Gerorge, Sun and Ni (2008)
 * The KLS modol employing Bayesian variable selection à la Korobilis (2013)
 * Structural BVEC models, where the structural coefficients are estimated from contemporaneous endogenous variables (A-model). However, no further restrictions are made regarding the cointegration term.
+* Stochastic volatility (SV) of the errors à la Kim, Shephard and Chip (1998)
+* Time varying parameter models (TVP-VEC) à la Koop, León-González and Strachan (2011)
 
 For Bayesian inference of *dynamic factor models* the package implements the althorithm used in the textbook of Chan, Koop, Poirer and Tobias (2019).
 
@@ -297,6 +301,12 @@ Chan, J., Koop, G., Poirier, D. J., & Tobias, J. L. (2019). *Bayesian Econometri
 Eddelbuettel, D., & Sanderson C. (2014). RcppArmadillo: Accelerating R with high-performance C++ linear algebra. *Computational Statistics and Data Analysis, 71*, 1054-1063. <https://doi.org/10.1016/j.csda.2013.02.005>
 
 George, E. I., Sun, D., & Ni, S. (2008). Bayesian stochastic search for VAR model restrictions. *Journal of Econometrics, 142*(1), 553-580. <https://doi.org/10.1016/j.jeconom.2007.08.017>
+
+Kim, S., Shephard, N., & Chib, S. (1998). Stochastic volatility: Likelihood inference and comparison with ARCH models. *Review of Economic Studies 65*(3), 361-396.
+
+Koop, G., León-González, R., & Strachan R. W. (2010). Efficient posterior simulation for cointegrated models with priors on the cointegration space. *Econometric Reviews, 29*(2), 224-242. <https://doi.org/10.1080/07474930903382208>
+
+Koop, G., León-González, R., & Strachan R. W. (2011). Bayesian inference in a time varying cointegration model. *Journal of Econometrics, 165*(2), 210-220. <https://doi.org/10.1016/j.jeconom.2011.07.007>
 
 Koop, G., Pesaran, M. H., & Potter, S.M. (1996). Impulse response analysis in nonlinear multivariate models. *Journal of Econometrics 74*(1), 119-147. <https://doi.org/10.1016/0304-4076(95)01753-4>
 

@@ -4,7 +4,7 @@
 \alias{draw_posterior.dfmodel}
 \title{Posterior Simulation}
 \usage{
-\method{draw_posterior}{dfmodel}(object, FUN = NULL, mc.cores = NULL)
+\method{draw_posterior}{dfmodel}(object, FUN = NULL, mc.cores = NULL, ...)
 }
 \arguments{
 \item{object}{a list of model specifications, which should be passed on

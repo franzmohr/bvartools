@@ -4,7 +4,7 @@
 \alias{draw_posterior.bvecmodel}
 \title{Posterior Simulation for Vector Error Correction Models}
 \usage{
-\method{draw_posterior}{bvecmodel}(object, FUN = NULL, mc.cores = NULL)
+\method{draw_posterior}{bvecmodel}(object, FUN = NULL, mc.cores = NULL, ...)
 }
 \arguments{
 \item{object}{a list of model specifications, which should be passed on

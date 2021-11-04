@@ -49,16 +49,21 @@
 #' \emph{Econometric Reviews, 29}(2), 224--242.
 #' \doi{10.1080/07474930903382208}
 #' 
+#' Koop, G., León-González, R., & Strachan R. W. (2011). Bayesian inference in
+#' a time varying cointegration model. \emph{Journal of Econometrics, 165}(2), 210--220.
+#' \doi{10.1016/j.jeconom.2011.07.007}
+#' 
 #' Korobilis, D. (2013). VAR forecasting using Bayesian variable selection.
 #' \emph{Journal of Applied Econometrics, 28}(2), 204--230.
 #' \doi{10.1002/jae.1271}
 #' 
-#' Lütkepohl, H. (2007). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
+#' Lütkepohl, H. (2006). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
 #' 
 #' Sanderson, C., & Curtin, R. (2016). Armadillo: a template-based C++ library for linear algebra.
 #' \emph{Journal of Open Source Software, 1}(2), 26. \doi{10.21105/joss.00026}
 #' 
 #' @useDynLib bvartools, .registration = TRUE
+#' @importFrom coda thin
 #' @importFrom Rcpp sourceCpp
 #' @import methods
 #' @exportPattern "^[[:alpha:]]+"

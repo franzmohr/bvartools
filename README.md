@@ -4,7 +4,7 @@
 [![CRAN
 status](https://www.r-pkg.org/badges/version/bvartools)](https://cran.r-project.org/package=bvartools)
 [![Travis build
-status](https://travis-ci.org/franzmohr/bvartools.svg?branch=master)](https://travis-ci.org/franzmohr/bvartools)
+status](https://app.travis-ci.com/franzmohr/bvartools.svg?branch=master)](https://app.travis-ci.com/franzmohr/bvartools)
 
 ## Overview
 
@@ -12,14 +12,14 @@ The package `bvartools` implements functions for Bayesian inference of
 linear vector autoregressive (VAR) models. It separates a typical BVAR
 analysis workflow into multiple steps:
 
-  - *Model set-up*: Produces data matrices for given lag orders and
+-   *Model set-up*: Produces data matrices for given lag orders and
     model types, which can be used for posterior simulation.
-  - *Prior specification*: Generates prior matrices for a given model.
-  - *Estimation*: Researchers can choose to use the posterior algorithms
+-   *Prior specification*: Generates prior matrices for a given model.
+-   *Estimation*: Researchers can choose to use the posterior algorithms
     of the package or use their own algorithms.
-  - *Standardising model output*: Combines the output of the estimation
+-   *Standardising model output*: Combines the output of the estimation
     step into standardised objects for subsequent steps of the analyis.
-  - *Evaluation*: Produces summary statistics, forecasts, impulse
+-   *Evaluation*: Produces summary statistics, forecasts, impulse
     responses and forecast error variance decompositions.
 
 In each step researchers are provided with the opportunitiy to fine-tune
@@ -29,28 +29,36 @@ package comes with posterior simulation functions that do not require to
 implement any further simulation algorithms. For Bayesian inference of
 *stationary VAR models* the package covers
 
-  - Standard BVAR models with independent normal-Wishart priors
-  - BVAR models employing stochastic search variable selection à la
+-   Standard BVAR models with independent normal-Wishart priors
+-   BVAR models employing stochastic search variable selection à la
     Gerorge, Sun and Ni (2008)
-  - BVAR models employing Bayesian variable selection à la Korobilis
-    (2013)
-  - Structural BVAR models, where the structural coefficients are
+-   BVAR models employing Bayesian variable selection à la
+    Korobilis (2013)
+-   Structural BVAR models, where the structural coefficients are
     estimated from contemporary endogenous variables (A-model)
+-   Stochastic volatility (SV) of the errors à la Kim, Shephard and
+    Chip (1998)
+-   Time varying parameter models (TVP-VAR)
 
 For Bayesian inference of *cointegrated VAR models* the package
 implements the algorithm of Koop, León-González and Strachan (2010)
 \[KLS\] – which places identification restrictions on the cointegration
 space – in the following variants
 
-  - The BVEC model as presented in Koop et al. (2010)
-  - The KLS model employing stochastic search variable selection à la
+-   The BVEC model as presented in Koop, León-González and
+    Strachan (2010)
+-   The KLS model employing stochastic search variable selection à la
     Gerorge, Sun and Ni (2008)
-  - The KLS modol employing Bayesian variable selection à la Korobilis
-    (2013)
-  - Structural BVEC models, where the structural coefficients are
+-   The KLS modol employing Bayesian variable selection à la
+    Korobilis (2013)
+-   Structural BVEC models, where the structural coefficients are
     estimated from contemporaneous endogenous variables (A-model).
     However, no further restrictions are made regarding the
     cointegration term.
+-   Stochastic volatility (SV) of the errors à la Kim, Shephard and
+    Chip (1998)
+-   Time varying parameter models (TVP-VEC) à la Koop, León-González and
+    Strachan (2011)
 
 For Bayesian inference of *dynamic factor models* the package implements
 the althorithm used in the textbook of Chan, Koop, Poirer and Tobias
@@ -58,13 +66,13 @@ the althorithm used in the textbook of Chan, Koop, Poirer and Tobias
 
 Similar packages worth checking out are
 
-  - [BVAR](https://cran.r-project.org/package=BVAR)
-  - [bvarsv](https://cran.r-project.org/package=bvarsv)
-  - [bvar](https://github.com/nk027/bvar)
-  - [bvarr](https://github.com/bdemeshev/bvarr)
-  - [bvars](https://github.com/joergrieger/bvars)
-  - [mfbvar](https://github.com/ankargren/mfbvar)
-  - [BMR](https://github.com/kthohr/BMR)
+-   [BVAR](https://cran.r-project.org/package=BVAR)
+-   [bvarsv](https://cran.r-project.org/package=bvarsv)
+-   [bvar](https://github.com/nk027/bvar)
+-   [bvarr](https://github.com/bdemeshev/bvarr)
+-   [bvars](https://github.com/joergrieger/bvars)
+-   [mfbvar](https://github.com/ankargren/mfbvar)
+-   [BMR](https://github.com/kthohr/BMR)
 
 ## Installation
 
@@ -98,7 +106,11 @@ the log-differenced series are used.
 
 ``` r
 library(bvartools)
+```
 
+    ## Loading required package: coda
+
+``` r
 # Load data
 data("e1")
 e1 <- diff(log(e1)) * 100
@@ -228,50 +240,52 @@ summary(bvar_est)
 ```
 
     ## 
+    ## Bayesian VAR model with p = 2 
+    ## 
     ## Model:
     ## 
-    ## y ~ invest.1 + income.1 + cons.1 + invest.2 + income.2 + cons.2 + const
+    ## y ~ invest.01 + income.01 + cons.01 + invest.02 + income.02 + cons.02 + const
     ## 
     ## Variable: invest 
     ## 
-    ##             Mean     SD Naive SD Time-series SD    2.5%     50%    97.5%
-    ## invest.1 -0.3210 0.1280 0.001280       0.001286 -0.5734 -0.3216 -0.06831
-    ## income.1  0.1472 0.5654 0.005654       0.005654 -0.9602  0.1439  1.26083
-    ## cons.1    0.9662 0.6768 0.006768       0.006778 -0.3453  0.9560  2.32034
-    ## invest.2 -0.1600 0.1263 0.001263       0.001305 -0.4049 -0.1612  0.08747
-    ## income.2  0.1036 0.5519 0.005519       0.005439 -0.9653  0.1010  1.19676
-    ## cons.2    0.9348 0.6894 0.006894       0.006894 -0.4165  0.9283  2.28239
-    ## const    -1.6637 1.7556 0.017556       0.017556 -5.1131 -1.6428  1.81572
+    ##              Mean     SD Naive SD Time-series SD    2.5%     50%    97.5%
+    ## invest.01 -0.3210 0.1280 0.001280       0.001286 -0.5734 -0.3216 -0.06831
+    ## income.01  0.1472 0.5654 0.005654       0.005654 -0.9602  0.1439  1.26083
+    ## cons.01    0.9662 0.6768 0.006768       0.006778 -0.3453  0.9560  2.32034
+    ## invest.02 -0.1600 0.1263 0.001263       0.001305 -0.4049 -0.1612  0.08747
+    ## income.02  0.1036 0.5519 0.005519       0.005439 -0.9653  0.1010  1.19676
+    ## cons.02    0.9348 0.6894 0.006894       0.006894 -0.4165  0.9283  2.28239
+    ## const     -1.6637 1.7556 0.017556       0.017556 -5.1131 -1.6428  1.81572
     ## 
     ## Variable: income 
     ## 
-    ##               Mean      SD  Naive SD Time-series SD     2.5%       50%  97.5%
-    ## invest.1  0.043539 0.03283 0.0003283      0.0003340 -0.02134  0.043640 0.1078
-    ## income.1 -0.152587 0.14272 0.0014272      0.0014354 -0.43484 -0.152102 0.1278
-    ## cons.1    0.287003 0.17215 0.0017215      0.0017583 -0.05264  0.284572 0.6301
-    ## invest.2  0.049836 0.03215 0.0003215      0.0003215 -0.01315  0.049738 0.1135
-    ## income.2  0.019209 0.13846 0.0013846      0.0013846 -0.25074  0.020273 0.2888
-    ## cons.2   -0.008994 0.17079 0.0017079      0.0017079 -0.34237 -0.009633 0.3335
-    ## const     1.577324 0.44978 0.0044978      0.0044978  0.69837  1.573286 2.4624
+    ##                Mean      SD  Naive SD Time-series SD     2.5%       50%  97.5%
+    ## invest.01  0.043539 0.03283 0.0003283      0.0003340 -0.02134  0.043640 0.1078
+    ## income.01 -0.152587 0.14272 0.0014272      0.0014354 -0.43484 -0.152102 0.1278
+    ## cons.01    0.287003 0.17215 0.0017215      0.0017583 -0.05264  0.284572 0.6301
+    ## invest.02  0.049836 0.03215 0.0003215      0.0003215 -0.01315  0.049738 0.1135
+    ## income.02  0.019209 0.13846 0.0013846      0.0013846 -0.25074  0.020273 0.2888
+    ## cons.02   -0.008994 0.17079 0.0017079      0.0017079 -0.34237 -0.009633 0.3335
+    ## const      1.577324 0.44978 0.0044978      0.0044978  0.69837  1.573286 2.4624
     ## 
     ## Variable: cons 
     ## 
-    ##               Mean      SD  Naive SD Time-series SD      2.5%       50%
-    ## invest.1 -0.002623 0.02648 0.0002648      0.0002648 -0.054699 -0.002433
-    ## income.1  0.223178 0.11668 0.0011668      0.0011668 -0.003841  0.222297
-    ## cons.1   -0.263006 0.13888 0.0013888      0.0013888 -0.539179 -0.262530
-    ## invest.2  0.033789 0.02612 0.0002612      0.0002612 -0.017709  0.033990
-    ## income.2  0.354398 0.11138 0.0011138      0.0011302  0.131559  0.356159
-    ## cons.2   -0.020351 0.13878 0.0013878      0.0013661 -0.294508 -0.019763
-    ## const     1.292296 0.35786 0.0035786      0.0035786  0.590719  1.290012
-    ##             97.5%
-    ## invest.1 0.049704
-    ## income.1 0.449267
-    ## cons.1   0.007515
-    ## invest.2 0.085769
-    ## income.2 0.571058
-    ## cons.2   0.254939
-    ## const    2.006569
+    ##                Mean      SD  Naive SD Time-series SD      2.5%       50%
+    ## invest.01 -0.002623 0.02648 0.0002648      0.0002648 -0.054699 -0.002433
+    ## income.01  0.223178 0.11668 0.0011668      0.0011668 -0.003841  0.222297
+    ## cons.01   -0.263006 0.13888 0.0013888      0.0013888 -0.539179 -0.262530
+    ## invest.02  0.033789 0.02612 0.0002612      0.0002612 -0.017709  0.033990
+    ## income.02  0.354398 0.11138 0.0011138      0.0011302  0.131559  0.356159
+    ## cons.02   -0.020351 0.13878 0.0013878      0.0013661 -0.294508 -0.019763
+    ## const      1.292296 0.35786 0.0035786      0.0035786  0.590719  1.290012
+    ##              97.5%
+    ## invest.01 0.049704
+    ## income.01 0.449267
+    ## cons.01   0.007515
+    ## invest.02 0.085769
+    ## income.02 0.571058
+    ## cons.02   0.254939
+    ## const     2.006569
     ## 
     ## Variance-covariance matrix:
     ## 
@@ -288,6 +302,105 @@ summary(bvar_est)
 
 The means of the posterior draws are very close to the results of the
 frequentist estimatior in Lütkepohl (2006).
+
+### Inspect posterior draws
+
+Posterior draws can be visually inspected by using the `plot` function.
+By default, it produces a series of histograms of all estimated
+coefficients.
+
+``` r
+plot(bvar_est)
+```
+
+<img src="README_files/figure-gfm/unnamed-chunk-4-1.png" style="display: block; margin: auto;" />
+
+Alternatively, the trace plot of the post-burnin draws can be draws by
+adding the argument `type = "trace"`:
+
+``` r
+plot(bvar_est, type = "trace")
+```
+
+<img src="README_files/figure-gfm/unnamed-chunk-5-1.png" style="display: block; margin: auto;" />
+
+### Summary statistics
+
+Summary statistics can be obtained in the usual way using the `summary`
+method.
+
+``` r
+summary(bvar_est)
+```
+
+    ## 
+    ## Bayesian VAR model with p = 2 
+    ## 
+    ## Model:
+    ## 
+    ## y ~ invest.01 + income.01 + cons.01 + invest.02 + income.02 + cons.02 + const
+    ## 
+    ## Variable: invest 
+    ## 
+    ##              Mean     SD Naive SD Time-series SD    2.5%     50%    97.5%
+    ## invest.01 -0.3210 0.1280 0.001280       0.001286 -0.5734 -0.3216 -0.06831
+    ## income.01  0.1472 0.5654 0.005654       0.005654 -0.9602  0.1439  1.26083
+    ## cons.01    0.9662 0.6768 0.006768       0.006778 -0.3453  0.9560  2.32034
+    ## invest.02 -0.1600 0.1263 0.001263       0.001305 -0.4049 -0.1612  0.08747
+    ## income.02  0.1036 0.5519 0.005519       0.005439 -0.9653  0.1010  1.19676
+    ## cons.02    0.9348 0.6894 0.006894       0.006894 -0.4165  0.9283  2.28239
+    ## const     -1.6637 1.7556 0.017556       0.017556 -5.1131 -1.6428  1.81572
+    ## 
+    ## Variable: income 
+    ## 
+    ##                Mean      SD  Naive SD Time-series SD     2.5%       50%  97.5%
+    ## invest.01  0.043539 0.03283 0.0003283      0.0003340 -0.02134  0.043640 0.1078
+    ## income.01 -0.152587 0.14272 0.0014272      0.0014354 -0.43484 -0.152102 0.1278
+    ## cons.01    0.287003 0.17215 0.0017215      0.0017583 -0.05264  0.284572 0.6301
+    ## invest.02  0.049836 0.03215 0.0003215      0.0003215 -0.01315  0.049738 0.1135
+    ## income.02  0.019209 0.13846 0.0013846      0.0013846 -0.25074  0.020273 0.2888
+    ## cons.02   -0.008994 0.17079 0.0017079      0.0017079 -0.34237 -0.009633 0.3335
+    ## const      1.577324 0.44978 0.0044978      0.0044978  0.69837  1.573286 2.4624
+    ## 
+    ## Variable: cons 
+    ## 
+    ##                Mean      SD  Naive SD Time-series SD      2.5%       50%
+    ## invest.01 -0.002623 0.02648 0.0002648      0.0002648 -0.054699 -0.002433
+    ## income.01  0.223178 0.11668 0.0011668      0.0011668 -0.003841  0.222297
+    ## cons.01   -0.263006 0.13888 0.0013888      0.0013888 -0.539179 -0.262530
+    ## invest.02  0.033789 0.02612 0.0002612      0.0002612 -0.017709  0.033990
+    ## income.02  0.354398 0.11138 0.0011138      0.0011302  0.131559  0.356159
+    ## cons.02   -0.020351 0.13878 0.0013878      0.0013661 -0.294508 -0.019763
+    ## const      1.292296 0.35786 0.0035786      0.0035786  0.590719  1.290012
+    ##              97.5%
+    ## invest.01 0.049704
+    ## income.01 0.449267
+    ## cons.01   0.007515
+    ## invest.02 0.085769
+    ## income.02 0.571058
+    ## cons.02   0.254939
+    ## const     2.006569
+    ## 
+    ## Variance-covariance matrix:
+    ## 
+    ##                  Mean     SD Naive SD Time-series SD    2.5%     50%  97.5%
+    ## invest_invest 22.3072 4.0178 0.040178       0.044990 15.8399 21.7999 31.327
+    ## invest_income  0.7561 0.7313 0.007313       0.008046 -0.6330  0.7286  2.294
+    ## invest_cons    1.2956 0.6022 0.006022       0.006781  0.2157  1.2701  2.576
+    ## income_invest  0.7561 0.7313 0.007313       0.008046 -0.6330  0.7286  2.294
+    ## income_income  1.4378 0.2610 0.002610       0.002854  1.0191  1.4057  2.038
+    ## income_cons    0.6442 0.1690 0.001690       0.001873  0.3596  0.6280  1.032
+    ## cons_invest    1.2956 0.6022 0.006022       0.006781  0.2157  1.2701  2.576
+    ## cons_income    0.6442 0.1690 0.001690       0.001873  0.3596  0.6280  1.032
+    ## cons_cons      0.9348 0.1681 0.001681       0.001872  0.6610  0.9141  1.312
+
+### Thin results
+
+The MCMC series in object `est_bvar` can be thinned using
+
+``` r
+bvar_est <- thin(bvar_est, thin = 10)
+```
 
 ### Forecasts
 
@@ -357,10 +470,18 @@ George, E. I., Sun, D., & Ni, S. (2008). Bayesian stochastic search for
 VAR model restrictions. *Journal of Econometrics, 142*(1), 553-580.
 <https://doi.org/10.1016/j.jeconom.2007.08.017>
 
+Kim, S., Shephard, N., & Chib, S. (1998). Stochastic volatility:
+Likelihood inference and comparison with ARCH models. *Review of
+Economic Studies 65*(3), 361-396.
+
 Koop, G., León-González, R., & Strachan R. W. (2010). Efficient
 posterior simulation for cointegrated models with priors on the
 cointegration space. *Econometric Reviews, 29*(2), 224-242.
 <https://doi.org/10.1080/07474930903382208>
+
+Koop, G., León-González, R., & Strachan R. W. (2011). Bayesian inference
+in a time varying cointegration model. *Journal of Econometrics,
+165*(2), 210-220. <https://doi.org/10.1016/j.jeconom.2011.07.007>
 
 Korobilis, D. (2013). VAR forecasting using Bayesian variable selection.
 *Journal of Applied Econometrics, 28*(2), 204-230.

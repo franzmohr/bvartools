@@ -114,7 +114,7 @@ bvec_est <- bvec(y = data$data$Y, w = data$data$W,
                  Sigma = draws_sigma)
 
 # Thin posterior draws
-bvec_est <- thin_posterior(bvec_est, thin = 5)
+bvec_est <- thin(bvec_est, thin = 5)
 
 # Transfrom VEC output to VAR output
 bvar_form <- bvec_to_bvar(bvec_est)

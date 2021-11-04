@@ -38,7 +38,7 @@
 #' object <- draw_posterior(model)
 #' 
 #' @export
-draw_posterior.dfmodel <- function(object, FUN = NULL, mc.cores = NULL){
+draw_posterior.dfmodel <- function(object, FUN = NULL, mc.cores = NULL, ...){
   
   # rm(list = ls()[-which(ls() == "object")]); FUN = NULL; mc.cores = NULL
   

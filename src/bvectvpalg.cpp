@@ -132,12 +132,12 @@ Rcpp::List bvectvpalg(Rcpp::List object) {
     post_beta_mu = prior_beta_mu * 0;
     post_beta_v = prior_beta_vinv * 0;
     
-    // rho
-    bool update_rho = false;
-    priors_rho = Rcpp::as<arma::vec>(priors_cointegration["rho"]);
-    if (priors_rho.n_elem == 2) {
-      update_rho = true;
-    }
+    // rho (future functionality)
+    // bool update_rho = false;
+    // priors_rho = Rcpp::as<arma::vec>(priors_cointegration["rho"]);
+    // if (priors_rho.n_elem == 2) {
+    //   update_rho = true;
+    // }
   
     alpha = arma::zeros<arma::mat>(n_alpha, tt);
     beta = arma::mat(n_beta, tt);
@@ -146,7 +146,7 @@ Rcpp::List bvectvpalg(Rcpp::List object) {
     }
     pi = arma::zeros<arma::mat>(k * k_w, tt);
     sigma_b_i = arma::speye<arma::sp_mat>(n_beta * tt, n_beta * tt);
-    rho = mean(priors_rho);
+    rho = Rcpp::as<double>(init_coint["rho"]);
     ytilde = yvec * 0;
     beta_init = arma::zeros<arma::vec>(n_beta);
     zztilde = arma::zeros<arma::mat>(k * tt, n_beta * tt);
@@ -416,12 +416,10 @@ Rcpp::List bvectvpalg(Rcpp::List object) {
       // Update ECT
       if (bvs) {
         for (int i = 0; i < tt; i++) {
-          //zz_bvs.submat(i * k, i * n_tot, (i + 1) * k - 1, i * n_tot + n_alpha - 1) = arma::kron(arma::trans(arma::trans(arma::reshape(beta.submat(i * n_beta, 0, (i + 1) * n_beta - 1, 0), k_w, r)) * w.col(i)), diag_k);
           zz_bvs.submat(i * k, i * n_tot, (i + 1) * k - 1, i * n_tot + n_alpha - 1) = arma::kron(arma::trans(arma::trans(arma::reshape(beta.col(i), k_w, r)) * w.col(i)), diag_k);
         }
       } else {
         for (int i = 0; i < tt; i++) {
-          //zz.submat(i * k, i * n_tot, (i + 1) * k - 1, i * n_tot + n_alpha - 1) = arma::kron(arma::trans(arma::trans(arma::reshape(beta.submat(i * n_beta, 0, (i + 1) * n_beta - 1, 0), k_w, r)) * w.col(i)), diag_k);
           zz.submat(i * k, i * n_tot, (i + 1) * k - 1, i * n_tot + n_alpha - 1) = arma::kron(arma::trans(arma::trans(arma::reshape(beta.col(i), k_w, r)) * w.col(i)), diag_k);
         }
       }
@@ -436,7 +434,7 @@ Rcpp::List bvectvpalg(Rcpp::List object) {
     post_gamma_mu = arma::solve(post_gamma_v, h_sigmav_i_h * arma::kron(vec_tt, gamma_init) + zzss_i * yvec);
     gamma = post_gamma_mu + arma::solve(arma::chol(post_gamma_v), arma::randn<arma::vec>(n_tot * tt));
     
-    //////////////// Variable selection ////////////////
+    // Variable selection
     
     if (n_nonalpha > 0 && bvs) {
       zz = zz_bvs;
@@ -470,7 +468,7 @@ Rcpp::List bvectvpalg(Rcpp::List object) {
       gamma_lambda_vec = gamma_lambda.diag();
     }
 
-    /////// Error variances of state equation //////////
+    // Error variances of state equation
     
     gamma_lag.submat(0, 0, n_tot - 1, 0) = gamma_init;
     gamma_lag.submat(n_tot, 0, tt * n_tot - 1, 0) = gamma.submat(0, 0, (tt - 1) * n_tot - 1, 0);
@@ -480,7 +478,7 @@ Rcpp::List bvectvpalg(Rcpp::List object) {
       sigma_v_i(i, i) = arma::randg<double>(arma::distr_param(post_sigma_v_shape(i), post_sigma_v_scale(i)));
     }
 
-    /////// Draw gamma_0 //////////
+    // Draw gamma_0 
     if (use_rr) {
       // Update alpha_0 prior
       prior_gamma_vinv.submat(0, 0, n_alpha - 1, n_alpha - 1) = 1 / (1 - rho * rho) * arma::eye<arma::mat>(n_alpha, n_alpha);
@@ -513,12 +511,9 @@ Rcpp::List bvectvpalg(Rcpp::List object) {
       beta = arma::reshape(beta, n_beta, tt);
 
       for (int i = 0; i < tt; i++) {
-        // u = y - Pi * ECT
-        //pi_temp = arma::reshape(gamma.submat(i * n_tot, 0, i * n_tot + n_alpha - 1, 0), k, r) * arma::trans(arma::reshape(beta.submat(i * n_beta, 0, (i + 1) * n_beta - 1, 0), k_w, r));
         pi_temp = arma::reshape(gamma.submat(i * n_tot, 0, i * n_tot + n_alpha - 1, 0), k, r) * arma::trans(arma::reshape(beta.col(i), k_w, r));
         u.col(i) = y.col(i) - pi_temp * w.col(i);
         pi.col(i) = arma::vectorise(pi_temp);
-        // u = u - Gamma * X
         if (n_nonalpha > 0) {
           u.col(i) = u.col(i) - zz.submat(i * k, i * n_tot + n_alpha, (i + 1) * k - 1, (i + 1) * n_tot - 1) * gamma.submat(i * n_tot + n_alpha, 0, (i + 1) * n_tot - 1, 0);
         }

@@ -56,8 +56,8 @@
 #'   of the loading matrix \eqn{\alpha}. Default is 3.}
 #'   \item{\code{rate}}{a numeric specifying the prior variance of error term of the state equation
 #'   of the loading matrix \eqn{\alpha}. Default is 0.0001.}
-#'   \item{\code{rho}}{a vector of length 2 containing the lower and upper bound of the autocorrelation coefficient
-#'   of the state equation of \eqn{\beta}. Default is \code{c(.999, 1)}.}
+#'   \item{\code{rho}}{a numeric specifying the autocorrelation coefficient
+#'   of the state equation of \eqn{\beta}. It must be smaller than 1. Default is 0.999.}
 #' }
 #' 
 #' Argument \code{sigma} can contain the following elements:
@@ -171,7 +171,7 @@
 #' @export
 add_priors.bvecmodel <- function(object,
                                  coef = list(v_i = 1, v_i_det = 0.1, shape = 3, rate = 0.0001, rate_det = 0.01),
-                                 coint = list(v_i = 0, p_tau_i = 1, shape = 3, rate = 0.0001, rho = c(0.999, 1)),
+                                 coint = list(v_i = 0, p_tau_i = 1, shape = 3, rate = 0.0001, rho = .999),
                                  sigma = list(df = "k", scale = 1, mu = 0, v_i = 0.01, sigma_h = 0.05),
                                  ssvs = NULL,
                                  bvs = NULL,
@@ -406,14 +406,24 @@ add_priors.bvecmodel <- function(object,
       
       if (object[[i]][["model"]][["tvp"]]) {
         rho <- coint[["rho"]]
+        if (is.null(rho)) {
+          rho <- .999
+        } else {
+          if (rho >= 1) {
+            stop("rho must be smaller than 1.")
+          }
+          if (rho < .8) {
+            warning("Value of rho appears very small.")
+          }
+        }
         # Only use one or two values for rho. One for fixed rho. Two for Metropolis-within-Gibbs.
-        object[[i]][["priors"]][["cointegration"]][["rho"]] <- unique(rho[order(rho)][c(1, length(rho))])
+        #object[[i]][["priors"]][["cointegration"]][["rho"]] <- unique(rho[order(rho)][c(1, length(rho))])
         object[[i]][["priors"]][["cointegration"]][["alpha"]] <- list(mu = matrix(0, n_alpha),
-                                                                      v_i = diag(1 / (1 - mean(coint[["rho"]])^2), n_alpha),
+                                                                      v_i = diag(1 / (1 - rho^2), n_alpha),
                                                                       shape = matrix(coint[["shape"]], n_alpha),
                                                                       rate = matrix(coint[["rate"]], n_alpha))
         object[[i]][["priors"]][["cointegration"]][["beta"]] <- list(mu = matrix(0, n_beta),
-                                                                     v_i = diag(1 - mean(coint[["rho"]])^2, n_beta))
+                                                                     v_i = diag(1 - rho^2, n_beta))
       } else {
         object[[i]][["priors"]][["cointegration"]] <- list(v_i = coint[["v_i"]],
                                                            p_tau_i = diag(coint[["p_tau_i"]], n_ect / k)) 
@@ -649,6 +659,9 @@ add_priors.bvecmodel <- function(object,
       beta <- matrix(0, n_ect / k, r_temp)
       beta[1:r_temp, 1:r_temp] <- diag(1, r_temp)
       object[[i]][["initial"]][["cointegration"]][["beta"]] <- beta
+      if (object[[i]][["model"]][["tvp"]]) {
+        object[[i]][["initial"]][["cointegration"]][["rho"]] <- rho
+      }
     }
     if (object[[i]][["model"]][["tvp"]]) {
       object[[i]][["initial"]][["noncointegration"]][["sigma_i"]] <- diag(c(1 / object[[i]][["priors"]][["noncointegration"]][["rate"]]), tot_par)

@@ -7,7 +7,7 @@
 \method{add_priors}{bvecmodel}(
   object,
   coef = list(v_i = 1, v_i_det = 0.1, shape = 3, rate = 1e-04, rate_det = 0.01),
-  coint = list(v_i = 0, p_tau_i = 1, shape = 3, rate = 1e-04, rho = c(0.999, 1)),
+  coint = list(v_i = 0, p_tau_i = 1, shape = 3, rate = 1e-04, rho = 0.999),
   sigma = list(df = "k", scale = 1, mu = 0, v_i = 0.01, sigma_h = 0.05),
   ssvs = NULL,
   bvs = NULL,
@@ -82,8 +82,8 @@ Argument \code{coint} can contain the following elements:
   of the loading matrix \eqn{\alpha}. Default is 3.}
   \item{\code{rate}}{a numeric specifying the prior variance of error term of the state equation
   of the loading matrix \eqn{\alpha}. Default is 0.0001.}
-  \item{\code{rho}}{a vector of length 2 containing the lower and upper bound of the autocorrelation coefficient
-  of the state equation of \eqn{\beta}. Default is \code{c(.999, 1)}.}
+  \item{\code{rho}}{a numeric specifying the autocorrelation coefficient
+  of the state equation of \eqn{\beta}. It must be smaller than 1. Default is 0.999.}
 }
 
 Argument \code{sigma} can contain the following elements:

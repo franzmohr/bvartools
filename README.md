@@ -3,8 +3,7 @@
 
 [![CRAN
 status](https://www.r-pkg.org/badges/version/bvartools)](https://cran.r-project.org/package=bvartools)
-[![Travis build
-status](https://app.travis-ci.com/franzmohr/bvartools.svg?branch=master)](https://app.travis-ci.com/franzmohr/bvartools)
+[![R-CMD-check](https://github.com/franzmohr/bvartools/workflows/R-CMD-check/badge.svg)](https://github.com/franzmohr/bvartools/actions)
 
 ## Overview
 

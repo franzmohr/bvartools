@@ -110,8 +110,8 @@ gen_var <- function(data, p = 2, exogen = NULL, s = NULL,
   
   model <- NULL
   model[["type"]] <- "VAR"
-  model[["endogen"]] <- list("variables" = data_name,
-                             "lags" = 0)
+  model$endogen <- list("variables" = data_name,
+                        "lags" = 0)
   
   temp <- data
   temp_name <- data_name
@@ -160,8 +160,8 @@ gen_var <- function(data, p = 2, exogen = NULL, s = NULL,
       } 
     }
     
-    model[["exogen"]] <- list("variables" = dimnames(exogen)[[2]],
-                              "lags" = 0)
+    model$exogen <- list("variables" = exo_name,
+                         "lags" = 0)
   } else {
     use_exo <- FALSE
     s <- 0

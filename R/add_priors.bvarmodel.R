@@ -161,8 +161,8 @@ add_priors.bvarmodel <- function(object,
   
   # Checks - Coefficient priors ----
   if (!is.null(coef)) {
-    if (!is.null(coef[["v_i"]])) {
-      if (coef[["v_i"]] < 0) {
+    if (!is.null(coef$v_i)) {
+      if (coef$v_i < 0) {
         stop("Argument 'v_i' must be at least 0.")
       }  
     } else {
@@ -172,9 +172,9 @@ add_priors.bvarmodel <- function(object,
     }
   }
   
-  if (!is.null(coef[["const"]])) {
-    if (class(coef[["const"]]) == "character") {
-      if (!coef[["const"]] %in% c("first", "mean")) {
+  if (!is.null(coef$const)) {
+    if (class(coef$const) == "character") {
+      if (!coef$const %in% c("first", "mean")) {
         stop("Invalid specificatin of coef$const.")
       }
     }
@@ -185,7 +185,7 @@ add_priors.bvarmodel <- function(object,
     stop("Argument 'sigma' must be at least of length 2.")
   } else {
     error_prior <- NULL
-    if (any(unlist(lapply(object, function(x) {x[["model"]][["sv"]]})))) { # Check for SV
+    if (any(unlist(lapply(object, function(x) {x$model$sv})))) { # Check for SV
       if (any(!c("mu", "v_i", "shape", "rate") %in% names(sigma))) {
         stop("Missing prior specifications for stochastic volatility prior.")
       }
@@ -205,18 +205,18 @@ add_priors.bvarmodel <- function(object,
       }
       
       if (error_prior == "wishart") {
-        if (sigma[["df"]] < 0) {
+        if (sigma$df < 0) {
           stop("Argument 'sigma$df' must be at least 0.")
         }
-        if (sigma[["scale"]] <= 0) {
+        if (sigma$scale <= 0) {
           stop("Argument 'sigma$scale' must be larger than 0.")
         } 
       }
       if (error_prior == "gamma") {
-        if (sigma[["shape"]] < 0) {
+        if (sigma$shape < 0) {
           stop("Argument 'sigma$shape' must be at least 0.")
         }
-        if (sigma[["rate"]] <= 0) {
+        if (sigma$rate <= 0) {
           stop("Argument 'sigma$rate' must be larger than 0.")
         } 
       } 
@@ -404,7 +404,7 @@ add_priors.bvarmodel <- function(object,
         mu <- rbind(mu, matrix(0, n_struct))
       }
       
-      object[[i]][["priors"]][["coefficients"]] <- list(mu = mu)
+      object[[i]]$priors$coefficients <- list(mu = mu)
       
       ### Prior covariances ----
       
@@ -419,7 +419,7 @@ add_priors.bvarmodel <- function(object,
                                 coint_var = FALSE,
                                 sigma = "AR")
         
-        object[[i]][["priors"]][["coefficients"]][["v_i"]] <- minn$v_i 
+        object[[i]]$priors$coefficients$v_i <- minn$v_i 
       }
       
       #### SSVS prior ----
@@ -449,7 +449,7 @@ add_priors.bvarmodel <- function(object,
         if (n_det > 0 & !is.null(coef[["v_i_det"]])) {
           diag(v_i)[tot_par - n_struct - n_det + 1:n_det] <- coef[["v_i_det"]]
         }
-        object[[i]][["priors"]][["coefficients"]][["v_i"]] <- v_i   
+        object[[i]][["priors"]][["coefficients"]]$v_i <- v_i   
       }
       
       #### BVS prior ----
@@ -513,8 +513,8 @@ add_priors.bvarmodel <- function(object,
       if (error_prior == "wishart") {
         object[[i]][["priors"]][["sigma"]][["type"]] <- "wishart"
         help_df <- sigma[["df"]]
-        object[[i]][["priors"]][["sigma"]][["df"]] <- NA_real_
-        object[[i]][["priors"]][["sigma"]][["scale"]] = diag(sigma[["scale"]], k)
+        object[[i]][["priors"]][["sigma"]]$df <- NA_real_
+        object[[i]][["priors"]][["sigma"]]$scale = diag(sigma[["scale"]], k)
       }
       
       if (error_prior == "gamma") {
@@ -526,7 +526,7 @@ add_priors.bvarmodel <- function(object,
       
       if (minnesota) {
         # Store LS estimate of variance coviariance matrix for analytical solution
-        object[[i]][["priors"]][["sigma"]][["sigma_i"]] = minn[["sigma_i"]]
+        object[[i]][["priors"]][["sigma"]]$sigma_i = minn[["sigma_i"]]
       }
       
       if (class(help_df) == "character") {
@@ -543,10 +543,10 @@ add_priors.bvarmodel <- function(object,
       }
       
       if (error_prior == "wishart") {
-        object[[i]][["priors"]][["sigma"]][["df"]] <- help_df
+        object[[i]][["priors"]][["sigma"]]$df <- help_df
       }
       if (error_prior == "gamma") {
-        object[[i]][["priors"]][["sigma"]][["shape"]] <- matrix(help_df, k)
+        object[[i]][["priors"]][["sigma"]]$shape <- matrix(help_df, k)
       } 
     }
     

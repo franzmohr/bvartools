@@ -4,7 +4,7 @@ author: "Franz X. Mohr"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Stochastic Search Variable Selection}
+  %\VignetteIndexEntry{Stochastic Search Variable Selection in bvartools}
   %\VignetteEngine{knitr::rmarkdown}
   \usepackage[utf8]{inputenc}
 ---

@@ -1,11 +1,11 @@
 ---
-title: "Model Comparison in bvartools"
+title: "Model Comparison in `bvartools`"
 author: "Franz X. Mohr"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Model comparison}
-  %\VignetteEngine{rmarkdown::render}
+  %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 

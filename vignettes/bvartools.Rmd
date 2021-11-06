@@ -1,11 +1,11 @@
 ---
-title: "Introduction to bvartools"
+title: "Introduction to `bvartools`"
 author: "Franz X. Mohr"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Introduction to bvartools}
-  %\VignetteEngine{rmarkdown::render}
+  %\VignetteEngine{knitr::rmarkdown}
   \usepackage[utf8]{inputenc}
 ---
 

@@ -1,11 +1,11 @@
 ---
-title: "Stochastic Search Variable Selection"
+title: "Stochastic Search Variable Selection in `bvartools`"
 author: "Franz X. Mohr"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Stochastic Search Variable Selection}
-  %\VignetteEngine{rmarkdown::render}
+  %\VignetteEngine{knitr::rmarkdown}
   \usepackage[utf8]{inputenc}
 ---
 

@@ -141,7 +141,7 @@ gen_vec <- function(data, p = 2, exogen = NULL, s = 2, r = NULL,
   
   model <- NULL
   model[["type"]] <- "VEC"
-  model[["endogen"]] <- list("variables" = dimnames(data)[[2]],
+  model$endogen <- list("variables" = data_name,
                              "lags" = 1)
   
   # Differenced endogenous variables
@@ -171,7 +171,7 @@ gen_vec <- function(data, p = 2, exogen = NULL, s = 2, r = NULL,
     temp_name <- c(temp_name, paste("l.", exog_name, sep = ""))
     n_ect <- n_ect + m
     
-    model[["exogen"]] <- list("variables" = dimnames(exogen)[[2]],
+    model$exogen <- list("variables" = exog_name,
                               "lags" = 1)
   } else {
     use_exo <- FALSE
@@ -314,12 +314,12 @@ gen_vec <- function(data, p = 2, exogen = NULL, s = 2, r = NULL,
   use_det_r <- FALSE
   if (length(det_name_r) > 0) {
     use_det_r <- TRUE
-    model[["deterministic"]][["restricted"]] <- det_name_r
+    model[["deterministic"]]$restricted <- det_name_r
   }
   use_det_ur <- FALSE
   if (length(det_name_ur) > 0) {
     use_det_ur <- TRUE
-    model[["deterministic"]][["unrestricted"]] <- det_name_ur
+    model[["deterministic"]]$unrestricted <- det_name_ur
   }
   
   if (is.null(r)) {

@@ -416,17 +416,15 @@ add_priors.bvecmodel <- function(object,
             warning("Value of rho appears very small.")
           }
         }
-        # Only use one or two values for rho. One for fixed rho. Two for Metropolis-within-Gibbs.
-        #object[[i]][["priors"]][["cointegration"]][["rho"]] <- unique(rho[order(rho)][c(1, length(rho))])
-        object[[i]][["priors"]][["cointegration"]][["alpha"]] <- list(mu = matrix(0, n_alpha),
+        object[[i]][["priors"]][["cointegration"]]$alpha <- list(mu = matrix(0, n_alpha),
                                                                       v_i = diag(1 / (1 - rho^2), n_alpha),
                                                                       shape = matrix(coint[["shape"]], n_alpha),
                                                                       rate = matrix(coint[["rate"]], n_alpha))
-        object[[i]][["priors"]][["cointegration"]][["beta"]] <- list(mu = matrix(0, n_beta),
+        object[[i]][["priors"]][["cointegration"]]$beta <- list(mu = matrix(0, n_beta),
                                                                      v_i = diag(1 - rho^2, n_beta))
       } else {
-        object[[i]][["priors"]][["cointegration"]] <- list(v_i = coint[["v_i"]],
-                                                           p_tau_i = diag(coint[["p_tau_i"]], n_ect / k)) 
+        object[[i]][["priors"]]$cointegration <- list(v_i = coint[["v_i"]],
+                                                      p_tau_i = diag(coint[["p_tau_i"]], n_ect / k)) 
       }
     } else {
       if (r_temp == 0 & tot_par == 0) {

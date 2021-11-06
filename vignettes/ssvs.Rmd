@@ -1,5 +1,5 @@
 ---
-title: "Stochastic Search Variable Selection in `bvartools`"
+title: "Stochastic Search Variable Selection in bvartools"
 author: "Franz X. Mohr"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette

@@ -110,7 +110,7 @@ gen_var <- function(data, p = 2, exogen = NULL, s = NULL,
   
   model <- NULL
   model[["type"]] <- "VAR"
-  model[["endogen"]] <- list("variables" = dimnames(data)[[2]],
+  model[["endogen"]] <- list("variables" = data_name,
                              "lags" = 0)
   
   temp <- data

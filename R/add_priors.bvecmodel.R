@@ -600,18 +600,18 @@ add_priors.bvecmodel <- function(object,
       if (error_prior == "wishart") {
         object[[i]][["priors"]][["sigma"]][["type"]] <- "wishart"
         help_df <- sigma[["df"]]
-        object[[i]][["priors"]][["sigma"]][["df"]] <- NA
-        object[[i]][["priors"]][["sigma"]][["scale"]] = diag(sigma[["scale"]], k)
+        object[[i]][["priors"]][["sigma"]]$df <- NA
+        object[[i]][["priors"]][["sigma"]]$scale = diag(sigma[["scale"]], k)
       }
       if (error_prior == "gamma") {
         object[[i]][["priors"]][["sigma"]][["type"]] <- "gamma"
         help_df <- sigma[["shape"]]
-        object[[i]][["priors"]][["sigma"]][["shape"]] <- NA
-        object[[i]][["priors"]][["sigma"]][["rate"]] = matrix(sigma[["rate"]], k)
+        object[[i]][["priors"]][["sigma"]]$shape <- NA
+        object[[i]][["priors"]][["sigma"]]$rate = matrix(sigma[["rate"]], k)
       }
       if (minnesota) {
         # Store LS estimate of variance coviariance matrix for analytical solution
-        object[[i]][["priors"]][["sigma"]][["sigma_i"]] = minn[["sigma_i"]]
+        object[[i]][["priors"]][["sigma"]]$sigma_i = minn[["sigma_i"]]
       }
       
       if (class(help_df) == "character") {
@@ -633,10 +633,10 @@ add_priors.bvecmodel <- function(object,
       }
       
       if (error_prior == "wishart") {
-        object[[i]][["priors"]][["sigma"]][["df"]] <- help_df
+        object[[i]][["priors"]][["sigma"]]$df <- help_df
       }
       if (error_prior == "gamma") {
-        object[[i]][["priors"]][["sigma"]][["shape"]] <- matrix(help_df, k)
+        object[[i]][["priors"]][["sigma"]]$shape <- matrix(help_df, k)
       }
     }
     
@@ -646,17 +646,17 @@ add_priors.bvecmodel <- function(object,
       z <- object[[i]][["data"]][["SUR"]]
       ols <- solve(crossprod(z)) %*% crossprod(z, matrix(y))
       u <- matrix(matrix(y) - z %*% ols, NROW(y))
-      object[[i]][["initial"]][["noncointegration"]][["draw"]] <- matrix(ols[-c(1:n_ect),])
+      object[[i]][["initial"]][["noncointegration"]]$draw <- matrix(ols[-c(1:n_ect),])
     } else {
       if (tot_par > 0) {
-        object[[i]][["initial"]][["noncointegration"]][["draw"]] <- mu 
+        object[[i]][["initial"]][["noncointegration"]]$draw <- mu 
       }
       u <- y - matrix(apply(y, 1, mean), nrow = NROW(y), ncol = NCOL(y))
     }
     if (r_temp > 0) {
       beta <- matrix(0, n_ect / k, r_temp)
       beta[1:r_temp, 1:r_temp] <- diag(1, r_temp)
-      object[[i]][["initial"]][["cointegration"]][["beta"]] <- beta
+      object[[i]][["initial"]][["cointegration"]]$beta <- beta
       if (object[[i]][["model"]][["tvp"]]) {
         object[[i]][["initial"]][["cointegration"]][["rho"]] <- rho
       }

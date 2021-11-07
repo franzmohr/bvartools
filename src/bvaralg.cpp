@@ -28,7 +28,6 @@ Rcpp::List bvaralg(Rcpp::List object) {
   const int tt = y.n_cols;
   const int k = y.n_rows;
   const int p = Rcpp::as<int>(endogen["lags"]);
-  int n_a0 = 0;
   const int n_a = k * k * p;
   int m = 0;
   int s = 0;
@@ -42,6 +41,7 @@ Rcpp::List bvaralg(Rcpp::List object) {
   const arma::mat diag_ktt = arma::eye<arma::mat>(k * tt, k * tt);
   const bool sv = Rcpp::as<bool>(model["sv"]);
   const bool structural = Rcpp::as<bool>(model["structural"]);
+  int n_a0 = 0;
   if (structural) {
     n_a0 = k * (k - 1) / 2;
   }
@@ -73,9 +73,16 @@ Rcpp::List bvaralg(Rcpp::List object) {
     n_c = k * n;
   }
   
-  // Priors ----
+  // Priors & initial values ----
   Rcpp::List priors = object["priors"];
   Rcpp::CharacterVector priors_names = priors.names();
+  
+  Rcpp::List initial = object["initial"];
+  Rcpp::List init_coeffs;
+  if (use_a) {
+    init_coeffs = initial["coefficients"];
+  }
+  Rcpp::List init_sigma = initial["sigma"];
   
   // Priors - Coefficients
   Rcpp::List priors_coefficients;
@@ -85,6 +92,10 @@ Rcpp::List bvaralg(Rcpp::List object) {
   Rcpp::List a_prior_varsel;
   arma::vec a_prior_incl, a_tau0, a_tau1, a_tau0sq, a_tau1sq;
   arma::vec a_bvs_lprior_0, a_bvs_lprior_1;
+  int a_varsel_n, a_varsel_pos;
+  double a_bayes, a_bayes_rand, a_l0, a_l1, a_lambda_draw;
+  arma::vec a_post_incl, a_post_mu, a_randu, a_theta0_res, a_theta1_res, a_u0, a_u1, a_varsel_include, a_varsel_include_draw;
+  arma::mat a, a_AG, a_lambda, a_post_v, a_theta0, a_theta1, z_bvs;
   if (n_tot > 0) {
     // Priors - Coefficients
     priors_coefficients = priors["coefficients"];
@@ -115,15 +126,34 @@ Rcpp::List bvaralg(Rcpp::List object) {
     }
     
     varsel = ssvs || bvs;  
+    
+    a = Rcpp::as<arma::mat>(init_coeffs["draw"]);
+    if (varsel) {
+      a_varsel_include = Rcpp::as<arma::vec>(a_prior_varsel["include"]) - 1;
+      a_varsel_n = size(a_varsel_include)(0);
+      if (ssvs) {
+        a_lambda = arma::ones<arma::mat>(n_tot, 1);
+      }
+      if (bvs) {
+        a_lambda = arma::eye<arma::mat>(n_tot, n_tot);
+        a_l0 = 0;
+        a_l1 = 0;
+        a_bayes = 0;
+        a_bayes_rand = 0;
+        z_bvs = z;
+      }
+    } 
   }
-  
   
   // Priors - Covar coefficients
   Rcpp::List psi_priors, psi_prior_varsel;
   Rcpp::CharacterVector psi_priors_names;
   arma::vec psi_prior_incl, psi_tau0, psi_tau1, psi_tau0sq, psi_tau1sq, psi_bvs_lprior_0, psi_bvs_lprior_1;
   arma::mat psi_prior_mu, psi_prior_vi;
-  
+  int psi_varsel_n, psi_varsel_pos;
+  double psi_bayes, psi_bayes_rand, psi_l0, psi_l1, psi_lambda_draw;
+  arma::vec psi_post_incl, psi_post_mu, psi_randu, psi_theta0_res, psi_theta1_res, psi_varsel_include, psi_varsel_include_draw, psi_u0, psi_u1, psi_y;
+  arma::mat diag_omega_i, diag_covar_omega_i, diag_Psi, psi, Psi, psi_AG, psi_lambda, psi_post_v, psi_theta0, psi_theta1, psi_z, psi_z_bvs;
   if (std::find(priors_names.begin(), priors_names.end(), "psi") != priors_names.end()) {
     covar = true;
     psi_priors = priors["psi"];
@@ -152,71 +182,7 @@ Rcpp::List bvaralg(Rcpp::List object) {
     }
     
     psi_varsel = psi_ssvs || psi_bvs;
-  }
-  
-  
-  // Priors - Errors
-  Rcpp::List sigma_pr = priors["sigma"];
-  Rcpp::CharacterVector sigma_names = sigma_pr.names();
-  double sigma_post_df;
-  arma::vec sigma_post_shape, sigma_prior_rate, sigma_prior_mu;
-  arma::mat sigma_prior_scale, sigma_prior_vi;
-  bool use_gamma = false;
-  if (sv) {
-    sigma_prior_mu = Rcpp::as<arma::vec>(sigma_pr["mu"]);
-    sigma_prior_vi = Rcpp::as<arma::mat>(sigma_pr["v_i"]);
-    sigma_post_shape = Rcpp::as<arma::vec>(sigma_pr["shape"]) + 0.5 * tt;
-    sigma_prior_rate = Rcpp::as<arma::vec>(sigma_pr["rate"]);
-  } else {
-    if (std::find(sigma_names.begin(), sigma_names.end(), "df") != sigma_names.end()) {
-      sigma_post_df = Rcpp::as<double>(sigma_pr["df"]) + tt;
-      sigma_prior_scale = Rcpp::as<arma::mat>(sigma_pr["scale"]);
-    }
-    if (std::find(sigma_names.begin(), sigma_names.end(), "shape") != sigma_names.end()) {
-      use_gamma = true;
-      sigma_post_shape = Rcpp::as<arma::vec>(sigma_pr["shape"]) + 0.5 * tt;
-      sigma_prior_rate = Rcpp::as<arma::vec>(sigma_pr["rate"]);
-    }
-  }
-  
-  // Initial values and other objects ----
-  Rcpp::List initial = object["initial"];
-  Rcpp::List init_coeffs;
-  if (use_a) {
-    init_coeffs = initial["coefficients"];
-  }
-  Rcpp::List init_sigma = initial["sigma"];
-  
-  // Coefficients
-  int a_varsel_n, a_varsel_pos;
-  double a_bayes, a_bayes_rand, a_l0, a_l1, a_lambda_draw;
-  arma::vec a_post_incl, a_post_mu, a_randu, a_theta0_res, a_theta1_res, a_u0, a_u1, a_varsel_include, a_varsel_include_draw;
-  arma::mat a, a_AG, a_lambda, a_post_v, a_theta0, a_theta1, z_bvs;
-  if (n_tot > 0) {
-    a = Rcpp::as<arma::mat>(init_coeffs["draw"]);
-    if (varsel) {
-      a_varsel_include = Rcpp::as<arma::vec>(a_prior_varsel["include"]) - 1;
-      a_varsel_n = size(a_varsel_include)(0);
-      if (ssvs) {
-        a_lambda = arma::ones<arma::mat>(n_tot, 1);
-      }
-      if (bvs) {
-        a_lambda = arma::eye<arma::mat>(n_tot, n_tot);
-        a_l0 = 0;
-        a_l1 = 0;
-        a_bayes = 0;
-        a_bayes_rand = 0;
-        z_bvs = z;
-      }
-    } 
-  }
-
-  // Covar
-  int psi_varsel_n, psi_varsel_pos;
-  double psi_bayes, psi_bayes_rand, psi_l0, psi_l1, psi_lambda_draw;
-  arma::vec psi_post_incl, psi_post_mu, psi_randu, psi_theta0_res, psi_theta1_res, psi_varsel_include, psi_varsel_include_draw, psi_u0, psi_u1, psi_y;
-  arma::mat diag_omega_i, diag_covar_omega_i, diag_Psi, psi, Psi, psi_AG, psi_lambda, psi_post_v, psi_theta0, psi_theta1, psi_z, psi_z_bvs;
-  if (covar) {
+    
     n_psi = k * (k - 1) / 2;
     Psi = arma::eye<arma::mat>(k, k);
     psi_z = arma::zeros<arma::mat>((k - 1) * tt, n_psi);
@@ -236,8 +202,15 @@ Rcpp::List bvaralg(Rcpp::List object) {
     }
     diag_covar_omega_i = arma::zeros<arma::mat>(tt * (k - 1), tt * (k - 1));
   }
-
-  // Error
+  
+  
+  // Priors - Errors
+  Rcpp::List sigma_pr = priors["sigma"];
+  Rcpp::CharacterVector sigma_names = sigma_pr.names();
+  double sigma_post_df;
+  arma::vec sigma_post_shape, sigma_prior_rate, sigma_prior_mu;
+  arma::mat sigma_prior_scale, sigma_prior_vi;
+  bool use_gamma = false;
   arma::vec h_init, sigma_h, u_vec, sigma_post_scale;
   arma::mat h_init_post_v, sigma_h_i, diag_sigma_i_temp;
   arma::vec h_init_post_mu;
@@ -245,12 +218,27 @@ Rcpp::List bvaralg(Rcpp::List object) {
   arma::mat u = y * 0;
   arma::mat diag_sigma_i = arma::zeros(k * tt, k * tt);
   if (sv) {
+    sigma_prior_mu = Rcpp::as<arma::vec>(sigma_pr["mu"]);
+    sigma_prior_vi = Rcpp::as<arma::mat>(sigma_pr["v_i"]);
+    sigma_post_shape = Rcpp::as<arma::vec>(sigma_pr["shape"]) + 0.5 * tt;
+    sigma_prior_rate = Rcpp::as<arma::vec>(sigma_pr["rate"]);
+    
     h = Rcpp::as<arma::mat>(init_sigma["h"]);
     h_lag = h * 0;
     sigma_h = Rcpp::as<arma::vec>(init_sigma["sigma_h"]);
     h_init = arma::vectorise(h.row(0));
     sigma_i = arma::diagmat(1 / exp(h_init));
   } else {
+    if (std::find(sigma_names.begin(), sigma_names.end(), "df") != sigma_names.end()) {
+      sigma_post_df = Rcpp::as<double>(sigma_pr["df"]) + tt;
+      sigma_prior_scale = Rcpp::as<arma::mat>(sigma_pr["scale"]);
+    }
+    if (std::find(sigma_names.begin(), sigma_names.end(), "shape") != sigma_names.end()) {
+      use_gamma = true;
+      sigma_post_shape = Rcpp::as<arma::vec>(sigma_pr["shape"]) + 0.5 * tt;
+      sigma_prior_rate = Rcpp::as<arma::vec>(sigma_pr["rate"]);
+    }
+    
     omega_i = Rcpp::as<arma::mat>(init_sigma["sigma_i"]);
     sigma_i = omega_i;
   }

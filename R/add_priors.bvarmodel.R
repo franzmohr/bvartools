@@ -354,13 +354,13 @@ add_priors.bvarmodel <- function(object,
     if (covar & structural) {
       stop("Error covariances and structural coefficients cannot be estimated at the same time.")
     }
-    sv <- object[[i]][["model"]][["sv"]]
     n_struct <- 0
     if (structural & k > 1) {
       n_struct <- (k - 1) * k / 2
       tot_par <- tot_par + n_struct
     }
     
+    sv <- object[[i]][["model"]][["sv"]]
     
     # Priors ----
     ## Coefficients ----
@@ -473,8 +473,7 @@ add_priors.bvarmodel <- function(object,
     }
     
     ## Covar priors ----
-    
-    # Regular priors
+  
     if (!structural & covar & k > 1) {
       
       n_covar <- k * (k - 1) / 2

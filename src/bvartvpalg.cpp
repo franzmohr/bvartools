@@ -11,7 +11,7 @@ Rcpp::List bvartvpalg(Rcpp::List object) {
   // Model data and helper object
   Rcpp::List data = object["data"];
   arma::mat y = arma::trans(Rcpp::as<arma::mat>(data["Y"]));
-  arma::mat yvec = arma::vectorise(y);
+  const arma::mat yvec = arma::vectorise(y);
   Rcpp::Nullable<Rcpp::List> z_test = data["SUR"];
   arma::mat z;
   int n_tot = 0;
@@ -30,7 +30,6 @@ Rcpp::List bvartvpalg(Rcpp::List object) {
   const int tt = y.n_cols; // Number of periods
   const int k = y.n_rows; // Number of endogeous variable in the measurement equation
   const int p = Rcpp::as<int>(endogen["lags"]); // Lags of endogenous coefficiens
-  int n_a0 = 0;
   const int n_a = k * k * p;
   int m = 0;
   int s = 0;
@@ -44,6 +43,8 @@ Rcpp::List bvartvpalg(Rcpp::List object) {
   const arma::vec vec_tt = arma::ones<arma::vec>(tt); // T vector
   const bool sv = Rcpp::as<bool>(model["sv"]);
   const bool structural = Rcpp::as<bool>(model["structural"]);
+  int n_a0 = 0;
+  int n_psi = 0;
   if (structural) {
     n_a0 = k * (k - 1) / 2;
   }

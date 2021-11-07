@@ -186,10 +186,10 @@ minnesota_prior <- function(object, kappa0 = 2, kappa1 = .5, kappa2 = NULL, kapp
       for (l in 1:k) {
         for (j in 1:m) {
           # Note that in the loop r starts at 1, so that this is equivalent to l + 1
-          if (!is.null(kappa2)) {
-            V[l, n_ect + p * k + (r - 1) * m + j] <- kappa0 * kappa2 / r^2 * s_endo[l]^2 / s_exo[j]^2 
-          } else {
+          if (is.null(kappa2)) {
             V[l, n_ect + p * k + (r - 1) * m + j] <- kappa0 * kappa3 * s_endo[l]^2
+          } else {
+            V[l, n_ect + p * k + (r - 1) * m + j] <- kappa0 * kappa2 / r^2 * s_endo[l]^2 / s_exo[j]^2 
           }
         }
       }

@@ -36,7 +36,6 @@ Rcpp::List bvartvpalg(Rcpp::List object) {
   int n_b = 0;
   int n = 0;
   int n_c = 0;
-  int n_psi = 0;
   const int n_sigma = k * k;
   const arma::mat diag_k = arma::eye<arma::mat>(k, k); // K diag matrix
   const arma::sp_mat diag_tt = arma::speye<arma::sp_mat>(tt, tt); // T diag matrix

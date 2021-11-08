@@ -27,27 +27,6 @@ A plot function for objects of class "bvarfevd".
 data("e1")
 e1 <- diff(log(e1)) * 100
 
-# Generate models
-model <- gen_var(e1, p = 2, deterministic = 2,
-                 iterations = 100, burnin = 10)
-
-# Add priors
-model <- add_priors(model)
-
-# Obtain posterior draws
-object <- draw_posterior(model)
-
-# Obtain FEVD
-vd <- fevd(object, response = "cons")
-
-# Plot FEVD
-plot(vd)
-
-
-# Load data
-data("e1")
-e1 <- diff(log(e1)) * 100
-
 # Generate model data
 model <- gen_var(e1, p = 2, deterministic = 2,
                  iterations = 100, burnin = 10)

@@ -27,9 +27,9 @@ Possible choices are orthogonalised \code{oir} (default) and generalised \code{g
 
 \item{normalise_gir}{logical. Should the GIR-based FEVD be normalised?}
 
-\item{period}{integer. Index of the period of a TVP VAR, for which FEVDs should be generated.
-Only used for TVP models. Default is \code{NULL} so that only the most recent time period
-is used.}
+\item{period}{integer. Index of the period, for which the variance decomposition should be generated.
+Only used for TVP or SV models. Default is \code{NULL}, so that the posterior draws of the last time period
+are used.}
 
 \item{...}{further arguments passed to or from other methods.}
 }

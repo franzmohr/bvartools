@@ -122,32 +122,36 @@ cointegration term.}
 \item{x_x}{a time-series object of \eqn{Ms} differenced unmodelled regressors.}
 \item{x_d}{a time-series object of \eqn{N^{UR}} deterministic terms that do not enter the
 cointegration term.}
-\item{A0}{an \eqn{S \times K^2} "mcmc" object of coefficient draws of structural parameters.}
+\item{A0}{an \eqn{S \times K^2} "mcmc" object of coefficient draws of structural parameters. In case of time varying parameters a list of such objects.}
 \item{A0_lambda}{an \eqn{S \times K^2} "mcmc" object of inclusion parameters for coefficients
 corresponding to structural parameters.}
-\item{alpha}{an \eqn{S \times Kr} "mcmc" object of coefficient draws of loading parameters.}
+\item{A0_sigma}{an \eqn{S \times K^2} "mcmc" object of the error covariance matrices of the structural parameters in a model with time varying parameters.}
+\item{alpha}{an \eqn{S \times Kr} "mcmc" object of coefficient draws of loading parameters. In case of time varying parameters a list of such objects.}
 \item{beta}{an \eqn{S \times ((K + M + N^{R})r)} "mcmc" object of coefficient draws of cointegration parameters
-corresponding to the endogenous variables of the model.}
+corresponding to the endogenous variables of the model. In case of time varying parameters a list of such objects.}
 \item{beta_x}{an \eqn{S \times KM} "mcmc" object of coefficient draws of cointegration parameters
-corresponding to unmodelled, non-deterministic variables.}
+corresponding to unmodelled, non-deterministic variables. In case of time varying parameters a list of such objects.}
 \item{beta_d}{an \eqn{S \times KN^{R}} "mcmc" object of coefficient draws of cointegration parameters
-corresponding to restricted deterministic variables.}
-\item{Pi}{an \eqn{S \times K^2} "mcmc" object of coefficient draws of endogenous variables in the cointegration matrix.}
-\item{Pi_x}{an \eqn{S \times KM} "mcmc" object of coefficient draws of unmodelled, non-deterministic variables in the cointegration matrix.}
-\item{Pi_d}{an \eqn{S \times KN^{R}} "mcmc" object of coefficient draws of restricted deterministic variables in the cointegration matrix.}
-\item{Gamma}{an \eqn{S \times (p-1)K^2} "mcmc" object of coefficient draws of differenced lagged endogenous variables.}
+corresponding to restricted deterministic variables. In case of time varying parameters a list of such objects.}
+\item{Pi}{an \eqn{S \times K^2} "mcmc" object of coefficient draws of endogenous variables in the cointegration matrix. In case of time varying parameters a list of such objects.}
+\item{Pi_x}{an \eqn{S \times KM} "mcmc" object of coefficient draws of unmodelled, non-deterministic variables in the cointegration matrix. In case of time varying parameters a list of such objects.}
+\item{Pi_d}{an \eqn{S \times KN^{R}} "mcmc" object of coefficient draws of restricted deterministic variables in the cointegration matrix. In case of time varying parameters a list of such objects.}
+\item{Gamma}{an \eqn{S \times (p-1)K^2} "mcmc" object of coefficient draws of differenced lagged endogenous variables. In case of time varying parameters a list of such objects.}
 \item{Gamma_lamba}{an \eqn{S \times (p-1)K^2} "mcmc" object of inclusion parameters for coefficients
 corresponding to differenced lagged endogenous variables.}
-\item{Upsilon}{an \eqn{S \times sMK} "mcmc" object of coefficient draws of differenced unmodelled variables.}
+\item{Gamma_sigma}{an \eqn{S \times (p - 1)K^2} "mcmc" object of the error covariance matrices of the coefficients of lagged endogenous variables in a model with time varying parameters.}
+\item{Upsilon}{an \eqn{S \times sMK} "mcmc" object of coefficient draws of differenced unmodelled, non-deterministic variables. In case of time varying parameters a list of such objects.}
 \item{Upsilon_lambda}{an \eqn{S \times sMK} "mcmc" object of inclusion parameters for coefficients
 corresponding to differenced unmodelled, non-deterministic variables.}
+\item{Upsilon_sigma}{an \eqn{S \times sMK} "mcmc" object of the error covariance matrices of the coefficients of unmodelled, non-deterministic variables in a model with time varying parameters.}
 \item{C}{an \eqn{S \times KN^{UR}} "mcmc" object of coefficient draws of deterministic terms that
-do not enter the cointegration term.}
+do not enter the cointegration term. In case of time varying parameters a list of such objects.}
 \item{C_lambda}{an \eqn{S \times KN^{UR}} "mcmc" object of inclusion parameters for coefficients
-corresponding to deterministic terms, that do not enter the conitegration term.}
-\item{Sigma}{an \eqn{S \times K^2} "mcmc" object of variance-covariance draws.}
-\item{Sigma_lambda}{an \eqn{S \times K^2} "mcmc" object inclusion parameters for the variance-covariance
-matrix.}
+corresponding to deterministic terms, that do not enter the conintegration term.}
+\item{C_sigma}{an \eqn{S \times KN^{UR}} "mcmc" object of the error covariance matrices of the coefficients of deterministic terms, which do not enter the cointegration term, in a model with time varying parameters.}
+\item{Sigma}{an \eqn{S \times K^2} "mcmc" object of variance-covariance draws. In case of time varying parameters a list of such objects.}
+\item{Sigma_lambda}{an \eqn{S \times K^2} "mcmc" object inclusion parameters for the variance-covariance matrix.}
+\item{Sigma_sigma}{an \eqn{S \times K^2} "mcmc" object of the error covariance matrices of the coefficients of the error covariance matrix of the measurement equation of a model with time varying parameters.}
 \item{specifications}{a list containing information on the model specification.}
 }
 \description{
@@ -175,6 +179,9 @@ and \eqn{\Upsilon_i} its corresponding coefficient matrix. \eqn{d_t} is an
 \eqn{N^{UR}}-dimensional vector of unrestricted deterministics and \eqn{C^{UR}}
 the corresponding coefficient matrix.
 \eqn{u_t} is an error term with \eqn{u_t \sim N(0, \Sigma_u)}.
+
+For time varying parameter and stochastic volatility models the respective coefficients and
+error covariance matrix of the above model are assumed to be time varying, respectively.
 
 The draws of the different coefficient matrices provided in \code{alpha}, \code{beta},
 \code{Pi}, \code{Pi_x}, \code{Pi_d}, \code{A0}, \code{Gamma}, \code{Ypsilon},

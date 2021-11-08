@@ -11,7 +11,7 @@
 to function \code{FUN}. Usually, the output of a call to \code{\link{gen_var}} in
 combination with \code{\link{add_priors}}.}
 
-\item{FUN}{the function to be applied to each list element in argument \code{object}.
+\item{FUN}{the function to be applied to each model in argument \code{object}.
 If \code{NULL} (default), the internal functions \code{\link{bvarpost}} is used.}
 
 \item{mc.cores}{the number of cores to use, i.e. at most how many child

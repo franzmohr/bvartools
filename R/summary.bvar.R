@@ -6,9 +6,9 @@
 #' \code{\link{bvar}} or \code{\link{bvec_to_bvar}}.
 #' @param ci a numeric between 0 and 1 specifying the probability of the credible band.
 #' Defaults to 0.95.
-#' @param period integer. Index of the period of a TVP VAR, for which a summery should be generated.
-#' Only used for TVP models. Default is \code{NULL} so that only the most recent time period
-#' is used.
+#' @param period integer. Index of the period, for which the summary statistics should be generated.
+#' Only used for TVP or SV models. Default is \code{NULL}, so that the posterior draws of the last time period
+#' are used.
 #' @param x an object of class \code{"summary.bvar"}, usually, a result of a call to
 #' \code{\link{summary.bvar}}.
 #' @param digits the number of significant digits to use when printing.

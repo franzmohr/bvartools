@@ -18,9 +18,9 @@
 #' @param keep_draws logical specifying whether the function should return all draws of
 #' the posterior impulse response function. Defaults to \code{FALSE} so that
 #' the median and the credible intervals of the posterior draws are returned.
-#' @param period integer. Index of the period of a TVP VAR, for which IRFs should be generated.
-#' Only used for TVP models. Default is \code{NULL} so that only the most recent time period
-#' is used.
+#' @param period integer. Index of the period, for which the IR should be generated.
+#' Only used for TVP or SV models. Default is \code{NULL}, so that the posterior draws of the last time period
+#' are used.
 #' @param ... further arguments passed to or from other methods.
 #' 
 #' @details The function produces different types of impulse responses for the VAR model

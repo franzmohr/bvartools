@@ -63,6 +63,14 @@ Argument \code{coef} can contain the following elements
   LS estimate. For exogenous variables \eqn{\sigma_{i}} is the sample standard deviation.}
   \item{\code{max_var}}{a numeric specifying the maximum prior variance that is allowed for
   non-deterministic coefficients.}
+  \item{\code{shape}}{a numeric specifying the prior shape parameter of the error term of the
+  state equation. Only used for models with time varying parameters. Default is 3.}
+  \item{\code{rate}}{a numeric specifying the prior rate parameter of the error term of the
+  state equation. Only used for models with time varying parameters. Default is 0.0001.}
+  \item{\code{rate_det}}{a numeric specifying the prior rate parameter of the error term of the
+  state equation for coefficients, which correspond to deterministic terms.
+  Only used for models with time varying parameters. If not provided, the value of argument
+  \code{coef$rate} will be used. Default is 0.01.}
 }
 If \code{minnesota} is specified, \code{v_i} and \code{v_i_det} are ignored.
 
@@ -80,10 +88,10 @@ Argument \code{sigma} can contain the following elements:
   For models with constant volatility the default is \code{"k"}, which indicates the amount of endogenous
   variables in the respective country model. \code{"k + 3"} can be used to set the prior to the amount of
   endogenous variables plus 3. If a numeric is provided, the shape parameters are set to this value in all
-  models. For models with time varying volatility this prior refers to the error variance of the state
+  models. For models with stochastic volatility this prior refers to the error variance of the state
   equation.}
   \item{\code{rate}}{a numeric specifying the prior rate parameter of the error term. Only used, if the
-  prior is inverse gamma or if time varying volatilities are estimated. For models with time varying
+  prior is inverse gamma or if time varying volatilities are estimated. For models with stochastic
   volatility this prior refers to the error variance of the state equation.}
   \item{\code{mu}}{numeric of the prior mean of the initial state of the log-volatilities.
   Only used for models with time varying volatility.}
@@ -92,7 +100,8 @@ Argument \code{sigma} can contain the following elements:
   \item{\code{sigma_h}}{numeric of the initial draw for the variance of the log-volatilities.
   Only used for models with time varying volatility.}
   \item{\code{covar}}{logical indicating whether error covariances should be estimated. Only used
-  in combination with an inverse gamma prior or stochastic volatility.}
+  in combination with an inverse gamma prior or stochastic volatility, for which \code{shape} and
+  \code{rate} must be specified.}
 }
 \code{df} and \code{scale} must be specified for an inverse Wishart prior. \code{shape} and \code{rate}
 are required for an inverse gamma prior. For structural models only a gamma prior specification

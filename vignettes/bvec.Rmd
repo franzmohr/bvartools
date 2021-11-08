@@ -179,6 +179,12 @@ bvec_est <- bvec(y = data$data$Y,
                  Sigma = draws_sigma)
 ```
 
+Posterior draws an be inspected with `plot`:
+
+```{r, message=FALSE, warning=FALSE, fig.align='center', fig.height=5, fig.width=10}
+plot(bvec_est)
+```
+
 Obtain summaries of posterior draws
 
 ```{r}

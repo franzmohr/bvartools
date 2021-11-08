@@ -45,7 +45,7 @@
 #' 
 #' If \code{tvp} is \code{TRUE}, the respective coefficients
 #' of the above model are assumed to be time varying. If \code{sv} is \code{TRUE},
-#' the diagonal elements of the error covariance matrix are assumed to be time varying.
+#' the error covariance matrix is assumed to be time varying.
 #' 
 #' @return An object of class \code{'bvarmodel'}, which contains the following elements:
 #' \item{data}{A list of data objects, which can be used for posterior simulation. Element

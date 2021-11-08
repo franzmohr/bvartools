@@ -26,6 +26,8 @@ For this illustrations the data set E1 from Lütkepohl (2006) is used. It contai
 ```{r, message = FALSE, warning = FALSE, fig.height=4, fig.width=5}
 library(bvartools)
 
+set.seed(123456) # Set seed for reproducibility
+
 data("e1") # Load data
 data <- diff(log(e1)) * 100 # Obtain log-differences
 

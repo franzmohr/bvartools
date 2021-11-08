@@ -6,10 +6,10 @@
 #' in combination with \code{\link{add_priors}}.
 #' 
 #' @details The function implements commonly used posterior simulation algorithms for Bayesian VAR models with
-#' both constant and time varying parameters (TVP). It can produce posterior draws for standard BVAR models
-#' with independent normal-Wishart priors, which can be augmented by stochastic search variable selection
-#' (SSVS) as proposed by Geroge et al. (2008) or Bayesian variable selection (BVS) as proposed in Korobilis
-#' (2013). Both SSVS or BVS can also be applied to the covariances of the error term.
+#' both constant and time varying parameters (TVP) as well as stochastic volatility. It can produce posterior
+#' draws for standard BVAR models with independent normal-Wishart priors, which can be augmented by stochastic
+#' search variable selection (SSVS) as proposed by Geroge et al. (2008) or Bayesian variable selection (BVS)
+#' as proposed in Korobilis (2013). Both SSVS or BVS can also be applied to the covariances of the error term.
 #' 
 #' The implementation follows the descriptions in Chan et al. (2019), George et al. (2008) and Korobilis (2013).
 #' For all approaches the SUR form of a VAR model is used to obtain posterior draws. The algorithm is implemented
@@ -19,8 +19,7 @@
 #' contemporary endogenous variables, which corresponds to the so-called (A-model). Currently, only
 #' specifications are supported, where the structural matrix contains ones on its diagonal and all lower
 #' triangular elements are freely estimated. Since posterior draws are obtained based on the SUR form of
-#' the VAR model, the structural coefficients are drawn jointly with the other coefficients and not in a
-#' seperate Gibbs sampler step.
+#' the VAR model, the structural coefficients are drawn jointly with the other coefficients.
 #' 
 #' @return An object of class \code{"bvar"}.
 #' 

@@ -5,7 +5,7 @@
 #' @param object a list of model specifications, which should be passed on
 #' to function \code{FUN}. Usually, the output of a call to \code{\link{gen_var}} in
 #' combination with \code{\link{add_priors}}.
-#' @param FUN the function to be applied to each list element in argument \code{object}.
+#' @param FUN the function to be applied to each model in argument \code{object}.
 #' If \code{NULL} (default), the internal functions \code{\link{bvarpost}} is used.
 #' @param mc.cores the number of cores to use, i.e. at most how many child
 #' processes will be run simultaneously. The option is initialized from

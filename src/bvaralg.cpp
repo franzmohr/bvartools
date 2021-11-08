@@ -265,9 +265,10 @@ Rcpp::List bvaralg(Rcpp::List object) {
   arma::mat draws_a = arma::zeros<arma::mat>(n_a, iter);
   arma::mat draws_b = arma::zeros<arma::mat>(n_b, iter);
   arma::mat draws_c = arma::zeros<arma::mat>(n_c, iter);
-  arma::mat draws_sigma;
+  arma::mat draws_sigma, draws_sigma_sigma;
   if (sv) {
     draws_sigma = arma::zeros<arma::mat>(k * k * tt, iter);
+    draws_sigma_sigma = arma::zeros<arma::mat>(k * k, iter);
   } else {
     draws_sigma = arma::zeros<arma::mat>(k * k, iter);
   }
@@ -510,6 +511,7 @@ Rcpp::List bvaralg(Rcpp::List object) {
         for (int i = 0; i < tt; i ++) {
           draws_sigma.submat(i * n_sigma, pos_draw, (i + 1) * n_sigma - 1, pos_draw) = arma::vectorise(arma::solve(diag_sigma_i.submat(i * k, i * k, (i + 1) * k - 1, (i + 1) * k - 1), diag_k));
         }
+        draws_sigma_sigma.col(pos_draw) = arma::vectorise(arma::diagmat(sigma_h));
       } else {
         draws_sigma.col(pos_draw) = arma::vectorise(arma::solve(sigma_i, diag_k));
       }
@@ -588,10 +590,21 @@ Rcpp::List bvaralg(Rcpp::List object) {
   }
 
   if (psi_varsel) {
-    posteriors["sigma"] = Rcpp::wrap(Rcpp::List::create(Rcpp::Named("coeffs") = draws_sigma,
-                                                        Rcpp::Named("lambda") = draws_lambda_a0));
+    if (sv) {
+      posteriors["sigma"] = Rcpp::wrap(Rcpp::List::create(Rcpp::Named("coeffs") = draws_sigma,
+                                                     Rcpp::Named("sigma") = draws_sigma_sigma,
+                                                     Rcpp::Named("lambda") = draws_lambda_a0)); 
+    } else {
+      posteriors["sigma"] = Rcpp::wrap(Rcpp::List::create(Rcpp::Named("coeffs") = draws_sigma,
+                                                     Rcpp::Named("lambda") = draws_lambda_a0));
+    }
   } else {
-    posteriors["sigma"] = Rcpp::wrap(Rcpp::List::create(Rcpp::Named("coeffs") = draws_sigma));
+    if (sv) {
+      posteriors["sigma"] = Rcpp::wrap(Rcpp::List::create(Rcpp::Named("coeffs") = draws_sigma,
+                                                     Rcpp::Named("sigma") = draws_sigma_sigma)); 
+    } else {
+      posteriors["sigma"] = Rcpp::wrap(Rcpp::List::create(Rcpp::Named("coeffs") = draws_sigma));
+    }
   }
 
   Rcpp::List result = Rcpp::List::create(Rcpp::Named("data") = object["data"],

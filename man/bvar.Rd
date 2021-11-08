@@ -9,7 +9,7 @@
 bvar(
   data = NULL,
   exogen = NULL,
-  y = NULL,
+  y,
   x = NULL,
   A0 = NULL,
   A = NULL,
@@ -27,7 +27,7 @@ bvar(
 
 \item{exogen}{the original time-series object of unmodelled variables.}
 
-\item{y}{a time-series object of endogenous variables,
+\item{y}{a time-series object of endogenous variables with \eqn{T} observations,
 usually, a result of a call to \code{\link{gen_var}}.}
 
 \item{x}{an object of class \code{"bvar"}, usually, a result of a call to \code{\link{draw_posterior}}.}
@@ -35,27 +35,37 @@ usually, a result of a call to \code{\link{gen_var}}.}
 \item{A0}{either a \eqn{K^2 \times S} matrix of MCMC coefficient draws of structural parameters or
 a named list, where element \code{coeffs} contains a \eqn{K^2 \times S} matrix of MCMC coefficient
 draws of structural parameters and element \code{lambda} contains the corresponding draws of inclusion
-parameters in case variable selection algorithms were employed.}
+parameters in case variable selection algorithms were employed. For time varying parameter models
+the coefficient matrix must be \eqn{TK^2 \times S}. Draws of the error covariance matrix of the state
+equation can be provided as a \eqn{K^2 \times S} matrix in an additional list element.}
 
 \item{A}{either a \eqn{pK^2 \times S} matrix of MCMC coefficient draws of lagged endogenous variables or
 a named list, where element \code{coeffs} contains a \eqn{pK^2 \times S} matrix of MCMC coefficient draws
 of lagged endogenous variables and element \code{lambda} contains the corresponding draws of inclusion
-parameters in case variable selection algorithms were employed.}
+parameters in case variable selection algorithms were employed. For time varying parameter models
+the coefficient matrix must be \eqn{pTK^2 \times S}. Draws of the error covariance matrix of the state
+equation can be provided as a \eqn{pK^2 \times S} matrix in an additional list element.}
 
 \item{B}{either a \eqn{((1 + s)MK) \times S} matrix of MCMC coefficient draws of unmodelled, non-deterministic variables
 or a named list, where element \code{coeffs} contains a \eqn{((1 + s)MK) \times S} matrix of MCMC coefficient draws of
 unmodelled, non-deterministic variables and element \code{lambda} contains the corresponding draws of inclusion
-parameters in case variable selection algorithms were employed.}
+parameters in case variable selection algorithms were employed. For time varying parameter models
+the coefficient matrix must be \eqn{(1 + s)TMK \times S}. Draws of the error covariance matrix of the state
+equation can be provided as a \eqn{(1 + s)MK \times S} matrix in an additional list element.}
 
 \item{C}{either a \eqn{KN \times S} matrix of MCMC coefficient draws of deterministic terms or
 a named list, where element \code{coeffs} contains a \eqn{KN \times S} matrix of MCMC coefficient draws of
 deterministic terms and element \code{lambda} contains the corresponding draws of inclusion
-parameters in case variable selection algorithms were employed.}
+parameters in case variable selection algorithms were employed. For time varying parameter models
+the coefficient matrix must be \eqn{TKN \times S}. Draws of the error covariance matrix of the state
+equation can be provided as a \eqn{KN \times S} matrix in an additional list element.}
 
 \item{Sigma}{a \eqn{K^2 \times S} matrix of MCMC draws for the error variance-covariance matrix or
 a named list, where element \code{coeffs} contains a \eqn{K^2 \times S} matrix of MCMC draws for the
 error variance-covariance matrix and element \code{lambda} contains the corresponding draws of inclusion
-parameters in case variable selection algorithms were employed to the covariances.}
+parameters in case variable selection algorithms were employed to the covariances. For time varying parameter models
+the coefficient matrix must be \eqn{TK^2 \times S}. Draws of the error covariance matrix of the state
+equation can be provided as a \eqn{K^2 \times S} matrix in an additional list element.}
 
 \item{ci}{a numeric between 0 and 1 specifying the probability mass covered by the
 credible intervals. Defaults to 0.95.}
@@ -82,16 +92,21 @@ An object of class \code{"bvar"} containing the following components, if specifi
 \item{exogen}{the original time-series object of unmodelled variables.}
 \item{y}{a \eqn{K \times T} matrix of endogenous variables.}
 \item{x}{a \eqn{(pK + (1+s)M + N) \times T} matrix of regressor variables.}
-\item{A0}{an \eqn{S \times K^2} "mcmc" object of coefficient draws of structural parameters.}
+\item{A0}{an \eqn{S \times K^2} "mcmc" object of coefficient draws of structural parameters. In case of time varying parameters a list of such objects.}
 \item{A0_lambda}{an \eqn{S \times K^2} "mcmc" object of inclusion parameters for structural parameters.}
-\item{A}{an \eqn{S \times pK^2} "mcmc" object of coefficient draws of lagged endogenous variables.}
+\item{A0_sigma}{an \eqn{S \times K^2} "mcmc" object of the error covariance matrices of the structural parameters in a model with time varying parameters.}
+\item{A}{an \eqn{S \times pK^2} "mcmc" object of coefficient draws of lagged endogenous variables. In case of time varying parameters a list of such objects.}
 \item{A_lambda}{an \eqn{S \times pK^2} "mcmc" object of inclusion parameters for lagged endogenous variables.}
-\item{B}{an \eqn{S \times ((1 + s)MK)} "mcmc" object of coefficient draws of unmodelled, non-deterministic variables.}
+\item{A_sigma}{an \eqn{S \times pK^2} "mcmc" object of the error covariance matrices of coefficients of lagged endogenous variables in a model with time varying parameters.}
+\item{B}{an \eqn{S \times ((1 + s)MK)} "mcmc" object of coefficient draws of unmodelled, non-deterministic variables. In case of time varying parameters a list of such objects.}
 \item{B_lambda}{an \eqn{S \times ((1 + s)MK)} "mcmc" object of inclusion parameters for unmodelled, non-deterministic variables.}
-\item{C}{an \eqn{S \times NK} "mcmc" object of coefficient draws of deterministic terms.}
+\item{B_sigma}{an \eqn{S \times ((1 + s)MK)} "mcmc" object of the error covariance matrices of coefficients of unmodelled, non-deterministic variables in a model with time varying parameters.}
+\item{C}{an \eqn{S \times NK} "mcmc" object of coefficient draws of deterministic terms. In case of time varying parameters a list of such objects.}
 \item{C_lambda}{an \eqn{S \times NK} "mcmc" object of inclusion parameters for deterministic terms.}
-\item{Sigma}{an \eqn{S \times K^2} "mcmc" object of variance-covariance draws.}
+\item{C_sigma}{an \eqn{S \times NK} "mcmc" object of the error covariance matrices of coefficients of deterministic terms in a model with time varying parameters.}
+\item{Sigma}{an \eqn{S \times K^2} "mcmc" object of variance-covariance draws. In case of time varying parameters a list of such objects.}
 \item{Sigma_lambda}{an \eqn{S \times K^2} "mcmc" object of inclusion parameters for error covariances.}
+\item{Sigma_sigma}{an \eqn{S \times K^2} "mcmc" object of the error covariance matrices of the coefficients of the error covariance matrix of the measurement equation of a model with time varying parameters.}
 \item{specifications}{a list containing information on the model specification.}
 
 A time-series object of class \code{"bvarprd"}.
@@ -115,6 +130,9 @@ and \eqn{B_i} its corresponding coefficient matrix.
 \eqn{d_t} is an N-dimensional vector of deterministic terms
 and \eqn{C} its corresponding coefficient matrix.
 \eqn{u_t} is an error term with \eqn{u_t \sim N(0, \Sigma_u)}.
+
+For time varying parameter and stochastic volatility models the respective coefficients and
+error covariance matrix of the above model are assumed to be time varying, respectively.
 
 The draws of the different coefficient matrices provided in \code{A0}, \code{A},
 \code{B}, \code{C} and \code{Sigma} have to correspond to the same MCMC iterations.

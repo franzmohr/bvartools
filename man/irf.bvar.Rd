@@ -43,9 +43,9 @@ and structural generalised \code{"sgir"} impulse responses.}
 the posterior impulse response function. Defaults to \code{FALSE} so that
 the median and the credible intervals of the posterior draws are returned.}
 
-\item{period}{integer. Index of the period of a TVP VAR, for which IRFs should be generated.
-Only used for TVP models. Default is \code{NULL} so that only the most recent time period
-is used.}
+\item{period}{integer. Index of the period, for which the IR should be generated.
+Only used for TVP or SV models. Default is \code{NULL}, so that the posterior draws of the last time period
+are used.}
 
 \item{...}{further arguments passed to or from other methods.}
 }

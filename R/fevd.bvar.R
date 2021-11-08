@@ -9,9 +9,9 @@
 #' @param type type of the impulse responses used to calculate forecast error variable decompositions.
 #' Possible choices are orthogonalised \code{oir} (default) and generalised \code{gir} impulse responses.
 #' @param normalise_gir logical. Should the GIR-based FEVD be normalised?
-#' @param period integer. Index of the period of a TVP VAR, for which FEVDs should be generated.
-#' Only used for TVP models. Default is \code{NULL} so that only the most recent time period
-#' is used.
+#' @param period integer. Index of the period, for which the variance decomposition should be generated.
+#' Only used for TVP or SV models. Default is \code{NULL}, so that the posterior draws of the last time period
+#' are used.
 #' @param ... further arguments passed to or from other methods.
 #' 
 #' @details The function produces forecast error variance decompositions (FEVD) for the VAR model

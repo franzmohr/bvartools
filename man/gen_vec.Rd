@@ -24,14 +24,15 @@ gen_vec(
 \arguments{
 \item{data}{a time-series object of endogenous variables.}
 
-\item{p}{an integer vector of the lag order of the series in the (levels) VAR.}
+\item{p}{an integer vector of the lag order of the series in the (levels) VAR. Thus, the
+resulting model's lag will be \eqn{p - 1}. See 'Details'.}
 
 \item{exogen}{an optional time-series object of external regressors.}
 
 \item{s}{an optional integer vector of the lag order of the exogenous variables of the series
-in the (levels) VAR.}
+in the (levels) VAR. Thus, the resulting model's lag will be \eqn{s - 1}. See 'Details'.}
 
-\item{r}{an integer vector of the cointegration rank.}
+\item{r}{an integer vector of the cointegration rank. See 'Details'.}
 
 \item{const}{a character specifying whether a constant term enters the error correction
 term (\code{"restricted"}) or the non-cointegration term as an \code{"unrestricted"} variable.
@@ -43,8 +44,9 @@ If \code{NULL} (default) no constant term will be added.}
 
 \item{seasonal}{a character specifying whether seasonal dummies should be included in the error
 correction term (\code{"restricted"}) or in the non-cointegreation term as \code{"unrestricted"}
-variables. If \code{NULL} (default) no seasonal terms will be added. The amount of dummy variables depends
-on the frequency of the time-series object provided in \code{data}.}
+variables. If \code{NULL} (default) no seasonal terms will be added. The amount of dummy variables
+will be automatically detected and depends on the frequency of the time-series object provided
+in \code{data}.}
 
 \item{structural}{logical indicating whether data should be prepared for the estimation of a
 structural VAR model.}

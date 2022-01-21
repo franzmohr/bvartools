@@ -1,31 +1,40 @@
-#' Add Priors to Vector Error Correction Model
+#' Add Priors for Vector Error Correction Models
 #'
 #' Adds prior specifications to a list of models, which was produced by
 #' function \code{\link{gen_vec}}.
 #'
 #' @param object a list, usually, the output of a call to \code{\link{gen_vec}}.
-#' @param coef a named list of prior specifications for the coefficients of the
-#' models. For the default specification all prior means are set to zero and the diagonal elements of
-#' the inverse prior variance-covariance matrix are set to 1 for coefficients corresponding to non-deterministic
-#' terms. For deterministic coefficients the prior variances are set to 10 via \code{v_i_det = 0.1}.
-#' The variances need to be specified as precisions, i.e. as inverses of the variances.
-#' For further specifications such as the Minnesota prior see 'Details'.
-#' @param coint a named list of prior specifications for cointegration coefficients of VEC models. See 'Details'.
+#' @param coef a named list of prior specifications for those coefficients that do not 
+#' determine the cointegration space. For the default specification all prior means are set to zero
+#' and the diagonal elements of the inverse prior variance-covariance matrix are set to 1
+#' for coefficients corresponding to non-deterministic terms. For deterministic coefficients the prior
+#' variances are set to 10 via \code{v_i_det = 0.1}. The variances need to be specified as precisions,
+#' i.e. as inverses of the variances. For further specifications such as the Minnesota prior see 'Details'.
+#' @param coint a named list of prior specifications for coefficients determining the
+#' cointegration space of VEC models. See 'Details'.
 #' @param sigma a named list of prior specifications for the error variance-covariance matrix
 #' of the models. For the default specification of an inverse Wishart distribution
 #' the prior degrees of freedom are set to the number of endogenous variables plus the rank of
 #' the cointegration matrix. The prior variance is to 1. See 'Details'.
-#' @param ssvs optional; a named list of prior specifications for the SSVS algorithm. Not allowed for TVP models. See 'Details'.
+#' @param ssvs optional; a named list of prior specifications for the SSVS algorithm.
+#' Not allowed for TVP models. See 'Details'.
 #' @param bvs optional; a named list of prior specifications for the BVS algorithm. See 'Details'.
 #' @param ... further arguments passed to or from other methods.
 #' 
-#' @details Argument \code{coef} contains the following elements
+#' @details The arguments of the function require named lists. Possible
+#' specifications are described in the following. Note that it is important to specify the
+#' priors in the correct list. Otherwise, the provided specification will be disregarded
+#' and default values will be used.
+#' 
+#' Argument \code{coef} contains the following elements
 #' \describe{
 #'   \item{\code{v_i}}{a numeric specifying the prior precision of the coefficients. Default is 1.}
-#'   \item{\code{v_i_det}}{a numeric specifying the prior precision of coefficients that correspond to deterministic terms. Default is 0.1.}
+#'   \item{\code{v_i_det}}{a numeric specifying the prior precision of coefficients that correspond
+#'   to deterministic terms. Default is 0.1.}
 #'   \item{\code{const}}{a character specifying the prior mean of coefficients, which correspond
-#'   to the intercept. If \code{const = "mean"}, the means of the series of endogenous variables are used as prior means.
-#'   If \code{const = "first"}, the first values of the series of endogenous variables are used as prior means.}
+#'   to the intercept. If \code{const = "mean"}, the means of the series of endogenous variables
+#'   are used as prior means. If \code{const = "first"}, the first values of the series of endogenous
+#'   variables are used as prior means.}
 #'   \item{\code{minnesota}}{a list of length 4 containing parameters for the calculation of
 #'   the Minnesota prior, where the element names must be \code{kappa0}, \code{kappa1}, \code{kappa2} and \code{kappa3}.
 #'   For the endogenous variable \eqn{i} the prior variance of the \eqn{l}th lag of regressor \eqn{j} is obtained as
@@ -36,7 +45,7 @@
 #'   where \eqn{\sigma_{i}} is the residual standard deviation of variable \eqn{i} of an unrestricted
 #'   LS estimate. For exogenous variables \eqn{\sigma_{i}} is the sample standard deviation.
 #'   
-#'   The function only provides priors for the non-cointegration part of the model, although
+#'   The function only provides priors for the non-cointegration part of the model. However,
 #'   the residual standard errors \eqn{\sigma_i} are based on an unrestricted LS regression of the
 #'   endogenous variables on the error correction term and the non-cointegration regressors.}
 #'   \item{\code{max_var}}{a numeric specifying the maximum prior variance that is allowed for
@@ -47,8 +56,7 @@
 #'   state equation. Only used for models with time varying parameters. Default is 0.0001.}
 #'   \item{\code{rate_det}}{a numeric specifying the prior rate parameter of the error term of the
 #'   state equation for coefficients, which correspond to deterministic terms.
-#'   Only used for models with time varying parameters. If not provided, the value of argument
-#'   \code{coef$rate} will be used. Default is 0.01.}
+#'   Only used for models with time varying parameters. Default is 0.01.}
 #' }
 #' If \code{minnesota} is specified, elements \code{v_i} and \code{v_i_det} are ignored.
 #' 
@@ -62,7 +70,9 @@
 #'   \item{\code{rate}}{a numeric specifying the prior variance of error term of the state equation
 #'   of the loading matrix \eqn{\alpha}. Default is 0.0001.}
 #'   \item{\code{rho}}{a numeric specifying the autocorrelation coefficient
-#'   of the state equation of \eqn{\beta}. It must be smaller than 1. Default is 0.999.}
+#'   of the state equation of \eqn{\beta}. It must be smaller than 1. Default is 0.999.
+#'   Note that in contrast to Koop et al. (2011) \eqn{\rho} is not drawn in the Gibbs sampler of
+#'   this package yet.}
 #' }
 #' 
 #' Argument \code{sigma} can contain the following elements:
@@ -96,8 +106,8 @@
 #'   \code{rate} must be specified.}
 #' }
 #' \code{df} and \code{scale} must be specified for an inverse Wishart prior. \code{shape} and \code{rate}
-#' are required for an inverse gamma prior. For structural models only a gamma prior specification
-#' is allowed.
+#' are required for an inverse gamma prior. For structural models or models with stochastic volatility
+#' only a gamma prior specification is allowed.
 #' 
 #' Argument \code{ssvs} can contain the following elements:
 #' \describe{

@@ -35,7 +35,7 @@ For Bayesian inference of *cointegrated VAR models* the package implements the a
 * The KLS modol employing Bayesian variable selection à la Korobilis (2013)
 * Structural BVEC models, where the structural coefficients are estimated from contemporaneous endogenous variables (A-model). However, no further restrictions are made regarding the cointegration term.
 * Stochastic volatility (SV) of the errors à la Kim, Shephard and Chip (1998)
-* Time varying parameter models (TVP-VEC) à la Koop, León-González and Strachan (2011)
+* Time varying parameter models (TVP-VEC) à la Koop, León-González and Strachan (2011)[^tvpvec]
 
 For Bayesian inference of *dynamic factor models* the package implements the althorithm used in the textbook of Chan, Koop, Poirer and Tobias (2019).
 
@@ -282,3 +282,5 @@ Pesaran, H. H., & Shin, Y. (1998). Generalized impulse response analysis in line
 Sanderson, C., & Curtin, R. (2016). Armadillo: a template-based C++ library for linear algebra. *Journal of Open Source Software, 1*(2), 26. <https://doi.org/10.21105/joss.00026>
 
 [^cpp]: `RcppArmadillo` is the `Rcpp` bridge to the open source 'Armadillo' library of Sanderson and Curtin (2016).
+
+[^tvpvec]: In contrast to Koop et al. (2011) version 0.2.1 assumes a fixed value for the autocorrelation coefficient of the time varying cointegration space. A step for drawing this coefficient will be introduced in a future release.

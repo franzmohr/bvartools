@@ -19,8 +19,10 @@ An object of class \code{"bvec"} is transformed to a VAR in level representation
 
 # Load data
 data("e6")
+
 # Generate model
 data <- gen_vec(e6, p = 4, r = 1, const = "unrestricted", season = "unrestricted")
+
 # Obtain data matrices
 y <- t(data$data$Y)
 w <- t(data$data$W)
@@ -29,7 +31,7 @@ x <- t(data$data$X)
 # Reset random number generator for reproducibility
 set.seed(1234567)
 
-iterations <- 400 # Number of iterations of the Gibbs sampler
+iterations <- 100 # Number of iterations of the Gibbs sampler
 # Chosen number of iterations should be much higher, e.g. 30000.
 
 burnin <- 100 # Number of burn-in draws
@@ -119,5 +121,7 @@ bvec_est <- thin(bvec_est, thin = 5)
 # Transfrom VEC output to VAR output
 bvar_form <- bvec_to_bvar(bvec_est)
 
-
+}
+\references{
+Lütkepohl, H. (2006). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
 }

@@ -37,7 +37,7 @@
 #' 
 #' # Generate model
 #' model <- gen_vec(e6, p = 1, r = 1, const = "restricted",
-#'                  iterations = 100, burnin = 10)
+#'                  iterations = 10, burnin = 10)
 #' # Chosen number of iterations and burn-in should be much higher.
 #' 
 #' # Add priors

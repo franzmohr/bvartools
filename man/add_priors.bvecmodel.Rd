@@ -17,11 +17,11 @@
 \arguments{
 \item{object}{a list, usually, the output of a call to \code{\link{gen_vec}}.}
 
-\item{coef}{a named list of prior specifications for those coefficients that do not 
+\item{coef}{a named list of prior specifications for coefficients that do not 
 determine the cointegration space. For the default specification all prior means are set to zero
 and the diagonal elements of the inverse prior variance-covariance matrix are set to 1
 for coefficients corresponding to non-deterministic terms. For deterministic coefficients the prior
-variances are set to 10 via \code{v_i_det = 0.1}. The variances need to be specified as precisions,
+variances are set to 10 by \code{v_i_det = 0.1}. The variances need to be specified as precisions,
 i.e. as inverses of the variances. For further specifications such as the Minnesota prior see 'Details'.}
 
 \item{coint}{a named list of prior specifications for coefficients determining the
@@ -178,11 +178,16 @@ third and forth element in \code{ssvs$minnesota} or \code{bvs$minnesota}, respec
 }
 \examples{
 
+# Get data
 data("e6")
 
-model <- gen_var(e6, p = 2, deterministic = 2,
+# Create model
+model <- gen_vec(e6, p = 4, r = 1,
+                 const = "unrestricted", seasonal = "unrestricted",
                  iterations = 100, burnin = 10)
+# Chosen number of iterations and burnin should be much higher.
 
+# Add priors
 model <- add_priors(model)
 
 }

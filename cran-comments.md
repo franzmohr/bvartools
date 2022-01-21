@@ -6,4 +6,4 @@ macOS
 
 ## R CMD check results
 
-* NOTE: checking installed package size ... installed size is 32.9Mb sub-directories of 1Mb or more: libs  31.2Mb
+* NOTE: checking installed package size ... installed size is 16.1Mb sub-directories of 1Mb or more: libs  14.9Mb

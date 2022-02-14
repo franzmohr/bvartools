@@ -10,19 +10,24 @@ bvecpost(object)
 \item{object}{an object of class \code{"bvecmodel"}, usually, a result of a call to \code{\link{gen_vec}}
 in combination with \code{\link{add_priors}}.}
 }
+\value{
+An object of class \code{"bvec"}.
+}
 \description{
 Produces draws from the posterior distributions of Bayesian VEC models.
 }
 \details{
-The function implements a posterior simulation algorithm, which
-places identifying restrictions on the cointegration space. The algorithm is also able to employ
-stochastic search variable selection (SSVS) as proposed by Geroge et al. (2008) or Bayesian
-variable selection (BVS) as proposed in Korobilis (2013). Both SSVS and BVS can also be applied to the
-covariances of the error term. However, the algorithms cannot be applied to cointegration related
-coefficients, i.e. to the loading matrix \eqn{\alpha} or the cointegration matrix \eqn{beta}.
+The function implements posterior simulation algorithms proposed in Koop et al. (2010)
+and Koop et al. (2011), which place identifying restrictions on the cointegration space.
+Both algorithms are able to employ Bayesian variable selection (BVS) as proposed in Korobilis (2013).
+The algorithm of Koop et al. (2010) is also able to employ stochastic search variable selection (SSVS)
+as proposed by Geroge et al. (2008).
+Both SSVS and BVS can also be applied to the covariances of the error term. However, the algorithms
+cannot be applied to cointegration related coefficients, i.e. to the loading matrix \eqn{\alpha} or
+the cointegration matrix \eqn{beta}.
 
-The implementation primarily follows the description in Koop et al. (2010). However, Chan et al. (2019),
-George et al. (2008) and Korobilis (2013) were used to implement variable selection algorithms.
+The implementation primarily follows the description in Koop et al. (2010). Chan et al. (2019),
+George et al. (2008) and Korobilis (2013) were used to implement the variable selection algorithms.
 For all approaches the SUR form of a VEC model is used to obtain posterior draws. The algorithm is implemented
 in C++ to reduce calculation time.
 

@@ -57,7 +57,7 @@ space – in the following variants
 -   Stochastic volatility (SV) of the errors à la Kim, Shephard and
     Chip (1998)
 -   Time varying parameter models (TVP-VEC) à la Koop, León-González and
-    Strachan (2011)
+    Strachan (2011)[1]
 
 For Bayesian inference of *dynamic factor models* the package implements
 the althorithm used in the textbook of Chan, Koop, Poirer and Tobias
@@ -496,3 +496,8 @@ in linear multivariate models. *Economics Letters, 58*, 17-29.
 Sanderson, C., & Curtin, R. (2016). Armadillo: a template-based C++
 library for linear algebra. *Journal of Open Source Software, 1*(2), 26.
 <https://doi.org/10.21105/joss.00026>
+
+[1] In contrast to Koop et al. (2011) version 0.2.1 assumes a fixed
+value for the autocorrelation coefficient of the time varying
+cointegration space. A step for drawing this coefficient will be
+introduced in a future release.

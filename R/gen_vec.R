@@ -3,11 +3,12 @@
 #' \code{gen_vec} produces the input for the estimation of a vector error correction (VEC) model.
 #' 
 #' @param data a time-series object of endogenous variables.
-#' @param p an integer vector of the lag order of the series in the (levels) VAR.
-#' @param r an integer vector of the cointegration rank.
+#' @param p an integer vector of the lag order of the series in the (levels) VAR. Thus, the
+#' resulting model's lag will be \eqn{p - 1}. See 'Details'.
+#' @param r an integer vector of the cointegration rank. See 'Details'.
 #' @param exogen an optional time-series object of external regressors.
 #' @param s an optional integer vector of the lag order of the exogenous variables of the series
-#' in the (levels) VAR.
+#' in the (levels) VAR. Thus, the resulting model's lag will be \eqn{s - 1}. See 'Details'.
 #' @param const a character specifying whether a constant term enters the error correction
 #' term (\code{"restricted"}) or the non-cointegration term as an \code{"unrestricted"} variable.
 #' If \code{NULL} (default) no constant term will be added.
@@ -16,8 +17,9 @@
 #' If \code{NULL} (default) no constant term will be added.
 #' @param seasonal a character specifying whether seasonal dummies should be included in the error
 #' correction term (\code{"restricted"}) or in the non-cointegreation term as \code{"unrestricted"}
-#' variables. If \code{NULL} (default) no seasonal terms will be added. The amount of dummy variables depends
-#' on the frequency of the time-series object provided in \code{data}.
+#' variables. If \code{NULL} (default) no seasonal terms will be added. The amount of dummy variables
+#' will be automatically detected and depends on the frequency of the time-series object provided
+#' in \code{data}.
 #' @param structural logical indicating whether data should be prepared for the estimation of a
 #' structural VAR model.
 #' @param tvp logical indicating whether the model parameters are time varying.

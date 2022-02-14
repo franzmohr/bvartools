@@ -1,4 +1,4 @@
-#' Add Priors to a Vector Autoregressive Model
+#' Add Priors for a Vector Autoregressive Models
 #'
 #' Adds prior specifications to a list of models, which was produced by
 #' function \code{\link{gen_var}}.
@@ -18,7 +18,12 @@
 #' @param bvs optional; a named list of prior specifications for the BVS algorithm. See 'Details'.
 #' @param ... further arguments passed to or from other methods.
 #' 
-#' @details Argument \code{coef} can contain the following elements
+#' @details The arguments of the function require named lists. Possible
+#' specifications are described in the following. Note that it is important to specify the
+#' priors in the correct list. Otherwise, the provided specification will be disregarded
+#' and default values will be used.
+#' 
+#' Argument \code{coef} can contain the following elements
 #' \describe{
 #'   \item{\code{v_i}}{a numeric specifying the prior precision of the coefficients. Default is 1.}
 #'   \item{\code{v_i_det}}{a numeric specifying the prior precision of coefficients corresponding to deterministic terms. Default is 0.1.}
@@ -45,8 +50,7 @@
 #'   state equation. Only used for models with time varying parameters. Default is 0.0001.}
 #'   \item{\code{rate_det}}{a numeric specifying the prior rate parameter of the error term of the
 #'   state equation for coefficients, which correspond to deterministic terms.
-#'   Only used for models with time varying parameters. If not provided, the value of argument
-#'   \code{coef$rate} will be used. Default is 0.01.}
+#'   Only used for models with time varying parameters. Default is 0.01.}
 #' }
 #' If \code{minnesota} is specified, \code{v_i} and \code{v_i_det} are ignored.
 #' 
@@ -80,8 +84,8 @@
 #'   \code{rate} must be specified.}
 #' }
 #' \code{df} and \code{scale} must be specified for an inverse Wishart prior. \code{shape} and \code{rate}
-#' are required for an inverse gamma prior. For structural models only a gamma prior specification
-#' is allowed.
+#' are required for an inverse gamma prior. For structural models or models with stochastic volatility
+#' only a gamma prior specification is allowed.
 #' 
 #' Argument \code{ssvs} can contain the following elements:
 #' \describe{

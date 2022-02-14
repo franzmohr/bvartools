@@ -28,9 +28,28 @@ citEntry(header = "To cite the algortihm of Koop et al. (2010) use:",
          doi = "10.1080/07474930903382208",
          textVersion = paste0("G. Koop, R. León-González, & R. W. Strachan (2010). ",
                 "Efficient posterior simulation for cointegrated models with priors on the cointegration space ",
-                "Econometric Reviews, 29*(2), 603--615. ",
+                "Econometric Reviews, 29(2), 224--242. ",
                 "doi:10.1080/07474930903382208")
 )
+
+citEntry(header = "To cite the algortihm of Koop et al. (2011) use:",
+         entry = "article",
+         title = "Bayesian inference in a time varying cointegration model",
+         author = personList(as.person("G. Koop"),
+                             as.person("R. León-González"),
+                             as.person("R. W. Strachan")),
+         year = "2011",
+         journal = "Journal of Econometrics",
+         volume = "165",
+         number = "2",
+         pages = "210--220",
+         doi = "10.1016/j.jeconom.2011.07.007",
+         textVersion = paste0("G. Koop, R. León-González, & R. W. Strachan (2011). ",
+                "Bayesian inference in a time varying cointegration model ",
+                "Journal of Econometrics, 165(2), 210--220. ",
+                "doi:10.1016/j.jeconom.2011.07.007")
+)
+
 
 citEntry(header = "To cite the algortihm of Durbin & Koopman (2002) use:",
          entry = "article",

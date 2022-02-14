@@ -10,8 +10,10 @@
 #' 
 #' # Load data
 #' data("e6")
+#' 
 #' # Generate model
 #' data <- gen_vec(e6, p = 4, r = 1, const = "unrestricted", season = "unrestricted")
+#' 
 #' # Obtain data matrices
 #' y <- t(data$data$Y)
 #' w <- t(data$data$W)
@@ -20,7 +22,7 @@
 #' # Reset random number generator for reproducibility
 #' set.seed(1234567)
 #' 
-#' iterations <- 400 # Number of iterations of the Gibbs sampler
+#' iterations <- 100 # Number of iterations of the Gibbs sampler
 #' # Chosen number of iterations should be much higher, e.g. 30000.
 #' 
 #' burnin <- 100 # Number of burn-in draws
@@ -110,6 +112,9 @@
 #' # Transfrom VEC output to VAR output
 #' bvar_form <- bvec_to_bvar(bvec_est)
 #' 
+#' @references
+#' 
+#' Lütkepohl, H. (2006). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
 #' 
 #' @export
 bvec_to_bvar <- function(object) {

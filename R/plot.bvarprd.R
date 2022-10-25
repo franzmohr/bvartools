@@ -31,11 +31,10 @@
 #' 
 #' @export
 plot.bvarprd <- function(x, n.pre = NULL, ...) {
-  y <- x$y
+  y <- x[["y"]]
   tt <- nrow(y)
   var_names <- dimnames(y)[[2]]
   
-  graphics::par(mfcol = c(length(var_names), 1))
   for (i in var_names) {
     n_ahead <- nrow(x$fcst[[i]])
     temp <- cbind(y[, i], x$fcst[[i]])
@@ -48,5 +47,4 @@ plot.bvarprd <- function(x, n.pre = NULL, ...) {
     }
     stats::plot.ts(temp, plot.type = "single", lty = c(1, 2, 1, 2), main = i, ylab = "")
   }
-  graphics::par(mfcol = c(1, 1))
 }

@@ -1,3 +1,7 @@
+# bvartools 0.2.2
+
+* Fix bug of `predict.bvar`, which could not handle only VARX models with contemporaneous exogenous variables only.
+
 # bvartools 0.2.1
 
 * Added functionality for the simulation of models with time varying parameters, both for VAR and VEC models.

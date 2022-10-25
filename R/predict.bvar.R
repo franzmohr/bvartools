@@ -82,6 +82,10 @@ predict.bvar <- function(object, ..., n.ahead = 10, new_x = NULL, new_d = NULL, 
   }
   
   if (!is.null(object[["B"]])) {
+    
+    # Get lags
+    s <- object[["specifications"]][["lags"]][["s"]]
+    
     if (tvp[["B"]]) {
       A <- cbind(A, object[["B"]][[tt]])
       m <- ncol(object[["B"]][[1]]) / k
@@ -93,10 +97,13 @@ predict.bvar <- function(object, ..., n.ahead = 10, new_x = NULL, new_d = NULL, 
     if (is.null(new_x)) {
       new_x <- matrix(0, n.ahead, m)
     } else {
-      s <- m / NCOL(new_x) - 1
-      fstx <- stats::time(object[["y"]])[tt - s + 1]
       
-      # Prepare ts object
+      # Set position of most recent observation, after which forecasts start
+      if (s > 0) {
+        first_x <- stats::time(object[["y"]])[tt - s + 1]
+      }
+      
+      # Prepare ts column names if only a vector is provided
       if (is.null(dimnames(new_x))) {
         tsp_temp <- stats::tsp(new_x)
         new_x <- stats::ts(as.matrix(new_x), class = c("mts", "ts", "matrix"))
@@ -104,8 +111,12 @@ predict.bvar <- function(object, ..., n.ahead = 10, new_x = NULL, new_d = NULL, 
         dimnames(new_x)[[2]] <- "x"
       }
       
-      new_x <- stats::ts(new_x[stats::time(new_x) >= fstx, ], start = fstx, frequency = stats::tsp(new_x)[3])
+      # Obtain lags of exogenous parameters
       if (s > 0) {
+        
+        # Trim exogenous data to relevant time  
+        new_x <- stats::ts(new_x[stats::time(new_x) >= first_x, ], start = first_x, frequency = stats::tsp(new_x)[3]) 
+        
         temp <- new_x
         for (i in 1:s) {
           temp <- cbind(temp, stats::lag(new_x, -i))
@@ -114,9 +125,13 @@ predict.bvar <- function(object, ..., n.ahead = 10, new_x = NULL, new_d = NULL, 
         dimnames(new_x)[[2]] <- NULL
       }
     }
+    
+    # Check if new_x is long enough
     if (NROW(new_x) < n.ahead) {
       stop("Longer time series required for argument 'new_x'.")
     }
+    
+    # Trim exogenous data to forecast horizon
     new_x <- new_x[1:n.ahead,]
   }
   
@@ -137,6 +152,7 @@ predict.bvar <- function(object, ..., n.ahead = 10, new_x = NULL, new_d = NULL, 
     }
   }
   
+  # Generate matrix used for prediction ----
   pred <- matrix(NA, tot, n.ahead + 1)
   if (p > 0) {
     pos_y <- 1:(k * p)
@@ -145,11 +161,13 @@ predict.bvar <- function(object, ..., n.ahead = 10, new_x = NULL, new_d = NULL, 
     pos_y <- 1:k
     pred[pos_y, 1] <- t(object[["y"]][tt,])
   }
+  
   if (!is.null(new_x)) {
     pos_x <- k * p + 1:m
     tt_pos <- stats::time(object[["x"]]) == stats::time(object[["y"]])[tt] # Necessary for BVEC models
     pred[pos_x, ] <- cbind(matrix(object[["x"]][tt_pos, pos_x]), t(new_x))
   }
+  
   if (!is.null(object[["C"]])) {
     pos_d_pred <- (tot - n + 1):tot
     if (p == 0) {
@@ -158,6 +176,8 @@ predict.bvar <- function(object, ..., n.ahead = 10, new_x = NULL, new_d = NULL, 
       pos_d_object <- pos_d_pred
     }
     tt_pos <- stats::time(object[["x"]]) == stats::time(object[["y"]])[tt] # Necessary for BVEC models
+    
+    # Use latest observation of model data and add new_d
     pred[pos_d_pred, ] <- cbind(matrix(object[["x"]][tt_pos, pos_d_object], length(pos_d_object)), t(new_d))
   }
   
@@ -241,7 +261,7 @@ predict.bvar <- function(object, ..., n.ahead = 10, new_x = NULL, new_d = NULL, 
     }
   }
   
-  result <- list("y" = object$y,
+  result <- list("y" = object[["y"]],
                  "fcst" = result)
   
   class(result) <- append("bvarprd", class(result))

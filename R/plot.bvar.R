@@ -1,4 +1,4 @@
-#' Plotting Draws of a Bayesian VAR Models
+#' Plotting Draws of a Bayesian VAR Model
 #' 
 #' A plot function for objects of class \code{"bvar"}.
 #' 
@@ -6,8 +6,8 @@
 #' @param ci interval used to calculate credible bands for time-varying parameters.
 # @param style the 'layout' of the plot. If \code{style = 1} (default), all parameter draws are displayed in one large plot.
 # If \code{style = 2}, multiple panels are generated.
-#' @param type either \code{"hist"} (default) for histograms or \code{"trace"} for a trace plot.
-#' Only used for parameter draws of constant coefficients.
+#' @param type either \code{"hist"} (default) for histograms, \code{"trace"} for a trace plot
+#' or \code{"boxplot"} for a boxplot. Only used for parameter draws of constant coefficients.
 #' @param ... further graphical parameters.
 #' 
 #' @examples
@@ -34,8 +34,8 @@
 #' @rdname bvar
 plot.bvar <- function(x, ci = 0.95, type = "hist", ...) {
   
-  if (!type %in% c("hist", "trace")) {
-    stop("Argument 'style' must be 1 or 2.")
+  if (!type %in% c("hist", "trace", "boxplot")) {
+    stop("Argument 'type' must be 'hist', 'trace' or 'boxplot'.")
   }
   
   k <- x[["specifications"]][["dims"]][["K"]]
@@ -151,6 +151,9 @@ plot.bvar <- function(x, ci = 0.95, type = "hist", ...) {
             if (type == "trace") {
               stats::ts.plot(x[["A"]][, j], xlab = "")
             }
+            if (type == "boxplot") {
+              graphics::boxplot(x[["A"]][, j])
+            }
           } 
         }
       }
@@ -177,6 +180,9 @@ plot.bvar <- function(x, ci = 0.95, type = "hist", ...) {
             if (type == "trace") {
               stats::ts.plot(x[["B"]][, j], xlab = "")
             }
+            if (type == "boxplot") {
+              graphics::boxplot(x[["B"]][, j])
+            }
           }
         }
       }
@@ -200,6 +206,9 @@ plot.bvar <- function(x, ci = 0.95, type = "hist", ...) {
           }
           if (type == "trace") {
             stats::ts.plot(x[["C"]][, j], xlab = "")
+          }
+          if (type == "boxplot") {
+            graphics::boxplot(x[["C"]][, j])
           }
         }
       }
@@ -228,6 +237,9 @@ plot.bvar <- function(x, ci = 0.95, type = "hist", ...) {
           if (type == "trace") {
             stats::ts.plot(x[["A0"]][, j], xlab = "")
           }
+          if (type == "boxplot") {
+            graphics::boxplot(x[["A0"]][, j])
+          }
         }
       }
     }
@@ -255,7 +267,10 @@ plot.bvar <- function(x, ci = 0.95, type = "hist", ...) {
           }
           if (type == "trace") {
             stats::ts.plot(x[["Sigma"]][, j], xlab = "")
-          } 
+          }
+          if (type == "boxplot") {
+            graphics::boxplot(x[["Sigma"]][, j])
+          }
         }
       }
     }

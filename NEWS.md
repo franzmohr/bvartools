@@ -1,6 +1,8 @@
 # bvartools 0.2.2
 
 * Fix bug of `predict.bvar`, which could not handle only VARX models with contemporaneous exogenous variables only.
+* Model plot functions support boxplots.
+* Typo fixes
 
 # bvartools 0.2.1
 

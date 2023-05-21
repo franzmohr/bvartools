@@ -342,9 +342,9 @@ Rcpp::List bvecalg(Rcpp::List object) {
   g_i = sigma_i;
 
   // Storage objects
-  int iter = Rcpp::as<int>(model["iterations"]);
-  int burnin = Rcpp::as<int>(model["burnin"]);
-  int draws = iter + burnin;
+  const int iter = Rcpp::as<int>(model["iterations"]);
+  const int burnin = Rcpp::as<int>(model["burnin"]);
+  const int draws = iter + burnin;
   int pos_draw;
   const int alpha_pos_start = 0;
   const int alpha_pos_end = n_alpha - 1;

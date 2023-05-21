@@ -150,7 +150,7 @@
 #' for lag \eqn{l} with \eqn{\kappa_1}, \eqn{\kappa_2}, \eqn{\kappa_3}, \eqn{\kappa_4} as the first, second,
 #' third and forth element in \code{ssvs$minnesota} or \code{bvs$minnesota}, respectively.
 #' 
-#' @return A list of country models.
+#' @return A list of models.
 #' 
 #' @references
 #' 
@@ -549,7 +549,7 @@ add_priors.bvecmodel <- function(object,
           diag(v_i)[tot_par - n_struct - n_det + 1:n_det] <- coef[["v_i_det"]]
         }
         
-        object[[i]]$priors$noncointegration$v_i <- v_i
+        object[[i]][["priors"]][["noncointegration"]][["v_i"]] <- v_i
       }
       
       if (use_bvs) {

@@ -198,8 +198,6 @@ add_priors.bvecmodel <- function(object,
                                  bvs = NULL,
                                  ...){
   
-  # rm(list = ls()[-which(ls() == "object")]); coef = list(v_i = 1, v_i_det = 0.1, shape = 3, rate = 0.0001, rate_det = 0.01); coint = list(v_i = 0, p_tau_i = 1, shape = 3, rate = 0.0001, rho = c(0.999, 1)); sigma = list(shape = "k", rate = .0001); ssvs = NULL; bvs = list(inprior = .5)
-  
   only_one_model <- FALSE
   # If only one model is provided, make it compatible with the rest
   if ("data" %in% names(object)) {
@@ -212,7 +210,11 @@ add_priors.bvecmodel <- function(object,
     if (!is.null(coef[["v_i"]])) {
       if (coef[["v_i"]] < 0) {
         stop("Argument 'v_i' must be at least 0.")
-      }  
+      } 
+      # Define "v_i_det" if not specified (needed for a check later)
+      if (is.null(coef[["v_i_det"]])) {
+        coef[["v_i_det"]] <- coef[["v_i"]]
+      }
     } else {
       if (!any(c("minnesota", "ssvs") %in% names(coef))) {
         stop("If 'coef$v_i' is not specified, at least 'coef$minnesota' or 'coef$ssvs' must be specified.")
@@ -339,7 +341,7 @@ add_priors.bvecmodel <- function(object,
         use_bvs_error <- TRUE 
       }
     }
-    if (coef$v_i == 0 | (coef$v_i_det == 0 & !bvs$exclude_det)) {
+    if (coef[["v_i"]] == 0 | (coef[["v_i_det"]] == 0 & !bvs[["exclude_det"]])) {
       warning("Using BVS with an uninformative prior is not recommended.")
     }
   }

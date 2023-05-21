@@ -174,10 +174,14 @@ add_priors.bvarmodel <- function(object,
   
   # Checks - Coefficient priors ----
   if (!is.null(coef)) {
-    if (!is.null(coef$v_i)) {
-      if (coef$v_i < 0) {
+    if (!is.null(coef[["v_i"]])) {
+      if (coef[["v_i"]] < 0) {
         stop("Argument 'v_i' must be at least 0.")
-      }  
+      }
+      # Define "v_i_det" if not specified (needed for a check later)
+      if (is.null(coef[["v_i_det"]])) {
+        coef[["v_i_det"]] <- coef[["v_i"]]
+      }
     } else {
       if (!any(c("minnesota", "ssvs") %in% names(coef))) {
         stop("If 'coef$v_i' is not specified, at least 'coef$minnesota' or 'coef$ssvs' must be specified.")
@@ -308,7 +312,7 @@ add_priors.bvarmodel <- function(object,
         use_bvs_error <- TRUE 
       }
     }
-    if (coef$v_i == 0 | (coef$v_i_det == 0 & !bvs$exclude_det)) {
+    if (coef[["v_i"]] == 0 | (coef[["v_i_det"]] == 0 & !bvs[["exclude_det"]])) {
       warning("Using BVS with an uninformative prior is not recommended.")
     }
   }

@@ -1,8 +1,9 @@
 # bvartools 0.2.2
 
+* Fix erroneous SUR-matrix generation for VEC models with r = 0
 * Fix bug of `predict.bvar`, which could not handle only VARX models with contemporaneous exogenous variables only.
 * Model plot functions support boxplots.
-* Typo fixes
+* Fix typos in documentation.
 
 # bvartools 0.2.1
 

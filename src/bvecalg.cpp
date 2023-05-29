@@ -91,7 +91,7 @@ Rcpp::List bvecalg(Rcpp::List object) {
     }
     z_beta = arma::zeros<arma::mat>(k * tt, n_beta);
   } else {
-    z = Rcpp::as<arma::mat>(data["SUR"]).cols(k * n_w, k * (n_w + n_x) + n_a0 - 1);
+    z = Rcpp::as<arma::mat>(data["SUR"]).cols(k * w.n_rows, k * (w.n_rows + n_x) + n_a0 - 1);
   }
   
   // Exogenous variables
@@ -398,8 +398,10 @@ Rcpp::List bvecalg(Rcpp::List object) {
 
     // Draw non-cointegration coefficients ----
     
-    if (use_rr) { // Update priors for alpha
+    if (use_rr) {
+      // Update priors for alpha
       gamma_prior_vi.submat(0, 0, n_alpha - 1, n_alpha - 1) = arma::kron(coint_v_i * (arma::trans(beta) * p_tau_i * beta), g_i);
+      // Update data
       if (bvs) {
         z_bvs.cols(0, n_alpha - 1) = arma::kron(arma::trans(arma::trans(beta) * w), diag_k);
       } else {
@@ -485,7 +487,6 @@ Rcpp::List bvecalg(Rcpp::List object) {
       alpha = arma::reshape(gamma.rows(0, n_alpha - 1), k, r);
       Alpha = alpha * arma::solve(arma::sqrtmat_sympd(alpha.t() * alpha), diag_r);
 
-      // Draw Beta
       for (int i = 0; i < tt; i++){
         z_beta.rows(i * k, (i + 1) * k - 1) = arma::kron(Alpha, arma::trans(w.col(i)));
       }

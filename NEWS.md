@@ -1,6 +1,7 @@
 # bvartools 0.2.2
 
-* Fix erroneous SUR-matrix generation for VEC models with r = 0
+* Fix erroneous SUR-matrix generation for VEC models with r = 0 in `bvecalg`.
+* Fix bug in `bvecalg` with the storing of postserior draws of beta.
 * Fix bug of `predict.bvar`, which could not handle only VARX models with contemporaneous exogenous variables only.
 * Model plot functions support boxplots.
 * Fix typos in documentation.

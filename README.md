@@ -11,15 +11,15 @@ The package `bvartools` implements functions for Bayesian inference of
 linear vector autoregressive (VAR) models. It separates a typical BVAR
 analysis workflow into multiple steps:
 
--   *Model set-up*: Produces data matrices for given lag orders and
-    model types, which can be used for posterior simulation.
--   *Prior specification*: Generates prior matrices for a given model.
--   *Estimation*: Researchers can choose to use the posterior algorithms
-    of the package or use their own algorithms.
--   *Standardising model output*: Combines the output of the estimation
-    step into standardised objects for subsequent steps of the analyis.
--   *Evaluation*: Produces summary statistics, forecasts, impulse
-    responses and forecast error variance decompositions.
+- *Model set-up*: Produces data matrices for given lag orders and model
+  types, which can be used for posterior simulation.
+- *Prior specification*: Generates prior matrices for a given model.
+- *Estimation*: Researchers can choose to use the posterior algorithms
+  of the package or use their own algorithms.
+- *Standardising model output*: Combines the output of the estimation
+  step into standardised objects for subsequent steps of the analyis.
+- *Evaluation*: Produces summary statistics, forecasts, impulse
+  responses and forecast error variance decompositions.
 
 In each step researchers are provided with the opportunitiy to fine-tune
 a model according to their specific requirements or to use the default
@@ -28,36 +28,35 @@ package comes with posterior simulation functions that do not require to
 implement any further simulation algorithms. For Bayesian inference of
 *stationary VAR models* the package covers
 
--   Standard BVAR models with independent normal-Wishart priors
--   BVAR models employing stochastic search variable selection à la
-    Gerorge, Sun and Ni (2008)
--   BVAR models employing Bayesian variable selection à la
-    Korobilis (2013)
--   Structural BVAR models, where the structural coefficients are
-    estimated from contemporary endogenous variables (A-model)
--   Stochastic volatility (SV) of the errors à la Kim, Shephard and
-    Chip (1998)
--   Time varying parameter models (TVP-VAR)
+- Standard BVAR models with independent normal-Wishart priors
+- BVAR models employing stochastic search variable selection à la
+  Gerorge, Sun and Ni (2008)
+- BVAR models employing Bayesian variable selection à la Korobilis
+  (2013)
+- Structural BVAR models, where the structural coefficients are
+  estimated from contemporary endogenous variables (A-model)
+- Stochastic volatility (SV) of the errors à la Kim, Shephard and Chip
+  (1998)
+- Time varying parameter models (TVP-VAR)
 
 For Bayesian inference of *cointegrated VAR models* the package
 implements the algorithm of Koop, León-González and Strachan (2010)
 \[KLS\] – which places identification restrictions on the cointegration
 space – in the following variants
 
--   The BVEC model as presented in Koop, León-González and
-    Strachan (2010)
--   The KLS model employing stochastic search variable selection à la
-    Gerorge, Sun and Ni (2008)
--   The KLS modol employing Bayesian variable selection à la
-    Korobilis (2013)
--   Structural BVEC models, where the structural coefficients are
-    estimated from contemporaneous endogenous variables (A-model).
-    However, no further restrictions are made regarding the
-    cointegration term.
--   Stochastic volatility (SV) of the errors à la Kim, Shephard and
-    Chip (1998)
--   Time varying parameter models (TVP-VEC) à la Koop, León-González and
-    Strachan (2011)[1]
+- The BVEC model as presented in Koop, León-González and Strachan (2010)
+- The KLS model employing stochastic search variable selection à la
+  Gerorge, Sun and Ni (2008)
+- The KLS modol employing Bayesian variable selection à la Korobilis
+  (2013)
+- Structural BVEC models, where the structural coefficients are
+  estimated from contemporaneous endogenous variables (A-model).
+  However, no further restrictions are made regarding the cointegration
+  term.
+- Stochastic volatility (SV) of the errors à la Kim, Shephard and Chip
+  (1998)
+- Time varying parameter models (TVP-VEC) à la Koop, León-González and
+  Strachan (2011)[^1]
 
 For Bayesian inference of *dynamic factor models* the package implements
 the althorithm used in the textbook of Chan, Koop, Poirer and Tobias
@@ -65,13 +64,13 @@ the althorithm used in the textbook of Chan, Koop, Poirer and Tobias
 
 Similar packages worth checking out are
 
--   [BVAR](https://cran.r-project.org/package=BVAR)
--   [bvarsv](https://cran.r-project.org/package=bvarsv)
--   [bvar](https://github.com/nk027/bvar)
--   [bvarr](https://github.com/bdemeshev/bvarr)
--   [bvars](https://github.com/joergrieger/bvars)
--   [mfbvar](https://github.com/ankargren/mfbvar)
--   [BMR](https://github.com/kthohr/BMR)
+- [BVAR](https://cran.r-project.org/package=BVAR)
+- [bvarsv](https://cran.r-project.org/package=bvarsv)
+- [bvar](https://github.com/nk027/bvar)
+- [bvarr](https://github.com/bdemeshev/bvarr)
+- [bvars](https://github.com/joergrieger/bvars)
+- [mfbvar](https://github.com/ankargren/mfbvar)
+- [BMR](https://github.com/kthohr/BMR)
 
 ## Installation
 
@@ -414,7 +413,7 @@ bvar_pred <- predict(bvar_est, n.ahead = 5, new_D = rep(1, 5))
 plot(bvar_pred)
 ```
 
-![](README_files/figure-gfm/forecasts-1.png)<!-- -->
+![](README_files/figure-gfm/forecasts-1.png)<!-- -->![](README_files/figure-gfm/forecasts-2.png)<!-- -->![](README_files/figure-gfm/forecasts-3.png)<!-- -->
 
 ### Impulse response analysis
 
@@ -497,7 +496,7 @@ Sanderson, C., & Curtin, R. (2016). Armadillo: a template-based C++
 library for linear algebra. *Journal of Open Source Software, 1*(2), 26.
 <https://doi.org/10.21105/joss.00026>
 
-[1] In contrast to Koop et al. (2011) version 0.2.1 assumes a fixed
-value for the autocorrelation coefficient of the time varying
-cointegration space. A step for drawing this coefficient will be
-introduced in a future release.
+[^1]: In contrast to Koop et al. (2011) version 0.2.1 assumes a fixed
+    value for the autocorrelation coefficient of the time varying
+    cointegration space. A step for drawing this coefficient will be
+    introduced in a future release.

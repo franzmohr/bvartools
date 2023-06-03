@@ -335,7 +335,7 @@ Rcpp::List bvecalg(Rcpp::List object) {
     omega_i = Rcpp::as<arma::mat>(init_sigma["sigma_i"]);
     sigma_i = omega_i;
   }
-  diag_sigma_i.diag() = arma::repmat(sigma_i.diag(), tt, 1);
+  diag_sigma_i = arma::kron(diag_tt, sigma_i);
   if (covar | sv) {
     diag_omega_i = diag_sigma_i;
   }
@@ -673,7 +673,7 @@ Rcpp::List bvecalg(Rcpp::List object) {
 
       if (use_rr) {
         draws_alpha.col(pos_draw) = arma::vectorise(gamma.rows(alpha_pos_start, alpha_pos_end));
-        draws_beta.col(pos_draw) = arma::vectorise(beta);
+        draws_beta.col(pos_draw) = arma::vectorise(beta.t());
       }
 
       if (n_gamma > 0) {
@@ -715,6 +715,16 @@ Rcpp::List bvecalg(Rcpp::List object) {
 
   if (use_rr) {
     posteriors["alpha"] = Rcpp::wrap(Rcpp::List::create(Rcpp::Named("coeffs") = draws_alpha));
+    
+    // Reformat draws
+    for (int i = 0; i < iter; i ++) {
+      draws_beta.submat(0, i, r * k - 1, i) = arma::vectorise(arma::trans(arma::reshape(draws_beta.submat(0, i, r * k - 1, i), r, k)));
+      draws_beta.submat(r * k, i, r * (k + m) - 1, i) = arma::vectorise(arma::trans(arma::reshape(draws_beta.submat(r * k, i, r * (k + m) - 1, i), r, m)));
+      if (n_r > 0) {
+        draws_beta.submat(r * (k + m), i, r * (k + m + n_r) - 1, i) = arma::vectorise(arma::trans(arma::reshape(draws_beta.submat(r * (k + m), i, r * (k + m + n_r) - 1, i), r, n_r)));
+      }
+    }
+    
     posteriors["beta"] = Rcpp::wrap(Rcpp::List::create(Rcpp::Named("coeffs") = draws_beta.rows(0, r * k - 1)));
     if (m > 0) {
       posteriors["beta_x"] = Rcpp::wrap(Rcpp::List::create(Rcpp::Named("coeffs") = draws_beta.rows(r * k, r * (k + m) - 1)));

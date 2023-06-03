@@ -485,20 +485,20 @@ Rcpp::List bvecalg(Rcpp::List object) {
     if (use_rr) {
       // Reparameterise alpha
       alpha = arma::reshape(gamma.rows(0, n_alpha - 1), k, r);
-      // Alpha = alpha * arma::solve(arma::sqrtmat_sympd(alpha.t() * alpha), diag_r);
-      // 
-      // for (int i = 0; i < tt; i++){
-      //   z_beta.rows(i * k, (i + 1) * k - 1) = arma::kron(Alpha, arma::trans(w.col(i)));
-      // }
-      // 
-      // post_beta_Vi = arma::solve(arma::kron(Alpha.t() * g_i * Alpha, coint_v_i * p_tau_i) + arma::trans(z_beta) * diag_sigma_i * z_beta, diag_beta);
-      // post_beta_mu = post_beta_Vi * (arma::trans(z_beta) * diag_sigma_i * y_beta);
-      // Beta = arma::reshape(arma::mvnrnd(post_beta_mu, post_beta_Vi), n_w, r);
-      // 
-      // // Final cointegration values
-      // BB_sqrt = arma::sqrtmat_sympd(arma::trans(Beta) * Beta);
-      // alpha = Alpha * BB_sqrt;
-      // beta = Beta * arma::solve(BB_sqrt, diag_r);
+      Alpha = alpha * arma::solve(arma::sqrtmat_sympd(alpha.t() * alpha), diag_r);
+
+      for (int i = 0; i < tt; i++){
+        z_beta.rows(i * k, (i + 1) * k - 1) = arma::kron(Alpha, arma::trans(w.col(i)));
+      }
+
+      post_beta_Vi = arma::solve(arma::kron(Alpha.t() * g_i * Alpha, coint_v_i * p_tau_i) + arma::trans(z_beta) * diag_sigma_i * z_beta, diag_beta);
+      post_beta_mu = post_beta_Vi * (arma::trans(z_beta) * diag_sigma_i * y_beta);
+      Beta = arma::reshape(arma::mvnrnd(post_beta_mu, post_beta_Vi), n_w, r);
+
+      // Final cointegration values
+      BB_sqrt = arma::sqrtmat_sympd(arma::trans(Beta) * Beta);
+      alpha = Alpha * BB_sqrt;
+      beta = Beta * arma::solve(BB_sqrt, diag_r);
 
       u_vec = y_beta - arma::vectorise(alpha * beta.t() * w);
     } else {

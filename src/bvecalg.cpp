@@ -792,6 +792,4 @@ Rcpp::List bvecalg(Rcpp::List object) {
                             Rcpp::Named("model") = object["model"],
                             Rcpp::Named("priors") = object["priors"],
                             Rcpp::Named("posteriors") = posteriors);
-  
-  // return Rcpp::List::create(Rcpp::Named("test") = sigma_i);
 }

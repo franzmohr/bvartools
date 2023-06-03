@@ -130,7 +130,7 @@ Rcpp::List bvecalg(Rcpp::List object) {
   Rcpp::List priors_cointegration;
   Rcpp::CharacterVector prcoint_names;
   double coint_v_i;
-  arma::mat g_i, post_beta_mu, post_beta_Vi, p_tau_i;
+  arma::mat beta_post_v, g_i, post_beta_mu, p_tau_i;
   if (use_rr) {
     priors_cointegration = priors["cointegration"];
     prcoint_names = priors_cointegration.names();
@@ -470,16 +470,12 @@ Rcpp::List bvecalg(Rcpp::List object) {
         lambda_vec = a_lambda.diag();
       }
     }
-
-    
     
     if (n_x > 0) {
       y_beta = yvec - z.cols(n_alpha, n_tot - 1) * gamma.rows(n_alpha, n_tot - 1);
     } else {
       y_beta = yvec;
     }
-
-  
     
     // Cointegration
     if (use_rr) {
@@ -490,11 +486,11 @@ Rcpp::List bvecalg(Rcpp::List object) {
       for (int i = 0; i < tt; i++){
         z_beta.rows(i * k, (i + 1) * k - 1) = arma::kron(Alpha, arma::trans(w.col(i)));
       }
-
-      post_beta_Vi = arma::solve(arma::kron(Alpha.t() * g_i * Alpha, coint_v_i * p_tau_i) + arma::trans(z_beta) * diag_sigma_i * z_beta, diag_beta);
-      post_beta_mu = post_beta_Vi * (arma::trans(z_beta) * diag_sigma_i * y_beta);
-      Beta = arma::reshape(arma::mvnrnd(post_beta_mu, post_beta_Vi), n_w, r);
-
+      
+      beta_post_v = arma::kron(Alpha.t() * g_i * Alpha, coint_v_i * p_tau_i) + arma::trans(z_beta) * diag_sigma_i * z_beta;
+      post_beta_mu = arma::solve(beta_post_v, arma::trans(z_beta) * diag_sigma_i * y_beta);
+      Beta = arma::reshape(post_beta_mu + arma::solve(arma::chol(beta_post_v), arma::randn(n_beta)), n_w, r);
+      
       // Final cointegration values
       BB_sqrt = arma::sqrtmat_sympd(arma::trans(Beta) * Beta);
       alpha = Alpha * BB_sqrt;
@@ -637,7 +633,11 @@ Rcpp::List bvecalg(Rcpp::List object) {
         }
 
       } else {
-        sigma_i = arma::wishrnd(arma::solve(sigma_prior_scale + u * u.t(), diag_k), sigma_post_df);
+        if (use_rr) {
+          sigma_i = arma::wishrnd(arma::solve(coint_v_i * alpha * (beta.t() * p_tau_i * beta) * alpha.t() + u * u.t(), diag_k), sigma_post_df);
+        } else {
+          sigma_i = arma::wishrnd(arma::solve(sigma_prior_scale + u * u.t(), diag_k), sigma_post_df);
+        }
       }
 
       diag_sigma_i = arma::kron(diag_tt, sigma_i);

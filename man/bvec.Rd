@@ -102,8 +102,8 @@ parameters in case variable selection algorithms were employed to the covariance
 
 \item{ci}{interval used to calculate credible bands for time-varying parameters.}
 
-\item{type}{either \code{"hist"} (default) for histograms or \code{"trace"} for a trace plot.
-Only used for parameter draws of constant coefficients.}
+\item{type}{either \code{"hist"} (default) for histograms, \code{"trace"} for a trace plot
+or \code{"boxplot"} for a boxplot. Only used for parameter draws of constant coefficients.}
 
 \item{...}{further graphical parameters.}
 }

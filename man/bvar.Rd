@@ -70,8 +70,8 @@ equation can be provided as a \eqn{K^2 \times S} matrix in an additional list el
 \item{ci}{a numeric between 0 and 1 specifying the probability mass covered by the
 credible intervals. Defaults to 0.95.}
 
-\item{type}{either \code{"hist"} (default) for histograms or \code{"trace"} for a trace plot.
-Only used for parameter draws of constant coefficients.}
+\item{type}{either \code{"hist"} (default) for histograms, \code{"trace"} for a trace plot
+or \code{"boxplot"} for a boxplot. Only used for parameter draws of constant coefficients.}
 
 \item{...}{additional arguments.}
 

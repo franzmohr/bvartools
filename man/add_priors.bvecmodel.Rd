@@ -40,7 +40,7 @@ Not allowed for TVP models. See 'Details'.}
 \item{...}{further arguments passed to or from other methods.}
 }
 \value{
-A list of country models.
+A list of models.
 }
 \description{
 Adds prior specifications to a list of models, which was produced by

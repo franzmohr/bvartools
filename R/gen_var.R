@@ -208,19 +208,19 @@ gen_var <- function(data, p = 2, exogen = NULL, s = NULL,
     use_det <- TRUE
   }
   
-  if (class(structural) == "logical") {
+  if ("logical" %in% class(structural)) {
     model[["structural"]] <- structural
   } else {
     stop("Argument 'structural' must be of class 'logical'.")
   }
   
   # TVP specifications ----
-  if (class(tvp) == "logical") {
+  if ("logical" %in% class(tvp)) {
     model[["tvp"]] <- tvp 
   } else {
     stop("Argument 'tvp' must be of class 'logical'.")
   }
-  if (class(sv) == "logical") {
+  if ("logical" %in% class(sv)) {
     model[["sv"]] <- sv
   } else {
     stop("Argument 'sv' must be of class 'logical'.")

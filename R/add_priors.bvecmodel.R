@@ -223,7 +223,7 @@ add_priors.bvecmodel <- function(object,
   }
   
   if (!is.null(coef[["const"]])) {
-    if (class(coef[["const"]]) == "character") {
+    if ("character" %in% class(coef[["const"]])) {
       if (!coef[["const"]] %in% c("first", "mean")) {
         stop("Invalid specificatin of coef$const.")
       }
@@ -470,7 +470,7 @@ add_priors.bvecmodel <- function(object,
           pos <- which(dimnames(object[[i]]$data$X)[[2]] == "const")
           
           if (length(pos) == 1) {
-            if (class(coef$const) == "character") {
+            if ("character" %in% class(coef[["const"]])) {
               if (coef$const == "first") {
                 mu[, pos] <- object[[i]]$data$Y[1, ]
               }
@@ -478,7 +478,7 @@ add_priors.bvecmodel <- function(object,
                 mu[, pos] <- colMeans(object[[i]]$data$Y)
               }
             }
-            if (class(coef$const) == "numeric") {
+            if ("numeric" %in% class(coef[["const"]])) {
               mu[, pos] <- coef$const
             } 
           }
@@ -637,7 +637,7 @@ add_priors.bvecmodel <- function(object,
         object[[i]][["priors"]][["sigma"]]$sigma_i = minn[["sigma_i"]]
       }
       
-      if (class(help_df) == "character") {
+      if ("character" %in% class(help_df)) {
         if (grepl("k", help_df)) {
           # Transform character specification to expression and evaluate
           help_df <- eval(parse(text = help_df))

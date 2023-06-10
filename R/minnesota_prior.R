@@ -61,9 +61,6 @@
 minnesota_prior <- function(object, kappa0 = 2, kappa1 = .5, kappa2 = NULL, kappa3 = 5,
                             max_var = NULL, coint_var = FALSE, sigma = "AR") {
   
-  # Dev specs
-  # rm(list = ls()[-which(ls() == "object")]);  kappa0 = .5; kappa1 = .5; kappa2 = NULL; kappa3 = 200; max_var = NULL; coint_var = FALSE; sigma = "AR"
-  
   if (any(c(kappa0, kappa1, kappa2, kappa3) <= 0)) {
     stop("Kappa arguments must be positive.")
   }
@@ -198,7 +195,7 @@ minnesota_prior <- function(object, kappa0 = 2, kappa1 = .5, kappa2 = NULL, kapp
   
   # Restrict prior variances
   if (!is.null(max_var)) {
-    if (any(V > max_var)) {
+    if (any(stats::na.omit(c(V)) > max_var)) {
       V[which(V > max_var)] <- max_var
     } 
   }

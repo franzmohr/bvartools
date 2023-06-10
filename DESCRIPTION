@@ -47,6 +47,7 @@ Collate:
     'plot.bvar.R'
     'plot.bvarfevd.R'
     'plot.bvarirf.R'
+    'plot.bvarlist.R'
     'plot.bvarprd.R'
     'plot.bvec.R'
     'plot.dfm.R'

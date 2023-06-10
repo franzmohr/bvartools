@@ -14,9 +14,7 @@
 \item{type}{either \code{"hist"} (default) for histograms, \code{"trace"} for a trace plot,
 or \code{"boxplot"} for a boxplot. Only used for parameter draws of constant coefficients.}
 
-\item{model}{indicates, for which model plots should be produced. Can be a character
-vector of country names or an integer vector of the positions of the elements in
-argument \code{x}.}
+\item{model}{numeric or integer indicating for which models in argument \code{"x"} plots should be produced.}
 
 \item{...}{further graphical parameters.}
 }

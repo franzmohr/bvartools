@@ -6,23 +6,27 @@
 #' @param ci interval used to calculate credible bands for time-varying parameters.
 #' @param type either \code{"hist"} (default) for histograms, \code{"trace"} for a trace plot,
 #' or \code{"boxplot"} for a boxplot. Only used for parameter draws of constant coefficients.
-#' @param model indicates, for which model plots should be produced. Can be a character
-#' vector of country names or an integer vector of the positions of the elements in
-#' argument \code{x}.
+#' @param model numeric or integer indicating for which models in argument \code{"x"} plots should be produced.
 #' @param ... further graphical parameters.
 #' 
 #' @export 
 plot.bvarlist <- function(x, ci = 0.95, type = "hist", model = NULL, ...) {
   
   if (is.null(model)) {
-    for (i in 1:length(x)) {
-      plot(x[[i]], ci = ci, type = type, ctry = names(x)[i], ...)
-    }
+    model <- 1:length(x)
   } else {
-    if (any(class(model) %in% c("numeric", "integer"))) {
-      for (i in model) {
-        plot(x[[i]], ci = ci, type = type, ctry = names(x)[i], ...)
+    if (!any(c("numeric", "integer") %in% class(model))) {
+      stop("If specified, argument 'model' must be numeric or integer.")
+    }
+  }
+  
+  for (i in model) {
+    if (!is.null(x[[i]][["error"]])) {
+      if (x[[i]][["error"]]) {
+        next
       }
+    } else {
+      plot(x[[i]], ci = ci, type = type, ctry = names(x)[i], ...) 
     }
   }
 }

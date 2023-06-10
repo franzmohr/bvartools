@@ -831,7 +831,5 @@ Rcpp::List bvectvpalg(Rcpp::List object) {
                             Rcpp::Named("priors") = object["priors"],
                             Rcpp::Named("posteriors") = posteriors);
   
-  //return Rcpp::List::create(Rcpp::Named("data") = beta_init);
-  
 }
 

@@ -79,7 +79,7 @@ draw_posterior.bvarmodel <- function(object, FUN = NULL, mc.cores = NULL, ...){
   
   # Produce something if estimation fails
   if (inherits(object, "try-error")) {
-    object <- c(object, list(coefficients = NULL))
+    object <- c(object, list(error = TRUE))
   }
   
   return(object)

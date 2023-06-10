@@ -38,6 +38,12 @@ summary.bvarlist <- function(object, ...){
   
   for (i in 1:n_models) {
     
+    if (!is.null(object[[i]][["error"]])) {
+      if (object[[i]][["error"]]) {
+        next
+      }
+    }
+    
     tvp <- any(unlist(object[[i]][["specifications"]][["tvp"]]))
     sv <- object[[i]][["specifications"]][["tvp"]][["Sigma"]]
     tt <- NROW(object[[i]][["y"]])

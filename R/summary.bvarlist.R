@@ -79,17 +79,19 @@ summary.bvarlist <- function(object, ...){
     if ("bvec" %in% class(object[[i]])) {
       
       type <- "VEC"
-      if (is.null(object[[i]][["r"]])) {
-        if (is.null(object[[i]][["alpha"]])) {
-          r <- 0
-          teststats[i, "r"] <- 0
-        } else {
-          r <- NCOL(object[[i]][["alpha"]]) / k
-          teststats[i, "r"] <- r
-        } 
+      r <- 0
+      if (is.null(object[[i]][["specifications"]][["rank"]])) {
+        if (!is.null(object[[i]][["alpha"]])) {
+          if (tvp) {
+            r <- NCOL(object[[i]][["alpha"]][[1]]) / k
+          } else {
+            r <- NCOL(object[[i]][["alpha"]]) / k 
+          }
+        }
       } else {
-        r <- object[[i]][["r"]]
+        r <- object[[i]][["specifications"]][["rank"]]
       }
+      teststats[i, "r"] <- r
       tot_pars <- r
       
       vars <- c("Pi", "Pi_x", "Pi_d", "Gamma", "Upsilon", "C")
@@ -185,7 +187,7 @@ summary.bvarlist <- function(object, ...){
   if (!is.null(exog_vars)) {
     exog_vars <- unique(exog_vars) 
   }
-
+  
   # Omit unnecessary columns
   teststats <- teststats[, which(!apply(teststats, 2, function(x) {all(is.na(x))}))]
   

@@ -112,7 +112,7 @@ Rcpp::List bvectvpalg(Rcpp::List object) {
   arma::vec priors_rho;
   arma::mat prior_beta_mu, prior_beta_vinv, post_beta_mu, post_beta_v;
   arma::vec ytilde, beta_init;
-  arma::mat alpha, beta, beta_help, pi, pi_temp, zztilde;
+  arma::mat alpha, beta, beta_t, beta_help, pi, pi_temp, zztilde;
   arma::sp_mat sigma_b_i, zzss_b_i, hb_sigmab_i_hb, hh_b;
   double rho;
   
@@ -699,14 +699,25 @@ Rcpp::List bvectvpalg(Rcpp::List object) {
       
       if (use_rr) {
         draws_alpha.col(pos_draw) = arma::vectorise(gamma.rows(0, n_alpha - 1));
-
-        draws_beta.col(pos_draw) = arma::vectorise(beta.rows(0, r * k - 1));
-        if (m > 0) {
-          draws_beta_exo.col(pos_draw) = arma::vectorise(beta.rows(r * k, r * (k + m) - 1));
+        
+        for (int i = 0; i < tt; i++) {
+          beta_t = arma::reshape(beta.col(i), k_w, r).t();
+          draws_beta.submat(i * k * r, pos_draw, (i + 1) * r * k - 1, pos_draw) = arma::vectorise(arma::trans(beta_t.cols(0, k - 1)));
+          if (m > 0) {
+            draws_beta_exo.submat(i * m * r, pos_draw, (i + 1) * r * m - 1, pos_draw) = arma::vectorise(arma::trans(beta_t.cols(k, k + m - 1)));
+          }
+          if (k_detr > 0) {
+            draws_beta_d.submat(i * k_detr * r, pos_draw, (i + 1) * r * k_detr - 1, pos_draw) = arma::vectorise(arma::trans(beta_t.cols(k + m, k + m + k_detr - 1)));
+          }
         }
-        if (k_detr > 0) {
-          draws_beta_d.col(pos_draw) = arma::vectorise(beta.rows(r * (k + m), r * (k + m + k_detr) - 1));
-        }
+        
+        // draws_beta.col(pos_draw) = arma::vectorise(beta.rows(0, r * k - 1));
+        // if (m > 0) {
+        //   draws_beta_exo.col(pos_draw) = arma::vectorise(beta.rows(r * k, r * (k + m) - 1));
+        // }
+        // if (k_detr > 0) {
+        //   draws_beta_d.col(pos_draw) = arma::vectorise(beta.rows(r * (k + m), r * (k + m + k_detr) - 1));
+        // }
       }
 
       if (n_gamma > 0) {

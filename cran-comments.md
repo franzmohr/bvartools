@@ -1,10 +1,10 @@
 ## Test environments
 
-ubuntu 18.04 (on GitHub Actions), R-devel, R-release, R 4.0.5, R 3.6.3, R 3.5.3, R 3.4.4
-win-builder (devel)
-macOS
+ubuntu 22.04 (on GitHub Actions): R-devel, R-release, R 4.2.3
+win-builder: R-release
+macOS: R-release
 
 ## R CMD check results
 
-* NOTE: checking installed package size ... installed size is 33.2Mb
-sub-directories of 1Mb or more: libs  31.5Mb
+* NOTE: checking installed package size ... installed size is 31.4Mb
+sub-directories of 1Mb or more: libs  29.6Mb

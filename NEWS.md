@@ -1,5 +1,6 @@
 # bvartools 0.2.2
 
+* Addressed the CRAN NOTE "Specified C++11: please drop specification unless essential" by dropping the specification from "src/Makevars"
 * Improved the treatment of `bvar` and `bvec` objects if Gibbs sampler fails.
 * Fix erroneous SUR-matrix generation for VEC models with r = 0 in `.bvecalg`.
 * Fix bug in `.bvecalg` and `.bvectvpalg` with the storing of posterior draws of beta.

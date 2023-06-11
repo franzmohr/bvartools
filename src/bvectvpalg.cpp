@@ -699,7 +699,8 @@ Rcpp::List bvectvpalg(Rcpp::List object) {
       
       if (use_rr) {
         draws_alpha.col(pos_draw) = arma::vectorise(gamma.rows(0, n_alpha - 1));
-        
+        // Store posterior draws of endogenous, exogenous and deterministic terms in separate objects
+        // This requires some reshaping
         for (int i = 0; i < tt; i++) {
           beta_t = arma::reshape(beta.col(i), k_w, r).t();
           draws_beta.submat(i * k * r, pos_draw, (i + 1) * r * k - 1, pos_draw) = arma::vectorise(arma::trans(beta_t.cols(0, k - 1)));
@@ -710,14 +711,6 @@ Rcpp::List bvectvpalg(Rcpp::List object) {
             draws_beta_d.submat(i * k_detr * r, pos_draw, (i + 1) * r * k_detr - 1, pos_draw) = arma::vectorise(arma::trans(beta_t.cols(k + m, k + m + k_detr - 1)));
           }
         }
-        
-        // draws_beta.col(pos_draw) = arma::vectorise(beta.rows(0, r * k - 1));
-        // if (m > 0) {
-        //   draws_beta_exo.col(pos_draw) = arma::vectorise(beta.rows(r * k, r * (k + m) - 1));
-        // }
-        // if (k_detr > 0) {
-        //   draws_beta_d.col(pos_draw) = arma::vectorise(beta.rows(r * (k + m), r * (k + m + k_detr) - 1));
-        // }
       }
 
       if (n_gamma > 0) {

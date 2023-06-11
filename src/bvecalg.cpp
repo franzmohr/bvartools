@@ -486,11 +486,11 @@ Rcpp::List bvecalg(Rcpp::List object) {
       for (int i = 0; i < tt; i++){
         z_beta.rows(i * k, (i + 1) * k - 1) = arma::kron(Alpha, arma::trans(w.col(i)));
       }
-      
+
       beta_post_v = arma::kron(Alpha.t() * g_i * Alpha, coint_v_i * p_tau_i) + arma::trans(z_beta) * diag_sigma_i * z_beta;
       post_beta_mu = arma::solve(beta_post_v, arma::trans(z_beta) * diag_sigma_i * y_beta);
       Beta = arma::reshape(post_beta_mu + arma::solve(arma::chol(beta_post_v), arma::randn(n_beta)), n_w, r);
-      
+
       // Final cointegration values
       BB_sqrt = arma::sqrtmat_sympd(arma::trans(Beta) * Beta);
       alpha = Alpha * BB_sqrt;
@@ -675,7 +675,7 @@ Rcpp::List bvecalg(Rcpp::List object) {
         draws_alpha.col(pos_draw) = arma::vectorise(gamma.rows(alpha_pos_start, alpha_pos_end));
         draws_beta.col(pos_draw) = arma::vectorise(beta.t());
       }
-
+      
       if (n_gamma > 0) {
         draws_gamma.col(pos_draw) = arma::vectorise(gamma.rows(gamma_pos_start, gamma_pos_end));
         if (varsel) {
@@ -702,7 +702,7 @@ Rcpp::List bvecalg(Rcpp::List object) {
       }
     }
   } // End loop
-
+  
   Rcpp::List posteriors = Rcpp::List::create(Rcpp::Named("a0") = R_NilValue,
                                              Rcpp::Named("alpha") = R_NilValue,
                                              Rcpp::Named("beta") = R_NilValue,
@@ -719,7 +719,9 @@ Rcpp::List bvecalg(Rcpp::List object) {
     // Reformat draws
     for (int i = 0; i < iter; i ++) {
       draws_beta.submat(0, i, r * k - 1, i) = arma::vectorise(arma::trans(arma::reshape(draws_beta.submat(0, i, r * k - 1, i), r, k)));
-      draws_beta.submat(r * k, i, r * (k + m) - 1, i) = arma::vectorise(arma::trans(arma::reshape(draws_beta.submat(r * k, i, r * (k + m) - 1, i), r, m)));
+      if (m > 0) {
+        draws_beta.submat(r * k, i, r * (k + m) - 1, i) = arma::vectorise(arma::trans(arma::reshape(draws_beta.submat(r * k, i, r * (k + m) - 1, i), r, m))); 
+      }
       if (n_r > 0) {
         draws_beta.submat(r * (k + m), i, r * (k + m + n_r) - 1, i) = arma::vectorise(arma::trans(arma::reshape(draws_beta.submat(r * (k + m), i, r * (k + m + n_r) - 1, i), r, n_r)));
       }

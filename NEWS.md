@@ -1,3 +1,7 @@
+# 0.2.3
+
+
+
 # bvartools 0.2.2
 
 * Addressed CRAN NOTE on CITATION file

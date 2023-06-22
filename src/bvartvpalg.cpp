@@ -227,7 +227,7 @@ Rcpp::List bvartvpalg(Rcpp::List object) {
     sigma_u_i = omega_i;
   }
   diag_sigma_u_i.diag() = arma::repmat(sigma_u_i.diag(), tt, 1);
-  if (covar | sv) {
+  if (covar || sv) {
     diag_omega_i = diag_sigma_u_i;
   }
   

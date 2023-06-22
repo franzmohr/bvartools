@@ -1,6 +1,6 @@
 # 0.2.3
 
-
+* Replace erroneous `|` in C++ sampling functions by `||`.
 
 # bvartools 0.2.2
 

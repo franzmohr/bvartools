@@ -33,7 +33,7 @@ credible intervals. Defaults to 0.95.}
 
 \item{shock}{size of the shock.}
 
-\item{type}{type of the impulse resoponse. Possible choices are forecast error \code{"feir"}
+\item{type}{type of the impulse response. Possible choices are forecast error \code{"feir"}
 (default), orthogonalised \code{"oir"}, structural \code{"sir"}, generalised \code{"gir"},
 and structural generalised \code{"sgir"} impulse responses.}
 

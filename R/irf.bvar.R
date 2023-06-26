@@ -11,7 +11,7 @@
 #' @param ci a numeric between 0 and 1 specifying the probability mass covered by the
 #' credible intervals. Defaults to 0.95.
 #' @param shock size of the shock.
-#' @param type type of the impulse resoponse. Possible choices are forecast error \code{"feir"}
+#' @param type type of the impulse response. Possible choices are forecast error \code{"feir"}
 #' (default), orthogonalised \code{"oir"}, structural \code{"sir"}, generalised \code{"gir"},
 #' and structural generalised \code{"sgir"} impulse responses.
 #' @param cumulative logical specifying whether a cumulative IRF should be calculated.

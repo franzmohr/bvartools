@@ -150,6 +150,10 @@ bvar <- function(data = NULL, exogen = NULL, y, x = NULL,
                  A0 = NULL, A = NULL, B = NULL,
                  C = NULL, Sigma = NULL) {
   
+  if (!"ts" %in% class(y)) {
+    stop("Argument 'y' must be an object of class time-series")
+  }
+  
   result <- NULL
   result[["y"]] <- y
   k <- NCOL(y)

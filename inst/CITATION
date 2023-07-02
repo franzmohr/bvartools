@@ -99,3 +99,21 @@ bibentry(header = "To cite the BVS algortihm of Korobilis (2013) use:",
                 "Journal of Applied Econometrics 28(2), 204-230. ",
                 "doi:10.1002/jae.1271")
 )
+
+bibentry(header = "To cite the stochastic volatility algortihm of Kim et al. (1998) use:",
+         bibtype = "article",
+         title = "Stochastic volatility. Likelihood inference and comparison with ARCH models",
+         author = c(person("S.", "Kim"),
+                    person("N.", "Shephard"),
+                    person("S.", "Chib")),
+         year = "1998",
+         journal = "Review of Economic Studies",
+         volume = "65",
+         number = "3",
+         pages = "361--393",
+         doi = "10.1111/1467-937X.00050",
+         textVersion = paste0("S. Kim, N. Shephard, & S. Chib (1998). ",
+                "Stochastic volatility. Likelihood inference and comparison with ARCH models ",
+                "Review of Economic Studies 65(3), 361-393. ",
+                "doi:10.1111/1467-937X.00050")
+)

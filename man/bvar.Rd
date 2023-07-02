@@ -233,7 +233,7 @@ e1 <- diff(log(e1)) * 100
 e1 <- window(e1, end = c(1978, 4))
 
 # Generate model data
-model <- gen_var(e1, p = 2, deterministic = 2,
+model <- gen_var(e1, p = 0, deterministic = "const",
                  iterations = 100, burnin = 10)
 # Chosen number of iterations and burnin should be much higher.
 

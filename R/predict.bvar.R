@@ -27,7 +27,7 @@
 #' e1 <- window(e1, end = c(1978, 4))
 #' 
 #' # Generate model data
-#' model <- gen_var(e1, p = 2, deterministic = 2,
+#' model <- gen_var(e1, p = 0, deterministic = "const",
 #'                  iterations = 100, burnin = 10)
 #' # Chosen number of iterations and burnin should be much higher.
 #' 
@@ -152,6 +152,8 @@ predict.bvar <- function(object, ..., n.ahead = 10, new_x = NULL, new_d = NULL, 
     }
   }
   
+  use_a <- !is.null(A)
+  
   # Generate matrix used for prediction ----
   pred <- matrix(NA, tot, n.ahead + 1)
   if (p > 0) {
@@ -212,27 +214,8 @@ predict.bvar <- function(object, ..., n.ahead = 10, new_x = NULL, new_d = NULL, 
         A0_i <- solve(matrix(object[["A0"]][draw, ], k)) 
       }
     }
-    
-    for (i in 1:n.ahead) {
-      # Generate error
-      temp <- eigen(matrix(object[["Sigma"]][draw, ], k))
-      u <- temp$vectors %*% diag(sqrt(temp$values), k) %*% t(temp$vectors) %*% stats::rnorm(k)
-      
-      # Prediction step
-      if (is.null(A)) {
-        pred[1:k, i + 1] <- pred[, i] + A0_i %*% u 
-      } else {
-        pred[1:k, i + 1] <- A0_i %*% matrix(A[draw, ], k) %*% pred[pos_pred, i]+ A0_i %*% u
-      }
-      
-      # Update matrix of predictors
-      if (p > 1) {
-        for (j in 1:(p - 1)) {
-          pred[j * k + 1:k, i + 1] <- pred[(j - 1) * k + 1:k, i]
-        } 
-      }
-    }
-    result[,, draw] <- pred[1:k, -1]
+
+    result[,, draw] <- .draw_forecast(draw, k, p, A0_i, use_a, A, object[["Sigma"]], pred)[1:k, -1]
   }
   
   ci_low <- (1 - ci) / 2
@@ -264,6 +247,6 @@ predict.bvar <- function(object, ..., n.ahead = 10, new_x = NULL, new_d = NULL, 
   result <- list("y" = object[["y"]],
                  "fcst" = result)
   
-  class(result) <- append("bvarprd", class(result))
+  class(result) <- c("bvarprd", "list")
   return(result)
 }

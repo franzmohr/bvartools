@@ -93,6 +93,10 @@ bvs <- function(y, z, a, lambda, sigma_i, prob_prior, include = NULL) {
     .Call(`_bvartools_dfmalg`, object)
 }
 
+.draw_forecast <- function(i, k, p, a0_i, use_a, a_, sigma, pred) {
+    .Call(`_bvartools_draw_forecast`, i, k, p, a0_i, use_a, a_, sigma, pred)
+}
+
 .ir <- function(A, h, type, impulse, response) {
     .Call(`_bvartools_ir`, A, h, type, impulse, response)
 }

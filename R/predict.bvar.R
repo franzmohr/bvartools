@@ -209,7 +209,11 @@ predict.bvar <- function(object, ..., n.ahead = 10, new_x = NULL, new_d = NULL, 
       }
     }
 
-    result[,, draw] <- .draw_forecast(draw, k, p, A0_i, use_a, A, object[["Sigma"]], pred)[1:k, -1]
+    if (tvp[["Sigma"]]) {
+      result[,, draw] <- .draw_forecast(draw, k, p, A0_i, use_a, A, object[["Sigma"]][[tt]], pred)[1:k, -1] 
+    } else {
+      result[,, draw] <- .draw_forecast(draw, k, p, A0_i, use_a, A, object[["Sigma"]], pred)[1:k, -1]
+    }
   }
   
   ci_low <- (1 - ci) / 2

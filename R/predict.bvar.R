@@ -183,7 +183,6 @@ predict.bvar <- function(object, ..., n.ahead = 10, new_x = NULL, new_d = NULL, 
     pred[pos_d_pred, ] <- cbind(matrix(object[["x"]][tt_pos, pos_d_object], length(pos_d_object)), t(new_d))
   }
   
-  A0_i <- diag(1, k)
   draws <- NA
   vars <- c("A0", "A", "B", "C", "Sigma")
   for (i in vars) {
@@ -197,14 +196,9 @@ predict.bvar <- function(object, ..., n.ahead = 10, new_x = NULL, new_d = NULL, 
       }   
     }
   }
+  
+  A0_i <- diag(1, k)
   result <- array(NA, dim = c(k, n.ahead, draws))
-  
-  if (p == 0) {
-    pos_pred <- (k + 1):tot
-  } else {
-    pos_pred <- 1:tot 
-  }
-  
   for (draw in 1:draws) {
     
     if (struct) {

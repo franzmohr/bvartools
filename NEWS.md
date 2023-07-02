@@ -1,5 +1,6 @@
 # 0.2.3
 
+* Implement recursive iterations for forecasts in C++.
 * Replace erroneous `|` in C++ sampling functions by `||`.
 
 # bvartools 0.2.2

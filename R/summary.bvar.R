@@ -92,7 +92,7 @@ summary.bvar <- function(object, ci = .95, period = NULL, ...){
     if (!is.null(object[["x"]])) {
       x_names <- c(x_names, dimnames(object[["x"]])[[2]][m + n + 1:o])
     } else {
-      x_names <- c(x_names, paste("det", 1:m, sep = ""))
+      x_names <- c(x_names, paste("det", 1:o, sep = ""))
     }
   }
   if (!is.null(object[["A0"]])) {
@@ -234,6 +234,6 @@ summary.bvar <- function(object, ci = .95, period = NULL, ...){
   result[["specifications"]][["ci"]] <- paste(c(ci_low, ci_high) * 100, "%", sep = "")
   result[["specifications"]][["period"]] <- period_long
   
-  class(result) <- "summary.bvar"
+  class(result) <- list("summary.bvar", "list")
   return(result)
 }

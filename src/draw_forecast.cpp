@@ -3,13 +3,13 @@
 #include <RcppArmadillo.h>
 
 // [[Rcpp::export(.draw_forecast)]]
-arma::mat draw_forecast(int &i, // index of draw
-                        int &k, // number of endogenous vars
-                        int &p, // number of lags of endogenous vars
-                        arma::mat &a0_i, // A0
-                        bool &use_a,
-                        arma::mat &a_, // A
-                        arma::mat &sigma, // Sigma
+arma::mat draw_forecast(int i, // index of draw
+                        int k, // number of endogenous vars
+                        int p, // number of lags of endogenous vars
+                        arma::mat a0_i, // A0
+                        bool use_a,
+                        arma::mat a_, // A
+                        arma::mat sigma, // Sigma
                         arma::mat pred) { // Data matrix for prediction
   
   const int n_ahead = pred.n_cols - 1;

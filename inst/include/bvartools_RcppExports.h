@@ -46,6 +46,27 @@ namespace bvartools {
         return Rcpp::as<arma::vec >(rcpp_result_gen);
     }
 
+    inline arma::vec stochvol_ocsn2007(arma::vec& y, arma::vec& h, double& sigma, double& h_init) {
+        typedef SEXP(*Ptr_stochvol_ocsn2007)(SEXP,SEXP,SEXP,SEXP);
+        static Ptr_stochvol_ocsn2007 p_stochvol_ocsn2007 = NULL;
+        if (p_stochvol_ocsn2007 == NULL) {
+            validateSignature("arma::vec(*stochvol_ocsn2007)(arma::vec&,arma::vec&,double&,double&)");
+            p_stochvol_ocsn2007 = (Ptr_stochvol_ocsn2007)R_GetCCallable("bvartools", "_bvartools_stochvol_ocsn2007");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_stochvol_ocsn2007(Shield<SEXP>(Rcpp::wrap(y)), Shield<SEXP>(Rcpp::wrap(h)), Shield<SEXP>(Rcpp::wrap(sigma)), Shield<SEXP>(Rcpp::wrap(h_init)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<arma::vec >(rcpp_result_gen);
+    }
+
 }
 
 #endif // RCPP_bvartools_RCPPEXPORTS_H_GEN_

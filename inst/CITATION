@@ -117,3 +117,22 @@ bibentry(header = "To cite the stochastic volatility algortihm of Kim et al. (19
                 "Review of Economic Studies 65(3), 361-393. ",
                 "doi:10.1111/1467-937X.00050")
 )
+
+bibentry(header = "To cite the stochastic volatility algortihm of Omori et al. (2007) use:",
+         bibtype = "article",
+         title = "Stochastic volatiltiy with leverage. Fast and efficient likelihood inference",
+         author = c(person("Y.", "Omori"),
+                    person("S.", "Chib"),
+                    person("N.", "Shephard"),
+                    person("J.", "Nakajima")),
+         year = "2007",
+         journal = "Journal of Econometrics",
+         volume = "140",
+         number = "2",
+         pages = "425--449",
+         doi = "10.1016/j.jeconom.2006.07.008",
+         textVersion = paste0("Y. Omori, S. Chib, N. Shephard, & J. Nakajima (2007). ",
+                "Stochastic volatiltiy with leverage. Fast and efficient likelihood inference ",
+                "Journal of Econometrics 140(2), 425-449. ",
+                "doi:10.1016/j.jeconom.2006.07.008")
+)

@@ -102,4 +102,4 @@ h_init <- log(var(aud))
 h <- rep(h_init, length(aud))
 stochvol_ocsn2007(aud - mean(aud), h, .05, h_init, 0.0001)
 
-*/
+***/

@@ -104,6 +104,77 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// ewma
+arma::mat ewma(arma::mat u, const double lambda);
+static SEXP _bvartools_ewma_try(SEXP uSEXP, SEXP lambdaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type u(uSEXP);
+    Rcpp::traits::input_parameter< const double >::type lambda(lambdaSEXP);
+    rcpp_result_gen = Rcpp::wrap(ewma(u, lambda));
+    return rcpp_result_gen;
+END_RCPP_RETURN_ERROR
+}
+RcppExport SEXP _bvartools_ewma(SEXP uSEXP, SEXP lambdaSEXP) {
+    SEXP rcpp_result_gen;
+    {
+        Rcpp::RNGScope rcpp_rngScope_gen;
+        rcpp_result_gen = PROTECT(_bvartools_ewma_try(uSEXP, lambdaSEXP));
+    }
+    Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
+    if (rcpp_isInterrupt_gen) {
+        UNPROTECT(1);
+        Rf_onintr();
+    }
+    bool rcpp_isLongjump_gen = Rcpp::internal::isLongjumpSentinel(rcpp_result_gen);
+    if (rcpp_isLongjump_gen) {
+        Rcpp::internal::resumeJump(rcpp_result_gen);
+    }
+    Rboolean rcpp_isError_gen = Rf_inherits(rcpp_result_gen, "try-error");
+    if (rcpp_isError_gen) {
+        SEXP rcpp_msgSEXP_gen = Rf_asChar(rcpp_result_gen);
+        UNPROTECT(1);
+        Rf_error(CHAR(rcpp_msgSEXP_gen));
+    }
+    UNPROTECT(1);
+    return rcpp_result_gen;
+}
+// ewma_kk2013
+arma::mat ewma_kk2013(arma::mat u, double lambda, arma::mat sigmainit);
+static SEXP _bvartools_ewma_kk2013_try(SEXP uSEXP, SEXP lambdaSEXP, SEXP sigmainitSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type u(uSEXP);
+    Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type sigmainit(sigmainitSEXP);
+    rcpp_result_gen = Rcpp::wrap(ewma_kk2013(u, lambda, sigmainit));
+    return rcpp_result_gen;
+END_RCPP_RETURN_ERROR
+}
+RcppExport SEXP _bvartools_ewma_kk2013(SEXP uSEXP, SEXP lambdaSEXP, SEXP sigmainitSEXP) {
+    SEXP rcpp_result_gen;
+    {
+        Rcpp::RNGScope rcpp_rngScope_gen;
+        rcpp_result_gen = PROTECT(_bvartools_ewma_kk2013_try(uSEXP, lambdaSEXP, sigmainitSEXP));
+    }
+    Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
+    if (rcpp_isInterrupt_gen) {
+        UNPROTECT(1);
+        Rf_onintr();
+    }
+    bool rcpp_isLongjump_gen = Rcpp::internal::isLongjumpSentinel(rcpp_result_gen);
+    if (rcpp_isLongjump_gen) {
+        Rcpp::internal::resumeJump(rcpp_result_gen);
+    }
+    Rboolean rcpp_isError_gen = Rf_inherits(rcpp_result_gen, "try-error");
+    if (rcpp_isError_gen) {
+        SEXP rcpp_msgSEXP_gen = Rf_asChar(rcpp_result_gen);
+        UNPROTECT(1);
+        Rf_error(CHAR(rcpp_msgSEXP_gen));
+    }
+    UNPROTECT(1);
+    return rcpp_result_gen;
+}
 // ir
 arma::vec ir(Rcpp::List A, int h, std::string type, int impulse, int response);
 RcppExport SEXP _bvartools_ir(SEXP ASEXP, SEXP hSEXP, SEXP typeSEXP, SEXP impulseSEXP, SEXP responseSEXP) {
@@ -368,6 +439,8 @@ END_RCPP
 static int _bvartools_RcppExport_validate(const char* sig) { 
     static std::set<std::string> signatures;
     if (signatures.empty()) {
+        signatures.insert("arma::mat(*ewma)(arma::mat,const double)");
+        signatures.insert("arma::mat(*ewma_kk2013)(arma::mat,double,arma::mat)");
         signatures.insert("arma::vec(*stoch_vol)(arma::vec,arma::vec,double,double,double)");
         signatures.insert("arma::vec(*stochvol_ksc1998)(arma::vec,arma::vec,double,double,double)");
         signatures.insert("arma::mat(*stochvol_ocsn2007)(arma::vec,arma::vec,double,double,double)");
@@ -377,6 +450,8 @@ static int _bvartools_RcppExport_validate(const char* sig) {
 
 // registerCCallable (register entry points for exported C++ functions)
 RcppExport SEXP _bvartools_RcppExport_registerCCallable() { 
+    R_RegisterCCallable("bvartools", "_bvartools_ewma", (DL_FUNC)_bvartools_ewma_try);
+    R_RegisterCCallable("bvartools", "_bvartools_ewma_kk2013", (DL_FUNC)_bvartools_ewma_kk2013_try);
     R_RegisterCCallable("bvartools", "_bvartools_stoch_vol", (DL_FUNC)_bvartools_stoch_vol_try);
     R_RegisterCCallable("bvartools", "_bvartools_stochvol_ksc1998", (DL_FUNC)_bvartools_stochvol_ksc1998_try);
     R_RegisterCCallable("bvartools", "_bvartools_stochvol_ocsn2007", (DL_FUNC)_bvartools_stochvol_ocsn2007_try);
@@ -392,6 +467,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_bvartools_bvs", (DL_FUNC) &_bvartools_bvs, 7},
     {"_bvartools_dfmalg", (DL_FUNC) &_bvartools_dfmalg, 1},
     {"_bvartools_draw_forecast", (DL_FUNC) &_bvartools_draw_forecast, 8},
+    {"_bvartools_ewma", (DL_FUNC) &_bvartools_ewma, 2},
+    {"_bvartools_ewma_kk2013", (DL_FUNC) &_bvartools_ewma_kk2013, 3},
     {"_bvartools_ir", (DL_FUNC) &_bvartools_ir, 5},
     {"_bvartools_kalman_dk", (DL_FUNC) &_bvartools_kalman_dk, 7},
     {"_bvartools_loglik_normal", (DL_FUNC) &_bvartools_loglik_normal, 2},

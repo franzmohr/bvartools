@@ -25,6 +25,48 @@ namespace bvartools {
         }
     }
 
+    inline arma::mat ewma(arma::mat u, const double lambda) {
+        typedef SEXP(*Ptr_ewma)(SEXP,SEXP);
+        static Ptr_ewma p_ewma = NULL;
+        if (p_ewma == NULL) {
+            validateSignature("arma::mat(*ewma)(arma::mat,const double)");
+            p_ewma = (Ptr_ewma)R_GetCCallable("bvartools", "_bvartools_ewma");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_ewma(Shield<SEXP>(Rcpp::wrap(u)), Shield<SEXP>(Rcpp::wrap(lambda)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<arma::mat >(rcpp_result_gen);
+    }
+
+    inline arma::mat ewma_kk2013(arma::mat u, double lambda, arma::mat sigmainit) {
+        typedef SEXP(*Ptr_ewma_kk2013)(SEXP,SEXP,SEXP);
+        static Ptr_ewma_kk2013 p_ewma_kk2013 = NULL;
+        if (p_ewma_kk2013 == NULL) {
+            validateSignature("arma::mat(*ewma_kk2013)(arma::mat,double,arma::mat)");
+            p_ewma_kk2013 = (Ptr_ewma_kk2013)R_GetCCallable("bvartools", "_bvartools_ewma_kk2013");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_ewma_kk2013(Shield<SEXP>(Rcpp::wrap(u)), Shield<SEXP>(Rcpp::wrap(lambda)), Shield<SEXP>(Rcpp::wrap(sigmainit)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<arma::mat >(rcpp_result_gen);
+    }
+
     inline arma::vec stoch_vol(arma::vec y, arma::vec h, double sigma, double h_init, double constant) {
         typedef SEXP(*Ptr_stoch_vol)(SEXP,SEXP,SEXP,SEXP,SEXP);
         static Ptr_stoch_vol p_stoch_vol = NULL;

@@ -1,5 +1,6 @@
 # bvartools 0.2.3
 
+* Added `ewma` and `ewma_kk2013` algorithms.
 * Changed `stoch_vol` to a wrapper for `stochvol_ksc1998`.
 * Added stochastic volatility algorithm of Kim et al. (1998) in a separate function `stochvol_ksc1998`.
 * Added stochastic volatility algorithm of Omori et al. (2007) in function `stochvol_ocsn2007`.

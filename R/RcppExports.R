@@ -713,7 +713,7 @@ stochvol_ksc1998 <- function(y, h, sigma, h_init, constant) {
 #' h <- rep(h_init, length(y))
 #' 
 #' # Obtain draw
-#' stochvol_ocsn2007(y - mean(y), h, .05, h_init)
+#' stochvol_ocsn2007(y - mean(y), h, .05, h_init, 0.0001)
 #' 
 #' @references
 #' 

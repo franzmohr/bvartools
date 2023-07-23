@@ -44,10 +44,10 @@ arma::vec stoch_vol(arma::vec y, arma::vec h, double sigma, double h_init, doubl
 
 /*** R
 
-aud <- c(as.matrix(read.csv("/home/franz/data/audusd_fx_data.csv", header = FALSE)))
-h_init <- log(var(aud))
-h <- rep(h_init, length(aud))
-stoch_vol(aud - mean(aud), h, .05, h_init, .0001)
+data("us_macrodata")
+y <- us_macrodata[, 1]
+h_init <- log(var(y))
+h <- rep(h_init, length(y))
+stoch_vol(y - mean(y), h, .05, h_init, 0.0001)
 
-
-*/
+***/

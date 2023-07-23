@@ -221,23 +221,24 @@ BEGIN_RCPP
 END_RCPP
 }
 // stoch_vol
-arma::vec stoch_vol(arma::vec y, arma::vec h, double sigma, double h_init);
-static SEXP _bvartools_stoch_vol_try(SEXP ySEXP, SEXP hSEXP, SEXP sigmaSEXP, SEXP h_initSEXP) {
+arma::vec stoch_vol(arma::vec y, arma::vec h, double sigma, double h_init, double constant);
+static SEXP _bvartools_stoch_vol_try(SEXP ySEXP, SEXP hSEXP, SEXP sigmaSEXP, SEXP h_initSEXP, SEXP constantSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< arma::vec >::type y(ySEXP);
     Rcpp::traits::input_parameter< arma::vec >::type h(hSEXP);
     Rcpp::traits::input_parameter< double >::type sigma(sigmaSEXP);
     Rcpp::traits::input_parameter< double >::type h_init(h_initSEXP);
-    rcpp_result_gen = Rcpp::wrap(stoch_vol(y, h, sigma, h_init));
+    Rcpp::traits::input_parameter< double >::type constant(constantSEXP);
+    rcpp_result_gen = Rcpp::wrap(stoch_vol(y, h, sigma, h_init, constant));
     return rcpp_result_gen;
 END_RCPP_RETURN_ERROR
 }
-RcppExport SEXP _bvartools_stoch_vol(SEXP ySEXP, SEXP hSEXP, SEXP sigmaSEXP, SEXP h_initSEXP) {
+RcppExport SEXP _bvartools_stoch_vol(SEXP ySEXP, SEXP hSEXP, SEXP sigmaSEXP, SEXP h_initSEXP, SEXP constantSEXP) {
     SEXP rcpp_result_gen;
     {
         Rcpp::RNGScope rcpp_rngScope_gen;
-        rcpp_result_gen = PROTECT(_bvartools_stoch_vol_try(ySEXP, hSEXP, sigmaSEXP, h_initSEXP));
+        rcpp_result_gen = PROTECT(_bvartools_stoch_vol_try(ySEXP, hSEXP, sigmaSEXP, h_initSEXP, constantSEXP));
     }
     Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
     if (rcpp_isInterrupt_gen) {
@@ -258,23 +259,24 @@ RcppExport SEXP _bvartools_stoch_vol(SEXP ySEXP, SEXP hSEXP, SEXP sigmaSEXP, SEX
     return rcpp_result_gen;
 }
 // stochvol_ksc1998
-arma::vec stochvol_ksc1998(arma::vec y, arma::vec h, double sigma, double h_init);
-static SEXP _bvartools_stochvol_ksc1998_try(SEXP ySEXP, SEXP hSEXP, SEXP sigmaSEXP, SEXP h_initSEXP) {
+arma::vec stochvol_ksc1998(arma::vec y, arma::vec h, double sigma, double h_init, double constant);
+static SEXP _bvartools_stochvol_ksc1998_try(SEXP ySEXP, SEXP hSEXP, SEXP sigmaSEXP, SEXP h_initSEXP, SEXP constantSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< arma::vec >::type y(ySEXP);
     Rcpp::traits::input_parameter< arma::vec >::type h(hSEXP);
     Rcpp::traits::input_parameter< double >::type sigma(sigmaSEXP);
     Rcpp::traits::input_parameter< double >::type h_init(h_initSEXP);
-    rcpp_result_gen = Rcpp::wrap(stochvol_ksc1998(y, h, sigma, h_init));
+    Rcpp::traits::input_parameter< double >::type constant(constantSEXP);
+    rcpp_result_gen = Rcpp::wrap(stochvol_ksc1998(y, h, sigma, h_init, constant));
     return rcpp_result_gen;
 END_RCPP_RETURN_ERROR
 }
-RcppExport SEXP _bvartools_stochvol_ksc1998(SEXP ySEXP, SEXP hSEXP, SEXP sigmaSEXP, SEXP h_initSEXP) {
+RcppExport SEXP _bvartools_stochvol_ksc1998(SEXP ySEXP, SEXP hSEXP, SEXP sigmaSEXP, SEXP h_initSEXP, SEXP constantSEXP) {
     SEXP rcpp_result_gen;
     {
         Rcpp::RNGScope rcpp_rngScope_gen;
-        rcpp_result_gen = PROTECT(_bvartools_stochvol_ksc1998_try(ySEXP, hSEXP, sigmaSEXP, h_initSEXP));
+        rcpp_result_gen = PROTECT(_bvartools_stochvol_ksc1998_try(ySEXP, hSEXP, sigmaSEXP, h_initSEXP, constantSEXP));
     }
     Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
     if (rcpp_isInterrupt_gen) {
@@ -295,23 +297,24 @@ RcppExport SEXP _bvartools_stochvol_ksc1998(SEXP ySEXP, SEXP hSEXP, SEXP sigmaSE
     return rcpp_result_gen;
 }
 // stochvol_ocsn2007
-arma::mat stochvol_ocsn2007(arma::vec y, arma::vec h, double sigma, double h_init);
-static SEXP _bvartools_stochvol_ocsn2007_try(SEXP ySEXP, SEXP hSEXP, SEXP sigmaSEXP, SEXP h_initSEXP) {
+arma::mat stochvol_ocsn2007(arma::vec y, arma::vec h, double sigma, double h_init, double constant);
+static SEXP _bvartools_stochvol_ocsn2007_try(SEXP ySEXP, SEXP hSEXP, SEXP sigmaSEXP, SEXP h_initSEXP, SEXP constantSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< arma::vec >::type y(ySEXP);
     Rcpp::traits::input_parameter< arma::vec >::type h(hSEXP);
     Rcpp::traits::input_parameter< double >::type sigma(sigmaSEXP);
     Rcpp::traits::input_parameter< double >::type h_init(h_initSEXP);
-    rcpp_result_gen = Rcpp::wrap(stochvol_ocsn2007(y, h, sigma, h_init));
+    Rcpp::traits::input_parameter< double >::type constant(constantSEXP);
+    rcpp_result_gen = Rcpp::wrap(stochvol_ocsn2007(y, h, sigma, h_init, constant));
     return rcpp_result_gen;
 END_RCPP_RETURN_ERROR
 }
-RcppExport SEXP _bvartools_stochvol_ocsn2007(SEXP ySEXP, SEXP hSEXP, SEXP sigmaSEXP, SEXP h_initSEXP) {
+RcppExport SEXP _bvartools_stochvol_ocsn2007(SEXP ySEXP, SEXP hSEXP, SEXP sigmaSEXP, SEXP h_initSEXP, SEXP constantSEXP) {
     SEXP rcpp_result_gen;
     {
         Rcpp::RNGScope rcpp_rngScope_gen;
-        rcpp_result_gen = PROTECT(_bvartools_stochvol_ocsn2007_try(ySEXP, hSEXP, sigmaSEXP, h_initSEXP));
+        rcpp_result_gen = PROTECT(_bvartools_stochvol_ocsn2007_try(ySEXP, hSEXP, sigmaSEXP, h_initSEXP, constantSEXP));
     }
     Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
     if (rcpp_isInterrupt_gen) {
@@ -365,9 +368,9 @@ END_RCPP
 static int _bvartools_RcppExport_validate(const char* sig) { 
     static std::set<std::string> signatures;
     if (signatures.empty()) {
-        signatures.insert("arma::vec(*stoch_vol)(arma::vec,arma::vec,double,double)");
-        signatures.insert("arma::vec(*stochvol_ksc1998)(arma::vec,arma::vec,double,double)");
-        signatures.insert("arma::mat(*stochvol_ocsn2007)(arma::vec,arma::vec,double,double)");
+        signatures.insert("arma::vec(*stoch_vol)(arma::vec,arma::vec,double,double,double)");
+        signatures.insert("arma::vec(*stochvol_ksc1998)(arma::vec,arma::vec,double,double,double)");
+        signatures.insert("arma::mat(*stochvol_ocsn2007)(arma::vec,arma::vec,double,double,double)");
     }
     return signatures.find(sig) != signatures.end();
 }
@@ -396,9 +399,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"_bvartools_post_coint_kls_sur", (DL_FUNC) &_bvartools_post_coint_kls_sur, 11},
     {"_bvartools_post_normal", (DL_FUNC) &_bvartools_post_normal, 5},
     {"_bvartools_post_normal_sur", (DL_FUNC) &_bvartools_post_normal_sur, 6},
-    {"_bvartools_stoch_vol", (DL_FUNC) &_bvartools_stoch_vol, 4},
-    {"_bvartools_stochvol_ksc1998", (DL_FUNC) &_bvartools_stochvol_ksc1998, 4},
-    {"_bvartools_stochvol_ocsn2007", (DL_FUNC) &_bvartools_stochvol_ocsn2007, 4},
+    {"_bvartools_stoch_vol", (DL_FUNC) &_bvartools_stoch_vol, 5},
+    {"_bvartools_stochvol_ksc1998", (DL_FUNC) &_bvartools_stochvol_ksc1998, 5},
+    {"_bvartools_stochvol_ocsn2007", (DL_FUNC) &_bvartools_stochvol_ocsn2007, 5},
     {"_bvartools_ssvs", (DL_FUNC) &_bvartools_ssvs, 5},
     {"_bvartools_vardecomp", (DL_FUNC) &_bvartools_vardecomp, 4},
     {"_bvartools_RcppExport_registerCCallable", (DL_FUNC) &_bvartools_RcppExport_registerCCallable, 0},

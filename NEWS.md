@@ -1,9 +1,11 @@
 # bvartools 0.2.3
 
-* Add stochastic volatility algorithm of Omori et al. (2007).
-* Fix bug with detection of deterministic terms in `bvar`.
-* Implement recursive iterations for forecasts in C++.
-* Replace erroneous `|` in C++ sampling functions by `||`.
+* Changed `stoch_vol` to a wrapper for `stochvol_ksc1998`.
+* Added stochastic volatility algorithm of Kim et al. (1998) in a separate function `stochvol_ksc1998`.
+* Added stochastic volatility algorithm of Omori et al. (2007) in function `stochvol_ocsn2007`.
+* Fixed bug with detection of deterministic terms in `bvar`.
+* Implemented recursive iterations for forecasts in C++.
+* Replaced erroneous `|` in C++ sampling functions by `||`.
 
 # bvartools 0.2.2
 

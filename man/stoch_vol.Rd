@@ -4,7 +4,7 @@
 \alias{stoch_vol}
 \title{Stochastic Volatility}
 \usage{
-stoch_vol(y, h, sigma, h_init)
+stoch_vol(y, h, sigma, h_init, constant)
 }
 \arguments{
 \item{y}{a \eqn{T \times 1} vector containing the time series.}
@@ -14,6 +14,9 @@ stoch_vol(y, h, sigma, h_init)
 \item{sigma}{a numeric of the variance of the log-volatilites.}
 
 \item{h_init}{a numeric of the initial state of log-volatilities.}
+
+\item{constant}{a numeric of the constant that should be added to \eqn{y^2}
+before taking the natural logarithm.}
 }
 \value{
 A vector of log-volatility draws.
@@ -22,22 +25,7 @@ A vector of log-volatility draws.
 Produces a draw of log-volatilities.
 }
 \details{
-The function produces a posterior draw of the log-volatility \eqn{h} for the model
-\deqn{y_{t} = e^{\frac{1}{2}h_t} \epsilon_{t},}
-where \eqn{\epsilon_t \sim N(0, 1)} and \eqn{h_t} is assumed to evolve according to a random walk
-\deqn{h_t = h_{t - 1} + u_t,}
-with \eqn{u_t \sim N(0, \sigma^2)}.
-
-The implementation follows the algorithm of Kim, Shephard and Chip (1998) and performs the
-following steps:
-\enumerate{
-  \item Perform the transformation \eqn{y_t^* = ln(y_t^2 + 0.0001)}.
-  \item Obtain a sample from the seven-component normal mixture for
-  approximating the log-\eqn{\chi_1^2} distribution.
-  \item Obtain a draw of log-volatilities.
-}
-
-The implementation follows the code provided on the website to the textbook by Chan, Koop, Poirier, and Tobias (2019).
+The function is a wrapper for function \code{\link{stochvol_ksc1998}}.
 }
 \examples{
 data("us_macrodata")
@@ -48,7 +36,7 @@ h_init <- log(var(y))
 h <- rep(h_init, length(y))
 
 # Obtain draw
-stoch_vol(y - mean(y), h, .05, h_init)
+stoch_vol(y - mean(y), h, .05, h_init, 0.0001)
 
 }
 \references{

@@ -4,7 +4,7 @@
 \alias{stochvol_ksc1998}
 \title{Stochastic Volatility}
 \usage{
-stochvol_ksc1998(y, h, sigma, h_init)
+stochvol_ksc1998(y, h, sigma, h_init, constant)
 }
 \arguments{
 \item{y}{a \eqn{T \times 1} vector containing the time series.}
@@ -14,6 +14,9 @@ stochvol_ksc1998(y, h, sigma, h_init)
 \item{sigma}{a numeric of the variance of the log-volatilites.}
 
 \item{h_init}{a numeric of the initial state of log-volatilities.}
+
+\item{constant}{a numeric of the constant that should be added to \eqn{y^2}
+before taking the natural logarithm. See 'Details'.}
 }
 \value{
 A vector of log-volatility draws.
@@ -31,7 +34,7 @@ with \eqn{u_t \sim N(0, \sigma^2)}.
 The implementation follows the algorithm of Kim, Shephard and Chip (1998) and performs the
 following steps:
 \enumerate{
-  \item Perform the transformation \eqn{y_t^* = ln(y_t^2 + 0.0001)}.
+  \item Perform the transformation \eqn{y_t^* = ln(y_t^2 + constant)}.
   \item Obtain a sample from the seven-component normal mixture for
   approximating the log-\eqn{\chi_1^2} distribution.
   \item Obtain a draw of log-volatilities.
@@ -48,7 +51,7 @@ h_init <- log(var(y))
 h <- rep(h_init, length(y))
 
 # Obtain draw
-stochvol_ksc1998(y - mean(y), h, .05, h_init)
+stochvol_ksc1998(y - mean(y), h, .05, h_init, 0.0001)
 
 }
 \references{

@@ -10,6 +10,8 @@
 //' @param h a \eqn{T \times 1} vector of log-volatilities.
 //' @param sigma a numeric of the variance of the log-volatilites.
 //' @param h_init a numeric of the initial state of log-volatilities.
+//' @param constant a numeric of the constant that should be added to \eqn{y^2}
+//' before taking the natural logarithm. See 'Details'.
 //' 
 //' @details The function produces a posterior draw of the log-volatility \eqn{h} for the model
 //' \deqn{y_{t} = e^{\frac{1}{2}h_t} \epsilon_{t},}
@@ -20,7 +22,7 @@
 //' The implementation follows the algorithm of Omori, Chib, Shephard and Nakajima (2007) and performs the
 //' following steps:
 //' \enumerate{
-//'   \item Perform the transformation \eqn{y_t^* = ln(y_t^2 + 0.0001)}.
+//'   \item Perform the transformation \eqn{y_t^* = ln(y_t^2 + constant)}.
 //'   \item Obtain a sample from the ten-component normal mixture for
 //'   approximating the log-\eqn{\chi_1^2} distribution.
 //'   \item Obtain a draw of log-volatilities.
@@ -48,14 +50,14 @@
 //' \emph{Journal of Econometrics 140}(2), 425--449. \doi{10.1016/j.jeconom.2006.07.008}
 //' 
 // [[Rcpp::export]]
-arma::mat stochvol_ocsn2007(arma::vec y, arma::vec h, double sigma, double h_init) {
+arma::mat stochvol_ocsn2007(arma::vec y, arma::vec h, double sigma, double h_init, double constant) {
   
   if (y.has_nan()) {
     Rcpp::stop("Argument 'y' contains NAs.");
   }
   
   // Prepare series
-  y = log(arma::pow(y, 2) + 0.0001);
+  y = log(arma::pow(y, 2) + constant);
   arma::uword tt = y.n_elem;
   if (tt != h.n_elem) {
     Rcpp::stop("Arguments 'y' and 'h' do not have the same length.");
@@ -98,6 +100,6 @@ data("us_macrodata")
 aud <- us_macrodata[, 1]
 h_init <- log(var(aud))
 h <- rep(h_init, length(aud))
-stochvol_ocsn2007(aud - mean(aud), h, .05, h_init)
+stochvol_ocsn2007(aud - mean(aud), h, .05, h_init, 0.0001)
 
 */

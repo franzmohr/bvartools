@@ -454,7 +454,7 @@ Rcpp::List bvaralg(Rcpp::List object) {
       
       // Draw variances  
       for (int i = 0; i < k; i++) {
-        h.col(i) = bvartools::stoch_vol(u.row(i).t(), h.col(i), sigma_h(i), h_init(i));
+        h.col(i) = bvartools::stoch_vol(u.row(i).t(), h.col(i), sigma_h(i), h_init(i), 0.0001);
       }
       diag_omega_i.diag() = 1 / exp(arma::vectorise(h.t()));
       if (covar) {

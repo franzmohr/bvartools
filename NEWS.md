@@ -1,5 +1,6 @@
 # bvartools 0.2.3
 
+* Made `kalman_dk` callable for C++.
 * Added `ewma` and `ewma_kk2013` algorithms.
 * Changed `stoch_vol` to a wrapper for `stochvol_ksc1998`.
 * Added stochastic volatility algorithm of Kim et al. (1998) in a separate function `stochvol_ksc1998`.

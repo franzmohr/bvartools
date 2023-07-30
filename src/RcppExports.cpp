@@ -192,10 +192,9 @@ END_RCPP
 }
 // kalman_dk
 arma::mat kalman_dk(arma::mat y, arma::mat z, arma::mat sigma_u, arma::mat sigma_v, arma::mat B, arma::vec a_init, arma::mat P_init);
-RcppExport SEXP _bvartools_kalman_dk(SEXP ySEXP, SEXP zSEXP, SEXP sigma_uSEXP, SEXP sigma_vSEXP, SEXP BSEXP, SEXP a_initSEXP, SEXP P_initSEXP) {
+static SEXP _bvartools_kalman_dk_try(SEXP ySEXP, SEXP zSEXP, SEXP sigma_uSEXP, SEXP sigma_vSEXP, SEXP BSEXP, SEXP a_initSEXP, SEXP P_initSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< arma::mat >::type y(ySEXP);
     Rcpp::traits::input_parameter< arma::mat >::type z(zSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type sigma_u(sigma_uSEXP);
@@ -205,7 +204,31 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::mat >::type P_init(P_initSEXP);
     rcpp_result_gen = Rcpp::wrap(kalman_dk(y, z, sigma_u, sigma_v, B, a_init, P_init));
     return rcpp_result_gen;
-END_RCPP
+END_RCPP_RETURN_ERROR
+}
+RcppExport SEXP _bvartools_kalman_dk(SEXP ySEXP, SEXP zSEXP, SEXP sigma_uSEXP, SEXP sigma_vSEXP, SEXP BSEXP, SEXP a_initSEXP, SEXP P_initSEXP) {
+    SEXP rcpp_result_gen;
+    {
+        Rcpp::RNGScope rcpp_rngScope_gen;
+        rcpp_result_gen = PROTECT(_bvartools_kalman_dk_try(ySEXP, zSEXP, sigma_uSEXP, sigma_vSEXP, BSEXP, a_initSEXP, P_initSEXP));
+    }
+    Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
+    if (rcpp_isInterrupt_gen) {
+        UNPROTECT(1);
+        Rf_onintr();
+    }
+    bool rcpp_isLongjump_gen = Rcpp::internal::isLongjumpSentinel(rcpp_result_gen);
+    if (rcpp_isLongjump_gen) {
+        Rcpp::internal::resumeJump(rcpp_result_gen);
+    }
+    Rboolean rcpp_isError_gen = Rf_inherits(rcpp_result_gen, "try-error");
+    if (rcpp_isError_gen) {
+        SEXP rcpp_msgSEXP_gen = Rf_asChar(rcpp_result_gen);
+        UNPROTECT(1);
+        Rf_error(CHAR(rcpp_msgSEXP_gen));
+    }
+    UNPROTECT(1);
+    return rcpp_result_gen;
 }
 // loglik_normal
 arma::vec loglik_normal(arma::mat u, arma::mat sigma);
@@ -441,6 +464,7 @@ static int _bvartools_RcppExport_validate(const char* sig) {
     if (signatures.empty()) {
         signatures.insert("arma::mat(*ewma)(arma::mat,const double)");
         signatures.insert("arma::mat(*ewma_kk2013)(arma::mat,double,arma::mat)");
+        signatures.insert("arma::mat(*kalman_dk)(arma::mat,arma::mat,arma::mat,arma::mat,arma::mat,arma::vec,arma::mat)");
         signatures.insert("arma::vec(*stoch_vol)(arma::vec,arma::vec,double,double,double)");
         signatures.insert("arma::vec(*stochvol_ksc1998)(arma::vec,arma::vec,double,double,double)");
         signatures.insert("arma::mat(*stochvol_ocsn2007)(arma::vec,arma::vec,double,double,double)");
@@ -452,6 +476,7 @@ static int _bvartools_RcppExport_validate(const char* sig) {
 RcppExport SEXP _bvartools_RcppExport_registerCCallable() { 
     R_RegisterCCallable("bvartools", "_bvartools_ewma", (DL_FUNC)_bvartools_ewma_try);
     R_RegisterCCallable("bvartools", "_bvartools_ewma_kk2013", (DL_FUNC)_bvartools_ewma_kk2013_try);
+    R_RegisterCCallable("bvartools", "_bvartools_kalman_dk", (DL_FUNC)_bvartools_kalman_dk_try);
     R_RegisterCCallable("bvartools", "_bvartools_stoch_vol", (DL_FUNC)_bvartools_stoch_vol_try);
     R_RegisterCCallable("bvartools", "_bvartools_stochvol_ksc1998", (DL_FUNC)_bvartools_stochvol_ksc1998_try);
     R_RegisterCCallable("bvartools", "_bvartools_stochvol_ocsn2007", (DL_FUNC)_bvartools_stochvol_ocsn2007_try);

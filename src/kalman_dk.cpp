@@ -1,5 +1,6 @@
 #include <RcppArmadillo.h>
 // [[Rcpp::depends("RcppArmadillo")]]
+// [[Rcpp::interfaces(r, cpp)]]
 
 //' Durbin and Koopman Simulation Smoother
 //' 
@@ -125,19 +126,11 @@ arma::mat kalman_dk(arma::mat y, arma::mat z,
   arma::mat U;
   arma::vec s;
   
-  //arma::mat U;
-  //arma::vec s;
-  //arma::eig_sym(s, U, V_post);
-  //U * arma::diagmat(sqrt(s)) * arma::trans(U)
-  
   // Step 1
   
   arma::eig_sym(s, U, P_init);
-  //svd(U, s, V, P_init);
-  //arma::mat A = U * arma::diagmat(sqrt(s)) * arma::trans(V);
   arma::mat A = U * arma::diagmat(sqrt(s)) * arma::trans(U);
-  arma::vec Z = arma::randn<arma::vec>(nvars);
-  aplus.col(0) = A * Z;
+  aplus.col(0) = A * arma::randn<arma::vec>(nvars);
   
   int p1, p2, pA1, pA2;
   for (int i = 0; i < t; i++){
@@ -146,19 +139,13 @@ arma::mat kalman_dk(arma::mat y, arma::mat z,
     pA1 = i * nvars;
     pA2 = (i + 1) * nvars - 1;
     
-    //svd(U, s, V, sigma_u.rows(p1, p2));
     arma::eig_sym(s, U, sigma_u.rows(p1, p2));
-    //A = U * arma::diagmat(sqrt(s)) * arma::trans(V);
     A = U * arma::diagmat(sqrt(s)) * arma::trans(U);
-    Z = arma::randn<arma::vec>(k);
-    yplus.col(i) =  z.rows(p1, p2) * aplus.col(i) + A * Z;
+    yplus.col(i) =  z.rows(p1, p2) * aplus.col(i) + A * arma::randn<arma::vec>(k);
     
-    //svd(U, s, V, sigma_v.rows(pA1, pA2));
     arma::eig_sym(s, U, sigma_v.rows(pA1, pA2));
-    //A = U * arma::diagmat(sqrt(s)) * arma::trans(V);
     A = U * arma::diagmat(sqrt(s)) * arma::trans(U);
-    Z = arma::randn<arma::vec>(nvars);
-    aplus.col(i + 1) = B.rows(pA1, pA2) * aplus.col(i) + A * Z;
+    aplus.col(i + 1) = B.rows(pA1, pA2) * aplus.col(i) + A * arma::randn<arma::vec>(nvars);
   }
   
   // Step 2

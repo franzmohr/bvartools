@@ -9,6 +9,10 @@
     .Call(`_bvartools_bvartvpalg`, object)
 }
 
+.bvartvpalg_kalman_dk <- function(object) {
+    .Call(`_bvartools_bvartvpalg_kalman_dk`, object)
+}
+
 .bvecalg <- function(object) {
     .Call(`_bvartools_bvecalg`, object)
 }

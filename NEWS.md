@@ -1,5 +1,6 @@
 # bvartools 0.2.3
 
+* Add posterior simulation function, which builds on Durbin and Koopman (2002) algorithm.
 * Made `kalman_dk` callable for C++.
 * Added `ewma` and `ewma_kk2013` algorithms.
 * Changed `stoch_vol` to a wrapper for `stochvol_ksc1998`.

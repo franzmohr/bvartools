@@ -23,6 +23,7 @@ Collate:
     'bvar.R'
     'bvar_fill_helper.R'
     'bvarpost.R'
+    'bvarpost_tvp_sv_dk2002.R'
     'bvartools.R'
     'bvec.R'
     'bvec_to_bvar.R'

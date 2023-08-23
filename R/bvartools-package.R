@@ -1,29 +1,8 @@
-#' bvartools: Bayesian Inference of Vector Autoregressive Models
-#' 
-#' A collection of R and C++ functions, which assist in the Bayesian inference of
-#' vector autoregressive (VAR) and vector error correction (VEC) models.
-#' 
-#' The package \code{bvartools} implements some common functions used for Bayesian
-#' inference for linear, multivariate time series models. It should give researchers
-#' maximum freedom in setting up MCMC algorithms in R and keep calculation time
-#' limited at the same time. This is achieved by implementing posterior simulation
-#' functions in C++. Its main features are
-#' \itemize{
-#' \item The \code{bvar} and \code{bvec} functions collect the output of a Gibbs sampler
-#' in standardised objects, which can be used for further analyses.
-#' \item Further functions such as \code{predict}, \code{irf}, \code{fevd} for forecasting,
-#' impulse response analysis and forecast error variance decomposition, respectively.
-#' \item Computationally intensive functions - such as for posterior
-#' simulation - are written in C++ using the \code{RcppArmadillo} package of Eddelbuettel
-#' and Sanderson (2014).
-#' \item Posterior simulation functions for commonly used Gibbs sampler algorithms.
-#' }
-#' 
-#' @author Franz X. Mohr
-#' @docType package
-#' @name bvartools
-#' 
-#'
+#' @keywords internal
+"_PACKAGE"
+
+## usethis namespace: start
+
 #' @references
 #' 
 #' Chan, J., Koop, G., Poirier, D. J., & Tobias, J. L. (2019). \emph{Bayesian Econometric Methods}
@@ -62,9 +41,11 @@
 #' Sanderson, C., & Curtin, R. (2016). Armadillo: a template-based C++ library for linear algebra.
 #' \emph{Journal of Open Source Software, 1}(2), 26. \doi{10.21105/joss.00026}
 #' 
+#' 
 #' @useDynLib bvartools, .registration = TRUE
 #' @importFrom coda thin
 #' @importFrom Rcpp sourceCpp
 #' @import methods
 #' @exportPattern "^[[:alpha:]]+"
+## usethis namespace: end
 NULL

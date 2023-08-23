@@ -812,5 +812,5 @@ ssvs <- function(a, tau0, tau1, prob_prior, include = NULL) {
 
 # Register entry points for exported C++ functions
 methods::setLoadAction(function(ns) {
-    .Call('_bvartools_RcppExport_registerCCallable', PACKAGE = 'bvartools')
+    .Call(`_bvartools_RcppExport_registerCCallable`)
 })

@@ -6,5 +6,5 @@ macOS: R-release
 
 ## R CMD check results
 
-* NOTE: checking installed package size ... installed size is 31.4Mb
-sub-directories of 1Mb or more: libs  29.6Mb
+* NOTE: installed size is 34.5Mb
+sub-directories of 1Mb or more: libs  32.7Mb

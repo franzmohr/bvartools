@@ -1,6 +1,6 @@
 # bvartools 0.2.3
 
-* Fix alias issue resulting from use with `roxygen2`, i.e. create 
+* Fixed alias issue resulting from use of `roxygen2`.
 * Made `kalman_dk` callable from C++.
 * Stochastic volatility algorithms allow to set the offsetting constant manually.
 * Changed `stoch_vol` to a wrapper for `stochvol_ksc1998`.

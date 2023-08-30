@@ -9,10 +9,6 @@
     .Call(`_bvartools_bvartvpalg`, object)
 }
 
-.bvartvpalg_kalman_dk <- function(object) {
-    .Call(`_bvartools_bvartvpalg_kalman_dk`, object)
-}
-
 .bvecalg <- function(object) {
     .Call(`_bvartools_bvecalg`, object)
 }
@@ -99,44 +95,6 @@ bvs <- function(y, z, a, lambda, sigma_i, prob_prior, include = NULL) {
 
 .draw_forecast <- function(i, k, p, a0_i, use_a, a_, sigma, pred) {
     .Call(`_bvartools_draw_forecast`, i, k, p, a0_i, use_a, a_, sigma, pred)
-}
-
-#' Exponentially Weighted Moving Average
-#' 
-#' Produces a draw of log-volatilities.
-#' 
-#' @param u a \eqn{T \times K} matrix containing the time series.
-#' @param lambda a scalar, vector or matrix of decay factors.
-#' 
-#' @details Some text.
-#' 
-#' @return A matrix with the same dimensions as \code{u}.
-#' 
-ewma <- function(u, lambda) {
-    .Call(`_bvartools_ewma`, u, lambda)
-}
-
-#' Exponentially Weighted Moving Average
-#' 
-#' Produces a matrix of covariance matrices based on the EWMA algorithm used
-#' in Koop and Korobilis (2013).
-#' 
-#' @param u a \eqn{T \times k} matrix containing the time series.
-#' @param lambda a numeric specifying the decay factor.
-#' @param sigmainit a matrix with the initial values of sigma.
-#' 
-#' @details The 
-#' \deqn{\Sigma_{t} = \lambda \Sigma_{t - 1} + (1 - \lambda) u_t u_t^{\prime}.}
-#' 
-#' @return A matrix.
-#' 
-#' @references
-#' 
-#' Koop, G., & Korobilis, D. (2013). Large time-varying parameter VARs.
-#' \emph{Journal of Econometrics 177}(2), 185--198. \doi{10.1016/j.jeconom.2013.04.007}
-#' 
-ewma_kk2013 <- function(u, lambda, sigmainit) {
-    .Call(`_bvartools_ewma_kk2013`, u, lambda, sigmainit)
 }
 
 .ir <- function(A, h, type, impulse, response) {

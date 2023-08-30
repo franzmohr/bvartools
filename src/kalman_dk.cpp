@@ -127,10 +127,9 @@ arma::mat kalman_dk(arma::mat y, arma::mat z,
   arma::vec s;
   
   // Step 1
-  
   arma::eig_sym(s, U, P_init);
   arma::mat A = U * arma::diagmat(sqrt(s)) * arma::trans(U);
-  aplus.col(0) = A * arma::randn<arma::vec>(nvars);
+  aplus.col(0) = A * arma::randn<arma::vec>(nvars); // cf. Jarocinski (2015)
   
   int p1, p2, pA1, pA2;
   for (int i = 0; i < t; i++){
@@ -141,7 +140,7 @@ arma::mat kalman_dk(arma::mat y, arma::mat z,
     
     arma::eig_sym(s, U, sigma_u.rows(p1, p2));
     A = U * arma::diagmat(sqrt(s)) * arma::trans(U);
-    yplus.col(i) =  z.rows(p1, p2) * aplus.col(i) + A * arma::randn<arma::vec>(k);
+    yplus.col(i) = z.rows(p1, p2) * aplus.col(i) + A * arma::randn<arma::vec>(k);
     
     arma::eig_sym(s, U, sigma_v.rows(pA1, pA2));
     A = U * arma::diagmat(sqrt(s)) * arma::trans(U);
@@ -151,7 +150,7 @@ arma::mat kalman_dk(arma::mat y, arma::mat z,
   // Step 2
   arma::mat ystar = y - yplus;
   arma::mat a = arma::zeros<arma::mat>(nvars, t + 1);
-  a.col(0) = a_init;
+  a.col(0) = a_init; // cf. DK (2002, p.606)
   arma::mat P = P_init;
   arma::mat v = y * 0;
   arma::mat Fi = arma::zeros<arma::mat>(k * t, k);

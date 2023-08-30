@@ -1,8 +1,8 @@
 # bvartools 0.2.3
 
-* Add posterior simulation function, which builds on Durbin and Koopman (2002) algorithm.
-* Made `kalman_dk` callable for C++.
-* Added `ewma` and `ewma_kk2013` algorithms.
+* Fix alias issue resulting from use with `roxygen2`, i.e. create 
+* Made `kalman_dk` callable from C++.
+* Stochastic volatility algorithms allow to set the offsetting constant manually.
 * Changed `stoch_vol` to a wrapper for `stochvol_ksc1998`.
 * Added stochastic volatility algorithm of Kim et al. (1998) in a separate function `stochvol_ksc1998`.
 * Added stochastic volatility algorithm of Omori et al. (2007) in function `stochvol_ocsn2007`.

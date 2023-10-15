@@ -243,6 +243,20 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// prep_covar_data
+arma::sp_mat prep_covar_data(arma::vec y, int k, int tt, bool tvp);
+RcppExport SEXP _bvartools_prep_covar_data(SEXP ySEXP, SEXP kSEXP, SEXP ttSEXP, SEXP tvpSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec >::type y(ySEXP);
+    Rcpp::traits::input_parameter< int >::type k(kSEXP);
+    Rcpp::traits::input_parameter< int >::type tt(ttSEXP);
+    Rcpp::traits::input_parameter< bool >::type tvp(tvpSEXP);
+    rcpp_result_gen = Rcpp::wrap(prep_covar_data(y, k, tt, tvp));
+    return rcpp_result_gen;
+END_RCPP
+}
 // stoch_vol
 arma::vec stoch_vol(arma::vec y, arma::vec h, double sigma, double h_init, double constant);
 static SEXP _bvartools_stoch_vol_try(SEXP ySEXP, SEXP hSEXP, SEXP sigmaSEXP, SEXP h_initSEXP, SEXP constantSEXP) {
@@ -424,6 +438,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_bvartools_post_coint_kls_sur", (DL_FUNC) &_bvartools_post_coint_kls_sur, 11},
     {"_bvartools_post_normal", (DL_FUNC) &_bvartools_post_normal, 5},
     {"_bvartools_post_normal_sur", (DL_FUNC) &_bvartools_post_normal_sur, 6},
+    {"_bvartools_prep_covar_data", (DL_FUNC) &_bvartools_prep_covar_data, 4},
     {"_bvartools_stoch_vol", (DL_FUNC) &_bvartools_stoch_vol, 5},
     {"_bvartools_stochvol_ksc1998", (DL_FUNC) &_bvartools_stochvol_ksc1998, 5},
     {"_bvartools_stochvol_ocsn2007", (DL_FUNC) &_bvartools_stochvol_ocsn2007, 5},

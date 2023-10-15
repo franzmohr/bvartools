@@ -547,6 +547,10 @@ post_normal_sur <- function(y, z, sigma_i, a_prior, v_i_prior, svd = FALSE) {
     .Call(`_bvartools_post_normal_sur`, y, z, sigma_i, a_prior, v_i_prior, svd)
 }
 
+.prep_covar_data <- function(y, k, tt, tvp) {
+    .Call(`_bvartools_prep_covar_data`, y, k, tt, tvp)
+}
+
 #' Stochastic Volatility
 #' 
 #' Produces a draw of log-volatilities.

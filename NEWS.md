@@ -1,3 +1,8 @@
+# bvartools 0.2.4
+
+* Added `post_normal_covar_const` for posterior simulation of constant, lower triangular covariance matrices.
+* Added `post_normal_covar_tvp` for posterior simulation of time varying, lower triangular covariance matrices.
+
 # bvartools 0.2.3
 
 * Fixed alias issue resulting from use of `roxygen2`.

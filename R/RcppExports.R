@@ -428,6 +428,50 @@ post_coint_kls_sur <- function(y, beta, w, sigma_i, v_i, p_tau_i, g_i, x = NULL,
     .Call(`_bvartools_post_coint_kls_sur`, y, beta, w, sigma_i, v_i, p_tau_i, g_i, x, gamma_mu_prior, gamma_v_i_prior, svd)
 }
 
+#' Posterior Draws of Error Variances
+#' 
+#' Produces a draw of error variances from a gamma posterior density.
+#' 
+#' @param phi a \eqn{K \times T} matrix of time varying parameter draws.
+#' @param phi_init a \eqn{K \times 1} vector of initial states.
+#' @param shape_prior a \eqn{K \times 1} vector of prior shape parameters.
+#' @param rate_prior a \eqn{K \times 1} vector of prior rate parameters.
+#' 
+#' @details The function produces a posterior draw of the variaces vector \eqn{a} for the model
+#' Follow description in Chan eta al.
+#' 
+#' @references
+#' Chan, J., Koop, G., Poirier, D. J., & Tobias J. L. (2019). \emph{Bayesian econometric methods}
+#' (2nd ed.). Cambridge: Cambridge University Press.
+#' 
+#' @examples
+#' k <- 10 # Number of artificial coefficients
+#' tt <- 1000 # Number of observations
+#' 
+#' set.seed(1234) # Set RNG seed
+#' 
+#' # Generate artificial data according to a random walk
+#' phi <- matrix(rnorm(k), k, tt + 1)
+#' for (i in 2:(tt + 1)) {
+#'   phi[, i] <- phi[, i - 1] + rnorm(k, 0, sqrt(1 / 100))
+#' }
+#' 
+#' phi_init <- matrix(phi[, 1]) # Define inital state
+#' phi <- phi[, -1] # Drop initial state from main sample
+#' 
+#' # Define priors
+#' shape_prior <- matrix(1, k)
+#' rate_prior <- matrix(.0001, k)
+#' 
+#' # Obtain posterior draw
+#' post_gamma_state_variance(phi, phi_init, shape_prior, rate_prior)
+#' 
+#' @return A matrix.
+#' 
+post_gamma_state_variance <- function(phi, phi_init, shape_prior, rate_prior) {
+    .Call(`_bvartools_post_gamma_state_variance`, phi, phi_init, shape_prior, rate_prior)
+}
+
 #' Posterior Draw from a Normal Distribution
 #' 
 #' Produces a draw of coefficients from a normal posterior density.

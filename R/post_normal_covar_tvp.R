@@ -74,12 +74,11 @@ post_normal_covar_tvp <- function(y, u_omega_i, v_sigma_i, psi_init) {
   u_omega_i <- u_omega_i[pos_used, pos_used]
   
   # Draw coefficients
-  hh <- Matrix(0, n_covar * tt, n_covar * tt)
-  diag(hh) <- 1
+  hh <- Matrix::Diagonal(n_covar * tt, 1)
   diag(hh[-(1:n_covar), -(n_covar * (tt - 1) + 1:n_covar)]) <- -1
   
   if (NCOL(v_sigma_i) == n_covar & NCOL(v_sigma_i) == n_covar) {
-    v_sigma_i <- kronecker(Diagonal(tt, 1), v_sigma_i)
+    v_sigma_i <- kronecker(Matrix::Diagonal(tt, 1), v_sigma_i)
   }
   
   hh_temp <- t(hh) %*% v_sigma_i %*% hh
@@ -87,5 +86,5 @@ post_normal_covar_tvp <- function(y, u_omega_i, v_sigma_i, psi_init) {
   v_post <- hh_temp + x_temp %*% z
   mu_post <- solve(v_post, hh_temp %*% kronecker(matrix(1, tt), psi_init) + x_temp %*% y)
   
-  return(matrix(mu_post + solve(chol(v_post), matrix(rnorm(n_covar * tt)))))
+  return(matrix(mu_post + solve(chol(v_post), matrix(stats::rnorm(n_covar * tt)))))
 }

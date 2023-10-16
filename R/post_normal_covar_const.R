@@ -60,7 +60,7 @@ post_normal_covar_const <- function(y, u_omega_i, prior_mean, prior_covariance_i
   
   # Adapt error variance matrix
   if (NCOL(u_omega_i) == k & NCOL(u_omega_i) == k) {
-    u_omega_i <- kronecker(Diagonal(tt, 1), u_omega_i)
+    u_omega_i <- kronecker(Matrix::Diagonal(tt, 1), u_omega_i)
   }
   # Trim error variance matrix
   u_omega_i <- u_omega_i[pos_used, pos_used]
@@ -69,5 +69,5 @@ post_normal_covar_const <- function(y, u_omega_i, prior_mean, prior_covariance_i
   v_post <- prior_covariance_i + crossprod(z, u_omega_i) %*% z
   mu_post <- solve(v_post, prior_covariance_i %*% prior_mean + crossprod(z, u_omega_i) %*% y)
   
-  return(matrix(mu_post + solve(chol(v_post), matrix(rnorm(n_covar)))))
+  return(matrix(mu_post + solve(chol(v_post), matrix(stats::rnorm(n_covar)))))
 }

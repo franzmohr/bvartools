@@ -68,7 +68,7 @@ post_normal_covar_tvp <- function(y, u_omega_i, v_sigma_i, psi_init) {
   
   # Trim 
   if (NCOL(u_omega_i) == k & NCOL(u_omega_i) == k) {
-    u_omega_i <- kronecker(Diagonal(tt, 1), u_omega_i)
+    u_omega_i <- kronecker(Matrix::Diagonal(tt, 1), u_omega_i)
   }
   # Trim error variance matrix
   u_omega_i <- u_omega_i[pos_used, pos_used]

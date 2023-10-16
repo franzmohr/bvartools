@@ -1,6 +1,7 @@
 # Load needed functions from different packages for fast access
 
 #' @importFrom Matrix chol
+#' @importFrom Matrix crossprod
 #' @importFrom Matrix solve
 #' @importFrom Matrix t
 

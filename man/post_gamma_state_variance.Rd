@@ -4,26 +4,35 @@
 \alias{post_gamma_state_variance}
 \title{Posterior Draws of Error Variances}
 \usage{
-post_gamma_state_variance(phi, phi_init, shape_prior, rate_prior)
+post_gamma_state_variance(a, a_init, shape_prior, rate_prior, inverse = FALSE)
 }
 \arguments{
-\item{phi}{a \eqn{K \times T} matrix of time varying parameter draws.}
+\item{a}{a \eqn{K \times T} matrix of time varying parameter draws.}
 
-\item{phi_init}{a \eqn{K \times 1} vector of initial states.}
+\item{a_init}{a \eqn{K \times 1} vector of initial states.}
 
 \item{shape_prior}{a \eqn{K \times 1} vector of prior shape parameters.}
 
 \item{rate_prior}{a \eqn{K \times 1} vector of prior rate parameters.}
+
+\item{inverse}{logical. If \code{TRUE}, the function returns the precision matrix,
+i.e. the inverse of the variance matrix. Defaults to \code{FALSE}.}
 }
 \value{
 A matrix.
 }
 \description{
-Produces a draw of error variances from a gamma posterior density.
+Produces a draw of the constant diagonal error variance matrix of the
+state equation of a state space model using an inverse gamma posterior density.
 }
 \details{
-The function produces a posterior draw of the variaces vector \eqn{a} for the model
-Follow description in Chan eta al.
+For the state space model with state equation
+\deqn{a_t = a_{t-1} + v}
+and measurement equation
+\deqn{y_t = Z_{t} a_t + u_t}
+with \eqn{v_t \sim N(0, \Sigma_{v})} and \eqn{u_t \sim N(0, \Sigma_{u,t})}
+the function produces a draw of the constant diagonal error variances matrix of the
+state equation \eqn{\Simga_v}.
 }
 \examples{
 k <- 10 # Number of artificial coefficients
@@ -32,20 +41,20 @@ tt <- 1000 # Number of observations
 set.seed(1234) # Set RNG seed
 
 # Generate artificial data according to a random walk
-phi <- matrix(rnorm(k), k, tt + 1)
+a <- matrix(rnorm(k), k, tt + 1)
 for (i in 2:(tt + 1)) {
-  phi[, i] <- phi[, i - 1] + rnorm(k, 0, sqrt(1 / 100))
+  a[, i] <- a[, i - 1] + rnorm(k, 0, sqrt(1 / 100))
 }
 
-phi_init <- matrix(phi[, 1]) # Define inital state
-phi <- phi[, -1] # Drop initial state from main sample
+a_init <- matrix(a[, 1]) # Define inital state
+a <- a[, -1] # Drop initial state from main sample
 
 # Define priors
 shape_prior <- matrix(1, k)
 rate_prior <- matrix(.0001, k)
 
 # Obtain posterior draw
-post_gamma_state_variance(phi, phi_init, shape_prior, rate_prior)
+post_gamma_state_variance(a, a_init, shape_prior, rate_prior)
 
 }
 \references{

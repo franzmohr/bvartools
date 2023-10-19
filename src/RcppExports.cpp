@@ -213,16 +213,17 @@ BEGIN_RCPP
 END_RCPP
 }
 // post_gamma_state_variance
-arma::mat post_gamma_state_variance(arma::mat phi, arma::vec phi_init, arma::vec shape_prior, arma::vec rate_prior);
-RcppExport SEXP _bvartools_post_gamma_state_variance(SEXP phiSEXP, SEXP phi_initSEXP, SEXP shape_priorSEXP, SEXP rate_priorSEXP) {
+arma::mat post_gamma_state_variance(arma::mat a, arma::vec a_init, arma::vec shape_prior, arma::vec rate_prior, bool inverse);
+RcppExport SEXP _bvartools_post_gamma_state_variance(SEXP aSEXP, SEXP a_initSEXP, SEXP shape_priorSEXP, SEXP rate_priorSEXP, SEXP inverseSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type phi(phiSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type phi_init(phi_initSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type a(aSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type a_init(a_initSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type shape_prior(shape_priorSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type rate_prior(rate_priorSEXP);
-    rcpp_result_gen = Rcpp::wrap(post_gamma_state_variance(phi, phi_init, shape_prior, rate_prior));
+    Rcpp::traits::input_parameter< bool >::type inverse(inverseSEXP);
+    rcpp_result_gen = Rcpp::wrap(post_gamma_state_variance(a, a_init, shape_prior, rate_prior, inverse));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -450,7 +451,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_bvartools_loglik_normal", (DL_FUNC) &_bvartools_loglik_normal, 2},
     {"_bvartools_post_coint_kls", (DL_FUNC) &_bvartools_post_coint_kls, 10},
     {"_bvartools_post_coint_kls_sur", (DL_FUNC) &_bvartools_post_coint_kls_sur, 11},
-    {"_bvartools_post_gamma_state_variance", (DL_FUNC) &_bvartools_post_gamma_state_variance, 4},
+    {"_bvartools_post_gamma_state_variance", (DL_FUNC) &_bvartools_post_gamma_state_variance, 5},
     {"_bvartools_post_normal", (DL_FUNC) &_bvartools_post_normal, 5},
     {"_bvartools_post_normal_sur", (DL_FUNC) &_bvartools_post_normal_sur, 6},
     {"_bvartools_prep_covar_data", (DL_FUNC) &_bvartools_prep_covar_data, 4},

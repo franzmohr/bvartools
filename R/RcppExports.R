@@ -464,7 +464,7 @@ post_coint_kls_sur <- function(y, beta, w, sigma_i, v_i, p_tau_i, g_i, x = NULL,
 #'   a[, i] <- a[, i - 1] + rnorm(k, 0, sqrt(1 / 100))
 #' }
 #' 
-#' a_init <- matrix(a[, 1]) # Define inital state
+#' a_init <- matrix(a[, 1]) # Define initial state
 #' a <- a[, -1] # Drop initial state from main sample
 #' 
 #' # Define priors
@@ -472,7 +472,7 @@ post_coint_kls_sur <- function(y, beta, w, sigma_i, v_i, p_tau_i, g_i, x = NULL,
 #' rate_prior <- matrix(.0001, k)
 #' 
 #' # Obtain posterior draw
-#' post_gamma_state_variance(a, a_init, shape_prior, rate_prior)
+#' post_gamma_state_variance(a, a_init, shape_prior, rate_prior, inverse = FALSE)
 #' 
 #' @return A matrix.
 #' 

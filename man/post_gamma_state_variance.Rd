@@ -46,7 +46,7 @@ for (i in 2:(tt + 1)) {
   a[, i] <- a[, i - 1] + rnorm(k, 0, sqrt(1 / 100))
 }
 
-a_init <- matrix(a[, 1]) # Define inital state
+a_init <- matrix(a[, 1]) # Define initial state
 a <- a[, -1] # Drop initial state from main sample
 
 # Define priors
@@ -54,7 +54,7 @@ shape_prior <- matrix(1, k)
 rate_prior <- matrix(.0001, k)
 
 # Obtain posterior draw
-post_gamma_state_variance(a, a_init, shape_prior, rate_prior)
+post_gamma_state_variance(a, a_init, shape_prior, rate_prior, inverse = FALSE)
 
 }
 \references{

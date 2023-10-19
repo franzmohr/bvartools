@@ -476,7 +476,7 @@ post_coint_kls_sur <- function(y, beta, w, sigma_i, v_i, p_tau_i, g_i, x = NULL,
 #' 
 #' @return A matrix.
 #' 
-post_gamma_state_variance <- function(a, a_init, shape_prior, rate_prior, inverse = FALSE) {
+post_gamma_state_variance <- function(a, a_init, shape_prior, rate_prior, inverse) {
     .Call(`_bvartools_post_gamma_state_variance`, a, a_init, shape_prior, rate_prior, inverse)
 }
 

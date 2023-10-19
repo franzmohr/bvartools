@@ -4,7 +4,7 @@
 \alias{post_gamma_state_variance}
 \title{Posterior Draws of Error Variances}
 \usage{
-post_gamma_state_variance(a, a_init, shape_prior, rate_prior, inverse = FALSE)
+post_gamma_state_variance(a, a_init, shape_prior, rate_prior, inverse)
 }
 \arguments{
 \item{a}{a \eqn{K \times T} matrix of time varying parameter draws.}

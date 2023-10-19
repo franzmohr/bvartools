@@ -50,7 +50,7 @@
 //' @return A matrix.
 //' 
 // [[Rcpp::export]]
-arma::mat post_gamma_state_variance(arma::mat a, arma::vec a_init, arma::vec shape_prior, arma::vec rate_prior, bool inverse = false) {
+arma::mat post_gamma_state_variance(arma::mat a, arma::vec a_init, arma::vec shape_prior, arma::vec rate_prior, bool inverse) {
   
   int k = a.n_rows;
   int tt = a.n_cols;
@@ -59,16 +59,16 @@ arma::mat post_gamma_state_variance(arma::mat a, arma::vec a_init, arma::vec sha
   a_lag.cols(1, tt - 1) = a.cols(0, tt - 2);
   arma::mat a_v = arma::trans(a - a_lag);
   arma::vec psi_sigma_v_post_scale = 1 / (rate_prior + arma::vectorise(arma::sum(arma::pow(a_v, 2))) * 0.5);
-  arma::mat psi_sigma = arma::zeros<arma::mat>(k, k);
+  arma::mat result = arma::zeros<arma::mat>(k, k);
   arma::vec shape_post = shape_prior + tt * 0.5;
   for (int i = 0; i < k; i++) {
-    psi_sigma(i, i) = arma::randg<double>(arma::distr_param(shape_post(i), psi_sigma_v_post_scale(i)));
-    if (inverse) {
-      psi_sigma(i, i) = 1 / psi_sigma(i, i);
+    // Inverse
+    result(i, i) = arma::randg<double>(arma::distr_param(shape_post(i), psi_sigma_v_post_scale(i)));
+    if (!inverse) {
+      result(i, i) = 1 / result(i, i);
     }
   }
-  
-  return psi_sigma;
+  return result;
 }
 
 /*** R

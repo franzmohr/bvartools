@@ -623,11 +623,11 @@ post_normal_sur <- function(y, z, sigma_i, a_prior, v_i_prior, svd = FALSE) {
 #' y <- us_macrodata[, "r"]
 #' 
 #' # Initialise log-volatilites
-#' h_init <- log(var(y))
-#' h <- rep(h_init, length(y))
+#' h_init <- matrix(log(var(y)))
+#' h <- matrix(rep(h_init, length(y)))
 #' 
 #' # Obtain draw
-#' stoch_vol(y - mean(y), h, .05, h_init, 0.0001)
+#' stoch_vol(y - mean(y), h, matrix(.05), h_init, matrix(0.0001))
 #' 
 #' @references
 #' 
@@ -681,11 +681,11 @@ stoch_vol <- function(y, h, sigma, h_init, constant) {
 #' y <- us_macrodata[, "r"]
 #' 
 #' # Initialise log-volatilites
-#' h_init <- log(var(y))
-#' h <- rep(h_init, length(y))
+#' h_init <- matrix(log(var(y)))
+#' h <- matrix(rep(h_init, length(y)))
 #' 
 #' # Obtain draw
-#' stochvol_ksc1998(y - mean(y), h, .05, h_init, 0.0001)
+#' stochvol_ksc1998(y - mean(y), h, matrix(.05), h_init, matrix(0.0001))
 #' 
 #' @references
 #' 
@@ -732,11 +732,11 @@ stochvol_ksc1998 <- function(y, h, sigma, h_init, constant) {
 #' y <- us_macrodata[, "r"]
 #' 
 #' # Initialise log-volatilites
-#' h_init <- log(var(y))
-#' h <- rep(h_init, length(y))
+#' h_init <- matrix(log(var(y)))
+#' h <- matrix(rep(h_init, length(y)))
 #' 
 #' # Obtain draw
-#' stochvol_ocsn2007(y - mean(y), h, .05, h_init, 0.0001)
+#' stochvol_ocsn2007(y - mean(y), matrix(h), matrix(.05), h_init, matrix(0.0001))
 #' 
 #' @references
 #' 

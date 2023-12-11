@@ -35,11 +35,11 @@
 //' y <- us_macrodata[, "r"]
 //' 
 //' # Initialise log-volatilites
-//' h_init <- log(var(y))
-//' h <- rep(h_init, length(y))
+//' h_init <- matrix(log(var(y)))
+//' h <- matrix(rep(h_init, length(y)))
 //' 
 //' # Obtain draw
-//' stochvol_ocsn2007(y - mean(y), h, .05, h_init, 0.0001)
+//' stochvol_ocsn2007(y - mean(y), matrix(h), matrix(.05), h_init, matrix(0.0001))
 //' 
 //' @references
 //' 
@@ -98,8 +98,8 @@ arma::mat stochvol_ocsn2007(arma::vec y, arma::vec h, double sigma, double h_ini
 
 data("us_macrodata")
 aud <- us_macrodata[, 1]
-h_init <- log(var(aud))
-h <- rep(h_init, length(aud))
-stochvol_ocsn2007(aud - mean(aud), h, .05, h_init, 0.0001)
+h_init <- matrix(log(var(aud)))
+h <- matrix(rep(h_init, length(aud)))
+stochvol_ocsn2007(aud - mean(aud), h, matrix(.05), h_init, matrix(0.0001))
 
 ***/

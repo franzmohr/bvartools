@@ -42,11 +42,11 @@
 //' y <- us_macrodata[, "r"]
 //' 
 //' # Initialise log-volatilites
-//' h_init <- log(var(y))
-//' h <- rep(h_init, length(y))
+//' h_init <- matrix(log(var(y)))
+//' h <- matrix(rep(h_init, length(y)))
 //' 
 //' # Obtain draw
-//' stochvol_ksc1998(y - mean(y), h, .05, h_init, 0.0001)
+//' stochvol_ksc1998(y - mean(y), h, matrix(.05), h_init, matrix(0.0001))
 //' 
 //' @references
 //' 

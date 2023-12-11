@@ -620,7 +620,7 @@ post_normal_sur <- function(y, z, sigma_i, a_prior, v_i_prior, svd = FALSE) {
 #' 
 #' @examples
 #' data("us_macrodata")
-#' y <- us_macrodata[, "r"]
+#' y <- matrix(us_macrodata[, "r"])
 #' 
 #' # Initialise log-volatilites
 #' h_init <- matrix(log(var(y)))
@@ -678,7 +678,7 @@ stoch_vol <- function(y, h, sigma, h_init, constant) {
 #' 
 #' @examples
 #' data("us_macrodata")
-#' y <- us_macrodata[, "r"]
+#' y <- matrix(us_macrodata[, "r"])
 #' 
 #' # Initialise log-volatilites
 #' h_init <- matrix(log(var(y)))
@@ -729,7 +729,7 @@ stochvol_ksc1998 <- function(y, h, sigma, h_init, constant) {
 #' 
 #' @examples
 #' data("us_macrodata")
-#' y <- us_macrodata[, "r"]
+#' y <- matrix(us_macrodata[, "r"])
 #' 
 #' # Initialise log-volatilites
 #' h_init <- matrix(log(var(y)))

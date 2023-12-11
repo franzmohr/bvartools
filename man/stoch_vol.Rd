@@ -29,7 +29,7 @@ The function is a wrapper for function \code{\link{stochvol_ksc1998}}.
 }
 \examples{
 data("us_macrodata")
-y <- us_macrodata[, "r"]
+y <- matrix(us_macrodata[, "r"])
 
 # Initialise log-volatilites
 h_init <- matrix(log(var(y)))

@@ -79,7 +79,7 @@ arma::mat stochvol_ksc1998(arma::mat y, arma::mat h, arma::vec sigma, arma::vec 
   hh.diag(-1) = -arma::ones<arma::vec>(tt - 1);
   hh = hh.t() * hh;
   
-  if (tt != h.n_rows) {
+  if (y.n_rows != h.n_rows) {
     Rcpp::stop("Arguments 'y' and 'h' do not have the same length.");
   }
   

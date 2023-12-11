@@ -101,6 +101,8 @@
 #'   Only used for models with time varying volatility.}
 #'   \item{\code{sigma_h}}{numeric of the initial draw for the variance of the log-volatilities.
 #'   Only used for models with time varying volatility.}
+#'   \item{\code{constant}}{numeric of the constant, which is added before taking the log of the squared errors.
+#'   Only used for models with time varying volatility.}
 #'   \item{\code{covar}}{logical indicating whether error covariances should be estimated. Only used
 #'   in combination with an inverse gamma prior or stochastic volatility, for which \code{shape} and
 #'   \code{rate} must be specified.}
@@ -193,7 +195,7 @@
 add_priors.bvecmodel <- function(object,
                                  coef = list(v_i = 1, v_i_det = 0.1, shape = 3, rate = 0.0001, rate_det = 0.01),
                                  coint = list(v_i = 0, p_tau_i = 1, shape = 3, rate = 0.0001, rho = .999),
-                                 sigma = list(df = "k", scale = 1, mu = 0, v_i = 0.01, sigma_h = 0.05),
+                                 sigma = list(df = "k", scale = 1, mu = 0, v_i = 0.01, sigma_h = 0.05, constant = 0.0001),
                                  ssvs = NULL,
                                  bvs = NULL,
                                  ...){
@@ -704,6 +706,7 @@ add_priors.bvecmodel <- function(object,
     if (object[[i]][["model"]][["sv"]]) {
       object[[i]][["initial"]][["sigma"]][["h"]] <- log(matrix(u, nrow = NCOL(y), ncol = NROW(y), byrow = TRUE))
       object[[i]][["initial"]][["sigma"]][["sigma_h"]] <- matrix(sigma[["sigma_h"]], NROW(y))
+      object[[i]][["initial"]][["sigma"]][["constant"]] <- matrix(sigma[["constant"]], NROW(y))
     } else {
       object[[i]][["initial"]][["sigma"]][["sigma_i"]] <- diag(1 / u, NROW(y))
       dimnames(object[[i]][["initial"]][["sigma"]][["sigma_i"]]) <- list(dimnames(y)[[2]], dimnames(y)[[2]])

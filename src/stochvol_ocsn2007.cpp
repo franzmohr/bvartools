@@ -59,7 +59,7 @@ arma::mat stochvol_ocsn2007(arma::vec y, arma::vec h, double sigma, double h_ini
   // Prepare series
   y = log(arma::pow(y, 2) + constant);
   arma::uword tt = y.n_elem;
-  if (tt != h.n_elem) {
+  if (y.n_elem != h.n_elem) {
     Rcpp::stop("Arguments 'y' and 'h' do not have the same length.");
   }
   

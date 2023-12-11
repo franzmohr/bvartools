@@ -211,7 +211,7 @@ Rcpp::List bvaralg(Rcpp::List object) {
   arma::vec sigma_post_shape, sigma_prior_rate, sigma_prior_mu;
   arma::mat sigma_prior_scale, sigma_prior_vi;
   bool use_gamma = false;
-  arma::vec h_init, sigma_h, u_vec, sigma_post_scale;
+  arma::vec h_constant, h_init, sigma_h, u_vec, sigma_post_scale;
   arma::mat h_init_post_v, sigma_h_i, diag_sigma_i_temp;
   arma::vec h_init_post_mu;
   arma::mat sigma_i, h, h_lag, sse, omega_i;
@@ -226,6 +226,7 @@ Rcpp::List bvaralg(Rcpp::List object) {
     h = Rcpp::as<arma::mat>(init_sigma["h"]);
     h_lag = h * 0;
     sigma_h = Rcpp::as<arma::vec>(init_sigma["sigma_h"]);
+    h_constant = Rcpp::as<arma::vec>(init_sigma["constant"]);
     h_init = arma::vectorise(h.row(0));
     sigma_i = arma::diagmat(1 / exp(h_init));
   } else {
@@ -453,9 +454,7 @@ Rcpp::List bvaralg(Rcpp::List object) {
     if (sv) {
       
       // Draw variances  
-      for (int i = 0; i < k; i++) {
-        h.col(i) = bvartools::stoch_vol(u.row(i).t(), h.col(i), sigma_h(i), h_init(i), 0.0001);
-      }
+      h = bvartools::stoch_vol(u, h, sigma_h, h_init, h_constant);
       diag_omega_i.diag() = 1 / exp(arma::vectorise(h.t()));
       if (covar) {
         diag_Psi = arma::kron(diag_tt, Psi);

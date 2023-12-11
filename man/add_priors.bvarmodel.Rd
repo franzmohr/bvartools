@@ -7,7 +7,7 @@
 \method{add_priors}{bvarmodel}(
   object,
   coef = list(v_i = 1, v_i_det = 0.1, shape = 3, rate = 1e-04, rate_det = 0.01),
-  sigma = list(df = "k", scale = 1, mu = 0, v_i = 0.01, sigma_h = 0.05),
+  sigma = list(df = "k", scale = 1, mu = 0, v_i = 0.01, sigma_h = 0.05, constant = 1e-04),
   ssvs = NULL,
   bvs = NULL,
   ...
@@ -102,6 +102,8 @@ Argument \code{sigma} can contain the following elements:
   \item{\code{v_i}}{numeric of the prior precision of the initial state of the log-volatilities.
   Only used for models with time varying volatility.}
   \item{\code{sigma_h}}{numeric of the initial draw for the variance of the log-volatilities.
+  Only used for models with time varying volatility.}
+  \item{\code{constant}}{numeric of the constant, which is added before taking the log of the squared errors.
   Only used for models with time varying volatility.}
   \item{\code{covar}}{logical indicating whether error covariances should be estimated. Only used
   in combination with an inverse gamma prior or stochastic volatility, for which \code{shape} and

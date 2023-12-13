@@ -52,16 +52,16 @@
 // [[Rcpp::export]]
 arma::mat stochvol_ocsn2007(arma::vec y, arma::vec h, double sigma, double h_init, double constant) {
   
-  // if (y.has_nan()) {
-  //   Rcpp::stop("Argument 'y' contains NAs.");
-  // }
+  if (y.has_nan()) {
+    Rcpp::stop("Argument 'y' contains NAs.");
+  }
   
   // Prepare series
   y = log(arma::pow(y, 2) + constant);
   arma::uword tt = y.n_elem;
-  // if (y.n_elem != h.n_elem) {
-  //   Rcpp::stop("Arguments 'y' and 'h' do not have the same length.");
-  // }
+  if (y.n_elem != h.n_elem) {
+    Rcpp::stop("Arguments 'y' and 'h' do not have the same length.");
+  }
   
   // Components of the mixture model
   arma::rowvec p_i(10), mu(10), sigma2(10);

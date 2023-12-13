@@ -59,9 +59,9 @@
 // [[Rcpp::export]]
 arma::mat stochvol_ksc1998(arma::mat y, arma::mat h, arma::vec sigma, arma::vec h_init, arma::vec constant) {
   
-  if (y.has_nan()) {
-    Rcpp::stop("Argument 'y' contains NAs.");
-  }
+  // if (y.has_nan()) {
+  //   Rcpp::stop("Argument 'y' contains NAs.");
+  // }
   
   // Components of the mixture model
   arma::rowvec p_i(7), mu(7), sigma2(7);

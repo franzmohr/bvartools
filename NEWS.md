@@ -1,5 +1,6 @@
 # bvartools 0.2.4
 
+* Dropped some error messages to fix a security concern with `Rcpp::stop`.
 * `stochvol_ocsn2007` can handle multi-column input.
 * `stochvol_ksc1998` can handle multi-column input.
 * Added `post_gamma_state_variance` for posterior simulation of constant error variances of the state equation.

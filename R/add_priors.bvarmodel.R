@@ -601,6 +601,11 @@ add_priors.bvarmodel <- function(object,
     if (object[[i]][["model"]][["sv"]]) {
       object[[i]][["initial"]][["sigma"]][["h"]] <- log(matrix(u, nrow = NCOL(y), ncol = NROW(y), byrow = TRUE))
       object[[i]][["initial"]][["sigma"]][["sigma_h"]] <- matrix(sigma[["sigma_h"]], NROW(y))
+      
+      if (is.null(sigma[["constant"]])) {
+        warning("Argument 'sigma$constant' not specified. Using the value 0.0001.")
+        sigma[["constant"]] <- .0001
+      }
       object[[i]][["initial"]][["sigma"]][["constant"]] <- matrix(sigma[["constant"]], NROW(y))
     } else {
       object[[i]][["initial"]][["sigma"]][["sigma_i"]] <- diag(1 / u, NROW(y))

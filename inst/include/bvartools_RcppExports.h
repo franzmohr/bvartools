@@ -46,11 +46,11 @@ namespace bvartools {
         return Rcpp::as<arma::mat >(rcpp_result_gen);
     }
 
-    inline arma::vec stoch_vol(arma::mat y, arma::mat h, arma::vec sigma, arma::vec h_init, arma::vec constant) {
+    inline arma::mat stoch_vol(arma::mat y, arma::mat h, arma::vec sigma, arma::vec h_init, arma::vec constant) {
         typedef SEXP(*Ptr_stoch_vol)(SEXP,SEXP,SEXP,SEXP,SEXP);
         static Ptr_stoch_vol p_stoch_vol = NULL;
         if (p_stoch_vol == NULL) {
-            validateSignature("arma::vec(*stoch_vol)(arma::mat,arma::mat,arma::vec,arma::vec,arma::vec)");
+            validateSignature("arma::mat(*stoch_vol)(arma::mat,arma::mat,arma::vec,arma::vec,arma::vec)");
             p_stoch_vol = (Ptr_stoch_vol)R_GetCCallable("bvartools", "_bvartools_stoch_vol");
         }
         RObject rcpp_result_gen;
@@ -64,7 +64,7 @@ namespace bvartools {
             throw Rcpp::LongjumpException(rcpp_result_gen);
         if (rcpp_result_gen.inherits("try-error"))
             throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
-        return Rcpp::as<arma::vec >(rcpp_result_gen);
+        return Rcpp::as<arma::mat >(rcpp_result_gen);
     }
 
     inline arma::mat stochvol_ksc1998(arma::mat y, arma::mat h, arma::vec sigma, arma::vec h_init, arma::vec constant) {
@@ -88,11 +88,11 @@ namespace bvartools {
         return Rcpp::as<arma::mat >(rcpp_result_gen);
     }
 
-    inline arma::mat stochvol_ocsn2007(arma::vec y, arma::vec h, double sigma, double h_init, double constant) {
+    inline arma::mat stochvol_ocsn2007(arma::mat y, arma::mat h, arma::vec sigma, arma::vec h_init, arma::vec constant) {
         typedef SEXP(*Ptr_stochvol_ocsn2007)(SEXP,SEXP,SEXP,SEXP,SEXP);
         static Ptr_stochvol_ocsn2007 p_stochvol_ocsn2007 = NULL;
         if (p_stochvol_ocsn2007 == NULL) {
-            validateSignature("arma::mat(*stochvol_ocsn2007)(arma::vec,arma::vec,double,double,double)");
+            validateSignature("arma::mat(*stochvol_ocsn2007)(arma::mat,arma::mat,arma::vec,arma::vec,arma::vec)");
             p_stochvol_ocsn2007 = (Ptr_stochvol_ocsn2007)R_GetCCallable("bvartools", "_bvartools_stochvol_ocsn2007");
         }
         RObject rcpp_result_gen;

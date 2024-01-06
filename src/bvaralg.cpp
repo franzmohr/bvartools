@@ -287,7 +287,7 @@ Rcpp::List bvaralg(Rcpp::List object) {
   if (covar && psi_varsel) {
     draws_lambda_a0 = arma::zeros<arma::mat>(n_psi, iter);  
   }
-
+  
   // Start Gibbs sampler
   for (int draw = 0; draw < draws; draw++) {
     
@@ -295,7 +295,8 @@ Rcpp::List bvaralg(Rcpp::List object) {
       Rcpp::checkUserInterrupt();
     }
     
-    // Draw coefficients ----
+    ////////////////////////////////////////////////////////////////////////////
+    // Draw coefficients
     if (use_a) {
       
       if (bvs) {
@@ -366,7 +367,9 @@ Rcpp::List bvaralg(Rcpp::List object) {
       u = y;
     }
     
-    // Covariances
+    ////////////////////////////////////////////////////////////////////////////
+    // Draw error covariances
+    
     if (covar) {
       
       // Prepare data
@@ -451,17 +454,12 @@ Rcpp::List bvaralg(Rcpp::List object) {
       u = Psi * u;
     }
     
+    ////////////////////////////////////////////////////////////////////////////
+    // Draw error variances
+    
     if (sv) {
       
-      // Draw variances  
-      h = bvartools::stoch_vol(u, h, sigma_h, h_init, h_constant);
-      diag_omega_i.diag() = 1 / exp(arma::vectorise(h.t()));
-      if (covar) {
-        diag_Psi = arma::kron(diag_tt, Psi);
-        diag_sigma_i = arma::trans(diag_Psi) * diag_omega_i * diag_Psi;
-      } else {
-        diag_sigma_i = diag_omega_i;
-      }
+      h = bvartools::stochvol_ksc1998(arma::trans(u), h, sigma_h, h_init, h_constant);
       
       // Draw sigma_h
       h_lag.row(0) = h_init.t();
@@ -481,24 +479,39 @@ Rcpp::List bvaralg(Rcpp::List object) {
     } else {
       
       if (use_gamma) {
-        
         sse = u * u.t();
         for (int i = 0; i < k; i++) {
           omega_i(i, i) = arma::randg<double>(arma::distr_param(sigma_post_shape(i), 1 / arma::as_scalar(sigma_prior_rate(i) + sse(i, i) * 0.5)));
         }
-        if (covar) {
-          diag_omega_i = arma::kron(diag_tt, omega_i);
-          sigma_i = arma::trans(Psi) * omega_i * Psi;
-        } else {
-          sigma_i = omega_i;
-        }
-        
-      } else {
-        sigma_i = arma::wishrnd(arma::solve(sigma_prior_scale + u * u.t(), diag_k), sigma_post_df);
       }
       
+    }
+    
+    ////////////////////////////////////////////////////////////////////////////
+    // Combine Psi and Omega resp. draw from Wishart
+    
+    if (sv) {
+      diag_omega_i.diag() = 1 / exp(arma::vectorise(arma::trans(h)));
+      if (covar) {
+        diag_Psi = arma::kron(diag_tt, Psi);
+        diag_sigma_i = arma::trans(diag_Psi) * diag_omega_i * diag_Psi;
+      } else {
+        diag_sigma_i = diag_omega_i;
+      }
+    } else {
+      if (use_gamma) {
+        if (covar) {
+          diag_omega_i = arma::kron(diag_tt, omega_i); // Used if covar is estimated
+          sigma_i = arma::trans(Psi) * omega_i * Psi; // Update sigma
+        } else {
+          sigma_i = omega_i; // Since no covar, sigma = omega
+        }
+      } else {
+        // Draw from Wishart
+        sigma_i = arma::wishrnd(arma::solve(sigma_prior_scale + u * u.t(), diag_k), sigma_post_df);
+      }
+      // Final sigma block diagonal matrix for block A
       diag_sigma_i = arma::kron(diag_tt, sigma_i);
-      
     }
     
     // Store draws
@@ -614,3 +627,18 @@ Rcpp::List bvaralg(Rcpp::List object) {
   return result;
   // return Rcpp::List::create(Rcpp::Named("test") = sigma_i);
 }
+
+/*** R
+
+data("us_macrodata")
+
+object <- gen_var(us_macrodata, p = 0, deterministic = "none",
+                  sv = TRUE,
+                  iterations = 20, burnin = 10)
+
+object <- add_priors(object,
+                     sigma = list(shape = 3, rate = .4, mu = 10, v_i = .01, sigma_h = .05, constant = .0001))
+
+.bvaralg(object)
+
+*/

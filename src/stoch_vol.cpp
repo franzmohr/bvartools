@@ -38,7 +38,7 @@
 //' with ARCH models. \emph{Review of Economic Studies 65}(3), 361--393. \doi{10.1111/1467-937X.00050}
 //' 
 // [[Rcpp::export]]
-arma::vec stoch_vol(arma::mat y, arma::mat h, arma::vec sigma, arma::vec h_init, arma::vec constant) {
+arma::mat stoch_vol(arma::mat y, arma::mat h, arma::vec sigma, arma::vec h_init, arma::vec constant) {
   return bvartools::stochvol_ksc1998(y, h, sigma, h_init, constant);
 }
 

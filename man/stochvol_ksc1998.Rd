@@ -9,7 +9,7 @@ stochvol_ksc1998(y, h, sigma, h_init, constant)
 \arguments{
 \item{y}{a \eqn{T \times K} matrix containing the time series.}
 
-\item{h}{a \eqn{T \times K} vector of log-volatilities.}
+\item{h}{a \eqn{T \times K} vector of the current draw of log-volatilities.}
 
 \item{sigma}{a \eqn{K \times 1} vector of variances of log-volatilities,
 where the \eqn{i}th element corresponds to the \eqn{i}th column in \code{y}.}

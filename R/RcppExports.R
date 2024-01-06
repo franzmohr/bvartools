@@ -646,7 +646,7 @@ stoch_vol <- function(y, h, sigma, h_init, constant) {
 #' Produces a draw of log-volatilities.
 #'
 #' @param y a \eqn{T \times K} matrix containing the time series.
-#' @param h a \eqn{T \times K} vector of log-volatilities.
+#' @param h a \eqn{T \times K} vector of the current draw of log-volatilities.
 #' @param sigma a \eqn{K \times 1} vector of variances of log-volatilities,
 #' where the \eqn{i}th element corresponds to the \eqn{i}th column in \code{y}.
 #' @param h_init a \eqn{K \times 1} vector of the initial states of log-volatilities,
@@ -703,14 +703,18 @@ stochvol_ksc1998 <- function(y, h, sigma, h_init, constant) {
 #' 
 #' Produces a draw of log-volatilities based on Omori, Chib, Shephard and Nakajima (2007).
 #' 
-#' @param y a \eqn{T \times 1} vector containing the time series.
-#' @param h a \eqn{T \times 1} vector of log-volatilities.
-#' @param sigma a numeric of the variance of the log-volatilites.
-#' @param h_init a numeric of the initial state of log-volatilities.
-#' @param constant a numeric of the constant that should be added to \eqn{y^2}
-#' before taking the natural logarithm. See 'Details'.
+#' @param y a \eqn{T \times K} matrix containing the time series.
+#' @param h a \eqn{T \times K} vector of the current draw of log-volatilities.
+#' @param sigma a \eqn{K \times 1} vector of variances of log-volatilities,
+#' where the \eqn{i}th element corresponds to the \eqn{i}th column in \code{y}.
+#' @param h_init a \eqn{K \times 1} vector of the initial states of log-volatilities,
+#' where the \eqn{i}th element corresponds to the \eqn{i}th column in \code{y}.
+#' @param constant a \eqn{K \times 1} vector of constants that should be added to \eqn{y^2}
+#' before taking the natural logarithm. The \eqn{i}th element corresponds to
+#' the \eqn{i}th column in \code{y}. See 'Details'.
 #' 
-#' @details The function produces a posterior draw of the log-volatility \eqn{h} for the model
+#' @details For each column in \code{y} the function produces a posterior
+#' draw of the log-volatility \eqn{h} for the model
 #' \deqn{y_{t} = e^{\frac{1}{2}h_t} \epsilon_{t},}
 #' where \eqn{\epsilon_t \sim N(0, 1)} and \eqn{h_t} is assumed to evolve according to a random walk
 #' \deqn{h_t = h_{t - 1} + u_t,}
@@ -725,6 +729,9 @@ stochvol_ksc1998 <- function(y, h, sigma, h_init, constant) {
 #'   \item Obtain a draw of log-volatilities.
 #' }
 #' 
+#' The implementation is an adaption of the code provided on the website to the textbook
+#' by Chan, Koop, Poirier, and Tobias (2019).
+#' 
 #' @return A vector of log-volatility draws.
 #' 
 #' @examples
@@ -736,7 +743,7 @@ stochvol_ksc1998 <- function(y, h, sigma, h_init, constant) {
 #' h <- matrix(rep(h_init, length(y)))
 #' 
 #' # Obtain draw
-#' stochvol_ocsn2007(y - mean(y), matrix(h), matrix(.05), h_init, matrix(0.0001))
+#' stochvol_ocsn2007(y - mean(y), h, matrix(.05), h_init, matrix(0.0001))
 #' 
 #' @references
 #' 

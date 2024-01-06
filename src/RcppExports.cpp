@@ -273,7 +273,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // stoch_vol
-arma::vec stoch_vol(arma::mat y, arma::mat h, arma::vec sigma, arma::vec h_init, arma::vec constant);
+arma::mat stoch_vol(arma::mat y, arma::mat h, arma::vec sigma, arma::vec h_init, arma::vec constant);
 static SEXP _bvartools_stoch_vol_try(SEXP ySEXP, SEXP hSEXP, SEXP sigmaSEXP, SEXP h_initSEXP, SEXP constantSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -349,15 +349,15 @@ RcppExport SEXP _bvartools_stochvol_ksc1998(SEXP ySEXP, SEXP hSEXP, SEXP sigmaSE
     return rcpp_result_gen;
 }
 // stochvol_ocsn2007
-arma::mat stochvol_ocsn2007(arma::vec y, arma::vec h, double sigma, double h_init, double constant);
+arma::mat stochvol_ocsn2007(arma::mat y, arma::mat h, arma::vec sigma, arma::vec h_init, arma::vec constant);
 static SEXP _bvartools_stochvol_ocsn2007_try(SEXP ySEXP, SEXP hSEXP, SEXP sigmaSEXP, SEXP h_initSEXP, SEXP constantSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
-    Rcpp::traits::input_parameter< arma::vec >::type y(ySEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type h(hSEXP);
-    Rcpp::traits::input_parameter< double >::type sigma(sigmaSEXP);
-    Rcpp::traits::input_parameter< double >::type h_init(h_initSEXP);
-    Rcpp::traits::input_parameter< double >::type constant(constantSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type y(ySEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type h(hSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type h_init(h_initSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type constant(constantSEXP);
     rcpp_result_gen = Rcpp::wrap(stochvol_ocsn2007(y, h, sigma, h_init, constant));
     return rcpp_result_gen;
 END_RCPP_RETURN_ERROR
@@ -421,9 +421,9 @@ static int _bvartools_RcppExport_validate(const char* sig) {
     static std::set<std::string> signatures;
     if (signatures.empty()) {
         signatures.insert("arma::mat(*kalman_dk)(arma::mat,arma::mat,arma::mat,arma::mat,arma::mat,arma::vec,arma::mat)");
-        signatures.insert("arma::vec(*stoch_vol)(arma::mat,arma::mat,arma::vec,arma::vec,arma::vec)");
+        signatures.insert("arma::mat(*stoch_vol)(arma::mat,arma::mat,arma::vec,arma::vec,arma::vec)");
         signatures.insert("arma::mat(*stochvol_ksc1998)(arma::mat,arma::mat,arma::vec,arma::vec,arma::vec)");
-        signatures.insert("arma::mat(*stochvol_ocsn2007)(arma::vec,arma::vec,double,double,double)");
+        signatures.insert("arma::mat(*stochvol_ocsn2007)(arma::mat,arma::mat,arma::vec,arma::vec,arma::vec)");
     }
     return signatures.find(sig) != signatures.end();
 }

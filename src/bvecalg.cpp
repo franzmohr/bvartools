@@ -589,18 +589,13 @@ Rcpp::List bvecalg(Rcpp::List object) {
       u = Psi * u;
     }
     
+    ////////////////////////////////////////////////////////////////////////////
+    // Draw error variances
+    
     if (sv) {
       
-      // Draw variances  
-      h = bvartools::stoch_vol(u, h, sigma_h, h_init, h_constant);
-      diag_omega_i.diag() = 1 / exp(arma::vectorise(h.t()));
-      if (covar) {
-       diag_Psi = arma::kron(diag_tt, Psi);
-       diag_sigma_i = arma::trans(diag_Psi) * diag_omega_i * diag_Psi;
-      } else {
-        diag_sigma_i = diag_omega_i;
-      }
-
+      h = bvartools::stochvol_ksc1998(arma::trans(u), h, sigma_h, h_init, h_constant);
+      
       // Draw sigma_h
       h_lag.row(0) = h_init.t();
       h_lag.rows(1, tt - 1) = h.rows(0, tt - 2);
@@ -609,28 +604,43 @@ Rcpp::List bvecalg(Rcpp::List object) {
       for (int i = 0; i < k; i++) {
         sigma_h(i) = 1 / arma::randg<double>(arma::distr_param(sigma_post_shape(i), sigma_post_scale(i)));
       }
-
+      
       // Draw h_init
       sigma_h_i = arma::diagmat(1 / sigma_h);
       h_init_post_v = sigma_prior_vi + sigma_h_i;
       h_init_post_mu = arma::solve(h_init_post_v, sigma_prior_vi * sigma_prior_mu + sigma_h_i * h.row(0).t());
       h_init = h_init_post_mu + arma::solve(arma::chol(h_init_post_v), arma::randn(k));
-
+      
     } else {
-
+      
       if (use_gamma) {
-        
         sse = u * u.t();
         for (int i = 0; i < k; i++) {
           omega_i(i, i) = arma::randg<double>(arma::distr_param(sigma_post_shape(i), 1 / arma::as_scalar(sigma_prior_rate(i) + sse(i, i) * 0.5)));
         }
+      }
+      
+    }
+    
+    ////////////////////////////////////////////////////////////////////////////
+    // Combine Psi and Omega resp. draw from Wishart
+    
+    if (sv) {
+      diag_omega_i.diag() = 1 / exp(arma::vectorise(h.t()));
+      if (covar) {
+        diag_Psi = arma::kron(diag_tt, Psi);
+        diag_sigma_i = arma::trans(diag_Psi) * diag_omega_i * diag_Psi;
+      } else {
+        diag_sigma_i = diag_omega_i;
+      }
+    } else {
+      if (use_gamma) {
         if (covar) {
           diag_omega_i = arma::kron(diag_tt, omega_i);
           sigma_i = arma::trans(Psi) * omega_i * Psi;
         } else {
           sigma_i = omega_i;
         }
-
       } else {
         if (use_rr) {
           sigma_i = arma::wishrnd(arma::solve(coint_v_i * alpha * (beta.t() * p_tau_i * beta) * alpha.t() + u * u.t(), diag_k), sigma_post_df);
@@ -638,9 +648,7 @@ Rcpp::List bvecalg(Rcpp::List object) {
           sigma_i = arma::wishrnd(arma::solve(sigma_prior_scale + u * u.t(), diag_k), sigma_post_df);
         }
       }
-
       diag_sigma_i = arma::kron(diag_tt, sigma_i);
-      
     }
     
     // Update g_i

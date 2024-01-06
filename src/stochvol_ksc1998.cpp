@@ -7,7 +7,7 @@
 //' Produces a draw of log-volatilities.
 //'
 //' @param y a \eqn{T \times K} matrix containing the time series.
-//' @param h a \eqn{T \times K} vector of log-volatilities.
+//' @param h a \eqn{T \times K} vector of the current draw of log-volatilities.
 //' @param sigma a \eqn{K \times 1} vector of variances of log-volatilities,
 //' where the \eqn{i}th element corresponds to the \eqn{i}th column in \code{y}.
 //' @param h_init a \eqn{K \times 1} vector of the initial states of log-volatilities,
@@ -59,8 +59,15 @@
 // [[Rcpp::export]]
 arma::mat stochvol_ksc1998(arma::mat y, arma::mat h, arma::vec sigma, arma::vec h_init, arma::vec constant) {
   
+  // Checks
   if (y.has_nan()) {
     Rcpp::stop("Argument 'y' contains NAs.");
+  }
+  if (y.n_rows != h.n_rows) {
+    Rcpp::stop("Arguments 'y' and 'h' do not have the same number of rows.");
+  }
+  if (y.n_cols != h.n_cols) {
+    Rcpp::stop("Arguments 'y' and 'h' do not have the same number of columns.");
   }
   
   // Components of the mixture model
@@ -78,10 +85,6 @@ arma::mat stochvol_ksc1998(arma::mat y, arma::mat h, arma::vec sigma, arma::vec 
   arma::mat hh = arma::eye<arma::mat>(tt, tt);
   hh.diag(-1) = -arma::ones<arma::vec>(tt - 1);
   hh = hh.t() * hh;
-  
-  if (y.n_rows != h.n_rows) {
-    Rcpp::stop("Arguments 'y' and 'h' do not have the same length.");
-  }
   
   for (int i = 0; i < k; i++) {
     // Prepare series
@@ -113,4 +116,5 @@ h <- t(matrix(h_init, 3, nrow(y)))
 sigma_h <- rep(.05, 3)
 const <- rep(.0001, 3)
 stochvol_ksc1998(y, h, sigma_h, h_init, const)
+
 ***/

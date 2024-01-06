@@ -6,14 +6,18 @@
 //' 
 //' Produces a draw of log-volatilities based on Omori, Chib, Shephard and Nakajima (2007).
 //' 
-//' @param y a \eqn{T \times 1} vector containing the time series.
-//' @param h a \eqn{T \times 1} vector of log-volatilities.
-//' @param sigma a numeric of the variance of the log-volatilites.
-//' @param h_init a numeric of the initial state of log-volatilities.
-//' @param constant a numeric of the constant that should be added to \eqn{y^2}
-//' before taking the natural logarithm. See 'Details'.
+//' @param y a \eqn{T \times K} matrix containing the time series.
+//' @param h a \eqn{T \times K} vector of the current draw of log-volatilities.
+//' @param sigma a \eqn{K \times 1} vector of variances of log-volatilities,
+//' where the \eqn{i}th element corresponds to the \eqn{i}th column in \code{y}.
+//' @param h_init a \eqn{K \times 1} vector of the initial states of log-volatilities,
+//' where the \eqn{i}th element corresponds to the \eqn{i}th column in \code{y}.
+//' @param constant a \eqn{K \times 1} vector of constants that should be added to \eqn{y^2}
+//' before taking the natural logarithm. The \eqn{i}th element corresponds to
+//' the \eqn{i}th column in \code{y}. See 'Details'.
 //' 
-//' @details The function produces a posterior draw of the log-volatility \eqn{h} for the model
+//' @details For each column in \code{y} the function produces a posterior
+//' draw of the log-volatility \eqn{h} for the model
 //' \deqn{y_{t} = e^{\frac{1}{2}h_t} \epsilon_{t},}
 //' where \eqn{\epsilon_t \sim N(0, 1)} and \eqn{h_t} is assumed to evolve according to a random walk
 //' \deqn{h_t = h_{t - 1} + u_t,}
@@ -28,6 +32,9 @@
 //'   \item Obtain a draw of log-volatilities.
 //' }
 //' 
+//' The implementation is an adaption of the code provided on the website to the textbook
+//' by Chan, Koop, Poirier, and Tobias (2019).
+//' 
 //' @return A vector of log-volatility draws.
 //' 
 //' @examples
@@ -39,7 +46,7 @@
 //' h <- matrix(rep(h_init, length(y)))
 //' 
 //' # Obtain draw
-//' stochvol_ocsn2007(y - mean(y), matrix(h), matrix(.05), h_init, matrix(0.0001))
+//' stochvol_ocsn2007(y - mean(y), h, matrix(.05), h_init, matrix(0.0001))
 //' 
 //' @references
 //' 
@@ -50,17 +57,17 @@
 //' \emph{Journal of Econometrics 140}(2), 425--449. \doi{10.1016/j.jeconom.2006.07.008}
 //' 
 // [[Rcpp::export]]
-arma::mat stochvol_ocsn2007(arma::vec y, arma::vec h, double sigma, double h_init, double constant) {
+arma::mat stochvol_ocsn2007(arma::mat y, arma::mat h, arma::vec sigma, arma::vec h_init, arma::vec constant) {
   
+  // Checks
   if (y.has_nan()) {
     Rcpp::stop("Argument 'y' contains NAs.");
   }
-  
-  // Prepare series
-  y = log(arma::pow(y, 2) + constant);
-  arma::uword tt = y.n_elem;
-  if (y.n_elem != h.n_elem) {
-    Rcpp::stop("Arguments 'y' and 'h' do not have the same length.");
+  if (y.n_rows != h.n_rows) {
+    Rcpp::stop("Arguments 'y' and 'h' do not have the same number of rows.");
+  }
+  if (y.n_cols != h.n_cols) {
+    Rcpp::stop("Arguments 'y' and 'h' do not have the same number of columns.");
   }
   
   // Components of the mixture model
@@ -76,30 +83,44 @@ arma::mat stochvol_ocsn2007(arma::vec y, arma::vec h, double sigma, double h_ini
   p_i(8) = 0.01575; mu(8) = -8.68384; sigma2(8) = 4.16591;
   p_i(9) = 0.00115; mu(9) = -14.65000; sigma2(9) = 7.33342;
   
-  // Choose, which component should be used per observation
-  arma::mat q = arma::repmat(p_i, tt, 1) % arma::normpdf(arma::repmat(y, 1, 10), arma::repmat(h, 1, 10) + arma::repmat(mu, tt, 1), arma::repmat(sqrt(sigma2), tt, 1));
-  q = q / arma::repmat(sum(q, 1), 1, 10);
-  arma::umat s = 10 - sum(arma::repmat(arma::randu<arma::vec>(tt), 1, 10) < cumsum(q, 1), 1);
-  // umat is a matrix index
+  int k = y.n_cols;
+  int tt = y.n_rows;
+  arma::mat q, sigh_hh, sigs, post_h_v, post_h_mu;
+  arma::umat s;
   
-  // Sample log-volatility
   arma::mat hh = arma::eye<arma::mat>(tt, tt);
   hh.diag(-1) = -arma::ones<arma::vec>(tt - 1);
-  arma::mat sigh_hh = hh.t() * hh / sigma;
-  arma::mat sigs = arma::eye<arma::mat>(tt, tt);
-  sigs.diag() = 1 / sigma2.elem(s);
-  arma::mat post_h_v = sigh_hh + sigs;
-  arma::mat post_h_mu = arma::solve(post_h_v, sigh_hh * arma::ones<arma::vec>(tt) * h_init + sigs * (y - mu.elem(s)));
+  hh = hh.t() * hh;
   
-  return post_h_mu + arma::solve(arma::chol(arma::mat(post_h_v)), arma::randn<arma::vec>(tt));
+  for (int i = 0; i < k; i++) {
+    // Prepare series
+    y.col(i) = log(arma::pow(y.col(i), 2) + constant(i));
+    
+    // Sample s
+    q = arma::repmat(p_i, tt, 1) % arma::normpdf(arma::repmat(y.col(i), 1, 10), arma::repmat(h.col(i), 1, 10) + arma::repmat(mu, tt, 1), arma::repmat(sqrt(sigma2), tt, 1));
+    q = q / arma::repmat(sum(q, 1), 1, 10);
+    s = 10 - sum(arma::repmat(arma::randu<arma::vec>(tt), 1, 10) < cumsum(q, 1), 1);
+    
+    // Sample log-volatility
+    sigh_hh = hh / sigma(i);
+    sigs = arma::eye<arma::mat>(tt, tt);
+    sigs.diag() = 1 / sigma2.elem(s);
+    post_h_v = sigh_hh + sigs;
+    post_h_mu = arma::solve(post_h_v, sigh_hh * arma::ones<arma::vec>(tt) * h_init(i) + sigs * (y.col(i) - mu.elem(s)));
+    h.col(i) = post_h_mu + arma::solve(arma::chol(post_h_v), arma::randn<arma::vec>(tt));
+  }
+  
+  return h;
 }
 
 /*** R
 
 data("us_macrodata")
-aud <- us_macrodata[, 1]
-h_init <- matrix(log(var(aud)))
-h <- matrix(rep(h_init, length(aud)))
-stochvol_ocsn2007(aud - mean(aud), h, matrix(.05), h_init, matrix(0.0001))
+y <- us_macrodata
+h_init <- log(diag(var(y)))
+h <- t(matrix(h_init, 3, nrow(y)))
+sigma_h <- rep(.05, 3)
+const <- rep(.0001, 3)
+stochvol_ocsn2007(y, h, sigma_h, h_init, const)
 
 ***/

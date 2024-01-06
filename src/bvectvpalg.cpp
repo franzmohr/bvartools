@@ -625,16 +625,12 @@ Rcpp::List bvectvpalg(Rcpp::List object) {
       u = arma::reshape(Psi * arma::vectorise(u), k, tt);
     }
     
+    ////////////////////////////////////////////////////////////////////////////
+    // Draw measurement error variances
+    
     if (sv) {
       
-      // Draw variances
-      h = bvartools::stoch_vol(u, h, sigma_h, h_init, h_constant);
-      diag_omega_i.diag() = 1 / exp(arma::vectorise(h.t()));
-      if (covar) {
-        diag_sigma_u_i = arma::trans(Psi) * diag_omega_i * Psi;
-      } else {
-        diag_sigma_u_i = diag_omega_i;
-      }
+      h = bvartools::stochvol_ksc1998(arma::trans(u), h, sigma_h, h_init, h_constant);
       
       // Draw sigma_h
       h_lag.row(0) = h_init.t();
@@ -654,19 +650,32 @@ Rcpp::List bvectvpalg(Rcpp::List object) {
     } else {
       
       if (use_gamma) {
-        
         sse = u * u.t();
         for (int i = 0; i < k; i++) {
           omega_i(i, i) = arma::randg<double>(arma::distr_param(sigma_post_shape(i), 1 / arma::as_scalar(sigma_prior_rate(i) + sse(i, i) * 0.5)));
         }
-        diag_omega_i = arma::kron(diag_tt, omega_i);
+      }
+      
+    }
+    
+    ////////////////////////////////////////////////////////////////////////////
+    // Combine Psi and Omega resp. draw from Wishart
+    
+    if (sv) {
+      diag_omega_i.diag() = 1 / exp(arma::vectorise(h.t()));
+      if (covar) {
+        diag_sigma_u_i = arma::trans(Psi) * diag_omega_i * Psi;
+      } else {
+        diag_sigma_u_i = diag_omega_i;
+      }
+    } else {
+      if (use_gamma) {
         if (covar) {
           diag_sigma_u_i = arma::trans(Psi) * diag_omega_i * Psi;
         } else {
           sigma_u_i = omega_i;
           diag_sigma_u_i = diag_omega_i;
         }
-        
       } else {
         sigma_u_i = arma::wishrnd(arma::solve(sigma_prior_scale + u * u.t(), diag_k), sigma_post_df);
         diag_sigma_u_i = arma::kron(diag_tt, sigma_u_i);

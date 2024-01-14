@@ -89,6 +89,94 @@ bvs <- function(y, z, a, lambda, sigma_i, prob_prior, include = NULL) {
     .Call(`_bvartools_bvs`, y, z, a, lambda, sigma_i, prob_prior, include)
 }
 
+#' Covariance: Data Preparation
+#'
+#' Convenience function, which generates the input data for posterior
+#' simulation of covariance parameters.
+#'
+#' @param y a \eqn{KT \times 1} vector of input data.
+#' @param omega_i a \eqn{K \times K} or \eqn{KT \times KT} matrix of error variances.
+#' The matrix must be sparse.
+#' @param k an integer of the number of endogenous variables.
+#' @param tt an integer of the number of observations.
+#' @param tvp logical indicating if the SUR matrix with the values of regressors
+#' should be prepared for the estimation of constant or time varying parameters.
+#' 
+#' @details For the model
+#' \deqn{y_t = Z_{t} a_t + u_t}
+#' with \eqn{u_t \sim N(0, \Psi \Omega_{t} \Psi^{\prime})} and \eqn{\Omega_{t}}
+#' as a diagonal matrix of error variances, the function produces
+#' the input data for the posterior simulation of the lower triangular covariance coefficients
+#' of \eqn{\Psi} as presented in Primiceri (2005).
+#' 
+#' @return A list with three elements:
+#' \item{y}{The prepared vector of endogenous variables.}
+#' \item{z}{The prepared matrix of regressors.}
+#' \item{omega_i}{The prepared diagonal matrix of measurement error variances.}
+#' All matrices are returned as sparse matrices.
+#' 
+#' @references
+#' 
+#' Chan, J., Koop, G., Poirier, D. J., & Tobias J. L. (2019). \emph{Bayesian econometric methods} (2nd ed.). Cambridge: Cambridge University Press.
+#' 
+#' Primiceri, G. E. (2005). Time varying structural vector autoregressions and monetary policy. \emph{The Review of Economic Studies 72}(3), 821--852. \doi{10.1111/j.1467-937X.2005.00353.x}
+#' 
+#' @examples
+#' 
+#' # Create artificial data
+#' k <- 3
+#' tt <- 4
+#' u <- matrix(1:(k * tt))
+#' omega_i <- Matrix(diag(1:3, k))
+#' 
+#' # Generate input data (constant parameters)
+#' covar_prepare_data(u, omega_i, k, tt, FALSE)
+#' 
+#' # Generate input data (time varying parameters)
+#' covar_prepare_data(u, omega_i, k, tt, TRUE)
+#' 
+covar_prepare_data <- function(y, omega_i, k, tt, tvp) {
+    .Call(`_bvartools_covar_prepare_data`, y, omega_i, k, tt, tvp)
+}
+
+#' Covariance: Vector to Matrix
+#'
+#' Convenience function, which takes the vector of draws of lower triangular
+#' covariance coefficients and transforms it into a matrix with ones on the main
+#' diagonal. In case of time varying parameters the resulting matrix will be
+#' block diagonal.
+#'
+#' @param psi a \eqn{K (K - 1) / 2 \times 1} or \eqn{T K (K - 1) / 2 \times 1} vector of input data.
+#' @param k the number \eqn{K} of endogenous variables.
+#' @param tt the number \eqn{T} of observations.
+#' 
+#' @return A sparse, block diagonal matrix.
+#' 
+#' @references
+#' 
+#' Chan, J., Koop, G., Poirier, D. J., & Tobias J. L. (2019). \emph{Bayesian econometric methods} (2nd ed.). Cambridge: Cambridge University Press.
+#' 
+#' Primiceri, G. E. (2005). Time varying structural vector autoregressions and monetary policy. \emph{The Review of Economic Studies 72}(3), 821--852. \doi{10.1111/j.1467-937X.2005.00353.x}
+#' 
+#' @examples
+#' 
+#' # Create artificial data
+#' k <- 5
+#' tt <- 4
+#' n_covar <- (k - 1) * k / 2
+#' 
+#' # Constant parameters
+#' psi <- matrix(1:(n_covar))
+#' covar_vector_to_matrix(psi, k, tt)
+#' 
+#' # Time varying parameters
+#' psi <- matrix(1:(n_covar * tt))
+#' covar_vector_to_matrix(psi, k, tt)
+#' 
+covar_vector_to_matrix <- function(psi, k, tt) {
+    .Call(`_bvartools_covar_vector_to_matrix`, psi, k, tt)
+}
+
 .dfmalg <- function(object) {
     .Call(`_bvartools_dfmalg`, object)
 }
@@ -428,6 +516,102 @@ post_coint_kls_sur <- function(y, beta, w, sigma_i, v_i, p_tau_i, g_i, x = NULL,
     .Call(`_bvartools_post_coint_kls_sur`, y, beta, w, sigma_i, v_i, p_tau_i, g_i, x, gamma_mu_prior, gamma_v_i_prior, svd)
 }
 
+#' Posterior Draws of Error Variances
+#' 
+#' Produces a draw of the constant diagonal error variance matrix of the
+#' measurement equation of a state space model using an inverse gamma posterior density.
+#' 
+#' @param u a \eqn{KT \times 1} vector of errors.
+#' @param shape_prior a \eqn{K \times 1} vector of prior shape parameters.
+#' @param rate_prior a \eqn{K \times 1} vector of prior rate parameters.
+#' @param inverse logical. If \code{TRUE}, the function returns the precision matrix,
+#' i.e. the inverse of the variance matrix. Defaults to \code{FALSE}.
+#' 
+#' @details For a model with measurement equation
+#' \deqn{y_t = Z_{t} a_t + u_t}
+#' with \eqn{u_t \sim N(0, \Sigma_{u})}
+#' the function produces a draw of the constant diagonal error variance matrix
+#' \eqn{\Simga_u}.
+#' 
+#' @references
+#' Chan, J., Koop, G., Poirier, D. J., & Tobias J. L. (2019). \emph{Bayesian econometric methods}
+#' (2nd ed.). Cambridge: Cambridge University Press.
+#' 
+#' @examples
+#' 
+#' k <- 10 # Number of endogenous variables
+#' tt <- 1000 # Number of observations
+#' 
+#' set.seed(1234) # Set RNG seed
+#' 
+#' # Generate artificial error series with N(0, 1)
+#' u <- matrix(rnorm(k * tt))
+#' 
+#' # Define priors
+#' shape_prior <- matrix(1, k)
+#' rate_prior <- matrix(.0001, k)
+#' 
+#' # Obtain posterior draw
+#' post_gamma_measurement_variance(u, shape_prior, rate_prior, inverse = FALSE)
+#' 
+#' @return A matrix.
+#' 
+post_gamma_measurement_variance <- function(u, shape_prior, rate_prior, inverse) {
+    .Call(`_bvartools_post_gamma_measurement_variance`, u, shape_prior, rate_prior, inverse)
+}
+
+#' Posterior Draws of Error Variances
+#' 
+#' Produces a draw of the constant diagonal error variance matrix of the
+#' state equation of a state space model using an inverse gamma posterior density.
+#' 
+#' @param a a \eqn{KT \times 1} vector of time varying parameter draws.
+#' @param a_init a \eqn{K \times 1} vector of initial states.
+#' @param shape_prior a \eqn{K \times 1} vector of prior shape parameters.
+#' @param rate_prior a \eqn{K \times 1} vector of prior rate parameters.
+#' @param inverse logical. If \code{TRUE}, the function returns the precision matrix,
+#' i.e. the inverse of the variance matrix. Defaults to \code{FALSE}.
+#' 
+#' @details For the state space model with state equation
+#' \deqn{a_t = a_{t-1} + v}
+#' and measurement equation
+#' \deqn{y_t = Z_{t} a_t + u_t}
+#' with \eqn{v_t \sim N(0, \Sigma_{v})} and \eqn{u_t \sim N(0, \Sigma_{u,t})}
+#' the function produces a draw of the constant diagonal error variances matrix of the
+#' state equation \eqn{\Simga_v}.
+#' 
+#' @references
+#' Chan, J., Koop, G., Poirier, D. J., & Tobias J. L. (2019). \emph{Bayesian econometric methods}
+#' (2nd ed.). Cambridge: Cambridge University Press.
+#' 
+#' @examples
+#' k <- 10 # Number of artificial coefficients
+#' tt <- 1000 # Number of observations
+#' 
+#' set.seed(1234) # Set RNG seed
+#' 
+#' # Generate artificial data according to a random walk
+#' a <- matrix(rnorm(k), k, tt + 1)
+#' for (i in 2:(tt + 1)) {
+#'   a[, i] <- a[, i - 1] + rnorm(k, 0, sqrt(1 / 100))
+#' }
+#' 
+#' a_init <- matrix(a[, 1]) # Define initial state
+#' a <- matrix(a[, -1]) # Drop initial state from main sample and make vector
+#' 
+#' # Define priors
+#' shape_prior <- matrix(1, k)
+#' rate_prior <- matrix(.0001, k)
+#' 
+#' # Obtain posterior draw
+#' post_gamma_state_variance(a, a_init, shape_prior, rate_prior, inverse = FALSE)
+#' 
+#' @return A matrix.
+#' 
+post_gamma_state_variance <- function(a, a_init, shape_prior, rate_prior, inverse) {
+    .Call(`_bvartools_post_gamma_state_variance`, a, a_init, shape_prior, rate_prior, inverse)
+}
+
 #' Posterior Draw from a Normal Distribution
 #' 
 #' Produces a draw of coefficients from a normal posterior density.
@@ -545,10 +729,6 @@ post_normal <- function(y, x, sigma_i, a_prior, v_i_prior) {
 #' 
 post_normal_sur <- function(y, z, sigma_i, a_prior, v_i_prior, svd = FALSE) {
     .Call(`_bvartools_post_normal_sur`, y, z, sigma_i, a_prior, v_i_prior, svd)
-}
-
-.prep_covar_data <- function(y, k, tt, tvp) {
-    .Call(`_bvartools_prep_covar_data`, y, k, tt, tvp)
 }
 
 #' Stochastic Volatility
@@ -703,6 +883,38 @@ stochvol_ksc1998 <- function(y, h, sigma, h_init, constant) {
 #' 
 stochvol_ocsn2007 <- function(y, h, sigma, h_init, constant) {
     .Call(`_bvartools_stochvol_ocsn2007`, y, h, sigma, h_init, constant)
+}
+
+#' SUR Matrix Transformation
+#' 
+#' Transforms a dense matrix of dimensions \eqn{KT \times M} into a sparse block
+#' diagonal matrix of dimensions \eqn{KT \times MT}.
+#' 
+#' @param z a \eqn{KT \times M} matrix.
+#' @param k integer of the number of endogenous variables.
+#' @param tt integer of the number of observations.
+#' 
+#' @return A sparse block diagonal matrix of dimensions \eqn{KT \times MT}.
+#' 
+#' @examples
+#' 
+#' # Specify the dimensions of the dense matrix
+#' k <- 2
+#' tt <- 5
+#' m <- 3
+#' 
+#' # Generate artificial data
+#' z <- matrix(NA, k * tt, m)
+#' for (i in 1:tt) {
+#'   z[(i - 1) * k + 1:k, ] <- i
+#' }
+#' 
+#' # Perform transformation
+#' sur_const_to_tvp(z, k, tt)
+#' 
+#' 
+sur_const_to_tvp <- function(z, k, tt) {
+    .Call(`_bvartools_sur_const_to_tvp`, z, k, tt)
 }
 
 #' Stochastic Search Variable Selection

@@ -1,9 +1,18 @@
+
+# bvartools 0.2.5
+
+* Added function `covar_vector_to_matrix`.
+* Added function `sur_const_to_tvp`.
+* Updated `Rcpp` dependency in DESCRIPTION file to version 1.0.12.
+* Added `post_gamma_state_variance` for posterior simulation of constant error variances of the state equation.
+* Added `post_gamma_measurement_variance` for posterior simulation of constant error variances of the measurement equation.
+* Renamed `.prep_covar_data` to `covar_prepare_data` and made it visible in R and also callable from C++.
+
 # bvartools 0.2.4
 
 * Using an updated version of `Rcpp` to address an issue with `Rcpp::stop`.
 * `stochvol_ocsn2007` can handle multi-column input.
 * `stochvol_ksc1998` can handle multi-column input.
-* Added `post_gamma_state_variance` for posterior simulation of constant error variances of the state equation.
 * Added `post_normal_covar_tvp` for posterior simulation of time varying, lower triangular covariance matrices.
 * Added `post_normal_covar_const` for posterior simulation of constant, lower triangular covariance matrices.
 

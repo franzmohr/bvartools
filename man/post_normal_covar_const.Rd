@@ -4,7 +4,7 @@
 \alias{post_normal_covar_const}
 \title{Posterior Simulation of Error Covariance Coefficients}
 \usage{
-post_normal_covar_const(y, u_omega_i, prior_mean, prior_covariance_i)
+post_normal_covar_const(y, u_omega_i, k, prior_mean, prior_covariance_i)
 }
 \arguments{
 \item{y}{a \eqn{K \times T} matrix of data with \eqn{K} as the number of
@@ -13,6 +13,8 @@ endogenous variables and \eqn{T} the number of observations.}
 \item{u_omega_i}{matrix of error variances of the measurement equation.
 Either a \eqn{K \times K} matrix for constant variances or
 a \eqn{KT \times KT} matrix for time varying variances.}
+
+\item{k}{number of endogenous variables.}
 
 \item{prior_mean}{vector of prior means. In case of TVP, this vector is used
 as initial condition.}
@@ -38,14 +40,16 @@ and \eqn{y_{[1,...,K-1], t}} denotes the first to \eqn{(K-1)}th elements of the 
 # Load example data
 data("e1")
 y <- log(t(e1))
+k <- nrow(y)
+y <- matrix(y)
 
 # Generate artificial draws of other matrices
-u_omega_i <- diag(1, 3)
+u_omega_i <- Matrix(diag(1, k))
 prior_mean <- matrix(0, 3)
-prior_covariance_i <- diag(0, 3)
+prior_covariance_i <- Matrix(diag(0, 3))
 
 # Obtain posterior draw
-post_normal_covar_const(y, u_omega_i, prior_mean, prior_covariance_i)
+post_normal_covar_const(y, u_omega_i, k, prior_mean, prior_covariance_i)
 
 }
 \references{

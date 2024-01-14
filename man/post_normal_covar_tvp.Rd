@@ -4,15 +4,17 @@
 \alias{post_normal_covar_tvp}
 \title{Posterior Simulation of Error Covariance Coefficients}
 \usage{
-post_normal_covar_tvp(y, u_omega_i, v_sigma_i, psi_init)
+post_normal_covar_tvp(y, u_omega_i, k, v_sigma_i, psi_init)
 }
 \arguments{
-\item{y}{a \eqn{K \times T} matrix of data with \eqn{K} as the number of
+\item{y}{a \eqn{KT \times 1} vector of data with \eqn{K} as the number of
 endogenous variables and \eqn{T} the number of observations.}
 
 \item{u_omega_i}{matrix of error variances of the measurement equation.
 Either a \eqn{K \times K} matrix for constant variances or
 a \eqn{KT \times KT} matrix for time varying variances.}
+
+\item{k}{number of endogenous variables.}
 
 \item{v_sigma_i}{matrix of error variances of the state equation.
 Either an \eqn{M \times M} matrix for constant variances or
@@ -41,14 +43,16 @@ The algorithm of Chan and Jeliazkov (2009) is used to obtain time varying coeffi
 # Load example data
 data("e1")
 y <- log(t(e1))
+k <- nrow(y)
+y <- matrix(y)
 
 # Generate artificial draws of other matrices
-u_omega_i <- diag(1, 3)
-v_sigma_i <- diag(1000, 3)
+u_omega_i <- Matrix(diag(1, 3))
+v_sigma_i <- Matrix(diag(1000, 3))
 psi_init <- matrix(0, 3)
 
 # Obtain posterior draw
-post_normal_covar_tvp(y, u_omega_i, v_sigma_i, psi_init)
+post_normal_covar_tvp(y, u_omega_i, k, v_sigma_i, psi_init)
 
 }
 \references{

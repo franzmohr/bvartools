@@ -25,6 +25,48 @@ namespace bvartools {
         }
     }
 
+    inline Rcpp::List covar_prepare_data(const arma::vec y, const arma::sp_mat omega_i, const arma::uword k, const int tt, const bool tvp) {
+        typedef SEXP(*Ptr_covar_prepare_data)(SEXP,SEXP,SEXP,SEXP,SEXP);
+        static Ptr_covar_prepare_data p_covar_prepare_data = NULL;
+        if (p_covar_prepare_data == NULL) {
+            validateSignature("Rcpp::List(*covar_prepare_data)(const arma::vec,const arma::sp_mat,const arma::uword,const int,const bool)");
+            p_covar_prepare_data = (Ptr_covar_prepare_data)R_GetCCallable("bvartools", "_bvartools_covar_prepare_data");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_covar_prepare_data(Shield<SEXP>(Rcpp::wrap(y)), Shield<SEXP>(Rcpp::wrap(omega_i)), Shield<SEXP>(Rcpp::wrap(k)), Shield<SEXP>(Rcpp::wrap(tt)), Shield<SEXP>(Rcpp::wrap(tvp)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<Rcpp::List >(rcpp_result_gen);
+    }
+
+    inline arma::sp_mat covar_vector_to_matrix(const arma::vec psi, const int k, const int tt) {
+        typedef SEXP(*Ptr_covar_vector_to_matrix)(SEXP,SEXP,SEXP);
+        static Ptr_covar_vector_to_matrix p_covar_vector_to_matrix = NULL;
+        if (p_covar_vector_to_matrix == NULL) {
+            validateSignature("arma::sp_mat(*covar_vector_to_matrix)(const arma::vec,const int,const int)");
+            p_covar_vector_to_matrix = (Ptr_covar_vector_to_matrix)R_GetCCallable("bvartools", "_bvartools_covar_vector_to_matrix");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_covar_vector_to_matrix(Shield<SEXP>(Rcpp::wrap(psi)), Shield<SEXP>(Rcpp::wrap(k)), Shield<SEXP>(Rcpp::wrap(tt)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<arma::sp_mat >(rcpp_result_gen);
+    }
+
     inline arma::mat kalman_dk(arma::mat y, arma::mat z, arma::mat sigma_u, arma::mat sigma_v, arma::mat B, arma::vec a_init, arma::mat P_init) {
         typedef SEXP(*Ptr_kalman_dk)(SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP);
         static Ptr_kalman_dk p_kalman_dk = NULL;

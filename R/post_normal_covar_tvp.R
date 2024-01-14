@@ -2,11 +2,12 @@
 #' 
 #' Produces posterior draws of time varying error covariance coefficients.
 #' 
-#' @param y a \eqn{K \times T} matrix of data with \eqn{K} as the number of
+#' @param y a \eqn{KT \times 1} vector of data with \eqn{K} as the number of
 #' endogenous variables and \eqn{T} the number of observations.
 #' @param u_omega_i matrix of error variances of the measurement equation.
 #' Either a \eqn{K \times K} matrix for constant variances or
 #' a \eqn{KT \times KT} matrix for time varying variances.
+#' @param k number of endogenous variables.
 #' @param v_sigma_i matrix of error variances of the state equation.
 #' Either an \eqn{M \times M} matrix for constant variances or
 #' an \eqn{MT \times MT} matrix for time varying variances, where \eqn{M} is the
@@ -37,41 +38,28 @@
 #' # Load example data
 #' data("e1")
 #' y <- log(t(e1))
+#' k <- nrow(y)
+#' y <- matrix(y)
 #' 
 #' # Generate artificial draws of other matrices
-#' u_omega_i <- diag(1, 3)
-#' v_sigma_i <- diag(1000, 3)
+#' u_omega_i <- Matrix(diag(1, 3))
+#' v_sigma_i <- Matrix(diag(1000, 3))
 #' psi_init <- matrix(0, 3)
 #' 
 #' # Obtain posterior draw
-#' post_normal_covar_tvp(y, u_omega_i, v_sigma_i, psi_init)
+#' post_normal_covar_tvp(y, u_omega_i, k, v_sigma_i, psi_init)
 #'
 #' @export
-post_normal_covar_tvp <- function(y, u_omega_i, v_sigma_i, psi_init) {
+post_normal_covar_tvp <- function(y, u_omega_i, k, v_sigma_i, psi_init) {
   
-  k <- nrow(y)
   if (k == 1L) {
     stop("Argument 'y' must contain at least two variables.")
   }
   n_covar <- k * (k - 1) / 2
-  tt <- ncol(y)
-  y <- matrix(y)
+  tt <- nrow(y) / k
   
   # Generate z for lower triangular design
-  z <- .prep_covar_data(y, k, tt, TRUE)
-  
-  # Get positions of values, on which variables in z are regressed
-  pos_used <- rep(k * 0:(tt - 1), each = k - 1) + 2:k
-  
-  # Trim endogenous variables
-  y <- matrix(y[pos_used, ])
-  
-  # Trim 
-  if (NCOL(u_omega_i) == k & NCOL(u_omega_i) == k) {
-    u_omega_i <- kronecker(Matrix::Diagonal(tt, 1), u_omega_i)
-  }
-  # Trim error variance matrix
-  u_omega_i <- u_omega_i[pos_used, pos_used]
+  temp <- covar_prepare_data(y, u_omega_i, k, tt, TRUE)
   
   # Draw coefficients
   hh <- Matrix::Diagonal(n_covar * tt, 1)
@@ -82,9 +70,9 @@ post_normal_covar_tvp <- function(y, u_omega_i, v_sigma_i, psi_init) {
   }
   
   hh_temp <- t(hh) %*% v_sigma_i %*% hh
-  x_temp <- t(z) %*% u_omega_i
-  v_post <- hh_temp + x_temp %*% z
-  mu_post <- solve(v_post, hh_temp %*% kronecker(matrix(1, tt), psi_init) + x_temp %*% y)
+  x_temp <- t(temp$z) %*% temp$omega_i
+  v_post <- hh_temp + x_temp %*% temp$z
+  mu_post <- solve(v_post, hh_temp %*% kronecker(matrix(1, tt), psi_init) + x_temp %*% temp$y)
   
   return(matrix(mu_post + solve(chol(v_post), matrix(stats::rnorm(n_covar * tt)))))
 }

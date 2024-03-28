@@ -76,13 +76,7 @@ Rcpp::List bvaralg(Rcpp::List object) {
   // Priors & initial values ----
   Rcpp::List priors = object["priors"];
   Rcpp::CharacterVector priors_names = priors.names();
-  
   Rcpp::List initial = object["initial"];
-  Rcpp::List init_coeffs;
-  if (use_a) {
-    init_coeffs = initial["coefficients"];
-  }
-  Rcpp::List init_sigma = initial["sigma"];
   
   // Priors - Coefficients
   Rcpp::List priors_coefficients;
@@ -98,7 +92,7 @@ Rcpp::List bvaralg(Rcpp::List object) {
   arma::mat a, a_AG, a_lambda, a_post_v, a_theta0, a_theta1, z_bvs;
   if (n_tot > 0) {
     // Priors - Coefficients
-    priors_coefficients = priors["coefficients"];
+    priors_coefficients = priors["a"];
     prcoeff_names = priors_coefficients.names();
     prior_a_mu = Rcpp::as<arma::mat>(priors_coefficients["mu"]);
     prior_a_Vi = Rcpp::as<arma::mat>(priors_coefficients["v_i"]);
@@ -127,7 +121,7 @@ Rcpp::List bvaralg(Rcpp::List object) {
     
     varsel = ssvs || bvs;  
     
-    a = Rcpp::as<arma::mat>(init_coeffs["draw"]);
+    a = Rcpp::as<arma::mat>(initial["a"]);
     if (varsel) {
       a_varsel_include = Rcpp::as<arma::vec>(a_prior_varsel["include"]) - 1;
       a_varsel_n = size(a_varsel_include)(0);
@@ -205,7 +199,7 @@ Rcpp::List bvaralg(Rcpp::List object) {
   
   
   // Priors - Errors
-  Rcpp::List sigma_pr = priors["sigma"];
+  Rcpp::List sigma_pr = priors["V"];
   Rcpp::CharacterVector sigma_names = sigma_pr.names();
   double sigma_post_df;
   arma::vec sigma_post_shape, sigma_prior_rate, sigma_prior_mu;
@@ -223,10 +217,10 @@ Rcpp::List bvaralg(Rcpp::List object) {
     sigma_post_shape = Rcpp::as<arma::vec>(sigma_pr["shape"]) + 0.5 * tt;
     sigma_prior_rate = Rcpp::as<arma::vec>(sigma_pr["rate"]);
     
-    h = Rcpp::as<arma::mat>(init_sigma["h"]);
+    h = Rcpp::as<arma::mat>(initial["h"]);
     h_lag = h * 0;
-    sigma_h = Rcpp::as<arma::vec>(init_sigma["sigma_h"]);
-    h_constant = Rcpp::as<arma::vec>(init_sigma["constant"]);
+    sigma_h = Rcpp::as<arma::vec>(initial["sigma_h"]);
+    h_constant = Rcpp::as<arma::vec>(initial["constant"]);
     h_init = arma::vectorise(h.row(0));
     sigma_i = arma::diagmat(1 / exp(h_init));
   } else {
@@ -240,7 +234,7 @@ Rcpp::List bvaralg(Rcpp::List object) {
       sigma_prior_rate = Rcpp::as<arma::vec>(sigma_pr["rate"]);
     }
     
-    omega_i = Rcpp::as<arma::mat>(init_sigma["sigma_i"]);
+    omega_i = Rcpp::as<arma::mat>(initial["V_i"]);
     sigma_i = omega_i;
   }
   diag_sigma_i.diag() = arma::repmat(sigma_i.diag(), tt, 1);
@@ -632,7 +626,7 @@ Rcpp::List bvaralg(Rcpp::List object) {
 
 data("us_macrodata")
 
-object <- gen_var(us_macrodata, p = 0, deterministic = "none",
+object <- create_var_model(us_macrodata, p = 0, deterministic = "none",
                   sv = TRUE,
                   iterations = 20, burnin = 10)
 

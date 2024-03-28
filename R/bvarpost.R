@@ -2,8 +2,9 @@
 #' 
 #' Produces draws from the posterior distributions of Bayesian VAR models.
 #' 
-#' @param object an object of class \code{"bvarmodel"}, usually, a result of a call to \code{\link{gen_var}}
-#' in combination with \code{\link{add_priors}}.
+#' @param object an object of class \code{"bvarmodel"}, usually, a result of a
+#' call to \code{\link{create_var_model}} in combination with
+#' \code{\link{add_priors}} and \code{\link{add_initial_values}}.
 #' 
 #' @details The function implements commonly used posterior simulation algorithms for Bayesian VAR models with
 #' both constant and time varying parameters (TVP) as well as stochastic volatility. It can produce posterior
@@ -42,12 +43,15 @@
 #' e1 <- diff(log(e1)) * 100
 #' 
 #' # Create model
-#' model <- gen_var(e1, p = 2, deterministic = "const",
-#'                  iterations = 50, burnin = 10)
+#' model <- create_var_model(e1, p = 2, deterministic = "const",
+#'                           iterations = 50, burnin = 10)
 #' # Number of iterations and burnin should be much higher.
 #' 
 #' # Add priors
 #' model <- add_priors(model)
+#' 
+#' # Add initial values
+#' model <- add_initial_values(model)
 #'
 #' # Obtain posterior draws 
 #' object <- bvarpost(model)

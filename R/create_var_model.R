@@ -1,6 +1,6 @@
-#' Vector Autoregressive Model Input
+#' Create a Vector Autoregressive Model
 #' 
-#' \code{gen_var} produces the input for the estimation of a vector autoregressive (VAR) model.
+#' Produces the input for the estimation of a vector autoregressive (VAR) model.
 #' 
 #' @param data a time-series object of endogenous variables.
 #' @param p an integer vector of the lag order (default is \code{p = 2}).
@@ -18,28 +18,28 @@
 #' @param sv logical indicating whether time varying error variances should be estimated by
 #' employing a stochastic volatility algorithm.
 #' @param iterations an integer of MCMC draws excluding burn-in draws (defaults
-#' to 50000).
+#' to 20000).
 #' @param burnin an integer of MCMC draws used to initialize the sampler
-#' (defaults to 5000). These draws do not enter the computation of posterior
+#' (defaults to 2000). These draws do not enter the computation of posterior
 #' moments, forecasts etc.
 #' 
 #' @details The function produces the data matrices for vector autoregressive (VAR)
 #' models, which can also include unmodelled, non-deterministic variables:
 #' \deqn{A_0 y_t = \sum_{i=1}^{p} A_i y_{t - i} +
 #' \sum_{i=0}^{s} B_i x_{t - i} +
-#' C D_t + u_t,}
+#' C d_t + u_t,}
 #' where
 #' \eqn{y_t} is a K-dimensional vector of endogenous variables,
 #' \eqn{A_0} is a \eqn{K \times K} coefficient matrix of contemporaneous endogenous variables,
 #' \eqn{A_i} is a \eqn{K \times K} coefficient matrix of endogenous variables,
 #' \eqn{x_t} is an M-dimensional vector of exogenous regressors and
 #' \eqn{B_i} its corresponding \eqn{K \times M} coefficient matrix.
-#' \eqn{D_t} is an N-dimensional vector of deterministic terms and
+#' \eqn{d_t} is an N-dimensional vector of deterministic terms and
 #' \eqn{C} its corresponding \eqn{K \times N} coefficient matrix.
 #' \eqn{p} is the lag order of endogenous variables, \eqn{s} is the lag
 #' order of exogenous variables, and \eqn{u_t} is an error term.
 #' 
-#' If an integer vector is provided as argument \code{p} or \code{s}, the function will
+#' If a vector is provided as argument \code{p} or \code{s}, the function will
 #' produce a distinct model for all possible combinations of those specifications.
 #' 
 #' If \code{tvp} is \code{TRUE}, the respective coefficients
@@ -60,22 +60,25 @@
 #' e1 <- diff(log(e1))
 #' 
 #' # Generate model data
-#' data <- gen_var(e1, p = 0:2, deterministic = "const")
+#' data <- create_var_model(e1, p = 0:2, deterministic = "const")
 #' 
 #' @references
 #' 
 #' Chan, J., Koop, G., Poirier, D. J., & Tobias, J. L. (2019). \emph{Bayesian Econometric Methods}
 #' (2nd ed.). Cambridge: University Press.
 #' 
-#' Lütkepohl, H. (2006). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
+#' Lütkepohl, H. (2006). \emph{New Introduction to Multiple Time Series Analysis} (2nd ed.). Berlin: Springer.
 #' 
 #' @export
-gen_var <- function(data, p = 2, exogen = NULL, s = NULL,
-                    deterministic = "const", seasonal = FALSE,
-                    structural = FALSE, tvp = FALSE, sv = FALSE,
-                    iterations = 50000, burnin = 5000) {
-  
-  warning("Function 'gen_var' is deprecated and will not be available from version 0.3.0 onwards. Please use function 'create_var_model' instead.")
+create_var_model <- function(data, p = 2,
+                             exogen = NULL, s = NULL,
+                             deterministic = "const",
+                             seasonal = FALSE,
+                             structural = FALSE,
+                             tvp = FALSE,
+                             sv = FALSE,
+                             iterations = 20000,
+                             burnin = 2000) {
   
   # Check data ----
   if (!"ts" %in% class(data)) {
@@ -94,6 +97,8 @@ gen_var <- function(data, p = 2, exogen = NULL, s = NULL,
   
   # Endogenous variables ----
   if (is.null(dimnames(data))) {
+    # If 'data' is a simple ts object, transform it into a matrix object
+    # to keep variable name information
     tsp_temp <- stats::tsp(data)
     data <- stats::ts(as.matrix(data), class = c("mts", "ts", "matrix"))
     stats::tsp(data) <- tsp_temp
@@ -116,6 +121,7 @@ gen_var <- function(data, p = 2, exogen = NULL, s = NULL,
   temp <- data
   temp_name <- data_name
   if (p_max >= 1) {
+    # Obtain lags of endogenous variables
     for (i in 1:p_max) {
       temp <- cbind(temp, stats::lag(data, -i))
       if (nchar(p_max) > 2) {
@@ -131,6 +137,8 @@ gen_var <- function(data, p = 2, exogen = NULL, s = NULL,
   if (!is.null(exogen)) {
     use_exo <- TRUE
     if (is.null(dimnames(exogen))) {
+      # If 'exogen' is a simple ts object, transform it into a matrix object
+      # to keep variable name information
       tsp_temp <- stats::tsp(exogen)
       exogen <- stats::ts(as.matrix(exogen), class = c("mts", "ts", "matrix"))
       stats::tsp(exogen) <- tsp_temp
@@ -173,18 +181,21 @@ gen_var <- function(data, p = 2, exogen = NULL, s = NULL,
   tt <- nrow(temp)
   det_name <- NULL
   
+  # Add intercept term
   if (deterministic %in% c("const", "both")) {
     temp <- cbind(temp, 1)
     temp_name <- c(temp_name, "const")
     det_name <- c(det_name, "const")
   }
   
+  # Add linear trend
   if (deterministic %in% c("trend", "both")) {
     temp <- cbind(temp, 1:tt)
     temp_name <- c(temp_name, "trend")
     det_name <- c(det_name, "trend")
   }
   
+  # Add seasonal dummies
   if (seasonal) {
     freq <- stats::frequency(data)
     if (freq == 1) {
@@ -202,38 +213,47 @@ gen_var <- function(data, p = 2, exogen = NULL, s = NULL,
     }
   }
   
+  # Update model specs for deterministic terms
   use_det <- FALSE
   if (length(det_name) > 0) {
     model[["deterministic"]] <- det_name
     use_det <- TRUE
   }
   
+  # Set if the model is structural
   if ("logical" %in% class(structural)) {
     model[["structural"]] <- structural
+    model[["type"]] <- "SVAR"
   } else {
     stop("Argument 'structural' must be of class 'logical'.")
   }
   
-  # TVP specifications ----
+  # TVP ----
   if ("logical" %in% class(tvp)) {
     model[["tvp"]] <- tvp 
   } else {
     stop("Argument 'tvp' must be of class 'logical'.")
   }
+  
+  # Stochastic volatility ----
   if ("logical" %in% class(sv)) {
     model[["sv"]] <- sv
   } else {
     stop("Argument 'sv' must be of class 'logical'.")
   }
   
+  # Iterations and burnin ----
   model[["iterations"]] <- iterations
   model[["burnin"]] <- burnin
   
-  # Is equal across all models
+  # Data that is equal across models ----
+  
+  # Endogenous variables y
   y <- stats::ts(as.matrix(temp[, 1:k]), class = c("mts", "ts", "matrix"))
   stats::tsp(y) <- stats::tsp(temp)
   dimnames(y)[[2]] <- temp_name[1:k]
   
+  # Structural data
   y_A0 <- NULL
   if (structural & k > 1) {
     y_A0 <- kronecker(-y, diag(1, k))
@@ -244,9 +264,10 @@ gen_var <- function(data, p = 2, exogen = NULL, s = NULL,
     y_A0 <- y_A0[, -pos]
   }
   
+  # Create model list ----
   result <- NULL
-  for (i in p) {
-    for (j in s) {
+  for (i in p) { # for each lag p
+    for (j in s) { # for each lag s
       pos <- NULL
       model_i <- model
       if (i >= 1) {
@@ -264,21 +285,25 @@ gen_var <- function(data, p = 2, exogen = NULL, s = NULL,
       x <- NULL
       z <- NULL
       if (length(pos) > 0) {
+        # Create data input matrix of the respective model
         x <- stats::ts(as.matrix(temp[, pos]), class = c("mts", "ts", "matrix")) 
         stats::tsp(x) <- stats::tsp(temp)
         dimnames(x)[[2]] <- temp_name[pos]
         z <- kronecker(x, diag(1, k))
       }
       
+      # If specified add structural data to SUR form
       if (!is.null(y_A0)) {
         z <- cbind(z, y_A0)
       }
       
+      # Create individual model
       result_i <- list("data" = list("Y" = y,
                                      "Z" = x,
                                      "SUR" = z),
                        "model" = model_i)
       
+      # Update class of individual model
       class(result_i) <- append("bvarmodel", class(result_i)) 
       
       result <- c(result, list(result_i)) 
@@ -291,7 +316,6 @@ gen_var <- function(data, p = 2, exogen = NULL, s = NULL,
   } else {
     class(result) <- append("modellist", class(result)) 
   }
-  
   
   return(result)
 }

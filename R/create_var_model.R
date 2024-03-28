@@ -223,7 +223,9 @@ create_var_model <- function(data, p = 2,
   # Set if the model is structural
   if ("logical" %in% class(structural)) {
     model[["structural"]] <- structural
-    model[["type"]] <- "SVAR"
+    if (structural) {
+      model[["type"]] <- "SVAR" 
+    }
   } else {
     stop("Argument 'structural' must be of class 'logical'.")
   }

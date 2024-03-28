@@ -4,22 +4,22 @@
 #' It was produced from file "freddata_Q.csv" of the data sets associated
 #' with Chan, Koop, Poirier and Tobias (2019). Raw data are available at
 #' \url{https://web.ics.purdue.edu/~jltobias/second_edition/Chapter18/code_for_exercise_4/freddata_Q.csv}.
-#' 
+#'
 #' @usage data("bem_dfmdata")
-#' 
+#'
 #' @format A named time-series object with 225 rows and 196 variables. A detailed explanation of the
 #' variables can be found in McCracken and Ng (2016).
-#' 
+#'
 #' @references
-#' 
+#'
 #' Chan, J., Koop, G., Poirier, D. J., & Tobias J. L. (2019). \emph{Bayesian econometric methods}
 #' (2nd ed.). Cambridge: Cambridge University Press.
-#' 
+#'
 #' McCracken, M. W., & Ng, S. (2016). FRED-MD: A monthly database for macroeconomic research.
 #' \emph{Journal of Business & Economic Statistics 34}(4), 574-589. \doi{10.1080/07350015.2015.1086655}
-#' 
-#' 
-#' 
+#'
+#'
+#'
 "bem_dfmdata"
 
 #' West German economic time series data

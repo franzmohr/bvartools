@@ -14,7 +14,7 @@
 )
 }
 \arguments{
-\item{object}{a list, usually, the output of a call to \code{\link{gen_var}}.}
+\item{object}{a list, usually, the output of a call to \code{\link{create_var_model}}.}
 
 \item{coef}{a named list of prior specifications for the coefficients of the
 models. For the default specification all prior means are set to zero and the diagonal elements of
@@ -35,11 +35,11 @@ the prior variances to 1. See 'Details'.}
 \item{...}{further arguments passed to or from other methods.}
 }
 \value{
-A list of country models.
+A list of models.
 }
 \description{
 Adds prior specifications to a list of models, which was produced by
-function \code{\link{gen_var}}.
+function \code{\link{create_var_model}}.
 }
 \details{
 The arguments of the function require named lists. Possible
@@ -159,8 +159,8 @@ third and forth element in \code{ssvs$minnesota} or \code{bvs$minnesota}, respec
 data("e1")
 e1 <- diff(log(e1)) * 100
 
-model <- gen_var(e1, p = 2, deterministic = 2,
-                 iterations = 100, burnin = 10)
+model <- create_var_model(e1, p = 2, deterministic = 2,
+                          iterations = 100, burnin = 10)
 
 model <- add_priors(model)
 

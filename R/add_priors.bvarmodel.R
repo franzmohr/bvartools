@@ -1,9 +1,9 @@
 #' Add Priors for a Vector Autoregressive Models
 #'
 #' Adds prior specifications to a list of models, which was produced by
-#' function \code{\link{gen_var}}.
+#' function \code{\link{create_var_model}}.
 #'
-#' @param object a list, usually, the output of a call to \code{\link{gen_var}}.
+#' @param object a list, usually, the output of a call to \code{\link{create_var_model}}.
 #' @param coef a named list of prior specifications for the coefficients of the
 #' models. For the default specification all prior means are set to zero and the diagonal elements of
 #' the inverse prior variance-covariance matrix are set to 1 for coefficients corresponding to non-deterministic
@@ -130,7 +130,7 @@
 #' for lag \eqn{l} with \eqn{\kappa_1}, \eqn{\kappa_2}, \eqn{\kappa_3}, \eqn{\kappa_4} as the first, second,
 #' third and forth element in \code{ssvs$minnesota} or \code{bvs$minnesota}, respectively.
 #' 
-#' @return A list of country models.
+#' @return A list of models.
 #' 
 #' @references
 #' 
@@ -151,8 +151,8 @@
 #' data("e1")
 #' e1 <- diff(log(e1)) * 100
 #' 
-#' model <- gen_var(e1, p = 2, deterministic = 2,
-#'                  iterations = 100, burnin = 10)
+#' model <- create_var_model(e1, p = 2, deterministic = 2,
+#'                           iterations = 100, burnin = 10)
 #' 
 #' model <- add_priors(model)
 #' 
@@ -163,16 +163,6 @@ add_priors.bvarmodel <- function(object,
                                  ssvs = NULL,
                                  bvs = NULL,
                                  ...){
-  
-  # Const set-up
-  # rm(list = ls()[-which(ls() == "object")]); coef = list(v_i = 1, v_i_det = 0.01); sigma = list(df = 3, scale = 1); ssvs = NULL; bvs = NULL
-  
-  only_one_model <- FALSE
-  # If only one model is provided, make it compatible with the rest
-  if ("data" %in% names(object)) {
-    object <- list(object)
-    only_one_model <- TRUE
-  }
   
   # Checks - Coefficient priors ----
   if (!is.null(coef)) {
@@ -329,292 +319,243 @@ add_priors.bvarmodel <- function(object,
   
   varsel_covar <- use_ssvs_error | use_bvs_error
   
-  # Generate priors for each country ----
-  for (i in 1:length(object)) {
+  # Generate priors ----
+  
+  # Get model specs to obtain total number of coeffs
+  k <- length(object[["model"]][["endogen"]][["variables"]])
+  p <- object[["model"]][["endogen"]][["lags"]]
+  
+  if (k == 1 & (use_ssvs_error | use_bvs_error)) {
+    stop("BVS or SSVS cannot be applied to covariance matrix when there is only one endogenous variable.")
+  } 
+  
+  use_exo <- FALSE
+  if (!is.null(object$model$exogen)) {
+    use_exo <- TRUE
+    m <- length(object$model$exogen$variables)
+    s <- object$model$exogen$lags
+  } else {
+    s <- 0
+    m <- 0
+  }
+  if (use_exo) {
+    s <- s + 1
+  }
+  
+  # Total # of non-deterministic coefficients
+  n_a <- k * (k * p)
+  n_b <- k * (m * s)
+  
+  # Add number of non-cointegration deterministic terms
+  n_det <- 0
+  if (!is.null(object[["model"]][["deterministic"]])){
+    n_det <- length(object[["model"]][["deterministic"]]) * k
+  }
+  
+  tot_par <- n_a + n_b + n_det
+  
+  covar <- FALSE
+  if (!is.null(sigma[["covar"]])) {
+    covar <- sigma[["covar"]]
+  }
+  structural <- object[["model"]][["structural"]]
+  if (covar & structural) {
+    stop("Error covariances and structural coefficients cannot be estimated at the same time.")
+  }
+  n_struct <- 0
+  if (structural & k > 1) {
+    n_struct <- (k - 1) * k / 2
+    tot_par <- tot_par + n_struct
+  }
+  
+  sv <- object[["model"]][["sv"]]
+  
+  # Priors ----
+  ## Coefficients ----
+  if (tot_par > 0) {
     
-    # Get model specs to obtain total number of coeffs
-    k <- length(object[[i]][["model"]][["endogen"]][["variables"]])
-    p <- object[[i]][["model"]][["endogen"]][["lags"]]
+    ### Prior means ----
     
-    if (k == 1 & (use_ssvs_error | use_bvs_error)) {
-      stop("BVS or SSVS cannot be applied to covariance matrix when there is only one endogenous variable.")
-    } 
+    mu <- matrix(rep(0, tot_par - n_struct), k)
     
-    use_exo <- FALSE
-    if (!is.null(object[[i]]$model$exogen)) {
-      use_exo <- TRUE
-      m <- length(object[[i]]$model$exogen$variables)
-      s <- object[[i]]$model$exogen$lags
-    } else {
-      s <- 0
-      m <- 0
+    # Add 1 to first own lags for cointegrated VAR model
+    if (coint_var & p > 0) {
+      mu[1:k, 1:k] <- diag(1, k)
     }
-    if (use_exo) {
-      s <- s + 1
-    }
     
-    # Total # of non-deterministic coefficients
-    n_a <- k * (k * p)
-    n_b <- k * (m * s)
-    
-    # Add number of non-cointegration deterministic terms
-    n_det <- 0
-    if (!is.null(object[[i]][["model"]][["deterministic"]])){
-      n_det <- length(object[[i]][["model"]][["deterministic"]]) * k
-    }
-    
-    tot_par <- n_a + n_b + n_det
-    
-    covar <- FALSE
-    if (!is.null(sigma[["covar"]])) {
-      covar <- sigma[["covar"]]
-    }
-    structural <- object[[i]][["model"]][["structural"]]
-    if (covar & structural) {
-      stop("Error covariances and structural coefficients cannot be estimated at the same time.")
-    }
-    n_struct <- 0
-    if (structural & k > 1) {
-      n_struct <- (k - 1) * k / 2
-      tot_par <- tot_par + n_struct
-    }
-    
-    sv <- object[[i]][["model"]][["sv"]]
-    
-    # Priors ----
-    ## Coefficients ----
-    if (tot_par > 0) {
+    # Prior for intercept terms
+    if (n_det > 0) {
       
-      ### Prior means ----
-      
-      mu <- matrix(rep(0, tot_par - n_struct), k)
-      
-      # Add 1 to first own lags for cointegrated VAR model
-      if (coint_var & p > 0) {
-        mu[1:k, 1:k] <- diag(1, k)
-      }
-      
-      # Prior for intercept terms
-      if (n_det > 0) {
+      if (!is.null(coef[["const"]]))  {
         
-        if (!is.null(coef[["const"]]))  {
-          
-          pos <- which(dimnames(object[[i]][["data"]][["Z"]])[[2]] == "const")
-          
-          if (length(pos) == 1) {
-            if ("character" %in% class(coef[["const"]])) {
-              if (coef[["const"]] == "first") {
-                mu[, pos] <- object[[i]][["data"]][["Y"]][1, ]
-              }
-              if (coef[["const"]] == "mean") {
-                mu[, pos] <- colMeans(object[[i]][["data"]][["Y"]])
-              }
+        pos <- which(dimnames(object[["data"]][["Z"]])[[2]] == "const")
+        
+        if (length(pos) == 1) {
+          if ("character" %in% class(coef[["const"]])) {
+            if (coef[["const"]] == "first") {
+              mu[, pos] <- object[["data"]][["Y"]][1, ]
             }
-            if ("numeric" %in% class(coef[["const"]])) {
-              mu[, pos] <- coef[["const"]]
-            } 
+            if (coef[["const"]] == "mean") {
+              mu[, pos] <- colMeans(object[["data"]][["Y"]])
+            }
           }
-        }
-      }
-      
-      mu <- matrix(mu)
-      
-      if (structural) {
-        mu <- rbind(mu, matrix(0, n_struct))
-      }
-      
-      object[[i]]$priors$coefficients <- list(mu = mu)
-      
-      ### Prior covariances ----
-      
-      if (minnesota) {
-        #### Minnesota prior ----
-        minn <- minnesota_prior(object = object[[i]],
-                                kappa0 = coef[["minnesota"]][["kappa0"]],
-                                kappa1 = coef[["minnesota"]][["kappa1"]],
-                                kappa2 = coef[["minnesota"]][["kappa2"]],
-                                kappa3 = coef[["minnesota"]][["kappa3"]],
-                                max_var = NULL,
-                                coint_var = FALSE,
-                                sigma = "AR")
-        
-        object[[i]]$priors$coefficients$v_i <- minn$v_i 
-      }
-      
-      #### SSVS prior ----
-      if (use_ssvs) {
-        
-        if (object[[i]][["model"]][["sv"]]) {
-          stop("Not allowed to use SSVS with stochastic volatility models.")
-        }
-        
-        ssvs_temp <- ssvs_prior(object[[i]], tau = ssvs$tau, semiautomatic = ssvs$semiautomatic)
-        temp <- inclusion_prior(object[[i]], prob = ssvs$inprior, exclude_deterministics = ssvs$exclude_det,
-                                minnesota_like = !is.null(ssvs$minnesota), kappa = ssvs$minnesota)
-        object[[i]]$model$varselect <- "SSVS"
-        
-        object[[i]][["priors"]][["coefficients"]]$v_i <- diag(1 / ssvs_temp$tau1[, 1]^2, tot_par)
-        object[[i]][["priors"]][["coefficients"]]$ssvs$inprior <- temp$prior
-        object[[i]][["priors"]][["coefficients"]]$ssvs$include <- temp$include
-        object[[i]][["priors"]][["coefficients"]]$ssvs$tau0 <- ssvs_temp$tau0
-        object[[i]][["priors"]][["coefficients"]]$ssvs$tau1 <- ssvs_temp$tau1
-        rm(temp)
-      }
-      
-      #### Regular prior ----
-      if (!minnesota & !use_ssvs) {
-        v_i <- diag(coef[["v_i"]], tot_par)
-        # Add priors for deterministic terms if they were specified
-        if (n_det > 0 & !is.null(coef[["v_i_det"]])) {
-          diag(v_i)[tot_par - n_struct - n_det + 1:n_det] <- coef[["v_i_det"]]
-        }
-        object[[i]][["priors"]][["coefficients"]]$v_i <- v_i   
-      }
-      
-      #### BVS prior ----
-      if (use_bvs) {
-        object[[i]]$model$varselect <- "BVS"
-        temp <- inclusion_prior(object[[i]], prob = bvs[["inprior"]], exclude_deterministics = bvs[["exclude_det"]],
-                                minnesota_like = !is.null(bvs[["minnesota"]]), kappa = bvs[["minnesota"]])
-        
-        object[[i]][["priors"]][["coefficients"]][["bvs"]][["inprior"]] <- temp[["prior"]]
-        object[[i]][["priors"]][["coefficients"]][["bvs"]][["include"]] <- temp[["include"]]
-      }
-      
-      ### TVP prior ----
-      if (object[[i]][["model"]][["tvp"]]) {
-        object[[i]][["priors"]][["coefficients"]][["shape"]] <- matrix(coef[["shape"]], tot_par)
-        object[[i]][["priors"]][["coefficients"]][["rate"]] <- matrix(coef[["rate"]], tot_par)
-        if (n_det > 0 & !is.null(coef[["rate_det"]])) {
-          object[[i]][["priors"]][["coefficients"]][["rate"]][tot_par - n_struct - n_det + 1:n_det, ] <- coef[["rate_det"]]
+          if ("numeric" %in% class(coef[["const"]])) {
+            mu[, pos] <- coef[["const"]]
+          } 
         }
       }
     }
     
-    ## Covar priors ----
+    mu <- matrix(mu)
+    
+    if (structural) {
+      mu <- rbind(mu, matrix(0, n_struct))
+    }
+    
+    object$priors$a <- list(type = "normal",
+                            mu = mu)
+    
+    ### Prior covariances ----
+    
+    if (minnesota) {
+      #### Minnesota prior ----
+      minn <- minnesota_prior(object = object,
+                              kappa0 = coef[["minnesota"]][["kappa0"]],
+                              kappa1 = coef[["minnesota"]][["kappa1"]],
+                              kappa2 = coef[["minnesota"]][["kappa2"]],
+                              kappa3 = coef[["minnesota"]][["kappa3"]],
+                              max_var = NULL,
+                              coint_var = FALSE,
+                              sigma = "AR")
+      
+      object$priors$a$v_i <- minn$v_i 
+    }
+    
+    #### SSVS prior ----
+    if (use_ssvs) {
+      
+      if (object[["model"]][["sv"]]) {
+        stop("Not allowed to use SSVS with stochastic volatility models.")
+      }
+      
+      ssvs_temp <- ssvs_prior(object, tau = ssvs$tau, semiautomatic = ssvs$semiautomatic)
+      temp <- inclusion_prior(object, prob = ssvs$inprior, exclude_deterministics = ssvs$exclude_det,
+                              minnesota_like = !is.null(ssvs$minnesota), kappa = ssvs$minnesota)
+      object$model$varselect <- "SSVS"
+      
+      object[["priors"]][["a"]]$v_i <- diag(1 / ssvs_temp$tau1[, 1]^2, tot_par)
+      object[["priors"]][["a"]]$ssvs$inprior <- temp$prior
+      object[["priors"]][["a"]]$ssvs$include <- temp$include
+      object[["priors"]][["a"]]$ssvs$tau0 <- ssvs_temp$tau0
+      object[["priors"]][["a"]]$ssvs$tau1 <- ssvs_temp$tau1
+      rm(temp)
+    }
+    
+    #### Regular prior ----
+    if (!minnesota & !use_ssvs) {
+      v_i <- diag(coef[["v_i"]], tot_par)
+      # Add priors for deterministic terms if they were specified
+      if (n_det > 0 & !is.null(coef[["v_i_det"]])) {
+        diag(v_i)[tot_par - n_struct - n_det + 1:n_det] <- coef[["v_i_det"]]
+      }
+      object[["priors"]][["a"]]$v_i <- v_i   
+    }
+    
+    #### BVS prior ----
+    if (use_bvs) {
+      object$model$varselect <- "BVS"
+      temp <- inclusion_prior(object, prob = bvs[["inprior"]], exclude_deterministics = bvs[["exclude_det"]],
+                              minnesota_like = !is.null(bvs[["minnesota"]]), kappa = bvs[["minnesota"]])
+      
+      object[["priors"]][["a"]][["bvs"]][["inprior"]] <- temp[["prior"]]
+      object[["priors"]][["a"]][["bvs"]][["include"]] <- temp[["include"]]
+    }
+    
+    ### TVP prior ----
+    if (object[["model"]][["tvp"]]) {
+      object[["priors"]][["a"]][["shape"]] <- matrix(coef[["shape"]], tot_par)
+      object[["priors"]][["a"]][["rate"]] <- matrix(coef[["rate"]], tot_par)
+      if (n_det > 0 & !is.null(coef[["rate_det"]])) {
+        object[["priors"]][["a"]][["rate"]][tot_par - n_struct - n_det + 1:n_det, ] <- coef[["rate_det"]]
+      }
+    }
+  }
   
-    if (!structural & covar & k > 1) {
-      
-      n_covar <- k * (k - 1) / 2
-      object[[i]][["priors"]][["psi"]][["mu"]] <- matrix(0, n_covar)
-      object[[i]][["priors"]][["psi"]][["v_i"]] <- diag(coef[["v_i"]], n_covar)
-      if (object[[i]][["model"]][["tvp"]]) {
-        object[[i]][["priors"]][["psi"]][["shape"]] <- matrix(coef[["shape"]], n_covar)
-        object[[i]][["priors"]][["psi"]][["rate"]] <- matrix(coef[["rate"]], n_covar) 
-      }
-      
-      # SSVS priors
-      if (use_ssvs_error) {
-        object[[i]][["priors"]][["psi"]][["ssvs"]][["inprior"]] <- matrix(ssvs[["inprior"]], n_covar)
-        object[[i]][["priors"]][["psi"]][["ssvs"]][["include"]] <- matrix(1:n_covar)
-        object[[i]][["priors"]][["psi"]][["ssvs"]][["tau0"]] <- matrix(ssvs[["tau"]][1], n_covar)
-        object[[i]][["priors"]][["psi"]][["ssvs"]][["tau1"]] <- matrix(ssvs[["tau"]][2], n_covar)
-      }
-      
-      # BVS priors
-      if (use_bvs_error) {
-        object[[i]][["priors"]][["psi"]][["bvs"]][["inprior"]] <- matrix(bvs[["inprior"]], n_covar)
-        object[[i]][["priors"]][["psi"]][["bvs"]][["include"]] <- matrix(1:n_covar)
-      }
-    }
-    
-    ## Error term ----
-    if (object[[i]][["model"]][["sv"]]) {
-
-      object[[i]][["priors"]][["sigma"]][["mu"]] <- matrix(sigma[["mu"]], k)
-      object[[i]][["priors"]][["sigma"]][["v_i"]] <- diag(sigma[["v_i"]], k)
-      object[[i]][["priors"]][["sigma"]][["shape"]] <- matrix(sigma[["shape"]], k)
-      object[[i]][["priors"]][["sigma"]][["rate"]] <- matrix(sigma[["rate"]], k)
-      
-    } else {
-      
-      if (error_prior == "wishart") {
-        object[[i]][["priors"]][["sigma"]][["type"]] <- "wishart"
-        help_df <- sigma[["df"]]
-        object[[i]][["priors"]][["sigma"]]$df <- NA_real_
-        object[[i]][["priors"]][["sigma"]]$scale = diag(sigma[["scale"]], k)
-      }
-      
-      if (error_prior == "gamma") {
-        object[[i]][["priors"]][["sigma"]][["type"]] <- "gamma"
-        help_df <- sigma[["shape"]]
-        object[[i]][["priors"]][["sigma"]][["shape"]] <- NA_real_
-        object[[i]][["priors"]][["sigma"]][["rate"]] = matrix(sigma[["rate"]], k)
-      }
-      
-      if (minnesota) {
-        # Store LS estimate of variance coviariance matrix for analytical solution
-        object[[i]][["priors"]][["sigma"]]$sigma_i = minn[["sigma_i"]]
-      }
-      
-      if ("character" %in% class(help_df)) {
-        if (grepl("k", help_df)) {
-          # Transform character specification to expression and evaluate
-          help_df <- eval(parse(text = help_df))
-        } else {
-          stop("Use no other letter than 'k' in 'sigma$df' to indicate the number of endogenous variables.")
-        }
-      }
-      
-      if (help_df < 0) {
-        stop("Current specification implies a negative prior degree of\nfreedom or shape parameter of the error term.")
-      }
-      
-      if (error_prior == "wishart") {
-        object[[i]][["priors"]][["sigma"]]$df <- help_df
-      }
-      if (error_prior == "gamma") {
-        object[[i]][["priors"]][["sigma"]]$shape <- matrix(help_df, k)
-      } 
-    }
-    
-    # Initial values ----
-    y <- t(object[[i]][["data"]][["Y"]])
-    if (tot_par > 0 & tot_par < NCOL(y)) {
-      z <- object[[i]][["data"]][["SUR"]]
-      ols <- solve(crossprod(z)) %*% crossprod(z, matrix(y))
-      u <- matrix(matrix(y) - z %*% ols, NROW(y))
-      object[[i]][["initial"]][["coefficients"]][["draw"]] <- ols
-    } else {
-      if (tot_par > 0) {
-        object[[i]][["initial"]][["coefficients"]][["draw"]] <- mu
-      }
-      u <- y - matrix(apply(y, 1, mean), nrow = NROW(y), ncol = NCOL(y))
-    }
-    if (object[[i]][["model"]][["tvp"]]) {
-      object[[i]][["initial"]][["coefficients"]][["sigma_i"]] <- diag(c(1 / object[[i]][["priors"]][["coefficients"]][["rate"]]), tot_par)
-    }
-    if (covar) {
-      y_covar <- kronecker(-t(u), diag(1, k))
-      pos <- NULL
-      for (j in 1:k) {pos <- c(pos, (j - 1) * k + 1:j)}
-      y_covar <- y_covar[, -pos]
-      psi <- solve(crossprod(y_covar)) %*% crossprod(y_covar, matrix(u))
-      object[[i]][["initial"]][["psi"]][["draw"]] <- psi
-      Psi <- diag(1, k)
-      for (j in 2:k) {
-        Psi[j, 1:(j - 1)] <- t(psi[((j - 2) * (j - 1) / 2) + 1:(j - 1), 1])
-      }
-      u <- Psi %*% u
-    }
-    u <- apply(u, 1, stats::var)
-    if (object[[i]][["model"]][["sv"]]) {
-      object[[i]][["initial"]][["sigma"]][["h"]] <- log(matrix(u, nrow = NCOL(y), ncol = NROW(y), byrow = TRUE))
-      object[[i]][["initial"]][["sigma"]][["sigma_h"]] <- matrix(sigma[["sigma_h"]], NROW(y))
-      
-      if (is.null(sigma[["constant"]])) {
-        warning("Argument 'sigma$constant' not specified. Using the value 0.0001.")
-        sigma[["constant"]] <- .0001
-      }
-      object[[i]][["initial"]][["sigma"]][["constant"]] <- matrix(sigma[["constant"]], NROW(y))
-    } else {
-      object[[i]][["initial"]][["sigma"]][["sigma_i"]] <- diag(1 / u, NROW(y))
-      dimnames(object[[i]][["initial"]][["sigma"]][["sigma_i"]]) <- list(dimnames(y)[[1]], dimnames(y)[[1]])
-    }
-  } # End model loop
+  ## Covar priors ----
   
-  if (only_one_model) {
-    object <- object[[1]]
+  if (!structural & covar & k > 1) {
+    
+    n_covar <- k * (k - 1) / 2
+    object[["priors"]][["psi"]][["mu"]] <- matrix(0, n_covar)
+    object[["priors"]][["psi"]][["v_i"]] <- diag(coef[["v_i"]], n_covar)
+    if (object[["model"]][["tvp"]]) {
+      object[["priors"]][["psi"]][["shape"]] <- matrix(coef[["shape"]], n_covar)
+      object[["priors"]][["psi"]][["rate"]] <- matrix(coef[["rate"]], n_covar) 
+    }
+    
+    # SSVS priors
+    if (use_ssvs_error) {
+      object[["priors"]][["psi"]][["ssvs"]][["inprior"]] <- matrix(ssvs[["inprior"]], n_covar)
+      object[["priors"]][["psi"]][["ssvs"]][["include"]] <- matrix(1:n_covar)
+      object[["priors"]][["psi"]][["ssvs"]][["tau0"]] <- matrix(ssvs[["tau"]][1], n_covar)
+      object[["priors"]][["psi"]][["ssvs"]][["tau1"]] <- matrix(ssvs[["tau"]][2], n_covar)
+    }
+    
+    # BVS priors
+    if (use_bvs_error) {
+      object[["priors"]][["psi"]][["bvs"]][["inprior"]] <- matrix(bvs[["inprior"]], n_covar)
+      object[["priors"]][["psi"]][["bvs"]][["include"]] <- matrix(1:n_covar)
+    }
+  }
+  
+  ## Error term ----
+  if (object[["model"]][["sv"]]) {
+    
+    object[["priors"]][["V"]][["mu"]] <- matrix(sigma[["mu"]], k)
+    object[["priors"]][["V"]][["v_i"]] <- diag(sigma[["v_i"]], k)
+    object[["priors"]][["V"]][["shape"]] <- matrix(sigma[["shape"]], k)
+    object[["priors"]][["V"]][["rate"]] <- matrix(sigma[["rate"]], k)
+    
+  } else {
+    
+    if (error_prior == "wishart") {
+      object[["priors"]][["V"]][["type"]] <- "wishart"
+      help_df <- sigma[["df"]]
+      object[["priors"]][["V"]]$df <- NA_real_
+      object[["priors"]][["V"]]$scale = diag(sigma[["scale"]], k)
+    }
+    
+    if (error_prior == "gamma") {
+      object[["priors"]][["V"]][["type"]] <- "gamma"
+      help_df <- sigma[["shape"]]
+      object[["priors"]][["V"]][["shape"]] <- NA_real_
+      object[["priors"]][["V"]][["rate"]] = matrix(sigma[["rate"]], k)
+    }
+    
+    if (minnesota) {
+      # Store LS estimate of variance coviariance matrix for analytical solution
+      object[["priors"]][["V"]]$sigma_i = minn[["sigma_i"]]
+    }
+    
+    if ("character" %in% class(help_df)) {
+      if (grepl("k", help_df)) {
+        # Transform character specification to expression and evaluate
+        help_df <- eval(parse(text = help_df))
+      } else {
+        stop("Use no other letter than 'k' in 'sigma$df' to indicate the number of endogenous variables.")
+      }
+    }
+    
+    if (help_df < 0) {
+      stop("Current specification implies a negative prior degree of\nfreedom or shape parameter of the error term.")
+    }
+    
+    if (error_prior == "wishart") {
+      object[["priors"]][["V"]]$df <- help_df
+    }
+    if (error_prior == "gamma") {
+      object[["priors"]][["V"]]$shape <- matrix(help_df, k)
+    } 
   }
   
   return(object)

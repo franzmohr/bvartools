@@ -54,71 +54,71 @@
 #' Lütkepohl, H. (2006). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
 #'
 #' @export
-gen_dfm <- function(x, p = 2, n = 1, normalize_x = TRUE, iterations = 20000, burnin = 2000) {
-  
+create_df_model <- function(x, p = 2, n = 1, normalize_x = TRUE, iterations = 20000, burnin = 2000) {
+
   warning("Functionality for dynamic factor models will be exported to package 'dfmtools' in the near future.")
   
   # Check data ----
   if (!"ts" %in% class(x)) {
     stop("Argument 'data' must be an object of class 'ts'.")
   }
-  
+
   if (any(p < 0)) {
     stop("Argument 'p' must be at least 0.")
   }
-  
+
   if (any(n < 1)) {
     stop("Argument 'n' must be at least 1.")
   }
-  
+
   if (is.null(dimnames(x))) {
     tsp_temp <- stats::tsp(x)
     data <- stats::ts(as.matrix(x), class = c("mts", "ts", "matrix"))
     stats::tsp(x) <- tsp_temp
     dimnames(x)[[2]] <- "y"
   }
-  
+
   # Normalise every column of x
   if (normalize_x) {
     x <- scale(x)
   }
-  
+
   data_name <- dimnames(x)[[2]]
   m <- NCOL(x)
   p_max <- max(p)
-  
+
   model <- NULL
   model$type <- "DFM"
   model$variables <- dimnames(x)[[2]]
   model$n_factors <- 0
   model$p <- 0
-  
+
   tt <- nrow(x)
-  
+
   model$iterations <- iterations
   model$burnin <- burnin
-  
+
   result <- NULL
   for (j in n) {
     for (i in p) {
       model_i <- model
       model_i$n_factors <- j
       model_i$p <- i
-      
+
       result_i <- list("data" = list("X" = x),
                        "model" = model_i)
-      
+
       class(result_i) <- append("dfmodel", class(result_i))
-      
+
       result <- c(result, list(result_i))
     }
   }
-  
+
   if (length(result) == 1) {
     result <- result[[1]]
   } else {
     class(result) <- append("modellist", class(result))
   }
-  
+
   return(result)
 }

@@ -4,7 +4,8 @@
 #' the respective method.
 #'
 #' @param object a list, usually, the output of a call to
-#' \code{\link{create_var_model}} or \code{\link{create_vec_model}}.
+#' \code{\link{create_var_model}} or \code{\link{create_vec_model}} in
+#' combination with \code{\link{add_priors}}.
 #' @param ... further arguments passed to or from other methods.
 #' 
 #' @return A list of models.

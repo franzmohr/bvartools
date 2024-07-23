@@ -238,7 +238,7 @@ bvar <- function(data = NULL, exogen = NULL, y, x = NULL,
     } else {
       n_sigma <- nrow(Sigma)
     }
-    if ((n_sigma / tt) %% k == 0 & n_sigma / tt >= 1) {
+    if ((n_sigma / tt) %% k == 0 & n_sigma / tt >= 1) { # Check if TVP
       tvp_sigma <- TRUE
       n_sigma <- n_sigma / tt
     }
@@ -311,6 +311,6 @@ bvar <- function(data = NULL, exogen = NULL, y, x = NULL,
                                                   "Sigma" = tvp_sigma),
                                      "structural" = structural)
   
-  class(result) <- "bvar"
+  class(result) <- append("bvar", class(result))
   return(result)
 }

@@ -2,13 +2,14 @@
 % Please edit documentation in R/add_initial_values.modellist.R
 \name{add_initial_values.modellist}
 \alias{add_initial_values.modellist}
-\title{Add Initial Values to a List of Bayesian Models}
+\title{Add Initial Values of an MCMC Chain}
 \usage{
 \method{add_initial_values}{modellist}(object, ...)
 }
 \arguments{
 \item{object}{a list, usually, the output of a call to
-\code{\link{create_var_model}} or \code{\link{create_vec_model}}.}
+\code{\link{create_var_model}} or \code{\link{create_vec_model}} in
+combination with \code{\link{add_priors}}.}
 
 \item{...}{further arguments passed to or from other methods.}
 }
@@ -21,13 +22,14 @@ the respective method.
 }
 \examples{
 
-# Prepare data
+# Load data
 data("e1")
 e1 <- diff(log(e1)) * 100
 
-# Generate models
-model <- create_var_model(e1, p = 1:2, deterministic = 2,
-                          iterations = 100, burnin = 10)
+# Create model
+model <- create_var_model(e1, p = 0:2, deterministic = "const",
+                          iterations = 50, burnin = 10)
+# Number of iterations and burnin should be much higher.
 
 # Add priors
 model <- add_priors(model)

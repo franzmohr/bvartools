@@ -2,15 +2,15 @@
 % Please edit documentation in R/add_initial_values.bvarmodel.R
 \name{add_initial_values.bvarmodel}
 \alias{add_initial_values.bvarmodel}
-\title{Add Initial Values to a Bayesian VAR Model}
+\title{Add Initial Values of an MCMC Chain}
 \usage{
 \method{add_initial_values}{bvarmodel}(object, method = "ols", ...)
 }
 \arguments{
-\item{object}{a list, usually, the output of a call to \code{\link{create_var_model}}.}
+\item{object}{list of class 'bvarmodel'.}
 
-\item{method}{a character specifying the method of how initial values are generated.
-Defaults to \code{"ols"}, which is not entirely available for TVP and SV models. See 'Details'.}
+\item{method}{character specifying the method of how initial values are generated.
+Default is \code{"ols"}. See 'Details'.}
 
 \item{...}{further arguments passed to or from other methods.}
 }
@@ -24,27 +24,34 @@ function \code{\link{create_var_model}} in combination with \code{\link{add_prio
 \details{
 For argument \code{method} the following specifications are possible:
 \describe{
-  \item{\code{"ols"}}{Inital values are equal to estimates from unrestricted LS regressions.}
+  \item{\code{"ols"}}{Inital values are equal to estimates from an unrestricted LS regression.}
   \item{\code{"prior"}}{Initial values are drawn from the prior. Not possible for uninformative priors.}
 }
 
 In case \code{method = "ols"}, the initial draw of \eqn{a} is the result of
-the unrestricted LS regression \eqn{(Z^{\prime}Z)^{-1}Z^{\prime}y}, where \eqn{Z}
-is the matrix of regressors in SUR form and \eqn{y} is the vector of endogenous
-variables.
-The initial draw of \eqn{V} is the sum of squared
-residuals divided by the number of observations, i.e. \eqn{\frac{vv^{\prime}}{T}},
-with \eqn{v} as the residuals of the LS regression.
+the unrestricted LS regression \eqn{(Z^{\prime}Z)^{-1}Z^{\prime}y} of the model
+\eqn{y_{t} = Z_{t} a + u_{t}}, where \eqn{Z} is the matrix of regressors in
+SUR form and \eqn{y} is the vector of endogenous variables.
+
+The initial draw of \eqn{\Sigma^u} is the sum of squared
+residuals divided by the number of observations, i.e. \eqn{\frac{uu^{\prime}}{T}},
+with \eqn{u} as the residuals of the LS regression.
+
+In case of a model with time varying parameters (TVP), the initial states are
+obtained using the approach specified in argument \code{method}. However, the
+initial draws of the error variances of the state equations are always drawn
+from their prior distributions.
 }
 \examples{
 
-# Prepare data
+# Load data
 data("e1")
 e1 <- diff(log(e1)) * 100
 
-# Generate model
-model <- create_var_model(e1, p = 2, deterministic = 2,
-                          iterations = 100, burnin = 10)
+# Create model
+model <- create_var_model(e1, p = 2, deterministic = "const",
+                          iterations = 50, burnin = 10)
+# Number of iterations and burnin should be much higher.
 
 # Add priors
 model <- add_priors(model)

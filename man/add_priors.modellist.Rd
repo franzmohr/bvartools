@@ -2,7 +2,7 @@
 % Please edit documentation in R/add_priors.modellist.R
 \name{add_priors.modellist}
 \alias{add_priors.modellist}
-\title{Add Priors to a List of Models}
+\title{Add Priors to Bayesian Models}
 \usage{
 \method{add_priors}{modellist}(object, ...)
 }
@@ -21,13 +21,14 @@ the respective method.
 }
 \examples{
 
-# Prepare data
+# Load data
 data("e1")
 e1 <- diff(log(e1)) * 100
 
-# Generate models
-model <- create_var_model(e1, p = 1:2, deterministic = 2,
-                          iterations = 100, burnin = 10)
+# Create model
+model <- create_var_model(e1, p = 0:2, deterministic = "const",
+                          iterations = 50, burnin = 10)
+# Number of iterations and burnin should be much higher.
 
 # Add priors
 model <- add_priors(model)

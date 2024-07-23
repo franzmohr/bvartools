@@ -2,31 +2,31 @@
 % Please edit documentation in R/add_priors.dfmodel.R
 \name{add_priors.dfmodel}
 \alias{add_priors.dfmodel}
-\title{Add Priors to Dynamic Factor Model}
+\title{Add Priors to Bayesian Models}
 \usage{
 \method{add_priors}{dfmodel}(
   object,
-  lambda = list(v_i = 0.01),
-  sigma_u = list(shape = 5, rate = 4),
-  a = list(v_i = 0.01),
-  sigma_v = list(shape = 5, rate = 4),
+  lambda = list(vinv = 0.01),
+  u = list(shape = 5, rate = 4),
+  a = list(vinv = 0.01),
+  v = list(shape = 5, rate = 4),
   ...
 )
 }
 \arguments{
-\item{object}{a list, usually, the output of a call to \code{\link{gen_dfm}}.}
+\item{object}{a list of class 'dfmodel'.}
 
 \item{lambda}{a named list of prior specifications for the factor loadings in the measurement equation.
 For the default specification the diagonal elements of the inverse prior variance-covariance matrix are set to 0.01.
 The variances need to be specified as precisions, i.e. as inverses of the variances.}
 
-\item{sigma_u}{a named list of prior specifications for the error variance-covariance matrix. See 'Details'.}
+\item{u}{a named list of prior specifications for the error variance-covariance matrix. See 'Details'.}
 
 \item{a}{a named list of prior specifications for the coefficients of the transition equation.
 For the default specification the diagonal elements of the inverse prior variance-covariance matrix are set to 0.01.
 The variances need to be specified as precisions, i.e. as inverses of the variances.}
 
-\item{sigma_v}{a named list of prior specifications for the error variance-covariance matrix. See 'Details'.}
+\item{v}{a named list of prior specifications for the error variance-covariance matrix. See 'Details'.}
 
 \item{...}{further arguments passed to or from other methods.}
 }
@@ -34,15 +34,15 @@ The variances need to be specified as precisions, i.e. as inverses of the varian
 A list of models.
 }
 \description{
-Adds prior specifications to a list of models, which was produced by
-function \code{\link{gen_dfm}}.
+Adds prior specifications to a dynamic factor model, which was produced by
+function \code{\link{create_df_model}}.
 }
 \details{
-Argument \code{lambda} can only contain the element \code{v_i}, which is a numeric specifying the prior
+Argument \code{lambda} can only contain the element \code{vinv}, which is a numeric specifying the prior
 precision of the loading factors of the measurement equation. Default is 0.01.
 
 The function assumes an inverse gamma prior for the errors of the measurement equation.
-Argument \code{sigma_u} can contain the following elements:
+Argument \code{u} can contain the following elements:
 \describe{
   \item{\code{shape}}{a numeric or character specifying the prior shape parameter of the error terms
   of the measurement equation. Default is 5.}
@@ -50,11 +50,11 @@ Argument \code{sigma_u} can contain the following elements:
   equation. Default is 4.}
 }
 
-Argument \code{a} can only contain the element \code{v_i}, which is a numeric specifying the prior
+Argument \code{a} can only contain the element \code{vinv}, which is a numeric specifying the prior
 precision of the coefficients of the transition equation. Default is 0.01.
 
 The function assumes an inverse gamma prior for the errors of the transition equation.
-Argument \code{sigma_v} can contain the following elements:
+Argument \code{v} can contain the following elements:
 \describe{
   \item{\code{shape}}{a numeric or character specifying the prior shape parameter of the error terms
   of the transition equation. Default is 5.}
@@ -68,21 +68,21 @@ Argument \code{sigma_v} can contain the following elements:
 data("bem_dfmdata")
 
 # Generate model data
-model <- gen_dfm(x = bem_dfmdata, p = 1, n = 1,
-                 iterations = 5000, burnin = 1000)
-# Number of iterations and burnin should be much higher.
+model <- create_df_model(x = bem_dfmdata, p = 1:2, n = 1,
+                         iterations = 5000, burnin = 1000)
+# Number of iterations and burn-in should be much higher.
 
 # Add prior specifications
 model <- add_priors(model,
-                    lambda = list(v_i = .01),
-                    sigma_u = list(shape = 5, rate = 4),
-                    a = list(v_i = .01),
-                    sigma_v = list(shape = 5, rate = 4))
+                    lambda = list(vinv = .01),
+                    u = list(shape = 5, rate = 4),
+                    a = list(vinv = .01),
+                    v = list(shape = 5, rate = 4))
 
 }
 \references{
 Chan, J., Koop, G., Poirier, D. J., & Tobias J. L. (2019). \emph{Bayesian econometric methods}
 (2nd ed.). Cambridge: Cambridge University Press.
 
-Lütkepohl, H. (2007). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
+Lütkepohl, H. (2006). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
 }

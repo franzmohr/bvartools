@@ -398,10 +398,10 @@ bvec <- function(y, alpha = NULL, beta = NULL, beta_x = NULL, beta_d = NULL, r =
   if(!is.null(C)) {
     if (is.list(C)) {
       if ("coeffs" %in% names(C)) {
-        n_c <- NROW(C[["coeffs"]])
+        n_c <- nrow(C[["coeffs"]])
       }
     } else {
-      n_c <- NROW(C)
+      n_c <- nrow(C)
     }
     if ((n_c / tt) %% k == 0 & n_c / tt >= 1) {
       tvp_c <- TRUE
@@ -656,6 +656,6 @@ bvec <- function(y, alpha = NULL, beta = NULL, beta_x = NULL, beta_d = NULL, r =
                                                   "Sigma" = tvp_sigma),
                                      "structural" = structural)
   
-  class(result) <- "bvec"
+  class(result) <- append("bvec", class(result))
   return(result)
 }

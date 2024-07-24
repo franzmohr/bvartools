@@ -36,17 +36,32 @@
 //' 
 //' @examples
 //' 
-//' # Create artificial data
 //' k <- 3
 //' tt <- 4
 //' u <- matrix(1:(k * tt))
-//' omega_i <- Matrix(diag(1:3, k))
+//'   
+//' # Generate simple variance matrix
+//' omega_i <- Matrix(diag(1:k, k))
+//' # Generate block diagonal variance matrix
+//' tv_omega_i <- Matrix(0, k * tt, k * tt)
+//' for (i in 1:tt) {
+//'   tv_omega_i[(i - 1) * k + 1:k, (i - 1) * k + 1:k] <- omega_i
+//' }
 //' 
-//' # Generate input data (constant parameters)
+//' # Constant error variances
+//' 
+//' # Constant coefficients
 //' covar_prepare_data(u, omega_i, k, tt, FALSE)
-//' 
-//' # Generate input data (time varying parameters)
+//' # Time varying coefficients
 //' covar_prepare_data(u, omega_i, k, tt, TRUE)
+//' 
+//' 
+//' # Time varying error variances
+//' 
+//' # Constant coefficients
+//' covar_prepare_data(u, tv_omega_i, k, tt, FALSE)
+//' # Time varying coefficients
+//' covar_prepare_data(u, tv_omega_i, k, tt, TRUE)
 //' 
 // [[Rcpp::export(covar_prepare_data)]]
 Rcpp::List covar_prepare_data(const arma::vec y, const arma::sp_mat omega_i, const arma::uword k, const int tt, const bool tvp) {
@@ -107,19 +122,27 @@ k <- 3
 tt <- 4
 u <- matrix(1:(k * tt))
 
+# Generate simple variance matrix
 omega_i <- Matrix(diag(1:k, k))
-
-prepare_covar_data(u, omega_i, k, tt, FALSE)
-
-prepare_covar_data(u, omega_i, k, tt, TRUE)
-
-# Time varying errors
-new_omega_i <- Matrix(0, k * tt, k * tt)
+# Generate block diagonal variance matrix
+tv_omega_i <- Matrix(0, k * tt, k * tt)
 for (i in 1:tt) {
-  new_omega_i[(i - 1) * k + 1:k, (i - 1) * k + 1:k] <- omega_i
+  tv_omega_i[(i - 1) * k + 1:k, (i - 1) * k + 1:k] <- omega_i
 }
 
-prepare_covar_data(u, new_omega_i, k, tt, FALSE)
+# Constant error variances
 
-prepare_covar_data(u, new_omega_i, k, tt, TRUE)
+# Constant coefficients
+covar_prepare_data(u, omega_i, k, tt, FALSE)
+# Time varying coefficients
+covar_prepare_data(u, omega_i, k, tt, TRUE)
+
+
+
+# Time varying error variances
+
+# Constant coefficients
+covar_prepare_data(u, tv_omega_i, k, tt, FALSE)
+# Time varying coefficients
+covar_prepare_data(u, tv_omega_i, k, tt, TRUE)
 */

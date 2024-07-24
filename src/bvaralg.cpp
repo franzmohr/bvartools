@@ -7,44 +7,29 @@ Rcpp::List bvaralg(Rcpp::List object) {
   
   // Initialise variables
   Rcpp::List data = object["data"];
-  arma::mat y = arma::trans(Rcpp::as<arma::mat>(data["Y"]));
+  arma::mat y = arma::trans(Rcpp::as<arma::mat>(data["y"]));
   const arma::mat yvec = arma::vectorise(y);
-  Rcpp::Nullable<Rcpp::List> z_test = data["SUR"];
+  Rcpp::Nullable<Rcpp::List> z_test = data["z"];
   arma::mat z;
   int n_tot = 0;
   if (z_test.isNotNull()) {
-    z = Rcpp::as<arma::mat>(data["SUR"]);
+    z = Rcpp::as<arma::mat>(data["z"]);
     n_tot = z.n_cols;
   }
   const bool use_a = n_tot > 0;
   
   // Model information
   Rcpp::List model = object["model"];
-  Rcpp::CharacterVector model_names = model.names();
-  Rcpp::List endogen = model["endogen"];
-  Rcpp::CharacterVector endo_names = Rcpp::as<Rcpp::CharacterVector>(endogen["variables"]);
   
   // Define useful variables
   const int tt = y.n_cols;
   const int k = y.n_rows;
-  const int p = Rcpp::as<int>(endogen["lags"]);
-  const int n_a = k * k * p;
-  int m = 0;
-  int s = 0;
-  int n_b = 0;
-  int n = 0;
-  int n_c = 0;
-  int n_psi = 0;
   const int n_sigma = k * k;
   const arma::mat diag_k = arma::eye<arma::mat>(k, k);
   const arma::mat diag_tt = arma::eye<arma::mat>(tt, tt);
   const arma::mat diag_ktt = arma::eye<arma::mat>(k * tt, k * tt);
-  const bool sv = Rcpp::as<bool>(model["sv"]);
-  const bool structural = Rcpp::as<bool>(model["structural"]);
-  int n_a0 = 0;
-  if (structural) {
-    n_a0 = k * (k - 1) / 2;
-  }
+  const Rcpp::String model_error = model["error"];
+  const bool sv = model_error == "sv" || model_error == "sv-covar";
   
   bool covar = false;
   bool varsel = false; // Variable selection
@@ -53,26 +38,8 @@ Rcpp::List bvaralg(Rcpp::List object) {
   bool psi_ssvs = false;
   bool bvs = false;
   bool psi_bvs = false;
-  
-  // Exogenous variables
-  Rcpp::CharacterVector exogen_names;
-  Rcpp::List exogen;
-  if (std::find(model_names.begin(), model_names.end(), "exogen") != model_names.end()) {
-    exogen = model["exogen"];
-    exogen_names = Rcpp::as<Rcpp::CharacterVector>(exogen["variables"]);
-    m = exogen_names.length();
-    s = Rcpp::as<int>(exogen["lags"]);
-    n_b = k * m * (s + 1);
-  }
 
-  // Deterministic terms
-  Rcpp::CharacterVector det_names;
-  if (std::find(model_names.begin(), model_names.end(), "deterministic") != model_names.end()) {
-    det_names = Rcpp::as<Rcpp::CharacterVector>(model["deterministic"]);
-    n = det_names.length();
-    n_c = k * n;
-  }
-  
+  //////////////////////////////////////////////////////////////////////////////
   // Priors & initial values ----
   Rcpp::List priors = object["priors"];
   Rcpp::CharacterVector priors_names = priors.names();
@@ -88,7 +55,7 @@ Rcpp::List bvaralg(Rcpp::List object) {
   arma::vec a_bvs_lprior_0, a_bvs_lprior_1;
   int a_varsel_n, a_varsel_pos;
   double a_bayes, a_bayes_rand, a_l0, a_l1, a_lambda_draw;
-  arma::vec a_post_incl, a_post_mu, a_randu, a_theta0_res, a_theta1_res, a_u0, a_u1, a_varsel_include, a_varsel_include_draw;
+  arma::vec a_post_incl, a_post_mu, a_randu, a_theta0_res, a_theta1_res, a_u0, a_u1, a_varsel_include, a_varsel_include_draw, lambda_vec;
   arma::mat a, a_AG, a_lambda, a_post_v, a_theta0, a_theta1, z_bvs;
   if (n_tot > 0) {
     // Priors - Coefficients
@@ -142,9 +109,9 @@ Rcpp::List bvaralg(Rcpp::List object) {
   // Priors - Covar coefficients
   Rcpp::List psi_priors, psi_prior_varsel;
   Rcpp::CharacterVector psi_priors_names;
-  arma::vec psi_prior_incl, psi_tau0, psi_tau1, psi_tau0sq, psi_tau1sq, psi_bvs_lprior_0, psi_bvs_lprior_1;
+  arma::vec psi_lambda_vec, psi_prior_incl, psi_tau0, psi_tau1, psi_tau0sq, psi_tau1sq, psi_bvs_lprior_0, psi_bvs_lprior_1;
   arma::mat psi_prior_mu, psi_prior_vi;
-  int psi_varsel_n, psi_varsel_pos;
+  int n_psi, psi_varsel_n, psi_varsel_pos;
   double psi_bayes, psi_bayes_rand, psi_l0, psi_l1, psi_lambda_draw;
   arma::vec psi_post_incl, psi_post_mu, psi_randu, psi_theta0_res, psi_theta1_res, psi_varsel_include, psi_varsel_include_draw, psi_u0, psi_u1, psi_y;
   arma::mat diag_omega_i, diag_covar_omega_i, diag_Psi, psi, Psi, psi_AG, psi_lambda, psi_post_v, psi_theta0, psi_theta1, psi_z, psi_z_bvs;
@@ -199,7 +166,7 @@ Rcpp::List bvaralg(Rcpp::List object) {
   
   
   // Priors - Errors
-  Rcpp::List sigma_pr = priors["V"];
+  Rcpp::List sigma_pr = priors["sigma"];
   Rcpp::CharacterVector sigma_names = sigma_pr.names();
   double sigma_post_df;
   arma::vec sigma_post_shape, sigma_prior_rate, sigma_prior_mu;
@@ -219,8 +186,8 @@ Rcpp::List bvaralg(Rcpp::List object) {
     
     h = Rcpp::as<arma::mat>(initial["h"]);
     h_lag = h * 0;
-    sigma_h = Rcpp::as<arma::vec>(initial["sigma_h"]);
-    h_constant = Rcpp::as<arma::vec>(initial["constant"]);
+    sigma_h = Rcpp::as<arma::vec>(initial["h_state_variance"]);
+    h_constant = Rcpp::as<arma::vec>(initial["h_offset"]);
     h_init = arma::vectorise(h.row(0));
     sigma_i = arma::diagmat(1 / exp(h_init));
   } else {
@@ -234,7 +201,7 @@ Rcpp::List bvaralg(Rcpp::List object) {
       sigma_prior_rate = Rcpp::as<arma::vec>(sigma_pr["rate"]);
     }
     
-    omega_i = Rcpp::as<arma::mat>(initial["V_i"]);
+    omega_i = Rcpp::as<arma::mat>(initial["sigma_i"]);
     sigma_i = omega_i;
   }
   diag_sigma_i.diag() = arma::repmat(sigma_i.diag(), tt, 1);
@@ -247,39 +214,22 @@ Rcpp::List bvaralg(Rcpp::List object) {
   const int burnin = Rcpp::as<int>(model["burnin"]);
   const int draws = iter + burnin;
   int pos_draw;
-  const int a_pos_start = 0;
-  const int a_pos_end = n_a - 1;
-  const int b_pos_start = n_a;
-  const int b_pos_end = n_a + n_b - 1;
-  const int c_pos_start = n_a + n_b;
-  const int c_pos_end = n_a + n_b + n_c - 1;
-  const int a0_pos_start = n_a + n_b + n_c;
-  const int a0_pos_end = n_a + n_b + n_c + n_a0 - 1;
-
-  arma::mat draws_a0 = arma::zeros<arma::mat>(n_a0, iter);
-  arma::mat draws_a = arma::zeros<arma::mat>(n_a, iter);
-  arma::mat draws_b = arma::zeros<arma::mat>(n_b, iter);
-  arma::mat draws_c = arma::zeros<arma::mat>(n_c, iter);
+  
+  arma::mat draws_a = arma::zeros<arma::mat>(iter, n_tot);
   arma::mat draws_sigma, draws_sigma_sigma;
   if (sv) {
-    draws_sigma = arma::zeros<arma::mat>(k * k * tt, iter);
-    draws_sigma_sigma = arma::zeros<arma::mat>(k * k, iter);
+    draws_sigma = arma::zeros<arma::mat>(iter, k * k * tt);
+    draws_sigma_sigma = arma::zeros<arma::mat>(iter, k * k);
   } else {
-    draws_sigma = arma::zeros<arma::mat>(k * k, iter);
+    draws_sigma = arma::zeros<arma::mat>(iter, k * k);
   }
   
-  arma::vec lambda_vec, psi_lambda_vec;
-  arma::mat draws_lambda_a0, draws_lambda_a, draws_lambda_b, draws_lambda_c;
+  arma::mat draws_lambda_a0, draws_lambda_a;
   if (varsel) {
-    if (structural) {
-      draws_lambda_a0 = arma::zeros<arma::mat>(n_a0, iter); 
-    }
-    draws_lambda_a = arma::zeros<arma::mat>(n_a, iter);
-    draws_lambda_b = arma::zeros<arma::mat>(n_b, iter);
-    draws_lambda_c = arma::zeros<arma::mat>(n_c, iter);
+    draws_lambda_a = arma::zeros<arma::mat>(iter, n_tot);
   }
   if (covar && psi_varsel) {
-    draws_lambda_a0 = arma::zeros<arma::mat>(n_psi, iter);  
+    draws_lambda_a0 = arma::zeros<arma::mat>(iter, n_psi);  
   }
   
   // Start Gibbs sampler
@@ -453,7 +403,7 @@ Rcpp::List bvaralg(Rcpp::List object) {
     
     if (sv) {
       
-      h = bvartools::stochvol_ksc1998(arma::trans(u), h, sigma_h, h_init, h_constant);
+      h = bvartools::stochvol_ocsn2007(arma::trans(u), h, sigma_h, h_init, h_constant);
       
       // Draw sigma_h
       h_lag.row(0) = h_init.t();
@@ -510,88 +460,40 @@ Rcpp::List bvaralg(Rcpp::List object) {
     
     // Store draws
     if (draw >= burnin) {
-      
+
       pos_draw = draw - burnin;
-      
+
       if (sv) {
         for (int i = 0; i < tt; i ++) {
-          draws_sigma.submat(i * n_sigma, pos_draw, (i + 1) * n_sigma - 1, pos_draw) = arma::vectorise(arma::solve(diag_sigma_i.submat(i * k, i * k, (i + 1) * k - 1, (i + 1) * k - 1), diag_k));
+         draws_sigma.submat(pos_draw, i * n_sigma, pos_draw, (i + 1) * n_sigma - 1) = arma::trans(arma::vectorise(arma::solve(diag_sigma_i.submat(i * k, i * k, (i + 1) * k - 1, (i + 1) * k - 1), diag_k)));
         }
-        draws_sigma_sigma.col(pos_draw) = arma::vectorise(arma::diagmat(sigma_h));
+        draws_sigma_sigma.row(pos_draw) = arma::trans(arma::vectorise(arma::diagmat(sigma_h)));
       } else {
-        draws_sigma.col(pos_draw) = arma::vectorise(arma::solve(sigma_i, diag_k));
+        draws_sigma.row(pos_draw) = arma::trans(arma::vectorise(arma::solve(sigma_i, diag_k)));
       }
-      
+    
       if (psi_varsel) {
-        draws_lambda_a0.col(pos_draw) = psi_lambda_vec;
+        draws_lambda_a0.row(pos_draw) = arma::trans(psi_lambda_vec);
       }
-      
-      if (n_a > 0) {
-        draws_a.col(pos_draw) = arma::vectorise(a.rows(a_pos_start, a_pos_end));
+
+      if (use_a) {
+        draws_a.row(pos_draw) = arma::trans(arma::vectorise(a));
         if (varsel) {
-          draws_lambda_a.col(pos_draw) = lambda_vec.subvec(a_pos_start, a_pos_end);
-        }
-      }
-      if (n_b > 0) {
-        draws_b.col(pos_draw) = arma::vectorise(a.rows(b_pos_start, b_pos_end));
-        if (varsel) {
-          draws_lambda_b.col(pos_draw) = lambda_vec.subvec(b_pos_start, b_pos_end);
-        }
-      }
-      if (n_c > 0) {
-        draws_c.col(pos_draw) = arma::vectorise(a.rows(c_pos_start, c_pos_end));
-        if (varsel) {
-          draws_lambda_c.col(pos_draw) = lambda_vec.subvec(c_pos_start, c_pos_end);
-        }
-      }
-      if (structural) {
-        draws_a0.col(pos_draw) = arma::vectorise(a.rows(a0_pos_start, a0_pos_end));
-        if (varsel) {
-          draws_lambda_a0.col(pos_draw) = lambda_vec.subvec(a0_pos_start, a0_pos_end);
+          draws_lambda_a.row(pos_draw) = arma::trans(lambda_vec);
         }
       }
     }
   } // End loop
 
-  Rcpp::List posteriors = Rcpp::List::create(Rcpp::Named("a0") = R_NilValue,
-                                             Rcpp::Named("a") = R_NilValue,
-                                             Rcpp::Named("b") = R_NilValue,
-                                             Rcpp::Named("c") = R_NilValue,
+  Rcpp::List posteriors = Rcpp::List::create(Rcpp::Named("a") = R_NilValue,
                                              Rcpp::Named("sigma") = R_NilValue);
 
-  if (n_a > 0) {
+  if (use_a) {
     if (varsel) {
       posteriors["a"] = Rcpp::wrap(Rcpp::List::create(Rcpp::Named("coeffs") = draws_a,
                                                      Rcpp::Named("lambda") = draws_lambda_a));
     } else {
       posteriors["a"] = Rcpp::wrap(Rcpp::List::create(Rcpp::Named("coeffs") = draws_a));
-    }
-  }
-
-  if (n_b > 0) {
-    if (varsel) {
-      posteriors["b"] = Rcpp::wrap(Rcpp::List::create(Rcpp::Named("coeffs") = draws_b,
-                                                     Rcpp::Named("lambda") = draws_lambda_b));
-    } else {
-      posteriors["b"] = Rcpp::wrap(Rcpp::List::create(Rcpp::Named("coeffs") = draws_b));
-    }
-  }
-
-  if (n_c > 0) {
-    if (varsel) {
-      posteriors["c"] = Rcpp::wrap(Rcpp::List::create(Rcpp::Named("coeffs") = draws_c,
-                                                      Rcpp::Named("lambda") = draws_lambda_c));
-    } else {
-      posteriors["c"] = Rcpp::wrap(Rcpp::List::create(Rcpp::Named("coeffs") = draws_c));
-    }
-  }
-
-  if (structural) {
-    if (varsel) {
-      posteriors["a0"] = Rcpp::wrap(Rcpp::List::create(Rcpp::Named("coeffs") = draws_a0,
-                                                       Rcpp::Named("lambda") = draws_lambda_a0));
-    } else {
-      posteriors["a0"] = Rcpp::wrap(Rcpp::List::create(Rcpp::Named("coeffs") = draws_a0));
     }
   }
 
@@ -615,6 +517,7 @@ Rcpp::List bvaralg(Rcpp::List object) {
 
   Rcpp::List result = Rcpp::List::create(Rcpp::Named("data") = object["data"],
                                          Rcpp::Named("model") = object["model"],
+                                         Rcpp::Named("initial") = object["initial"],
                                          Rcpp::Named("priors") = object["priors"],
                                          Rcpp::Named("posteriors") = posteriors);
 
@@ -626,12 +529,15 @@ Rcpp::List bvaralg(Rcpp::List object) {
 
 data("us_macrodata")
 
-object <- create_var_model(us_macrodata, p = 0, deterministic = "none",
-                  sv = TRUE,
-                  iterations = 20, burnin = 10)
+object <- create_var_model(data = us_macrodata,
+                           p = 0, deterministic = "const",
+                           error = "sv-covar",
+                           iterations = 20, burnin = 10)
 
 object <- add_priors(object,
-                     sigma = list(shape = 3, rate = .4, mu = 10, v_i = .01, sigma_h = .05, constant = .0001))
+                     sigma = list(shape = 3, rate = .4, mu = 10, v_i = .01, state_variance = .05, offset = .0001))
+
+object <- add_initial_values(object)
 
 .bvaralg(object)
 

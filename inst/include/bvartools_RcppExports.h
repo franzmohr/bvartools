@@ -25,6 +25,48 @@ namespace bvartools {
         }
     }
 
+    inline Rcpp::List coint_kls2010_reparameterise_two(const arma::mat alpha, const arma::mat beta) {
+        typedef SEXP(*Ptr_coint_kls2010_reparameterise_two)(SEXP,SEXP);
+        static Ptr_coint_kls2010_reparameterise_two p_coint_kls2010_reparameterise_two = NULL;
+        if (p_coint_kls2010_reparameterise_two == NULL) {
+            validateSignature("Rcpp::List(*coint_kls2010_reparameterise_two)(const arma::mat,const arma::mat)");
+            p_coint_kls2010_reparameterise_two = (Ptr_coint_kls2010_reparameterise_two)R_GetCCallable("bvartools", "_bvartools_coint_kls2010_reparameterise_two");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_coint_kls2010_reparameterise_two(Shield<SEXP>(Rcpp::wrap(alpha)), Shield<SEXP>(Rcpp::wrap(beta)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<Rcpp::List >(rcpp_result_gen);
+    }
+
+    inline Rcpp::List coint_prepare_sur_data(const arma::mat w, arma::mat alpha, const int k, const int r, const bool reparameterise, const bool tvp) {
+        typedef SEXP(*Ptr_coint_prepare_sur_data)(SEXP,SEXP,SEXP,SEXP,SEXP,SEXP);
+        static Ptr_coint_prepare_sur_data p_coint_prepare_sur_data = NULL;
+        if (p_coint_prepare_sur_data == NULL) {
+            validateSignature("Rcpp::List(*coint_prepare_sur_data)(const arma::mat,arma::mat,const int,const int,const bool,const bool)");
+            p_coint_prepare_sur_data = (Ptr_coint_prepare_sur_data)R_GetCCallable("bvartools", "_bvartools_coint_prepare_sur_data");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_coint_prepare_sur_data(Shield<SEXP>(Rcpp::wrap(w)), Shield<SEXP>(Rcpp::wrap(alpha)), Shield<SEXP>(Rcpp::wrap(k)), Shield<SEXP>(Rcpp::wrap(r)), Shield<SEXP>(Rcpp::wrap(reparameterise)), Shield<SEXP>(Rcpp::wrap(tvp)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<Rcpp::List >(rcpp_result_gen);
+    }
+
     inline Rcpp::List covar_prepare_data(const arma::vec y, const arma::sp_mat omega_i, const arma::uword k, const int tt, const bool tvp) {
         typedef SEXP(*Ptr_covar_prepare_data)(SEXP,SEXP,SEXP,SEXP,SEXP);
         static Ptr_covar_prepare_data p_covar_prepare_data = NULL;
@@ -67,6 +109,27 @@ namespace bvartools {
         return Rcpp::as<arma::sp_mat >(rcpp_result_gen);
     }
 
+    inline arma::sp_mat generate_lower_block_diagonal(arma::mat& a, int& k, int& tt) {
+        typedef SEXP(*Ptr_generate_lower_block_diagonal)(SEXP,SEXP,SEXP);
+        static Ptr_generate_lower_block_diagonal p_generate_lower_block_diagonal = NULL;
+        if (p_generate_lower_block_diagonal == NULL) {
+            validateSignature("arma::sp_mat(*generate_lower_block_diagonal)(arma::mat&,int&,int&)");
+            p_generate_lower_block_diagonal = (Ptr_generate_lower_block_diagonal)R_GetCCallable("bvartools", "_bvartools_generate_lower_block_diagonal");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_generate_lower_block_diagonal(Shield<SEXP>(Rcpp::wrap(a)), Shield<SEXP>(Rcpp::wrap(k)), Shield<SEXP>(Rcpp::wrap(tt)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<arma::sp_mat >(rcpp_result_gen);
+    }
+
     inline arma::mat kalman_dk(arma::mat y, arma::mat z, arma::mat sigma_u, arma::mat sigma_v, arma::mat B, arma::vec a_init, arma::mat P_init) {
         typedef SEXP(*Ptr_kalman_dk)(SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP);
         static Ptr_kalman_dk p_kalman_dk = NULL;
@@ -78,48 +141,6 @@ namespace bvartools {
         {
             RNGScope RCPP_rngScope_gen;
             rcpp_result_gen = p_kalman_dk(Shield<SEXP>(Rcpp::wrap(y)), Shield<SEXP>(Rcpp::wrap(z)), Shield<SEXP>(Rcpp::wrap(sigma_u)), Shield<SEXP>(Rcpp::wrap(sigma_v)), Shield<SEXP>(Rcpp::wrap(B)), Shield<SEXP>(Rcpp::wrap(a_init)), Shield<SEXP>(Rcpp::wrap(P_init)));
-        }
-        if (rcpp_result_gen.inherits("interrupted-error"))
-            throw Rcpp::internal::InterruptedException();
-        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
-            throw Rcpp::LongjumpException(rcpp_result_gen);
-        if (rcpp_result_gen.inherits("try-error"))
-            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
-        return Rcpp::as<arma::mat >(rcpp_result_gen);
-    }
-
-    inline arma::mat stoch_vol(arma::mat y, arma::mat h, arma::vec sigma, arma::vec h_init, arma::vec constant) {
-        typedef SEXP(*Ptr_stoch_vol)(SEXP,SEXP,SEXP,SEXP,SEXP);
-        static Ptr_stoch_vol p_stoch_vol = NULL;
-        if (p_stoch_vol == NULL) {
-            validateSignature("arma::mat(*stoch_vol)(arma::mat,arma::mat,arma::vec,arma::vec,arma::vec)");
-            p_stoch_vol = (Ptr_stoch_vol)R_GetCCallable("bvartools", "_bvartools_stoch_vol");
-        }
-        RObject rcpp_result_gen;
-        {
-            RNGScope RCPP_rngScope_gen;
-            rcpp_result_gen = p_stoch_vol(Shield<SEXP>(Rcpp::wrap(y)), Shield<SEXP>(Rcpp::wrap(h)), Shield<SEXP>(Rcpp::wrap(sigma)), Shield<SEXP>(Rcpp::wrap(h_init)), Shield<SEXP>(Rcpp::wrap(constant)));
-        }
-        if (rcpp_result_gen.inherits("interrupted-error"))
-            throw Rcpp::internal::InterruptedException();
-        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
-            throw Rcpp::LongjumpException(rcpp_result_gen);
-        if (rcpp_result_gen.inherits("try-error"))
-            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
-        return Rcpp::as<arma::mat >(rcpp_result_gen);
-    }
-
-    inline arma::mat stochvol_ksc1998(arma::mat y, arma::mat h, arma::vec sigma, arma::vec h_init, arma::vec constant) {
-        typedef SEXP(*Ptr_stochvol_ksc1998)(SEXP,SEXP,SEXP,SEXP,SEXP);
-        static Ptr_stochvol_ksc1998 p_stochvol_ksc1998 = NULL;
-        if (p_stochvol_ksc1998 == NULL) {
-            validateSignature("arma::mat(*stochvol_ksc1998)(arma::mat,arma::mat,arma::vec,arma::vec,arma::vec)");
-            p_stochvol_ksc1998 = (Ptr_stochvol_ksc1998)R_GetCCallable("bvartools", "_bvartools_stochvol_ksc1998");
-        }
-        RObject rcpp_result_gen;
-        {
-            RNGScope RCPP_rngScope_gen;
-            rcpp_result_gen = p_stochvol_ksc1998(Shield<SEXP>(Rcpp::wrap(y)), Shield<SEXP>(Rcpp::wrap(h)), Shield<SEXP>(Rcpp::wrap(sigma)), Shield<SEXP>(Rcpp::wrap(h_init)), Shield<SEXP>(Rcpp::wrap(constant)));
         }
         if (rcpp_result_gen.inherits("interrupted-error"))
             throw Rcpp::internal::InterruptedException();
@@ -149,6 +170,27 @@ namespace bvartools {
         if (rcpp_result_gen.inherits("try-error"))
             throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
         return Rcpp::as<arma::mat >(rcpp_result_gen);
+    }
+
+    inline arma::sp_mat sur_const_to_tvp(arma::mat& z, arma::uword& k, int& tt) {
+        typedef SEXP(*Ptr_sur_const_to_tvp)(SEXP,SEXP,SEXP);
+        static Ptr_sur_const_to_tvp p_sur_const_to_tvp = NULL;
+        if (p_sur_const_to_tvp == NULL) {
+            validateSignature("arma::sp_mat(*sur_const_to_tvp)(arma::mat&,arma::uword&,int&)");
+            p_sur_const_to_tvp = (Ptr_sur_const_to_tvp)R_GetCCallable("bvartools", "_bvartools_sur_const_to_tvp");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_sur_const_to_tvp(Shield<SEXP>(Rcpp::wrap(z)), Shield<SEXP>(Rcpp::wrap(k)), Shield<SEXP>(Rcpp::wrap(tt)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<arma::sp_mat >(rcpp_result_gen);
     }
 
 }

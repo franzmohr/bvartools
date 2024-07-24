@@ -5,88 +5,82 @@
     .Call(`_bvartools_bvaralg`, object)
 }
 
-.bvartvpalg <- function(object) {
-    .Call(`_bvartools_bvartvpalg`, object)
-}
-
 .bvecalg <- function(object) {
     .Call(`_bvartools_bvecalg`, object)
 }
 
-.bvectvpalg <- function(object) {
-    .Call(`_bvartools_bvectvpalg`, object)
-}
-
-#' Bayesian Variable Selection
+#' Cointegration Reparameterisation
 #' 
-#' \code{bvs} employs Bayesian variable selection as proposed by Korobilis (2013)
-#' to produce a vector of inclusion parameters for the coefficient matrix
-#' of a VAR model.
+#' Performs the second transformation of the loading and
+#' cointegration matrix as proposed in Koop et al. (2010).
 #' 
-#' @param y a \eqn{K \times T} matrix of the endogenous variables.
-#' @param z a \eqn{KT \times M} matrix of explanatory variables.
-#' @param a an M-dimensional vector of parameter draws. If time varying parameters are used,
-#' an \eqn{M \times T} coefficient matrix can be provided.
-#' @param lambda an \eqn{M \times M} inclusion matrix that should be updated.
-#' @param sigma_i the inverse variance-covariance matrix. If the variance-covariance matrix
-#' is time varying, a \eqn{KT \times K} matrix can be provided.
-#' @param prob_prior an M-dimensional vector of prior inclusion probabilities.
-#' @param include an integer vector specifying the positions of variables, which should be
-#' included in the BVS algorithm. If \code{NULL} (default), BVS will be applied to all variables.
+#' @param alpha a \eqn{K \times r} matrix.
+#' @param beta an \eqn{M \times r} matrix.
 #' 
-#' @details The function employs Bayesian variable selection as proposed
-#' by Korobilis (2013) to produce a vector of inclusion parameters, which are
-#' the diagonal elements of the inclusion matrix \eqn{\Lambda} for the VAR model
-#' \deqn{y_t = Z_t \Lambda a_t + u_t,}
-#' where \eqn{u_t \sim N(0, \Sigma_{t})}.
-#' \eqn{y_t} is a K-dimensional vector of endogenous variables and
-#' \eqn{Z_t = x_t^{\prime} \otimes I_K} is a \eqn{K \times M} matrix of regressors with
-#' \eqn{x_t} as a vector of regressors.
+#' @details The function performs two transformations:
+#' \itemize{
+#'   \item \eqn{A = \alpha (\beta^{\prime} \beta)^{1/2}}
+#'   \item \eqn{B = \beta (\beta^{\prime} \beta)^{-1/2}}
+#' }
 #' 
-#' @return A matrix of inclusion parameters on its diagonal.
+#' @references
+#' Koop, G., León-González, R., & Strachan R. W. (2010). Efficient posterior
+#' simulation for cointegrated models with priors on the cointegration space.
+#' \emph{Econometric Reviews, 29}(2), 224-242. \doi{10.1080/07474930903382208}
+#' 
+#' @return A list of two matrices:
+#' \item{alpha}{Loading matrix \eqn{A}.}
+#' \item{beta}{Cointegration matrix \eqn{B} (semiorthogonal).}
 #' 
 #' @examples
 #' 
-#' # Load data
-#' data("e1")
-#' data <- diff(log(e1)) * 100
+#' # Generate input data
+#' alpha <- matrix(c(-0.07, 0.17), 2)
+#' beta <- matrix(c(1, -4), 2)
 #' 
-#' # Generate model data
-#' temp <- gen_var(data, p = 2, deterministic = "const")
+#' # Reparameterise
+#' coint_kls2010_reparameterise_two(alpha, beta)
 #' 
-#' y <- t(temp$data$Y)
-#' z <- temp$data$SUR
+coint_kls2010_reparameterise_two <- function(alpha, beta) {
+    .Call(`_bvartools_coint_kls2010_reparameterise_two`, alpha, beta)
+}
+
+#' Posterior Data Preparation
 #' 
-#' tt <- ncol(y)
-#' m <- ncol(z)
+#' Generates the input matrix for the simulation of the cointegration matrix \eqn{\beta}.
 #' 
-#' # Priors
-#' a_mu_prior <- matrix(0, m)
-#' a_v_i_prior <- diag(0.1, m)
+#' @param w a \eqn{T \times M} matrix.
+#' @param alpha a \eqn{K \times r} matrix of the loading matrix \eqn{\alpha}.
+#' @param k integer of the number of endogenous variables in the model.
+#' @param r integer with the rank of the cointegration matrix \eqn{\Pi}.
+#' @param reparameterise logical indicating if the reparameterisation described
+#' in Koop et al. (2010) should be performed.
+#' @param tvp logical indicating if the SUR matrix with the values of regressors
+#' should be prepared for the estimation of constant or time varying parameters.
 #' 
-#' # Prior for inclusion parameter
-#' prob_prior <- matrix(0.5, m)
+#' @return A sparse block matrix.
 #' 
-#' # Initial value of Sigma
-#' sigma <- tcrossprod(y) / tt
-#' sigma_i <- solve(sigma)
+#' @examples
 #' 
-#' lambda <- diag(1, m)
+#' data("e6") # Load data
 #' 
-#' z_bvs <- z %*% lambda
+#' # Generate model input
+#' mod <- gen_vec(e6, p = 4, r = 1,
+#'                const = "unrestricted", seasonal = "unrestricted")
 #' 
-#' a <- post_normal_sur(y = y, z = z_bvs, sigma_i = sigma_i,
-#'                      a_prior = a_mu_prior, v_i_prior = a_v_i_prior)
-#'
-#' lambda <- bvs(y = y, z = z, a = a, lambda = lambda,
-#'               sigma_i = sigma_i, prob_prior = prob_prior)
+#' # Obtain input data
+#' alpha <- matrix(c(-0.1, 0.16, -0.04, -0.02), 2)
+#' w <- mod$data$W
 #' 
-#' @references
+#' # Constant coefficients
+#' coint_prepare_sur_data(w, alpha, 2, 1, TRUE, FALSE)
 #' 
-#' Korobilis, D. (2013). VAR forecasting using Bayesian variable selection. \emph{Journal of Applied Econometrics, 28}(2), 204--230. \doi{10.1002/jae.1271}
+#' # Time varying coefficients
+#' coint_prepare_sur_data(w, alpha, 2, 1, FALSE, TRUE)
 #' 
-bvs <- function(y, z, a, lambda, sigma_i, prob_prior, include = NULL) {
-    .Call(`_bvartools_bvs`, y, z, a, lambda, sigma_i, prob_prior, include)
+#' 
+coint_prepare_sur_data <- function(w, alpha, k, r, reparameterise, tvp) {
+    .Call(`_bvartools_coint_prepare_sur_data`, w, alpha, k, r, reparameterise, tvp)
 }
 
 #' Covariance: Data Preparation
@@ -123,17 +117,32 @@ bvs <- function(y, z, a, lambda, sigma_i, prob_prior, include = NULL) {
 #' 
 #' @examples
 #' 
-#' # Create artificial data
 #' k <- 3
 #' tt <- 4
 #' u <- matrix(1:(k * tt))
-#' omega_i <- Matrix(diag(1:3, k))
+#'   
+#' # Generate simple variance matrix
+#' omega_i <- Matrix(diag(1:k, k))
+#' # Generate block diagonal variance matrix
+#' tv_omega_i <- Matrix(0, k * tt, k * tt)
+#' for (i in 1:tt) {
+#'   tv_omega_i[(i - 1) * k + 1:k, (i - 1) * k + 1:k] <- omega_i
+#' }
 #' 
-#' # Generate input data (constant parameters)
+#' # Constant error variances
+#' 
+#' # Constant coefficients
 #' covar_prepare_data(u, omega_i, k, tt, FALSE)
-#' 
-#' # Generate input data (time varying parameters)
+#' # Time varying coefficients
 #' covar_prepare_data(u, omega_i, k, tt, TRUE)
+#' 
+#' 
+#' # Time varying error variances
+#' 
+#' # Constant coefficients
+#' covar_prepare_data(u, tv_omega_i, k, tt, FALSE)
+#' # Time varying coefficients
+#' covar_prepare_data(u, tv_omega_i, k, tt, TRUE)
 #' 
 covar_prepare_data <- function(y, omega_i, k, tt, tvp) {
     .Call(`_bvartools_covar_prepare_data`, y, omega_i, k, tt, tvp)
@@ -177,12 +186,36 @@ covar_vector_to_matrix <- function(psi, k, tt) {
     .Call(`_bvartools_covar_vector_to_matrix`, psi, k, tt)
 }
 
-.dfmalg <- function(object) {
-    .Call(`_bvartools_dfmalg`, object)
-}
-
 .draw_forecast <- function(i, k, p, a0_i, use_a, a_, sigma, pred) {
     .Call(`_bvartools_draw_forecast`, i, k, p, a0_i, use_a, a_, sigma, pred)
+}
+
+.draw_forecast2 <- function(p, a0_i, use_a, a, sigma, pred) {
+    .Call(`_bvartools_draw_forecast2`, p, a0_i, use_a, a, sigma, pred)
+}
+
+#' Posterior Data Preparation
+#' 
+#' Generates a lower triangular block matrix with ones on the main diagonal,
+#' where the off-diagonal elements are blocks.
+#' 
+#' @param a \eqn{K^2p}-dimensional vector of coefficients. See 'Details'.
+#' @param k integer of the number of columns per block.
+#' @param tt integer specifying 
+#' 
+#' @return A sparse matrix.
+#' 
+#' @details For the \eqn{K \times Kp} matrix A, where \eqn{a = vec(A)}, with
+#' \eqn{A = \left[A_1, A_2, ..., A_p\right]} the function constructs the
+#' following sparse \eqn{KT \times KT} diagonal block matrix:
+#' \deqn{\begin{bmatrix} I_{K}  & 0 & 0 & 0 & \dots & 0 \\-A_{1} & I_{K} & 0 & 0 & \dots & 0 \\-A_{2} & -A_{1}& I_{K} & 0 & \dots & 0 \\ 0 & -A_{2}& -A_{1}& I_{K} & \dots & 0 \\ \vdots & \ddots& \ddots& \ddots& \ddots& 0 \\  0 & \dots & 0 & -A_{2}& -A_{1}& I_{K} \end{bmatrix}.}
+#' 
+#' @examples
+#' a <- matrix(1:8)
+#' generate_lower_block_diagonal(a, 2, 5)
+#' 
+generate_lower_block_diagonal <- function(a, k, tt) {
+    .Call(`_bvartools_generate_lower_block_diagonal`, a, k, tt)
 }
 
 .ir <- function(A, h, type, impulse, response) {
@@ -312,6 +345,68 @@ kalman_dk <- function(y, z, sigma_u, sigma_v, B, a_init, P_init) {
 #' 
 loglik_normal <- function(u, sigma) {
     .Call(`_bvartools_loglik_normal`, u, sigma)
+}
+
+#' Bayesian Variable Selection
+#' 
+#' \code{bvs} employs Bayesian variable selection as proposed by Korobilis (2013)
+#' to produce a vector of inclusion parameters for the coefficient matrix
+#' of a VAR model.
+#' 
+#' @param y a \eqn{KT \times 1} vector of the endogenous variables.
+#' @param z a \eqn{KT \times M} matrix of explanatory variables.
+#' @param a an M-dimensional vector of parameter draws. If time varying parameters are used,
+#' an \eqn{M \times T} coefficient matrix can be provided.
+#' @param lambda an \eqn{M \times M} inclusion matrix that should be updated.
+#' @param sigma_i a sparse \eqn{KT \times KT} block diagonal matrix containing
+#' the inverse variance-covariance matrix.
+#' @param prob_prior an M-dimensional vector of prior inclusion probabilities.
+#' @param include an integer vector specifying the positions of variables, which should be
+#' included in the BVS algorithm. If \code{NULL} (default), BVS will be applied to all variables.
+#' 
+#' @details The function employs Bayesian variable selection as proposed
+#' by Korobilis (2013) to produce a vector of inclusion parameters, which are
+#' the diagonal elements of the inclusion matrix \eqn{\Lambda} for the VAR model
+#' \deqn{y_t = Z_t \Lambda a_t + u_t,}
+#' where \eqn{u_t \sim N(0, \Sigma_{t})}.
+#' \eqn{y_t} is a K-dimensional vector of endogenous variables and
+#' \eqn{Z_t = x_t^{\prime} \otimes I_K} is a \eqn{K \times M} matrix of regressors with
+#' \eqn{x_t} as a vector of regressors.
+#' 
+#' @return A matrix of inclusion parameters on its diagonal.
+#' 
+#' @examples
+#' 
+#' # Load data
+#' data("e1")
+#' e1 <- diff(log(e1)) * 100
+#' 
+#' object <- create_var_model(data = e1)
+#' 
+#' object <- add_priors(object, bvs = list(inprior = .1))
+#' 
+#' object <- add_initial_values(object)
+#' 
+#' y <- matrix(t(object[["data"]][["y"]]))
+#' k <- ncol(object[["data"]][["y"]])
+#' tt <- nrow(object[["data"]][["y"]])
+#' z <- Matrix(object[["data"]][["z"]])
+#' m <- ncol(z)
+#' a <- object[["initial"]][["a"]]
+#' lambda <- Diagonal(ncol(z), 1)
+#' sigma_i <- object[["initial"]][["sigma_i"]]
+#' sigma_i <- kronecker(Diagonal(tt, 1), sigma_i)
+#' prob_prior <- object[["priors"]][["a"]][["bvs"]][["inprior"]]
+#' 
+#' # Draw inclusion parameters
+#' post_bvs(y, z, a, k, m, lambda, sigma_i, prob_prior)
+#' 
+#' @references
+#' 
+#' Korobilis, D. (2013). VAR forecasting using Bayesian variable selection. \emph{Journal of Applied Econometrics, 28}(2), 204--230. \doi{10.1002/jae.1271}
+#' 
+post_bvs <- function(y, z, a, k, m, lambda, sigma_i, prob_prior, include = NULL) {
+    .Call(`_bvartools_post_bvs`, y, z, a, k, m, lambda, sigma_i, prob_prior, include)
 }
 
 #' Posterior Draw for Cointegration Models
@@ -531,7 +626,7 @@ post_coint_kls_sur <- function(y, beta, w, sigma_i, v_i, p_tau_i, g_i, x = NULL,
 #' \deqn{y_t = Z_{t} a_t + u_t}
 #' with \eqn{u_t \sim N(0, \Sigma_{u})}
 #' the function produces a draw of the constant diagonal error variance matrix
-#' \eqn{\Simga_u}.
+#' \eqn{\Sigma_u}.
 #' 
 #' @references
 #' Chan, J., Koop, G., Poirier, D. J., & Tobias J. L. (2019). \emph{Bayesian econometric methods}
@@ -573,12 +668,12 @@ post_gamma_measurement_variance <- function(u, shape_prior, rate_prior, inverse)
 #' i.e. the inverse of the variance matrix. Defaults to \code{FALSE}.
 #' 
 #' @details For the state space model with state equation
-#' \deqn{a_t = a_{t-1} + v}
+#' \deqn{a_t = a_{t-1} + v_t}
 #' and measurement equation
-#' \deqn{y_t = Z_{t} a_t + u_t}
-#' with \eqn{v_t \sim N(0, \Sigma_{v})} and \eqn{u_t \sim N(0, \Sigma_{u,t})}
+#' \deqn{y_t = Z_{t} a_{t} + u_{t}}
+#' with \eqn{v_t \sim N(0, \Sigma^{v})} and \eqn{u_t \sim N(0, \Sigma^{u})}
 #' the function produces a draw of the constant diagonal error variances matrix of the
-#' state equation \eqn{\Simga_v}.
+#' state equation \eqn{\Sigma^{v}}.
 #' 
 #' @references
 #' Chan, J., Koop, G., Poirier, D. J., & Tobias J. L. (2019). \emph{Bayesian econometric methods}
@@ -610,6 +705,10 @@ post_gamma_measurement_variance <- function(u, shape_prior, rate_prior, inverse)
 #' 
 post_gamma_state_variance <- function(a, a_init, shape_prior, rate_prior, inverse) {
     .Call(`_bvartools_post_gamma_state_variance`, a, a_init, shape_prior, rate_prior, inverse)
+}
+
+.post_lambda <- function(x, ff, prior_vinv, uinv, lambda) {
+    .Call(`_bvartools_post_lambda`, x, ff, prior_vinv, uinv, lambda)
 }
 
 #' Posterior Draw from a Normal Distribution
@@ -729,102 +828,6 @@ post_normal <- function(y, x, sigma_i, a_prior, v_i_prior) {
 #' 
 post_normal_sur <- function(y, z, sigma_i, a_prior, v_i_prior, svd = FALSE) {
     .Call(`_bvartools_post_normal_sur`, y, z, sigma_i, a_prior, v_i_prior, svd)
-}
-
-#' Stochastic Volatility
-#' 
-#' Produces a draw of log-volatilities.
-#' 
-#' @param y a \eqn{T \times 1} vector containing the time series.
-#' @param h a \eqn{T \times 1} vector of log-volatilities.
-#' @param sigma a numeric of the variance of the log-volatilites.
-#' @param h_init a numeric of the initial state of log-volatilities.
-#' @param constant a numeric of the constant that should be added to \eqn{y^2}
-#' before taking the natural logarithm.
-#' 
-#' @details The function is a wrapper for function \code{\link{stochvol_ksc1998}}.
-#' 
-#' @return A vector of log-volatility draws.
-#' 
-#' @examples
-#' data("us_macrodata")
-#' y <- matrix(us_macrodata[, "r"])
-#' 
-#' # Initialise log-volatilites
-#' h_init <- matrix(log(var(y)))
-#' h <- matrix(rep(h_init, length(y)))
-#' 
-#' # Obtain draw
-#' stoch_vol(y - mean(y), h, matrix(.05), h_init, matrix(0.0001))
-#' 
-#' @references
-#' 
-#' Chan, J., Koop, G., Poirier, D. J., & Tobias J. L. (2019). \emph{Bayesian econometric methods}
-#' (2nd ed.). Cambridge: Cambridge University Press.
-#' 
-#' Kim, S., Shephard, N., & Chib, S. (1998). Stochastic volatility. Likelihood inference and comparison
-#' with ARCH models. \emph{Review of Economic Studies 65}(3), 361--393. \doi{10.1111/1467-937X.00050}
-#' 
-stoch_vol <- function(y, h, sigma, h_init, constant) {
-    .Call(`_bvartools_stoch_vol`, y, h, sigma, h_init, constant)
-}
-
-#' Stochastic Volatility
-#'
-#' Produces a draw of log-volatilities.
-#'
-#' @param y a \eqn{T \times K} matrix containing the time series.
-#' @param h a \eqn{T \times K} vector of the current draw of log-volatilities.
-#' @param sigma a \eqn{K \times 1} vector of variances of log-volatilities,
-#' where the \eqn{i}th element corresponds to the \eqn{i}th column in \code{y}.
-#' @param h_init a \eqn{K \times 1} vector of the initial states of log-volatilities,
-#' where the \eqn{i}th element corresponds to the \eqn{i}th column in \code{y}.
-#' @param constant a \eqn{K \times 1} vector of constants that should be added to \eqn{y^2}
-#' before taking the natural logarithm. The \eqn{i}th element corresponds to
-#' the \eqn{i}th column in \code{y}. See 'Details'.
-#' 
-#' @details For each column in \code{y} the function produces a posterior
-#' draw of the log-volatility \eqn{h} for the model
-#' \deqn{y_{t} = e^{\frac{1}{2}h_t} \epsilon_{t},}
-#' where \eqn{\epsilon_t \sim N(0, 1)} and \eqn{h_t} is assumed to evolve according to a random walk
-#' \deqn{h_t = h_{t - 1} + u_t,}
-#' with \eqn{u_t \sim N(0, \sigma^2)}.
-#' 
-#' The implementation is based on the algorithm of Kim, Shephard and Chip (1998) and performs the
-#' following steps:
-#' \enumerate{
-#'   \item Perform the transformation \eqn{y_t^* = ln(y_t^2 + constant)}.
-#'   \item Obtain a sample from the seven-component normal mixture for
-#'   approximating the log-\eqn{\chi_1^2} distribution.
-#'   \item Obtain a draw of log-volatilities.
-#' }
-#' 
-#' The implementation follows the code provided on the website to the textbook
-#' by Chan, Koop, Poirier, and Tobias (2019).
-#' 
-#' @return A vector of log-volatility draws.
-#' 
-#' @examples
-#' data("us_macrodata")
-#' y <- matrix(us_macrodata[, "r"])
-#' 
-#' # Initialise log-volatilites
-#' h_init <- matrix(log(var(y)))
-#' h <- matrix(rep(h_init, length(y)))
-#' 
-#' # Obtain draw
-#' stochvol_ksc1998(y - mean(y), h, matrix(.05), h_init, matrix(0.0001))
-#' 
-#' @references
-#' 
-#' Chan, J., Koop, G., Poirier, D. J., & Tobias J. L. (2019). \emph{Bayesian econometric methods}
-#' (2nd ed.). Cambridge: Cambridge University Press.
-#' 
-#' Kim, S., Shephard, N., & Chib, S. (1998). Stochastic volatility. Likelihood inference and comparison
-#' with ARCH models. \emph{Review of Economic Studies 65}(3), 361--393. \doi{10.1111/1467-937X.00050}
-#' 
-stochvol_ksc1998 <- function(y, h, sigma, h_init, constant) {
-    .Call(`_bvartools_stochvol_ksc1998`, y, h, sigma, h_init, constant)
 }
 
 #' Stochastic Volatility

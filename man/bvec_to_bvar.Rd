@@ -2,126 +2,23 @@
 % Please edit documentation in R/bvec_to_bvar.R
 \name{bvec_to_bvar}
 \alias{bvec_to_bvar}
-\title{Transform a VEC Model to a VAR in Levels}
+\title{Transform a VEC Model to a VAR in Levels
+ 
+A generic function used to transform a vector error correction model into
+its VAR form. The function invokes particular methods which depend on
+the class of the first argument.}
 \usage{
-bvec_to_bvar(object)
+bvec_to_bvar(object, ...)
 }
 \arguments{
-\item{object}{an object of class \code{"bvec"}.}
-}
-\value{
-An object of class \code{"bvar"}.
+\item{object}{an object of class 'bvec'.}
+
+\item{...}{arguments passed forward to method.}
 }
 \description{
-An object of class \code{"bvec"} is transformed to a VAR in level representation.
-}
-\examples{
-
-# Load data
-data("e6")
-
-# Generate model
-data <- gen_vec(e6, p = 4, r = 1, const = "unrestricted", season = "unrestricted")
-
-# Obtain data matrices
-y <- t(data$data$Y)
-w <- t(data$data$W)
-x <- t(data$data$X)
-
-# Reset random number generator for reproducibility
-set.seed(1234567)
-
-iterations <- 100 # Number of iterations of the Gibbs sampler
-# Chosen number of iterations should be much higher, e.g. 30000.
-
-burnin <- 100 # Number of burn-in draws
-draws <- iterations + burnin
-
-r <- 1 # Set rank
-
-tt <- ncol(y) # Number of observations
-k <- nrow(y) # Number of endogenous variables
-k_w <- nrow(w) # Number of regressors in error correction term
-k_x <- nrow(x) # Number of differenced regressors and unrestrictec deterministic terms
-
-k_alpha <- k * r # Number of elements in alpha
-k_beta <- k_w * r # Number of elements in beta
-k_gamma <- k * k_x
-
-# Set uninformative priors
-a_mu_prior <- matrix(0, k_x * k) # Vector of prior parameter means
-a_v_i_prior <- diag(0, k_x * k) # Inverse of the prior covariance matrix
-
-v_i <- 0
-p_tau_i <- diag(1, k_w)
-
-u_sigma_df_prior <- r # Prior degrees of freedom
-u_sigma_scale_prior <- diag(0, k) # Prior covariance matrix
-u_sigma_df_post <- tt + u_sigma_df_prior # Posterior degrees of freedom
-
-# Initial values
-beta <- matrix(c(1, -4), k_w, r)
-u_sigma_i <- diag(1 / .0001, k)
-g_i <- u_sigma_i
-
-# Data containers
-draws_alpha <- matrix(NA, k_alpha, iterations)
-draws_beta <- matrix(NA, k_beta, iterations)
-draws_pi <- matrix(NA, k * k_w, iterations)
-draws_gamma <- matrix(NA, k_gamma, iterations)
-draws_sigma <- matrix(NA, k^2, iterations)
-
-# Start Gibbs sampler
-for (draw in 1:draws) {
-  # Draw conditional mean parameters
-  temp <- post_coint_kls(y = y, beta = beta, w = w, x = x, sigma_i = u_sigma_i,
-                         v_i = v_i, p_tau_i = p_tau_i, g_i = g_i,
-                         gamma_mu_prior = a_mu_prior,
-                         gamma_v_i_prior = a_v_i_prior)
-  alpha <- temp$alpha
-  beta <- temp$beta
-  Pi <- temp$Pi
-  gamma <- temp$Gamma
-  
-  # Draw variance-covariance matrix
-  u <- y - Pi \%*\% w - matrix(gamma, k) \%*\% x
-  u_sigma_scale_post <- solve(tcrossprod(u) +
-     v_i * alpha \%*\% tcrossprod(crossprod(beta, p_tau_i) \%*\% beta, alpha))
-  u_sigma_i <- matrix(rWishart(1, u_sigma_df_post, u_sigma_scale_post)[,, 1], k)
-  u_sigma <- solve(u_sigma_i)
-  
-  # Update g_i
-  g_i <- u_sigma_i
-  
-  # Store draws
-  if (draw > burnin) {
-    draws_alpha[, draw - burnin] <- alpha
-    draws_beta[, draw - burnin] <- beta
-    draws_pi[, draw - burnin] <- Pi
-    draws_gamma[, draw - burnin] <- gamma
-    draws_sigma[, draw - burnin] <- u_sigma
-  }
-}
-
-# Number of non-deterministic coefficients
-k_nondet <- (k_x - 4) * k
-
-# Generate bvec object
-bvec_est <- bvec(y = data$data$Y, w = data$data$W,
-                 x = data$data$X[, 1:6],
-                 x_d = data$data$X[, 7:10],
-                 Pi = draws_pi,
-                 Gamma = draws_gamma[1:k_nondet,],
-                 C = draws_gamma[(k_nondet + 1):nrow(draws_gamma),],
-                 Sigma = draws_sigma)
-
-# Thin posterior draws
-bvec_est <- thin(bvec_est, thin = 5)
-
-# Transfrom VEC output to VAR output
-bvar_form <- bvec_to_bvar(bvec_est)
-
-}
-\references{
-Lütkepohl, H. (2006). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
+Transform a VEC Model to a VAR in Levels
+ 
+A generic function used to transform a vector error correction model into
+its VAR form. The function invokes particular methods which depend on
+the class of the first argument.
 }

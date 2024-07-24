@@ -26,14 +26,14 @@ Forwards model input to posterior simulation functions for vector autoregressive
 }
 \examples{
 
-# Load data 
+# Load data
 data("e1")
 e1 <- diff(log(e1)) * 100
 
-# Generate model
-model <- create_var_model(e1, p = 2, deterministic = 2,
-                          iterations = 100, burnin = 10)
-# Chosen number of iterations and burn-in should be much higher.
+# Create model
+model <- create_var_model(e1, p = 2, deterministic = "const",
+                          iterations = 50, burnin = 10)
+# Number of iterations and burnin should be much higher.
 
 # Add priors
 model <- add_priors(model)
@@ -41,7 +41,7 @@ model <- add_priors(model)
 # Add initial values
 model <- add_initial_values(model)
 
-# Obtain posterior draws
+# Obtain posterior draws 
 object <- draw_posterior(model)
 
 }

@@ -8,6 +8,8 @@
 # If \code{style = 2}, multiple panels are generated.
 #' @param type either \code{"hist"} (default) for histograms, \code{"trace"} for a trace plot
 #' or \code{"boxplot"} for a boxplot. Only used for parameter draws of constant coefficients.
+#' @param show_zero_y if \code{TRUE} (default), a horizontal line with y = 0 is
+#' added to the plot. Only used for time varying parameters.
 #' @param ... further graphical parameters.
 #' 
 #' @examples
@@ -32,7 +34,7 @@
 #' 
 #' @export
 #' @rdname bvar
-plot.bvar <- function(x, ci = 0.95, type = "hist", ...) {
+plot.bvar <- function(x, ci = 0.95, type = "hist", show_zero_y = TRUE, ...) {
   
   if (!type %in% c("hist", "trace", "boxplot")) {
     stop("Argument 'type' must be 'hist', 'trace' or 'boxplot'.")
@@ -136,7 +138,7 @@ plot.bvar <- function(x, ci = 0.95, type = "hist", ...) {
       var_pos <- ((i - 1) * k * k) + 1:(k * k)
       if (x[["specifications"]][["tvp"]][["A"]]) {
         for (j in var_pos) {
-          draws <- .tvpribbon(x[["A"]], j, ci_low, ci_high)
+          draws <- .tvpribbon(x[["A"]], j, ci_low, ci_high, show_zero_y)
           stats::tsp(draws) <- tsp_info
           stats::ts.plot(draws, xlab = "")
         }
@@ -165,7 +167,7 @@ plot.bvar <- function(x, ci = 0.95, type = "hist", ...) {
       var_pos <- ((i - 1) * k * m) + 1:(k * m)
       if (x[["specifications"]][["tvp"]][["B"]]) {
         for (j in var_pos) {
-          draws <- .tvpribbon(x[["B"]], j, ci_low, ci_high)
+          draws <- .tvpribbon(x[["B"]], j, ci_low, ci_high, show_zero_y)
           stats::tsp(draws) <- tsp_info
           stats::ts.plot(draws, xlab = "")
         }
@@ -192,7 +194,7 @@ plot.bvar <- function(x, ci = 0.95, type = "hist", ...) {
   if ("C" %in% names(x)) {
     if (x[["specifications"]][["tvp"]][["C"]]) {
       for (j in 1:NCOL(x[["C"]][[1]])) {
-        draws <- .tvpribbon(x[["C"]], j, ci_low, ci_high)
+        draws <- .tvpribbon(x[["C"]], j, ci_low, ci_high, show_zero_y)
         stats::tsp(draws) <- tsp_info
         stats::ts.plot(draws, xlab = "")
       }
@@ -218,7 +220,7 @@ plot.bvar <- function(x, ci = 0.95, type = "hist", ...) {
   if ("A0" %in% names(x)) {
     if (x[["specifications"]][["tvp"]][["A0"]]) {
       for (j in 1:NCOL(x[["A0"]][[1]])) {
-        draws <- .tvpribbon(x[["A0"]], j, ci_low, ci_high)
+        draws <- .tvpribbon(x[["A0"]], j, ci_low, ci_high, show_zero_y)
         if (all(draws[, 1] == draws[1, 1])) {
           graphics::plot.new(); graphics::text(0.5, 0.5, labels = draws[1, 2], adj = 0.5)
         } else {
@@ -249,7 +251,7 @@ plot.bvar <- function(x, ci = 0.95, type = "hist", ...) {
     var_pos <- 1:(k * k)
     if (x[["specifications"]][["tvp"]][["Sigma"]]) {
       for (j in var_pos) {
-        draws <- .tvpribbon(x[["Sigma"]], j, ci_low, ci_high)
+        draws <- .tvpribbon(x[["Sigma"]], j, ci_low, ci_high, show_zero_y)
         if (all(draws[, 1] == draws[1, 1])) {
           graphics::plot.new(); graphics::text(0.5, 0.5, labels = draws[1, 2], adj = 0.5)
         } else {

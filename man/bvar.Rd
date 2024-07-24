@@ -18,7 +18,7 @@ bvar(
   Sigma = NULL
 )
 
-\method{plot}{bvar}(x, ci = 0.95, type = "hist", ...)
+\method{plot}{bvar}(x, ci = 0.95, type = "hist", show_zero_y = TRUE, ...)
 
 \method{predict}{bvar}(object, ..., n.ahead = 10, new_x = NULL, new_d = NULL, ci = 0.95)
 }
@@ -72,6 +72,9 @@ credible intervals. Defaults to 0.95.}
 
 \item{type}{either \code{"hist"} (default) for histograms, \code{"trace"} for a trace plot
 or \code{"boxplot"} for a boxplot. Only used for parameter draws of constant coefficients.}
+
+\item{show_zero_y}{if \code{TRUE} (default), a horizontal line with y = 0 is
+added to the plot. Only used for time varying parameters.}
 
 \item{...}{additional arguments.}
 

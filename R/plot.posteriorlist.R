@@ -1,8 +1,8 @@
-#' Plotting Posterior Draws of Bayesian VAR or VEC Models
+#' Plotting Posterior Draws of Bayesian Models
 #' 
-#' A plot function for objects of class \code{"bvarlist"}.
+#' A plot function for objects of class \code{"posteriorlist"}.
 #' 
-#' @param x an object of class \code{"bvarlist"}, usually, a result of a call to \code{\link{draw_posterior}}.
+#' @param x an object of class \code{"posteriorlist"}, usually, a result of a call to \code{\link{draw_posterior}}.
 #' @param ci interval used to calculate credible bands for time-varying parameters.
 #' @param type either \code{"hist"} (default) for histograms, \code{"trace"} for a trace plot,
 #' or \code{"boxplot"} for a boxplot. Only used for parameter draws of constant coefficients.
@@ -10,7 +10,7 @@
 #' @param ... further graphical parameters.
 #' 
 #' @export 
-plot.bvarlist <- function(x, ci = 0.95, type = "hist", model = NULL, ...) {
+plot.posteriorlist <- function(x, ci = 0.95, type = "hist", model = NULL, ...) {
   
   if (is.null(model)) {
     model <- 1:length(x)

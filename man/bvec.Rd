@@ -30,7 +30,7 @@ bvec(
   exogen = NULL
 )
 
-\method{plot}{bvec}(x, ci = 0.95, type = "hist", ...)
+\method{plot}{bvec}(x, ci = 0.95, type = "hist", show_zero_y = TRUE, ...)
 }
 \arguments{
 \item{y}{a time-series object of differenced endogenous variables,
@@ -104,6 +104,9 @@ parameters in case variable selection algorithms were employed to the covariance
 
 \item{type}{either \code{"hist"} (default) for histograms, \code{"trace"} for a trace plot
 or \code{"boxplot"} for a boxplot. Only used for parameter draws of constant coefficients.}
+
+\item{show_zero_y}{if \code{TRUE} (default), a horizontal line with y = 0 is
+added to the plot. Only used for time varying parameters.}
 
 \item{...}{further graphical parameters.}
 }

@@ -10,7 +10,7 @@
 //' @param y a \eqn{K \times T} matrix of differenced endogenous variables.
 //' @param beta a \eqn{M \times r} cointegration matrix \eqn{\beta}.
 //' @param w a \eqn{M \times T} matrix of variables in the cointegration term.
-//' @param x  a \eqn{N \times T} matrix of differenced regressors and unrestricted deterministic terms.
+//' @param x a \eqn{N \times T} matrix of differenced regressors and unrestricted deterministic terms.
 //' @param sigma_i an inverse of the \eqn{K \times K} variance-covariance matrix.
 //' @param v_i a numeric between 0 and 1 specifying the shrinkage of the cointegration space prior.
 //' @param p_tau_i an inverted \eqn{M \times M} matrix specifying the central location
@@ -131,10 +131,10 @@ Rcpp::List post_coint_kls(arma::mat y, arma::mat beta, arma::mat w, arma::mat si
     k_g = k * k_x;
     k_mu = Gamma_mu_prior.n_rows;
     k_v = Gamma_V_i_prior.n_rows;
-    if (k_g != k_mu) {
+    if (k_g + k_a != k_mu) {
       Rcpp::stop("Argument 'gamma_mu_prior' does not contain the required amount of elements.");
     }
-    if (k_g != k_v) {
+    if (k_g + k_a != k_v) {
       Rcpp::stop("Argument 'gamma_v_i_prior' does not contain the required amount of elements.");
     }
   }
@@ -150,8 +150,8 @@ Rcpp::List post_coint_kls(arma::mat y, arma::mat beta, arma::mat w, arma::mat si
   arma::mat V_ag_prior = V_ag_post * 0;
   V_ag_prior.submat(0, 0, k_a - 1, k_a - 1) = arma::kron(v_i * (arma::trans(beta) * p_tau_i * beta), g_i);
   if (incl_x) {
-    mu_ag_prior.subvec(k_a, k_ag - 1) = Gamma_mu_prior;
-    V_ag_prior.submat(k_a, k_a, k_ag - 1, k_ag - 1) = Gamma_V_i_prior; 
+    mu_ag_prior.subvec(k_a, k_ag - 1) = Gamma_mu_prior.subvec(k_a, k_ag - 1);
+    V_ag_prior.submat(k_a, k_a, k_ag - 1, k_ag - 1) = Gamma_V_i_prior.submat(k_a, k_a, k_ag - 1, k_ag - 1); 
   }
   V_ag_post = arma::inv(V_ag_post + V_ag_prior);
   arma::vec mu_ag_post = V_ag_post * (mu_ag_prior + arma::reshape(sigma_i * y * arma::trans(Z), k_ag, 1));

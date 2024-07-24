@@ -21,7 +21,6 @@ knitr::opts_chunk$set(
 This vignette provides the code to set up and estimate a Bayesian vector error correction (BVEC) model with the `bvartools` package. The presented Gibbs sampler is based on the approach of Koop et al. (2010), who propose a prior on the cointegration space. The estimated model has the following form
 
 $$\Delta y_t = \Pi y_{t - 1} + \sum_{l = 1}^{p - 1} \Gamma_l \Delta y_{t - l} + C d_t + u_t,$$
-
 where $\Pi = \alpha \beta^{\prime}$ with cointegration rank $r$, $u_t \sim N(0, \Sigma)$ and $d_t$ contains an intercept and seasonal dummies. For an introduction to vector error correction models see [https://www.r-econometrics.com/timeseries/vecintro/](https://www.r-econometrics.com/timeseries/vecintro/).
 
 ## Data
@@ -36,45 +35,51 @@ data("e6")
 plot(e6) # Plot the series
 ```
 
-The `gen_vec` function produces the data matrices `Y`, `W` and `X` for the BVEC estimator, where `Y` is the matrix of dependent variables, `W` is a matrix of potentially cointegrated regressors, and `X` is the matrix of non-cointegration regressors.
+The `create_vec_model` function produces the data matrices `y`, `w` and `x` for the BVEC estimator, where `y` is the matrix of dependent variables, `w` is a matrix of potentially cointegrated regressors, and `x` is the matrix of non-cointegration regressors.
 
 ```{r}
-data <- gen_vec(e6, p = 4, r = 1,
-                const = "unrestricted", season = "unrestricted",
-                iterations = 5000, burnin = 1000)
+object <- create_vec_model(e6, p = 4, r = 1,
+                           const = "unrestricted", season = "unrestricted",
+                           iterations = 5000, burnin = 1000)
 ```
 
-Argument `p` represents the lag order of the VAR form of the model and `r` is the cointegration rank of `Pi`. Function `gen_vec` requires to specify the inclusion of intercepts, trends and seasonal dummies separately. This allows to decide on whether they enter the cointegration term or the non-cointegration part of the model.
+Argument `p` represents the lag order of the VAR form of the model and `r` is the cointegration rank of `Pi`. Function `create_vec_model` requires to specify the inclusion of intercepts, trends and seasonal dummies separately. This allows to decide on whether they enter the cointegration term or the non-cointegration part of the model.
 
 ## Priors
 
-Function `add_priors` adds the necessary prior specifications to object `data`. We
-
-For the current application we use non-informative priors.
+Function `add_priors` adds the necessary prior specifications to object `object`. For the current application we use non-informative priors to compare the with the result in Lütkepohl (2006):
 
 ```{r}
-data <- add_priors(data,
-                   coint = list(v_i = 0, p_tau_i = 1),
-                   coef = list(v_i = 0, v_i_det = 0),
-                   sigma = list(df = 0, scale = .0001))
+object <- add_priors(object,
+                     coint = list(v_i = 0, p_tau_i = 1),
+                     coef = list(v_i = 0, v_i_det = 0),
+                     sigma = list(df = 0, scale = .0001))
+```
+
+### Adding initial values
+
+Function `add_initial_values` generates of first draws of the Gibbs sampler for the specified model(s) in object `model` and augments the object accordingly.
+
+```{r}
+object <- add_initial_values(object, method = "maxlik")
 ```
 
 ## Estimation
 
 ### User-specific algorithm
 
-The following code produces posterior draws using the algortihm described in Koop et al. (2010).
+The following code produces posterior draws using the algorithm described in Koop et al. (2010).
 
-```{r flat prior}
+```{r}
 # Reset random number generator for reproducibility
 set.seed(7654321)
 
 # Obtain data matrices
-y <- t(data$data$Y)
-w <- t(data$data$W)
-x <- t(data$data$X)
+y <- t(object$data$y)
+w <- t(object$data$w)
+x <- t(object$data$x)
 
-r <- data$model$rank # Set rank
+r <- object$model$rank # Set rank
 
 tt <- ncol(y) # Number of observations
 k <- nrow(y) # Number of endogenous variables
@@ -86,14 +91,14 @@ k_alpha <- k * r # Number of elements in alpha
 k_beta <- k_w * r # Number of elements in beta
 
 # Priors
-a_mu_prior <- data$priors$noncointegration$mu # Prior means
-a_v_i_prior <- data$priors$noncointegration$v_i # Inverse of the prior covariance matrix
+a_mu_prior <- object$priors$a$mu # Prior means
+a_v_i_prior <- object$priors$a$v_i # Inverse of the prior covariance matrix
 
-v_i <- data$priors$cointegration$v_i
-p_tau_i <- data$priors$cointegration$p_tau_i
+v_i <- object$priors$cointegration$v_i
+p_tau_i <- object$priors$cointegration$p_tau_i
 
-sigma_df_prior <- data$priors$sigma$df # Prior degrees of freedom
-sigma_scale_prior <- data$priors$sigma$scale # Prior covariance matrix
+sigma_df_prior <- object$priors$sigma$df # Prior degrees of freedom
+sigma_scale_prior <- object$priors$sigma$scale # Prior covariance matrix
 sigma_df_post <- tt + sigma_df_prior # Posterior degrees of freedom
 
 # Initial values
@@ -104,8 +109,8 @@ sigma_i <- diag(1 / .0001, k)
 
 g_i <- sigma_i
 
-iterations <- data$model$iterations # Number of iterations of the Gibbs sampler
-burnin <- data$model$burnin # Number of burn-in draws
+iterations <- object$model$iterations # Number of iterations of the Gibbs sampler
+burnin <- object$model$burnin # Number of burn-in draws
 draws <- iterations + burnin # Total number of draws
 
 # Data containers
@@ -120,9 +125,9 @@ for (draw in 1:draws) {
   
   # Draw conditional mean parameters
   temp <- post_coint_kls(y = y, beta = beta, w = w, x = x, sigma_i = sigma_i,
-                           v_i = v_i, p_tau_i = p_tau_i, g_i = g_i,
-                           gamma_mu_prior = a_mu_prior,
-                           gamma_v_i_prior = a_v_i_prior)
+                         v_i = v_i, p_tau_i = p_tau_i, g_i = g_i,
+                         gamma_mu_prior = a_mu_prior,
+                         gamma_v_i_prior = a_v_i_prior)
   alpha <- temp$alpha
   beta <- temp$beta
   Pi <- temp$Pi
@@ -151,8 +156,8 @@ for (draw in 1:draws) {
 Obtain point estimates of cointegration variables:
 
 ```{r beta}
-beta <- apply(t(draws_beta) / t(draws_beta)[, 1], 2, mean) # Obtain means for every row
-beta <- matrix(beta, k_w) # Transform mean vector into a matrix
+beta <- apply(t(draws_beta) / t(draws_beta)[, 1], 2, median) # Obtain medians for every row
+beta <- matrix(beta, k_w) # Transform vector into a matrix
 beta <- round(beta, 3) # Round values
 dimnames(beta) <- list(dimnames(w)[[1]], NULL) # Rename matrix dimensions
 
@@ -168,10 +173,10 @@ The `bvec` function can be used to collect output of the Gibbs sampler in a stan
 k_nondet <- (k_x - 4) * k
 
 # Generate bvec object
-bvec_est <- bvec(y = data$data$Y,
-                 w = data$data$W,
-                 x = data$data$X[, 1:6],
-                 x_d = data$data$X[, -(1:6)],
+bvec_est <- bvec(y = object$data$y,
+                 w = object$data$w,
+                 x = object$data$x[, 1:6],
+                 x_d = object$data$x[, -(1:6)],
                  Pi = draws_pi,
                  r = 1,
                  Gamma = draws_gamma[1:k_nondet,],
@@ -196,7 +201,7 @@ summary(bvec_est)
 As an alternative to a user-specific algorithm function `draw_posterior` can be used estimate such a model as well:
 
 ```{r, eval = FALSE}
-bvec_est <- draw_posterior(data)
+bvec_est <- draw_posterior(object)
 ```
 
 ## Evaluation
@@ -225,7 +230,7 @@ Forecasts with credible bands can be obtained with the function `predict`. If th
 
 ```{r forecasts, fig.width=5.5, fig.height=5.5}
 # Generate deterministc terms for function predict
-new_d <- data$data$X[3 + 1:10, c("const", "season.1", "season.2", "season.3")]
+new_d <- object$data$x[3 + 1:10, c("const", "season.1", "season.2", "season.3")]
 
 # Genrate forecasts
 bvar_pred <- predict(bvar_form, n.ahead = 10, new_d = new_d)

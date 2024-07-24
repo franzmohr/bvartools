@@ -1,5 +1,5 @@
 
-.add_priors_check_coef <- function(obect, coef) {
+.add_priors_check_coef <- function(object, coef) {
   
   if (!all(names(coef) %in% c("v_i", "v_i_det", "coint_var", "const", "minnesota", "max_var", "shape", "rate", "rate_det"))) {
     stop("At least one element in argument 'coef' is not valid.")

@@ -36,7 +36,12 @@
 #' \emph{Journal of Applied Econometrics, 28}(2), 204--230.
 #' \doi{10.1002/jae.1271}
 #' 
-#' Lütkepohl, H. (2006). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
+#' Lütkepohl, H. (2006). \emph{New introduction to multiple time series analysis}
+#' (2nd ed.). Berlin: Springer.
+#' 
+#' Primiceri, G. E. (2005). Time varying structural vector autoregressions and
+#' monetary policy. \emph{The Review of Economic Studies, 72}(3), 821--852.
+#' \doi{10.1111/j.1467-937X.2005.00353.x}
 #' 
 #' Sanderson, C., & Curtin, R. (2016). Armadillo: a template-based C++ library for linear algebra.
 #' \emph{Journal of Open Source Software, 1}(2), 26. \doi{10.21105/joss.00026}
@@ -44,6 +49,10 @@
 #' 
 #' @useDynLib bvartools, .registration = TRUE
 #' @importFrom coda thin
+#' @importFrom Matrix chol
+#' @importFrom Matrix crossprod
+#' @importFrom Matrix solve
+#' @importFrom Matrix t
 #' @importFrom Rcpp sourceCpp
 #' @import methods
 #' @exportPattern "^[[:alpha:]]+"

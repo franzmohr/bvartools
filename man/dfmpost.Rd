@@ -7,8 +7,9 @@
 dfmpost(object)
 }
 \arguments{
-\item{object}{an object of class \code{"dfmodel"}, usually, a result of a call to \code{\link{gen_dfm}}
-in combination with \code{\link{add_priors}}.}
+\item{object}{an object of class \code{"dfmodel"}, usually, a result of a
+call to \code{\link{create_df_model}} in combination with \code{\link{add_priors}}
+and \code{\link{add_initial_values}}.}
 }
 \value{
 An object of class \code{"dfm"}.
@@ -27,16 +28,19 @@ The implementation follows the description in Chan et al. (2019) and C++ is used
 data("bem_dfmdata")
 
 # Generate model data
-model <- gen_dfm(x = bem_dfmdata, p = 1, n = 1,
-                 iterations = 20, burnin = 10)
+model <- create_df_model(x = bem_dfmdata, p = 1, n = 1,
+                         iterations = 20, burnin = 10)
 # Number of iterations and burnin should be much higher.
 
 # Add prior specifications
 model <- add_priors(model,
-                    lambda = list(v_i = .01),
-                    sigma_u = list(shape = 5, rate = 4),
-                    a = list(v_i = .01),
-                    sigma_v = list(shape = 5, rate = 4))
+                    lambda = list(vinv = .01),
+                    u = list(shape = 5, rate = 4),
+                    a = list(vinv = .01),
+                    v = list(shape = 5, rate = 4))
+
+# Add initial values
+model <- add_initial_values(model)
 
 # Obtain posterior draws
 object <- dfmpost(model)

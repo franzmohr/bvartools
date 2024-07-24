@@ -7,6 +7,8 @@
 #' @param n an integer vector of the number of factors. See 'Details'.
 #' @param normalize_x logical indicating whether each column of \code{x} should
 #' be normalized using \code{scale}. Defaults to \code{TRUE}.
+#' @param error character specifying the model that should be used for the estimation
+#' of the covariance matrix of the error term. Default is \code{"gamma"}. See 'Details'.
 #' @param iterations an integer of MCMC draws excluding burn-in draws (defaults
 #' to 20000).
 #' @param burnin an integer of MCMC draws used to initialize the sampler
@@ -31,6 +33,13 @@
 #' If integer vectors are provided as arguments \code{p} or \code{n}, the function will
 #' produce a distinct model for all possible combinations of those specifications.
 #'
+#' Argument \code{error} specifies the structure of the covariance matrix of
+#' the error term and how it is estimated. Possible specifications are:
+#' \itemize{
+#'  \item{\code{"gamma"}: Only the diagonal elements of the covariance matrix are estimated using a gamma prior.
+#' Off-diagonal elements are not estimated and set to zero.}
+#' }
+#'
 #' @return An object of class \code{'dfmodel'}, which contains the following elements:
 #' \item{data}{A list of data objects, which can be used for posterior simulation. Element
 #' \code{X} is a time-series object of normalised observable variables, i.e. each column has
@@ -54,71 +63,82 @@
 #' Lütkepohl, H. (2006). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
 #'
 #' @export
-create_df_model <- function(x, p = 2, n = 1, normalize_x = TRUE, iterations = 20000, burnin = 2000) {
-
+create_df_model <- function(x, p = 2, n = 1, normalize_x = TRUE, error = "gamma", iterations = 20000, burnin = 2000) {
+  
   warning("Functionality for dynamic factor models will be exported to package 'dfmtools' in the near future.")
   
-  # Check data ----
+  # Input checks ----
   if (!"ts" %in% class(x)) {
     stop("Argument 'data' must be an object of class 'ts'.")
   }
-
+  
   if (any(p < 0)) {
     stop("Argument 'p' must be at least 0.")
   }
-
+  
   if (any(n < 1)) {
     stop("Argument 'n' must be at least 1.")
   }
-
+  
+  if ("character" %in% class(error)) {
+    if (!error %in% c("gamma")) {
+      stop("Invalid specification of argument 'error'.")
+    }
+  } else {
+    stop("Argument 'error' must be of class 'character'.")
+  }
+  
+  # Data preparation ----
+  
   if (is.null(dimnames(x))) {
     tsp_temp <- stats::tsp(x)
     data <- stats::ts(as.matrix(x), class = c("mts", "ts", "matrix"))
     stats::tsp(x) <- tsp_temp
     dimnames(x)[[2]] <- "y"
   }
-
+  
   # Normalise every column of x
   if (normalize_x) {
     x <- scale(x)
   }
-
+  
   data_name <- dimnames(x)[[2]]
   m <- NCOL(x)
+  tt <- nrow(x)
   p_max <- max(p)
-
+  
   model <- NULL
   model$type <- "DFM"
-  model$variables <- dimnames(x)[[2]]
-  model$n_factors <- 0
+  model$m <- m
+  model$n <- 0
   model$p <- 0
-
-  tt <- nrow(x)
-
+  model$error <- error
   model$iterations <- iterations
   model$burnin <- burnin
-
+  
+  
+  
   result <- NULL
   for (j in n) {
     for (i in p) {
       model_i <- model
-      model_i$n_factors <- j
+      model_i$n <- j
       model_i$p <- i
-
-      result_i <- list("data" = list("X" = x),
+      
+      result_i <- list("data" = list("x" = x),
                        "model" = model_i)
-
+      
       class(result_i) <- append("dfmodel", class(result_i))
-
+      
       result <- c(result, list(result_i))
     }
   }
-
+  
   if (length(result) == 1) {
     result <- result[[1]]
   } else {
     class(result) <- append("modellist", class(result))
   }
-
+  
   return(result)
 }

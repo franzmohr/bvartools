@@ -1,10 +1,10 @@
-#' Add Initial Values of an MCMC Chain
+#' Add Initial Values to a Dynamic Factor Model
 #'
 #' Adds initial values to a dynamic factor model, which was produced by
 #' function \code{\link{create_df_model}} in combination with \code{\link{add_priors}}.
 #'
-#' @param object named list of class 'dfmodel'.
-#' @param method character specifying the method of how initial values are generated.
+#' @param object a named list, usually, the output of a call to \code{\link{create_df_model}}.
+#' @param method a character specifying the method of how initial values are generated.
 #' Defaults to \code{"prior"}. See 'Details'.
 #' @param ... further arguments passed to or from other methods.
 #'
@@ -36,35 +36,35 @@
 #'
 #' @export
 add_initial_values.dfmodel <- function(object, method = "prior", ...){
-
+  
   if (method == "prior") {
-
+    
     # lambda
     object$initial$lambda <- chol(object$priors$lambda$vinv) %*% stats::rnorm(nrow(object$priors$lambda$vinv))
-
+    
     # U
     sigma_shape <- object$priors$u$shape
     sigma_rate <- 1 / object$priors$u$rate
-    object$initial$uinv <- diag(1, length(object$model$variables))
-    for (i in 1:length(object$model$variables)) {
+    object$initial$uinv <- diag(1, object$model$m)
+    for (i in 1:object$model$m) {
       object$initial$uinv[i, i] <- 1 / stats::rgamma(1, shape = sigma_shape[i], rate = sigma_rate[i])
     }
     rm(list = c("sigma_shape", "sigma_rate"))
-
+    
     # V
     sigma_shape <- object$priors$v$shape
     sigma_rate <- 1 / object$priors$v$rate
-    object$initial$vinv <- diag(1, object$model$n_factors)
-    for (i in 1:object$model$n_factors) {
+    object$initial$vinv <- diag(1, object$model$n)
+    for (i in 1:object$model$n) {
       object$initial$vinv[i, i] <- 1 / stats::rgamma(1, shape = sigma_shape[i], rate = sigma_rate[i])
     }
     rm(list = c("sigma_shape", "sigma_rate"))
-
+    
     if (object$model$p > 0) {
       # A
-      object$initial$a <- object$priors$a$mu + chol(object$priors$a$vinv) %*% stats::rnorm(object$model$n_factors^2 * object$model$p)
+      object$initial$a <- object$priors$a$mu + chol(object$priors$a$vinv) %*% stats::rnorm(object$model$n^2 * object$model$p)
     }
   }
-
+  
   return(object)
 }

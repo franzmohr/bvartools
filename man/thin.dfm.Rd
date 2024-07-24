@@ -25,16 +25,19 @@ Thins the MCMC posterior draws in an object of class \code{"dfm"}.
 data("bem_dfmdata")
 
 # Generate model data
-model <- gen_dfm(x = bem_dfmdata, p = 1, n = 1,
-                 iterations = 20, burnin = 10)
+model <- create_df_model(x = bem_dfmdata, p = 1, n = 1,
+                         iterations = 20, burnin = 10)
 # Number of iterations and burnin should be much higher.
 
 # Add prior specifications
 model <- add_priors(model,
-                    lambda = list(v_i = .01),
-                    sigma_u = list(shape = 5, rate = 4),
-                    a = list(v_i = .01),
-                    sigma_v = list(shape = 5, rate = 4))
+                    lambda = list(vinv = .01),
+                    u = list(shape = 5, rate = 4),
+                    a = list(vinv = .01),
+                    v = list(shape = 5, rate = 4))
+
+# Add initial values
+model <- add_initial_values(model)
 
 # Obtain posterior draws
 object <- draw_posterior(model)

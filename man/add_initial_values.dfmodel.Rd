@@ -2,14 +2,14 @@
 % Please edit documentation in R/add_initial_values.dfmodel.R
 \name{add_initial_values.dfmodel}
 \alias{add_initial_values.dfmodel}
-\title{Add Initial Values of an MCMC Chain}
+\title{Add Initial Values to a Dynamic Factor Model}
 \usage{
 \method{add_initial_values}{dfmodel}(object, method = "prior", ...)
 }
 \arguments{
-\item{object}{named list of class 'dfmodel'.}
+\item{object}{a named list, usually, the output of a call to \code{\link{create_df_model}}.}
 
-\item{method}{character specifying the method of how initial values are generated.
+\item{method}{a character specifying the method of how initial values are generated.
 Defaults to \code{"prior"}. See 'Details'.}
 
 \item{...}{further arguments passed to or from other methods.}

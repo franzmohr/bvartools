@@ -1,9 +1,9 @@
-#' Add Priors to Bayesian Models
-#' 
-#' Adds prior specifications to a dynamic factor model, which was produced by
+#' Add Priors to a Dynamic Factor Model
+#'
+#' Adds prior specifications to a list of models, which was produced by
 #' function \code{\link{create_df_model}}.
 #'
-#' @param object a list of class 'dfmodel'.
+#' @param object a list, usually, the output of a call to \code{\link{create_df_model}}.
 #' @param lambda a named list of prior specifications for the factor loadings in the measurement equation.
 #' For the default specification the diagonal elements of the inverse prior variance-covariance matrix are set to 0.01.
 #' The variances need to be specified as precisions, i.e. as inverses of the variances.
@@ -46,7 +46,7 @@
 #' Chan, J., Koop, G., Poirier, D. J., & Tobias J. L. (2019). \emph{Bayesian econometric methods}
 #' (2nd ed.). Cambridge: Cambridge University Press.
 #'
-#' Lütkepohl, H. (2006). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
+#' Lütkepohl, H. (2007). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
 #'
 #' @examples
 #'
@@ -72,7 +72,7 @@ add_priors.dfmodel <- function(object,
                                a = list(vinv = 0.01),
                                v = list(shape = 5, rate = 4),
                                ...){
-
+  
   # Checks - Coefficient priors ----
   if (!is.null(lambda)) {
     if (!is.null(lambda$vinv)) {
@@ -83,7 +83,7 @@ add_priors.dfmodel <- function(object,
       stop("Argument 'lambda$vinv' is missing.")
     }
   }
-
+  
   if (!is.null(a)) {
     if (!is.null(a$vinv)) {
       if (a$vinv < 0) {
@@ -93,7 +93,7 @@ add_priors.dfmodel <- function(object,
       stop("Argument 'a$vinv' is missing.")
     }
   }
-
+  
   # Checks - Error priors ----
   if (length(u) < 2) {
     stop("Argument 'u' must be at least of length 2.")
@@ -111,7 +111,7 @@ add_priors.dfmodel <- function(object,
       stop("Argument 'u$rate' must be larger than 0.")
     }
   }
-
+  
   if (length(v) < 2) {
     stop("Argument 'v' must be at least of length 2.")
   } else {
@@ -128,33 +128,33 @@ add_priors.dfmodel <- function(object,
       stop("Argument 'v$rate' must be larger than 0.")
     }
   }
-
+  
   # Get model specs to obtain total number of coeffs
-  m <- length(object$model$variables)
-  n <- object$model$n_factors
+  m <- object$model$m
+  n <- object$model$n
   p <- object$model$p
-
+  
   # Total number of freely estimated coefficients in lambda
   n_lambda <- (2 * m - n - 1) * n / 2
-
+  
   # Total # of estimated coefficients in measurement equation
   n_a <- n * n * p
-
+  
   # Priors for lambda ----
   object$priors$lambda <- list(vinv = diag(lambda$vinv, n_lambda))
-
+  
   # Priors for Phi ----
   if (n_a > 0) {
     object$priors$a <- list(mu = matrix(0, n_a),
-                                 vinv = diag(a$vinv, n_a))
+                            vinv = diag(a$vinv, n_a))
   }
-
+  
   # Error terms ----
   object$priors$u$shape <- matrix(u$shape, m)
   object$priors$u$rate <- matrix(u$rate, m)
-
+  
   object$priors$v$shape <- matrix(v$shape, n)
   object$priors$v$rate <- matrix(v$rate, n)
-
+  
   return(object)
 }

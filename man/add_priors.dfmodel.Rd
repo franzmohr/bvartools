@@ -2,7 +2,7 @@
 % Please edit documentation in R/add_priors.dfmodel.R
 \name{add_priors.dfmodel}
 \alias{add_priors.dfmodel}
-\title{Add Priors to Bayesian Models}
+\title{Add Priors to a Dynamic Factor Model}
 \usage{
 \method{add_priors}{dfmodel}(
   object,
@@ -14,7 +14,7 @@
 )
 }
 \arguments{
-\item{object}{a list of class 'dfmodel'.}
+\item{object}{a list, usually, the output of a call to \code{\link{create_df_model}}.}
 
 \item{lambda}{a named list of prior specifications for the factor loadings in the measurement equation.
 For the default specification the diagonal elements of the inverse prior variance-covariance matrix are set to 0.01.
@@ -34,7 +34,7 @@ The variances need to be specified as precisions, i.e. as inverses of the varian
 A list of models.
 }
 \description{
-Adds prior specifications to a dynamic factor model, which was produced by
+Adds prior specifications to a list of models, which was produced by
 function \code{\link{create_df_model}}.
 }
 \details{
@@ -84,5 +84,5 @@ model <- add_priors(model,
 Chan, J., Koop, G., Poirier, D. J., & Tobias J. L. (2019). \emph{Bayesian econometric methods}
 (2nd ed.). Cambridge: Cambridge University Press.
 
-Lütkepohl, H. (2006). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
+Lütkepohl, H. (2007). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
 }

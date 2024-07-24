@@ -21,8 +21,9 @@ knitr::opts_chunk$set(
 The package `bvartools` implements functions for Bayesian inference of linear vector autoregressive (VAR) models. It separates a typical BVAR analysis workflow into multiple steps:
 
 * *Model set-up*: Produces data matrices for given lag orders and model types, which can be used for posterior simulation.
-* *Prior specification*: Generates prior matrices for a given model.
-* *Estimation*: Researchers can choose to use the posterior simulation algorithms of the package or use their own algorithms.
+* *Setting of prior hyperparameters*: Generates prior matrices for a given model.
+* *Setting initial values*: Generates initial values for a given model.
+* *Posterior simulation*: Researchers can choose to use the posterior simulation algorithms of the package or use their own algorithms.
 * *Standardising model output*: Combines the output of the estimation step into standardised objects for subsequent steps of the analyis.
 * *Evaluation*: Produces summary statistics, forecasts, impulse responses and forecast error variance decompositions.
 
@@ -71,8 +72,8 @@ plot(e1)
 The `gen_var` function produces an object, which contains information on the specification of the VAR model that should be estimated. The following code specifies a VAR(2) model with an intercept term. The number of iterations and burn-in draws is already specified at this stage.
 
 ```{r}
-model <- gen_var(e1, p = 2, deterministic = "const",
-                 iterations = 5000, burnin = 1000)
+model <- create_var_model(e1, p = 2, deterministic = "const",
+                          iterations = 5000, burnin = 1000)
 ```
 
 Note that the function is also capable of generating more than one model. For example, specifying `p = 0:2` would result in three models.
@@ -88,6 +89,14 @@ model_with_priors <- add_priors(model,
 ```
 
 If researchers want to fine-tune individual prior specifications, this can be done by directly accessing the respective elements in object `model_with_priors`.
+
+### Adding initial values
+
+Function `add_initial_values` generates of first draws of the Gibbs sampler for the specified model(s) in object `model` and augments the object accordingly.
+  
+```{r}
+model_with_priors <- add_initial_values(model_with_priors, method = "ols")
+```
 
 ### Obtaining posterior draws
 
@@ -127,11 +136,11 @@ As expected for an algrotihm with uninformative priors the posterior means are f
 
 ```{r}
 # Obtain data for LS estimator
-y <- t(model$data$Y)
-z <- t(model$data$Z)
+y <- t(model$data$y)
+x <- t(model$data$x)
 
 # Calculate LS estimates
-A_freq <- tcrossprod(y, z) %*% solve(tcrossprod(z))
+A_freq <- tcrossprod(y, x) %*% solve(tcrossprod(x))
 
 # Round estimates and print
 round(A_freq, 3)
@@ -226,16 +235,16 @@ These steps are exactly the same as described above. Thus, the following Gibbs s
 set.seed(1234567)
 
 # Get data matrices
-y <- t(model_with_priors$data$Y)
-x <- t(model_with_priors$data$Z)
+y <- t(model_with_priors$data$y)
+x <- t(model_with_priors$data$x)
 
 tt <- ncol(y) # Number of observations
 k <- nrow(y) # Number of endogenous variables
 m <- k * nrow(x) # Number of estimated coefficients
 
 # Priors for coefficients
-a_mu_prior <- model_with_priors$priors$coefficients$mu # Prior means
-a_v_i_prior <- model_with_priors$priors$coefficients$v_i # Prior precisions
+a_mu_prior <- model_with_priors$priors$a$mu # Prior means
+a_v_i_prior <- model_with_priors$priors$a$v_i # Prior precisions
 
 # Priors for error variance-covariance matrix
 u_sigma_df_prior <- model_with_priors$priors$sigma$df # Prior degrees of freedom
@@ -281,8 +290,8 @@ for (draw in 1:draws) {
 The `bvar` function can be used to collect relevant output of the Gibbs sampler into a standardised object, which can be used by functions such as `predict` to obtain forecasts or `irf` for impulse respons analysis.
 
 ```{r bvar-object}
-bvar_est_two <- bvar(y = model_with_priors$data$Y,
-                     x = model_with_priors$data$Z,
+bvar_est_two <- bvar(y = model_with_priors$data$y,
+                     x = model_with_priors$data$x,
                      A = draws_a[1:18,],
                      C = draws_a[19:21, ],
                      Sigma = draws_sigma)

@@ -84,21 +84,19 @@
 #' data("e6")
 #' 
 #' # Create model
-#' model <- gen_vec(e6, p = 4, r = 1,
-#'                  const = "unrestricted", seasonal = "unrestricted",
-#'                  iterations = 100, burnin = 10)
+#' model <- create_vec_model(e6, p = 4, r = 1,
+#'                           const = "unrestricted", seasonal = "unrestricted",
+#'                           iterations = 100, burnin = 10)
 #' 
 #' @references
 #' 
 #' Lütkepohl, H. (2006). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
 #' 
 #' @export
-gen_vec <- function(data, p = 2, exogen = NULL, s = 2, r = NULL,
-                    const = NULL, trend = NULL, seasonal = NULL,
-                    structural = FALSE, error = "wishart", tvp = FALSE,
-                    iterations = 20000, burnin = 2000) {
-  
-  warning("Function 'gen_vec' will be deprecated in the near future. Please use function 'create_vec_model' instead.")
+create_vec_model <- function(data, p = 2, exogen = NULL, s = 2, r = NULL,
+                             const = NULL, trend = NULL, seasonal = NULL,
+                             structural = FALSE, error = "wishart", tvp = FALSE,
+                             iterations = 20000, burnin = 2000) {
   
   # Input checks ----
   if (!"ts" %in% class(data)) {

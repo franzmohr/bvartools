@@ -1,5 +1,6 @@
 #include <RcppArmadillo.h>
 // [[Rcpp::depends(RcppArmadillo)]]
+// [[Rcpp::interfaces(r, cpp)]]
 
 //' SUR Matrix Transformation
 //' 
@@ -30,7 +31,7 @@
 //' 
 //' 
 // [[Rcpp::export]]
-arma::sp_mat sur_const_to_tvp(const arma::mat z, const int k, const int tt) {
+arma::sp_mat sur_const_to_tvp(arma::mat& z, arma::uword& k, int& tt) {
   
   const int m = z.n_cols;
   arma::sp_mat z_large = arma::zeros<arma::sp_mat>(k * tt, m * tt);

@@ -12,8 +12,8 @@ create_var_model(
   deterministic = "const",
   seasonal = FALSE,
   structural = FALSE,
+  error = "wishart",
   tvp = FALSE,
-  sv = FALSE,
   iterations = 20000,
   burnin = 2000
 )
@@ -38,10 +38,10 @@ time-series object provided in \code{data}.}
 \item{structural}{logical indicating whether data should be prepared for the estimation of a
 structural VAR model.}
 
-\item{tvp}{logical indicating whether the model parameters are time varying.}
+\item{error}{character specifying the model that should be used for the estimation
+of the covariance matrix of the error term. Default is \code{"wishart"}. See 'Details'.}
 
-\item{sv}{logical indicating whether time varying error variances should be estimated by
-employing a stochastic volatility algorithm.}
+\item{tvp}{logical indicating whether the model parameters are time varying.}
 
 \item{iterations}{an integer of MCMC draws excluding burn-in draws (defaults
 to 20000).}
@@ -53,8 +53,8 @@ moments, forecasts etc.}
 \value{
 An object of class \code{'bvarmodel'}, which contains the following elements:
 \item{data}{A list of data objects, which can be used for posterior simulation. Element
-\code{Y} is a time-series object of dependent variables. Element \code{Z} is a time-series
-object of the regressors and element \code{SUR} is the corresponding matrix of regressors
+\code{y} is a time-series object of dependent variables. Element \code{x} is a time-series
+object of the regressors and element \code{z} is the corresponding matrix of regressors
 in SUR form.}
 \item{model}{A list of model specifications.}
 }
@@ -78,21 +78,47 @@ where
 \eqn{p} is the lag order of endogenous variables, \eqn{s} is the lag
 order of exogenous variables, and \eqn{u_t} is an error term.
 
+The model can be rewritten as
+\deqn{A_0 y_t = Z_t a + u_t,}
+where \eqn{Z_t} is a \eqn{KT \times K * (Kp + M(s + 1) + N)} data matrix and
+\eqn{a} the corresponding coefficient vector. Unless structural models are
+be estimated, \eqn{A_0} is assumed to be an identity matrix.
+
 If a vector is provided as argument \code{p} or \code{s}, the function will
 produce a distinct model for all possible combinations of those specifications.
+
+If \code{structural = TRUE}, the data matrix \eqn{Z_t} is augmented by negative
+contemporaneous observations of endogenous variables, which correspond to
+the coefficients in the lower triangular of \eqn{A_0}.
 
 If \code{tvp} is \code{TRUE}, the respective coefficients
 of the above model are assumed to be time varying. If \code{sv} is \code{TRUE},
 the error covariance matrix is assumed to be time varying.
+
+Argument \code{error} specifies the structure of the covariance matrix of
+the error term and how it is estimated. Possible specifications are:
+\itemize{
+ \item{\code{"wishart"}: The covariance is estimated using a Wishart prior.}
+ \item{\code{"gamma"}: Only the diagonal elements of the covariance matrix are estimated using a gamma prior.
+Off-diagonal elements are not estimated and set to zero.}
+ \item{\code{"gamma-covar"}: The diagonal elements of the covariance matrix are estimated using a gamma prior.
+Covariances are estimated based on a triangular decomposition.}
+ \item{\code{"sv"}: Only the diagonal elements of the covariance matrix are estimated using a stochastic volatility
+algorithm. Off-diagonal elements are not estimated and set to zero.}
+ \item{\code{"sv-covar"}: Only the diagonal elements of the covariance matrix are estimated using a stochastic volatility
+algorithm. Covariances are estimated based on a triangular decomposition.}
+}
 }
 \examples{
 
 # Load data
-data("e1") 
-e1 <- diff(log(e1))
+data("e1")
+e1 <- diff(log(e1)) * 100
 
-# Generate model data
-data <- create_var_model(e1, p = 0:2, deterministic = "const")
+# Create model
+model <- create_var_model(e1, p = 2, deterministic = "const",
+                          iterations = 50, burnin = 10)
+# Number of iterations and burnin should be much higher.
 
 }
 \references{

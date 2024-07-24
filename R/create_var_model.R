@@ -15,8 +15,8 @@
 #' @param structural logical indicating whether data should be prepared for the estimation of a
 #' structural VAR model.
 #' @param tvp logical indicating whether the model parameters are time varying.
-#' @param sv logical indicating whether time varying error variances should be estimated by
-#' employing a stochastic volatility algorithm.
+#' @param error character specifying the model that should be used for the estimation
+#' of the covariance matrix of the error term. Default is \code{"wishart"}. See 'Details'.
 #' @param iterations an integer of MCMC draws excluding burn-in draws (defaults
 #' to 20000).
 #' @param burnin an integer of MCMC draws used to initialize the sampler
@@ -39,28 +39,54 @@
 #' \eqn{p} is the lag order of endogenous variables, \eqn{s} is the lag
 #' order of exogenous variables, and \eqn{u_t} is an error term.
 #' 
+#' The model can be rewritten as
+#' \deqn{A_0 y_t = Z_t a + u_t,}
+#' where \eqn{Z_t} is a \eqn{KT \times K * (Kp + M(s + 1) + N)} data matrix and
+#' \eqn{a} the corresponding coefficient vector. Unless structural models are
+#' be estimated, \eqn{A_0} is assumed to be an identity matrix.
+#' 
 #' If a vector is provided as argument \code{p} or \code{s}, the function will
 #' produce a distinct model for all possible combinations of those specifications.
+#' 
+#' If \code{structural = TRUE}, the data matrix \eqn{Z_t} is augmented by negative
+#' contemporaneous observations of endogenous variables, which correspond to
+#' the coefficients in the lower triangular of \eqn{A_0}.
 #' 
 #' If \code{tvp} is \code{TRUE}, the respective coefficients
 #' of the above model are assumed to be time varying. If \code{sv} is \code{TRUE},
 #' the error covariance matrix is assumed to be time varying.
 #' 
+#' Argument \code{error} specifies the structure of the covariance matrix of
+#' the error term and how it is estimated. Possible specifications are:
+#' \itemize{
+#'  \item{\code{"wishart"}: The covariance is estimated using a Wishart prior.}
+#'  \item{\code{"gamma"}: Only the diagonal elements of the covariance matrix are estimated using a gamma prior.
+#' Off-diagonal elements are not estimated and set to zero.}
+#'  \item{\code{"gamma-covar"}: The diagonal elements of the covariance matrix are estimated using a gamma prior.
+#' Covariances are estimated based on a triangular decomposition.}
+#'  \item{\code{"sv"}: Only the diagonal elements of the covariance matrix are estimated using a stochastic volatility
+#' algorithm. Off-diagonal elements are not estimated and set to zero.}
+#'  \item{\code{"sv-covar"}: Only the diagonal elements of the covariance matrix are estimated using a stochastic volatility
+#' algorithm. Covariances are estimated based on a triangular decomposition.}
+#' }
+#' 
 #' @return An object of class \code{'bvarmodel'}, which contains the following elements:
 #' \item{data}{A list of data objects, which can be used for posterior simulation. Element
-#' \code{Y} is a time-series object of dependent variables. Element \code{Z} is a time-series
-#' object of the regressors and element \code{SUR} is the corresponding matrix of regressors
+#' \code{y} is a time-series object of dependent variables. Element \code{x} is a time-series
+#' object of the regressors and element \code{z} is the corresponding matrix of regressors
 #' in SUR form.}
 #' \item{model}{A list of model specifications.}
 #' 
 #' @examples
 #' 
 #' # Load data
-#' data("e1") 
-#' e1 <- diff(log(e1))
+#' data("e1")
+#' e1 <- diff(log(e1)) * 100
 #' 
-#' # Generate model data
-#' data <- create_var_model(e1, p = 0:2, deterministic = "const")
+#' # Create model
+#' model <- create_var_model(e1, p = 2, deterministic = "const",
+#'                           iterations = 50, burnin = 10)
+#' # Number of iterations and burnin should be much higher.
 #' 
 #' @references
 #' 
@@ -75,8 +101,8 @@ create_var_model <- function(data, p = 2,
                              deterministic = "const",
                              seasonal = FALSE,
                              structural = FALSE,
+                             error = "wishart",
                              tvp = FALSE,
-                             sv = FALSE,
                              iterations = 20000,
                              burnin = 2000) {
   
@@ -106,7 +132,17 @@ create_var_model <- function(data, p = 2,
   }
   
   if (NCOL(data) == 1 & structural) {
-    stop("Model must contain at least two endogenous variables for structural analysis.")
+    structural <- FALSE
+    if (error == "gamma-covar") {
+      error <- "gamma"
+    }
+    if (error == "sv-covar") {
+      error <- "sv"
+    }
+  }
+  
+  if (structural & error %in% c("wishart", "gamma-covar", "sv-covar")) {
+    stop(paste0("Structural models cannot be estimated with argument 'error' specified as '", error,"'."))
   }
   
   data_name <- dimnames(data)[[2]]
@@ -115,8 +151,11 @@ create_var_model <- function(data, p = 2,
   
   model <- NULL
   model[["type"]] <- "VAR"
-  model$endogen <- list("variables" = data_name,
-                        "lags" = 0)
+  model[["k"]] <- length(data_name)
+  model[["p"]] <- 0
+  model[["m"]] <- 0
+  model[["s"]] <- 0
+  model[["n"]] <- 0
   
   temp <- data
   temp_name <- data_name
@@ -168,8 +207,9 @@ create_var_model <- function(data, p = 2,
       } 
     }
     
-    model$exogen <- list("variables" = exo_name,
-                         "lags" = 0)
+    model[["m"]] <- length(exo_names)
+    model[["s"]] <- 0
+    
   } else {
     use_exo <- FALSE
     s <- 0
@@ -216,7 +256,7 @@ create_var_model <- function(data, p = 2,
   # Update model specs for deterministic terms
   use_det <- FALSE
   if (length(det_name) > 0) {
-    model[["deterministic"]] <- det_name
+    model[["n"]] <- length(det_name)
     use_det <- TRUE
   }
   
@@ -230,18 +270,21 @@ create_var_model <- function(data, p = 2,
     stop("Argument 'structural' must be of class 'logical'.")
   }
   
-  # TVP ----
-  if ("logical" %in% class(tvp)) {
-    model[["tvp"]] <- tvp 
+  ## errors ----
+  if ("character" %in% class(error)) {
+    if (!error %in% c("wishart", "gamma", "gamma-covar", "sv", "sv-covar")) {
+      stop("Invalid specification of argument 'error'.")
+    }
+    model[["error"]] <- error
   } else {
-    stop("Argument 'tvp' must be of class 'logical'.")
+    stop("Argument 'error' must be of class 'character'.")
   }
   
-  # Stochastic volatility ----
-  if ("logical" %in% class(sv)) {
-    model[["sv"]] <- sv
+  ## tvp ----
+  if ("logical" %in% class(tvp)) {
+    model[["tvp"]] <- tvp
   } else {
-    stop("Argument 'sv' must be of class 'logical'.")
+    stop("Argument 'tvp' must be of class 'logical'.")
   }
   
   # Iterations and burnin ----
@@ -274,11 +317,11 @@ create_var_model <- function(data, p = 2,
       model_i <- model
       if (i >= 1) {
         pos <- c(pos, k + 1:(k * i))
-        model_i[["endogen"]][["lags"]] <- i
+        model_i[["p"]] <- i
       }  
       if (use_exo) {
         pos <- c(pos, k + k * p_max + 1:(m * (j + 1)))
-        model_i[["exogen"]][["lags"]] <- j
+        model_i[["s"]] <- j
       }
       if (use_det) {
         pos <- c(pos, k + k * p_max + m * (s_max + 1) + 1:length(det_name))
@@ -300,9 +343,9 @@ create_var_model <- function(data, p = 2,
       }
       
       # Create individual model
-      result_i <- list("data" = list("Y" = y,
-                                     "Z" = x,
-                                     "SUR" = z),
+      result_i <- list("data" = list("y" = y,
+                                     "x" = x,
+                                     "z" = z),
                        "model" = model_i)
       
       # Update class of individual model

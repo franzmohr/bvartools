@@ -106,7 +106,7 @@ gen_var <- function(data, p = 2,
                     iterations = 20000,
                     burnin = 2000) {
   
-  warning("Function 'gen_var' is deprecated and will not be available from version 0.3.0 onwards. Please use function 'create_var_model' instead.")
+  warning("Function 'gen_var' will be deprecated in the near future. Please use function 'create_var_model' instead.")
   
   # Check data ----
   if (!"ts" %in% class(data)) {

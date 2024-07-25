@@ -62,8 +62,7 @@ post_normal_covar_tvp <- function(y, u_omega_i, k, v_sigma_i, psi_init) {
   temp <- covar_prepare_data(y, u_omega_i, k, tt, TRUE)
   
   # Draw coefficients
-  hh <- Matrix::Diagonal(n_covar * tt, 1)
-  diag(hh[-(1:n_covar), -(n_covar * (tt - 1) + 1:n_covar)]) <- -1
+  hh <- create_first_difference_matrix(n_covar, tt)
   
   if (NCOL(v_sigma_i) == n_covar & NCOL(v_sigma_i) == n_covar) {
     v_sigma_i <- kronecker(Matrix::Diagonal(tt, 1), v_sigma_i)

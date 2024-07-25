@@ -31,7 +31,7 @@
 thin.bvar <- function(x, thin = 10, ...) {
   
   draws <- NA
-  vars <- c("A0", "A", "B", "C", "Sigma")
+  vars <- c("Sigma", "A0", "A", "B", "C")
   for (i in vars) {
     if (is.na(draws)) {
       if (!is.null(x[[i]])) {

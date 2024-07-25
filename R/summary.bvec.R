@@ -186,18 +186,21 @@ summary.bvec <- function(object, ci = .95, period = NULL, ...){
     dimnames(q_low) <- dim_names
     dimnames(median) <- dim_names
     dimnames(q_high) <- dim_names
-  }
-  
-  result <- list(coefficients = list(means = means,
-                                     median = median,
-                                     sd = sds,
-                                     naivesd = naive_sd,
-                                     tssd = ts_sd,
-                                     q_lower = q_low,
-                                     q_upper = q_high))
-  
-  if (use_incl) {
-    result[["coefficients"]][["lambda"]] = incl
+    
+    result <- list(coefficients = list(means = means,
+                                       median = median,
+                                       sd = sds,
+                                       naivesd = naive_sd,
+                                       tssd = ts_sd,
+                                       q_lower = q_low,
+                                       q_upper = q_high))
+    
+    if (use_incl) {
+      result[["coefficients"]][["lambda"]] = incl
+    }
+    
+  } else {
+    result <- list(coefficients = NULL)
   }
   
   # Error coefficients

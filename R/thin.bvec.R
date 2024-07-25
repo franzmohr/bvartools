@@ -31,7 +31,7 @@
 thin.bvec <- function(x, thin = 10, ...) {
   
   draws <- NA
-  vars <- c("Pi", "Pi_x", "Pi_d", "Gamma", "Upsilon", "C", "A0")
+  vars <- c("Sigma", "Pi", "Pi_x", "Pi_d", "Gamma", "Upsilon", "C", "A0")
   for (i in vars) {
     if (is.na(draws)) {
       if (!is.null(x[[i]])) {

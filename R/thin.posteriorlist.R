@@ -28,7 +28,7 @@
 #' @return An object of class \code{"bvarlist"}.
 #' 
 #' @export
-thin.bvarlist <- function(x, thin = 10, ...) {
+thin.posteriorlist <- function(x, thin = 10, ...) {
   
   for (i in 1:length(x)) {
     x[[i]] <- thin(x[[i]], thin = thin)

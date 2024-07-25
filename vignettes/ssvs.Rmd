@@ -35,8 +35,8 @@ e1 <- diff(log(e1))
 e1 <- window(e1, end = c(1978, 4))
 
 # Generate VAR
-data <- gen_var(e1, p = 4, deterministic = "const",
-                iterations = 10000, burnin = 5000)
+data <- create_var_model(e1, p = 4, deterministic = "const",
+                         iterations = 10000, burnin = 5000)
 ```
 
 `bvartools` allows to estimate BVAR models with SSVS either by using algorithms that were written by the researchers themselves or by using the built-in posterior simulation algorithm. The first approach is presented in the following section. The latter approach is illustrated at the end of this introduction.
@@ -50,8 +50,8 @@ The prior variances of the parameters are set in accordance with the semiautomat
 set.seed(1234567)
 
 # Get data matrices
-y <- t(data$data$Y)
-x <- t(data$data$Z)
+y <- t(data$data$y)
+x <- t(data$data$x)
 
 tt <- ncol(y) # Number of observations
 k <- nrow(y) # Number of endogenous variables
@@ -124,7 +124,7 @@ for (draw in 1:draws) {
 The output of a Gibbs sampler with SSVS can be further analysed in the usual way. With the `bvartools` package the posterior draws can be collected in a `bvar` object and the `summary` method provides summary statistics. It is also possible to add information on the inclusion parameters to the `bvar` object by providing a named list as an argument. The list must contain an element `coeffs`, which contains the MCMC draws of the coefficients, and element `lambda` contains the corresponding draw of the inclusion parameter.
 
 ```{r}
-bvar_est <- bvar(y = data$data$Y, x = data$data$Z,
+bvar_est <- bvar(y = data$data$y, x = data$data$x,
                  A = list(coeffs = draws_a[1:36,],
                           lambda = draws_lambda[1:36,]),
                  C = list(coeffs = draws_a[37:39, ],
@@ -185,7 +185,7 @@ for (draw in 1:draws) {
 The means of the posterior draws are similar to the OLS estimates in Lütkepohl (2006, Section 5.2.10):
 
 ```{r}
-bvar_est <- bvar(y = data$data$Y, x = data$data$Z, A = draws_a[1:36,],
+bvar_est <- bvar(y = data$data$y, x = data$data$x, A = draws_a[1:36,],
                  C = draws_a[37:39, ], Sigma = draws_sigma)
 
 summary(bvar_est)
@@ -200,8 +200,14 @@ Priors can be added to object `data` using function `add_priors`. To use the sam
 ```{r, eval = FALSE}
 # Obtain priors
 model_with_priors <- add_priors(data,
-                                ssvs = list(inprior = 0.5, semiautomatic = c(0.01, 10), exclude_det = TRUE),
-                                sigma = list(df = 0, scale = 0.00001))
+                                sigma = list(df = 0, scale = 0.00001),
+                                ssvs = list(inprior = 0.5, semiautomatic = c(0.01, 10), exclude_det = TRUE))
+```
+
+Initial values can be added to the model by using function `add_initial_values`.
+
+```{r, eval = FALSE}
+model_with_priors <- add_initial_values(model_with_priors)
 ```
 
 Posterior draws can be obtained using function `draw_posterior`. It will recognise the specifications of the model based on the content of object `model_with_priors` and produce the respective draws from the posterior.

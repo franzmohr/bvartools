@@ -4,20 +4,13 @@
 \alias{ssvs_prior}
 \title{Stochastic Search Variable Selection Prior}
 \usage{
-ssvs_prior(object, tau = c(0.05, 10), semiautomatic = NULL)
+ssvs_prior(object, ...)
 }
 \arguments{
-\item{object}{an object of class \code{"bvarmodel"}, usually, a result of a call to \code{\link{gen_var}}
-or \code{\link{gen_vec}}.}
+\item{object}{an object of class \code{"bvarmodel"} or \code{"bvecmodel"},
+usually, a result of a call to \code{\link{create_var_model}} or \code{\link{create_vec_model}}.}
 
-\item{tau}{a numeric vector of two elements containing the prior standard errors of restricted
-variables (\eqn{\tau_0}) as its first element and unrestricted variables (\eqn{\tau_1})
-as its second. Default is \code{c(0.05, 10)}.}
-
-\item{semiautomatic}{an optional numeric vector of two elements containing the factors by which
-the standard errors associated with an unconstrained least squares estimate of the VAR model are
-multiplied to obtain the prior standard errors of restricted (\eqn{\tau_0}) and unrestricted
-(\eqn{\tau_1}) variables. This is the semiautomatic approach described in George et al. (2008).}
+\item{...}{arguments passed forward to method.}
 }
 \value{
 A list containing the vectors of prior standard deviations for restricted

@@ -19,7 +19,7 @@ parallelization requires at least two cores.}
 \item{...}{further arguments passed to or from other methods.}
 }
 \value{
-A list.
+A list of class 'posteriorlist'.
 }
 \description{
 Forwards model input to posterior simulation functions.

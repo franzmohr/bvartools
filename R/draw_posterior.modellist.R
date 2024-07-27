@@ -11,7 +11,7 @@
 #' parallelization requires at least two cores.
 #' @param ... further arguments passed to or from other methods.
 #' 
-#' @return A list.
+#' @return A list of class 'posteriorlist'.
 #' 
 #' @examples
 #' 

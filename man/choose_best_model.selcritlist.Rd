@@ -2,17 +2,28 @@
 % Please edit documentation in R/choose_best_model.selcritlist.R
 \name{choose_best_model.selcritlist}
 \alias{choose_best_model.selcritlist}
-\title{Plotting Selection Criteria}
+\title{Choose Best Model}
 \usage{
 \method{choose_best_model}{selcritlist}(object, criterion = "BIC", ...)
 }
 \arguments{
+\item{object}{object of class 'selcritlist', usually, a result of a call
+to \code{\link{selection_criteria}}.}
+
 \item{criterion}{the selection criterion that should be plotted. Available choices
 are \code{"LL"}, \code{"AIC"}, \code{"BIC"} (default), \code{"HQ"}.}
 
-\item{x}{object object of class \code{"selcritlist"}, usually, a result of a call
-to \code{\link{selection_criteria}}.}
+\item{...}{further arguments passed to or from other methods.}
+}
+\value{
+An integer giving the position of the best model in the list provided
+in argument \code{object}.
 }
 \description{
-A plot function for objects of class \code{"selcritlist"}.
+Chooses the best model according the selection criteria in an object of class
+'selcritlist'.
+}
+\details{
+If argument \code{criterion} is "LL", the model with the maximum value is chosen,
+otherwise, the model with the minimum value.
 }

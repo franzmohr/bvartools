@@ -59,11 +59,33 @@
 #' @export
 bvarpost <- function(object) {
   
+  # Check if the input is suitable for the posterior simulation functions
+  check_bvarpost_input(object)
+  
   if (object[["model"]][["tvp"]]) {
     object <- .bvartvpalg(object)
   } else {
     object <- .bvaralg(object)
   }
-
+  
+  if (!is.null(object[["data"]][["z"]])) {
+    if (object[["model"]][["tvp"]]) {
+      for (i in 1:length(object[["posteriors"]][["a"]][["coeffs"]])) {
+        object[["posteriors"]][["a"]][["coeffs"]][[i]]  <- coda::as.mcmc(object[["posteriors"]][["a"]][["coeffs"]][[i]])
+      }
+    } else {
+      object[["posteriors"]][["a"]][["coeffs"]] <- coda::as.mcmc(object[["posteriors"]][["a"]][["coeffs"]])
+    }
+  }
+  
+  if (object[["model"]][["error"]] %in% c("sv", "sv-covar")) {
+    for (i in 1:length(object[["posteriors"]][["sigma"]][["coeffs"]])) {
+      object[["posteriors"]][["sigma"]][["coeffs"]][[i]]  <- coda::as.mcmc(object[["posteriors"]][["sigma"]][["coeffs"]][[i]])
+    }
+  } else {
+    object[["posteriors"]][["sigma"]][["coeffs"]] <- coda::as.mcmc(object[["posteriors"]][["sigma"]][["coeffs"]])
+  }
+  
+  
   return(object)
 }

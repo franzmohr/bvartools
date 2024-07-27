@@ -78,5 +78,33 @@ bvecpost <- function(object) {
     object <- .bvecalg(object)
   }
   
+  if (!is.null(object[["data"]][["z"]])) {
+    if (object[["model"]][["tvp"]]) {
+      for (i in 1:length(object[["posteriors"]][["a"]][["coeffs"]])) {
+        object[["posteriors"]][["a"]][["coeffs"]][[i]]  <- coda::as.mcmc(object[["posteriors"]][["a"]][["coeffs"]][[i]])
+      }
+    } else {
+      object[["posteriors"]][["a"]][["coeffs"]] <- coda::as.mcmc(object[["posteriors"]][["a"]][["coeffs"]])
+    }
+  }
+  
+  if (object[["model"]][["rank"]] > 0) {
+    if (object[["model"]][["tvp"]]) {
+      for (i in 1:length(object[["posteriors"]][["beta"]][["coeffs"]])) {
+        object[["posteriors"]][["beta"]][["coeffs"]][[i]]  <- coda::as.mcmc(object[["posteriors"]][["beta"]][["coeffs"]][[i]])
+      }
+    } else {
+      object[["posteriors"]][["beta"]][["coeffs"]] <- coda::as.mcmc(object[["posteriors"]][["beta"]][["coeffs"]])
+    }
+  }
+  
+  if (object[["model"]][["error"]] %in% c("sv", "sv-covar")) {
+    for (i in 1:length(object[["posteriors"]][["sigma"]][["coeffs"]])) {
+      object[["posteriors"]][["sigma"]][["coeffs"]][[i]]  <- coda::as.mcmc(object[["posteriors"]][["sigma"]][["coeffs"]][[i]])
+    }
+  } else {
+    object[["posteriors"]][["sigma"]][["coeffs"]] <- coda::as.mcmc(object[["posteriors"]][["sigma"]][["coeffs"]])
+  }
+  
   return(object)
 }

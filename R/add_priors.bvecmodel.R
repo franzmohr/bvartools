@@ -327,6 +327,13 @@ add_priors.bvecmodel <- function(object,
   
   tot_par <- n_alpha + n_gamma + n_upsilon + n_det
   
+  # Additional input check
+  if (!is.null(object[["data"]][["z"]])) {
+    if (tot_par != ncol(object[["data"]][["z"]])) {
+      stop("Model specifications are not consistent with data matrix 'object$data$z'.")
+    } 
+  }
+  
   covar <- object[["model"]][["error"]] %in% c("gamma-covar", "sv-covar")
   structural <- object[["model"]][["structural"]]
   if (covar & structural) {

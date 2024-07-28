@@ -19,12 +19,15 @@
 #' e1 <- diff(log(e1)) * 100
 #' 
 #' # Generate model
-#' model <- gen_var(e1, p = 1, deterministic = 2,
-#'                  iterations = 100, burnin = 10)
+#' model <- create_var_model(e1, p = 1, deterministic = 2,
+#'                           iterations = 100, burnin = 10)
 #' # Chosen number of iterations and burn-in should be much higher.
 #' 
 #' # Add priors
 #' model <- add_priors(model)
+#' 
+#' # Add initial values
+#' model <- add_initial_values(model)
 #' 
 #' # Obtain posterior draws
 #' object <- draw_posterior(model)
@@ -33,7 +36,6 @@
 #' plot(object)
 #' 
 #' @export
-#' @rdname bvar
 plot.bvar <- function(x, ci = 0.95, type = "hist", show_zero_y = TRUE, ...) {
   
   if (!type %in% c("hist", "trace", "boxplot")) {

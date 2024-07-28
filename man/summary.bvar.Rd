@@ -10,7 +10,7 @@
 \method{print}{summary.bvar}(x, digits = max(3L, getOption("digits") - 3L), ...)
 }
 \arguments{
-\item{object}{an object of class \code{"bvar"}, usually, a result of a call to
+\item{object}{an object of class 'bvar', usually, a result of a call to
 \code{\link{bvar}} or \code{\link{bvec_to_bvar}}.}
 
 \item{ci}{a numeric between 0 and 1 specifying the probability of the credible band.
@@ -28,7 +28,7 @@ are used.}
 \item{digits}{the number of significant digits to use when printing.}
 }
 \value{
-\code{summary.bvar} returns a list of class \code{"summary.bvar"},
+\code{summary.bvar} returns a list of class 'summary.bvar',
 which contains the following components:
 \item{coefficients}{A list of various summary statistics of the posterior
 draws of the VAR coefficients.}
@@ -37,5 +37,5 @@ draws of the variance-covariance matrix.}
 \item{specifications}{a list containing information on the model specification.}
 }
 \description{
-summary method for class \code{"bvar"}.
+summary method for class 'bvar'.
 }

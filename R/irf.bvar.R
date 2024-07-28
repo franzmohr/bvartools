@@ -2,7 +2,7 @@
 #' 
 #' Computes the impulse response coefficients for an object of class 'bvar'.
 #' 
-#' @param x an object of class \code{"bvar"}, usually, a result of a call to
+#' @param x an object of class 'bvar', usually, a result of a call to
 #' \code{\link{bvar}} or \code{\link{bvec_to_bvar}}.
 #' @param impulse name of the impulse variable.
 #' @param response name of the response variable.
@@ -41,7 +41,7 @@
 #' one in its \eqn{j^{th}} element and zero otherwise. If the \code{"bvar"} object does not contain draws
 #' of \eqn{A_0}, it is assumed to be an identity matrix.
 #' 
-#' @return A time-series object of class \code{"bvarirf"} and if \code{keep_draws = TRUE} a simple matrix.
+#' @return A time-series object of class 'bvarirf' or, if \code{keep_draws = TRUE}, a simple matrix.
 #' 
 #' @examples
 #' 

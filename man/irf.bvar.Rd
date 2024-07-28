@@ -19,7 +19,7 @@
 )
 }
 \arguments{
-\item{x}{an object of class \code{"bvar"}, usually, a result of a call to
+\item{x}{an object of class 'bvar', usually, a result of a call to
 \code{\link{bvar}} or \code{\link{bvec_to_bvar}}.}
 
 \item{impulse}{name of the impulse variable.}
@@ -50,7 +50,7 @@ are used.}
 \item{...}{further arguments passed to or from other methods.}
 }
 \value{
-A time-series object of class \code{"bvarirf"} and if \code{keep_draws = TRUE} a simple matrix.
+A time-series object of class 'bvarirf' or, if \code{keep_draws = TRUE}, a simple matrix.
 }
 \description{
 Computes the impulse response coefficients for an object of class 'bvar'.

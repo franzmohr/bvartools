@@ -51,7 +51,6 @@
 #' Lütkepohl, H. (2006). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
 #' 
 #' @export
-#' @rdname bvar
 predict.bvar <- function(object, ..., n_ahead = 10, new_x = NULL, new_d = NULL, ci = .95) {
   
   k <- object[["specifications"]][["dims"]][["K"]]

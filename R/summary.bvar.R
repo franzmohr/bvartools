@@ -1,8 +1,8 @@
 #' Summarising Bayesian VAR Coefficients
 #'
-#' summary method for class \code{"bvar"}.
+#' summary method for class 'bvar'.
 #'
-#' @param object an object of class \code{"bvar"}, usually, a result of a call to
+#' @param object an object of class 'bvar', usually, a result of a call to
 #' \code{\link{bvar}} or \code{\link{bvec_to_bvar}}.
 #' @param ci a numeric between 0 and 1 specifying the probability of the credible band.
 #' Defaults to 0.95.
@@ -14,7 +14,7 @@
 #' @param digits the number of significant digits to use when printing.
 #' @param ... further arguments passed to or from other methods.
 #'
-#' @return \code{summary.bvar} returns a list of class \code{"summary.bvar"},
+#' @return \code{summary.bvar} returns a list of class 'summary.bvar',
 #' which contains the following components:
 #' \item{coefficients}{A list of various summary statistics of the posterior
 #' draws of the VAR coefficients.}

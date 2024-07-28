@@ -1,8 +1,8 @@
 #' Thinning Posterior Draws
 #' 
-#' Thins the MCMC posterior draws in an object of class \code{"bvar"}.
+#' Thins the MCMC posterior draws in an object of class 'bvar'.
 #' 
-#' @param x an object of class \code{"bvar"}.
+#' @param x an object of class 'bvar'.
 #' @param thin an integer specifying the thinning interval between successive values of posterior draws.
 #' @param ... further arguments passed to or from other methods.
 #' 
@@ -13,19 +13,23 @@
 #' e1 <- diff(log(e1)) * 100
 #' 
 #' # Obtain data matrices
-#' model <- gen_var(e1, p = 2, deterministic = 2,
-#'                  iterations = 100, burnin = 10)
+#' model <- create_var_model(e1, p = 2, deterministic = 2,
+#'                           iterations = 100, burnin = 10)
 #' # Chosen number of iterations and burn-in draws should be much higher.
 #' 
 #' # Add prior specifications
 #' model <- add_priors(model)
 #' 
+#' # Add initial values
+#' model <- add_initial_values(model)
+#' 
 #' # Obtain posterior draws
 #' object <- draw_posterior(model)
 #' 
+#' # Thinning
 #' object <- thin(object)
 #' 
-#' @return An object of class \code{"bvar"}.
+#' @return An object of class 'bvar'.
 #' 
 #' @export
 thin.bvar <- function(x, thin = 10, ...) {

@@ -1,13 +1,12 @@
 #' Impulse Response Function
 #' 
-#' Computes the impulse response coefficients of an object of class \code{"bvar"} for
-#' \code{n.ahead} steps.
+#' Computes the impulse response coefficients for an object of class 'bvar'.
 #' 
 #' @param x an object of class \code{"bvar"}, usually, a result of a call to
 #' \code{\link{bvar}} or \code{\link{bvec_to_bvar}}.
 #' @param impulse name of the impulse variable.
 #' @param response name of the response variable.
-#' @param n.ahead number of steps ahead.
+#' @param n_ahead number of steps ahead.
 #' @param ci a numeric between 0 and 1 specifying the probability mass covered by the
 #' credible intervals. Defaults to 0.95.
 #' @param shock size of the shock.
@@ -51,12 +50,15 @@
 #' e1 <- diff(log(e1)) * 100
 #' 
 #' # Generate model data
-#' model <- gen_var(e1, p = 2, deterministic = 2,
-#'                  iterations = 100, burnin = 10)
+#' model <- create_var_model(e1, p = 2, deterministic = 2,
+#'                           iterations = 100, burnin = 10)
 #' # Chosen number of iterations and burnin should be much higher.
 #' 
 #' # Add prior specifications
 #' model <- add_priors(model)
+#' 
+#' # Add initial values
+#' model <- add_initial_values(model)
 #' 
 #' # Obtain posterior draws
 #' object <- draw_posterior(model)
@@ -66,7 +68,6 @@
 #' 
 #' # Plot IR
 #' plot(ir)
-#'
 #' 
 #' @references
 #' 
@@ -75,12 +76,9 @@
 #' Pesaran, H. H., Shin, Y. (1998). Generalized impulse response analysis in linear multivariate models. \emph{Economics Letters, 58}, 17-29.
 #' 
 #' @export
-irf.bvar <- function(x, impulse = NULL, response = NULL, n.ahead = 5, ci = .95, shock = 1,
+irf.bvar <- function(x, impulse = NULL, response = NULL, n_ahead = 5, ci = .95, shock = 1,
                 type = "feir", cumulative = FALSE, keep_draws = FALSE, period = NULL, ...) {
 
-  # Dev specs
-  # rm(list = ls()[-which(ls() == "x")]); impulse = "r"; response = "Dp"; n.ahead = 20; ci = .95; type = "oir"; cumulative = FALSE; keep_draws = FALSE; period <- NULL
-  
   if (!type %in% c("feir", "oir", "gir", "sir", "sgir")) {
     stop("Argument 'type' not known.")
   }
@@ -196,10 +194,10 @@ irf.bvar <- function(x, impulse = NULL, response = NULL, n.ahead = 5, ci = .95, 
     A[[i]] <- temp
   }
   
-  result <- lapply(A, .ir, h = n.ahead, type = type,
+  result <- lapply(A, .ir, h = n_ahead, type = type,
                    impulse = impulse, response = response)
   
-  result <- t(matrix(unlist(result), n.ahead + 1))
+  result <- t(matrix(unlist(result), n_ahead + 1))
   
   if (cumulative) {
     result <- t(apply(result, 1, cumsum))

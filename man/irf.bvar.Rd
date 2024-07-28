@@ -8,7 +8,7 @@
   x,
   impulse = NULL,
   response = NULL,
-  n.ahead = 5,
+  n_ahead = 5,
   ci = 0.95,
   shock = 1,
   type = "feir",
@@ -26,7 +26,7 @@
 
 \item{response}{name of the response variable.}
 
-\item{n.ahead}{number of steps ahead.}
+\item{n_ahead}{number of steps ahead.}
 
 \item{ci}{a numeric between 0 and 1 specifying the probability mass covered by the
 credible intervals. Defaults to 0.95.}
@@ -53,8 +53,7 @@ are used.}
 A time-series object of class \code{"bvarirf"} and if \code{keep_draws = TRUE} a simple matrix.
 }
 \description{
-Computes the impulse response coefficients of an object of class \code{"bvar"} for
-\code{n.ahead} steps.
+Computes the impulse response coefficients for an object of class 'bvar'.
 }
 \details{
 The function produces different types of impulse responses for the VAR model
@@ -83,12 +82,15 @@ data("e1")
 e1 <- diff(log(e1)) * 100
 
 # Generate model data
-model <- gen_var(e1, p = 2, deterministic = 2,
-                 iterations = 100, burnin = 10)
+model <- create_var_model(e1, p = 2, deterministic = 2,
+                          iterations = 100, burnin = 10)
 # Chosen number of iterations and burnin should be much higher.
 
 # Add prior specifications
 model <- add_priors(model)
+
+# Add initial values
+model <- add_initial_values(model)
 
 # Obtain posterior draws
 object <- draw_posterior(model)
@@ -98,7 +100,6 @@ ir <- irf(object, impulse = "invest", response = "cons")
 
 # Plot IR
 plot(ir)
-
 
 }
 \references{

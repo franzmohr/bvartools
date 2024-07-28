@@ -2,7 +2,7 @@
 #'  
 #' A generic function used to calculate impulse response functions.
 #' 
-#' @param x an object of class \code{"bvar"}.
+#' @param x an object with suitable input data passed forward to method.
 #' @param ... arguments passed forward to method.
 #' 
 #' @export

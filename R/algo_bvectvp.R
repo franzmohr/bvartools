@@ -72,7 +72,7 @@
   }
   
   ## Covariances ----
-  use_psi <- object[["model"]][["error"]] %in% c("gamma-covar", "sv-covar")
+  use_psi <- object[["model"]][["error"]] %in% c("gamma+covar", "sv+covar")
   use_psi_bvs <- FALSE
   if (use_psi) {
     n_psi <- k * (k - 1) / 2
@@ -114,8 +114,8 @@
   
   ## Error term ----
   u <- yvec
-  use_sv <- object[["model"]][["error"]] %in% c("sv", "sv-covar")
-  use_gamma <- object[["model"]][["error"]] %in% c("gamma", "gamma-covar")
+  use_sv <- object[["model"]][["error"]] %in% c("sv", "sv+covar")
+  use_gamma <- object[["model"]][["error"]] %in% c("gamma", "gamma+covar")
   if (use_sv) {
     h_init_prior_mu <- object[["priors"]][["sigma"]][["mu"]]
     h_init_prior_vi <- object[["priors"]][["sigma"]][["v_i"]]

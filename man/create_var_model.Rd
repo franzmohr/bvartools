@@ -101,11 +101,11 @@ the error term and how it is estimated. Possible specifications are:
  \item{\code{"wishart"}: The covariance is estimated using a Wishart prior.}
  \item{\code{"gamma"}: Only the diagonal elements of the covariance matrix are estimated using a gamma prior.
 Off-diagonal elements are not estimated and set to zero.}
- \item{\code{"gamma-covar"}: The diagonal elements of the covariance matrix are estimated using a gamma prior.
+ \item{\code{"gamma+covar"}: The diagonal elements of the covariance matrix are estimated using a gamma prior.
 Covariances are estimated based on a triangular decomposition.}
  \item{\code{"sv"}: Only the diagonal elements of the covariance matrix are estimated using a stochastic volatility
 algorithm. Off-diagonal elements are not estimated and set to zero.}
- \item{\code{"sv-covar"}: Only the diagonal elements of the covariance matrix are estimated using a stochastic volatility
+ \item{\code{"sv+covar"}: Only the diagonal elements of the covariance matrix are estimated using a stochastic volatility
 algorithm. Covariances are estimated based on a triangular decomposition.}
 }
 }

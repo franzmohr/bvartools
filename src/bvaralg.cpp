@@ -29,7 +29,7 @@ Rcpp::List bvaralg(Rcpp::List object) {
   const arma::mat diag_tt = arma::eye<arma::mat>(tt, tt);
   const arma::mat diag_ktt = arma::eye<arma::mat>(k * tt, k * tt);
   const Rcpp::String model_error = model["error"];
-  const bool sv = model_error == "sv" || model_error == "sv-covar";
+  const bool sv = model_error == "sv" || model_error == "sv+covar";
   
   bool covar = false;
   bool varsel = false; // Variable selection
@@ -531,7 +531,7 @@ data("us_macrodata")
 
 object <- create_var_model(data = us_macrodata,
                            p = 0, deterministic = "const",
-                           error = "sv-covar",
+                           error = "sv+covar",
                            iterations = 20, burnin = 10)
 
 object <- add_priors(object,

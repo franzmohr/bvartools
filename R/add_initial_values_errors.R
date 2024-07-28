@@ -11,11 +11,11 @@
     tt <- ncol(y)
     
     # Errors
-    if (object$model$error %in% c("gamma", "gamma-covar")) {
+    if (object$model$error %in% c("gamma", "gamma+covar")) {
       object[["initial"]][["sigma_i"]] <- diag(1 / apply(u, 1, stats::var), k)
     }
     
-    if (object$model$error %in% c("sv", "sv-covar")) {
+    if (object$model$error %in% c("sv", "sv+covar")) {
       u <- apply(u, 1, stats::var)
       object[["initial"]][["h"]] <- log(matrix(u, nrow = NCOL(y), ncol = NROW(y), byrow = TRUE))
       object[["initial"]][["h_init"]] <- matrix(object[["initial"]][["h"]][1, ])
@@ -30,7 +30,7 @@
   
   if (method == "prior") {
     # Errors
-    if (object$model$error %in% c("gamma", "gamma-covar")) {
+    if (object$model$error %in% c("gamma", "gamma+covar")) {
       sigma_shape <- object$priors$sigma$shape
       sigma_rate <- 1 / object$priors$sigma$rate
       object[["initial"]][["sigma_i"]] <- diag(1, k)
@@ -39,7 +39,7 @@
       }
     }
     
-    if (object$model$error %in% c("sv", "sv-covar")) {
+    if (object$model$error %in% c("sv", "sv+covar")) {
       mu <- object$priors$sigma$mu
       vinv <- object$priors$sigma$v_i
       h_draw <- mu + chol(vinv) %*% stats::rnorm(NROW(y))
@@ -72,7 +72,7 @@
     }
   }
   
-  if (object[["model"]][["tvp"]] & object[["model"]][["error"]] %in% c("gamma-covar", "sv-covar") & ncol(object[["data"]][["y"]]) > 1) {
+  if (object[["model"]][["tvp"]] & object[["model"]][["error"]] %in% c("gamma+covar", "sv+covar") & ncol(object[["data"]][["y"]]) > 1) {
     n_psi <- length(object[["priors"]][["psi"]][["shape"]])
     object[["initial"]][["psi_v_i"]] <- Matrix::Diagonal(n = n_psi, x = 0)
     for (i in 1:n_psi) {

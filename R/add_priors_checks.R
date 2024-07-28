@@ -47,7 +47,7 @@
     if (!all(c("kappa0", "kappa1", "kappa3") %in% names(coef[["minnesota"]]))) {
       stop("Argument coeff$minnesota must contain at least the elements 'kappa0', 'kappa1' and 'kappa3'.")
     }
-    if (object$model$error %in% c("gamma-covar", "sv-covar") & is.null(coef[["v_i"]])) {
+    if (object$model$error %in% c("gamma+covar", "sv+covar") & is.null(coef[["v_i"]])) {
       stop("If error covarances should be estimated, argument coef$v_i must be provided also when the Minnesota prior is used.")
     }
   }
@@ -65,7 +65,7 @@
   } else {
     error_prior <- NULL
     
-    if (object$model$error %in% c("gamma", "gamma-covar")) {
+    if (object$model$error %in% c("gamma", "gamma+covar")) {
       if (all(c("shape", "rate") %in% names(sigma))) {
         error_prior <- "gamma"
       } else {
@@ -79,7 +79,7 @@
       } 
     }
     
-    if (object$model$error %in% c("sv", "sv-covar")) {
+    if (object$model$error %in% c("sv", "sv+covar")) {
       if (any(!c("mu", "v_i", "shape", "rate", "state_variance", "offset") %in% names(sigma))) {
         stop("Missing prior specifications for stochastic volatility prior.")
       }
@@ -126,7 +126,7 @@
       use_ssvs_error <- TRUE 
     }
   }
-  if (object[["model"]][["error"]] == "gamma-covar" & use_ssvs_error & is.null(ssvs[["tau"]])) {
+  if (object[["model"]][["error"]] == "gamma+covar" & use_ssvs_error & is.null(ssvs[["tau"]])) {
     stop("If SSVS should be applied to error covariances, argument 'ssvs$tau' must be specified.")
   }
   if (object[["model"]][["structural"]] & is.null(ssvs[["tau"]])) {

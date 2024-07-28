@@ -100,7 +100,7 @@ add_initial_values.bvarmodel <- function(object, method = "ols", ...){
     }
     
     # Covariances
-    if (object$model$error %in% c("gamma-covar", "sv-covar") & k > 1) {
+    if (object$model$error %in% c("gamma+covar", "sv+covar") & k > 1) {
       y_covar <- kronecker(-t(u), diag(1, k))
       pos <- NULL
       for (j in 1:k) {pos <- c(pos, (j - 1) * k + 1:j)}

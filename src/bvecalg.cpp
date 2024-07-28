@@ -32,7 +32,7 @@ Rcpp::List bvecalg(Rcpp::List object) {
   const bool use_rr = r > 0;
   const int n_sigma = k * k;
   const Rcpp::String model_error = model["error"];
-  const bool sv = model_error == "sv" || model_error == "sv-covar";
+  const bool sv = model_error == "sv" || model_error == "sv+covar";
   
   bool covar = false;
   bool varsel = false;

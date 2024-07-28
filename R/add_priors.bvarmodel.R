@@ -304,15 +304,7 @@ add_priors.bvarmodel <- function(object,
   
   tot_par <- n_a + n_b + n_det
   
-  # Additional input check
-  if (!is.null(object[["data"]][["z"]])) {
-    if (tot_par != ncol(object[["data"]][["z"]])) {
-      stop("Model specifications are not consistent with data matrix 'object$data$z'.")
-    } 
-  }
-  
-  covar <- object$model$error %in% c("gamma-covar", "sv-covar")
-  
+  covar <- object$model$error %in% c("gamma+covar", "sv+covar")
   structural <- object[["model"]][["structural"]]
   if (covar & structural) {
     stop("Error covariances and structural coefficients cannot be estimated at the same time.")
@@ -321,6 +313,13 @@ add_priors.bvarmodel <- function(object,
   if (structural & k > 1) {
     n_struct <- (k - 1) * k / 2
     tot_par <- tot_par + n_struct
+  }
+  
+  # Additional input check
+  if (!is.null(object[["data"]][["z"]])) {
+    if (tot_par != ncol(object[["data"]][["z"]])) {
+      stop("Model specifications are not consistent with data matrix 'object$data$z'.")
+    } 
   }
   
   sv <- error_prior == "sv"

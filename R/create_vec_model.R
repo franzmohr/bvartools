@@ -62,11 +62,11 @@
 #'  \item{\code{"wishart"}: The covariance is estimated using a Wishart prior.}
 #'  \item{\code{"gamma"}: Only the diagonal elements of the covariance matrix are estimated using a gamma prior.
 #' Off-diagonal elements are not estimated and set to zero.}
-#'  \item{\code{"gamma-covar"}: The diagonal elements of the covariance matrix are estimated using a gamma prior.
+#'  \item{\code{"gamma+covar"}: The diagonal elements of the covariance matrix are estimated using a gamma prior.
 #' Covariances are estimated based on a triangular decomposition.}
 #'  \item{\code{"sv"}: Only the diagonal elements of the covariance matrix are estimated using a stochastic volatility
 #' algorithm. Off-diagonal elements are not estimated and set to zero.}
-#'  \item{\code{"sv-covar"}: Only the diagonal elements of the covariance matrix are estimated using a stochastic volatility
+#'  \item{\code{"sv+covar"}: Only the diagonal elements of the covariance matrix are estimated using a stochastic volatility
 #' algorithm. Covariances are estimated based on a triangular decomposition.}
 #' }
 #' 
@@ -138,7 +138,7 @@ create_vec_model <- function(data, p = 2, exogen = NULL, s = 2, r = NULL,
   
   ## errors ----
   if ("character" %in% class(error)) {
-    if (!error %in% c("wishart", "gamma", "gamma-covar", "sv", "sv-covar")) {
+    if (!error %in% c("wishart", "gamma", "gamma+covar", "sv", "sv+covar")) {
       stop("Invalid specification of argument 'error'.")
     }
   } else {
@@ -154,15 +154,15 @@ create_vec_model <- function(data, p = 2, exogen = NULL, s = 2, r = NULL,
   
   if (NCOL(data) == 1 & structural) {
     structural <- FALSE
-    if (error == "gamma-covar") {
+    if (error == "gamma+covar") {
       error <- "gamma"
     }
-    if (error == "sv-covar") {
+    if (error == "sv+covar") {
       error <- "sv"
     }
   }
   
-  if (structural & error %in% c("wishart", "gamma-covar", "sv-covar")) {
+  if (structural & error %in% c("wishart", "gamma+covar", "sv+covar")) {
     stop(paste0("Structural models cannot be estimated with argument 'error' specified as '", error,"'."))
   }
   
@@ -423,7 +423,7 @@ create_vec_model <- function(data, p = 2, exogen = NULL, s = 2, r = NULL,
           pos <- c(pos, k * (p_max - 1) + m * s_max + 1:n_det_ur)
         }
         
-        # if (rank == 0 & length(pos) == 0 & !structural & !error %in% c("gamma-covar", "sv-covar")) {
+        # if (rank == 0 & length(pos) == 0 & !structural & !error %in% c("gamma+covar", "sv+covar")) {
         #   warning("Model with zero cointegration rank and no non-cointegration regressors is skipped.")
         #   next
         # }

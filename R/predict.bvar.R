@@ -4,18 +4,18 @@
 #' 
 #' @param object an object of class \code{"bvar"}, usually, a result of a call to
 #' \code{\link{bvar}} or \code{\link{bvec_to_bvar}}.
-#' @param n.ahead number of steps ahead at which to predict.
+#' @param n_ahead number of steps ahead at which to predict.
 #' @param new_x an object of class \code{ts} of new non-deterministic, exogenous variables.
 #' The object must have the same frequency as the time series in \code{object[["x"]]} and must contain
 #' at least all necessary observations for the predicted period.
-#' @param new_d a matrix of new deterministic variables. Must have \code{n.ahead} rows.
+#' @param new_d a matrix of new deterministic variables. Must have \code{n_ahead} rows.
 #' @param ci a numeric between 0 and 1 specifying the probability mass covered by the
 #' credible intervals. Defaults to 0.95.
 #' @param ... additional arguments.
 #' 
 #' @details For the VAR model
 #' \deqn{A_0 y_t = \sum_{i = 1}^{p} A_{i} y_{t-i} + \sum_{i = 0}^{s} B_{i} x_{t-i} + C D_t + u_t,}
-#' with \eqn{u_t \sim N(0, \Sigma)} the function produces \code{n.ahead} forecasts.
+#' with \eqn{u_t \sim N(0, \Sigma)} the function produces \code{n_ahead} forecasts.
 #' 
 #' @return A time-series object of class \code{"bvarprd"}.
 #' 
@@ -27,18 +27,21 @@
 #' e1 <- window(e1, end = c(1978, 4))
 #' 
 #' # Generate model data
-#' model <- gen_var(e1, p = 0, deterministic = "const",
-#'                  iterations = 100, burnin = 10)
+#' model <- create_var_model(e1, p = 0, deterministic = "const",
+#'                           iterations = 100, burnin = 10)
 #' # Chosen number of iterations and burnin should be much higher.
 #' 
 #' # Add prior specifications
 #' model <- add_priors(model)
 #' 
+#' # Add initial values
+#' model <- add_initial_values(model)
+#' 
 #' # Obtain posterior draws
 #' object <- draw_posterior(model)
 #' 
 #' # Generate forecasts
-#' bvar_pred <- predict(object, n.ahead = 10, new_d = rep(1, 10))
+#' bvar_pred <- predict(object, n_ahead = 10, new_d = rep(1, 10))
 #' 
 #' # Plot forecasts
 #' plot(bvar_pred)
@@ -49,11 +52,7 @@
 #' 
 #' @export
 #' @rdname bvar
-predict.bvar <- function(object, ..., n.ahead = 10, new_x = NULL, new_d = NULL, ci = .95) {
-  
-  # Dev specs
-  # n.ahead = 10; new_x = NULL; new_d = NULL; ci = .95
-  # new_d <- rep(1, 10)
+predict.bvar <- function(object, ..., n_ahead = 10, new_x = NULL, new_d = NULL, ci = .95) {
   
   k <- object[["specifications"]][["dims"]][["K"]]
   tt <- nrow(object[["y"]])
@@ -95,7 +94,7 @@ predict.bvar <- function(object, ..., n.ahead = 10, new_x = NULL, new_d = NULL, 
     }
     tot <- tot + m
     if (is.null(new_x)) {
-      new_x <- matrix(0, n.ahead, m)
+      new_x <- matrix(0, n_ahead, m)
     } else {
       
       # Set position of most recent observation, after which forecasts start
@@ -127,12 +126,12 @@ predict.bvar <- function(object, ..., n.ahead = 10, new_x = NULL, new_d = NULL, 
     }
     
     # Check if new_x is long enough
-    if (NROW(new_x) < n.ahead) {
+    if (NROW(new_x) < n_ahead) {
       stop("Longer time series required for argument 'new_x'.")
     }
     
     # Trim exogenous data to forecast horizon
-    new_x <- new_x[1:n.ahead,]
+    new_x <- new_x[1:n_ahead,]
   }
   
   if (!is.null(object[["C"]])) {
@@ -145,17 +144,17 @@ predict.bvar <- function(object, ..., n.ahead = 10, new_x = NULL, new_d = NULL, 
     }
     tot <- tot + n
     if (is.null(new_d)) {
-      new_d <- matrix(0, n.ahead, n)
+      new_d <- matrix(0, n_ahead, n)
     }
-    if (NROW(new_d) != n.ahead) {
-      stop("Length of argument 'new_d' must be equal to 'n.ahead'.")
+    if (NROW(new_d) != n_ahead) {
+      stop("Length of argument 'new_d' must be equal to 'n_ahead'.")
     }
   }
   
   use_a <- !is.null(A)
   
   # Generate matrix used for prediction ----
-  pred <- matrix(NA, tot, n.ahead + 1)
+  pred <- matrix(NA, tot, n_ahead + 1)
   if (p > 0) {
     pos_y <- 1:(k * p)
     pred[pos_y, 1] <- t(object[["y"]][tt:(tt - p + 1), ])
@@ -198,7 +197,7 @@ predict.bvar <- function(object, ..., n.ahead = 10, new_x = NULL, new_d = NULL, 
   }
   
   A0_i <- diag(1, k)
-  result <- array(NA, dim = c(k, n.ahead, draws))
+  result <- array(NA, dim = c(k, n_ahead, draws))
   for (draw in 1:draws) {
     
     if (struct) {
@@ -230,7 +229,7 @@ predict.bvar <- function(object, ..., n.ahead = 10, new_x = NULL, new_d = NULL, 
     object$y <- stats::ts(object$y, start = ts_info[1], frequency = ts_info[3])
     attr(object$y, "ts_info") <- NULL
     
-    ts_temp <- stats::ts(0:n.ahead, start = ts_info[2], frequency = ts_info[3])
+    ts_temp <- stats::ts(0:n_ahead, start = ts_info[2], frequency = ts_info[3])
     ts_temp <- stats::time(ts_temp)[-1]
     for (i in 1:k) {
       stats::tsp(result[[i]]) <- c(ts_temp[1], ts_temp[length(ts_temp)], ts_info[3])

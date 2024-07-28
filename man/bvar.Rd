@@ -20,7 +20,7 @@ bvar(
 
 \method{plot}{bvar}(x, ci = 0.95, type = "hist", show_zero_y = TRUE, ...)
 
-\method{predict}{bvar}(object, ..., n.ahead = 10, new_x = NULL, new_d = NULL, ci = 0.95)
+\method{predict}{bvar}(object, ..., n_ahead = 10, new_x = NULL, new_d = NULL, ci = 0.95)
 }
 \arguments{
 \item{data}{the original time-series object of endogenous variables.}
@@ -81,13 +81,13 @@ added to the plot. Only used for time varying parameters.}
 \item{object}{an object of class \code{"bvar"}, usually, a result of a call to
 \code{\link{bvar}} or \code{\link{bvec_to_bvar}}.}
 
-\item{n.ahead}{number of steps ahead at which to predict.}
+\item{n_ahead}{number of steps ahead at which to predict.}
 
 \item{new_x}{an object of class \code{ts} of new non-deterministic, exogenous variables.
 The object must have the same frequency as the time series in \code{object[["x"]]} and must contain
 at least all necessary observations for the predicted period.}
 
-\item{new_d}{a matrix of new deterministic variables. Must have \code{n.ahead} rows.}
+\item{new_d}{a matrix of new deterministic variables. Must have \code{n_ahead} rows.}
 }
 \value{
 An object of class \code{"bvar"} containing the following components, if specified:
@@ -142,7 +142,7 @@ The draws of the different coefficient matrices provided in \code{A0}, \code{A},
 
 For the VAR model
 \deqn{A_0 y_t = \sum_{i = 1}^{p} A_{i} y_{t-i} + \sum_{i = 0}^{s} B_{i} x_{t-i} + C D_t + u_t,}
-with \eqn{u_t \sim N(0, \Sigma)} the function produces \code{n.ahead} forecasts.
+with \eqn{u_t \sim N(0, \Sigma)} the function produces \code{n_ahead} forecasts.
 }
 \examples{
 
@@ -236,18 +236,21 @@ e1 <- diff(log(e1)) * 100
 e1 <- window(e1, end = c(1978, 4))
 
 # Generate model data
-model <- gen_var(e1, p = 0, deterministic = "const",
-                 iterations = 100, burnin = 10)
+model <- create_var_model(e1, p = 0, deterministic = "const",
+                          iterations = 100, burnin = 10)
 # Chosen number of iterations and burnin should be much higher.
 
 # Add prior specifications
 model <- add_priors(model)
 
+# Add initial values
+model <- add_initial_values(model)
+
 # Obtain posterior draws
 object <- draw_posterior(model)
 
 # Generate forecasts
-bvar_pred <- predict(object, n.ahead = 10, new_d = rep(1, 10))
+bvar_pred <- predict(object, n_ahead = 10, new_d = rep(1, 10))
 
 # Plot forecasts
 plot(bvar_pred)

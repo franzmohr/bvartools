@@ -1,8 +1,8 @@
 #' Forecast Error Variance Decomposition
 #'  
-#' A generic function used to calculate forecast error varianc decompositions.
+#' A generic function used to calculate forecast error variance decompositions.
 #' 
-#' @param object an object of class \code{"bvar"}.
+#' @param object an object with suitable input data passed forward to method.
 #' @param ... arguments passed forward to method.
 #' 
 #' @export

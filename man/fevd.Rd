@@ -5,14 +5,14 @@
 \alias{plot.bvarfevd}
 \title{Forecast Error Variance Decomposition
  
-A generic function used to calculate forecast error varianc decompositions.}
+A generic function used to calculate forecast error variance decompositions.}
 \usage{
 fevd(object, ...)
 
 \method{plot}{bvarfevd}(x, ...)
 }
 \arguments{
-\item{object}{an object of class \code{"bvar"}.}
+\item{object}{an object with suitable input data passed forward to method.}
 
 \item{...}{further graphical parameters.}
 

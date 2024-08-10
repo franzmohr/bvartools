@@ -17,6 +17,8 @@
 #' @param tvp logical indicating whether the model parameters are time varying.
 #' @param error character specifying the model that should be used for the estimation
 #' of the covariance matrix of the error term. Default is \code{"wishart"}. See 'Details'.
+#' @param varsel character specifying the type of variable selection algorithm
+#' that should be employed. Default is \code{"none"}. See 'Details'.
 #' @param iterations an integer of MCMC draws excluding burn-in draws (defaults
 #' to 20000).
 #' @param burnin an integer of MCMC draws used to initialize the sampler
@@ -70,6 +72,13 @@
 #' algorithm. Covariances are estimated based on a triangular decomposition.}
 #' }
 #' 
+#' Available specifications for argument \code{varsel} are:
+#' \itemize{
+#'  \item{\code{"none"}: No variable selection algorithm is used.}
+#'  \item{\code{"bvs"}: Bayesian variable selection as proposed in Korobilis (2013).}
+#'  \item{\code{"ssvs"}: Stochastic search variable selection as proposed in George et al. (2008).}
+#' }
+#' 
 #' @return An object of class \code{'bvarmodel'}, which contains the following elements:
 #' \item{data}{A list of data objects, which can be used for posterior simulation. Element
 #' \code{y} is a time-series object of dependent variables. Element \code{x} is a time-series
@@ -84,7 +93,7 @@
 #' e1 <- diff(log(e1)) * 100
 #' 
 #' # Create model
-#' model <- create_var_model(e1, p = 2, deterministic = "const",
+#' model <- create_bvarmodel(e1, p = 2, deterministic = "const",
 #'                           iterations = 50, burnin = 10)
 #' # Number of iterations and burnin should be much higher.
 #' 
@@ -93,16 +102,24 @@
 #' Chan, J., Koop, G., Poirier, D. J., & Tobias, J. L. (2019). \emph{Bayesian Econometric Methods}
 #' (2nd ed.). Cambridge: University Press.
 #' 
+#' George, E. I., Sun, D., & Ni, S. (2008). Bayesian stochastic search for VAR model
+#' restrictions. \emph{Journal of Econometrics, 142}(1), 553--580.
+#' \doi{10.1016/j.jeconom.2007.08.017}
+#' 
+#' Korobilis, D. (2013). VAR forecasting using Bayesian variable selection.
+#' \emph{Journal of Applied Econometrics, 28}(2), 204--230. \doi{10.1002/jae.1271}
+#' 
 #' Lütkepohl, H. (2006). \emph{New Introduction to Multiple Time Series Analysis} (2nd ed.). Berlin: Springer.
 #' 
 #' @export
-create_var_model <- function(data, p = 2,
+create_bvarmodel <- function(data, p = 2,
                              exogen = NULL, s = NULL,
                              deterministic = "const",
                              seasonal = FALSE,
                              structural = FALSE,
                              error = "wishart",
                              tvp = FALSE,
+                             varsel = "none",
                              iterations = 20000,
                              burnin = 2000) {
   
@@ -145,6 +162,10 @@ create_var_model <- function(data, p = 2,
     stop(paste0("Structural models cannot be estimated with argument 'error' specified as '", error,"'."))
   }
   
+  if (!varsel %in% c("none", "bvs", "ssvs")) {
+    stop("Specification of argument 'varsel' is not supported.")
+  }
+  
   data_name <- dimnames(data)[[2]]
   k <- NCOL(data)
   p_max <- max(p)
@@ -156,6 +177,7 @@ create_var_model <- function(data, p = 2,
   model[["m"]] <- 0
   model[["s"]] <- 0
   model[["n"]] <- 0
+  model[["varsel"]] <- varsel
   
   temp <- data
   temp_name <- data_name

@@ -79,7 +79,7 @@
 #'  \item{\code{"ssvs"}: Stochastic search variable selection as proposed in George et al. (2008).}
 #' }
 #' 
-#' @return An object of class \code{'bvarmodel'}, which contains the following elements:
+#' @return An object of class 'bvarmodel', which contains the following elements:
 #' \item{data}{A list of data objects, which can be used for posterior simulation. Element
 #' \code{y} is a time-series object of dependent variables. Element \code{x} is a time-series
 #' object of the regressors and element \code{z} is the corresponding matrix of regressors
@@ -148,6 +148,19 @@ create_bvarmodel <- function(data, p = 2,
     dimnames(data)[[2]] <- "y"
   }
   
+  # Exogenous variables ----
+  use_exo <- !is.null(exogen)
+  if (use_exo) {
+    if (is.null(dimnames(exogen))) {
+      # If 'exogen' is a simple ts object, transform it into a matrix object
+      # to keep variable name information
+      tsp_temp <- stats::tsp(exogen)
+      exogen <- stats::ts(as.matrix(exogen), class = c("mts", "ts", "matrix"))
+      stats::tsp(exogen) <- tsp_temp
+      dimnames(exogen)[[2]] <- "exogen"
+    }
+  }
+  
   if (NCOL(data) == 1 & structural) {
     structural <- FALSE
     if (error == "gamma+covar") {
@@ -170,14 +183,36 @@ create_bvarmodel <- function(data, p = 2,
   k <- NCOL(data)
   p_max <- max(p)
   
+  model_type <- NULL
+  if (tvp) {
+    model_type <- paste0(model_type, "Tvp")
+  } else {
+    model_type <- paste0(model_type, "Normal")
+  }
+  if (error == "wishart") {
+    model_type <- paste0(model_type, "Wishart")
+  }
+  if (error %in% c("gamma", "gamma+covar")) {
+    model_type <- paste0(model_type, "Gamma")
+  }
+  if (error %in% c("sv", "sv+covar")) {
+    model_type <- paste0(model_type, "Stochvol")
+  }
+  model_type <- paste0("Var", model_type)
+  
   model <- NULL
-  model[["type"]] <- "VAR"
+  model[["type"]] <- ifelse(length(data_name) == 1, "AR", "VAR")
+  model[["algorithm"]] <- model_type
   model[["k"]] <- length(data_name)
-  model[["p"]] <- 0
-  model[["m"]] <- 0
-  model[["s"]] <- 0
-  model[["n"]] <- 0
+  model[["p"]] <- 0L
+  model[["m"]] <- 0L
+  model[["s"]] <- 0L
+  model[["n"]] <- 0L
   model[["varsel"]] <- varsel
+  model[["endogen"]] <- dimnames(data)[[2]]
+  if (use_exo) {
+    model[["exogen"]] <- dimnames(exogen)[[2]]
+  }
   
   temp <- data
   temp_name <- data_name
@@ -195,17 +230,8 @@ create_bvarmodel <- function(data, p = 2,
   }
   
   # Exogenous variables ---- 
-  if (!is.null(exogen)) {
-    use_exo <- TRUE
-    if (is.null(dimnames(exogen))) {
-      # If 'exogen' is a simple ts object, transform it into a matrix object
-      # to keep variable name information
-      tsp_temp <- stats::tsp(exogen)
-      exogen <- stats::ts(as.matrix(exogen), class = c("mts", "ts", "matrix"))
-      stats::tsp(exogen) <- tsp_temp
-      dimnames(exogen)[[2]] <- "x"
-    }
-    exo_name <- dimnames(exogen)[[2]]
+  if (use_exo) {
+    exo_name <- model[["exogen"]]
     m <- length(exo_name)
     s_max <- max(s)
     
@@ -229,19 +255,19 @@ create_bvarmodel <- function(data, p = 2,
       } 
     }
     
-    model[["m"]] <- length(exo_names)
+    model[["m"]] <- length(exo_name)
     model[["s"]] <- 0
     
   } else {
-    use_exo <- FALSE
     s <- 0
     s_max <- 0
-    m <- 0
+    m <- 0L
   }
   
-  temp <- stats::na.omit(temp)
   tt <- nrow(temp)
+  det_data <- NULL
   det_name <- NULL
+  det_pos <- ncol(temp)
   
   # Add intercept term
   if (deterministic %in% c("const", "both")) {
@@ -252,7 +278,7 @@ create_bvarmodel <- function(data, p = 2,
   
   # Add linear trend
   if (deterministic %in% c("trend", "both")) {
-    temp <- cbind(temp, 1:tt)
+    temp <- cbind(temp, 1:tt - max(p_max, s_max))
     temp_name <- c(temp_name, "trend")
     det_name <- c(det_name, "trend")
   }
@@ -280,7 +306,17 @@ create_bvarmodel <- function(data, p = 2,
   if (length(det_name) > 0) {
     model[["n"]] <- length(det_name)
     use_det <- TRUE
+    det_data <- temp[, det_pos + 1:model[["n"]]]
+    
+    # If 'det_data' is a simple ts object, transform it into a matrix object
+    # to keep variable name information
+    tsp_det_data <- stats::tsp(det_data)
+    det_data <- stats::ts(as.matrix(det_data), class = c("mts", "ts", "matrix"))
+    stats::tsp(det_data) <- tsp_det_data
+    dimnames(det_data) <- list(NULL, det_name)
   }
+  
+  temp <- na.omit(temp)
   
   # Set if the model is structural
   if ("logical" %in% class(structural)) {
@@ -310,8 +346,8 @@ create_bvarmodel <- function(data, p = 2,
   }
   
   # Iterations and burnin ----
-  model[["iterations"]] <- iterations
-  model[["burnin"]] <- burnin
+  model[["iterations"]] <- as.integer(iterations)
+  model[["burnin"]] <- as.integer(burnin)
   
   # Data that is equal across models ----
   
@@ -339,11 +375,11 @@ create_bvarmodel <- function(data, p = 2,
       model_i <- model
       if (i >= 1) {
         pos <- c(pos, k + 1:(k * i))
-        model_i[["p"]] <- i
+        model_i[["p"]] <- as.integer(i)
       }  
       if (use_exo) {
         pos <- c(pos, k + k * p_max + 1:(m * (j + 1)))
-        model_i[["s"]] <- j
+        model_i[["s"]] <- as.integer(j)
       }
       if (use_det) {
         pos <- c(pos, k + k * p_max + m * (s_max + 1) + 1:length(det_name))
@@ -365,10 +401,13 @@ create_bvarmodel <- function(data, p = 2,
       }
       
       # Create individual model
-      result_i <- list("data" = list("y" = y,
-                                     "x" = x,
-                                     "z" = z),
-                       "model" = model_i)
+      result_i <- list("model" = model_i,
+                       "data" = list("original" = list("endogen" = data,
+                                                       "exogen" = exogen,
+                                                       "deterministic" = det_data),
+                                     "train" = list("y" = matrix(t(y)),
+                                                    "x" = as.matrix(x),
+                                                    "z" = z)))
       
       # Update class of individual model
       class(result_i) <- append("bvarmodel", class(result_i)) 

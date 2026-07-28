@@ -316,7 +316,7 @@ create_bvarmodel <- function(data, p = 2,
     dimnames(det_data) <- list(NULL, det_name)
   }
   
-  temp <- na.omit(temp)
+  temp <- stats::na.omit(temp)
   
   # Set if the model is structural
   if ("logical" %in% class(structural)) {

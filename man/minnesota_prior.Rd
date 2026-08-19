@@ -7,7 +7,7 @@
 minnesota_prior(object, ...)
 }
 \arguments{
-\item{object}{an object of class \code{"bvarmodel"} or \code{"bvecmodel"}.}
+\item{object}{an object of a class, for which a method should be called.}
 
 \item{...}{arguments passed forward to method.}
 }

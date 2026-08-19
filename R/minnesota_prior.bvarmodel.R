@@ -2,17 +2,18 @@
 #' 
 #' Calculates the Minnesota prior for a VAR model.
 #' 
-#' @param object an object of class \code{"bvarmodel"}, usually, a result of a call to \code{\link{gen_var}}
-#' or \code{\link{gen_vec}}.
-#' @param kappa0 a numeric specifying the prior variance of coefficients that correspond to
-#' own lags of endogenous variables.
-#' @param kappa1 a numeric specifying the size of the prior variance of endogenous
-#' variables, which do not correspond to own lags, relative to argument \code{kappa0}.
-#' @param kappa2 a numeric specifying the size of the prior variance of non-deterministic exogenous
-#' variables relative to argument \code{kappa0}. Default is \code{NULL}, which indicates that the formula
-#' for the calculation of the prior variance of deterministic terms is used for all exogenous variables.
-#' @param kappa3 a numeric specifying the size of the prior variance of deterministic
-#' terms relative to argument \code{kappa0}.
+#' @param object an object of class 'bvarmodel', usually, a result of a call to
+#' \code{\link{create_bvarmodel}}.
+#' @param kappa1 a numeric specifying the prior variance of coefficients that correspond to
+#' own lags of endogenous variables. See 'Details'.
+#' @param kappa2 a numeric specifying the size of the prior variance of endogenous
+#' variables, which do not correspond to own lags. See 'Details'.
+#' @param kappa3 a numeric specifying the size of the prior variance of non-deterministic exogenous
+#' variables. Default is \code{NULL}, which indicates that the formula
+#' for the calculation of the prior variance of deterministic terms is used
+#' for all exogenous variables.  See 'Details'.
+#' @param kappa4 a numeric specifying the size of the prior variance of deterministic
+#' terms. See 'Details'.
 #' @param max_var a positive numeric specifying the maximum prior variance that is allowed for
 #' coefficients of non-deterministic variables. If \code{NULL} (default), the prior variances are not limited.
 #' @param coint_var a logical specifying whether the model is a cointegrated VAR model,
@@ -22,20 +23,18 @@
 #' the VAR form, respectively. In both cases all deterministic variables are used in the regressions,
 #' if they appear in the model.
 #' 
-#' @details The function calculates the Minnesota prior of a VAR model. For the endogenous variable
-#' \eqn{i} the prior variance of the \eqn{l}th lag of regressor \eqn{j} is obtained as
-#' \deqn{ \frac{\kappa_{0}}{l^2} \textrm{ for own lags of endogenous variables,}} 
-#' \deqn{ \frac{\kappa_{0} \kappa_{1}}{l^2} \frac{\sigma_{i}^2}{\sigma_{j}^2} \textrm{ for endogenous variables other than own lags,}}
-#' \deqn{ \frac{\kappa_{0} \kappa_{2}}{(l + 1)^2} \frac{\sigma_{i}^2}{\sigma_{j}^2} \textrm{ for exogenous variables,}}
-#' \deqn{ \kappa_{0} \kappa_{3} \sigma_{i}^2 \textrm{ for deterministic terms,}}
+#' @details The function calculates the Minnesota prior of a VAR model. For the
+#' endogenous variable \eqn{i} the prior variance of the \eqn{l}th lag of
+#' regressor \eqn{j} is obtained as
+#' \deqn{ \frac{\kappa_{1}}{l^2} \textrm{ for own lags of endogenous variables,}} 
+#' \deqn{ \frac{\kappa_{1} \kappa_{2}}{l^2} \frac{\sigma_{i}^2}{\sigma_{j}^2} \textrm{ for endogenous variables other than own lags,}}
+#' \deqn{ \frac{\kappa_{1} \kappa_{3}}{(l+1)^2} \frac{\sigma_{i}^2}{\sigma_{j}^2} \textrm{ for unmodelled exogenous variables,}}
+#' \deqn{ \kappa_{1} \kappa_{4} \sigma_{i}^2 \textrm{ for deterministic terms,}}
 #' where \eqn{\sigma_{i}} is the residual standard deviation of variable \eqn{i} of an unrestricted
 #' LS estimate. For exogenous variables \eqn{\sigma_{i}} is the sample standard deviation.
+#' If the model does not contain exogenous variables, \code{kappa3} will be ignored.
 #' 
-#' For VEC models the function only provides priors for the non-cointegration part of the model. The
-#' residual standard errors \eqn{\sigma_i} are based on an unrestricted LS regression of the
-#' endogenous variables on the error correction term and the non-cointegration regressors.
-#' 
-#' @return A list containing a matrix of prior means and the precision matrix of the cofficients and the
+#' @return A list containing a matrix of prior means and the precision matrix of the coefficients and the
 #' inverse variance-covariance matrix of the error term, which was obtained by an LS estimation.
 #' 
 #' @references
@@ -52,50 +51,59 @@
 #' data <- diff(log(e1))
 #' 
 #' # Generate model input
-#' object <- create_var_model(data)
+#' object <- create_bvarmodel(data)
 #' 
 #' # Obtain Minnesota prior
 #' prior <- minnesota_prior(object)
 #' 
 #' @export
-minnesota_prior.bvarmodel <- function(object, kappa0 = 2, kappa1 = .5, kappa2 = NULL, kappa3 = 5,
+minnesota_prior.bvarmodel <- function(object, kappa1 = 2, kappa2 = 0.5, kappa3 = NULL, kappa4 = 5,
                                       max_var = NULL, coint_var = FALSE, sigma = "AR") {
   
-  if (any(c(kappa0, kappa1, kappa2, kappa3) <= 0)) {
-    stop("Kappa arguments must be positive.")
+  if (kappa1 <= 0) {
+    stop("Argument 'kappa1' must be positive.")
   }
-  
+  if (kappa2 <= 0) {
+    stop("Argument 'kappa2' must be positive.")
+  }
+  if (!is.null(kappa3)) {
+    if (kappa3 <= 0) {
+      stop("Argument 'kappa3' must be positive.")
+    } 
+  }
+  if (kappa4 <= 0) {
+    stop("Argument 'kappa4' must be positive.")
+  }
   if (!is.null(max_var)) {
     if (max_var <= 0) {
       stop("Argument 'max_var' must be positive.")
     } 
   }
-  
   if (!sigma %in% c("AR", "VAR")) {
     stop("Argument 'sigma' must be either 'AR' or 'VAR'.")
   }
   
-  y <- t(object$data$y)
-  type <- object$model$type
-  k <- NROW(y)
+  k <- object[["model"]][["k"]]
+  y <- t(object[["data"]][["train"]][["y"]])
   
   mu <- NULL
   V <- NULL
   result <- NULL
   
-  if (!is.null(object[["data"]][["z"]])) {
+  if (!is.null(object[["data"]][["train"]][["z"]])) {
     
-    if (!is.null(object[["data"]][["x"]])) {
+    if (!is.null(object[["data"]][["train"]][["x"]])) {
       
-      x <- t(object$data$x)
+      
+      x <- t(object[["data"]][["train"]][["x"]])
       tt <- NCOL(y)
       tot_par <- k * NROW(x)
-      p <- object$model$p
+      p <- object[["model"]][["p"]]
       m <- 0
       s <- 0
-      if (object$model$m > 0) {
-        m <- object$model$m
-        s <- object$model$s
+      if (object[["model"]][["m"]] > 0) {
+        m <- object[["model"]][["m"]]
+        s <- object[["model"]][["s"]]
       }
       
       V <- matrix(rep(NA, tot_par), k) # Set up matrix for variances
@@ -105,8 +113,8 @@ minnesota_prior.bvarmodel <- function(object, kappa0 = 2, kappa1 = .5, kappa2 = 
       
       # Determine positions of deterministic terms for calculation of sigma
       pos_det <- NULL
-      if (object$model$n > 0) {
-        pos_det <- k * p + (s + 1) * m + 1:object$model$n
+      if (object[["model"]][["n"]] > 0) {
+        pos_det <- k * p + (s + 1) * m + 1:object[["model"]][["n"]]
       }
       
       # Obtain sigmas for V_i
@@ -138,9 +146,9 @@ minnesota_prior.bvarmodel <- function(object, kappa0 = 2, kappa1 = .5, kappa2 = 
           for (l in 1:k) {
             for (j in 1:k) {
               if (l == j) {
-                V[l, (r - 1) * k + j] <- kappa0 / r^2
+                V[l, (r - 1) * k + j] <- kappa1 / r^2
               } else {
-                V[l, (r - 1) * k + j] <- kappa0 * kappa1 / r^2 * s_endo[l]^2 / s_endo[j]^2
+                V[l, (r - 1) * k + j] <- kappa1 * kappa2 / r^2 * s_endo[l]^2 / s_endo[j]^2
               }
             } 
           }
@@ -154,10 +162,10 @@ minnesota_prior.bvarmodel <- function(object, kappa0 = 2, kappa1 = .5, kappa2 = 
           for (l in 1:k) {
             for (j in 1:m) {
               # Note that in the loop r starts at 1, so that this is equivalent to l + 1
-              if (is.null(kappa2)) {
-                V[l, p * k + (r - 1) * m + j] <- kappa0 * kappa3 * s_endo[l]^2
+              if (is.null(kappa3)) {
+                V[l, p * k + (r - 1) * m + j] <- kappa1 * kappa3 * s_endo[l]^2
               } else {
-                V[l, p * k + (r - 1) * m + j] <- kappa0 * kappa2 / r^2 * s_endo[l]^2 / s_exo[j]^2 
+                V[l, p * k + (r - 1) * m + j] <- kappa1 * kappa4 / r^2 * s_endo[l]^2 / s_exo[j]^2 
               }
             }
           }
@@ -172,8 +180,8 @@ minnesota_prior.bvarmodel <- function(object, kappa0 = 2, kappa1 = .5, kappa2 = 
       }
       
       # Deterministic variables
-      if (object$model$n > 0){
-          V[, pos_det] <- kappa0 * kappa3 * s_endo^2 
+      if (object[["model"]][["n"]] > 0){
+          V[, pos_det] <- kappa1 * kappa4 * s_endo^2 
       }
       
       # Prior means
@@ -189,12 +197,12 @@ minnesota_prior.bvarmodel <- function(object, kappa0 = 2, kappa1 = .5, kappa2 = 
     }
     
     # Structural parameters
-    if (object$model$structural & k > 1) {
+    if (object[["model"]][["structural"]] & k > 1) {
       mu <- rbind(mu, matrix(0, k * (k - 1) / 2))
       
       V_struct <- matrix(NA, k, k)
       for (j in 1:(k - 1)) {
-        V_struct[(j + 1):k, j] <- kappa0 * kappa1 * s_endo[(j + 1):k]^2 / s_endo[j]^2  
+        V_struct[(j + 1):k, j] <- kappa1 * kappa2 * s_endo[(j + 1):k]^2 / s_endo[j]^2  
       }
       V_struct <- matrix(V_struct[lower.tri(V_struct)])
       V <- rbind(V, V_struct)
@@ -204,10 +212,10 @@ minnesota_prior.bvarmodel <- function(object, kappa0 = 2, kappa1 = .5, kappa2 = 
     v_i <- diag(c(1 / V))
     
     result <- list("mu" = mu,
-                   "v_i" = v_i)
+                   "v_inv" = v_i)
     
-    if (!object$model$structural & !is.null(object$data$x)) {
-      result[["sigma_i"]] = solve(ols_sigma) 
+    if (!is.null(object[["data"]][["train"]][["x"]])) {
+      result[["sigma_inv"]] = solve(ols_sigma) 
     } 
   }
   

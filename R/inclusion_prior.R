@@ -6,8 +6,7 @@
 #' The function invokes particular methods which depend on the class of the
 #' first argument.
 #' 
-#' @param object an object of class 'bvarmodel' or 'bvecmodel',
-#' usually, a result of a call to \code{\link{create_var_model}} or \code{\link{create_vec_model}}.
+#' @param object an object of a class, for which a method should be called.
 #' @param ... arguments passed forward to method.
 #' 
 #' @export

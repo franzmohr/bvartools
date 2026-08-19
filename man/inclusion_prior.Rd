@@ -7,8 +7,7 @@
 inclusion_prior(object, ...)
 }
 \arguments{
-\item{object}{an object of class 'bvarmodel' or 'bvecmodel',
-usually, a result of a call to \code{\link{create_var_model}} or \code{\link{create_vec_model}}.}
+\item{object}{an object of a class, for which a method should be called.}
 
 \item{...}{arguments passed forward to method.}
 }

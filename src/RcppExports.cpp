@@ -14,14 +14,267 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// bvaralg
-Rcpp::List bvaralg(Rcpp::List object);
-RcppExport SEXP _bvartools_bvaralg(SEXP objectSEXP) {
+// VarNormalGammaCoefficients
+Rcpp::List VarNormalGammaCoefficients(Rcpp::List object);
+RcppExport SEXP _bvartools_VarNormalGammaCoefficients(SEXP objectSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
-    rcpp_result_gen = Rcpp::wrap(bvaralg(object));
+    rcpp_result_gen = Rcpp::wrap(VarNormalGammaCoefficients(object));
+    return rcpp_result_gen;
+END_RCPP
+}
+// VarNormalGammaForecasts
+Rcpp::List VarNormalGammaForecasts(Rcpp::List object);
+RcppExport SEXP _bvartools_VarNormalGammaForecasts(SEXP objectSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
+    rcpp_result_gen = Rcpp::wrap(VarNormalGammaForecasts(object));
+    return rcpp_result_gen;
+END_RCPP
+}
+// VarNormalGammaLogLik
+Rcpp::List VarNormalGammaLogLik(Rcpp::List object);
+RcppExport SEXP _bvartools_VarNormalGammaLogLik(SEXP objectSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
+    rcpp_result_gen = Rcpp::wrap(VarNormalGammaLogLik(object));
+    return rcpp_result_gen;
+END_RCPP
+}
+// VarNormalStochvolCoefficients
+Rcpp::List VarNormalStochvolCoefficients(Rcpp::List object);
+RcppExport SEXP _bvartools_VarNormalStochvolCoefficients(SEXP objectSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
+    rcpp_result_gen = Rcpp::wrap(VarNormalStochvolCoefficients(object));
+    return rcpp_result_gen;
+END_RCPP
+}
+// VarNormalStochvolForecasts
+Rcpp::List VarNormalStochvolForecasts(Rcpp::List object);
+RcppExport SEXP _bvartools_VarNormalStochvolForecasts(SEXP objectSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
+    rcpp_result_gen = Rcpp::wrap(VarNormalStochvolForecasts(object));
+    return rcpp_result_gen;
+END_RCPP
+}
+// VarNormalStochvolLogLik
+Rcpp::List VarNormalStochvolLogLik(Rcpp::List object);
+RcppExport SEXP _bvartools_VarNormalStochvolLogLik(SEXP objectSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
+    rcpp_result_gen = Rcpp::wrap(VarNormalStochvolLogLik(object));
+    return rcpp_result_gen;
+END_RCPP
+}
+// VarNormalWishartCoefficients
+Rcpp::List VarNormalWishartCoefficients(Rcpp::List object);
+RcppExport SEXP _bvartools_VarNormalWishartCoefficients(SEXP objectSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
+    rcpp_result_gen = Rcpp::wrap(VarNormalWishartCoefficients(object));
+    return rcpp_result_gen;
+END_RCPP
+}
+// VarNormalWishartForecasts
+Rcpp::List VarNormalWishartForecasts(Rcpp::List object);
+RcppExport SEXP _bvartools_VarNormalWishartForecasts(SEXP objectSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
+    rcpp_result_gen = Rcpp::wrap(VarNormalWishartForecasts(object));
+    return rcpp_result_gen;
+END_RCPP
+}
+// VarNormalWishartLogLik
+Rcpp::List VarNormalWishartLogLik(Rcpp::List object);
+RcppExport SEXP _bvartools_VarNormalWishartLogLik(SEXP objectSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
+    rcpp_result_gen = Rcpp::wrap(VarNormalWishartLogLik(object));
+    return rcpp_result_gen;
+END_RCPP
+}
+// VarTvpGammaCoefficients
+Rcpp::List VarTvpGammaCoefficients(Rcpp::List object);
+RcppExport SEXP _bvartools_VarTvpGammaCoefficients(SEXP objectSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
+    rcpp_result_gen = Rcpp::wrap(VarTvpGammaCoefficients(object));
+    return rcpp_result_gen;
+END_RCPP
+}
+// VarTvpGammaForecasts
+Rcpp::List VarTvpGammaForecasts(Rcpp::List object);
+RcppExport SEXP _bvartools_VarTvpGammaForecasts(SEXP objectSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
+    rcpp_result_gen = Rcpp::wrap(VarTvpGammaForecasts(object));
+    return rcpp_result_gen;
+END_RCPP
+}
+// VarTvpGammaLogLik
+Rcpp::List VarTvpGammaLogLik(Rcpp::List object);
+RcppExport SEXP _bvartools_VarTvpGammaLogLik(SEXP objectSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
+    rcpp_result_gen = Rcpp::wrap(VarTvpGammaLogLik(object));
+    return rcpp_result_gen;
+END_RCPP
+}
+// VarTvpStochvolCoefficients
+Rcpp::List VarTvpStochvolCoefficients(Rcpp::List object);
+RcppExport SEXP _bvartools_VarTvpStochvolCoefficients(SEXP objectSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
+    rcpp_result_gen = Rcpp::wrap(VarTvpStochvolCoefficients(object));
+    return rcpp_result_gen;
+END_RCPP
+}
+// VarTvpStochvolForecasts
+Rcpp::List VarTvpStochvolForecasts(Rcpp::List object);
+RcppExport SEXP _bvartools_VarTvpStochvolForecasts(SEXP objectSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
+    rcpp_result_gen = Rcpp::wrap(VarTvpStochvolForecasts(object));
+    return rcpp_result_gen;
+END_RCPP
+}
+// VarTvpStochvolLogLik
+Rcpp::List VarTvpStochvolLogLik(Rcpp::List object);
+RcppExport SEXP _bvartools_VarTvpStochvolLogLik(SEXP objectSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
+    rcpp_result_gen = Rcpp::wrap(VarTvpStochvolLogLik(object));
+    return rcpp_result_gen;
+END_RCPP
+}
+// VarTvpWishartCoefficients
+Rcpp::List VarTvpWishartCoefficients(Rcpp::List object);
+RcppExport SEXP _bvartools_VarTvpWishartCoefficients(SEXP objectSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
+    rcpp_result_gen = Rcpp::wrap(VarTvpWishartCoefficients(object));
+    return rcpp_result_gen;
+END_RCPP
+}
+// VarTvpWishartForecasts
+Rcpp::List VarTvpWishartForecasts(Rcpp::List object);
+RcppExport SEXP _bvartools_VarTvpWishartForecasts(SEXP objectSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
+    rcpp_result_gen = Rcpp::wrap(VarTvpWishartForecasts(object));
+    return rcpp_result_gen;
+END_RCPP
+}
+// VarTvpWishartLogLik
+Rcpp::List VarTvpWishartLogLik(Rcpp::List object);
+RcppExport SEXP _bvartools_VarTvpWishartLogLik(SEXP objectSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
+    rcpp_result_gen = Rcpp::wrap(VarTvpWishartLogLik(object));
+    return rcpp_result_gen;
+END_RCPP
+}
+// VecNormalWishartCoefficients
+Rcpp::List VecNormalWishartCoefficients(Rcpp::List object);
+RcppExport SEXP _bvartools_VecNormalWishartCoefficients(SEXP objectSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
+    rcpp_result_gen = Rcpp::wrap(VecNormalWishartCoefficients(object));
+    return rcpp_result_gen;
+END_RCPP
+}
+// VecNormalWishartForecasts
+Rcpp::List VecNormalWishartForecasts(Rcpp::List object);
+RcppExport SEXP _bvartools_VecNormalWishartForecasts(SEXP objectSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
+    rcpp_result_gen = Rcpp::wrap(VecNormalWishartForecasts(object));
+    return rcpp_result_gen;
+END_RCPP
+}
+// VecNormalWishartLogLik
+Rcpp::List VecNormalWishartLogLik(Rcpp::List object);
+RcppExport SEXP _bvartools_VecNormalWishartLogLik(SEXP objectSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
+    rcpp_result_gen = Rcpp::wrap(VecNormalWishartLogLik(object));
+    return rcpp_result_gen;
+END_RCPP
+}
+// algo_bvectvp_update_z_a
+arma::mat algo_bvectvp_update_z_a(const arma::vec& b, const arma::mat& w, const int& k, const int& tt, const int& r, const int& n_beta);
+RcppExport SEXP _bvartools_algo_bvectvp_update_z_a(SEXP bSEXP, SEXP wSEXP, SEXP kSEXP, SEXP ttSEXP, SEXP rSEXP, SEXP n_betaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type b(bSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type w(wSEXP);
+    Rcpp::traits::input_parameter< const int& >::type k(kSEXP);
+    Rcpp::traits::input_parameter< const int& >::type tt(ttSEXP);
+    Rcpp::traits::input_parameter< const int& >::type r(rSEXP);
+    Rcpp::traits::input_parameter< const int& >::type n_beta(n_betaSEXP);
+    rcpp_result_gen = Rcpp::wrap(algo_bvectvp_update_z_a(b, w, k, tt, r, n_beta));
+    return rcpp_result_gen;
+END_RCPP
+}
+// algo_bvectvp_update_z_b
+arma::mat algo_bvectvp_update_z_b(const arma::vec& a, const arma::mat& w, const int& k, const int& tt, const int& n_a, const int& r, const int& n_alpha);
+RcppExport SEXP _bvartools_algo_bvectvp_update_z_b(SEXP aSEXP, SEXP wSEXP, SEXP kSEXP, SEXP ttSEXP, SEXP n_aSEXP, SEXP rSEXP, SEXP n_alphaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type a(aSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type w(wSEXP);
+    Rcpp::traits::input_parameter< const int& >::type k(kSEXP);
+    Rcpp::traits::input_parameter< const int& >::type tt(ttSEXP);
+    Rcpp::traits::input_parameter< const int& >::type n_a(n_aSEXP);
+    Rcpp::traits::input_parameter< const int& >::type r(rSEXP);
+    Rcpp::traits::input_parameter< const int& >::type n_alpha(n_alphaSEXP);
+    rcpp_result_gen = Rcpp::wrap(algo_bvectvp_update_z_b(a, w, k, tt, n_a, r, n_alpha));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -66,7 +319,7 @@ RcppExport SEXP _bvartools_coint_kls2010_reparameterise_two(SEXP alphaSEXP, SEXP
     if (rcpp_isError_gen) {
         SEXP rcpp_msgSEXP_gen = Rf_asChar(rcpp_result_gen);
         UNPROTECT(1);
-        Rf_error("%s", CHAR(rcpp_msgSEXP_gen));
+        (Rf_error)("%s", CHAR(rcpp_msgSEXP_gen));
     }
     UNPROTECT(1);
     return rcpp_result_gen;
@@ -105,7 +358,7 @@ RcppExport SEXP _bvartools_coint_prepare_sur_data(SEXP wSEXP, SEXP alphaSEXP, SE
     if (rcpp_isError_gen) {
         SEXP rcpp_msgSEXP_gen = Rf_asChar(rcpp_result_gen);
         UNPROTECT(1);
-        Rf_error("%s", CHAR(rcpp_msgSEXP_gen));
+        (Rf_error)("%s", CHAR(rcpp_msgSEXP_gen));
     }
     UNPROTECT(1);
     return rcpp_result_gen;
@@ -143,7 +396,7 @@ RcppExport SEXP _bvartools_covar_prepare_data(SEXP ySEXP, SEXP omega_iSEXP, SEXP
     if (rcpp_isError_gen) {
         SEXP rcpp_msgSEXP_gen = Rf_asChar(rcpp_result_gen);
         UNPROTECT(1);
-        Rf_error("%s", CHAR(rcpp_msgSEXP_gen));
+        (Rf_error)("%s", CHAR(rcpp_msgSEXP_gen));
     }
     UNPROTECT(1);
     return rcpp_result_gen;
@@ -179,42 +432,42 @@ RcppExport SEXP _bvartools_covar_vector_to_matrix(SEXP psiSEXP, SEXP kSEXP, SEXP
     if (rcpp_isError_gen) {
         SEXP rcpp_msgSEXP_gen = Rf_asChar(rcpp_result_gen);
         UNPROTECT(1);
-        Rf_error("%s", CHAR(rcpp_msgSEXP_gen));
+        (Rf_error)("%s", CHAR(rcpp_msgSEXP_gen));
     }
     UNPROTECT(1);
     return rcpp_result_gen;
 }
 // draw_forecast
-arma::mat draw_forecast(int i, int k, int p, arma::mat a0_i, bool use_a, arma::mat a_, arma::mat sigma, arma::mat pred);
-RcppExport SEXP _bvartools_draw_forecast(SEXP iSEXP, SEXP kSEXP, SEXP pSEXP, SEXP a0_iSEXP, SEXP use_aSEXP, SEXP a_SEXP, SEXP sigmaSEXP, SEXP predSEXP) {
+arma::mat draw_forecast(int& k, int& p, arma::mat& a0_i, bool& use_a, arma::mat& a, arma::mat& sigma, arma::mat pred);
+RcppExport SEXP _bvartools_draw_forecast(SEXP kSEXP, SEXP pSEXP, SEXP a0_iSEXP, SEXP use_aSEXP, SEXP aSEXP, SEXP sigmaSEXP, SEXP predSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< int >::type i(iSEXP);
-    Rcpp::traits::input_parameter< int >::type k(kSEXP);
-    Rcpp::traits::input_parameter< int >::type p(pSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type a0_i(a0_iSEXP);
-    Rcpp::traits::input_parameter< bool >::type use_a(use_aSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type a_(a_SEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type sigma(sigmaSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type pred(predSEXP);
-    rcpp_result_gen = Rcpp::wrap(draw_forecast(i, k, p, a0_i, use_a, a_, sigma, pred));
-    return rcpp_result_gen;
-END_RCPP
-}
-// draw_forecast2
-arma::mat draw_forecast2(int& p, arma::mat& a0_i, bool& use_a, arma::mat& a, arma::mat& sigma, arma::mat pred);
-RcppExport SEXP _bvartools_draw_forecast2(SEXP pSEXP, SEXP a0_iSEXP, SEXP use_aSEXP, SEXP aSEXP, SEXP sigmaSEXP, SEXP predSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int& >::type k(kSEXP);
     Rcpp::traits::input_parameter< int& >::type p(pSEXP);
     Rcpp::traits::input_parameter< arma::mat& >::type a0_i(a0_iSEXP);
     Rcpp::traits::input_parameter< bool& >::type use_a(use_aSEXP);
     Rcpp::traits::input_parameter< arma::mat& >::type a(aSEXP);
     Rcpp::traits::input_parameter< arma::mat& >::type sigma(sigmaSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type pred(predSEXP);
-    rcpp_result_gen = Rcpp::wrap(draw_forecast2(p, a0_i, use_a, a, sigma, pred));
+    rcpp_result_gen = Rcpp::wrap(draw_forecast(k, p, a0_i, use_a, a, sigma, pred));
+    return rcpp_result_gen;
+END_RCPP
+}
+// generate_forecasts
+arma::mat generate_forecasts(int k, int p, int h, bool use_a, arma::mat z, arma::mat draws_a, arma::mat draws_u_sigma_inv);
+RcppExport SEXP _bvartools_generate_forecasts(SEXP kSEXP, SEXP pSEXP, SEXP hSEXP, SEXP use_aSEXP, SEXP zSEXP, SEXP draws_aSEXP, SEXP draws_u_sigma_invSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type k(kSEXP);
+    Rcpp::traits::input_parameter< int >::type p(pSEXP);
+    Rcpp::traits::input_parameter< int >::type h(hSEXP);
+    Rcpp::traits::input_parameter< bool >::type use_a(use_aSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type z(zSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type draws_a(draws_aSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type draws_u_sigma_inv(draws_u_sigma_invSEXP);
+    rcpp_result_gen = Rcpp::wrap(generate_forecasts(k, p, h, use_a, z, draws_a, draws_u_sigma_inv));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -249,7 +502,7 @@ RcppExport SEXP _bvartools_generate_lower_block_diagonal(SEXP aSEXP, SEXP kSEXP,
     if (rcpp_isError_gen) {
         SEXP rcpp_msgSEXP_gen = Rf_asChar(rcpp_result_gen);
         UNPROTECT(1);
-        Rf_error("%s", CHAR(rcpp_msgSEXP_gen));
+        (Rf_error)("%s", CHAR(rcpp_msgSEXP_gen));
     }
     UNPROTECT(1);
     return rcpp_result_gen;
@@ -304,10 +557,23 @@ RcppExport SEXP _bvartools_kalman_dk(SEXP ySEXP, SEXP zSEXP, SEXP sigma_uSEXP, S
     if (rcpp_isError_gen) {
         SEXP rcpp_msgSEXP_gen = Rf_asChar(rcpp_result_gen);
         UNPROTECT(1);
-        Rf_error("%s", CHAR(rcpp_msgSEXP_gen));
+        (Rf_error)("%s", CHAR(rcpp_msgSEXP_gen));
     }
     UNPROTECT(1);
     return rcpp_result_gen;
+}
+// log_likelihood_normal
+arma::mat log_likelihood_normal(const int k, const arma::mat u, const arma::mat sigma_inv);
+RcppExport SEXP _bvartools_log_likelihood_normal(SEXP kSEXP, SEXP uSEXP, SEXP sigma_invSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const int >::type k(kSEXP);
+    Rcpp::traits::input_parameter< const arma::mat >::type u(uSEXP);
+    Rcpp::traits::input_parameter< const arma::mat >::type sigma_inv(sigma_invSEXP);
+    rcpp_result_gen = Rcpp::wrap(log_likelihood_normal(k, u, sigma_inv));
+    return rcpp_result_gen;
+END_RCPP
 }
 // loglik_normal
 arma::vec loglik_normal(arma::mat u, arma::mat sigma);
@@ -322,14 +588,14 @@ BEGIN_RCPP
 END_RCPP
 }
 // post_bvs
-arma::sp_mat post_bvs(arma::vec y, arma::mat z, arma::vec a, arma::uword k, arma::uword m, arma::sp_mat lambda, arma::sp_mat sigma_i, arma::vec prob_prior, Rcpp::Nullable<Rcpp::IntegerVector> include);
+arma::sp_mat post_bvs(const arma::vec& y, const arma::mat& z, arma::vec& a, arma::uword k, arma::uword m, arma::sp_mat lambda, arma::sp_mat sigma_i, arma::vec prob_prior, Rcpp::Nullable<Rcpp::IntegerVector> include);
 RcppExport SEXP _bvartools_post_bvs(SEXP ySEXP, SEXP zSEXP, SEXP aSEXP, SEXP kSEXP, SEXP mSEXP, SEXP lambdaSEXP, SEXP sigma_iSEXP, SEXP prob_priorSEXP, SEXP includeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::vec >::type y(ySEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type z(zSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type a(aSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type z(zSEXP);
+    Rcpp::traits::input_parameter< arma::vec& >::type a(aSEXP);
     Rcpp::traits::input_parameter< arma::uword >::type k(kSEXP);
     Rcpp::traits::input_parameter< arma::uword >::type m(mSEXP);
     Rcpp::traits::input_parameter< arma::sp_mat >::type lambda(lambdaSEXP);
@@ -456,52 +722,14 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// stochvol_ocsn2007
-arma::mat stochvol_ocsn2007(arma::mat y, arma::mat h, arma::vec sigma, arma::vec h_init, arma::vec constant);
-static SEXP _bvartools_stochvol_ocsn2007_try(SEXP ySEXP, SEXP hSEXP, SEXP sigmaSEXP, SEXP h_initSEXP, SEXP constantSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type y(ySEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type h(hSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type sigma(sigmaSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type h_init(h_initSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type constant(constantSEXP);
-    rcpp_result_gen = Rcpp::wrap(stochvol_ocsn2007(y, h, sigma, h_init, constant));
-    return rcpp_result_gen;
-END_RCPP_RETURN_ERROR
-}
-RcppExport SEXP _bvartools_stochvol_ocsn2007(SEXP ySEXP, SEXP hSEXP, SEXP sigmaSEXP, SEXP h_initSEXP, SEXP constantSEXP) {
-    SEXP rcpp_result_gen;
-    {
-        Rcpp::RNGScope rcpp_rngScope_gen;
-        rcpp_result_gen = PROTECT(_bvartools_stochvol_ocsn2007_try(ySEXP, hSEXP, sigmaSEXP, h_initSEXP, constantSEXP));
-    }
-    Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
-    if (rcpp_isInterrupt_gen) {
-        UNPROTECT(1);
-        Rf_onintr();
-    }
-    bool rcpp_isLongjump_gen = Rcpp::internal::isLongjumpSentinel(rcpp_result_gen);
-    if (rcpp_isLongjump_gen) {
-        Rcpp::internal::resumeJump(rcpp_result_gen);
-    }
-    Rboolean rcpp_isError_gen = Rf_inherits(rcpp_result_gen, "try-error");
-    if (rcpp_isError_gen) {
-        SEXP rcpp_msgSEXP_gen = Rf_asChar(rcpp_result_gen);
-        UNPROTECT(1);
-        Rf_error("%s", CHAR(rcpp_msgSEXP_gen));
-    }
-    UNPROTECT(1);
-    return rcpp_result_gen;
-}
 // sur_const_to_tvp
-arma::sp_mat sur_const_to_tvp(arma::mat& z, arma::uword& k, int& tt);
+arma::sp_mat sur_const_to_tvp(const arma::mat& z, const arma::uword& k, const int& tt);
 static SEXP _bvartools_sur_const_to_tvp_try(SEXP zSEXP, SEXP kSEXP, SEXP ttSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
-    Rcpp::traits::input_parameter< arma::mat& >::type z(zSEXP);
-    Rcpp::traits::input_parameter< arma::uword& >::type k(kSEXP);
-    Rcpp::traits::input_parameter< int& >::type tt(ttSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type z(zSEXP);
+    Rcpp::traits::input_parameter< const arma::uword& >::type k(kSEXP);
+    Rcpp::traits::input_parameter< const int& >::type tt(ttSEXP);
     rcpp_result_gen = Rcpp::wrap(sur_const_to_tvp(z, k, tt));
     return rcpp_result_gen;
 END_RCPP_RETURN_ERROR
@@ -525,7 +753,7 @@ RcppExport SEXP _bvartools_sur_const_to_tvp(SEXP zSEXP, SEXP kSEXP, SEXP ttSEXP)
     if (rcpp_isError_gen) {
         SEXP rcpp_msgSEXP_gen = Rf_asChar(rcpp_result_gen);
         UNPROTECT(1);
-        Rf_error("%s", CHAR(rcpp_msgSEXP_gen));
+        (Rf_error)("%s", CHAR(rcpp_msgSEXP_gen));
     }
     UNPROTECT(1);
     return rcpp_result_gen;
@@ -570,8 +798,7 @@ static int _bvartools_RcppExport_validate(const char* sig) {
         signatures.insert("arma::sp_mat(*covar_vector_to_matrix)(const arma::vec,const int,const int)");
         signatures.insert("arma::sp_mat(*generate_lower_block_diagonal)(arma::mat&,int&,int&)");
         signatures.insert("arma::mat(*kalman_dk)(arma::mat,arma::mat,arma::mat,arma::mat,arma::mat,arma::vec,arma::mat)");
-        signatures.insert("arma::mat(*stochvol_ocsn2007)(arma::mat,arma::mat,arma::vec,arma::vec,arma::vec)");
-        signatures.insert("arma::sp_mat(*sur_const_to_tvp)(arma::mat&,arma::uword&,int&)");
+        signatures.insert("arma::sp_mat(*sur_const_to_tvp)(const arma::mat&,const arma::uword&,const int&)");
     }
     return signatures.find(sig) != signatures.end();
 }
@@ -584,24 +811,46 @@ RcppExport SEXP _bvartools_RcppExport_registerCCallable() {
     R_RegisterCCallable("bvartools", "_bvartools_covar_vector_to_matrix", (DL_FUNC)_bvartools_covar_vector_to_matrix_try);
     R_RegisterCCallable("bvartools", "_bvartools_generate_lower_block_diagonal", (DL_FUNC)_bvartools_generate_lower_block_diagonal_try);
     R_RegisterCCallable("bvartools", "_bvartools_kalman_dk", (DL_FUNC)_bvartools_kalman_dk_try);
-    R_RegisterCCallable("bvartools", "_bvartools_stochvol_ocsn2007", (DL_FUNC)_bvartools_stochvol_ocsn2007_try);
     R_RegisterCCallable("bvartools", "_bvartools_sur_const_to_tvp", (DL_FUNC)_bvartools_sur_const_to_tvp_try);
     R_RegisterCCallable("bvartools", "_bvartools_RcppExport_validate", (DL_FUNC)_bvartools_RcppExport_validate);
     return R_NilValue;
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_bvartools_bvaralg", (DL_FUNC) &_bvartools_bvaralg, 1},
+    {"_bvartools_VarNormalGammaCoefficients", (DL_FUNC) &_bvartools_VarNormalGammaCoefficients, 1},
+    {"_bvartools_VarNormalGammaForecasts", (DL_FUNC) &_bvartools_VarNormalGammaForecasts, 1},
+    {"_bvartools_VarNormalGammaLogLik", (DL_FUNC) &_bvartools_VarNormalGammaLogLik, 1},
+    {"_bvartools_VarNormalStochvolCoefficients", (DL_FUNC) &_bvartools_VarNormalStochvolCoefficients, 1},
+    {"_bvartools_VarNormalStochvolForecasts", (DL_FUNC) &_bvartools_VarNormalStochvolForecasts, 1},
+    {"_bvartools_VarNormalStochvolLogLik", (DL_FUNC) &_bvartools_VarNormalStochvolLogLik, 1},
+    {"_bvartools_VarNormalWishartCoefficients", (DL_FUNC) &_bvartools_VarNormalWishartCoefficients, 1},
+    {"_bvartools_VarNormalWishartForecasts", (DL_FUNC) &_bvartools_VarNormalWishartForecasts, 1},
+    {"_bvartools_VarNormalWishartLogLik", (DL_FUNC) &_bvartools_VarNormalWishartLogLik, 1},
+    {"_bvartools_VarTvpGammaCoefficients", (DL_FUNC) &_bvartools_VarTvpGammaCoefficients, 1},
+    {"_bvartools_VarTvpGammaForecasts", (DL_FUNC) &_bvartools_VarTvpGammaForecasts, 1},
+    {"_bvartools_VarTvpGammaLogLik", (DL_FUNC) &_bvartools_VarTvpGammaLogLik, 1},
+    {"_bvartools_VarTvpStochvolCoefficients", (DL_FUNC) &_bvartools_VarTvpStochvolCoefficients, 1},
+    {"_bvartools_VarTvpStochvolForecasts", (DL_FUNC) &_bvartools_VarTvpStochvolForecasts, 1},
+    {"_bvartools_VarTvpStochvolLogLik", (DL_FUNC) &_bvartools_VarTvpStochvolLogLik, 1},
+    {"_bvartools_VarTvpWishartCoefficients", (DL_FUNC) &_bvartools_VarTvpWishartCoefficients, 1},
+    {"_bvartools_VarTvpWishartForecasts", (DL_FUNC) &_bvartools_VarTvpWishartForecasts, 1},
+    {"_bvartools_VarTvpWishartLogLik", (DL_FUNC) &_bvartools_VarTvpWishartLogLik, 1},
+    {"_bvartools_VecNormalWishartCoefficients", (DL_FUNC) &_bvartools_VecNormalWishartCoefficients, 1},
+    {"_bvartools_VecNormalWishartForecasts", (DL_FUNC) &_bvartools_VecNormalWishartForecasts, 1},
+    {"_bvartools_VecNormalWishartLogLik", (DL_FUNC) &_bvartools_VecNormalWishartLogLik, 1},
+    {"_bvartools_algo_bvectvp_update_z_a", (DL_FUNC) &_bvartools_algo_bvectvp_update_z_a, 6},
+    {"_bvartools_algo_bvectvp_update_z_b", (DL_FUNC) &_bvartools_algo_bvectvp_update_z_b, 7},
     {"_bvartools_bvecalg", (DL_FUNC) &_bvartools_bvecalg, 1},
     {"_bvartools_coint_kls2010_reparameterise_two", (DL_FUNC) &_bvartools_coint_kls2010_reparameterise_two, 2},
     {"_bvartools_coint_prepare_sur_data", (DL_FUNC) &_bvartools_coint_prepare_sur_data, 6},
     {"_bvartools_covar_prepare_data", (DL_FUNC) &_bvartools_covar_prepare_data, 5},
     {"_bvartools_covar_vector_to_matrix", (DL_FUNC) &_bvartools_covar_vector_to_matrix, 3},
-    {"_bvartools_draw_forecast", (DL_FUNC) &_bvartools_draw_forecast, 8},
-    {"_bvartools_draw_forecast2", (DL_FUNC) &_bvartools_draw_forecast2, 6},
+    {"_bvartools_draw_forecast", (DL_FUNC) &_bvartools_draw_forecast, 7},
+    {"_bvartools_generate_forecasts", (DL_FUNC) &_bvartools_generate_forecasts, 7},
     {"_bvartools_generate_lower_block_diagonal", (DL_FUNC) &_bvartools_generate_lower_block_diagonal, 3},
     {"_bvartools_ir", (DL_FUNC) &_bvartools_ir, 5},
     {"_bvartools_kalman_dk", (DL_FUNC) &_bvartools_kalman_dk, 7},
+    {"_bvartools_log_likelihood_normal", (DL_FUNC) &_bvartools_log_likelihood_normal, 3},
     {"_bvartools_loglik_normal", (DL_FUNC) &_bvartools_loglik_normal, 2},
     {"_bvartools_post_bvs", (DL_FUNC) &_bvartools_post_bvs, 9},
     {"_bvartools_post_coint_kls", (DL_FUNC) &_bvartools_post_coint_kls, 10},
@@ -611,7 +860,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_bvartools_post_lambda", (DL_FUNC) &_bvartools_post_lambda, 5},
     {"_bvartools_post_normal", (DL_FUNC) &_bvartools_post_normal, 5},
     {"_bvartools_post_normal_sur", (DL_FUNC) &_bvartools_post_normal_sur, 6},
-    {"_bvartools_stochvol_ocsn2007", (DL_FUNC) &_bvartools_stochvol_ocsn2007, 5},
     {"_bvartools_sur_const_to_tvp", (DL_FUNC) &_bvartools_sur_const_to_tvp, 3},
     {"_bvartools_ssvs", (DL_FUNC) &_bvartools_ssvs, 5},
     {"_bvartools_vardecomp", (DL_FUNC) &_bvartools_vardecomp, 4},

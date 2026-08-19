@@ -151,32 +151,11 @@ namespace bvartools {
         return Rcpp::as<arma::mat >(rcpp_result_gen);
     }
 
-    inline arma::mat stochvol_ocsn2007(arma::mat y, arma::mat h, arma::vec sigma, arma::vec h_init, arma::vec constant) {
-        typedef SEXP(*Ptr_stochvol_ocsn2007)(SEXP,SEXP,SEXP,SEXP,SEXP);
-        static Ptr_stochvol_ocsn2007 p_stochvol_ocsn2007 = NULL;
-        if (p_stochvol_ocsn2007 == NULL) {
-            validateSignature("arma::mat(*stochvol_ocsn2007)(arma::mat,arma::mat,arma::vec,arma::vec,arma::vec)");
-            p_stochvol_ocsn2007 = (Ptr_stochvol_ocsn2007)R_GetCCallable("bvartools", "_bvartools_stochvol_ocsn2007");
-        }
-        RObject rcpp_result_gen;
-        {
-            RNGScope RCPP_rngScope_gen;
-            rcpp_result_gen = p_stochvol_ocsn2007(Shield<SEXP>(Rcpp::wrap(y)), Shield<SEXP>(Rcpp::wrap(h)), Shield<SEXP>(Rcpp::wrap(sigma)), Shield<SEXP>(Rcpp::wrap(h_init)), Shield<SEXP>(Rcpp::wrap(constant)));
-        }
-        if (rcpp_result_gen.inherits("interrupted-error"))
-            throw Rcpp::internal::InterruptedException();
-        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
-            throw Rcpp::LongjumpException(rcpp_result_gen);
-        if (rcpp_result_gen.inherits("try-error"))
-            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
-        return Rcpp::as<arma::mat >(rcpp_result_gen);
-    }
-
-    inline arma::sp_mat sur_const_to_tvp(arma::mat& z, arma::uword& k, int& tt) {
+    inline arma::sp_mat sur_const_to_tvp(const arma::mat& z, const arma::uword& k, const int& tt) {
         typedef SEXP(*Ptr_sur_const_to_tvp)(SEXP,SEXP,SEXP);
         static Ptr_sur_const_to_tvp p_sur_const_to_tvp = NULL;
         if (p_sur_const_to_tvp == NULL) {
-            validateSignature("arma::sp_mat(*sur_const_to_tvp)(arma::mat&,arma::uword&,int&)");
+            validateSignature("arma::sp_mat(*sur_const_to_tvp)(const arma::mat&,const arma::uword&,const int&)");
             p_sur_const_to_tvp = (Ptr_sur_const_to_tvp)R_GetCCallable("bvartools", "_bvartools_sur_const_to_tvp");
         }
         RObject rcpp_result_gen;

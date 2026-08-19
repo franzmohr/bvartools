@@ -1,14 +1,18 @@
+## The BayesTS core in src/core/ uses C++17 (nested namespace definitions),
+## which is only the compiler default from R 4.3 onwards.
+CXX_STD = CXX17
 
-## With R 3.1.0 or later, you can uncomment the following line to tell R to 
-## enable compilation with C++11 (where available)
-##
-## Also, OpenMP support in Armadillo prefers C++11 support. However, for wider
-## availability of the package we do not yet enforce this here.  It is however
-## recommended for client packages to set it.
-##
-## And with R 3.4.0, and RcppArmadillo 0.7.960.*, we turn C++11 on as OpenMP
-## support within Armadillo prefers / requires it
-
-#CXX_STD = CXX11
-PKG_CPPFLAGS = -DARMA_NO_DEBUG 
+## -I. so that the core sources find their own headers, which they include as
+## "core/algorithms/wishart.h" -- relative to src/, not to the including file.
+## -I../inst/include so that they find "bayests/*.h".
+## Armadillo has to arrive as RcppArmadillo, and first: it is what points
+## Armadillo's RNG at R's own. The vendored core reaches Armadillo through
+## bayests/arma.h, which honours this macro. src/bayests_rng_guard.cpp fails
+## the build if it is ever lost.
+PKG_CPPFLAGS = -DBAYESTS_ARMA_HEADER='<RcppArmadillo.h>' -DARMA_NO_DEBUG -I. -I../inst/include
 PKG_LIBS = $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS)
+
+## R builds the object list from the top level of src/ only, so the vendored
+## core would be skipped without this. Requires GNU make, which DESCRIPTION
+## declares under SystemRequirements.
+OBJECTS = $(patsubst %.cpp,%.o,$(wildcard *.cpp core/*.cpp core/*/*.cpp))

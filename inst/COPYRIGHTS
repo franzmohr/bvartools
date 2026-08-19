@@ -1,0 +1,101 @@
+Copyright and license status of the bvartools sources
+=====================================================
+
+The package as a whole is distributed under GPL (>= 2), as stated in
+DESCRIPTION. Unless listed below, every file is
+
+    Copyright (c) Franz X. Mohr
+    GPL (>= 2)
+
+The files listed below are copied from BayesTS
+(https://github.com/franzmohr/BayesTS) and carry that project's BSD
+3-Clause license, recorded in each file as an SPDX header. The copyright
+holder is the same person, and BSD-3-Clause is compatible with GPL (>= 2),
+so the combined work is distributed under GPL (>= 2); the notice below
+satisfies the attribution the BSD license asks for. src/core/VENDORED.md
+documents which files were modified on the way in and why.
+
+BSD 3-Clause portion
+--------------------
+
+    Copyright (c) 2026 Franz X. Mohr
+    SPDX-License-Identifier: BSD-3-Clause
+
+    inst/include/bayests/arma.h
+    inst/include/bayests/data.h
+    inst/include/bayests/inputs.h
+    inst/include/bayests/priors.h
+    inst/include/bayests/reporter.h
+    inst/include/bayests/results.h
+    inst/include/bayests/spec.h
+    inst/include/bayests/var_normal_gamma.h
+    inst/include/bayests/var_normal_stochvol.h
+    inst/include/bayests/var_normal_wishart.h
+    inst/include/bayests/var_tvp_gamma.h
+    inst/include/bayests/var_tvp_stochvol.h
+    inst/include/bayests/var_tvp_wishart.h
+    inst/include/bayests/vec_normal_wishart.h
+    src/core/inputs.cpp
+    src/core/spec.cpp
+    src/core/algorithms/bvs.cpp
+    src/core/algorithms/bvs.h
+    src/core/algorithms/kalman_durbin_koopman_2002.cpp
+    src/core/algorithms/kalman_durbin_koopman_2002.h
+    src/core/algorithms/ssvs.cpp
+    src/core/algorithms/ssvs.h
+    src/core/algorithms/stochvol_ocsn_2007.cpp
+    src/core/algorithms/stochvol_ocsn_2007.h
+    src/core/algorithms/vec_to_var.cpp
+    src/core/algorithms/vec_to_var.h
+    src/core/algorithms/wishart.cpp
+    src/core/algorithms/wishart.h
+    src/core/models/model_support.h
+    src/core/models/var_normal_gamma.cpp
+    src/core/models/var_normal_stochvol.cpp
+    src/core/models/var_normal_wishart.cpp
+    src/core/models/var_tvp_gamma.cpp
+    src/core/models/var_tvp_stochvol.cpp
+    src/core/models/var_tvp_wishart.cpp
+    src/core/models/vec_normal_wishart.cpp
+
+    That is every file under inst/include/bayests/ and every source under
+    src/core/. inst/include/bayests/arma.h has no upstream counterpart --
+    it exists only here, to route Armadillo through RcppArmadillo -- but is
+    released on the same terms as the headers it sits beside.
+
+    inst/include/bayests_reporter.h is *not* part of this set. It lives one
+    directory up, belongs to this package rather than to BayesTS, and is
+    GPL (>= 2) like the rest of the package.
+
+License text
+------------
+
+BSD 3-Clause License
+
+Copyright (c) 2026, Franz X. Mohr
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its
+   contributors may be used to endorse or promote products derived from
+   this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.

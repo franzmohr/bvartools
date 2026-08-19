@@ -7,14 +7,12 @@
 \method{add_initial_values}{modellist}(object, ...)
 }
 \arguments{
-\item{object}{a list, usually, the output of a call to
-\code{\link{create_var_model}} or \code{\link{create_vec_model}} in
-combination with \code{\link{add_priors}}.}
+\item{object}{a list of class 'modellist' \code{\link{add_priors}}.}
 
 \item{...}{further arguments passed to or from other methods.}
 }
 \value{
-A list of models.
+An object of class 'modellist'.
 }
 \description{
 Adds initial values to a list of models by passing each element to
@@ -27,12 +25,14 @@ data("e1")
 e1 <- diff(log(e1)) * 100
 
 # Create model
-model <- create_var_model(e1, p = 0:2, deterministic = "const",
-                          iterations = 50, burnin = 10)
+model <- create_bvarmodel(e1, p = 0:2, deterministic = "const",
+                          iterations = 10, burnin = 10)
 # Number of iterations and burnin should be much higher.
 
-# Add priors
-model <- add_priors(model)
+# Add prior specifications
+model <- add_priors(model,
+                    coef = list(v_i = 1, v_i_det = 1 / 10),
+                    sigma = list(df = "k", scale = 1))
 
 # Add initial values
 model <- add_initial_values(model)

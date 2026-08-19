@@ -1,9 +1,9 @@
 #' Add Initial Values of an MCMC Chain
 #'
-#' Adds initial values to a VAR model, which was produced by
-#' function \code{\link{create_var_model}} in combination with \code{\link{add_priors}}.
+#' Adds initial values to a VAR model.
 #'
-#' @param object list of class 'bvarmodel'.
+#' @param object list of class 'bvarmodel', usually, the result of a call to
+#' \code{\link{create_bvarmodel}} in combination with \code{\link{add_priors}}.
 #' @param method character specifying the method of how initial values are generated.
 #' Default is \code{"ols"}. See 'Details'.
 #' @param ... further arguments passed to or from other methods.
@@ -38,12 +38,14 @@
 #' e1 <- diff(log(e1)) * 100
 #' 
 #' # Create model
-#' model <- create_var_model(e1, p = 2, deterministic = "const",
+#' model <- create_bvarmodel(e1, p = 2, deterministic = "const",
 #'                           iterations = 50, burnin = 10)
 #' # Number of iterations and burnin should be much higher.
 #' 
-#' # Add priors
-#' model <- add_priors(model)
+#' # Add prior specifications
+#' model <- add_priors(model,
+#'                     coef = list(v_i = 1, v_i_det = 1 / 10),
+#'                     sigma = list(df = "k", scale = 1))
 #' 
 #' # Add initial values
 #' model <- add_initial_values(model)
@@ -59,15 +61,14 @@ add_initial_values.bvarmodel <- function(object, method = "ols", ...){
     stop("Argument 'method' can be 'ols' or 'prior' for BVAR models.")
   }
   
-  y <- t(object[["data"]][["y"]])
-  z <- object[["data"]][["z"]]
-  k <- nrow(y)
-  tt <- ncol(y)
+  y <- matrix(t(object[["data"]][["train"]][["y"]]))
+  z <- object[["data"]][["train"]][["z"]]
+  k <- object[["model"]][["k"]]
+  tt <- length(y) / k
+  u <- matrix(y, k)
   
   # Initial values from LS estimates ----
   if (method == "ols") {
-    
-    u <- y
     
     # Coefficients
     if (!is.null(z)) {
@@ -79,7 +80,7 @@ add_initial_values.bvarmodel <- function(object, method = "ols", ...){
       nparams <- k * p + m * (s + 1) + n
       
       if (tt >= nparams) {
-        ols <- solve(crossprod(z)) %*% crossprod(z, matrix(y))
+        ols <- solve(crossprod(z)) %*% crossprod(z, y)
         
         if (object[["model"]][["tvp"]]) {
           object[["initial"]][["a"]] <- matrix(ols, length(ols) * tt)
@@ -87,7 +88,7 @@ add_initial_values.bvarmodel <- function(object, method = "ols", ...){
         } else {
           object[["initial"]][["a"]] <- ols 
         }
-        u <- matrix(matrix(y) - z %*% ols, NROW(y))
+        u <- matrix(y - z %*% ols, k)
       } else {
         warning("Not enough observations for LS-based initial values. Setting initial values of coefficients to 0.")
         if (object[["model"]][["tvp"]]) {
@@ -100,7 +101,7 @@ add_initial_values.bvarmodel <- function(object, method = "ols", ...){
     }
     
     # Covariances
-    if (object$model$error %in% c("gamma+covar", "sv+covar") & k > 1) {
+    if (object[["model"]][["error"]] %in% c("gamma+covar", "sv+covar") & k > 1) {
       y_covar <- kronecker(-t(u), diag(1, k))
       pos <- NULL
       for (j in 1:k) {pos <- c(pos, (j - 1) * k + 1:j)}
@@ -110,7 +111,7 @@ add_initial_values.bvarmodel <- function(object, method = "ols", ...){
         object[["initial"]][["psi"]] <- matrix(psi, length(psi) * tt)
         object[["initial"]][["psi_init"]] <- matrix(psi, length(psi))
       } else {
-        object[["initial"]][["psi"]] <- psi
+        object[["initial"]][["psi"]] <- matrix(psi, length(psi))
       }
       Psi <- diag(1, k)
       for (j in 2:k) {
@@ -124,8 +125,8 @@ add_initial_values.bvarmodel <- function(object, method = "ols", ...){
   if (method == "prior") {
     # Coefficients
     if (!is.null(z)) {
-      a_mu <- object$priors$a$mu
-      a_vinv <- object$priors$a$v_i
+      a_mu <- object[["priors"]][["a"]][["mu"]]
+      a_vinv <- object[["priors"]][["a"]][["v_inv"]]
       a <- a_mu + chol(a_vinv) %*% stats::rnorm(length(a_mu)) 
       if (object[["model"]][["tvp"]]) {
         object[["initial"]][["a"]] <- matrix(a, length(a) * tt)
@@ -133,22 +134,35 @@ add_initial_values.bvarmodel <- function(object, method = "ols", ...){
       } else {
         object[["initial"]][["a"]] <- a
       }
+      u <- matrix(y - z %*% a, k)
     }
     
     # Covariances
-    if (!is.null(object$priors$psi) & k > 1) {
-      psi_mu <- object$priors$psi$mu
-      psi_vinv <- object$priors$psi$v_i
+    if (object[["model"]][["error"]] %in% c("gamma+covar", "sv+covar") & k > 1) {
+      psi_mu <- object[["priors"]][["psi"]][["mu"]]
+      psi_vinv <- object[["priors"]][["psi"]][["v_inv"]]
       psi <- psi_mu + chol(psi_vinv) %*% stats::rnorm(k * (k - 1) / 2)
       if (object[["model"]][["tvp"]]) {
         object[["initial"]][["psi"]] <- matrix(psi, length(psi) * tt)
         object[["initial"]][["psi_init"]] <- matrix(psi, length(psi))
       } else {
-        object[["initial"]][["psi"]] <- psi
+        object[["initial"]][["psi"]] <- matrix(psi, length(psi))
       }
+      Psi <- diag(1, k)
+      for (j in 2:k) {
+        Psi[j, 1:(j - 1)] <- t(psi[((j - 2) * (j - 1) / 2) + 1:(j - 1), 1])
+      }
+      u <- Psi %*% u
     }
-    
-    u <- NULL
+  }
+  
+  use_varsel <- object[["model"]][["varsel"]] %in% c("ssvs", "bvs")
+  
+  if (use_varsel & !is.null(object[["data"]][["train"]][["z"]])) {
+    object[["initial"]][["a_lambda"]] <- matrix(1, ncol(object[["data"]][["train"]][["z"]]))
+  }
+  if (use_varsel & !is.null(object[["priors"]][["psi"]][["inprior"]])) {
+    object[["initial"]][["psi_lambda"]] <- matrix(1, nrow(object[["priors"]][["psi"]][["inprior"]]))
   }
   
   # Variances of state equations ----

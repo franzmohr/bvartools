@@ -1,11 +1,4 @@
-^cran-comments\.md$
-^README\.Rmd$
 ^.*\.Rproj$
 ^\.Rproj\.user$
-^data-raw$
-README.Rmd
-README.md
-^README_files$
-^\.travis\.yml$
-^\.gitignore
-^\.github$
+^tools$
+^\.claude$

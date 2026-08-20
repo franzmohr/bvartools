@@ -1,10 +1,36 @@
 
+.add_priors_check_bvs <- function(object, bvs) {
+  
+  use_bvs_error <- FALSE
+  
+  if (object[["model"]][["varsel"]] == "bvs") {
+    
+    if (is.null(bvs)) {
+      stop("BVS was chosen as variable selection algorithm, but no prior specification was provided.")
+    }
+    
+    if (is.null(bvs[["inprior"]])) {
+      stop("Argument 'bvs$inprior' must be specified for BVS")
+    }
+    
+    if (!is.null(bvs[["covar"]])) {
+      if (bvs[["covar"]]) {
+        use_bvs_error <- TRUE 
+      }
+    }
+  }
+}
+
 .add_priors_check_coef <- function(object, coef) {
   
-  if (!all(names(coef) %in% c("v_i", "v_i_det", "coint_var", "const", "minnesota", "max_var", "shape", "rate", "rate_det"))) {
-    stop("At least one element in argument 'coef' is not valid.")
+  allowed_coef_arguments <- c("v_i", "v_i_det", "coint_var", "const", "minnesota",
+                              "max_var", "shape", "rate", "rate_det")
+  for (i in names(coef)) {
+    if (!i %in% allowed_coef_arguments) {
+      stop(paste0("Element '", i, "' in argument 'coef' is not recognised."))
+    }
   }
-  
+
   if (!is.null(coef[["v_i"]])) {
     if (coef[["v_i"]] < 0) {
       stop("Argument 'v_i' must be at least 0.")
@@ -20,21 +46,23 @@
   }
   
   # Tests for specifications used in TVP models
-  if (object[["model"]][["tvp"]]) {
-    if (!"shape" %in% names(coef)) {
-      stop("Argument 'coef$shape' must be specified for TVP models.")
-    }
-    if (!"rate" %in% names(coef)) {
-      stop("Argument 'coef$rate' must be specified for TVP models.")
-    }
-    
-    if (!is.null(coef[["const"]])) {
-      if ("character" %in% class(coef[["const"]])) {
-        if (!coef[["const"]] %in% c("first", "mean")) {
-          stop("Invalid specificatin of coef$const.")
+  if (!is.null(object[["model"]][["tvp"]])) {
+    if (object[["model"]][["tvp"]]) {
+      if (!"shape" %in% names(coef)) {
+        stop("Argument 'coef$shape' must be specified for TVP models.")
+      }
+      if (!"rate" %in% names(coef)) {
+        stop("Argument 'coef$rate' must be specified for TVP models.")
+      }
+      
+      if (!is.null(coef[["const"]])) {
+        if ("character" %in% class(coef[["const"]])) {
+          if (!coef[["const"]] %in% c("first", "mean")) {
+            stop("Invalid specificatin of coef$const.")
+          }
         }
       }
-    }
+    } 
   }
   
   if (!is.null(coef[["minnesota"]])) {
@@ -44,10 +72,10 @@
     if (is.null(names(coef[["minnesota"]]))) {
       stop("Argument coef$minnesota must be a named list.")
     }
-    if (!all(c("kappa0", "kappa1", "kappa3") %in% names(coef[["minnesota"]]))) {
-      stop("Argument coeff$minnesota must contain at least the elements 'kappa0', 'kappa1' and 'kappa3'.")
+    if (!all(c("kappa1", "kappa2", "kappa4") %in% names(coef[["minnesota"]]))) {
+      stop("Argument coeff$minnesota must contain at least the elements 'kappa1', 'kappa2' and 'kappa4'.")
     }
-    if (object$model$error %in% c("gamma+covar", "sv+covar") & is.null(coef[["v_i"]])) {
+    if (object[["$model"]][["error"]] %in% c("gamma+covar", "sv+covar") & is.null(coef[["v_i"]])) {
       stop("If error covarances should be estimated, argument coef$v_i must be provided also when the Minnesota prior is used.")
     }
   }
@@ -92,7 +120,7 @@
       } else {
         stop("Wishart prior requires specification of elements 'df' and 'scale' in 'sigma'.")
       }
-      if (any(unlist(lapply(object, function(x) {x$model$structural})))) {
+      if (any(unlist(lapply(object, function(x) {x[["model"]][["structural"]]})))) {
         stop("Structural models may not use a Wishart prior. Consider using a gamma prior instead.")
       }
       if (sigma$df < 0) {
@@ -111,15 +139,18 @@
   return(error_prior)
 }
 
+
+
+
 .add_priors_check_ssvs <- function(object, ssvs) {
   
   use_ssvs_error <- FALSE
   
   if (is.null(ssvs[["inprior"]])) {
-    stop("Argument 'ssvs$inprior' must be specified for SSVS.")
+    stop("Argument 'varsel$inprior' must be specified for SSVS.")
   }
   if (is.null(ssvs[["tau"]]) & is.null(ssvs[["semiautomatic"]])) {
-    stop("Either argument 'ssvs$tau' or 'ssvs$semiautomatic' must be specified for SSVS.")
+    stop("Either argument 'varsel$tau' or 'varsel$semiautomatic' must be specified for SSVS.")
   }
   if (!is.null(ssvs[["covar"]])) {
     if (ssvs[["covar"]]) {
@@ -127,18 +158,18 @@
     }
   }
   if (object[["model"]][["error"]] == "gamma+covar" & use_ssvs_error & is.null(ssvs[["tau"]])) {
-    stop("If SSVS should be applied to error covariances, argument 'ssvs$tau' must be specified.")
+    stop("If SSVS should be applied to error covariances, argument 'varsel$tau' must be specified.")
   }
   if (object[["model"]][["structural"]] & is.null(ssvs[["tau"]])) {
-    stop("If SSVS should be used with structural models, argument 'ssvs$tau' must be specified.")
+    stop("If SSVS should be used with structural models, argument 'varsel$tau' must be specified.")
   }
   
   if (!is.null(ssvs[["semiautomatic"]])) {
     if (!"numeric" %in% class(ssvs[["semiautomatic"]])) {
-      stop("Argument 'ssvs$semiautomatic' must be a numeric vector.")
+      stop("Argument 'varsel$semiautomatic' must be a numeric vector.")
     }
     if (length(ssvs[["semiautomatic"]]) != 2) {
-      stop("Argument 'ssvs$semiautomatic' must be a numeric vector with two elements.")
+      stop("Argument 'varsel$semiautomatic' must be a numeric vector with two elements.")
     }
   }
 }

@@ -7,13 +7,13 @@
 \method{add_priors}{modellist}(object, ...)
 }
 \arguments{
-\item{object}{a list, usually, the output of a call to \code{\link{create_var_model}} or
-\code{\link{create_vec_model}}.}
+\item{object}{a list of class 'modellist', usually, the output of a call
+to \code{\link{create_bvarmodel}} or \code{\link{create_bvecmodel}}.}
 
 \item{...}{further arguments passed to or from other methods.}
 }
 \value{
-A list of models.
+A list of class 'modellist'.
 }
 \description{
 Adds prior specifications to a list of models by passing each element to
@@ -26,11 +26,13 @@ data("e1")
 e1 <- diff(log(e1)) * 100
 
 # Create model
-model <- create_var_model(e1, p = 0:2, deterministic = "const",
-                          iterations = 50, burnin = 10)
+model <- create_bvarmodel(e1, p = 0:2, deterministic = "const",
+                          iterations = 10, burnin = 10)
 # Number of iterations and burnin should be much higher.
 
-# Add priors
-model <- add_priors(model)
+# Add prior specifications
+model <- add_priors(model,
+                    coef = list(v_i = 1, v_i_det = 1 / 10),
+                    sigma = list(df = "k", scale = 1))
 
 }

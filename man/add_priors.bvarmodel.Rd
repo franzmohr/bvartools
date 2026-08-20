@@ -4,15 +4,7 @@
 \alias{add_priors.bvarmodel}
 \title{Add Priors to Bayesian Models}
 \usage{
-\method{add_priors}{bvarmodel}(
-  object,
-  coef = list(v_i = 1, v_i_det = 0.1, shape = 3, rate = 1e-04, rate_det = 0.01),
-  sigma = list(df = "k", scale = 1, mu = 0, v_i = 0.01, state_variance = 0.05, offset =
-    1e-04),
-  ssvs = NULL,
-  bvs = NULL,
-  ...
-)
+\method{add_priors}{bvarmodel}(object, coef, sigma, varsel = NULL, ...)
 }
 \arguments{
 \item{object}{a list of class 'bvarmodel'.}
@@ -29,20 +21,17 @@ For the default specification of an inverse Wishart distribution
 the prior degrees of freedom are set to the number of endogenous variables and
 the prior variances to 1. See 'Details'.}
 
-\item{ssvs}{optional; a named list of prior specifications for the SSVS algorithm.
-Not allowed for TVP models. See 'Details'.}
-
-\item{bvs}{optional; a named list of prior specifications for the BVS algorithm.
-See 'Details'.}
+\item{varsel}{optional; a named list of prior specifications for the variable
+selection algorithm. See 'Details'.}
 
 \item{...}{further arguments passed to or from other methods.}
 }
 \value{
-A list of models.
+An object of class 'bvarmodel'.
 }
 \description{
 Adds prior specifications to a BVAR model, which was produced by
-function \code{\link{create_var_model}}.
+function \code{\link{create_bvarmodel}}.
 }
 \details{
 The arguments of the function require named lists. Possible
@@ -65,12 +54,12 @@ Argument \code{coef} can contain the following elements:
   If \code{coef$const = "first"}, the first values of the respective endogenous variable is used as prior mean.
   This can be useful for trend estimation when using a TVP model.}
   \item{\code{minnesota}}{a list containing for parameters for the calculation of
-  the Minnesota prior, where the element names must be \code{kappa0}, \code{kappa1}, \code{kappa2} and \code{kappa3}.
+  the Minnesota prior, where the element names must be \code{kappa1}, \code{kappa2}, \code{kappa3} and \code{kappa4}.
   For the endogenous variable \eqn{i} the prior variance of the \eqn{l}th lag of regressor \eqn{j} is obtained as
-  \deqn{ \frac{\kappa_{0}}{l^2} \textrm{ for own lags of endogenous variables,}} 
-  \deqn{ \frac{\kappa_{0} \kappa_{1}}{l^2} \frac{\sigma_{i}^2}{\sigma_{j}^2} \textrm{ for endogenous variables other than own lags,}}
-  \deqn{ \frac{\kappa_{0} \kappa_{2}}{(l+1)^2} \frac{\sigma_{i}^2}{\sigma_{j}^2} \textrm{ for exogenous variables,}}
-  \deqn{ \kappa_{0} \kappa_{3} \sigma_{i}^2 \textrm{ for deterministic terms,}}
+  \deqn{ \frac{\kappa_{1}}{l^2} \textrm{ for own lags of endogenous variables,}} 
+  \deqn{ \frac{\kappa_{1} \kappa_{2}}{l^2} \frac{\sigma_{i}^2}{\sigma_{j}^2} \textrm{ for endogenous variables other than own lags,}}
+  \deqn{ \frac{\kappa_{1} \kappa_{3}}{(l+1)^2} \frac{\sigma_{i}^2}{\sigma_{j}^2} \textrm{ for exogenous variables,}}
+  \deqn{ \kappa_{1} \kappa_{4} \sigma_{i}^2 \textrm{ for deterministic terms,}}
   where \eqn{\sigma_{i}} is the residual standard deviation of variable \eqn{i} of an unrestricted
   LS estimate. For exogenous variables \eqn{\sigma_{i}} is the sample standard deviation.
   If the model does not contain exogenous variables, \code{kappa2} will be ignored.}
@@ -86,6 +75,7 @@ Argument \code{coef} can contain the following elements:
   state equation for coefficients, which correspond to deterministic terms.
   Only used for models with time varying parameters. Default is 0.01.}
 }
+If \code{minnesota} is specified, \code{v_i} and \code{v_i_det} are ignored.
 
 Argument \code{sigma} can contain the following elements:
 \describe{
@@ -117,50 +107,38 @@ Argument \code{sigma} can contain the following elements:
 }
 For structural models only a gamma prior or stochastic volatility specification is allowed.
 
-Argument \code{ssvs} can contain the following elements:
+Argument \code{varsel} can contain the following elements:
 \describe{
   \item{\code{inprior}}{a numeric between 0 and 1 specifying the prior probability
   of a variable to be included in the model.}
+  \item{\code{covar}}{logical indicating if the variable selection algorithm
+  should also be applied to the error covariance matrix.}
+  \item{\code{exclude_det}}{logical indicating if deterministic terms should
+  be excluded from the variable selection algorithm.}
+  \item{\code{minnesota}}{a numeric vector of length 4 containing parameters
+  for the calculation of the Minnesota-like inclusion priors. See below.}
   \item{\code{tau}}{a numeric vector of two elements containing the prior standard errors
   of restricted variables (\eqn{\tau_0}) as its first element and unrestricted variables (\eqn{\tau_1})
-  as its second.}
+  as its second. Only used for SSVS.}
   \item{\code{semiautomatic}}{an numeric vector of two elements containing the
   factors by which the standard errors associated with an unconstrained least squares
   estimate of the model are multiplied to obtain the prior standard errors
   of restricted (\eqn{\tau_0}) and unrestricted (\eqn{\tau_1}) variables, respectively.
-  This is the semiautomatic approach described in George et al. (2008).}
-  \item{\code{covar}}{logical indicating if SSVS should also be applied to the
-  error covariance matrix.}
-  \item{\code{exclude_det}}{logical indicating if deterministic terms should
-  be excluded from the SSVS algorithm.}
-  \item{\code{minnesota}}{a numeric vector of length 4 containing parameters
-  for the calculation of the Minnesota-like inclusion priors. See below.}
+  This is the semiautomatic approach described in George et al. (2008). Only used for SSVS.}
 }
-Either \code{tau} or \code{semiautomatic} must be specified.
+In the case of SSVS, either \code{tau} or \code{semiautomatic} must be specified.
 
-The argument \code{bvs} can contain the following elements
-\describe{
-  \item{\code{inprior}}{a numeric between 0 and 1 specifying the prior probability
-  of a variable to be included in the model.}
-  \item{\code{covar}}{logical indicating if BVS should also be applied to the
-  error covariance matrix.}
-  \item{\code{exclude_det}}{logical indicating if deterministic terms should
-  be excluded from the BVS algorithm.}
-  \item{\code{minnesota}}{a numeric vector of length 4 containing parameters
-  for the calculation of the Minnesota-like inclusion priors. See below.}
-}
-
-If either \code{ssvs$minnesota} or \code{bvs$minnesota} is specified, prior
+If \code{varsel$minnesota} is specified, prior
 inclusion probabilities are calculated in a Minnesota-like fashion as
 \tabular{cl}{
-\eqn{\frac{\kappa_1}{l}} \tab for own lags of endogenous variables, \cr
-\eqn{\frac{\kappa_2}{l}} \tab for other endogenous variables, \cr
-\eqn{\frac{\kappa_3}{1 + l}} \tab for exogenous variables, \cr
+\eqn{\frac{\kappa_{1}}{l}} \tab for own lags of endogenous variables, \cr
+\eqn{\frac{\kappa_{2}}{l}} \tab for other endogenous variables, \cr
+\eqn{\frac{\kappa_{3}}{1 + l}} \tab for exogenous variables, \cr
 \eqn{\kappa_{4}} \tab for deterministic variables, 
 }
 for lag \eqn{l} with \eqn{\kappa_1}, \eqn{\kappa_2}, \eqn{\kappa_3},
 \eqn{\kappa_4} as the first, second, third and forth element in
-\code{ssvs$minnesota} or \code{bvs$minnesota}, respectively.
+\code{varsel$minnesota}, respectively.
 }
 \examples{
 
@@ -169,12 +147,14 @@ data("e1")
 e1 <- diff(log(e1)) * 100
 
 # Create model
-model <- create_var_model(e1, p = 2, deterministic = "const",
-                          iterations = 50, burnin = 10)
-# Number of iterations and burnin should be much higher.
+model <- create_bvarmodel(e1, p = 2, deterministic = "const",
+                          iterations = 10, burnin = 10)
+# Number of iterations and burn-in should be much higher.
 
-# Add priors
-model <- add_priors(model)
+# Add prior specifications
+model <- add_priors(model,
+                    coef = list(v_i = 1, v_i_det = 1 / 10),
+                    sigma = list(df = "k", scale = 1))
 
 }
 \references{

@@ -10,3 +10,4 @@ src/core/*/*.o
 ^data-raw$
 .Rproj
 inst/doc
+tools

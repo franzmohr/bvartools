@@ -1,32 +1,55 @@
 
 # bvartools
 
+<!-- badges: start -->
+
 [![CRAN
 status](https://www.r-pkg.org/badges/version/bvartools)](https://cran.r-project.org/package=bvartools)
-[![R-CMD-check](https://github.com/franzmohr/bvartools/workflows/R-CMD-check/badge.svg)](https://github.com/franzmohr/bvartools/actions)
+[![CRAN
+downloads](https://cranlogs.r-pkg.org/badges/bvartools)](https://cran.r-project.org/package=bvartools)
+[![Total
+downloads](https://cranlogs.r-pkg.org/badges/grand-total/bvartools)](https://cran.r-project.org/package=bvartools)
+[![R-CMD-check](https://github.com/franzmohr/bvartools/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/franzmohr/bvartools/actions/workflows/R-CMD-check.yaml)
+[![License: GPL (\>=
+2)](https://img.shields.io/badge/license-GPL%20%28%3E%3D%202%29-blue.svg)](https://www.gnu.org/licenses/gpl-2.0)
+<!-- badges: end -->
 
 ## Overview
 
 The package `bvartools` implements functions for Bayesian inference of
-linear vector autoregressive (VAR) models. It separates a typical BVAR
-analysis workflow into multiple steps:
+linear time series models with a focus on vector autoregressive (VAR)
+and vector error correction (VEC). It separates a typical analytics
+workflow into multiple steps:
 
-- *Model set-up*: Produces data matrices for given lag orders and model
-  types, which can be used for posterior simulation.
-- *Prior specification*: Generates prior matrices for a given model.
-- *Estimation*: Researchers can choose to use the posterior algorithms
-  of the package or use their own algorithms.
-- *Standardising model output*: Combines the output of the estimation
-  step into standardised objects for subsequent steps of the analyis.
-- *Evaluation*: Produces summary statistics, forecasts, impulse
-  responses and forecast error variance decompositions.
+- *Model set-up*
+  - Produce data matrices for given lag orders and model types, which
+    can be used for posterior simulation. This includes a set-up for
+    expanding window estimation.
+  - Set prior hyperparameters either manually or based on established
+    approaches such as the Minnesota prior.
+  - Set initial values based on maximum likelihood estiamtes or drawing
+    from a prior.
+- *Posterior simulation*
+  - Perform posterior simulation of coefficients, forecasts and
+    likelihoods using algortihms from the
+    [BayesTS](github.com/franzmohr/BayesTS) library.
+  - Researchers can also choose to use they own algorthms.
+- *Evaluation*
+  - Traditional summary statistics for individual coefficients
+  - In-sample performance measures (LL, AIC, BIC, HQ)
+  - Out-of-sample performance (MAFE, RMSFE)
+- *Application*
+  - Forecasts
+  - Impulse response functions
+  - Forecast error variance decompositions
 
-In each step researchers are provided with the opportunitiy to fine-tune
+In each step researchers are provided with the opportunity to fine-tune
 a model according to their specific requirements or to use the default
-framework for commonly used models and priors. Since version 0.1.0 the
-package comes with posterior simulation functions that do not require to
-implement any further simulation algorithms. For Bayesian inference of
-*stationary VAR models* the package covers
+framework for commonly used models and priors. Since version 1.0.0 the
+package includes simulation functions from the
+[BayesTS](github.com/franzmohr/BayesTS) C++ library.
+
+For Bayesian inference of *VAR models* the package covers
 
 - Standard BVAR models with independent normal-Wishart priors
 - BVAR models employing stochastic search variable selection à la
@@ -106,7 +129,9 @@ the log-differenced series are used.
 library(bvartools)
 ```
 
-    ## Loading required package: coda
+    ## Lade nötiges Paket: coda
+
+    ## Lade nötiges Paket: Matrix
 
 ``` r
 # Load data
@@ -120,19 +145,19 @@ e1 <- window(e1, end = c(1978, 4))
 plot(e1)
 ```
 
-<img src="README_files/figure-gfm/data-1.png" style="display: block; margin: auto;" />
+<img src="README_files/figure-gfm/data-1.png" alt="" style="display: block; margin: auto;" />
 
 ### Setting up a model
 
-The `gen_var` function produces an object, which contains information on
-the specification of the VAR model that should be estimated. The
-following code specifies a VAR(2) model with an intercept term. The
-number of iterations and burn-in draws is already specified at this
-stage.
+The `create_bvarmodel` function produces an object, which contains
+information on the specification of the VAR model that should be
+estimated. The following code specifies a VAR(2) model with an intercept
+term. The number of iterations and burn-in draws is already specified at
+this stage.
 
 ``` r
-model <- gen_var(e1, p = 2, deterministic = "const",
-                 iterations = 5000, burnin = 1000)
+model <- create_bvarmodel(e1, p = 2, deterministic = "const",
+                          iterations = 5000, burnin = 1000)
 ```
 
 Note that the function is also capable of generating more than one
@@ -144,28 +169,57 @@ Function `add_priors` produces priors for the specified model(s) in
 object `model` and augments the object accordingly.
 
 ``` r
-model_with_priors <- add_priors(model,
-                                coef = list(v_i = 0, v_i_det = 0),
-                                sigma = list(df = 1, scale = .0001))
+# Add uninformative prior
+model_with_prior <- add_priors(model,
+                               coef = list(v_i = 0, v_i_det = 0),
+                               sigma = list(df = 1, scale = .0001))
 ```
 
 If researchers want to fine-tune individual prior specifications, this
 can be done by directly accessing the respective elements in object
-`model_with_priors`.
+`model_with_prior`.
 
-### Estimation
+### Adding initial values
 
-The output of `add_priors` can be used as the input for user-written
-algorithms for posterior simulation. However, `bvartools` also comes
-with built-in posterior simulation functions, which can be directly
-applied to the output of the prior specification step by using function
-`draw_posterior`:
+Function `add_initial_values` adds initial values of posterior
+coefficients to `model_with_prior`. The default behaviour of the
+function is to obtain an LS estimate of the coefficients.
 
 ``` r
-bvar_est <- draw_posterior(model_with_priors)
+model <- add_initial_values(model_with_prior)
 ```
 
-The following code sets up a simple Gibbs sampler algorithm.
+To be sure, check the initial values, the function produced:
+
+``` r
+# 
+round(matrix(model[["initial"]][["a"]], 3), 3)
+```
+
+    ##        [,1]   [,2]   [,3]   [,4]  [,5]   [,6]   [,7]
+    ## [1,] -0.320  0.146  0.961 -0.161 0.115  0.934 -1.672
+    ## [2,]  0.044 -0.153  0.289  0.050 0.019 -0.010  1.577
+    ## [3,] -0.002  0.225 -0.264  0.034 0.355 -0.022  1.293
+
+### Posterior simulation of coefficients
+
+#### Using the built-in functions of the package
+
+The output of `add_priors` and `add_initial_values` can be used as the
+input for user-written algorithms for posterior simulation. However,
+`bvartools` also comes with built-in posterior simulation functions from
+the [BayesTS](github.com/franzmohr/BayesTS) library. By using function
+`add_posterior_coefficients`, the model input is forwared to a posterior
+function and the output is added to the original object:
+
+``` r
+model <- add_posterior_coefficients(model)
+```
+
+#### Using custom posterior functions
+
+The following code sets up a simple Gibbs sampler algorithm based on the
+input data, which was available after the application of `add_priors`.
 
 ``` r
 # Reset random number generator for reproducibility
@@ -175,19 +229,19 @@ iterations <- 10000 # Number of saved iterations of the Gibbs sampler
 burnin <- 5000 # Number of burn-in draws
 draws <- iterations + burnin # Total number of MCMC draws
 
-y <- t(model_with_priors$data$Y)
-x <- t(model_with_priors$data$Z)
+y <- t(model_with_prior[["data"]][["train"]][["y"]])
+x <- t(model_with_prior[["data"]][["train"]][["x"]])
 
 tt <- ncol(y) # Number of observations
 k <- nrow(y) # Number of endogenous variables
 m <- k * nrow(x) # Number of estimated coefficients
 
 # Set (uninformative) priors
-a_mu_prior <- model_with_priors$priors$coefficients$mu # Vector of prior parameter means
-a_v_i_prior <- model_with_priors$priors$coefficients$v_i # Inverse of the prior covariance matrix
+a_mu_prior <- model_with_prior[["priors"]][["a"]][["mu"]] # Vector of prior parameter means
+a_v_i_prior <- model_with_prior[["priors"]][["a"]][["v_inv"]] # Inverse of the prior covariance matrix
 
-u_sigma_df_prior <- model_with_priors$priors$sigma$df # Prior degrees of freedom
-u_sigma_scale_prior <- model_with_priors$priors$sigma$scale # Prior covariance matrix
+u_sigma_df_prior <- model_with_prior[["priors"]][["u_sigma"]][["df"]] # Prior degrees of freedom
+u_sigma_scale_prior <- model_with_prior[["priors"]][["u_sigma"]][["scale"]] # Prior covariance matrix
 u_sigma_df_post <- tt + u_sigma_df_prior # Posterior degrees of freedom
 
 # Initial values
@@ -216,16 +270,14 @@ for (draw in 1:draws) {
 }
 ```
 
-### `bvar` objects
-
-Function `bvar` can be used to collect relevant output of the Gibbs
-sampler in a standardised object, which can be used by further
-applications such as `predict` to obtain forecasts or `irf` for impulse
-respons analysis.
+After the posterior simulation, function `bvar` can be used to collect
+relevant output of the Gibbs sampler in a standardised object, which can
+be used by further applications such as `predict` to obtain forecasts or
+`irf` for impulse respons analysis.
 
 ``` r
-bvar_est <- bvar(y = model_with_priors$data$Y,
-                 x = model_with_priors$data$Z,
+bvar_est <- bvar(y = model_with_prior[["data"]][["train"]][["y"]],
+                 x = model_with_prior[["data"]][["train"]][["x"]],
                  A = draws_a[1:18,],
                  C = draws_a[19:21, ],
                  Sigma = draws_sigma)
@@ -242,7 +294,7 @@ summary(bvar_est)
     ## 
     ## Model:
     ## 
-    ## y ~ invest.01 + income.01 + cons.01 + invest.02 + income.02 + cons.02 + const
+    ## Endogenous variables: invest, income, cons
     ## 
     ## Variable: invest 
     ## 
@@ -298,8 +350,8 @@ summary(bvar_est)
     ## cons_income    0.6442 0.1690 0.001690       0.001873  0.3596  0.6280  1.032
     ## cons_cons      0.9348 0.1681 0.001681       0.001872  0.6610  0.9141  1.312
 
-The means of the posterior draws are very close to the results of the
-frequentist estimatior in Lütkepohl (2006).
+Note that the means of the posterior draws are very close to the results
+of the frequentist estimator in Lütkepohl (2006).
 
 ### Inspect posterior draws
 
@@ -311,7 +363,7 @@ coefficients.
 plot(bvar_est)
 ```
 
-<img src="README_files/figure-gfm/unnamed-chunk-4-1.png" style="display: block; margin: auto;" />
+<img src="README_files/figure-gfm/unnamed-chunk-6-1.png" alt="" style="display: block; margin: auto;" />
 
 Alternatively, the trace plot of the post-burnin draws can be draws by
 adding the argument `type = "trace"`:
@@ -320,7 +372,7 @@ adding the argument `type = "trace"`:
 plot(bvar_est, type = "trace")
 ```
 
-<img src="README_files/figure-gfm/unnamed-chunk-5-1.png" style="display: block; margin: auto;" />
+<img src="README_files/figure-gfm/unnamed-chunk-7-1.png" alt="" style="display: block; margin: auto;" />
 
 ### Summary statistics
 
@@ -336,7 +388,7 @@ summary(bvar_est)
     ## 
     ## Model:
     ## 
-    ## y ~ invest.01 + income.01 + cons.01 + invest.02 + income.02 + cons.02 + const
+    ## Endogenous variables: invest, income, cons
     ## 
     ## Variable: invest 
     ## 

@@ -253,10 +253,13 @@ bvar_est <- thin(bvar_est, thin = 10)
 
 ### Forecasts
 
-Forecasts can be obtained with the function `predict`. If the model contains deterministic terms, new values have to be provided in the argument `new_D`, which must be of the same length as the argument `n.ahead`.
+Forecasts are obtained in two steps. Function `add_forecast_input_data` generates the data of the forecast periods, where deterministic terms can be provided in the argument `deterministic` and unmodelled variables in the argument `exogen`. If they are not provided, the function tries to obtain them from the model. Function `add_posterior_forecasts` then simulates the forecasts, which can be extracted with the function `predict`.
 
 ```{r forecasts, fig.width=5.5, fig.height=5.5}
-bvar_pred <- predict(bvar_est, n.ahead = 5, new_D = rep(1, 5))
+bvar_est <- add_forecast_input_data(bvar_est, n_ahead = 5)
+bvar_est <- add_posterior_forecasts(bvar_est)
+
+bvar_pred <- predict(bvar_est)
 
 plot(bvar_pred)
 ```
@@ -266,7 +269,7 @@ plot(bvar_pred)
 #### Forecast error impulse response
 
 ```{r feir, fig.width=5.5, fig.height=4.5}
-IR <- irf(bvar_est, impulse = "income", response = "cons", n.ahead = 8)
+IR <- irf(bvar_est, impulse = "income", response = "cons", n_ahead = 8)
 
 plot(IR, main = "Forecast Error Impulse Response", xlab = "Period", ylab = "Response")
 ```
@@ -274,7 +277,7 @@ plot(IR, main = "Forecast Error Impulse Response", xlab = "Period", ylab = "Resp
 #### Orthogonalised impulse response
 
 ```{r oir, fig.width=5.5, fig.height=4.5}
-OIR <- irf(bvar_est, impulse = "income", response = "cons", n.ahead = 8, type = "oir")
+OIR <- irf(bvar_est, impulse = "income", response = "cons", n_ahead = 8, type = "oir")
 
 plot(OIR, main = "Orthogonalised Impulse Response", xlab = "Period", ylab = "Response")
 ```
@@ -282,7 +285,7 @@ plot(OIR, main = "Orthogonalised Impulse Response", xlab = "Period", ylab = "Res
 #### Generalised impulse response
 
 ```{r gir, fig.width=5.5, fig.height=4.5}
-GIR <- irf(bvar_est, impulse = "income", response = "cons", n.ahead = 8, type = "gir")
+GIR <- irf(bvar_est, impulse = "income", response = "cons", n_ahead = 8, type = "gir")
 
 plot(GIR, main = "Generalised Impulse Response", xlab = "Period", ylab = "Response")
 ```

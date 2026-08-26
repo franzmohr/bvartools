@@ -26,7 +26,7 @@
 #'
 #' The data set contains quarterly, seasonally adjusted time series for West German fixed investment, disposable
 #' income, and consumption expenditures in billions of DM from 1960Q1 to 1982Q4. It was produced
-#' from file E1 of the data sets associated with Lütkepohl (2007). Raw data are available at
+#' from file E1 of the data sets associated with Lütkepohl (2006). Raw data are available at
 #' \url{http://www.jmulti.de/download/datasets/e1.dat} and were originally obtained from
 #' Deutsche Bundesbank.
 #' 
@@ -49,7 +49,7 @@
 #'
 #' The data set contains quarterly, seasonally unadjusted time series for German long-term interest
 #' and inflation rates from 1972Q2 to 1998Q4. It was produced from file E6 of the data sets associated
-#' with Lütkepohl (2007). Raw data are available at \url{http://www.jmulti.de/download/datasets/e6.dat}
+#' with Lütkepohl (2006). Raw data are available at \url{http://www.jmulti.de/download/datasets/e6.dat}
 #' and were originally obtained from Deutsche Bundesbank and Deutsches Institut für Wirtschaftsforschung.
 #' 
 #' @usage data("e6")
@@ -91,3 +91,26 @@
 #' (2nd ed.). Cambridge: Cambridge University Press.
 #' 
 "us_macrodata"
+
+#' UK interest and inflation rate data
+#'
+#' The data set contains quarterly time series for two UK interest rates and inflation
+#' from 1957Q4 to 2009Q3. It was produced from the supplementary material to
+#' Koop, León-González and Strachan (2011).
+#' 
+#' @usage data("uk_macrodata")
+#' 
+#' @format A named time-series object with 210 rows and 3 variables:
+#' \describe{
+#'   \item{rs}{short term rate: Treasury bills. This should be series 'FITB_PA' of the IMF's International Financial Statistics database.}
+#'   \item{rs}{long term rate: Government bonds. This should be series 'FIGB_PA' of the IMF's International Financial Statistics database.}
+#'   \item{Dp}{inflation: Quarterly change in the log CPI annualized by multiplying the change by 400.}
+#' }
+#' 
+#' @references
+#' 
+#' Koop, G., León-González, R., & Strachan R. W. (2011). Bayesian inference in
+#' a time varying cointegration model. \emph{Journal of Econometrics, 165}(2), 210--220.
+#' \doi{10.1016/j.jeconom.2011.07.007}
+#' 
+"uk_macrodata"

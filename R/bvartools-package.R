@@ -54,6 +54,7 @@
 #' @importFrom Matrix solve
 #' @importFrom Matrix t
 #' @importFrom Rcpp sourceCpp
+#' @importFrom stats window
 #' @import methods
 #' @exportPattern "^[[:alpha:]]+"
 ## usethis namespace: end

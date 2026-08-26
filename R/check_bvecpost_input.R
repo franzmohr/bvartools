@@ -1,16 +1,16 @@
-#' Check Gibbs Sampler Input
-#' 
-#' Checks if the input to function \code{\link{bvecpost}} is suitable for the
-#' package's own Gibbs sampling algorithms.
-#' 
-#' @param object a list containing the necesseary data objects required for
-#' a Gibbs sampling algorithm. Usually, the output of a call to 
-#' \code{\link{create_vec_model}} in combination with \code{\link{add_priors}}
-#' and \code{\link{add_initial_values}}.
-#' 
-#' 
-#' @export
-check_bvecpost_input <- function(object){
+# Check Gibbs Sampler Input
+# 
+# Checks if the input to function \code{\link{bvecpost}} is suitable for the
+# package's own Gibbs sampling algorithms.
+# 
+# @param object a list containing the necesseary data objects required for
+# a Gibbs sampling algorithm. Usually, the output of a call to 
+# \code{\link{create_vec_model}} in combination with \code{\link{add_priors}}
+# and \code{\link{add_initial_values}}.
+# 
+# 
+# @export
+.check_bvecpost_input <- function(object){
   
   # Coefficients ----
   if (!is.null(object[["data"]][["z"]])) {
@@ -47,7 +47,7 @@ check_bvecpost_input <- function(object){
   }
   
   # Covariances ----
-  if (object[["model"]][["error"]] %in% c("gamma+covar", "sv+covar")) {
+  if (object[["model"]][["error"]] %in% c("gamma+covar", "sv+covar") & ncol(object[["data"]][["train"]][["y"]]) > 1) {
     # Priors
     if (is.null(object[["priors"]][["psi"]])) {
       stop("Missing element 'object$priors$psi'.")
@@ -80,16 +80,16 @@ check_bvecpost_input <- function(object){
   
   
   # Errors ----
-  if (is.null(object[["priors"]][["sigma"]])) {
-    stop("Missing element 'object$priors$sigma'.")
+  if (is.null(object[["priors"]][["u_sigma"]])) {
+    stop("Missing element 'object$priors$u_sigma'.")
   }
   
   # Wishart prior
   if (object[["model"]][["error"]] == "wishart") {
     # Priors
     for (i in c("df", "scale")) {
-      if (is.null(object[["priors"]][["sigma"]][[i]])) {
-        stop(paste0("Missing element 'object$priors$sigma$", i, "'."))
+      if (is.null(object[["priors"]][["u_sigma"]][[i]])) {
+        stop(paste0("Missing element 'object$priors$u_sigma$", i, "'."))
       }
     }
   }
@@ -98,8 +98,8 @@ check_bvecpost_input <- function(object){
   if (object[["model"]][["error"]] %in% c("gamma", "gamma+covar")) {
     # Priors
     for (i in c("shape", "rate")) {
-      if (is.null(object[["priors"]][["sigma"]][[i]])) {
-        stop(paste0("Missing element 'object$priors$sigma$", i, "'."))
+      if (is.null(object[["priors"]][["u_sigma"]][[i]])) {
+        stop(paste0("Missing element 'object$priors$u_sigma$", i, "'."))
       }
     } 
   }
@@ -107,8 +107,8 @@ check_bvecpost_input <- function(object){
   # Stochastic volatility
   if (object[["model"]][["error"]] %in% c("sv", "sv+covar")) {
     for (i in c("mu", "v_i", "shape", "rate")) {
-      if (is.null(object[["priors"]][["sigma"]][[i]])) {
-        stop(paste0("Missing element 'object$priors$sigma$", i, "'."))
+      if (is.null(object[["priors"]][["u_sigma"]][[i]])) {
+        stop(paste0("Missing element 'object$priors$u_sigma$", i, "'."))
       }
     } 
   }

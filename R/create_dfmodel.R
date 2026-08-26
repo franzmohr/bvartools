@@ -52,7 +52,7 @@
 #' data("bem_dfmdata")
 #'
 #' # Generate model data
-#' model <- create_df_model(x = bem_dfmdata, p = 1, n = 1,
+#' model <- create_dfmodel(x = bem_dfmdata, p = 1, n = 1,
 #'                         iterations = 5000, burnin = 1000)
 #'
 #' @references
@@ -63,7 +63,7 @@
 #' Lütkepohl, H. (2006). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
 #'
 #' @export
-create_df_model <- function(x, p = 2, n = 1, normalize_x = TRUE, error = "gamma", iterations = 20000, burnin = 2000) {
+create_dfmodel <- function(x, p = 2, n = 1, normalize_x = TRUE, error = "gamma", iterations = 20000, burnin = 2000) {
   
   warning("Functionality for dynamic factor models will be exported to package 'dfmtools' in the near future.")
   

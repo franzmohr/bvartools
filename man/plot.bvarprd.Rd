@@ -4,37 +4,44 @@
 \alias{plot.bvarprd}
 \title{Plotting Forecasts of BVAR Models}
 \usage{
-\method{plot}{bvarprd}(x, n.pre = NULL, ...)
+\method{plot}{bvarprd}(x, n_pre = NULL, ci = 0.95, ...)
 }
 \arguments{
-\item{x}{an object of class "bvarprd", usually, a result of a call to \code{\link{predict.bvar}}.}
+\item{x}{an object of class 'bvarprd', usually, a result of a call to \code{\link{predict.bvarmodel}}.}
 
-\item{n.pre}{number of plotted observations that precede the forecasts. If \code{NULL} (default),
-all available obervations will be plotted.}
+\item{n_pre}{number of plotted observations that precede the forecasts. If \code{NULL} (default),
+all available observations will be plotted.}
 
 \item{...}{further graphical parameters.}
 }
 \description{
-A plot function for objects of class \code{"bvarprd"}.
+A plot function for objects of class 'bvarprd'.
 }
 \examples{
 
 # Load data
 data("e1")
 e1 <- diff(log(e1)) * 100
+e1 <- window(e1, end = c(1978, 4))
 
 # Generate model data
-model <- gen_var(e1, p = 2, deterministic = 2,
-                 iterations = 100, burnin = 10)
+model <- create_bvarmodel(e1, p = 2, deterministic = "const",
+                          iterations = 100, burnin = 10)
+# Chosen number of iterations and burnin should be much higher.
 
 # Add prior specifications
-model <- add_priors(model)
+model <- add_priors(model,
+                    coef = list(v_i = 1, v_i_det = 1 / 10),
+                    sigma = list(df = "k", scale = 1))
+
+# Add initial values
+model <- add_initial_values(model)
 
 # Obtain posterior draws
-object <- draw_posterior(model)
+model <- add_posterior_coefficients(model)
 
 # Calculate forecasts
-pred <- predict(object, new_d = rep(1, 10))
+pred <- predict(model)
 
 # Plot forecasts
 plot(pred)

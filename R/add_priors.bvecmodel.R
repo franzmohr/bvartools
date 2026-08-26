@@ -1,7 +1,7 @@
 #' Add Priors to Bayesian Models
 #'
 #' Adds prior specifications to a list of models, which was produced by
-#' function \code{\link{create_vec_model}}.
+#' function \code{\link{create_bvecmodel}}.
 #'
 #' @param object a list of class 'bvecmodel'.
 #' @param coef a named list of prior specifications for coefficients that do not 
@@ -16,9 +16,8 @@
 #' For the default specification of an inverse Wishart distribution the prior degrees
 #' of freedom are set to the number of endogenous variables plus the rank of
 #' the cointegration matrix. The prior variance is to 1. See 'Details'.
-#' @param ssvs optional; a named list of prior specifications for the SSVS algorithm.
-#' Not allowed for TVP models. See 'Details'.
-#' @param bvs optional; a named list of prior specifications for the BVS algorithm. See 'Details'.
+#' @param varsel optional; a named list of prior specifications for the variable
+#' selection algorithm. See 'Details'.
 #' @param ... further arguments passed to or from other methods.
 #' 
 #' @details The arguments of the function require named lists. Possible
@@ -45,6 +44,8 @@
 #'   \deqn{ \kappa_{0} \kappa_{3} \sigma_{i}^2 \textrm{ for deterministic terms,}}
 #'   where \eqn{\sigma_{i}} is the residual standard deviation of variable \eqn{i} of an unrestricted
 #'   LS estimate. For exogenous variables \eqn{\sigma_{i}} is the sample standard deviation.
+#'   If \code{kappa2 = NULL}, \eqn{\kappa_{0} \kappa_{3} \sigma_{i}^2} will be used for
+#'   exogenous variables instead.
 #'   The function only provides priors for the non-cointegration part of the model. However,
 #'   the residual standard errors \eqn{\sigma_i} are based on an unrestricted LS regression of the
 #'   endogenous variables on the error correction term and the non-cointegration regressors.}
@@ -61,16 +62,32 @@
 #'   Only used for models with time varying parameters. Default is 0.01.}
 #' }
 #' 
-#' Argument \code{coint} can contain the following elements:
+#' Argument \code{coint} can contain the following elements. Which of them are
+#' required depends on whether the cointegration vectors are constant or time
+#' varying, since the two are given different kinds of prior: a matric-variate
+#' prior on the cointegration space in the first case, and a state equation in
+#' the second.
 #' \describe{
-#'   \item{\code{v_i}}{numeric between 0 and 1 specifying the shrinkage of the cointegration space prior. Default is 0.}
+#'   \item{\code{v_i}}{numeric between 0 and 1 specifying the shrinkage of the cointegration space prior.
+#'   Required for models with constant cointegration parameters and not used otherwise.}
 #'   \item{\code{p_tau_i}}{numeric of the diagonal elements of the inverse prior matrix of
-#'   the central location of the cointegration space \eqn{sp(\beta)}. Default is 1.}
+#'   the central location of the cointegration space \eqn{sp(\beta)}.
+#'   Required for models with constant cointegration parameters and not used otherwise.}
 #'   \item{\code{rho}}{a numeric specifying the autocorrelation coefficient
-#'   of the state equation of \eqn{\beta}. It must be smaller than 1. Default is 0.999.
+#'   of the state equation of \eqn{\beta}. It must be smaller than 1.
+#'   Required for models with time varying cointegration parameters and not used otherwise.
 #'   Note that in contrast to Koop et al. (2011) \eqn{\rho} is not drawn in the Gibbs sampler of
 #'   this package yet.}
 #' }
+#' For a model with time varying cointegration parameters the state equation is
+#' \eqn{\beta_t = \rho \beta_{t-1} + \eta_t} with \eqn{\eta_t \sim N(0, I)}, and
+#' the prior on the state before the sample is that equation's own stationary
+#' distribution, \eqn{N(0, I / (1 - \rho^2))}. This is what makes the prior
+#' proper, so a \eqn{\rho} close to one is intended and one further from it draws
+#' a warning. The loadings carry the compensating scale: only the product
+#' \eqn{\alpha \beta^{\prime}} is identified, so their prior variance is shrunk
+#' by \eqn{1 - \rho^2}, leaving the product on the scale \code{coef$v_i} asks
+#' for.
 #' 
 #' Argument \code{sigma} can contain the following elements:
 #' \describe{
@@ -103,40 +120,28 @@
 #' }
 #' For structural models only a gamma prior or stochastic volatility specification is allowed.
 #' 
-#' Argument \code{ssvs} can contain the following elements:
+#' Argument \code{varsel} can contain the following elements:
 #' \describe{
 #'   \item{\code{inprior}}{a numeric between 0 and 1 specifying the prior probability
 #'   of a variable to be included in the model.}
+#'   \item{\code{covar}}{logical indicating if the variable selection algorithm
+#'   should also be applied to the error covariance matrix.}
+#'   \item{\code{exclude_det}}{logical indicating if deterministic terms should
+#'   be excluded from the variable selection algorithm.}
+#'   \item{\code{minnesota}}{a numeric vector of length 4 containing parameters
+#'   for the calculation of the Minnesota-like inclusion priors. See below.}
 #'   \item{\code{tau}}{a numeric vector of two elements containing the prior standard errors
 #'   of restricted variables (\eqn{\tau_0}) as its first element and unrestricted variables (\eqn{\tau_1})
-#'   as its second.}
+#'   as its second. Only used for SSVS.}
 #'   \item{\code{semiautomatic}}{an numeric vector of two elements containing the
 #'   factors by which the standard errors associated with an unconstrained least squares
 #'   estimate of the model are multiplied to obtain the prior standard errors
 #'   of restricted (\eqn{\tau_0}) and unrestricted (\eqn{\tau_1}) variables, respectively.
-#'   This is the semiautomatic approach described in George et al. (2008).}
-#'   \item{\code{covar}}{logical indicating if SSVS should also be applied to the
-#'   error covariance matrix.}
-#'   \item{\code{exclude_det}}{logical indicating if deterministic terms should
-#'   be excluded from the SSVS algorithm.}
-#'   \item{\code{minnesota}}{a numeric vector of length 4 containing parameters
-#'   for the calculation of the Minnesota-like inclusion priors. See below.}
+#'   This is the semiautomatic approach described in George et al. (2008). Only used for SSVS.}
 #' }
-#' Either \code{tau} or \code{semiautomatic} must be specified.
+#' In the case of SSVS, either \code{tau} or \code{semiautomatic} must be specified.
 #' 
-#' The argument \code{bvs} can contain the following elements
-#' \describe{
-#'   \item{\code{inprior}}{a numeric between 0 and 1 specifying the prior probability
-#'   of a variable to be included in the model.}
-#'   \item{\code{covar}}{logical indicating if BVS should also be applied to the
-#'   error covariance matrix.}
-#'   \item{\code{exclude_det}}{logical indicating if deterministic terms should
-#'   be excluded from the BVS algorithm.}
-#'   \item{\code{minnesota}}{a numeric vector of length 4 containing parameters
-#'   for the calculation of the Minnesota-like inclusion priors. See below.}
-#' }
-#' 
-#' If either \code{ssvs$minnesota} or \code{bvs$minnesota} is specified, prior
+#' If \code{varsel$minnesota} is specified, prior
 #' inclusion probabilities are calculated in a Minnesota-like fashion as
 #' \tabular{cl}{
 #' \eqn{\frac{\kappa_1}{l}} \tab for own lags of endogenous variables, \cr
@@ -146,9 +151,9 @@
 #' }
 #' for lag \eqn{l} with \eqn{\kappa_1}, \eqn{\kappa_2}, \eqn{\kappa_3},
 #' \eqn{\kappa_4} as the first, second, third and forth element in
-#' \code{ssvs$minnesota} or \code{bvs$minnesota}, respectively.
+#' \code{varsel$minnesota}, respectively.
 #' 
-#' @return A list of models.
+#' @return An object of class 'bvecmodel'.
 #' 
 #' @references
 #' 
@@ -175,25 +180,42 @@
 #' 
 #' @examples 
 #' 
-#' # Load data
+#' # Load data 
 #' data("e6")
+#' e6 <- e6 * 100
 #' 
-#' # Create model
-#' model <- create_vec_model(e6, p = 4, r = 1,
-#'                           const = "unrestricted", seasonal = "unrestricted",
-#'                           iterations = 100, burnin = 10)
-#' # Chosen number of iterations and burnin should be much higher.
+#' # Generate model
+#' model <- create_bvecmodel(e6, p = 1, r = 1, const = "restricted",
+#'                           iterations = 10, burnin = 10)
+#' # Chosen number of iterations and burn-in should be much higher.
 #' 
 #' # Add priors
-#' model <- add_priors(model)
-#' 
+#' model <- add_priors(model,
+#'                     coef = list(v_i = 1, v_i_det = 1 / 10),
+#'                     coint = list(v_i = 0, p_tau_i = 1),
+#'                     sigma = list(df = "k", scale = 1))
+#'
+#' # The same model with time varying parameters. The cointegration vectors are
+#' # then a state path rather than a draw from a cointegration space prior, so
+#' # 'coint' takes the autocorrelation of that path instead of its shrinkage and
+#' # central location, and 'coef' takes the prior of the state error variances.
+#' model <- create_bvecmodel(e6, p = 4, r = 1, tvp = TRUE,
+#'                           const = "unrestricted",
+#'                           seasonal = "unrestricted",
+#'                           iterations = 10, burnin = 10)
+#'
+#' model <- add_priors(model,
+#'                     coef = list(v_i = 1, v_i_det = 1 / 10,
+#'                                 shape = 3, rate = 0.0001),
+#'                     coint = list(rho = 0.999),
+#'                     sigma = list(df = "k", scale = 1))
+#'
 #' @export
 add_priors.bvecmodel <- function(object,
-                                 coef = list(v_i = 1, v_i_det = 0.1, shape = 3, rate = 0.0001, rate_det = 0.01),
-                                 coint = list(v_i = 0, p_tau_i = 1, rho = .999),
-                                 sigma = list(df = "k", scale = 1, mu = 0, v_i = 0.01, state_variance = 0.05, offset = 0.0001),
-                                 ssvs = NULL,
-                                 bvs = NULL,
+                                 coef,
+                                 coint,
+                                 sigma,
+                                 varsel = NULL,
                                  ...){
   
   # Input checks ----
@@ -232,26 +254,30 @@ add_priors.bvecmodel <- function(object,
     minnesota <- TRUE
   }
   
+  if (!is.null(varsel) & object[["model"]][["varsel"]] == "none") {
+    stop("Argument 'varsel' was provided, but according to argument 'object$model$varsel' no variable selection algorithm should be used.")
+  }
+  
   ## SSVS ----
   use_ssvs <- FALSE
   use_ssvs_error <- FALSE
   use_ssvs_semi <- FALSE
-  if (!is.null(ssvs)) {
+  if (object[["model"]][["varsel"]] == "ssvs") {
     
-    .add_priors_check_ssvs(object, ssvs)
+    .add_priors_check_ssvs(object, varsel)
     
-    if (!is.null(ssvs[["covar"]])) {
-      if (ssvs[["covar"]]) {
+    if (!is.null(varsel[["covar"]])) {
+      if (varsel[["covar"]]) {
         use_ssvs_error <- TRUE 
       }
     }
     
-    if (is.null(ssvs[["exclude_det"]])) {
-      ssvs[["exclude_det"]] <- FALSE
+    if (is.null(varsel[["exclude_det"]])) {
+      varsel[["exclude_det"]] <- FALSE
     }
-    # In case ssvs is specified, check if the semi-automatic approach of 
+    # In case varsel is specified, check if the semi-automatic approach of 
     # George et al. (2008) should be used
-    if (!is.null(ssvs[["semiautomatic"]])) {
+    if (!is.null(varsel[["semiautomatic"]])) {
       use_ssvs_semi <- TRUE
     }
     
@@ -265,20 +291,20 @@ add_priors.bvecmodel <- function(object,
   ## BVS ----
   use_bvs <- FALSE
   use_bvs_error <- FALSE
-  if (!is.null(bvs)) {
+  if (object[["model"]][["varsel"]] == "bvs") {
     use_bvs <- TRUE
-    if (is.null(bvs$inprior)) {
-      stop("If BVS should be applied, argument 'bvs$inprior' must be specified.")
+    
+    .add_priors_check_bvs(object, varsel)
+    
+    if (is.null(varsel[["exclude_det"]])) {
+      varsel[["exclude_det"]] <- FALSE
     }
-    if (is.null(bvs$exclude_det)) {
-      bvs$exclude_det <- FALSE
-    }
-    if (!is.null(bvs$covar)) {
-      if (bvs$covar) {
+    if (!is.null(varsel[["covar"]])) {
+      if (varsel[["covar"]]) {
         use_bvs_error <- TRUE 
       }
     }
-    if (coef[["v_i"]] == 0 | (coef[["v_i_det"]] == 0 & !bvs[["exclude_det"]])) {
+    if (coef[["v_i"]] == 0 | (coef[["v_i_det"]] == 0 & !varsel[["exclude_det"]])) {
       warning("Using BVS with an uninformative prior is not recommended.")
     }
   }
@@ -304,15 +330,9 @@ add_priors.bvecmodel <- function(object,
     stop("BVS or SSVS cannot be applied to covarianc matrix when there is only one endogenous variable.")
   } 
   
-  use_exo <- FALSE
-  if (object[["model"]][["m"]] > 0) {
-    use_exo <- TRUE
-    m <- object[["model"]][["m"]]
-    s <- object[["model"]][["s"]]
-  } else {
-    s <- 0
-    m <- 0
-  }
+  m <- object[["model"]][["m"]]
+  s <- object[["model"]][["s"]]
+  use_exo <- m > 0
   
   # Substract lag from domestic model for VEC
   p <- p - 1
@@ -323,7 +343,7 @@ add_priors.bvecmodel <- function(object,
   n_upsilon <- k * (m * s)
   
   # Add number of unrestricted deterministic terms
-  n_det <- object[["model"]][["n_unrestricted"]] * k
+  n_det <- object[["model"]][["n"]] * k
   
   tot_par <- n_alpha + n_gamma + n_upsilon + n_det
   
@@ -334,9 +354,9 @@ add_priors.bvecmodel <- function(object,
   }
   sv <- object[["model"]][["error"]] %in% c("sv", "sv+covar")
   n_struct <- 0
-  n_z <- NCOL(object[["data"]][["z"]])
+  n_z <- NCOL(object[["data"]][["train"]][["z"]])
   if (object[["model"]][["rank"]] > 0) {
-    n_w <- NCOL(object[["data"]][["w"]])
+    n_w <- NCOL(object[["data"]][["train"]][["w"]])
   }
   
   if (structural & k > 1) {
@@ -345,38 +365,50 @@ add_priors.bvecmodel <- function(object,
   }
   
   # Additional input check
-  if (!is.null(object[["data"]][["z"]])) {
-    if (tot_par != ncol(object[["data"]][["z"]])) {
-      stop("Model specifications are not consistent with data matrix 'object$data$z'.")
+  if (!is.null(object[["data"]][["train"]][["z"]])) {
+    if (tot_par != ncol(object[["data"]][["train"]][["z"]])) {
+      stop("Model specifications are not consistent with data matrix 'object$data$train$z'.")
     } 
   }
   
-  #### Cointegration (constant) ----
-  n_ect <- k * (k + m)
-  if (object[["model"]][["n_restricted"]] > 0) {
-    n_ect <- n_ect + object[["model"]][["n_restricted"]] * k
-  }
-  
-  r <- object[["model"]][["rank"]]
+  #### Cointegration ----
   if (r > 0) {
+    
+    n_ect <- k * (k + m)
+    if (object[["model"]][["n_restricted"]] > 0) {
+      n_ect <- n_ect + object[["model"]][["n_restricted"]] * k
+    }
     
     n_alpha <- r * k
     n_beta <- r * n_ect / k
     
     if (object[["model"]][["tvp"]]) {
-      
-      object[["priors"]][["cointegration"]] <- list(type = "cointspace",
-                                                    rho = coint[["rho"]],
-                                                    mu = matrix(0, n_beta),
-                                                    v_i = Matrix::Diagonal(n_beta, 1 - coint[["rho"]]^2))
+
+      # The cointegration vectors are a state path of their own, with
+      # beta_t = rho beta_{t-1} + eta_t and eta_t ~ N(0, I). rho is fixed rather
+      # than drawn, so it belongs with the prior; the sampler reads it from here.
+      #
+      # The prior on the state before the sample is that path's own stationary
+      # distribution, N(0, I / (1 - rho^2)), whose precision is (1 - rho^2) I.
+      # That is what makes it proper: at rho = 1 the state equation is a random
+      # walk whose variance grows without bound, and beta, being identified only
+      # up to scale, has nothing to pull it back.
+      #
+      # The shrinkage and central location of the constant model's cointegration
+      # space, coint$v_i and coint$p_tau_i, have no counterpart here: the space is
+      # not drawn from a matric-variate prior but followed period by period.
+      object[["priors"]][["beta"]] <- list("type" = "cointspace",
+                                           "rho" = coint[["rho"]],
+                                           "mu" = matrix(0, n_beta),
+                                           "v_inv" = diag(1 - coint[["rho"]]^2, n_beta))
     } else {
-      object[["priors"]][["cointegration"]] <- list(type = "cointspace",
-                                                    v_i = coint[["v_i"]],
-                                                    p_tau_i = diag(coint[["p_tau_i"]], n_ect / k)) 
+      object[["priors"]][["beta"]] <- list("type" = "cointspace",
+                                           "v_inv" = coint[["v_i"]],
+                                           "p_tau_inv" = diag(coint[["p_tau_i"]], n_ect / k)) 
     }
   }
   
-  # Non-cointegration (constant) ----
+  # Non-cointegration ----
   # Generate prior matrices ----
   if (tot_par > 0) {
     
@@ -388,20 +420,22 @@ add_priors.bvecmodel <- function(object,
       
       if (!is.null(coef[["const"]]))  {
         
-        pos <- which(dimnames(object$data$x)[[2]] == "const") + r
+        pos <- which(dimnames(object[["data"]][["x"]])[[2]] == "const") + r
         
         if (length(pos) == 1) {
           if ("character" %in% class(coef[["const"]])) {
-            if (coef$const == "first") {
-              mu[, r + pos] <- object$data$y[1, ]
+            if (coef[["const"]] == "first") {
+              mu[, r + pos] <- object[["data"]][["train"]][["y"]][1,]
             }
-            if (coef$const == "mean") {
-              mu[, r + pos] <- colMeans(object$data$y)
+            if (coef[["const"]] == "mean") {
+              mu[, r + pos] <- colMeans(object[["data"]][["train"]][["y"]])
             }
           }
-          if ("numeric" %in% class(coef[["const"]])) {
-            mu[, r + pos] <- coef$const
-          } 
+          if (length(coef[["const"]]) == 1 | length(coef[["const"]]) == k) {
+            mu[, r + pos] <- coef[["const"]]
+          } else {
+            stop("When a numeric is provided in argument 'coef$const', it must be either a single number or a vector of the same length as the number of endogenous varibles in the model.")
+          }
         }
       }
     }
@@ -426,7 +460,7 @@ add_priors.bvecmodel <- function(object,
                               max_var = NULL,
                               sigma = "AR")
       
-      object[["priors"]][["a"]][["v_i"]] <- minn[["v_i"]]
+      object[["priors"]][["a"]][["v_inv"]] <- minn[["v_i"]]
     }
     
     # SSVS prior ----
@@ -436,88 +470,101 @@ add_priors.bvecmodel <- function(object,
         stop("SSVS is not supported for TVP models.")
       }
       
-      ssvs_temp <- ssvs_prior(object, tau = ssvs$tau, semiautomatic = ssvs$semiautomatic)
-      temp <- inclusion_prior(object, prob = ssvs$inprior, exclude_deterministics = ssvs$exclude_det,
-                              minnesota_like = !is.null(ssvs$minnesota), kappa = ssvs$minnesota)
-      if (!is.null(temp)) {
-        object$model$varselect <- "SSVS"
-        object[["priors"]][["a"]][["v_i"]] <- diag(1 / ssvs_temp$tau1[, 1]^2, tot_par)
-        object[["priors"]][["a"]][["ssvs"]][["inprior"]] <- temp$prior
-        object[["priors"]][["a"]][["ssvs"]][["include"]] <- temp$include
-        object[["priors"]][["a"]][["ssvs"]][["tau0"]] <- ssvs_temp$tau0
-        object[["priors"]][["a"]][["ssvs"]][["tau1"]] <- ssvs_temp$tau1
-      } else {
-        object[["priors"]][["a"]][["v_i"]] <- diag(coef[["v_i"]], tot_par)
+      if (sv) {
+        stop("Not allowed to use SSVS with stochastic volatility models.")
       }
+      
+      ssvs_temp <- ssvs_prior(object, tau = varsel[["tau"]], semiautomatic = varsel[["semiautomatic"]])
+      temp <- inclusion_prior(object, prob = varsel[["inprior"]], exclude_deterministics = varsel[["exclude_det"]],
+                              minnesota_like = !is.null(varsel[["minnesota"]]), kappa = varsel[["minnesota"]])
+      object[["priors"]][["a"]][["v_inv"]] <- diag(1 / ssvs_temp[["tau1"]][, 1]^2, tot_par)
+      object[["priors"]][["a"]][["inprior"]] <- temp[["prior"]]
+      object[["priors"]][["a"]][["include"]] <- temp[["include"]]
+      object[["priors"]][["a"]][["tau0"]] <- ssvs_temp[["tau0"]]
+      object[["priors"]][["a"]][["tau1"]] <- ssvs_temp[["tau1"]]
       rm(temp)
       rm(ssvs_temp)
     }
     
     # Regular prior ----
     if (!minnesota & !use_ssvs) {
-      v_i <- diag(coef[["v_i"]], tot_par)
-      # Add priors alpha
-      if (r > 0 & object[["model"]][["tvp"]]) {
-        v_i[1:n_alpha, 1:n_alpha] <- diag(1 / (1 - coint[["rho"]] * coint[["rho"]]), n_alpha)
-      }
-      # Add priors for deterministic terms if they were specified
-      if (n_det > 0 & !is.null(coef[["v_i_det"]])) {
-        diag(v_i)[tot_par - n_struct - n_det + 1:n_det] <- coef[["v_i_det"]]
-      }
       
-      object[["priors"]][["a"]][["v_i"]] <- v_i
+      if (object[["model"]][["tvp"]]) {
+
+        # For a TVP model this is the prior precision of the state before the
+        # sample rather than of a constant coefficient. Base matrices throughout,
+        # not Matrix::Diagonal: the sampler reads these as dense matrices and an
+        # S4 sparse one does not convert, which fails with "Not a matrix." at the
+        # first draw.
+        v_i <- diag(coef[["v_i"]], tot_par)
+
+        # The loadings carry the compensating scale of the cointegration space.
+        # beta_t has stationary variance 1 / (1 - rho^2), which for a rho just
+        # below one is large, and only the product alpha beta' is identified --
+        # so alpha's prior variance is shrunk by the same factor, leaving the
+        # product on the scale coef$v_i asks for.
+        if (r > 0) {
+          diag(v_i)[1:n_alpha] <- 1 / (1 - coint[["rho"]] * coint[["rho"]])
+        }
+        if (n_det > 0 & !is.null(coef[["v_i_det"]])) {
+          diag(v_i)[tot_par - n_struct - n_det + 1:n_det] <- coef[["v_i_det"]]
+        }
+        object[["priors"]][["a"]][["shape"]] <- matrix(coef[["shape"]], tot_par)
+        object[["priors"]][["a"]][["rate"]] <- matrix(coef[["rate"]], tot_par)
+        if (n_det > 0 & !is.null(coef[["rate_det"]])) {
+          object[["priors"]][["a"]][["rate"]][tot_par - n_struct - n_det + 1:n_det, ] <- coef[["rate_det"]]
+        }
+      } else {
+        v_i <- diag(coef[["v_i"]], tot_par)
+        # Add priors for deterministic terms if they were specified
+        if (n_det > 0 & !is.null(coef[["v_i_det"]])) {
+          diag(v_i)[tot_par - n_struct - n_det + 1:n_det] <- coef[["v_i_det"]]
+        }
+      }
+      object[["priors"]][["a"]][["v_inv"]] <- v_i
     }
     
     if (use_bvs) {
-      temp <- inclusion_prior(object, prob = bvs[["inprior"]], exclude_deterministics = bvs[["exclude_det"]],
-                              minnesota_like = !is.null(bvs[["minnesota"]]), kappa = bvs[["minnesota"]])
+      temp <- inclusion_prior(object, prob = varsel[["inprior"]], exclude_deterministics = varsel[["exclude_det"]],
+                              minnesota_like = !is.null(varsel[["minnesota"]]), kappa = varsel[["minnesota"]])
       
-      if (!is.null(temp)) {
-        object$model$varselect <- "BVS"
-        object[["priors"]][["a"]][["bvs"]][["inprior"]] <- temp[["prior"]]
-        object[["priors"]][["a"]][["bvs"]][["include"]] <- temp[["include"]] 
-      }
-    }
-    
-    
-    # TVP prior ----
-    if (object[["model"]][["tvp"]]) {
-      object[["priors"]][["a"]][["v_i"]] <- Matrix::Matrix(object[["priors"]][["a"]][["v_i"]]) 
-      object[["priors"]][["a"]][["shape"]] <- matrix(coef[["shape"]], tot_par)
-      object[["priors"]][["a"]][["rate"]] <- matrix(coef[["rate"]], tot_par)
-      if (n_det > 0 & !is.null(coef[["rate_det"]])) {
-        object[["priors"]][["a"]][["rate"]][tot_par - n_struct - n_det + 1:n_det, ] <- coef[["rate_det"]]
-      }
+      object[["priors"]][["a"]][["inprior"]] <- temp[["prior"]]
+      object[["priors"]][["a"]][["include"]] <- temp[["include"]]
+      rm(temp)
     }
   }
   
   ## Covar priors ----
+  
   if (!structural & covar & k > 1) {
     
     n_covar <- k * (k - 1) / 2
     object[["priors"]][["psi"]][["type"]] <- "normal"
     object[["priors"]][["psi"]][["mu"]] <- matrix(0, n_covar)
-    object[["priors"]][["psi"]][["v_i"]] <- diag(coef[["v_i"]], n_covar)
+    object[["priors"]][["psi"]][["v_inv"]] <- diag(coef[["v_i"]], n_covar)
     if (object[["model"]][["tvp"]]) {
-      object[["priors"]][["psi"]][["v_i"]] <- Matrix::Matrix(object[["priors"]][["psi"]][["v_i"]]) 
       object[["priors"]][["psi"]][["shape"]] <- matrix(coef[["shape"]], n_covar)
       object[["priors"]][["psi"]][["rate"]] <- matrix(coef[["rate"]], n_covar) 
     }
     
+    # Variable selection
+    object[["priors"]][["psi"]][["varsel"]] <- "none"
+    
+    # SSVS priors
     if (use_ssvs_error) {
-      object$model$varselect <- "SSVS"
-      object[["priors"]][["psi"]][["ssvs"]][["inprior"]] <- matrix(ssvs[["inprior"]], n_covar)
-      object[["priors"]][["psi"]][["ssvs"]][["include"]] <- matrix(1:n_covar)
-      object[["priors"]][["psi"]][["ssvs"]][["tau0"]] <- matrix(ssvs[["tau"]][1], n_covar)
-      object[["priors"]][["psi"]][["ssvs"]][["tau1"]] <- matrix(ssvs[["tau"]][2], n_covar)
+      object[["priors"]][["psi"]][["varsel"]] <- "ssvs"
+      object[["priors"]][["psi"]][["inprior"]] <- matrix(varsel[["inprior"]], n_covar)
+      object[["priors"]][["psi"]][["include"]] <- matrix(1:n_covar)
+      object[["priors"]][["psi"]][["tau0"]] <- matrix(varsel[["tau"]][1], n_covar)
+      object[["priors"]][["psi"]][["tau1"]] <- matrix(varsel[["tau"]][2], n_covar)
     }
     
+    # BVS priors
     if (use_bvs_error) {
-      object$model$varselect <- "BVS"
-      object[["priors"]][["psi"]][["bvs"]][["inprior"]] <- matrix(bvs[["inprior"]], n_covar)
-      object[["priors"]][["psi"]][["bvs"]][["include"]] <- matrix(1:n_covar)
+      object[["priors"]][["psi"]][["varsel"]] <- "bvs"
+      object[["priors"]][["psi"]][["inprior"]] <- matrix(varsel[["inprior"]], n_covar)
+      object[["priors"]][["psi"]][["include"]] <- matrix(1:n_covar)
     }
-    
   }
   
   # Error term ----
@@ -526,22 +573,23 @@ add_priors.bvecmodel <- function(object,
     object <- .add_priors_sv_helper(object, sigma, k)
     
   } else {
+    pos <- "u_sigma"
     if (error_prior == "wishart") {
-      object[["priors"]][["sigma"]][["type"]] <- "wishart"
+      object[["priors"]][[pos]][["type"]] <- "wishart"
       help_df <- sigma[["df"]]
-      object[["priors"]][["sigma"]][["df"]] <- NA
-      object[["priors"]][["sigma"]][["scale"]] = diag(sigma[["scale"]], k)
+      object[["priors"]][[pos]][["df"]] <- NA_real_
+      object[["priors"]][[pos]][["scale"]] = diag(sigma[["scale"]], k)
     }
     if (error_prior == "gamma") {
-      object[["priors"]][["sigma"]][["type"]] <- "gamma"
+      object[["priors"]][[pos]][["type"]] <- "gamma"
       help_df <- sigma[["shape"]]
-      object[["priors"]][["sigma"]][["shape"]] <- NA
-      object[["priors"]][["sigma"]][["rate"]] = matrix(sigma[["rate"]], k)
+      object[["priors"]][[pos]][["shape"]] <- NA_real_
+      object[["priors"]][[pos]][["rate"]] = matrix(sigma[["rate"]], k)
     }
     
     if (minnesota & !is.null(object[["data"]][["x"]])) {
       # Store LS estimate of variance coviariance matrix for analytical solution
-      object[["priors"]][["sigma"]][["sigma_i"]] = minn[["sigma_i"]]
+      object[["priors"]][[pos]][["u_sigma_inv"]] = minn[["sigma_inv"]]
     }
     
     if ("character" %in% class(help_df)) {
@@ -563,10 +611,10 @@ add_priors.bvecmodel <- function(object,
     }
     
     if (error_prior == "wishart") {
-      object[["priors"]][["sigma"]][["df"]] <- help_df
+      object[["priors"]][[pos]][["df"]] <- help_df
     }
     if (error_prior == "gamma") {
-      object[["priors"]][["sigma"]][["shape"]] <- matrix(help_df, k)
+      object[["priors"]][[pos]][["shape"]] <- matrix(help_df, k)
     }
   }
   

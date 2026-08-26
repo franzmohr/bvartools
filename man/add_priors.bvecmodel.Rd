@@ -4,16 +4,7 @@
 \alias{add_priors.bvecmodel}
 \title{Add Priors to Bayesian Models}
 \usage{
-\method{add_priors}{bvecmodel}(
-  object,
-  coef = list(v_i = 1, v_i_det = 0.1, shape = 3, rate = 1e-04, rate_det = 0.01),
-  coint = list(v_i = 0, p_tau_i = 1, rho = 0.999),
-  sigma = list(df = "k", scale = 1, mu = 0, v_i = 0.01, state_variance = 0.05, offset =
-    1e-04),
-  ssvs = NULL,
-  bvs = NULL,
-  ...
-)
+\method{add_priors}{bvecmodel}(object, coef, coint, sigma, varsel = NULL, ...)
 }
 \arguments{
 \item{object}{a list of class 'bvecmodel'.}
@@ -33,19 +24,17 @@ For the default specification of an inverse Wishart distribution the prior degre
 of freedom are set to the number of endogenous variables plus the rank of
 the cointegration matrix. The prior variance is to 1. See 'Details'.}
 
-\item{ssvs}{optional; a named list of prior specifications for the SSVS algorithm.
-Not allowed for TVP models. See 'Details'.}
-
-\item{bvs}{optional; a named list of prior specifications for the BVS algorithm. See 'Details'.}
+\item{varsel}{optional; a named list of prior specifications for the variable
+selection algorithm. See 'Details'.}
 
 \item{...}{further arguments passed to or from other methods.}
 }
 \value{
-A list of models.
+An object of class 'bvecmodel'.
 }
 \description{
 Adds prior specifications to a list of models, which was produced by
-function \code{\link{create_vec_model}}.
+function \code{\link{create_bvecmodel}}.
 }
 \details{
 The arguments of the function require named lists. Possible
@@ -72,6 +61,8 @@ Argument \code{coef} contains the following elements
   \deqn{ \kappa_{0} \kappa_{3} \sigma_{i}^2 \textrm{ for deterministic terms,}}
   where \eqn{\sigma_{i}} is the residual standard deviation of variable \eqn{i} of an unrestricted
   LS estimate. For exogenous variables \eqn{\sigma_{i}} is the sample standard deviation.
+  If \code{kappa2 = NULL}, \eqn{\kappa_{0} \kappa_{3} \sigma_{i}^2} will be used for
+  exogenous variables instead.
   The function only provides priors for the non-cointegration part of the model. However,
   the residual standard errors \eqn{\sigma_i} are based on an unrestricted LS regression of the
   endogenous variables on the error correction term and the non-cointegration regressors.}
@@ -88,16 +79,32 @@ Argument \code{coef} contains the following elements
   Only used for models with time varying parameters. Default is 0.01.}
 }
 
-Argument \code{coint} can contain the following elements:
+Argument \code{coint} can contain the following elements. Which of them are
+required depends on whether the cointegration vectors are constant or time
+varying, since the two are given different kinds of prior: a matric-variate
+prior on the cointegration space in the first case, and a state equation in
+the second.
 \describe{
-  \item{\code{v_i}}{numeric between 0 and 1 specifying the shrinkage of the cointegration space prior. Default is 0.}
+  \item{\code{v_i}}{numeric between 0 and 1 specifying the shrinkage of the cointegration space prior.
+  Required for models with constant cointegration parameters and not used otherwise.}
   \item{\code{p_tau_i}}{numeric of the diagonal elements of the inverse prior matrix of
-  the central location of the cointegration space \eqn{sp(\beta)}. Default is 1.}
+  the central location of the cointegration space \eqn{sp(\beta)}.
+  Required for models with constant cointegration parameters and not used otherwise.}
   \item{\code{rho}}{a numeric specifying the autocorrelation coefficient
-  of the state equation of \eqn{\beta}. It must be smaller than 1. Default is 0.999.
+  of the state equation of \eqn{\beta}. It must be smaller than 1.
+  Required for models with time varying cointegration parameters and not used otherwise.
   Note that in contrast to Koop et al. (2011) \eqn{\rho} is not drawn in the Gibbs sampler of
   this package yet.}
 }
+For a model with time varying cointegration parameters the state equation is
+\eqn{\beta_t = \rho \beta_{t-1} + \eta_t} with \eqn{\eta_t \sim N(0, I)}, and
+the prior on the state before the sample is that equation's own stationary
+distribution, \eqn{N(0, I / (1 - \rho^2))}. This is what makes the prior
+proper, so a \eqn{\rho} close to one is intended and one further from it draws
+a warning. The loadings carry the compensating scale: only the product
+\eqn{\alpha \beta^{\prime}} is identified, so their prior variance is shrunk
+by \eqn{1 - \rho^2}, leaving the product on the scale \code{coef$v_i} asks
+for.
 
 Argument \code{sigma} can contain the following elements:
 \describe{
@@ -130,40 +137,28 @@ Argument \code{sigma} can contain the following elements:
 }
 For structural models only a gamma prior or stochastic volatility specification is allowed.
 
-Argument \code{ssvs} can contain the following elements:
+Argument \code{varsel} can contain the following elements:
 \describe{
   \item{\code{inprior}}{a numeric between 0 and 1 specifying the prior probability
   of a variable to be included in the model.}
+  \item{\code{covar}}{logical indicating if the variable selection algorithm
+  should also be applied to the error covariance matrix.}
+  \item{\code{exclude_det}}{logical indicating if deterministic terms should
+  be excluded from the variable selection algorithm.}
+  \item{\code{minnesota}}{a numeric vector of length 4 containing parameters
+  for the calculation of the Minnesota-like inclusion priors. See below.}
   \item{\code{tau}}{a numeric vector of two elements containing the prior standard errors
   of restricted variables (\eqn{\tau_0}) as its first element and unrestricted variables (\eqn{\tau_1})
-  as its second.}
+  as its second. Only used for SSVS.}
   \item{\code{semiautomatic}}{an numeric vector of two elements containing the
   factors by which the standard errors associated with an unconstrained least squares
   estimate of the model are multiplied to obtain the prior standard errors
   of restricted (\eqn{\tau_0}) and unrestricted (\eqn{\tau_1}) variables, respectively.
-  This is the semiautomatic approach described in George et al. (2008).}
-  \item{\code{covar}}{logical indicating if SSVS should also be applied to the
-  error covariance matrix.}
-  \item{\code{exclude_det}}{logical indicating if deterministic terms should
-  be excluded from the SSVS algorithm.}
-  \item{\code{minnesota}}{a numeric vector of length 4 containing parameters
-  for the calculation of the Minnesota-like inclusion priors. See below.}
+  This is the semiautomatic approach described in George et al. (2008). Only used for SSVS.}
 }
-Either \code{tau} or \code{semiautomatic} must be specified.
+In the case of SSVS, either \code{tau} or \code{semiautomatic} must be specified.
 
-The argument \code{bvs} can contain the following elements
-\describe{
-  \item{\code{inprior}}{a numeric between 0 and 1 specifying the prior probability
-  of a variable to be included in the model.}
-  \item{\code{covar}}{logical indicating if BVS should also be applied to the
-  error covariance matrix.}
-  \item{\code{exclude_det}}{logical indicating if deterministic terms should
-  be excluded from the BVS algorithm.}
-  \item{\code{minnesota}}{a numeric vector of length 4 containing parameters
-  for the calculation of the Minnesota-like inclusion priors. See below.}
-}
-
-If either \code{ssvs$minnesota} or \code{bvs$minnesota} is specified, prior
+If \code{varsel$minnesota} is specified, prior
 inclusion probabilities are calculated in a Minnesota-like fashion as
 \tabular{cl}{
 \eqn{\frac{\kappa_1}{l}} \tab for own lags of endogenous variables, \cr
@@ -173,21 +168,39 @@ inclusion probabilities are calculated in a Minnesota-like fashion as
 }
 for lag \eqn{l} with \eqn{\kappa_1}, \eqn{\kappa_2}, \eqn{\kappa_3},
 \eqn{\kappa_4} as the first, second, third and forth element in
-\code{ssvs$minnesota} or \code{bvs$minnesota}, respectively.
+\code{varsel$minnesota}, respectively.
 }
 \examples{
 
-# Load data
+# Load data 
 data("e6")
+e6 <- e6 * 100
 
-# Create model
-model <- create_vec_model(e6, p = 4, r = 1,
-                          const = "unrestricted", seasonal = "unrestricted",
-                          iterations = 100, burnin = 10)
-# Chosen number of iterations and burnin should be much higher.
+# Generate model
+model <- create_bvecmodel(e6, p = 1, r = 1, const = "restricted",
+                          iterations = 10, burnin = 10)
+# Chosen number of iterations and burn-in should be much higher.
 
 # Add priors
-model <- add_priors(model)
+model <- add_priors(model,
+                    coef = list(v_i = 1, v_i_det = 1 / 10),
+                    coint = list(v_i = 0, p_tau_i = 1),
+                    sigma = list(df = "k", scale = 1))
+
+# The same model with time varying parameters. The cointegration vectors are
+# then a state path rather than a draw from a cointegration space prior, so
+# 'coint' takes the autocorrelation of that path instead of its shrinkage and
+# central location, and 'coef' takes the prior of the state error variances.
+model <- create_bvecmodel(e6, p = 4, r = 1, tvp = TRUE,
+                          const = "unrestricted",
+                          seasonal = "unrestricted",
+                          iterations = 10, burnin = 10)
+
+model <- add_priors(model,
+                    coef = list(v_i = 1, v_i_det = 1 / 10,
+                                shape = 3, rate = 0.0001),
+                    coint = list(rho = 0.999),
+                    sigma = list(df = "k", scale = 1))
 
 }
 \references{

@@ -11,10 +11,11 @@
 #' \code{"trend"} for a linear trend, and \code{"both"} for an intercept with a linear trend.
 #' @param seasonal logical. If \code{TRUE}, seasonal dummy variables are
 #' generated as additional deterministic terms. The amount of dummies depends on the frequency of the
-#' time-series object provided in \code{data}.
+#' time-series object provided in \code{data}. Defaults to \code{FALSE}.
 #' @param structural logical indicating whether data should be prepared for the estimation of a
-#' structural VAR model.
+#' structural VAR model. Defaults to \code{FALSE}.
 #' @param tvp logical indicating whether the model parameters are time varying.
+#' Defaults to \code{FALSE}.
 #' @param error character specifying the model that should be used for the estimation
 #' of the covariance matrix of the error term. Default is \code{"wishart"}. See 'Details'.
 #' @param varsel character specifying the type of variable selection algorithm
@@ -123,7 +124,7 @@ create_bvarmodel <- function(data, p = 2,
                              iterations = 20000,
                              burnin = 2000) {
   
-  # Check data ----
+  # Input checks ----
   if (!"ts" %in% class(data)) {
     stop("Argument 'data' must be an object of class 'ts'.")
   }
@@ -136,6 +137,14 @@ create_bvarmodel <- function(data, p = 2,
   
   if (seasonal & !deterministic %in% c("const", "both")) {
     stop("Argument 'deterministic' must be either 'const' or 'both' when using 'seasonal = TRUE'.")
+  }
+  
+  if ("character" %in% class(error)) {
+    if (!error %in% c("wishart", "gamma", "gamma+covar", "sv", "sv+covar")) {
+      stop("Invalid specification of argument 'error'.")
+    }
+  } else {
+    stop("Argument 'error' must be of class 'character'.")
   }
   
   # Endogenous variables ----
@@ -399,14 +408,15 @@ create_bvarmodel <- function(data, p = 2,
       if (!is.null(y_A0)) {
         z <- cbind(z, y_A0)
       }
+      dimnames(z) <- NULL
       
       # Create individual model
       result_i <- list("model" = model_i,
                        "data" = list("original" = list("endogen" = data,
                                                        "exogen" = exogen,
                                                        "deterministic" = det_data),
-                                     "train" = list("y" = matrix(t(y)),
-                                                    "x" = as.matrix(x),
+                                     "train" = list("y" = y,
+                                                    "x" = x,
                                                     "z" = z)))
       
       # Update class of individual model

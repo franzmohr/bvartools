@@ -34,15 +34,16 @@ be included. Available values are \code{"none"}, \code{"const"} (default) for an
 
 \item{seasonal}{logical. If \code{TRUE}, seasonal dummy variables are
 generated as additional deterministic terms. The amount of dummies depends on the frequency of the
-time-series object provided in \code{data}.}
+time-series object provided in \code{data}. Defaults to \code{FALSE}.}
 
 \item{structural}{logical indicating whether data should be prepared for the estimation of a
-structural VAR model.}
+structural VAR model. Defaults to \code{FALSE}.}
 
 \item{error}{character specifying the model that should be used for the estimation
 of the covariance matrix of the error term. Default is \code{"wishart"}. See 'Details'.}
 
-\item{tvp}{logical indicating whether the model parameters are time varying.}
+\item{tvp}{logical indicating whether the model parameters are time varying.
+Defaults to \code{FALSE}.}
 
 \item{varsel}{character specifying the type of variable selection algorithm
 that should be employed. Default is \code{"none"}. See 'Details'.}
@@ -55,7 +56,7 @@ to 20000).}
 moments, forecasts etc.}
 }
 \value{
-An object of class \code{'bvarmodel'}, which contains the following elements:
+An object of class 'bvarmodel', which contains the following elements:
 \item{data}{A list of data objects, which can be used for posterior simulation. Element
 \code{y} is a time-series object of dependent variables. Element \code{x} is a time-series
 object of the regressors and element \code{z} is the corresponding matrix of regressors

@@ -29,20 +29,15 @@
 #'                     coef = list(v_i = 1, v_i_det = 1 / 10),
 #'                     sigma = list(df = "k", scale = 1))
 #' 
-#' # Add initial values
-#' model <- add_initial_values(model)
-#'
-#' # Obtain posterior draws 
-#' model <- add_posterior_coefficients(model)
-#' 
 #' # Add data used for forecast calculation
-#' model <- add_forecast_input_data(model, n_ahead = 4)
+#' model <- add_forecast_input(model, n_ahead = 4)
 #' 
 #' @export
-add_forecast_input_data.expandingwindow <- function(object, ...){
+#' @method add_forecast_input expandingwindow
+add_forecast_input.expandingwindow <- function(object, ...){
   
   for (i in 1:length(object)) {
-    object[[i]] <- add_forecast_input_data(object[[i]], ...)
+    object[[i]] <- add_forecast_input(object[[i]], ...)
   }
   
   return(object)

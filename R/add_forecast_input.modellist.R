@@ -34,13 +34,14 @@
 #' model <- add_posterior_coefficients(model)
 #' 
 #' # Add data used for forecast calculation
-#' model <- add_forecast_input_data(model, n_ahead = 4)
+#' model <- add_forecast_input(model, n_ahead = 4)
 #' 
 #' @export
-add_forecast_input_data.modellist <- function(object, ...){
+#' @method add_forecast_input modellist
+add_forecast_input.modellist <- function(object, ...){
   
   for (i in 1:length(object)) {
-    object[[i]] <- add_forecast_input_data(object[[i]], ...)
+    object[[i]] <- add_forecast_input(object[[i]], ...)
   }
   
   return(object)

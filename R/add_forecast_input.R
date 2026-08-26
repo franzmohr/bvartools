@@ -7,6 +7,6 @@
 #' @param ... arguments passed forward to method.
 #' 
 #' @export
-add_forecast_input_data <- function (object, ...) {
-  UseMethod("add_forecast_input_data")
+add_forecast_input <- function (object, ...) {
+  UseMethod("add_forecast_input")
 }

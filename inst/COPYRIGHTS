@@ -34,19 +34,30 @@ BSD 3-Clause portion
     inst/include/bayests/var_tvp_gamma.h
     inst/include/bayests/var_tvp_stochvol.h
     inst/include/bayests/var_tvp_wishart.h
+    inst/include/bayests/vec_normal_gamma.h
+    inst/include/bayests/vec_normal_stochvol.h
     inst/include/bayests/vec_normal_wishart.h
+    inst/include/bayests/vec_to_var.h
+    inst/include/bayests/vec_tvp_gamma.h
+    inst/include/bayests/vec_tvp_stochvol.h
+    inst/include/bayests/vec_tvp_wishart.h
     src/core/inputs.cpp
     src/core/spec.cpp
     src/core/algorithms/bvs.cpp
     src/core/algorithms/bvs.h
+    src/core/algorithms/chan_jeliazkov_2009.cpp
+    src/core/algorithms/chan_jeliazkov_2009.h
     src/core/algorithms/kalman_durbin_koopman_2002.cpp
     src/core/algorithms/kalman_durbin_koopman_2002.h
     src/core/algorithms/ssvs.cpp
     src/core/algorithms/ssvs.h
+    src/core/algorithms/stochvol_ksc_1998.cpp
+    src/core/algorithms/stochvol_ksc_1998.h
+    src/core/algorithms/stochvol_mixture.h
     src/core/algorithms/stochvol_ocsn_2007.cpp
     src/core/algorithms/stochvol_ocsn_2007.h
+    src/core/algorithms/triangular_packing.h
     src/core/algorithms/vec_to_var.cpp
-    src/core/algorithms/vec_to_var.h
     src/core/algorithms/wishart.cpp
     src/core/algorithms/wishart.h
     src/core/models/model_support.h
@@ -56,7 +67,13 @@ BSD 3-Clause portion
     src/core/models/var_tvp_gamma.cpp
     src/core/models/var_tvp_stochvol.cpp
     src/core/models/var_tvp_wishart.cpp
+    src/core/models/vec_normal_gamma.cpp
+    src/core/models/vec_normal_stochvol.cpp
     src/core/models/vec_normal_wishart.cpp
+    src/core/models/vec_support.h
+    src/core/models/vec_tvp_gamma.cpp
+    src/core/models/vec_tvp_stochvol.cpp
+    src/core/models/vec_tvp_wishart.cpp
 
     That is every file under inst/include/bayests/ and every source under
     src/core/. inst/include/bayests/arma.h has no upstream counterpart --

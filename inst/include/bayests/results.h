@@ -176,6 +176,141 @@ struct VecNormalWishartDraws
     bool has_lambda() const { return a_lambda.n_elem > 0; }
 };
 
+/// Posterior draws of a VEC with independent gamma priors on the error
+/// precisions and, optionally, a constant covariance block.
+struct VecNormalGammaDraws
+{
+    arma::mat a;        ///< n_a x iterations.
+    arma::mat a_lambda;
+
+    arma::mat beta;     ///< n_beta x iterations. Empty without a cointegration relation.
+
+    /// (k * k) x iterations; each column a vectorised lower-triangular Psi.
+    arma::mat psi;
+    arma::mat psi_lambda;
+
+    /// k x iterations. Only the diagonal is drawn, so only it is kept.
+    arma::mat u_omega_inv;
+
+    /// (k * k) x iterations; each column a vectorised precision matrix.
+    arma::mat u_sigma_inv;
+
+    arma::uword iterations() const { return u_sigma_inv.n_cols; }
+    bool has_a() const { return a.n_elem > 0; }
+    bool has_beta() const { return beta.n_elem > 0; }
+    bool has_psi() const { return psi.n_elem > 0; }
+    bool has_lambda() const { return a_lambda.n_elem > 0; }
+};
+
+/// Posterior draws of a VEC with stochastic volatility.
+///
+/// The coefficients are constant and the error precision is not, so `a` and
+/// `beta` hold one value per draw while `u_sigma_inv` holds a whole path.
+struct VecNormalStochvolDraws
+{
+    arma::mat a;
+    arma::mat a_lambda;
+
+    arma::mat beta;
+
+    arma::mat psi;      ///< (k * k) x iterations.
+    arma::mat psi_lambda;
+
+    /// (k * tt) x iterations: the diagonal of the precision, period by period.
+    arma::mat u_omega_inv;
+
+    /// (k * k * tt) x iterations: one vectorised precision matrix per period,
+    /// periods stacked within a column.
+    arma::mat u_sigma_inv;
+
+    arma::uword iterations() const { return u_sigma_inv.n_cols; }
+    bool has_a() const { return a.n_elem > 0; }
+    bool has_beta() const { return beta.n_elem > 0; }
+    bool has_psi() const { return psi.n_elem > 0; }
+    bool has_lambda() const { return a_lambda.n_elem > 0; }
+};
+
+/// Posterior draws of a VEC whose coefficients -- loadings and cointegration
+/// vectors included -- follow a random walk, with a Wishart error precision.
+struct VecTvpWishartDraws
+{
+    arma::mat a;        ///< (n_a * tt) x iterations.
+    arma::mat a_sigma;
+    arma::mat a_lambda;
+
+    arma::mat beta;     ///< (n_beta * tt) x iterations.
+
+    /// (k * k) x iterations; the precision does not move with time here.
+    arma::mat u_sigma_inv;
+
+    arma::uword iterations() const { return u_sigma_inv.n_cols; }
+    bool has_a() const { return a.n_elem > 0; }
+    bool has_beta() const { return beta.n_elem > 0; }
+};
+
+/// Posterior draws of a VEC whose coefficients -- loadings and cointegration
+/// vectors included -- follow a random walk, with independent gamma priors on
+/// the error precisions.
+///
+/// `u_sigma_inv` is (k * k) x iterations without a covariance block and
+/// (k * k * tt) x iterations with one, since Psi is then a path and the
+/// precision it implies moves with it. Same convention as VarTvpGamma.
+struct VecTvpGammaDraws
+{
+    arma::mat a;
+    arma::mat a_sigma;
+    arma::mat a_lambda;
+
+    arma::mat beta;
+
+    arma::mat psi;
+    arma::mat psi_sigma;
+    arma::mat psi_lambda;
+
+    arma::mat u_omega_inv; ///< k x iterations.
+    arma::mat u_sigma_inv;
+
+    arma::uword iterations() const { return u_sigma_inv.n_cols; }
+    bool has_a() const { return a.n_elem > 0; }
+    bool has_beta() const { return beta.n_elem > 0; }
+    bool has_psi() const { return psi.n_elem > 0; }
+};
+
+/// Posterior draws of a VEC whose coefficients -- loadings and cointegration
+/// vectors included -- follow a random walk and whose errors carry stochastic
+/// volatility.
+///
+/// Every member but the state variances is a path: `a` holds n_a * tt per draw,
+/// `beta` holds n_beta * tt, and `u_sigma_inv` holds k * k * tt, periods stacked
+/// within a column in each case.
+struct VecTvpStochvolDraws
+{
+    arma::mat a;
+    arma::mat a_sigma;
+    arma::mat a_lambda;
+
+    /// (n_beta * tt) x iterations. Empty when the model has no cointegration
+    /// relation. `a` carries only the loadings on it, so this is the half
+    /// without which Pi cannot be reconstructed.
+    arma::mat beta;
+
+    arma::mat psi;
+    arma::mat psi_sigma;
+    arma::mat psi_lambda;
+
+    /// (k * tt) x iterations: the diagonal of the precision, period by period.
+    arma::mat u_omega_inv;
+
+    /// (k * k * tt) x iterations: one vectorised precision matrix per period,
+    /// periods stacked within a column.
+    arma::mat u_sigma_inv;
+
+    arma::uword iterations() const { return u_sigma_inv.n_cols; }
+    bool has_a() const { return a.n_elem > 0; }
+    bool has_beta() const { return beta.n_elem > 0; }
+    bool has_psi() const { return psi.n_elem > 0; }
+};
+
 /// Simulated forecast paths, (h * k) x draws: one column per posterior draw,
 /// horizons stacked within a column in the same variable order as the sample.
 struct ForecastDraws

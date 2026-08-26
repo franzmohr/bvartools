@@ -27,6 +27,35 @@ struct ConstantCointSpacePrior
     arma::mat p_tau_inv;
 };
 
+/// Prior on a cointegration space that moves with time:
+///
+///     beta_t = rho beta_{t-1} + eta_t,   eta_t ~ N(0, I).
+///
+/// The innovation variance is the identity and is deliberately not a knob. Only
+/// the product alpha beta' is identified, so something has to fix beta's scale;
+/// where the constant-coefficient VEC normalises the draw after the fact, this
+/// one lets the state equation do it -- the same normalisation bvartools'
+/// .bvectvpalg makes by hardcoding a unit state variance. The scale of the
+/// relation then lives in alpha, whose own state variance is drawn.
+struct TvpCointSpacePrior
+{
+    /// Autoregression of the state equation, and not drawn -- Koop,
+    /// Leon-Gonzalez and Strachan (2011) sample it, bvartools does not, and
+    /// neither does this.
+    ///
+    /// The default is theirs rather than the random walk `.bvectvpalg`
+    /// hardcodes. Just below one, beta_t has the stationary distribution
+    /// N(0, I / (1 - rho^2)), so the prior is proper and the path is pulled back
+    /// towards the space `initial_state` names; at exactly one it is a random
+    /// walk, whose variance grows without bound over the sample and which,
+    /// beta being identified only up to scale, has nothing to pull it back.
+    /// One is still accepted, and is what a file that predates this field means.
+    double rho = 0.999;
+
+    /// Normal on the state of the period before the sample.
+    NormalPrior initial_state;
+};
+
 /// Wishart prior on an inverse covariance matrix.
 struct WishartPrior
 {

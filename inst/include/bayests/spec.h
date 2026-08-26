@@ -40,6 +40,7 @@ struct VarSpec
     /// a VEC estimated without a cointegration relation -- which is what makes
     /// the difference between a `beta` that is absent and one that is empty.
     int rank = 0;
+    int k_beta = 0;
 
     /// Deterministic terms restricted to the cointegration space. Zero for a
     /// VAR. The unrestricted ones are counted by `n`, so the two never overlap
@@ -90,15 +91,9 @@ struct VarSpec
     /// leaves `beta` out of the posterior rather than storing an empty one.
     bool uses_coint() const { return rank > 0; }
 
-    /// Rows of `beta`: the endogenous and exogenous variables plus the
-    /// deterministic terms restricted to the cointegration space. Reported
-    /// independently of `rank`, because it is the shape of the space a rank of
-    /// zero says the model does not use.
-    int k_ect() const { return k + m + n_restricted; }
-
-    /// Free elements of `beta`: k_ect x rank, and zero unless the model has a
+    /// Free elements of `beta`: k_beta x rank, and zero unless the model has a
     /// cointegration relation.
-    int n_beta() const { return rank * k_ect(); }
+    int n_beta() const { return k_beta * rank; }
 
     /// Loading coefficients carried at the front of `a`, and zero unless the
     /// model has a cointegration relation.

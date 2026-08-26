@@ -73,6 +73,30 @@
     .Call(`_bvartools_VarTvpWishartLogLik`, object)
 }
 
+.VecNormalGammaCoefficients <- function(object) {
+    .Call(`_bvartools_VecNormalGammaCoefficients`, object)
+}
+
+.VecNormalGammaForecasts <- function(object) {
+    .Call(`_bvartools_VecNormalGammaForecasts`, object)
+}
+
+.VecNormalGammaLogLik <- function(object) {
+    .Call(`_bvartools_VecNormalGammaLogLik`, object)
+}
+
+.VecNormalStochvolCoefficients <- function(object) {
+    .Call(`_bvartools_VecNormalStochvolCoefficients`, object)
+}
+
+.VecNormalStochvolForecasts <- function(object) {
+    .Call(`_bvartools_VecNormalStochvolForecasts`, object)
+}
+
+.VecNormalStochvolLogLik <- function(object) {
+    .Call(`_bvartools_VecNormalStochvolLogLik`, object)
+}
+
 .VecNormalWishartCoefficients <- function(object) {
     .Call(`_bvartools_VecNormalWishartCoefficients`, object)
 }
@@ -85,16 +109,40 @@
     .Call(`_bvartools_VecNormalWishartLogLik`, object)
 }
 
-.algo_bvectvp_update_z_a <- function(b, w, k, tt, r, n_beta) {
-    .Call(`_bvartools_algo_bvectvp_update_z_a`, b, w, k, tt, r, n_beta)
+.VecTvpGammaCoefficients <- function(object) {
+    .Call(`_bvartools_VecTvpGammaCoefficients`, object)
 }
 
-.algo_bvectvp_update_z_b <- function(a, w, k, tt, n_a, r, n_alpha) {
-    .Call(`_bvartools_algo_bvectvp_update_z_b`, a, w, k, tt, n_a, r, n_alpha)
+.VecTvpGammaForecasts <- function(object) {
+    .Call(`_bvartools_VecTvpGammaForecasts`, object)
 }
 
-.bvecalg <- function(object) {
-    .Call(`_bvartools_bvecalg`, object)
+.VecTvpGammaLogLik <- function(object) {
+    .Call(`_bvartools_VecTvpGammaLogLik`, object)
+}
+
+.VecTvpStochvolCoefficients <- function(object) {
+    .Call(`_bvartools_VecTvpStochvolCoefficients`, object)
+}
+
+.VecTvpStochvolForecasts <- function(object) {
+    .Call(`_bvartools_VecTvpStochvolForecasts`, object)
+}
+
+.VecTvpStochvolLogLik <- function(object) {
+    .Call(`_bvartools_VecTvpStochvolLogLik`, object)
+}
+
+.VecTvpWishartCoefficients <- function(object) {
+    .Call(`_bvartools_VecTvpWishartCoefficients`, object)
+}
+
+.VecTvpWishartForecasts <- function(object) {
+    .Call(`_bvartools_VecTvpWishartForecasts`, object)
+}
+
+.VecTvpWishartLogLik <- function(object) {
+    .Call(`_bvartools_VecTvpWishartLogLik`, object)
 }
 
 #' Cointegration Reparameterisation
@@ -311,65 +359,80 @@ generate_lower_block_diagonal <- function(a, k, tt) {
 }
 
 #' Durbin and Koopman Simulation Smoother
-#' 
+#'
 #' An implementation of the Kalman filter and backward smoothing
 #' algorithm proposed by Durbin and Koopman (2002).
-#' 
+#'
 #' @param y a \eqn{K \times T} matrix of endogenous variables.
 #' @param z a \eqn{KT \times M} matrix of explanatory variables.
 #' @param sigma_u the constant \eqn{K \times K} error variance-covariance matrix.
 #' For time varying variance-covariance matrices a \eqn{KT \times K} can be specified.
 #' @param sigma_v the constant \eqn{M \times M} coefficient variance-covariance matrix.
 #' For time varying variance-covariance matrices a \eqn{MT \times M} can be specified.
-#' @param B an \eqn{M \times M} autocorrelation matrix of the transition equation.
+#' @param B the constant \eqn{M \times M} autocorrelation matrix of the transition
+#' equation. For a time varying transition an \eqn{MT \times M} matrix can be specified.
 #' @param a_init an M-dimensional vector of initial states.
 #' @param P_init an \eqn{M \times M} variance-covariance matrix of the initial states.
-#' 
+#'
 #' @details The function uses algorithm 2 from Durbin and Koopman (2002) to produce
 #' a draw of the state vector \eqn{a_t} for \eqn{t = 1,...,T} for a state space model
 #' with measurement equation
 #' \deqn{y_t = Z_t a_t + u_t}
-#' and transition equation 
+#' and transition equation
 #' \deqn{a_{t + 1} = B_t a_{t} + v_t,}
 #' where \eqn{u_t \sim N(0, \Sigma_{u,t})} and \eqn{v_t \sim N(0, \Sigma_{v,t})}.
 #' \eqn{y_t} is a K-dimensional vector of endogenous variables and
 #' \eqn{Z_t = z_t^{\prime} \otimes I_K} is a \eqn{K \times M} matrix of regressors with
 #' \eqn{z_t} as a vector of regressors.
-#' 
+#'
 #' The algorithm takes into account Jarociński (2015), where a possible missunderstanding
 #' in the implementation of the algorithm of Durbin and Koopman (2002) is pointed out. Following
 #' that note the function sets the mean of the initial state to zero in the first step of the algorithm.
-#' 
-#' @return A \eqn{M \times T+1} matrix of state vector draws.
-#' 
+#'
+#' This is the routine the time varying parameter samplers of the package use. It
+#' comes from the vendored BayesTS core, so there is one implementation of the
+#' smoother rather than one for R and one for the samplers.
+#'
+#' The draw uses R's random number generator, so \code{\link{set.seed}} makes it
+#' reproducible.
+#'
+#' @return A \eqn{M \times T+1} matrix of state vector draws. Column \eqn{i} is
+#' the state the observation in column \eqn{i} of \code{y} loads on, for
+#' \eqn{i = 1,...,T}, so a caller wanting one state per observation takes the
+#' first \eqn{T} columns. The first column is not a state preceding the sample:
+#' it is \eqn{a_1}, already conditioned on every observation. The last column is
+#' the transition applied once past the end of the sample and is informed by no
+#' observation; it is returned because the recursions build it on the way.
+#'
 #' @examples
-#' 
+#'
 #' # Load data
 #' data("e1")
 #' data <- diff(log(e1))
-#' 
+#'
 #' # Generate model data
-#' temp <- gen_var(data, p = 2, deterministic = "const")
-#' y <- t(temp$data$Y)
-#' z <- temp$data$SUR
+#' temp <- create_bvarmodel(data = data, p = 2, deterministic = "const",
+#'                          iterations = 1, burnin = 0)
+#' y <- t(temp$data$train$y)
+#' z <- temp$data$train$z
 #' k <- nrow(y)
 #' tt <- ncol(y)
 #' m <- ncol(z)
-#' 
+#'
 #' # Priors
 #' a_mu_prior <- matrix(0, m)
 #' a_v_i_prior <- diag(0.1, m)
-#' 
+#'
 #' a_Q <- diag(.0001, m)
-#' 
+#'
 #' # Initial value of Sigma
 #' sigma <- tcrossprod(y) / tt
 #' sigma_i <- solve(sigma)
-#' 
+#'
 #' # Initial values for Kalman filter
 #' y_init <- y * 0
 #' a_filter <- matrix(0, m, tt + 1)
-#' 
+#'
 #' # Initialise the Kalman filter
 #' for (i in 1:tt) {
 #'   y_init[, i] <- y[, i] - z[(i - 1) * k + 1:k,] %*% a_filter[, i]
@@ -378,25 +441,26 @@ generate_lower_block_diagonal <- function(a, k, tt) {
 #'                           a_prior = a_mu_prior, v_i_prior = a_v_i_prior)
 #' y_filter <- matrix(y) - z %*% a_init
 #' y_filter <- matrix(y_filter, k) # Reshape
-#' 
+#'
 #' # Kalman filter and backward smoother
-#' a_filter <- kalman_dk(y = y_filter, z = z, sigma_u = sigma,
-#'                       sigma_v = a_Q, B = diag(1, m),
-#'                       a_init = matrix(0, m), P_init = a_Q)
-#'                       
+#' a_filter <- kalman_durbin_koopman_2002(y = y_filter, z = z, sigma_u = sigma,
+#'                                        sigma_v = a_Q, B = diag(1, m),
+#'                                        a_init = matrix(0, m), P_init = a_Q)
+#'
 #' a <- a_filter + matrix(a_init, m, tt + 1)
-#' 
+#'
 #' @references
-#' 
+#'
 #' Durbin, J., & Koopman, S. J. (2002). A simple and efficient simulation smoother for
 #' state space time series analysis. \emph{Biometrika, 89}(3), 603--615.
-#' 
+#'
 #' Jarociński, M. (2015). A note on implementing the Durbin and Koopman simulation
 #' smoother. \emph{Computational Statistics and Data Analysis, 91}, 1--3.
 #' \doi{10.1016/j.csda.2015.05.001}
-#' 
-kalman_dk <- function(y, z, sigma_u, sigma_v, B, a_init, P_init) {
-    .Call(`_bvartools_kalman_dk`, y, z, sigma_u, sigma_v, B, a_init, P_init)
+#'
+#' @export
+kalman_durbin_koopman_2002 <- function(y, z, sigma_u, sigma_v, B, a_init, P_init) {
+    .Call(`_bvartools_kalman_durbin_koopman_2002_export`, y, z, sigma_u, sigma_v, B, a_init, P_init)
 }
 
 .log_likelihood_normal <- function(k, u, sigma_inv) {
@@ -931,6 +995,165 @@ post_normal_sur <- function(y, z, sigma_i, a_prior, v_i_prior, svd = FALSE) {
     .Call(`_bvartools_post_normal_sur`, y, z, sigma_i, a_prior, v_i_prior, svd)
 }
 
+#' Stochastic Volatility
+#'
+#' Produces a draw of log-volatilities based on Kim, Shephard and Chib (1998).
+#'
+#' @param y a \eqn{T \times K} matrix containing the time series.
+#' @param h a \eqn{T \times K} matrix of the current draw of log-volatilities.
+#' @param sigma a \eqn{K \times 1} vector of variances of log-volatilities,
+#' where the \eqn{i}th element corresponds to the \eqn{i}th column in \code{y}.
+#' Must be finite and positive.
+#' @param h_init a \eqn{K \times 1} vector of the initial states of log-volatilities,
+#' where the \eqn{i}th element corresponds to the \eqn{i}th column in \code{y}.
+#' @param constant a \eqn{K \times 1} vector of constants that should be added to \eqn{y^2}
+#' before taking the natural logarithm. The \eqn{i}th element corresponds to
+#' the \eqn{i}th column in \code{y}. Must be finite and positive. See 'Details'.
+#'
+#' @details For each column in \code{y} the function produces a posterior
+#' draw of the log-volatility \eqn{h} for the model
+#' \deqn{y_{t} = e^{\frac{1}{2}h_t} \epsilon_{t},}
+#' where \eqn{\epsilon_t \sim N(0, 1)} and \eqn{h_t} is assumed to evolve according to a random walk
+#' \deqn{h_t = h_{t - 1} + u_t,}
+#' with \eqn{u_t \sim N(0, \sigma^2)}.
+#'
+#' The implementation follows the algorithm of Kim, Shephard and Chib (1998)
+#' and performs the following steps:
+#' \enumerate{
+#'   \item Perform the transformation \eqn{y_t^* = ln(y_t^2 + constant)}.
+#'   \item Obtain a sample from the seven-component normal mixture for
+#'   approximating the log-\eqn{\chi_1^2} distribution.
+#'   \item Obtain a draw of log-volatilities.
+#' }
+#'
+#' The posterior precision of the log-volatility is tridiagonal -- the random
+#' walk contributes the two bands of \eqn{D^\prime D} and the mixture only a
+#' diagonal -- so the draw is obtained from a banded Cholesky factorisation,
+#' which costs \eqn{O(T)} rather than the \eqn{O(T^3)} of a dense one.
+#'
+#' The probabilities of the mixture components in step 2 are obtained in logs and
+#' shifted by their period-wise maximum before they are exponentiated. Weighting
+#' the component densities directly underflows to zero for all seven components
+#' once an observation lies far enough out in their tails, which leaves the
+#' probabilities of that period undefined and selects a component that does not
+#' exist.
+#'
+#' The arguments are checked before the first draw and a violation raises an
+#' error. \code{sigma} and \code{constant} have to be finite and positive, since
+#' the algorithm divides by the former and takes the logarithm of a sum
+#' containing the latter, and all three of \code{sigma}, \code{h_init} and
+#' \code{constant} have to have one element per column of \code{y}.
+#'
+#' The draw uses R's random number generator, so \code{\link{set.seed}} makes it
+#' reproducible.
+#'
+#' @return A \eqn{T \times K} matrix of log-volatility draws.
+#'
+#' @references
+#'
+#' Chan, J., Koop, G., Poirier, D. J., & Tobias J. L. (2019). \emph{Bayesian econometric methods}
+#' (2nd ed.). Cambridge: Cambridge University Press.
+#'
+#' Kim, S., Shephard, N., & Chib, S. (1998). Stochastic volatility. Likelihood inference and comparison
+#' with ARCH models. \emph{Review of Economic Studies 65}(3), 361--393. \doi{10.1111/1467-937X.00050}
+#'
+#' @examples
+#' data("us_macrodata")
+#' y <- diff(us_macrodata)
+#' h_init <- log(diag(var(y)))
+#' h <- t(matrix(h_init, 3, nrow(y)))
+#' sigma_h <- rep(.05, 3)
+#' const <- rep(.0001, 3)
+#' stochvol_ksc_1998(y, h, sigma_h, h_init, const)
+#'
+#' @export
+stochvol_ksc_1998 <- function(y, h, sigma, h_init, constant) {
+    .Call(`_bvartools_stochvol_ksc_1998_export`, y, h, sigma, h_init, constant)
+}
+
+#' Stochastic Volatility
+#'
+#' Produces a draw of log-volatilities based on Omori, Chib, Shephard and Nakajima (2007).
+#'
+#' @param y a \eqn{T \times K} matrix containing the time series.
+#' @param h a \eqn{T \times K} matrix of the current draw of log-volatilities.
+#' @param sigma a \eqn{K \times 1} vector of variances of log-volatilities,
+#' where the \eqn{i}th element corresponds to the \eqn{i}th column in \code{y}.
+#' Must be finite and positive.
+#' @param h_init a \eqn{K \times 1} vector of the initial states of log-volatilities,
+#' where the \eqn{i}th element corresponds to the \eqn{i}th column in \code{y}.
+#' @param constant a \eqn{K \times 1} vector of constants that should be added to \eqn{y^2}
+#' before taking the natural logarithm. The \eqn{i}th element corresponds to
+#' the \eqn{i}th column in \code{y}. Must be finite and positive. See 'Details'.
+#'
+#' @details For each column in \code{y} the function produces a posterior
+#' draw of the log-volatility \eqn{h} for the model
+#' \deqn{y_{t} = e^{\frac{1}{2}h_t} \epsilon_{t},}
+#' where \eqn{\epsilon_t \sim N(0, 1)} and \eqn{h_t} is assumed to evolve according to a random walk
+#' \deqn{h_t = h_{t - 1} + u_t,}
+#' with \eqn{u_t \sim N(0, \sigma^2)}.
+#'
+#' The implementation follows the algorithm of Omori, Chib, Shephard and Nakajima (2007)
+#' and performs the following steps:
+#' \enumerate{
+#'   \item Perform the transformation \eqn{y_t^* = ln(y_t^2 + constant)}.
+#'   \item Obtain a sample from the ten-component normal mixture for
+#'   approximating the log-\eqn{\chi_1^2} distribution.
+#'   \item Obtain a draw of log-volatilities.
+#' }
+#'
+#' The ten components approximate the log-\eqn{\chi_1^2} distribution more
+#' closely than the seven of \code{\link{stochvol_ksc_1998}}, at a proportional
+#' cost in the first step.
+#'
+#' The posterior precision of the log-volatility is tridiagonal -- the random
+#' walk contributes the two bands of \eqn{D^\prime D} and the mixture only a
+#' diagonal -- so the draw is obtained from a banded Cholesky factorisation,
+#' which costs \eqn{O(T)} rather than the \eqn{O(T^3)} of a dense one.
+#'
+#' The probabilities of the mixture components in step 2 are obtained in logs and
+#' shifted by their period-wise maximum before they are exponentiated. Weighting
+#' the component densities directly underflows to zero for all ten components
+#' once an observation lies far enough out in their tails, which leaves the
+#' probabilities of that period undefined and selects a component that does not
+#' exist.
+#'
+#' The arguments are checked before the first draw and a violation raises an
+#' error. \code{sigma} and \code{constant} have to be finite and positive, since
+#' the algorithm divides by the former and takes the logarithm of a sum
+#' containing the latter, and all three of \code{sigma}, \code{h_init} and
+#' \code{constant} have to have one element per column of \code{y}.
+#'
+#' The draw uses R's random number generator, so \code{\link{set.seed}} makes it
+#' reproducible.
+#'
+#' @return A \eqn{T \times K} matrix of log-volatility draws.
+#'
+#' @references
+#'
+#' Chan, J., Koop, G., Poirier, D. J., & Tobias J. L. (2019). \emph{Bayesian econometric methods}
+#' (2nd ed.). Cambridge: Cambridge University Press.
+#'
+#' Kim, S., Shephard, N., & Chib, S. (1998). Stochastic volatility. Likelihood inference and comparison
+#' with ARCH models. \emph{Review of Economic Studies 65}(3), 361--393. \doi{10.1111/1467-937X.00050}
+#'
+#' Omori, Y., Chib, S., Shephard, N., & Nakajima, J. (2007). Stochastic volatiltiy with leverage. Fast and efficient likelihood inference.
+#' \emph{Journal of Econometrics 140}(2), 425--449. \doi{10.1016/j.jeconom.2006.07.008}
+#'
+#' @examples
+#' data("us_macrodata")
+#' y <- diff(us_macrodata)
+#' h_init <- log(diag(var(y)))
+#' h <- t(matrix(h_init, 3, nrow(y)))
+#' sigma_h <- rep(.05, 3)
+#' const <- rep(.0001, 3)
+#' stochvol_ocsn_2007(y, h, sigma_h, h_init, const)
+#'
+#' @export
+stochvol_ocsn_2007 <- function(y, h, sigma, h_init, constant) {
+    .Call(`_bvartools_stochvol_ocsn_2007_export`, y, h, sigma, h_init, constant)
+}
+
 #' SUR Matrix Transformation
 #' 
 #' Transforms a dense matrix of dimensions \eqn{KT \times M} into a sparse block
@@ -1040,6 +1263,14 @@ ssvs <- function(a, tau0, tau1, prob_prior, include = NULL) {
 
 .vardecomp <- function(A, h, type, response) {
     .Call(`_bvartools_vardecomp`, A, h, type, response)
+}
+
+.VecToVarSpecification <- function(model) {
+    .Call(`_bvartools_VecToVarSpecification`, model)
+}
+
+.VecToVarCoefficients <- function(object) {
+    .Call(`_bvartools_VecToVarCoefficients`, object)
 }
 
 # Register entry points for exported C++ functions

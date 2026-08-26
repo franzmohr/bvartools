@@ -17,7 +17,7 @@ data("e6")
 \description{
 The data set contains quarterly, seasonally unadjusted time series for German long-term interest
 and inflation rates from 1972Q2 to 1998Q4. It was produced from file E6 of the data sets associated
-with Lütkepohl (2007). Raw data are available at \url{http://www.jmulti.de/download/datasets/e6.dat}
+with Lütkepohl (2006). Raw data are available at \url{http://www.jmulti.de/download/datasets/e6.dat}
 and were originally obtained from Deutsche Bundesbank and Deutsches Institut für Wirtschaftsforschung.
 }
 \details{

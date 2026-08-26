@@ -18,7 +18,7 @@ data("e1")
 \description{
 The data set contains quarterly, seasonally adjusted time series for West German fixed investment, disposable
 income, and consumption expenditures in billions of DM from 1960Q1 to 1982Q4. It was produced
-from file E1 of the data sets associated with Lütkepohl (2007). Raw data are available at
+from file E1 of the data sets associated with Lütkepohl (2006). Raw data are available at
 \url{http://www.jmulti.de/download/datasets/e1.dat} and were originally obtained from
 Deutsche Bundesbank.
 }

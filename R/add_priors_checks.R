@@ -120,7 +120,7 @@
       } else {
         stop("Wishart prior requires specification of elements 'df' and 'scale' in 'sigma'.")
       }
-      if (any(unlist(lapply(object, function(x) {x[["model"]][["structural"]]})))) {
+      if (object[["model"]][["structural"]]) {
         stop("Structural models may not use a Wishart prior. Consider using a gamma prior instead.")
       }
       if (sigma$df < 0) {

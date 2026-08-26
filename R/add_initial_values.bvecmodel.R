@@ -1,7 +1,7 @@
 #' Add Initial Values of an MCMC Chain
 #'
 #' Adds initial values to a VEC model, which was produced by
-#' function \code{\link{create_vec_model}} in combination with \code{\link{add_priors}}.
+#' function \code{\link{create_bvecmodel}} in combination with \code{\link{add_priors}}.
 #'
 #' @param object list of class 'bvecmodel'.
 #' @param method character specifying the method of how initial values are generated.
@@ -36,17 +36,22 @@
 #' 
 #' @examples
 #' 
-#' # Load data
+#' # Load data 
 #' data("e6")
+#' e6 <- e6 * 100
 #' 
-#' # Create model
-#' model <- create_vec_model(e6, p = 4, r = 1,
-#'                           const = "unrestricted", seasonal = "unrestricted",
-#'                           iterations = 100, burnin = 10)
-#' # Chosen number of iterations and burnin should be much higher.
+#' # Generate model
+#' model <- create_bvecmodel(e6, p = 4, r = 1,
+#'                           const = "unrestricted",
+#'                           seasonal = "unrestricted",
+#'                           iterations = 10, burnin = 10)
+#' # Chosen number of iterations and burn-in should be much higher.
 #' 
 #' # Add priors
-#' model <- add_priors(model)
+#' model <- add_priors(model,
+#'                     coef = list(v_i = 1, v_i_det = 1 / 10),
+#'                     coint = list(v_i = 0, p_tau_i = 1),
+#'                     sigma = list(df = "k", scale = 1))
 #' 
 #' # Add initial values
 #' model <- add_initial_values(model)
@@ -59,47 +64,51 @@ add_initial_values.bvecmodel <- function(object, method = "maxlik", ...){
   }
   
   if (!method %in% c("maxlik", "prior")) {
-    stop("Invalid specification of argument 'method'.")
     stop("Argument 'method' can be 'maxlik' or 'prior' for BVEC models.")
   }
   
-  y <- t(object[["data"]][["y"]])
-  w <- t(object[["data"]][["w"]])
-  if (!is.null(object[["data"]][["x"]])) {
-    x <- t(object[["data"]][["x"]]) 
+  y <- object[["data"]][["train"]][["y"]]
+  w <- object[["data"]][["train"]][["w"]]
+  if (!is.null(object[["data"]][["train"]][["x"]])) {
+    x <- object[["data"]][["train"]][["x"]]
   } else {
     x <- NULL
   }
-  z <- object[["data"]][["z"]]
+  z <- object[["data"]][["train"]][["z"]]
   r <- object[["model"]][["rank"]]
   k <- object[["model"]][["k"]]
   p <- object[["model"]][["p"]]
   m <- object[["model"]][["m"]]
   s <- object[["model"]][["s"]]
-  n <- object[["model"]][["n_unrestricted"]]
+  n <- object[["model"]][["n"]]
+  tt <- nrow(y)
   
-  k_ect <- ncol(object[["data"]][["w"]])
+  k_ect <- ncol(w)
   n_alpha <- k * r
   n_beta <- k_ect * r
   n_ect <- k_ect * k
-  tt <- ncol(y)
+  
   if (is.null(z)) {
     n_z <- 0
   } else {
     n_z <- ncol(z)
   }
   
+  u <- matrix(y, k)
+  
   # Maximum likelihood ----
   if (method == "maxlik") {
-    
-    u <- y
     
     ## Coefficients ----
     if (tt >= r + k * (p - 1) + m * s + n) {
       
       if (r > 0) {
         
+        y <- t(y)
+        w <- t(w)
+        
         if (k * (p - 1) + m * s + n > 0) {
+          x <- t(x) 
           M <- diag(tt) - crossprod(x, solve(tcrossprod(x))) %*% x
           R0 <- y %*% M # Residuals of regression of y on x
           R1 <- w %*% M # Residuals of regression of w on x 
@@ -115,12 +124,13 @@ add_initial_values.bvecmodel <- function(object, method = "maxlik", ...){
         lambda <- eigen(S11_sqrt_inv %*% S10 %*% S00_inv %*% S01 %*% t(S11_sqrt_inv))#, symmetric = TRUE)
         
         beta <- t(crossprod(matrix(lambda$vectors[, 1:r] , nrow(w)), S11_sqrt_inv))
-        z[, 1:n_alpha] <- kronecker(t(crossprod(beta, w)), diag(1, k))
+        ect <- crossprod(beta, w)
+        z[, 1:n_alpha] <- kronecker(t(ect), diag(1, k))
         if (object[["model"]][["tvp"]]) {
           object[["initial"]][["beta"]] <- matrix(beta, length(beta) * tt)
           object[["initial"]][["beta_init"]] <- matrix(beta)
         } else {
-          object[["initial"]][["beta"]] <- beta 
+          object[["initial"]][["beta"]] <- matrix(beta)
         }
       }
       
@@ -132,7 +142,7 @@ add_initial_values.bvecmodel <- function(object, method = "maxlik", ...){
         } else {
           object[["initial"]][["a"]] <- ml 
         }
-        u <- matrix(matrix(y) - z %*% ml, NROW(y)) 
+        u <- matrix(matrix(y) - z %*% ml, k) 
       }
       
     } else {
@@ -170,36 +180,46 @@ add_initial_values.bvecmodel <- function(object, method = "maxlik", ...){
   
   # Initial values from priors ----
   if (method == "prior") {
+    
+    w <- t(w)
+    
     # Coefficients
-    if (!is.null(object$priors$a)) {
-      a_mu <- object$priors$a$mu
-      a_vinv <- object$priors$a$v_i
+    if (n_z > 0) {
+      a_mu <- object[["priors"]][["a"]][["mu"]]
+      a_vinv <- object[["priors"]][["a"]][["v_i"]]
+      if (all(diag(a_vinv) == 0)) {
+        stop("All diagonal elements of the prior precision matrix of 'a' are zero.")
+      }
       a <- a_mu + chol(a_vinv) %*% stats::rnorm(length(a_mu))
       if (object[["model"]][["tvp"]]) {
-        object[["initial"]][["a"]] <- matrix(a, length(a) * tt)
-        object[["initial"]][["a_init"]] <- matrix(a, length(a))
+        object[["initial"]][["a"]] <- matrix(a, length(a_mu) * tt)
+        object[["initial"]][["a_init"]] <- matrix(a, length(a_mu))
       } else {
         object[["initial"]][["a"]] <- a
       }
     }
     
     if (r > 0) {
-      beta <- matrix(0, n_ect / k, object$model$rank)
-      beta[1:object$model$rank, 1:object$model$rank] <- diag(1, object$model$rank)
+      beta <- matrix(0, n_ect / k, object[["model"]][["rank"]])
+      beta[1:object[["model"]][["rank"]], 1:object[["model"]][["rank"]]] <- diag(1, object[["model"]][["rank"]])
       object[["initial"]][["beta"]] <- beta
       z[, 1:n_alpha] <- kronecker(t(crossprod(beta, w)), diag(1, k))
       if (object[["model"]][["tvp"]]) {
         object[["initial"]][["beta"]] <- matrix(beta, length(beta) * tt)
         object[["initial"]][["beta_init"]] <- matrix(beta)
       } else {
-        object[["initial"]][["beta"]] <- beta
+        object[["initial"]][["beta"]] <- matrix(beta)
       }
+      
     }
     
+    u <- matrix(y - z %*% a, k)
+    
+    
     # Covariances
-    if (!is.null(object$priors$psi) & k > 1) {
-      psi_mu <- object$priors$psi$mu
-      psi_vinv <- object$priors$psi$v_i
+    if (object[["model"]][["error"]] %in% c("gamma+covar", "sv+covar") & k > 1) {
+      psi_mu <- object[["priors"]][["psi"]][["mu"]]
+      psi_vinv <- object[["priors"]][["psi"]][["v_inv"]]
       psi <- psi_mu + chol(psi_vinv) %*% stats::rnorm(k * (k - 1) / 2)
       if (object[["model"]][["tvp"]]) {
         object[["initial"]][["psi"]] <- matrix(psi, length(psi) * tt)
@@ -207,17 +227,21 @@ add_initial_values.bvecmodel <- function(object, method = "maxlik", ...){
       } else {
         object[["initial"]][["psi"]] <- psi
       }
+      Psi <- diag(1, k)
+      for (j in 2:k) {
+        Psi[j, 1:(j - 1)] <- t(psi[((j - 2) * (j - 1) / 2) + 1:(j - 1), 1])
+      }
+      u <- Psi %*% u
     }
     
-    u <- NULL
   }
   
   if (n_z > 0) {
-    object[["data"]][["z"]] <- z 
+    object[["data"]][["train"]][["z"]] <- z
   }
   
   # Variances of state equations ----
- object <- .add_initial_values_state_errors(object)
+  object <- .add_initial_values_state_errors(object)
   
   # Initial values for errors
   object <- .add_initial_values_measurement_errors(object = object,
@@ -227,7 +251,10 @@ add_initial_values.bvecmodel <- function(object, method = "maxlik", ...){
   return(object)
 }
 
+
+
 # Square root of a matrix
+# Used in add_initial_values methods to estimate VEC models
 .mroot <- function(M){
   eig <- eigen(M)
   if (length(eig$values) == 1){

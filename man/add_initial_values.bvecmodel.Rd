@@ -19,7 +19,7 @@ An object of class 'bvecmodel'.
 }
 \description{
 Adds initial values to a VEC model, which was produced by
-function \code{\link{create_vec_model}} in combination with \code{\link{add_priors}}.
+function \code{\link{create_bvecmodel}} in combination with \code{\link{add_priors}}.
 }
 \details{
 For argument \code{method} the following specifications are possible:
@@ -47,17 +47,22 @@ specification.
 }
 \examples{
 
-# Load data
+# Load data 
 data("e6")
+e6 <- e6 * 100
 
-# Create model
-model <- create_vec_model(e6, p = 4, r = 1,
-                          const = "unrestricted", seasonal = "unrestricted",
-                          iterations = 100, burnin = 10)
-# Chosen number of iterations and burnin should be much higher.
+# Generate model
+model <- create_bvecmodel(e6, p = 4, r = 1,
+                          const = "unrestricted",
+                          seasonal = "unrestricted",
+                          iterations = 10, burnin = 10)
+# Chosen number of iterations and burn-in should be much higher.
 
 # Add priors
-model <- add_priors(model)
+model <- add_priors(model,
+                    coef = list(v_i = 1, v_i_det = 1 / 10),
+                    coint = list(v_i = 0, p_tau_i = 1),
+                    sigma = list(df = "k", scale = 1))
 
 # Add initial values
 model <- add_initial_values(model)

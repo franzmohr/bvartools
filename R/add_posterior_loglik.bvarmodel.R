@@ -35,6 +35,7 @@
 #' 
 #' 
 #' @export
+#' @method add_posterior_loglik bvarmodel
 add_posterior_loglik.bvarmodel <- function(object, ...) {
   
   # Input checks

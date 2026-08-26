@@ -1,4 +1,4 @@
-#' Create a Vector Error Correction Model
+#' Create Vector Error Correction Models
 #' 
 #' Produces the input for the estimation of a vector error correction (VEC) model.
 #' 
@@ -22,11 +22,14 @@
 #' in \code{data}.
 #' @param structural logical indicating whether data should be prepared for the estimation of a
 #' structural VAR model.
-#' @param tvp logical indicating whether the model parameters are time varying.
 #' @param error character specifying the model that should be used for the estimation
 #' of the covariance matrix of the error term. Default is \code{"wishart"}. See 'Details'.
+#' @param tvp logical indicating whether the model parameters are time varying.
 #' @param varsel character specifying the type of variable selection algorithm
 #' that should be employed. Default is \code{"none"}. See 'Details'.
+#' @param algorithm algorithm that should be used for posterior simulation. If \code{NULL}
+#' (default), standard algorithms will be used. See 'Details' for available
+#' non-standard options.
 #' @param iterations an integer of MCMC draws excluding burn-in draws (defaults
 #' to 50000).
 #' @param burnin an integer of MCMC draws used to initialize the sampler
@@ -79,6 +82,11 @@
 #'  \item{\code{"ssvs"}: Stochastic search variable selection as proposed in George et al. (2008).}
 #' }
 #' 
+#' Available specifications for argument \code{algorithm} are:
+#' \itemize{
+#'  \item{\code{"KLGS2010"}: Algorithm proposed in Koop, León-González & Strachan (2010).}
+#' }
+#' 
 #' @return An object of class \code{'bvecmodel'}, which contains the following elements:
 #' \item{data}{A list of data objects, which can be used for posterior simulation. Element
 #' \code{Y} is a time-series object of dependent variables. Element \code{W} is a timer-series
@@ -95,13 +103,19 @@
 #' # Create model
 #' model <- create_bvecmodel(e6, p = 4, r = 1,
 #'                           const = "unrestricted", seasonal = "unrestricted",
-#'                           iterations = 100, burnin = 10)
+#'                           iterations = 10, burnin = 10)
+#' # Number of iterations and burn-in should be much higher.
 #' 
 #' @references
 #' 
 #' George, E. I., Sun, D., & Ni, S. (2008). Bayesian stochastic search for VAR model
 #' restrictions. \emph{Journal of Econometrics, 142}(1), 553--580.
 #' \doi{10.1016/j.jeconom.2007.08.017}
+#' 
+#' Koop, G., León-González, R., & Strachan R. W. (2010). Efficient posterior
+#' simulation for cointegrated models with priors on the cointegration space.
+#' \emph{Econometric Reviews, 29}(2), 224--242.
+#' \doi{10.1080/07474930903382208}
 #' 
 #' Korobilis, D. (2013). VAR forecasting using Bayesian variable selection.
 #' \emph{Journal of Applied Econometrics, 28}(2), 204--230. \doi{10.1002/jae.1271}
@@ -112,6 +126,7 @@
 create_bvecmodel <- function(data, p = 2, exogen = NULL, s = 2, r = NULL,
                              const = NULL, trend = NULL, seasonal = NULL,
                              structural = FALSE, error = "wishart", tvp = FALSE,
+                             varsel = "none", algorithm = NULL,
                              iterations = 20000, burnin = 2000) {
   
   # Input checks ----
@@ -152,7 +167,6 @@ create_bvecmodel <- function(data, p = 2, exogen = NULL, s = 2, r = NULL,
     stop("Argument 's' must be at least 1 for any error correction model.")
   }
   
-  ## errors ----
   if ("character" %in% class(error)) {
     if (!error %in% c("wishart", "gamma", "gamma+covar", "sv", "sv+covar")) {
       stop("Invalid specification of argument 'error'.")
@@ -161,11 +175,17 @@ create_bvecmodel <- function(data, p = 2, exogen = NULL, s = 2, r = NULL,
     stop("Argument 'error' must be of class 'character'.")
   }
   
-  if (is.null(dimnames(data))) {
-    tsp_temp <- stats::tsp(data)
-    data <- stats::ts(as.matrix(data), class = c("mts", "ts", "matrix"))
-    stats::tsp(data) <- tsp_temp
-    dimnames(data)[[2]] <- "y"
+  # Exogenous variables ----
+  use_exo <- !is.null(exogen)
+  if (use_exo) {
+    if (is.null(dimnames(exogen))) {
+      # If 'exogen' is a simple ts object, transform it into a matrix object
+      # to keep variable name information
+      tsp_temp <- stats::tsp(exogen)
+      exogen <- stats::ts(as.matrix(exogen), class = c("mts", "ts", "matrix"))
+      stats::tsp(exogen) <- tsp_temp
+      dimnames(exogen)[[2]] <- "exogen"
+    }
   }
   
   if (NCOL(data) == 1 & structural) {
@@ -191,15 +211,49 @@ create_bvecmodel <- function(data, p = 2, exogen = NULL, s = 2, r = NULL,
   n_ect <- k
   p_max <- max(p)
   
+  if (is.null(algorithm)) {
+    algo <- NULL
+    if (tvp) {
+      algo <- paste0(algo, "Tvp")
+    } else {
+      algo <- paste0(algo, "Normal")
+    }
+    if (error == "wishart") {
+      algo <- paste0(algo, "Wishart")
+    }
+    if (error %in% c("gamma", "gamma+covar")) {
+      algo <- paste0(algo, "Gamma")
+    }
+    if (error %in% c("sv", "sv+covar")) {
+      algo <- paste0(algo, "Stochvol")
+    }
+    algo <- paste0("Vec", algo) 
+  } else {
+    if (!algorithm %in% c("KLGS2010")) {
+      stop("Specified algorithm not recognized.")
+    }
+    if (algorithm == "KLGS2010") {
+      algo <- "VecKlgs2010"
+    }
+  }
+  
   model <- NULL
-  model[["type"]] <- "VEC"
+  model[["type"]] <- ifelse(length(data_name) == 1, "EC", "VEC")
+  model[["algorithm"]] <- algo
   model[["k"]] <- k
-  model[["p"]] <- 0
-  model[["m"]] <- 0
-  model[["s"]] <- 0
-  model[["n_restricted"]] <- 0
-  model[["n_unrestricted"]] <- 0
+  model[["p"]] <- 0L
+  model[["m"]] <- 0L
+  model[["s"]] <- 0L
+  model[["n"]] <- 0L
+  model[["n_restricted"]] <- 0L
+  model[["rank"]] <- 0L
+  model[["k_beta"]] <- 0L
   model[["varsel"]] <- varsel
+  model[["endogen"]] <- dimnames(data)[[2]]
+  if (use_exo) {
+    exog_name <- dimnames(exogen)[[2]]
+    model[["exogen"]] <- exog_name
+  }
   
   # Differenced endogenous variables
   diff_y <- diff(data)
@@ -212,14 +266,6 @@ create_bvecmodel <- function(data, p = 2, exogen = NULL, s = 2, r = NULL,
   
   # Exogenous ECT variables
   if (!is.null(exogen)) {
-    use_exo <- TRUE
-    if (is.null(dimnames(exogen))) {
-      tsp_temp <- stats::tsp(exogen)
-      exogen <- stats::ts(as.matrix(exogen), class = c("mts", "ts", "matrix"))
-      stats::tsp(exogen) <- tsp_temp
-      dimnames(exogen)[[2]] <- "x"
-    }
-    exog_name <- dimnames(exogen)[[2]]
     m <- length(exog_name)
     s_max <- max(s)
     
@@ -228,9 +274,8 @@ create_bvecmodel <- function(data, p = 2, exogen = NULL, s = 2, r = NULL,
     temp_name <- c(temp_name, paste("l.", exog_name, sep = ""))
     n_ect <- n_ect + m
     
-    model$m <- m
+    model[["m"]] <- m
   } else {
-    use_exo <- FALSE
     s <- 0
     s_max <- 0
     m <- 0
@@ -366,7 +411,7 @@ create_bvecmodel <- function(data, p = 2, exogen = NULL, s = 2, r = NULL,
   use_det_ur <- FALSE
   if (length(det_name_ur) > 0) {
     use_det_ur <- TRUE
-    model[["n_unrestricted"]] <- length(det_name_ur)
+    model[["n"]] <- length(det_name_ur)
   }
   
   if (is.null(r)) {
@@ -381,16 +426,25 @@ create_bvecmodel <- function(data, p = 2, exogen = NULL, s = 2, r = NULL,
       stop("Argument rank 'r' must be smaller than or equal to the number of endogenous variables.")
     }
   }
-  model[["rank"]] <- 0
   
   if ("logical" %in% class(structural)) {
     model[["structural"]] <- structural
+    if (structural) {
+      model[["type"]] <- "SVECX" 
+    }
   } else {
     stop("Argument 'structural' must be of class 'logical'.")
   }
   
   ## error ----
-  model[["error"]] <- error
+  if ("character" %in% class(error)) {
+    if (!error %in% c("wishart", "gamma", "gamma+covar", "sv", "sv+covar")) {
+      stop("Invalid specification of argument 'error'.")
+    }
+    model[["error"]] <- error
+  } else {
+    stop("Argument 'error' must be of class 'character'.")
+  }
   
   # TVP specifications ----
   if ("logical" %in% class(tvp)) {
@@ -399,8 +453,8 @@ create_bvecmodel <- function(data, p = 2, exogen = NULL, s = 2, r = NULL,
     stop("Argument 'tvp' must be of class 'logical'.")
   }
   
-  model[["iterations"]] <- iterations
-  model[["burnin"]] <- burnin
+  model[["iterations"]] <- as.integer(iterations)
+  model[["burnin"]] <- as.integer(burnin)
   
   ect <- stats::ts(as.matrix(ect), class = c("mts", "ts", "matrix"))
   stats::tsp(ect) <- ts_info
@@ -414,6 +468,7 @@ create_bvecmodel <- function(data, p = 2, exogen = NULL, s = 2, r = NULL,
     x <- NULL
   }
   
+  # Structural data
   y_A0 <- NULL
   if (structural & k > 1) {
     y_A0 <- kronecker(-y, diag(1, k))
@@ -430,6 +485,8 @@ create_bvecmodel <- function(data, p = 2, exogen = NULL, s = 2, r = NULL,
       for (rank in r) {
         pos <- NULL
         model_i <- model
+        
+        # Build the matrix of regressors from object x
         if (i > 1) {
           pos <- c(pos, 1:(k * (i - 1)))
         }
@@ -449,14 +506,15 @@ create_bvecmodel <- function(data, p = 2, exogen = NULL, s = 2, r = NULL,
         #   next
         # }
         
-        model_i[["rank"]] = rank
-        X <- NULL
+        model_i[["k_beta"]] <- as.integer(n_ect)
+        model_i[["rank"]] = as.integer(rank)
+        x_i <- NULL
         z <- NULL
         if (length(pos) > 0) {
-          X <- stats::ts(as.matrix(x[, pos]), class = c("mts", "ts", "matrix")) 
-          stats::tsp(X) <- ts_info
-          dimnames(X)[[2]] <- x_names[pos]
-          z <- kronecker(X, diag(1, k))
+          x_i <- stats::ts(as.matrix(x[, pos]), class = c("mts", "ts", "matrix")) 
+          stats::tsp(x_i) <- ts_info
+          dimnames(x_i)[[2]] <- x_names[pos]
+          z <- kronecker(x_i, diag(1, k))
         }
         
         if (rank > 0) {
@@ -468,13 +526,15 @@ create_bvecmodel <- function(data, p = 2, exogen = NULL, s = 2, r = NULL,
         }
         dimnames(z) <- NULL
         
-        result_i <- list("data" = list("y" = y,
-                                       "w" = ect,
-                                       "x" = X,
-                                       "z" = z),
-                         "model" = model_i)
+        result_i <- list("model" = model_i,
+                         "data" = list("original" = list("endogen" = data,
+                                                         "exogen" = exogen),
+                                       "train" = list("y" = y,
+                                                      "w" = ect,
+                                                      "x" = x_i,
+                                                      "z" = z)))
         
-        class(result_i) <- append("bvecmodel", class(result_i)) 
+        class(result_i) <- c("bvecmodel", "list") 
         
         result <- c(result, list(result_i)) 
       }

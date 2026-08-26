@@ -2,7 +2,7 @@
 % Please edit documentation in R/create_bvecmodel.R
 \name{create_bvecmodel}
 \alias{create_bvecmodel}
-\title{Create a Vector Error Correction Model}
+\title{Create Vector Error Correction Models}
 \usage{
 create_bvecmodel(
   data,
@@ -16,6 +16,8 @@ create_bvecmodel(
   structural = FALSE,
   error = "wishart",
   tvp = FALSE,
+  varsel = "none",
+  algorithm = NULL,
   iterations = 20000,
   burnin = 2000
 )
@@ -55,15 +57,19 @@ of the covariance matrix of the error term. Default is \code{"wishart"}. See 'De
 
 \item{tvp}{logical indicating whether the model parameters are time varying.}
 
+\item{varsel}{character specifying the type of variable selection algorithm
+that should be employed. Default is \code{"none"}. See 'Details'.}
+
+\item{algorithm}{algorithm that should be used for posterior simulation. If \code{NULL}
+(default), standard algorithms will be used. See 'Details' for available
+non-standard options.}
+
 \item{iterations}{an integer of MCMC draws excluding burn-in draws (defaults
 to 50000).}
 
 \item{burnin}{an integer of MCMC draws used to initialize the sampler
 (defaults to 5000). These draws do not enter the computation of posterior
 moments, forecasts etc.}
-
-\item{varsel}{character specifying the type of variable selection algorithm
-that should be employed. Default is \code{"none"}. See 'Details'.}
 }
 \value{
 An object of class \code{'bvecmodel'}, which contains the following elements:
@@ -123,6 +129,11 @@ Available specifications for argument \code{varsel} are:
  \item{\code{"bvs"}: Bayesian variable selection as proposed in Korobilis (2013).}
  \item{\code{"ssvs"}: Stochastic search variable selection as proposed in George et al. (2008).}
 }
+
+Available specifications for argument \code{algorithm} are:
+\itemize{
+ \item{\code{"KLGS2010"}: Algorithm proposed in Koop, León-González & Strachan (2010).}
+}
 }
 \examples{
 
@@ -132,13 +143,19 @@ data("e6")
 # Create model
 model <- create_bvecmodel(e6, p = 4, r = 1,
                           const = "unrestricted", seasonal = "unrestricted",
-                          iterations = 100, burnin = 10)
+                          iterations = 10, burnin = 10)
+# Number of iterations and burn-in should be much higher.
 
 }
 \references{
 George, E. I., Sun, D., & Ni, S. (2008). Bayesian stochastic search for VAR model
 restrictions. \emph{Journal of Econometrics, 142}(1), 553--580.
 \doi{10.1016/j.jeconom.2007.08.017}
+
+Koop, G., León-González, R., & Strachan R. W. (2010). Efficient posterior
+simulation for cointegrated models with priors on the cointegration space.
+\emph{Econometric Reviews, 29}(2), 224--242.
+\doi{10.1080/07474930903382208}
 
 Korobilis, D. (2013). VAR forecasting using Bayesian variable selection.
 \emph{Journal of Applied Econometrics, 28}(2), 204--230. \doi{10.1002/jae.1271}

@@ -1,22 +1,29 @@
 #' Bayesian Vector Error Correction Objects
-#' 
-#' `bvec` is used to create objects of class \code{"bvec"}.
-#' 
-#' @param data the original time-series object of endogenous variables.
-#' @param exogen the original time-series object of unmodelled variables.
+#'
+#' \code{bvec} collects the posterior draws of a vector error correction model
+#' in an object of class 'bvecmodel'.
+#'
+#' @param data the original time-series object of endogenous variables in levels.
+#' If \code{NULL} (default), it is reconstructed from arguments \code{y} and \code{w}.
+#' @param exogen the original time-series object of unmodelled variables in levels.
+#' If \code{NULL} (default), it is reconstructed from arguments \code{w_x} and \code{x_x}.
+#' @param z a \eqn{TK \times K (r + (p-1)K + sM + N)} data matrix, usually, a result of a
+#' call to \code{\link{create_bvecmodel}}. If \code{NULL} (default), it is generated
+#' from the provided data.
 #' @param y a time-series object of differenced endogenous variables,
-#' usually, a result of a call to \code{\link{gen_vec}}.
+#' usually, a result of a call to \code{\link{create_bvecmodel}}.
 #' @param w a time-series object of lagged endogenous variables in levels, which enter the
-#' cointegration term, usually, a result of a call to \code{\link{gen_vec}}.
+#' cointegration term, usually, a result of a call to \code{\link{create_bvecmodel}}.
 #' @param w_x a time-series object of lagged unmodelled, non-deterministic variables in levels, which enter the
-#' cointegration term, usually, a result of a call to \code{\link{gen_vec}}.
+#' cointegration term, usually, a result of a call to \code{\link{create_bvecmodel}}.
 #' @param w_d a time-series object of deterministic terms, which enter the
-#' cointegration term, usually, a result of a call to \code{\link{gen_vec}}.
+#' cointegration term, usually, a result of a call to \code{\link{create_bvecmodel}}.
 #' @param x a time-series object of \eqn{K(p - 1)} differenced endogenous variables.
 #' @param x_x a time-series object of \eqn{Ms} differenced unmodelled regressors.
 #' @param x_d a time-series object of \eqn{N^{UR}} deterministic terms that do not enter the
 #' cointegration term.
-#' @param r an integer of the rank of the cointegration matrix.
+#' @param r an integer of the rank of the cointegration matrix. If \code{NULL}
+#' (default), it is obtained from argument \code{alpha}.
 #' @param A0 either a \eqn{K^2 \times S} matrix of MCMC coefficient draws of structural parameters or
 #' a named list, where element \code{coeffs} contains a \eqn{K^2 \times S} matrix of MCMC coefficient
 #' draws of structural parameters and element \code{lambda} contains the corresponding draws of inclusion
@@ -28,9 +35,6 @@
 #' corresponding to unmodelled, non-deterministic variables.
 #' @param beta_d a \eqn{N^{R}r \times S} matrix of MCMC coefficient draws of cointegration matrix \eqn{\beta}
 #' corresponding to restricted deterministic terms.
-#' @param Pi a \eqn{K^2 \times S} matrix of MCMC coefficient draws of endogenous varaibles in the cointegration matrix.
-#' @param Pi_x a \eqn{KM \times S} matrix of MCMC coefficient draws of unmodelled, non-deterministic variables in the cointegration matrix.
-#' @param Pi_d a \eqn{KN^{R} \times S} matrix of MCMC coefficient draws of restricted deterministic terms.
 #' @param Gamma a \eqn{(p-1)K^2 \times S} matrix of MCMC coefficient draws of differenced lagged endogenous variables or
 #' a named list, where element \code{coeffs} contains a \eqn{(p - 1)K^2 \times S} matrix of MCMC coefficient draws
 #' of lagged differenced endogenous variables and element \code{lambda} contains the corresponding draws of inclusion
@@ -46,616 +50,427 @@
 #' @param Sigma a \eqn{K^2 \times S} matrix of MCMC draws for the error variance-covariance matrix or
 #' a named list, where element \code{coeffs} contains a \eqn{K^2 \times S} matrix of MCMC draws for the
 #' error variance-covariance matrix and element \code{lambda} contains the corresponding draws of inclusion
-#' parameters in case variable selection algorithms were employed to the covariances.
-#' 
-#' @details For the vector error correction model with unmodelled exogenous variables (VECX) 
-#' \deqn{A_0 \Delta y_t = \Pi^{+} \begin{pmatrix} y_{t-1} \\ x_{t-1} \\ d^{R}_{t-1} \end{pmatrix} +
+#' parameters in case variable selection algorithms were employed to the covariances. For models with
+#' stochastic volatility the matrix must be \eqn{TK^2 \times S}.
+#' @param error a character specifying the model that was used for the estimation
+#' of the covariance matrix of the error term. If \code{NULL} (default), it is
+#' inferred from the draws in argument \code{Sigma}, which can only distinguish
+#' a constant covariance matrix from a time varying one. See
+#' \code{\link{create_bvecmodel}}.
+#' @param varsel a character specifying the variable selection algorithm that was
+#' employed. If \code{NULL} (default), it is inferred from the presence of draws
+#' of inclusion parameters. See \code{\link{create_bvecmodel}}.
+#' @param iterations an integer of the number of MCMC draws in the provided
+#' coefficient matrices. If \code{NULL} (default), it is obtained from those
+#' matrices.
+#' @param burnin an integer of the number of MCMC draws that were used to
+#' initialise the sampler. Defaults to zero, since the draws provided to the
+#' function are assumed to exclude them already.
+#'
+#' @details For the vector error correction model with unmodelled exogenous variables (VECX)
+#' \deqn{A_0 \Delta y_t = \alpha \beta^\prime \begin{pmatrix} y_{t-1} \\ x_{t-1} \\ d^{R}_{t-1} \end{pmatrix} +
 #' \sum_{i = 1}^{p-1} \Gamma_i \Delta y_{t-i} +
 #' \sum_{i = 0}^{s-1} \Upsilon_i \Delta x_{t-i} +
 #' C^{UR} d^{UR}_t + u_t}
 #' the function collects the \eqn{S} draws of a Gibbs sampler in a standardised object,
 #' where \eqn{\Delta y_t} is a K-dimensional vector of differenced endogenous variables
 #' and \eqn{A_0} is a \eqn{K \times K} matrix of structural coefficients.
-#' \eqn{\Pi^{+} = \left[ \Pi, \Pi^{x}, \Pi^{d} \right]} is
-#' the coefficient matrix of the error correction term, where
-#' \eqn{y_{t-1}}, \eqn{x_{t-1}} and \eqn{d^{R}_{t-1}} are the first lags of endogenous,
+#' \eqn{\alpha} is the \eqn{K \times r} loading matrix and \eqn{\beta} the
+#' \eqn{(K + M + N^{R}) \times r} cointegration matrix of the error correction term,
+#' where \eqn{y_{t-1}}, \eqn{x_{t-1}} and \eqn{d^{R}_{t-1}} are the first lags of endogenous,
 #' exogenous variables in levels and restricted deterministic terms, respectively.
-#' \eqn{\Pi}, \eqn{\Pi^{x}}, and \eqn{\Pi^{d}} are the corresponding coefficient matrices, respectively.
 #' \eqn{\Gamma_i} is a coefficient matrix of lagged differenced endogenous variabels.
 #' \eqn{\Delta x_t} is an M-dimensional vector of unmodelled, non-deterministic variables
 #' and \eqn{\Upsilon_i} its corresponding coefficient matrix. \eqn{d_t} is an
 #' \eqn{N^{UR}}-dimensional vector of unrestricted deterministics and \eqn{C^{UR}}
 #' the corresponding coefficient matrix.
 #' \eqn{u_t} is an error term with \eqn{u_t \sim N(0, \Sigma_u)}.
-#' 
+#'
 #' For time varying parameter and stochastic volatility models the respective coefficients and
 #' error covariance matrix of the above model are assumed to be time varying, respectively.
-#' 
+#'
 #' The draws of the different coefficient matrices provided in \code{alpha}, \code{beta},
-#' \code{Pi}, \code{Pi_x}, \code{Pi_d}, \code{A0}, \code{Gamma}, \code{Ypsilon},
+#' \code{beta_x}, \code{beta_d}, \code{A0}, \code{Gamma}, \code{Upsilon},
 #' \code{C} and \code{Sigma} have to correspond to the same MCMC iteration.
-#' 
-#' @return An object of class \code{"gvec"} containing the following components, if specified:
-#' \item{data}{the original time-series object of endogenous variables.}
-#' \item{exogen}{the original time-series object of unmodelled variables.}
-#' \item{y}{a time-series object of differenced endogenous variables.}
-#' \item{w}{a time-series object of lagged endogenous variables in levels, which enter the
-#' cointegration term.}
-#' \item{w_x}{a time-series object of lagged unmodelled, non-deterministic variables in levels, which enter the
-#' cointegration term.}
-#' \item{w_d}{a time-series object of deterministic terms, which enter the
-#' cointegration term.}
-#' \item{x}{a time-series object of \eqn{K(p - 1)} differenced endogenous variables}
-#' \item{x_x}{a time-series object of \eqn{Ms} differenced unmodelled regressors.}
-#' \item{x_d}{a time-series object of \eqn{N^{UR}} deterministic terms that do not enter the
-#' cointegration term.}
-#' \item{A0}{an \eqn{S \times K^2} "mcmc" object of coefficient draws of structural parameters. In case of time varying parameters a list of such objects.}
-#' \item{A0_lambda}{an \eqn{S \times K^2} "mcmc" object of inclusion parameters for coefficients
-#' corresponding to structural parameters.}
-#' \item{A0_sigma}{an \eqn{S \times K^2} "mcmc" object of the error covariance matrices of the structural parameters in a model with time varying parameters.}
-#' \item{alpha}{an \eqn{S \times Kr} "mcmc" object of coefficient draws of loading parameters. In case of time varying parameters a list of such objects.}
-#' \item{beta}{an \eqn{S \times ((K + M + N^{R})r)} "mcmc" object of coefficient draws of cointegration parameters
-#' corresponding to the endogenous variables of the model. In case of time varying parameters a list of such objects.}
-#' \item{beta_x}{an \eqn{S \times KM} "mcmc" object of coefficient draws of cointegration parameters
-#' corresponding to unmodelled, non-deterministic variables. In case of time varying parameters a list of such objects.}
-#' \item{beta_d}{an \eqn{S \times KN^{R}} "mcmc" object of coefficient draws of cointegration parameters
-#' corresponding to restricted deterministic variables. In case of time varying parameters a list of such objects.}
-#' \item{Pi}{an \eqn{S \times K^2} "mcmc" object of coefficient draws of endogenous variables in the cointegration matrix. In case of time varying parameters a list of such objects.}
-#' \item{Pi_x}{an \eqn{S \times KM} "mcmc" object of coefficient draws of unmodelled, non-deterministic variables in the cointegration matrix. In case of time varying parameters a list of such objects.}
-#' \item{Pi_d}{an \eqn{S \times KN^{R}} "mcmc" object of coefficient draws of restricted deterministic variables in the cointegration matrix. In case of time varying parameters a list of such objects.}
-#' \item{Gamma}{an \eqn{S \times (p-1)K^2} "mcmc" object of coefficient draws of differenced lagged endogenous variables. In case of time varying parameters a list of such objects.}
-#' \item{Gamma_lamba}{an \eqn{S \times (p-1)K^2} "mcmc" object of inclusion parameters for coefficients
-#' corresponding to differenced lagged endogenous variables.}
-#' \item{Gamma_sigma}{an \eqn{S \times (p - 1)K^2} "mcmc" object of the error covariance matrices of the coefficients of lagged endogenous variables in a model with time varying parameters.}
-#' \item{Upsilon}{an \eqn{S \times sMK} "mcmc" object of coefficient draws of differenced unmodelled, non-deterministic variables. In case of time varying parameters a list of such objects.}
-#' \item{Upsilon_lambda}{an \eqn{S \times sMK} "mcmc" object of inclusion parameters for coefficients
-#' corresponding to differenced unmodelled, non-deterministic variables.}
-#' \item{Upsilon_sigma}{an \eqn{S \times sMK} "mcmc" object of the error covariance matrices of the coefficients of unmodelled, non-deterministic variables in a model with time varying parameters.}
-#' \item{C}{an \eqn{S \times KN^{UR}} "mcmc" object of coefficient draws of deterministic terms that
-#' do not enter the cointegration term. In case of time varying parameters a list of such objects.}
-#' \item{C_lambda}{an \eqn{S \times KN^{UR}} "mcmc" object of inclusion parameters for coefficients
-#' corresponding to deterministic terms, that do not enter the conintegration term.}
-#' \item{C_sigma}{an \eqn{S \times KN^{UR}} "mcmc" object of the error covariance matrices of the coefficients of deterministic terms, which do not enter the cointegration term, in a model with time varying parameters.}
-#' \item{Sigma}{an \eqn{S \times K^2} "mcmc" object of variance-covariance draws. In case of time varying parameters a list of such objects.}
-#' \item{Sigma_lambda}{an \eqn{S \times K^2} "mcmc" object inclusion parameters for the variance-covariance matrix.}
-#' \item{Sigma_sigma}{an \eqn{S \times K^2} "mcmc" object of the error covariance matrices of the coefficients of the error covariance matrix of the measurement equation of a model with time varying parameters.}
-#' \item{specifications}{a list containing information on the model specification.}
-#' 
-#' @examples 
-#' 
+#'
+#' The result is the same kind of object as the output of
+#' \code{\link{create_bvecmodel}} in combination with
+#' \code{\link{draw_posterior}}, so it can be used with the methods of class
+#' 'bvecmodel' such as \code{\link{vec_to_var.bvecmodel}} or
+#' \code{\link{summary.bvecmodel}}. Accordingly, the draws are stored in the
+#' parameterisation those methods expect. The error correction term is described
+#' by \eqn{\alpha} and \eqn{\beta} and not by \eqn{\Pi = \alpha \beta^\prime},
+#' since the latter cannot be decomposed into the former. The draws of
+#' \eqn{\alpha} are collected in the same matrix as the coefficients of the
+#' remaining regressors and the draws of \eqn{\beta} of all cointegration
+#' relations are collected in a matrix of their own. Draws of the error term are
+#' stored as draws of the inverse of \eqn{\Sigma_u} and draws of \eqn{A_0} are
+#' reduced to the free elements below its diagonal, which are the elements that
+#' are estimated.
+#'
+#' Since a model that is constructed from posterior draws does not contain the
+#' specification of its priors, the elements \code{priors} and \code{initial} of
+#' the resulting object are empty. Use \code{\link{add_priors}} and
+#' \code{\link{add_initial_values}} if the model should be re-estimated.
+#'
+#' @return An object of class \code{"bvecmodel"} containing the following components:
+#' \item{model}{a list containing information on the model specification.}
+#' \item{data}{a list of data objects. Element \code{original} contains the
+#' original time-series objects of endogenous and unmodelled variables in levels.
+#' Element \code{train} contains the time-series objects \code{y} of differenced
+#' endogenous variables, \code{w} of the regressors of the error correction term
+#' and \code{x} of the remaining regressors as well as the matrix \code{z} of
+#' regressors in SUR form.}
+#' \item{posterior}{a list of posterior draws. Element \code{a} contains an
+#' \eqn{S \times (Kr + K((p - 1)K + sM + N^{UR}) + K(K - 1) / 2)} "mcmc" object of
+#' the draws of the loading matrix and the coefficients of the remaining
+#' regressors and, if provided, the corresponding draws of inclusion parameters
+#' in element \code{lambda} and of the error covariance matrix of the state
+#' equation in element \code{sigma}. Element \code{beta} contains an
+#' \eqn{S \times ((K + M + N^{R})r)} "mcmc" object of the draws of the
+#' cointegration matrix. Element \code{u_sigma_inv} contains an
+#' \eqn{S \times K^2} "mcmc" object of the draws of the inverse of the error
+#' variance-covariance matrix.}
+#'
+#' @examples
+#'
 #' # Load data
 #' data("e6")
 #' # Generate model
-#' data <- gen_vec(e6, p = 4, r = 1, const = "unrestricted", season = "unrestricted")
+#' model <- create_bvecmodel(e6, p = 4, r = 1, const = "unrestricted", seasonal = "unrestricted")
 #' # Obtain data matrices
-#' y <- t(data$data$Y)
-#' w <- t(data$data$W)
-#' x <- t(data$data$X)
-#' 
+#' y <- t(model$data$train$y)
+#' w <- t(model$data$train$w)
+#' x <- t(model$data$train$x)
+#'
 #' # Reset random number generator for reproducibility
 #' set.seed(1234567)
-#' 
+#'
 #' iterations <- 400 # Number of iterations of the Gibbs sampler
 #' # Chosen number of iterations should be much higher, e.g. 30000.
-#' 
+#'
 #' burnin <- 100 # Number of burn-in draws
 #' draws <- iterations + burnin
-#' 
+#'
 #' r <- 1 # Set rank
-#' 
+#'
 #' tt <- ncol(y) # Number of observations
 #' k <- nrow(y) # Number of endogenous variables
 #' k_w <- nrow(w) # Number of regressors in error correction term
 #' k_x <- nrow(x) # Number of differenced regressors and unrestrictec deterministic terms
-#' 
+#'
 #' k_alpha <- k * r # Number of elements in alpha
 #' k_beta <- k_w * r # Number of elements in beta
 #' k_gamma <- k * k_x
-#' 
+#'
 #' # Set uninformative priors
-#' a_mu_prior <- matrix(0, k_x * k) # Vector of prior parameter means
-#' a_v_i_prior <- diag(0, k_x * k) # Inverse of the prior covariance matrix
-#' 
+#' a_mu_prior <- matrix(0, k_alpha + k_gamma) # Vector of prior parameter means
+#' a_v_i_prior <- diag(0, k_alpha + k_gamma) # Inverse of the prior covariance matrix
+#'
 #' v_i <- 0
 #' p_tau_i <- diag(1, k_w)
-#' 
+#'
 #' u_sigma_df_prior <- r # Prior degrees of freedom
-#' u_sigma_scale_prior <- diag(0, k) # Prior covariance matrix
+#' u_sigma_scale_prior <- diag(0.01, k) # Prior covariance matrix
 #' u_sigma_df_post <- tt + u_sigma_df_prior # Posterior degrees of freedom
-#' 
+#'
 #' # Initial values
 #' beta <- matrix(c(1, -4), k_w, r)
 #' u_sigma_i <- diag(1 / .0001, k)
 #' g_i <- u_sigma_i
-#' 
+#'
 #' # Data containers
 #' draws_alpha <- matrix(NA, k_alpha, iterations)
 #' draws_beta <- matrix(NA, k_beta, iterations)
-#' draws_pi <- matrix(NA, k * k_w, iterations)
 #' draws_gamma <- matrix(NA, k_gamma, iterations)
 #' draws_sigma <- matrix(NA, k^2, iterations)
-#' 
+#'
 #' # Start Gibbs sampler
 #' for (draw in 1:draws) {
 #'   # Draw conditional mean parameters
-#'   temp <- post_coint_kls(y = y, beta = beta, w = w, x = x, sigma_i = u_sigma_i,
+#'   temp <- post_coint_kls(y = y, beta = beta, w = w, sigma_i = u_sigma_i,
 #'                          v_i = v_i, p_tau_i = p_tau_i, g_i = g_i,
+#'                          x = x,
 #'                          gamma_mu_prior = a_mu_prior,
 #'                          gamma_v_i_prior = a_v_i_prior)
 #'   alpha <- temp$alpha
 #'   beta <- temp$beta
 #'   Pi <- temp$Pi
 #'   gamma <- temp$Gamma
-#'   
+#'
 #'   # Draw variance-covariance matrix
 #'   u <- y - Pi %*% w - matrix(gamma, k) %*% x
 #'   u_sigma_scale_post <- solve(tcrossprod(u) +
 #'      v_i * alpha %*% tcrossprod(crossprod(beta, p_tau_i) %*% beta, alpha))
 #'   u_sigma_i <- matrix(rWishart(1, u_sigma_df_post, u_sigma_scale_post)[,, 1], k)
 #'   u_sigma <- solve(u_sigma_i)
-#'   
+#'
 #'   # Update g_i
 #'   g_i <- u_sigma_i
-#'   
+#'
 #'   # Store draws
 #'   if (draw > burnin) {
 #'     draws_alpha[, draw - burnin] <- alpha
 #'     draws_beta[, draw - burnin] <- beta
-#'     draws_pi[, draw - burnin] <- Pi
 #'     draws_gamma[, draw - burnin] <- gamma
 #'     draws_sigma[, draw - burnin] <- u_sigma
 #'   }
 #' }
-#' 
+#'
 #' # Number of non-deterministic coefficients
 #' k_nondet <- (k_x - 4) * k
-#' 
-#' # Generate bvec object
-#' bvec_est <- bvec(y = data$data$Y, w = data$data$W,
-#'                  x = data$data$X[, 1:6],
-#'                  x_d = data$data$X[, 7:10],
-#'                  Pi = draws_pi,
+#'
+#' # Generate bvecmodel object
+#' bvec_est <- bvec(y = model$data$train$y, w = model$data$train$w,
+#'                  x = model$data$train$x[, 1:6],
+#'                  x_d = model$data$train$x[, 7:10],
+#'                  r = r,
+#'                  alpha = draws_alpha,
+#'                  beta = draws_beta,
 #'                  Gamma = draws_gamma[1:k_nondet,],
 #'                  C = draws_gamma[(k_nondet + 1):nrow(draws_gamma),],
 #'                  Sigma = draws_sigma)
-#' 
+#'
 #' @export
 bvec <- function(y, alpha = NULL, beta = NULL, beta_x = NULL, beta_d = NULL, r = NULL,
-                 Pi = NULL, Pi_x = NULL, Pi_d = NULL,
                  w = NULL, w_x = NULL, w_d = NULL,
                  Gamma = NULL, Upsilon = NULL, C = NULL,
-                 x = NULL, x_x = NULL, x_d = NULL, 
+                 x = NULL, x_x = NULL, x_d = NULL,
                  A0 = NULL, Sigma = NULL,
-                 data = NULL, exogen = NULL) {
-  
-  result <- NULL
-  if (is.null(Pi) & is.null(Pi_x) & is.null(Pi_d) & is.null(r)) {
-    stop("If arguments 'Pi', 'Pi_x' and 'Pi_d' are not specified, at least argument 'r' must be set to zero.")
-  }
-  if (is.null(beta) & is.null(beta_x) & is.null(beta_d) &is.null(Pi) & is.null(Pi_x) & is.null(Pi_d) & !is.null(r)) {
-    if (r > 0) {
-      stop("Non of the arguments 'beta', 'beta_x', 'beta_d', 'Pi', 'Pi_x' and 'Pi_d' is specified although 'r' is larger than zero.") 
+                 data = NULL, exogen = NULL, z = NULL,
+                 error = NULL, varsel = NULL, iterations = NULL, burnin = 0) {
+
+  for (i in c("y", "w", "w_x", "w_d", "x", "x_x", "x_d")) {
+    temp <- get(i)
+    if (!is.null(temp)) {
+      if (!"ts" %in% class(temp)) {
+        stop("Argument '", i, "' must be of class 'ts'.")
+      }
     }
   }
-  if (is.null(r)) {
-    r <- NA
-  }
-  
-  if (!"ts" %in% class(y)) {
-    stop("'Argument 'y' must be of class 'ts'.")
-  }
-  result[["y"]] <- y
+
+  y <- .name_ts(y, "d.y")
   k <- NCOL(y)
   tt <- NROW(y)
-  
-  if(!is.null(w)) {
-    if (!"ts" %in% class(w)) {
-      stop("'Argument 'w' must be of class 'ts'.")
-    }
-    result[["w"]] <- w
-  }
-  
-  m <- 0
-  s <- 0
-  if(!is.null(w_x)) {
-    if (!"ts" %in% class(w_x)) {
-      stop("'Argument 'w_x' must be of class 'ts'.")
-    }
-    result[["w_x"]] <- w_x
-    m <- NCOL(w_x)
-  }
-  
-  k_detr <- NULL
-  if(!is.null(w_d)) {
-    if (!"ts" %in% class(w_d)) {
-      stop("'Argument 'w_d' must be of class 'ts'.")
-    }
-    result$w_d <- w_d
-    k_detr <- NCOL(w_d)
-  }
-  
-  if(!is.null(x)) {
-    if (!"ts" %in% class(x)) {
-      stop("'Argument 'x' must be of class 'ts'.")
-    }
-    result[["x"]] <- x
-  }
-  
-  if(!is.null(x_x)) {
-    if (!"ts" %in% class(x_x)) {
-      stop("'Argument 'x_x' must be of class 'ts'.")
-    }
-    result[["x_x"]] <- x_x
-  }
-  
-  if(!is.null(x_d)) {
-    if (!"ts" %in% class(x_d)) {
-      stop("'Argument 'x_d' must be of class 'ts'.")
-    }
-    result[["x_d"]] <- x_d
-  }
-  
-  tvp_a0 <- FALSE
-  tvp_alpha <- FALSE
-  tvp_beta <- FALSE
-  tvp_pi <- FALSE
-  tvp_gamma <- FALSE
-  tvp_upsilon <- FALSE
-  tvp_c <- FALSE
-  tvp_sigma <- FALSE
-  
-  structural <- FALSE
-  if(!is.null(A0)) {
-    if (is.list(A0)) {
-      if ("coeffs" %in% names(A0)) {
-        n_a0 <- nrow(A0[["coeffs"]])
-      }
-    } else {
-      n_a0 <- nrow(A0)
-    }
-    if (n_a0 / tt >= 1) {
-      tvp_a0 <- TRUE
-      n_a0 <- n_a0 / tt
-    }
-    if (n_a0 %% (k * k) != 0) {
-      stop("Row number of coefficient draws of 'A0' is not k^2 or multiples thereof.")
-    }
-    structural <- TRUE
-  }
-  
-  if(!is.null(alpha)) {
-    if (is.list(alpha)) {
-      if ("coeffs" %in% names(alpha)) {
-        n_alpha <- nrow(alpha[["coeffs"]])
-      }
-    } else {
-      n_alpha <- nrow(alpha)
-    }
-    if ((n_alpha / tt) %% k == 0 & n_alpha / (k * r) / tt == 1) {
-      tvp_alpha <- TRUE
-      n_alpha <- n_alpha / tt
+
+  # Regressors of the error correction term ----
+
+  w <- .name_ts(w, "l.y")
+  w_x <- .name_ts(w_x, "l.x")
+  w_d <- .name_ts(w_d, "l.d")
+
+  m <- ifelse(is.null(w_x), 0L, as.integer(NCOL(w_x)))
+  n_restricted <- ifelse(is.null(w_d), 0L, as.integer(NCOL(w_d)))
+
+  if (!is.null(w)) {
+    if (NCOL(w) != k) {
+      stop("Argument 'w' must contain one column per endogenous variable.")
     }
   }
-  
-  if(!is.null(beta)) {
-    if (is.list(beta)) {
-      if ("coeffs" %in% names(beta)) {
-        n_beta <- nrow(beta[["coeffs"]])
-      }
-    } else {
-      n_beta <- nrow(beta)
+  k_beta <- as.integer(k + m + n_restricted)
+
+  # Cointegration rank ----
+
+  block_alpha <- .split_draws(alpha, "alpha")
+  if (is.null(block_alpha)) {
+    if (is.null(r)) {
+      stop("Either argument 'alpha' or argument 'r' must be specified.")
     }
-    if ((n_beta / tt) %% k == 0 & n_beta / tt >= 1) {
-      tvp_beta <- TRUE
-      n_beta <- n_beta / tt
+    if (r > 0) {
+      stop("Argument 'alpha' must be specified if argument 'r' is larger than zero.")
     }
-  }
-  
-  if(!is.null(Pi)) {
-    if (is.list(Pi)) {
-      if ("coeffs" %in% names(Pi)) {
-        n_pi <- nrow(Pi[["coeffs"]])
-      }
-    } else {
-      n_pi <- nrow(Pi)
-    }
-    if ((n_pi / tt) %% k == 0 & n_pi / tt >= 1) {
-      tvp_pi <- TRUE
-      n_pi <- n_pi / tt
-    }
+    rank <- 0L
   } else {
-    tvp_pi <- tvp_alpha | tvp_beta 
-  }
-  
-  if(!is.null(Gamma)) {
-    if (is.list(Gamma)) {
-      if ("coeffs" %in% names(Gamma)) {
-        n_gamma <- nrow(Gamma[["coeffs"]])
-      }
-    } else {
-      n_gamma <- nrow(Gamma)
-    }
-    if ((n_gamma / tt) %% k == 0 & n_gamma / tt >= 1) {
-      tvp_gamma <- TRUE
-      n_gamma <- n_gamma / tt
-    }
-  }
-  
-  if(!is.null(Upsilon)) {
-    if (is.list(Upsilon)) {
-      if ("coeffs" %in% names(Upsilon)) {
-        n_upsilon <- nrow(Upsilon[["coeffs"]])
-      }
-    } else {
-      n_upsilon <- nrow(Upsilon)
-    }
-    if ((n_upsilon / tt) %% k == 0 & n_upsilon / tt >= 1) {
-      tvp_upsilon <- TRUE
-      n_upsilon <- n_upsilon / tt
-    }
-  }
-  
-  if(!is.null(C)) {
-    if (is.list(C)) {
-      if ("coeffs" %in% names(C)) {
-        n_c <- nrow(C[["coeffs"]])
-      }
-    } else {
-      n_c <- nrow(C)
-    }
-    if ((n_c / tt) %% k == 0 & n_c / tt >= 1) {
-      tvp_c <- TRUE
-      n_c <- n_c / tt
-    }
-  }
-  
-  if(!is.null(Sigma)) {
-    if (is.list(Sigma)) {
-      if ("coeffs" %in% names(Sigma)) {
-        n_sigma <- nrow(Sigma[["coeffs"]])
-      }
-    } else {
-      n_sigma <- nrow(Sigma)
-    }
-    if ((n_sigma / tt) %% k == 0 & n_sigma / tt >= 1) {
-      tvp_sigma <- TRUE
-      n_sigma <- n_sigma / tt
-    }
-    if (n_sigma %% (k * k) != 0) {
-      stop("Row number of coefficient draws of 'Sigma' is not k^2 or multiples thereof.")
-    }
-  }
-  
-  # Data objects ----
-  if(!is.null(data)) {
-    result[["data"]] <- data
-  }
-  if(!is.null(exogen)) {
-    result[["exogen"]] <- exogen
-  }
-  
-  if(!is.null(A0)) {
-    result <- c(result, .bvar_fill_helper(A0, tvp_a0, n_a0, tt, "A0"))
-  }
-  
-  # Parameters - alpha ----
-  if(!is.null(alpha)) {
-    result <- c(result, .bvar_fill_helper(alpha, tvp_alpha, r * k, tt, "alpha"))
-  }
-  
-  # beta
-  if(!is.null(beta)) {
-    result <- c(result, .bvar_fill_helper(beta, tvp_beta, r * k, tt, "beta"))
-  }
-  
-  # beta - exogenous
-  if(!is.null(beta_x)) {
-    result <- c(result, .bvar_fill_helper(beta_x, tvp_beta, r * m, tt, "beta_x"))
-  }
-  
-  # beta - deterministic
-  if(!is.null(beta_d)) {
-    result <- c(result, .bvar_fill_helper(beta_d, tvp_beta,  r * k_detr, tt, "beta_d"))
-  }
-  
-  if(!is.null(Pi)) {
-    result <- c(result, .bvar_fill_helper(Pi, tvp_pi, k * k, tt, "Pi"))
-  } else {
-    # If alpha and beta are provided, calculate Pi
-    if (!is.null(alpha) & !is.null(beta)) {
-      
-      if (is.list(result[["alpha"]])) {
-        draws <- NROW(result[["alpha"]][[1]])  
-      } else {
-        draws <- NROW(result[["alpha"]])
-      }
-      
-      if (!is.list(result[["alpha"]]) & !is.list(result[["beta"]])) {
-        result[["Pi"]] <- coda::mcmc(matrix(NA, draws, k * k))
-        for (draw in 1:draws) {
-          result[["Pi"]][draw, ] <- matrix(result[["alpha"]][draw,], k) %*% t(matrix(result[["beta"]][draw, ], k))
-        }
-      } else {
-        result[["Pi"]] <- list()
-        for (i in 1:tt) {
-          pi_temp <- matrix(NA, draws, k * k)
-          for (draw in 1:draws) {
-            if (is.list(result[["alpha"]])) {
-              alpha_temp <- matrix(result[["alpha"]][[i]][draw,], k)  
-            } else {
-              alpha_temp <- matrix(result[["alpha"]][draw,], k)
-            }
-            if (is.list(result[["beta"]])) {
-              beta_temp <- matrix(result[["beta"]][[i]][draw, ], k)
-            } else {
-              beta_temp <- matrix(result[["beta"]][draw, ], k)
-            }
-            pi_temp[draw, ] <- alpha_temp %*% t(beta_temp)
-          }
-          result[["Pi"]][[i]] <- coda::mcmc(pi_temp)
-        }
+    block_alpha <- .block_dims(block_alpha, tt, k, "alpha")
+    rank <- as.integer(block_alpha[["n"]] / k)
+    if (!is.null(r)) {
+      if (r != rank) {
+        stop("The number of rows of argument 'alpha' does not correspond to the rank in argument 'r'.")
       }
     }
-  }
-  
-  if(!is.null(Pi_x)) {
-    
-    result <- c(result, .bvar_fill_helper(Pi_x, tvp_pi, k * m, tt, "Pi_x"))
-    
-    if (is.list(result[["Pi_x"]])) {
-      n_x <- NCOL(result[["Pi_x"]][[1]])    
-    } else {
-      n_x <- NCOL(result[["Pi_x"]])
+    if (is.null(beta)) {
+      stop("Argument 'beta' must be specified if argument 'alpha' is specified.")
     }
-    if (n_x %% k == 0) {
-      if (is.null(m)) {
-        m <- n_x / k 
+    if (is.null(w)) {
+      stop("Argument 'w' must be specified for models with a cointegration rank larger than zero.")
+    }
+  }
+
+  # Remaining coefficient draws ----
+
+  block_gamma <- .block_dims(.split_draws(Gamma, "Gamma"), tt, k * k, "Gamma")
+  block_upsilon <- .block_dims(.split_draws(Upsilon, "Upsilon"), tt, k, "Upsilon")
+  block_c <- .block_dims(.split_draws(C, "C"), tt, k, "C")
+  block_sigma <- .block_dims(.split_draws(Sigma, "Sigma"), tt, k * k, "Sigma")
+
+  block_a0 <- .split_draws(A0, "A0")
+  structural <- !is.null(block_a0)
+  if (structural) {
+    if (k == 1) {
+      stop("Argument 'A0' cannot be used for models with a single endogenous variable.")
+    }
+    block_a0 <- .block_dims(block_a0, tt, k * k, "A0")
+    block_a0 <- .a0_free_elements(block_a0, k)
+    block_a0[["n"]] <- k * (k - 1) / 2
+  }
+
+  draws <- .count_draws(list(block_alpha, block_gamma, block_upsilon,
+                             block_c, block_a0, block_sigma))
+
+  # Dimensions of the model ----
+
+  # The lag orders of a VEC model are those of the corresponding VAR model, so
+  # they exceed the number of blocks of differenced regressors by one
+  p <- if (is.null(block_gamma)) 1L else as.integer(block_gamma[["n"]] / (k * k) + 1)
+  n <- if (is.null(block_c)) 0L else as.integer(block_c[["n"]] / k)
+
+  s <- 0L
+  if (!is.null(block_upsilon)) {
+    if (m == 0) {
+      stop("Argument 'w_x' must be specified if argument 'Upsilon' is specified.")
+    }
+    s <- as.integer(block_upsilon[["n"]] / (k * m))
+  }
+
+  # Data ----
+
+  ect <- .cbind_ts(list(w, w_x, w_d))
+  regressors <- .cbind_ts(list(x, x_x, x_d))
+
+  if (!is.null(regressors)) {
+    if (NCOL(regressors) != k * (p - 1) + m * s + n) {
+      stop("The number of regressors does not correspond to the number of provided coefficient draws.")
+    }
+  }
+
+  # The levels of the endogenous variables are the sum of their differences and
+  # their first lag in the error correction term
+  if (is.null(data) & !is.null(w)) {
+    data <- .subset_ts(y + w, 1:k, sub("^l\\.", "", dimnames(w)[[2]]))
+  }
+  data <- .name_ts(data, "y")
+
+  # The same holds for the unmodelled variables, whose current differences are
+  # the first block of the differenced unmodelled regressors
+  if (is.null(exogen) & m > 0 & s > 0 & !is.null(x_x)) {
+    exogen <- .subset_ts(w_x + x_x[, 1:m, drop = FALSE], 1:m, sub("^l\\.", "", dimnames(w_x)[[2]]))
+  }
+  exogen <- .name_ts(exogen, "x")
+
+  if (is.null(z)) {
+    z <- NULL
+    if (!is.null(regressors)) {
+      z <- kronecker(regressors, diag(1, k))
+    }
+    # The columns of the loading matrix are estimated conditional on the
+    # cointegration matrix, so their regressors are not known in advance
+    if (rank > 0) {
+      z <- cbind(matrix(NA_real_, tt * k, rank * k), z)
+    }
+    if (structural) {
+      y_A0 <- kronecker(-y, diag(1, k))
+      pos <- NULL
+      for (i in 1:k) {
+        pos <- c(pos, (i - 1) * k + 1:i)
       }
-    } else {
-      stop("Row number of argument 'Pi_x' is not a multiple of the number of endogenous variables.")
+      z <- cbind(z, y_A0[, -pos])
     }
-    s <- 0
-  } else {
-    # If alpha and beta_x are provided, calculate Pi_x
-    if (!is.null(alpha) & !is.null(beta_x)) {
-      
-      if (is.list(result[["alpha"]])) {
-        draws <- NROW(result[["alpha"]][[1]])  
-      } else {
-        draws <- NROW(result[["alpha"]])
-      }
-      
-      if (!is.list(result[["alpha"]]) & !is.list(result[["beta_x"]])) {
-        result[["Pi_x"]] <- coda::mcmc(matrix(NA, draws, k * m))
-        for (draw in 1:draws) {
-          result[["Pi_x"]][draw, ] <- matrix(result[["alpha"]][draw,], k) %*% t(matrix(result[["beta_x"]][draw, ], m))
-        }
-      } else {
-        result[["Pi_x"]] <- list()  
-        for (i in 1:tt) {
-          pi_temp <- matrix(NA, draws, k * m)
-          for (draw in 1:draws) {
-            if (is.list(result[["alpha"]])) {
-              alpha_temp <- matrix(result[["alpha"]][[i]][draw,], k)  
-            } else {
-              alpha_temp <- matrix(result[["alpha"]][draw,], k)
-            }
-            if (is.list(result[["beta_x"]])) {
-              beta_temp <- matrix(result[["beta_x"]][[i]][draw, ], m)
-            } else {
-              beta_temp <- matrix(result[["beta_x"]][draw, ], m)
-            }
-            pi_temp[draw, ] <- alpha_temp %*% t(beta_temp)
-          }
-          result[["Pi_x"]][[i]] <- coda::mcmc(pi_temp)
-        }
-      }
+    if (!is.null(z)) {
+      dimnames(z) <- NULL
     }
   }
-  
-  if(!is.null(Pi_d)) {
-    
-    result <- c(result, .bvar_fill_helper(Pi_d, tvp_pi, k * k_detr, tt, "Pi_d"))
-    
-    if (is.list(result[["Pi_d"]])) {
-      n_c_r <- NCOL(result[["Pi_d"]][[1]])
-    } else {
-      n_c_r <- NCOL(result[["Pi_d"]]) 
-    }
-    if (n_c_r %% k == 0) {
-      n_r <- n_c_r / k
-    } else {
-      stop("Row number of argument 'Pi_d' is not a multiple of the number of endogenous variables.")
-    }
-  } else {
-    # If alpha and beta_d are provided, calculate Pi_d
-    if (!is.null(alpha) & !is.null(beta_d)) {
-      
-      if (is.list(result[["alpha"]])) {
-        draws <- NROW(result[["alpha"]][[1]])  
-      } else {
-        draws <- NROW(result[["alpha"]])
-      }
-      
-      if (!is.list(result[["alpha"]]) & !is.list(result[["beta_d"]])) {
-        result[["Pi_d"]] <- coda::mcmc(matrix(NA, draws, k * k_detr))
-        for (draw in 1:draws) {
-          result[["Pi_d"]][draw, ] <- matrix(result[["alpha"]][draw,], k) %*% t(matrix(result[["beta_d"]][draw, ], k_detr))
-        }
-      } else {
-        result[["Pi_d"]] <- list()  
-        for (i in 1:tt) {
-          pi_temp <- matrix(NA, draws, k * k_detr)
-          for (draw in 1:draws) {
-            if (is.list(result[["alpha"]])) {
-              alpha_temp <- matrix(result[["alpha"]][[i]][draw,], k)  
-            } else {
-              alpha_temp <- matrix(result[["alpha"]][draw,], k)
-            }
-            if (is.list(result[["beta_d"]])) {
-              beta_temp <- matrix(result[["beta_d"]][[i]][draw, ], k_detr)
-            } else {
-              beta_temp <- matrix(result[["beta_d"]][draw, ], k_detr)
-            }
-            pi_temp[draw, ] <- alpha_temp %*% t(beta_temp)
-          }
-          result[["Pi_d"]][[i]] <- coda::mcmc(pi_temp)
-        }
-      }
-    }
+
+  # Model specification ----
+
+  sv <- isTRUE(block_sigma[["tvp"]])
+  tvp <- any(vapply(list(block_alpha, block_gamma, block_upsilon, block_c, block_a0),
+                    function(x) {isTRUE(x[["tvp"]])}, logical(1)))
+
+  error <- .check_error_spec(error, sv, k)
+
+  model <- NULL
+  model[["type"]] <- ifelse(structural, "SVECX", ifelse(k == 1, "EC", "VEC"))
+  model[["algorithm"]] <- .vec_algorithm(error, tvp)
+  model[["k"]] <- k
+  model[["p"]] <- p
+  model[["m"]] <- m
+  model[["s"]] <- s
+  model[["n"]] <- n
+  model[["n_restricted"]] <- n_restricted
+  model[["rank"]] <- rank
+  model[["k_beta"]] <- k_beta
+  # Filled in below, once it is known whether inclusion parameters were provided
+  model[["varsel"]] <- "none"
+  model[["endogen"]] <- dimnames(data)[[2]]
+  if (m > 0) {
+    model[["exogen"]] <- dimnames(exogen)[[2]]
   }
-  
-  if(!is.null(Gamma)) {
-    
-    if (n_gamma %% k == 0) {
-      p <- n_gamma / k^2
-    } else {
-      stop("Row number of argument 'Gamma' is not a multiple of the number of endogenous variables.")
+  model[["structural"]] <- structural
+  model[["error"]] <- error
+  model[["tvp"]] <- tvp
+  model[["iterations"]] <- if (is.null(iterations)) draws else as.integer(iterations)
+  model[["burnin"]] <- as.integer(burnin)
+
+  # Posterior draws ----
+
+  blocks <- list(block_alpha, block_gamma, block_upsilon, block_c, block_a0)
+
+  posterior <- NULL
+
+  coeffs <- .bind_blocks(blocks, tt, tvp)
+  if (!is.null(coeffs)) {
+    posterior[["a"]][["coeffs"]] <- coda::mcmc(coeffs)
+
+    # Coefficients without inclusion parameters are always part of the model
+    lambda <- .bind_blocks(blocks, tt, tvp, "lambda", fill = 1)
+    if (!is.null(lambda)) {
+      posterior[["a"]][["lambda"]] <- coda::mcmc(lambda)
     }
-    result <- c(result, .bvar_fill_helper(Gamma, tvp_gamma, n_gamma, tt, "Gamma"))
-  } else {
-    p <- 0
-  }
-  
-  if(!is.null(Upsilon)) {
-    
-    result <- c(result, .bvar_fill_helper(Upsilon, tvp_upsilon, n_upsilon, tt, "Upsilon"))
-    
-    if (n_upsilon %% k == 0) {
-      if (!is.null(m)) {
-        s <- n_upsilon / k / m - 1  
-      }
-    } else {
-      stop("Row number of argument 'Upsilon' is not a multiple of the number of endogenous variables.")
+
+    # Coefficients without a state equation do not vary over time
+    sigma <- .bind_blocks(blocks, tt, tvp, "sigma", fill = 0)
+    if (!is.null(sigma)) {
+      posterior[["a"]][["sigma"]] <- coda::mcmc(sigma)
     }
   }
-  if (!is.null(s)) {
-    s <- s + 1
+
+  if (rank > 0) {
+    beta_blocks <- list(.split_draws(beta, "beta"),
+                        .split_draws(beta_x, "beta_x"),
+                        .split_draws(beta_d, "beta_d"))
+    posterior[["beta"]][["coeffs"]] <- coda::mcmc(t(.bind_beta(beta_blocks,
+                                                               c(k, m, n_restricted),
+                                                               rank, k_beta)))
   }
-  
-  if(!is.null(C)) {
-    result <- c(result, .bvar_fill_helper(C, tvp_c, n_c, tt, "C"))
+
+  if (!is.null(block_sigma)) {
+    posterior[["u_sigma_inv"]][["coeffs"]] <- coda::mcmc(.invert_sigma_draws(block_sigma[["coeffs"]], k))
+    if (!is.null(block_sigma[["lambda"]])) {
+      posterior[["psi"]][["lambda"]] <- coda::mcmc(t(block_sigma[["lambda"]]))
+    }
   }
-  
-  if(!is.null(Sigma)) {
-    result <- c(result, .bvar_fill_helper(Sigma, tvp_sigma, k * k, tt, "Sigma"))
+
+  if (is.null(varsel)) {
+    varsel <- ifelse(is.null(posterior[["a"]][["lambda"]]) & is.null(posterior[["psi"]][["lambda"]]),
+                     "none", "bvs")
   }
-  
-  result[["specifications"]] <- list("dims" = list("K" = k, "M" = m),
-                                     "lags" = list("p" = p + 1, "s" = s),
-                                     "rank" = r,
-                                     "tvp" = list("A0" = tvp_a0,
-                                                  "alpha" = tvp_alpha,
-                                                  "beta" = tvp_beta,
-                                                  "Pi" = tvp_pi,
-                                                  "Pi_x" = tvp_pi,
-                                                  "Pi_d" = tvp_pi,
-                                                  "Gamma" = tvp_gamma,
-                                                  "Upsilon" = tvp_upsilon,
-                                                  "C" = tvp_c,
-                                                  "Sigma" = tvp_sigma),
-                                     "structural" = structural)
-  
-  class(result) <- append("bvec", class(result))
+  model[["varsel"]] <- varsel
+
+  # Result ----
+
+  result <- list("model" = model,
+                 "data" = list("original" = list("endogen" = data,
+                                                 "exogen" = exogen),
+                               "train" = list("y" = y,
+                                              "w" = ect,
+                                              "x" = regressors,
+                                              "z" = z)))
+
+  if (!is.null(posterior)) {
+    result[["posterior"]] <- posterior
+  }
+
+  class(result) <- c("bvecmodel", "list")
+
   return(result)
 }

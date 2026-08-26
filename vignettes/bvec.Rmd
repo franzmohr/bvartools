@@ -6,7 +6,7 @@ output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Bayesian Error Correction Models with Priors on the Cointegration Space}
   %\VignetteEngine{knitr::rmarkdown}
-  \usepackage[utf8]{inputenc}
+  %\VignetteEncoding{UTF-8}
 ---
 
 ```{r setup, include = FALSE}
@@ -32,18 +32,19 @@ library(bvartools)
 
 data("e6")
 
+e6 <- e6 * 100
 plot(e6) # Plot the series
 ```
 
-The `create_vec_model` function produces the data matrices `y`, `w` and `x` for the BVEC estimator, where `y` is the matrix of dependent variables, `w` is a matrix of potentially cointegrated regressors, and `x` is the matrix of non-cointegration regressors.
+The `create_bvecmodel` function produces an object of class `bvecmodel`, where the element `data$train` contains the data matrices `y`, `w` and `x` for the BVEC estimator, where `y` is the matrix of dependent variables, `w` is a matrix of potentially cointegrated regressors, and `x` is the matrix of non-cointegration regressors.
 
 ```{r}
-object <- create_vec_model(e6, p = 4, r = 1,
+object <- create_bvecmodel(e6, p = 4, r = 1,
                            const = "unrestricted", season = "unrestricted",
                            iterations = 5000, burnin = 1000)
 ```
 
-Argument `p` represents the lag order of the VAR form of the model and `r` is the cointegration rank of `Pi`. Function `create_vec_model` requires to specify the inclusion of intercepts, trends and seasonal dummies separately. This allows to decide on whether they enter the cointegration term or the non-cointegration part of the model.
+Argument `p` represents the lag order of the VAR form of the model and `r` is the cointegration rank of `Pi`. Function `create_bvecmodel` requires to specify the inclusion of intercepts, trends and seasonal dummies separately. This allows to decide on whether they enter the cointegration term (`"restricted"`) or the non-cointegration part (`"unrestricted"`) of the model.
 
 ## Priors
 
@@ -51,8 +52,8 @@ Function `add_priors` adds the necessary prior specifications to object `object`
 
 ```{r}
 object <- add_priors(object,
-                     coint = list(v_i = 0, p_tau_i = 1),
                      coef = list(v_i = 0, v_i_det = 0),
+                     coint = list(v_i = 0, p_tau_i = 1),
                      sigma = list(df = 0, scale = .0001))
 ```
 
@@ -75,11 +76,11 @@ The following code produces posterior draws using the algorithm described in Koo
 set.seed(7654321)
 
 # Obtain data matrices
-y <- t(object$data$y)
-w <- t(object$data$w)
-x <- t(object$data$x)
+y <- t(object[["data"]][["train"]][["y"]])
+w <- t(object[["data"]][["train"]][["w"]])
+x <- t(object[["data"]][["train"]][["x"]])
 
-r <- object$model$rank # Set rank
+r <- object[["model"]][["rank"]] # Set rank
 
 tt <- ncol(y) # Number of observations
 k <- nrow(y) # Number of endogenous variables
@@ -91,26 +92,24 @@ k_alpha <- k * r # Number of elements in alpha
 k_beta <- k_w * r # Number of elements in beta
 
 # Priors
-a_mu_prior <- object$priors$a$mu # Prior means
-a_v_i_prior <- object$priors$a$v_i # Inverse of the prior covariance matrix
+a_mu_prior <- object[["priors"]][["a"]][["mu"]] # Prior means
+a_v_i_prior <- object[["priors"]][["a"]][["v_inv"]] # Inverse of the prior covariance matrix
 
-v_i <- object$priors$cointegration$v_i
-p_tau_i <- object$priors$cointegration$p_tau_i
+v_i <- object[["priors"]][["beta"]][["v_inv"]]
+p_tau_i <- object[["priors"]][["beta"]][["p_tau_inv"]]
 
-sigma_df_prior <- object$priors$sigma$df # Prior degrees of freedom
-sigma_scale_prior <- object$priors$sigma$scale # Prior covariance matrix
+sigma_df_prior <- object[["priors"]][["u_sigma"]][["df"]] # Prior degrees of freedom
+sigma_scale_prior <- object[["priors"]][["u_sigma"]][["scale"]] # Prior covariance matrix
 sigma_df_post <- tt + sigma_df_prior # Posterior degrees of freedom
 
 # Initial values
-beta <- matrix(0, k_w, r)
-beta[1:r, 1:r] <- diag(1, r)
-
-sigma_i <- diag(1 / .0001, k)
+beta <- object[["initial"]][["beta"]]
+sigma_i <- object[["initial"]][["u_sigma_inv"]]
 
 g_i <- sigma_i
 
-iterations <- object$model$iterations # Number of iterations of the Gibbs sampler
-burnin <- object$model$burnin # Number of burn-in draws
+iterations <- object[["model"]][["iterations"]] # Number of iterations of the Gibbs sampler
+burnin <- object[["model"]][["burnin"]] # Number of burn-in draws
 draws <- iterations + burnin # Total number of draws
 
 # Data containers
@@ -128,10 +127,10 @@ for (draw in 1:draws) {
                          v_i = v_i, p_tau_i = p_tau_i, g_i = g_i,
                          gamma_mu_prior = a_mu_prior,
                          gamma_v_i_prior = a_v_i_prior)
-  alpha <- temp$alpha
-  beta <- temp$beta
-  Pi <- temp$Pi
-  gamma <- temp$Gamma
+  alpha <- temp[["alpha"]]
+  beta <- temp[["beta"]]
+  Pi <- temp[["Pi"]]
+  gamma <- temp[["Gamma"]]
   
   # Draw variance-covariance matrix
   u <- y - Pi %*% w - matrix(gamma, k) %*% x
@@ -164,29 +163,28 @@ dimnames(beta) <- list(dimnames(w)[[1]], NULL) # Rename matrix dimensions
 beta # Print
 ```
 
-### `bvec` objects
-
-The `bvec` function can be used to collect output of the Gibbs sampler in a standardised object, which can be used further for forecasting, impulse response analysis or forecast error variance decomposition.
+The `bvec` function can be used to collect output of the above Gibbs sampler in a standardized object of class `bvecmodel`, which can be used further for forecasting, impulse response analysis or forecast error variance decomposition. The error correction term is described by the draws of `alpha` and `beta` and not by those of `Pi`, since the latter cannot be decomposed into the former.
 
 ```{r bvec-object}
 # Number of non-deterministic coefficients
 k_nondet <- (k_x - 4) * k
 
-# Generate bvec object
-bvec_est <- bvec(y = object$data$y,
-                 w = object$data$w,
-                 x = object$data$x[, 1:6],
-                 x_d = object$data$x[, -(1:6)],
-                 Pi = draws_pi,
+# Generate bvecmodel object
+bvec_est <- bvec(y = object[["data"]][["train"]][["y"]],
+                 w = object[["data"]][["train"]][["w"]],
+                 x = object[["data"]][["train"]][["x"]][, 1:6],
+                 x_d = object[["data"]][["train"]][["x"]][, -(1:6)],
                  r = 1,
+                 alpha = draws_alpha,
+                 beta = draws_beta,
                  Gamma = draws_gamma[1:k_nondet,],
                  C = draws_gamma[(k_nondet + 1):nrow(draws_gamma),],
                  Sigma = draws_sigma)
 ```
 
-Posterior draws an be inspected with `plot`:
+Posterior draws can be inspected with `plot`. Note that the coefficients of the error correction term are displayed as draws of `Pi`, i.e. as the product of `alpha` and `beta`, since the two matrices are only identified up to a rotation.
 
-```{r, message=FALSE, warning=FALSE, fig.align='center', fig.height=5, fig.width=10}
+```{r, message=FALSE, warning=FALSE, fig.align='center', fig.height=4, fig.width=10}
 plot(bvec_est)
 ```
 
@@ -198,10 +196,10 @@ summary(bvec_est)
 
 ### Default algorithm
 
-As an alternative to a user-specific algorithm function `draw_posterior` can be used estimate such a model as well:
+As an alternative to a user-specific algorithm, function `add_posterior_coefficients` can be used to estimate such a model as well:
 
 ```{r, eval = FALSE}
-bvec_est <- draw_posterior(object)
+bvec_est <- add_posterior_coefficients(object)
 ```
 
 ## Evaluation
@@ -212,13 +210,13 @@ Posterior draws can be thinned with function `thin`:
 bvec_est <- thin(bvec_est, thin = 5)
 ```
 
-The function `bvec_to_bvar` can be used to transform the VEC model into a VAR in levels:
+The function `vec_to_var` can be used to transform the VEC model into a VAR in levels:
 
 ```{r vec2var}
-bvar_form <- bvec_to_bvar(bvec_est)
+bvar_form <- vec_to_var(bvec_est)
 ```
 
-The output of `bvec_to_bvar` is an object of class `bvar` for which summary statistics, forecasts, impulse responses and variance decompositions can be obtained in the usual manner using `summary`, `predict`, `irf` and `fevd`, respectively.
+The output of `vec_to_var` is an object of class `bvarmodel` for which summary statistics, forecasts, impulse responses and variance decompositions can be obtained in the usual manner using `summary`, `predict`, `irf` and `fevd`, respectively.
 
 ```{r}
 summary(bvar_form)
@@ -228,21 +226,27 @@ summary(bvar_form)
 
 Forecasts with credible bands can be obtained with the function `predict`. If the model contains deterministic terms, new values can be provided in the argument `new_d`. If no values are provided, the function sets them to zero. For the current model, seasonal dummies need to be provided. They are taken from the original series. The number of rows of `new_d` must be the same as the argument `n.ahead`.
 
-```{r forecasts, fig.width=5.5, fig.height=5.5}
-# Generate deterministc terms for function predict
-new_d <- object$data$x[3 + 1:10, c("const", "season.1", "season.2", "season.3")]
+```{r}
+bvar_form <- add_forecast_input(bvar_form, n_ahead = 10)
+```
 
+```{r}
+bvar_form <- add_posterior_forecasts(bvar_form)
+```
+
+
+```{r forecasts, fig.width=5.5, fig.height=5.5}
 # Genrate forecasts
-bvar_pred <- predict(bvar_form, n.ahead = 10, new_d = new_d)
+bvar_pred <- predict(bvar_form, n.ahead = 10)
 
 # Plot forecasts
-plot(bvar_pred)
+plot(bvar_pred, n_pre = 20)
 ```
 
 ### Forecast error impulse response
 
 ```{r feir, fig.width=5.5, fig.height=4.5}
-FEIR <- irf(bvar_form, impulse = "R", response = "Dp", n.ahead = 20)
+FEIR <- irf(bvar_form, impulse = "R", response = "Dp", n_ahead = 20)
 
 plot(FEIR, main = "Forecast Error Impulse Response", xlab = "Period", ylab = "Response")
 ```
@@ -250,7 +254,7 @@ plot(FEIR, main = "Forecast Error Impulse Response", xlab = "Period", ylab = "Re
 ## Forecast error variance decomposition 
 
 ```{r fevd-oir, fig.width=5.5, fig.height=4.5}
-bvar_fevd_oir <- fevd(bvar_form, response = "Dp", n.ahead = 20)
+bvar_fevd_oir <- fevd(bvar_form, response = "Dp", n_ahead = 20)
 
 plot(bvar_fevd_oir, main = "OIR-based FEVD of inflation")
 ```

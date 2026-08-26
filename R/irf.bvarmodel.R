@@ -1,9 +1,8 @@
 #' Impulse Response Function
 #' 
-#' Computes the impulse response coefficients for an object of class 'bvar'.
+#' Computes the impulse response coefficients for an object of class 'bvarmodel'.
 #' 
-#' @param x an object of class 'bvar', usually, a result of a call to
-#' \code{\link{bvar}} or \code{\link{bvec_to_bvar}}.
+#' @param x an object of class 'bvarmodel'.
 #' @param impulse name of the impulse variable.
 #' @param response name of the response variable.
 #' @param n_ahead number of steps ahead.
@@ -38,7 +37,7 @@
 #' (Structural) Generalised impulse responses for variable \eqn{j}, i.e. \eqn{\Theta^g_ji} are calculated as
 #' \eqn{\Theta^g_{ji} = \sigma_{jj}^{-1/2} \Phi_i A_0^{-1} \Sigma e_j}, where \eqn{\sigma_{jj}} is the variance
 #' of the \eqn{j^{th}} diagonal element of \eqn{\Sigma} and \eqn{e_i} is a selection vector containing
-#' one in its \eqn{j^{th}} element and zero otherwise. If the \code{"bvar"} object does not contain draws
+#' one in its \eqn{j^{th}} element and zero otherwise. If the \code{"bvarmodel"} object does not contain draws
 #' of \eqn{A_0}, it is assumed to be an identity matrix.
 #' 
 #' @return A time-series object of class 'bvarirf' or, if \code{keep_draws = TRUE}, a simple matrix.
@@ -49,25 +48,25 @@
 #' data("e1")
 #' e1 <- diff(log(e1)) * 100
 #' 
-#' # Generate model data
-#' model <- create_var_model(e1, p = 2, deterministic = 2,
-#'                           iterations = 100, burnin = 10)
-#' # Chosen number of iterations and burnin should be much higher.
+#' # Create model
+#' model <- create_bvarmodel(e1, p = 2, deterministic = "const",
+#'                           iterations = 20, burnin = 10)
+#' # Number of iterations and burnin should be much higher.
 #' 
-#' # Add prior specifications
-#' model <- add_priors(model)
+#' # Add priors
+#' model <- add_priors(model,
+#'                     coef = list(v_i = 1, v_i_det = 1 / 10),
+#'                     sigma = list(df = "k", scale = 1))
 #' 
 #' # Add initial values
 #' model <- add_initial_values(model)
-#' 
-#' # Obtain posterior draws
-#' object <- draw_posterior(model)
+#'
+#' # Obtain posterior draws 
+#' model <- add_posterior_coefficients(model)
 #' 
 #' # Obtain IR
-#' ir <- irf(object, impulse = "invest", response = "cons")
+#' ir <- irf(model, impulse = "invest", response = "cons")
 #' 
-#' # Plot IR
-#' plot(ir)
 #' 
 #' @references
 #' 
@@ -76,29 +75,22 @@
 #' Pesaran, H. H., Shin, Y. (1998). Generalized impulse response analysis in linear multivariate models. \emph{Economics Letters, 58}, 17-29.
 #' 
 #' @export
-irf.bvar <- function(x, impulse = NULL, response = NULL, n_ahead = 5, ci = .95, shock = 1,
-                type = "feir", cumulative = FALSE, keep_draws = FALSE, period = NULL, ...) {
-
+#' @method irf bvarmodel
+irf.bvarmodel <- function(x, impulse = NULL, response = NULL, n_ahead = 5, ci = .95, shock = 1,
+                          type = "feir", cumulative = FALSE, keep_draws = FALSE, period = NULL, ...) {
+  
   if (!type %in% c("feir", "oir", "gir", "sir", "sgir")) {
     stop("Argument 'type' not known.")
   }
   
-  if (!"bvar" %in% class(x)) {
-    stop("Argument 'x' must be of class 'bvar'.")
-  }
-  
-  if (is.null(x$y) | is.null(dimnames(x$y)[[2]])) {
-    stop("Argument 'x' must include a named matrix of endogenous variables.")
-  }
-  
-  if (is.null(x[["A"]]) & !type %in% c("sir", "sgir")) {
-    stop("Impulse responses only supported for models with p > 0, i.e. argument 'x' must contain element 'A', or structural models.")
+  if (x[["model"]][["p"]] == 0 & !x[["model"]][["structural"]]) {
+    stop("Impulse responses only supported for models with p > 0 or structural models.")
   }
   
   need_A0 <- FALSE
   if (type %in% c("sgir", "sir")) {
-    if (is.null(x[["A0"]])) {
-      stop("Structural IR requires that draws of 'A0' are contained in the 'bvar' x.")
+    if (!x[["model"]][["structural"]]) {
+      stop("Structural IR requires a structural model as input.")
     }
     need_A0 <- TRUE
   }
@@ -108,23 +100,28 @@ irf.bvar <- function(x, impulse = NULL, response = NULL, n_ahead = 5, ci = .95, 
   }
   
   if (type %in% c("oir", "gir", "sgir") | shock %in% c("sd", "nsd")) {
-    if (is.null(x[["Sigma"]])) {
-      stop("OIR, GIR, SGIR require that the 'bvar' x contains draws of 'Sigma'.")
-    }
     need_Sigma <- TRUE
   } else {
     need_Sigma <- FALSE
   }
   
-  impulse <- which(dimnames(x$y)[[2]] == impulse)
+  varnames <- x[["model"]][["endogen"]]
+  impulse <- which(varnames == impulse)
   if (length(impulse) == 0){stop("Impulse variable not available.")}
-  response <- which(dimnames(x$y)[[2]] == response)
+  response <- which(varnames == response)
   if (length(response) == 0){stop("Response variable not available.")}
   
-  k <- NCOL(x$y)
-  tt <- NROW(x$y)
-  tvp <- x[["specifications"]][["tvp"]]
-  if (any(unlist(tvp))) {
+  k <- x[["model"]][["k"]]
+  kk <- k * k
+  p <- x[["model"]][["p"]]
+  tt <- nrow(x[["data"]][["train"]][["y"]]) / k
+  tvp <- x[["model"]][["tvp"]]
+  tvp_and_covar <- tvp & x[["model"]][["error"]] %in% c("gamma", "gamma+covar")
+  if (tvp) {
+    nparams <- ncol(x[["data"]][["train"]][["z"]])
+  }
+  sv <- x[["model"]][["error"]] %in% c("sv", "sv+covar")
+  if (tvp | sv) {
     if (is.null(period)) {
       period <- tt
     } else {
@@ -134,43 +131,55 @@ irf.bvar <- function(x, impulse = NULL, response = NULL, n_ahead = 5, ci = .95, 
     }
   }
   
-  store <- NA
-  vars <- c("A0", "A", "B", "C", "Sigma")
-  for (i in vars) {
-    if (is.na(store)) {
-      if (!is.null(x[[i]])) {
-        if (x[["specifications"]][["tvp"]][[i]]) {
-          store <- nrow(x[[i]][[1]])
-        } else {
-          store <- nrow(x[[i]]) 
-        }
-      }   
+  if (need_A0) {
+    n_struct <- k * (k - 1) / 2
+    
+    if (tvp) {
+      pos_a <- nparams * period - n_struct + 1:n_struct
+    } else {
+      n_a <- ncol(x[["posterior"]][["a"]][["coeffs"]])
+      pos_a <- n_a - n_struct + 1:n_struct 
     }
+    
+    pos_a0 <- t(matrix(1:kk, k , k))
+    pos_a0 <- pos_a0[upper.tri(pos_a0)]
   }
+  
+  store <- nrow(x[["posterior"]][["u_sigma_inv"]][["coeffs"]])
   
   A <- NULL
   for (i in 1:store) {
     temp <- NULL
-    if (!is.null(x[["A"]])) {
-      if (x[["specifications"]][["tvp"]][["A"]]) {
-        temp[["A"]] <- matrix(x[["A"]][[period]][i, ], k)
+    
+    if (p > 0) {
+      if (tvp) {
+        temp[["A"]] <- matrix(x[["posterior"]][["a"]][["coeffs"]][i, (period - 1) * nparams + 1:(kk * p)], k)
       } else {
-        temp[["A"]] <- matrix(x[["A"]][i, ], k) 
+        temp[["A"]] <- matrix(x[["posterior"]][["a"]][["coeffs"]][i, 1:(kk * p)], k)  
       }
     } else {
       temp[["A"]] <- matrix(0, k, k)
     }
+    
+    if (need_A0) {
+      a0_temp <- diag(1, k)
+      a0_temp[pos_a0] <- x[["posterior"]][["a"]][["coeffs"]][i, pos_a]
+      temp[["A0"]] <- a0_temp
+      #temp[["A"]] <- solve(a0_temp) %*% temp[["A"]]
+    }
+    
+    
     if (need_Sigma) {
-      if (x[["specifications"]][["tvp"]][["Sigma"]]) {
-        temp[["Sigma"]] <- matrix(x[["Sigma"]][[period]][i, ], k)
+      if (sv | tvp_and_covar) {
+        temp[["Sigma"]] <- solve(matrix(x[["posterior"]][["u_sigma_inv"]][["coeffs"]][i, (period - 1) * kk + 1:kk], k))
       } else {
-        temp[["Sigma"]] <- matrix(x[["Sigma"]][i, ], k) 
+        temp[["Sigma"]] <- solve(matrix(x[["posterior"]][["u_sigma_inv"]][["coeffs"]][i, ], k))
       }
     }
     
     # Shock
     if (is.numeric(shock)) {
-        temp[["shock"]] <- shock
+      temp[["shock"]] <- shock
     } else {
       if (type == "oir") {
         temp[["shock"]] <- diag(chol(temp[["Sigma"]]))[impulse]
@@ -181,14 +190,6 @@ irf.bvar <- function(x, impulse = NULL, response = NULL, n_ahead = 5, ci = .95, 
       if (shock == "nsd") {
         temp[["shock"]] <- -temp[["shock"]]
       } 
-    }
-      
-    if (need_A0) {
-      if (x[["specifications"]][["tvp"]][["A0"]]) {
-        temp[["A0"]] <- matrix(x[["A0"]][[period]][i, ], k)
-      } else {
-        temp[["A0"]] <- matrix(x[["A0"]][i, ], k) 
-      }
     }
     
     A[[i]] <- temp

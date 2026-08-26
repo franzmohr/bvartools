@@ -20,9 +20,12 @@ using core::BvsScope;
 using core::bvs_sweep;
 using core::draw_normal_precision;
 using core::fill_strict_lower_triangle;
+using core::fill_strict_lower_triangle_by_column;
 using core::SsvsBlock;
 using core::ssvs_sweep;
+using core::split_structural_coefficients;
 using core::stacked_response;
+using core::structural_inverse;
 using core::require_forecast_regressors;
 using core::update_forecast_lags;
 
@@ -327,15 +330,7 @@ ForecastDraws VarNormalGammaSampler::forecast(const VarNormalGammaInput &input,
     const bool use_a = nparams > 0 && nparams > n_structural;
 
     arma::mat a = coefficients.a;
-    arma::mat a0;
-    if (structural)
-    {
-        a0 = a.rows(nparams - n_structural, nparams - 1);
-        if (use_a)
-        {
-            a = a.rows(0, nparams - n_structural - 1);
-        }
-    }
+    const arma::mat a0 = split_structural_coefficients(input.spec, a, nparams);
 
     const arma::uword draws = coefficients.iterations();
     const bool p_larger_than_0 = p > 0;
@@ -344,13 +339,16 @@ ForecastDraws VarNormalGammaSampler::forecast(const VarNormalGammaInput &input,
     const arma::mat diag_k = arma::eye<arma::mat>(k, k);
     arma::vec eigval;
     arma::mat eigvec;
-    arma::mat A0_inv;
 
     // Calculate forecasts
     for (arma::uword draw = 0; draw < draws; draw++)
     {
         reporter.check_interrupt();
         reporter.progress(static_cast<long long>(draw) + 1, static_cast<long long>(draws));
+
+        // Once per draw: nothing in it depends on the horizon.
+        const arma::mat a0_inv =
+            structural ? structural_inverse(a0, draw, diag_k) : arma::mat();
 
         for (int i = 0; i < h; i++)
         {
@@ -371,10 +369,8 @@ ForecastDraws VarNormalGammaSampler::forecast(const VarNormalGammaInput &input,
 
             if (structural)
             {
-                A0_inv = arma::eye<arma::mat>(k, k);
-                fill_strict_lower_triangle(A0_inv, a0.col(draw));
-                A0_inv = arma::solve(A0_inv, diag_k);
-                fcst.submat(i * k, draw, (i + 1) * k - 1, draw) = A0_inv * fcst.submat(i * k, draw, (i + 1) * k - 1, draw);
+                fcst.submat(i * k, draw, (i + 1) * k - 1, draw) =
+                    a0_inv * fcst.submat(i * k, draw, (i + 1) * k - 1, draw);
             }
         }
     }

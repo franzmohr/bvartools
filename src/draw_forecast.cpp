@@ -3,50 +3,38 @@
 #include <RcppArmadillo.h>
 
 // [[Rcpp::export(.draw_forecast)]]
-arma::mat draw_forecast(int i, // index of draw
-                        int k, // number of endogenous vars
-                        int p, // number of lags of endogenous vars
-                        arma::mat a0_i, // A0
-                        bool use_a,
-                        arma::mat a_, // A
-                        arma::mat sigma, // Sigma
+arma::mat draw_forecast(int& k,
+                         int& p, // number of lags of endogenous vars
+                        arma::mat& a0_i, // A0
+                        bool& use_a,
+                        arma::mat& a, // A
+                        arma::mat& sigma, // Sigma
                         arma::mat pred) { // Data matrix for prediction
   
-  const int n_ahead = pred.n_cols - 1;
-  int n_tot = 0;
-  arma::mat a;
-  if (use_a) {
-    n_tot = a_.n_cols / k;
-    a = arma::reshape(a_.row(i - 1), k, n_tot);
-  }
+  int n_ahead = pred.n_cols;
+  int pred_end = pred.n_rows - 1;
   arma::vec eigval, u;
   arma::mat eigvec;
+  arma::eig_sym(eigval, eigvec, sigma);
   
   // Forecast iterations
   for (int j = 0; j < n_ahead; j++) {
     
     // Generate random error
-    arma::eig_sym(eigval, eigvec, arma::reshape(sigma.row(i - 1), k, k));
-    u = eigvec * arma::diagmat(arma::sqrt(eigval)) * eigvec.t() * arma::randn(k);
+    u = eigvec * arma::diagmat(arma::sqrt(eigval)) * arma::trans(eigvec) * arma::randn(k);
     
     // Forecast for next period
     if (use_a) {
-      if (p == 0) {
-        pred.submat(0, j + 1, k - 1, j + 1) = a0_i * a * pred.submat(k, j, k + n_tot - 1, j) + a0_i * u; 
-      } else {
-        pred.submat(0, j + 1, k - 1, j + 1) = a0_i * a * pred.col(j) + a0_i * u;  
-      }
+      pred.submat(0, j, k - 1, j) = a0_i * a * pred.submat(k, j, pred_end, j) + a0_i * u; 
     } else {
-      pred.submat(0, j + 1, k - 1, j + 1) = pred.col(j) + a0_i * u; 
+      pred.col(j) = a0_i * u; 
     }
     
     // Update lags of endogenous variables
-    if (p > 1) {
-      for (int l = 0; l < (p - 1); l++) {
-        pred.submat((l + 1) * k, j + 1, (l + 2) * k - 1, j + 1) = pred.submat(l * k, j, (l + 1) * k - 1, j); 
-      }
+    if (j < (n_ahead - 1) && p > 0) {
+      pred.submat(k, j + 1, (p + 1) * k - 1, j + 1) = pred.submat(0, j, p * k - 1, j);  
     }
   }
   
-  return pred;
+  return arma::trans(pred);
 }

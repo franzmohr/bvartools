@@ -6,6 +6,10 @@
 
 #include "bayests/data.h"
 #include "bayests/spec.h"
+// Both unit lower triangular matrices a model carries are unpacked there, and
+// the two are packed in different orders -- read that file before reaching for
+// either. Included here so that a model needs one header, not two.
+#include "core/algorithms/triangular_packing.h"
 
 #include <stdexcept>
 #include <string>
@@ -86,27 +90,6 @@ inline arma::vec draw_normal_precision(const arma::mat &precision, const arma::v
     return mean + arma::solve(arma::trimatu(r), arma::randn<arma::vec>(precision.n_rows));
 }
 
-/// Writes `packed` into the strict lower triangle of `dest`, row by row.
-///
-/// The contemporaneous matrix Psi is unit lower triangular, so the sampler
-/// carries only its free elements, packed row-major: row i holds i of them,
-/// starting at i(i-1)/2. This is the one place that indexing is spelled out --
-/// it is the same arithmetic whether the packed source is a psi draw, a
-/// psi_lambda indicator vector, or a column of structural coefficients out of a
-/// posterior, and whether `dest` is dense or sparse.
-///
-/// `dest` must already hold the unit diagonal; only the strict lower triangle is
-/// touched.
-template <class Matrix, class Packed>
-inline void fill_strict_lower_triangle(Matrix &dest, const Packed &packed)
-{
-    for (arma::uword i = 1; i < dest.n_rows; i++)
-    {
-        dest.submat(i, 0, i, i - 1) =
-            arma::trans(packed.subvec(i * (i - 1) / 2, (i + 1) * i / 2 - 1));
-    }
-}
-
 /// The same fill, once per period, into the block diagonal a time-varying Psi
 /// is stored as: block j of `Psi` is the contemporaneous matrix of period j,
 /// taken from column j of `psi`.
@@ -125,6 +108,57 @@ inline void fill_psi_path(arma::mat &Psi, const arma::mat &psi, const int k)
                 arma::trans(psi.submat(i * (i - 1) / 2, j, (i + 1) * i / 2 - 1, j));
         }
     }
+}
+
+/// Splits the contemporaneous coefficients off the end of `a`, returning them
+/// and shortening `a` to the coefficients that do have a column in `z`.
+///
+/// A structural model carries its k(k-1)/2 contemporaneous coefficients as the
+/// last rows of the posterior, and they have no regressors: `z.n_cols` is short
+/// by exactly that many. So `nparams` has to be the *posterior's* own count,
+/// which the callers derive two different and equally correct ways -- off
+/// `coefficients.a` where the coefficients are constant, off the spec where they
+/// are a path and the posterior holds one period. Splitting on `z.n_cols`
+/// instead cuts `a` in the wrong place: it takes the contemporaneous block out
+/// of the lag coefficients and leaves a width that no longer matches `z`.
+///
+/// Returns an empty matrix for a model that is not structural, which is then the
+/// flag the caller tests -- there is nothing to split and nothing to apply.
+inline arma::mat split_structural_coefficients(const VarSpec &spec, arma::mat &a,
+                                               const int nparams)
+{
+    if (!spec.structural)
+    {
+        return {};
+    }
+
+    const int n_structural = spec.n_structural();
+    arma::mat a0 = a.rows(nparams - n_structural, nparams - 1);
+
+    // A model that is nothing but its contemporaneous coefficients leaves `a`
+    // alone: there is no row left to keep, and the caller's use_a is false.
+    if (nparams > n_structural)
+    {
+        a = a.rows(0, nparams - n_structural - 1);
+    }
+
+    return a0;
+}
+
+/// A_0^{-1} for one draw, unpacked from the block split off above.
+///
+/// By column, unlike Psi -- see core/algorithms/triangular_packing.h, which is
+/// where the two orders and the reason they differ are written down.
+///
+/// Called once per draw. The two samplers that had this written out inline did
+/// it inside the horizon loop instead, rebuilding and re-inverting the same
+/// matrix h times; nothing in it depends on the horizon.
+inline arma::mat structural_inverse(const arma::mat &a0, const arma::uword draw,
+                                    const arma::mat &diag_k)
+{
+    arma::mat a_0 = diag_k;
+    fill_strict_lower_triangle_by_column(a_0, a0.col(draw));
+    return arma::solve(a_0, diag_k);
 }
 
 /// Writes the simulated path into the lagged-endogenous columns of a forecast's

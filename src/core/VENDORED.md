@@ -77,7 +77,30 @@ That file is gone, and with it the `bvartools::kalman_durbin_koopman_2002`
 entry point that `// [[Rcpp::interfaces(cpp)]]` used to generate in
 `inst/include/bvartools_RcppExports.h` — a package that linked against it has
 to call the core function instead. It was never exposed to R, so nothing in
-`NAMESPACE` or `man/` changes.
+`NAMESPACE` or `man/` changed at the time.
+
+The R side has followed since. `src/kalman_dk.cpp` held a *third* copy of the
+smoother — the same numerics again, line for line, differing only in taking its
+arguments by value where the core takes four by reference — and was the exported
+R function `kalman_dk()`. It is gone. `kalman_durbin_koopman_2002()` replaces it,
+a thin `Rcpp::export` wrapper over the core function in
+`src/kalman_durbin_koopman_2002.cpp`, so R and the samplers run the same code.
+Because the two bodies were identical, a draw from a given seed is bit-identical
+to what `kalman_dk()` returned; nothing about any posterior changes.
+
+The wrapper carries no `// [[Rcpp::interfaces(r, cpp)]]`, so `bvartools::kalman_dk`
+is gone from `inst/include/bvartools_RcppExports.h` too. That entry point was
+added deliberately — *"Made `kalman_dk` callable from C++"*, NEWS 0.2.2 — so this
+is a removal, not a tidy-up, and an external package that used it has to link the
+core source instead. The reason is the one this file spends a section on: a
+`bvartools::` entry point wraps every call in an `Rcpp::RNGScope`, and a caller
+that holds the RNG across calls gets the rewind demonstrated below. Regenerating
+it under the name `kalman_durbin_koopman_2002` would have been worse still, since
+that is a name this package has already retired for exactly that reason.
+
+Its documented example was rewritten on the way. It called `gen_var()`, which no
+longer exists, and reached for `temp$data$Y` and `temp$data$SUR`, which the model
+object stopped carrying under those names some time before that.
 
 `VarTvpGammaCoefficients.cpp`, `VarTvpStochvolCoefficients.cpp` and
 `VarTvpWishartCoefficients.cpp` now call it as a plain C++ function. They used
@@ -124,10 +147,29 @@ which held the same algorithm. That file is gone, and with it the
 `bvartools::stochvol_ocsn2007_internal` entry point that `// [[Rcpp::interfaces(cpp)]]`
 used to generate in `inst/include/bvartools_RcppExports.h` — a package that
 linked against it has to call the core function instead. It was never exposed to
-R, so nothing in `NAMESPACE` or `man/` changes. The exported *R* function
-`stochvol_ocsn2007()` in `R/stochvol_ocsn2007.R` is a separate implementation,
-not a wrapper around this one, and carried the same two shortcomings; it has had
-the same fixes applied by hand and has to be kept in step by hand.
+R, so nothing in `NAMESPACE` or `man/` changed at the time.
+
+It is exposed to R now. `stochvol_ocsn_2007()` and `stochvol_ksc_1998()` are
+thin `Rcpp::export` wrappers over the two core functions, in
+`src/stochvol_ocsn_2007.cpp` and `src/stochvol_ksc_1998.cpp`, and they replace
+the exported R implementations `stochvol_ocsn2007()` and `stochvol_ksc1998()`,
+which are gone. Those were separate implementations of the same two algorithms
+and had to be kept in step by hand — which is how `stochvol_ksc1998()` came to
+be missing the two fixes its sibling received. One implementation each now, in
+the core, and R reaches it rather than reimplementing it.
+
+Two things about those wrappers. Their C++ functions are named
+`stochvol_*_export` and exported under the core function's name via
+`// [[Rcpp::export(stochvol_ocsn_2007)]]`, because the wrapper and the function
+it calls cannot both be `stochvol_ocsn_2007` in C++. And they carry no
+`// [[Rcpp::interfaces(r, cpp)]]`: a `bvartools::` entry point is what rewound
+the RNG in the three cases above, and nothing needs one here — a package that
+links against this one can call the core function.
+
+`R/algo_bvectvp.R` called `stochvol_ksc1998()` and now calls
+`stochvol_ksc_1998()`. Its draws from a given seed change; that sampler is not
+reachable through `add_priors()` yet, which refuses a VEC TVP prior, so the
+change is not observable from R at present.
 
 The vendored routine differs from the copy it replaces in two ways beyond the
 name.
@@ -153,6 +195,23 @@ the VEC sampler with stochastic volatility still move by a rounding error,
 because the posterior mean now comes from the same Cholesky factor as the draw
 instead of from a separate LU solve — the same substitution
 `core/models/model_support.h` documents upstream.
+
+Since then the draw of the path has been rewritten upstream to use a banded
+Cholesky. The posterior precision is tridiagonal — the random walk contributes
+the two bands of `D'D`, the mixture only a diagonal — and the earlier spelling
+materialised it as a dense `T x T` matrix and factorised that, at `O(T^3)` time
+and `O(T^2)` memory. The factor of a symmetric tridiagonal is bidiagonal, so it
+now comes out of one sweep over the periods at `O(T)`. Upstream measured 4.6x at
+`T = 200` and 49x at `T = 1000` against the dense path, and verified the two
+agree to a relative 1.8e-15 from the same seed, so draws are unchanged bar
+rounding. Both algorithms share the routine, in
+`core/algorithms/stochvol_mixture.h`, and each of the two `.cpp` files is its
+mixture table plus a call; upstream's `test/unit_stochvol.cpp` covers them.
+
+`core/algorithms/stochvol_ksc_1998.cpp` arrived with that refresh and is the
+seven-component mixture of Kim, Shephard and Chib (1998). Nothing in this
+package's samplers uses it — `bvecalg.cpp` and `core/models/var_tvp_stochvol.cpp`
+both take the ten-component one — but `stochvol_ksc_1998()` exposes it to R.
 
 ## Building
 

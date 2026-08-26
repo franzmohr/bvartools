@@ -59,11 +59,11 @@ void VarSpec::validate() const
         throw std::invalid_argument("the number of restricted deterministic terms cannot be "
                                     "negative");
     }
-    if (rank > k_ect())
+    if (rank > k_beta)
     {
         throw std::invalid_argument("cointegration rank (" + std::to_string(rank) +
-                                    ") cannot exceed the " + std::to_string(k_ect()) +
-                                    " rows of the cointegration matrix (k + m + n_restricted)");
+                                    ") cannot exceed the " + std::to_string(k_beta) +
+                                    " rows of the cointegration matrix (k_beta)");
     }
     if (iterations <= 0)
     {

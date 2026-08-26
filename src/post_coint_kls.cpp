@@ -65,17 +65,22 @@
 //' \item{Gamma}{a draw of the \eqn{K \times N} coefficient matrix for non-cointegration parameters.}
 //' 
 //' @examples
-//' 
+//'  
 //' # Load data
 //' data("e6")
 //' 
 //' # Generate model data
-//' temp <- gen_vec(e6, p = 1, r = 1)
-//' y <- t(temp$data$Y)
-//' ect <- t(temp$data$W)
+//' temp <- create_bvecmodel(e6, p = 2, r = 1)
+//' y <- t(temp$data$y)
+//' w <- t(temp$data$w)
+//' x <- t(temp$data$x)
 //' 
 //' k <- nrow(y) # Endogenous variables
 //' tt <- ncol(y) # Number of observations
+//' 
+//' # Priors
+//' gamma_mu_prior <- matrix(0, 6)
+//' gamma_v_i_prior <- diag(0, 6)
 //' 
 //' # Initial value of Sigma
 //' sigma <- tcrossprod(y) / tt
@@ -85,8 +90,9 @@
 //' beta <- matrix(c(1, -4), k)
 //' 
 //' # Draw parameters
-//' coint <- post_coint_kls(y = y, beta = beta, w = ect, sigma_i = sigma_i,
-//'                         v_i = 0, p_tau_i = diag(1, k), g_i = sigma_i)
+//' coint <- post_coint_kls(y = y, beta = beta, w = ect, x = x, sigma_i = sigma_i,
+//'                         v_i = 0, p_tau_i = diag(1, k), g_i = sigma_i,
+//'                         gamma_mu_prior = gamma_mu_prior, gamma_v_i_prior = gamma_v_i_prior)
 //' 
 //' @references
 //' 
@@ -195,3 +201,32 @@ Rcpp::List post_coint_kls(arma::mat y, arma::mat beta, arma::mat w, arma::mat si
                             Rcpp::Named("Pi") = Pi,
                             Rcpp::Named("Gamma") = g);
 }
+
+/*** R
+# Load data
+data("e6")
+
+# Generate model data
+temp <- create_bvecmodel(e6, p = 2, r = 1)
+y <- t(temp$data$y)
+w <- t(temp$data$w)
+x <- t(temp$data$x)
+ 
+k <- nrow(y) # Endogenous variables
+tt <- ncol(y) # Number of observations
+
+gamma_mu_prior <- matrix(0, 6)
+gamma_v_i_prior <- diag(0, 6)
+
+# Initial value of Sigma
+sigma <- tcrossprod(y) / tt
+sigma_i <- solve(sigma)
+
+# Initial values of beta
+beta <- matrix(c(1, -4), k)
+
+# Draw parameters
+coint <- post_coint_kls(y = y, beta = beta, w = ect, x = x, sigma_i = sigma_i,
+                        v_i = 0, p_tau_i = diag(1, k), g_i = sigma_i,
+                        gamma_mu_prior = gamma_mu_prior, gamma_v_i_prior = gamma_v_i_prior)
+*/

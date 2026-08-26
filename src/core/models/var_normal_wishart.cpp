@@ -21,7 +21,9 @@ using core::bvs_sweep;
 using core::draw_normal_precision;
 using core::SsvsBlock;
 using core::ssvs_sweep;
+using core::split_structural_coefficients;
 using core::stacked_response;
+using core::structural_inverse;
 using core::require_forecast_regressors;
 using core::update_forecast_lags;
 
@@ -176,6 +178,8 @@ ForecastDraws VarNormalWishartSampler::forecast(const VarNormalWishartInput &inp
     const int k = input.spec.k;
     const int p = input.spec.p;
     const int h = input.spec.h;
+    const bool structural = input.spec.structural;
+    const int n_structural = input.spec.n_structural();
 
     if (k <= 0)
     {
@@ -193,19 +197,36 @@ ForecastDraws VarNormalWishartSampler::forecast(const VarNormalWishartInput &inp
     arma::mat z = input.forecast.z;
 
     require_forecast_regressors(input.spec, z);
-    const int nparams = static_cast<int>(z.n_cols);
-    const bool use_a = nparams > 0;
 
-    if (use_a && !coefficients.has_a())
+    // The coefficient draws are only consulted when there are regressors to
+    // apply them to or a contemporaneous matrix to split off; without either,
+    // the path is the error process alone.
+    const bool have_z = z.n_elem > 0;
+    if ((have_z || structural) && !coefficients.has_a())
     {
         throw std::invalid_argument("forecast regressors were supplied but posterior draws of a "
                                     "are missing");
     }
-    if (use_a && static_cast<int>(coefficients.a.n_rows) != nparams)
+
+    // Counted off the posterior, not off z: the structural coefficients are the
+    // last n_structural rows of a and have no column in z, so z.n_cols is short
+    // by exactly that many.
+    //
+    // This is the path every VEC forecast reaches, converted to its level
+    // parameterisation -- so leaving the split out here left a structural VEC
+    // unable to forecast at all.
+    const int nparams = (have_z || structural) ? static_cast<int>(coefficients.a.n_rows) : 0;
+    const bool use_a = nparams > 0 && nparams > n_structural;
+
+    arma::mat a = coefficients.a;
+    const arma::mat a0 = split_structural_coefficients(input.spec, a, nparams);
+
+    if (use_a && z.n_cols != a.n_rows)
     {
-        throw std::invalid_argument("forecast regressors have " + std::to_string(nparams) +
-                                    " columns but the posterior holds " +
-                                    std::to_string(coefficients.a.n_rows) + " coefficients");
+        throw std::invalid_argument(
+            "forecast regressors and coefficient draws disagree: z has " +
+            std::to_string(z.n_cols) + " columns, a has " + std::to_string(a.n_rows) +
+            " rows after the structural split");
     }
     if (use_a && static_cast<int>(z.n_rows) != h * k)
     {
@@ -227,6 +248,10 @@ ForecastDraws VarNormalWishartSampler::forecast(const VarNormalWishartInput &inp
         reporter.check_interrupt();
         reporter.progress(static_cast<long long>(draw) + 1, static_cast<long long>(draws));
 
+        // Once per draw: nothing in it depends on the horizon.
+        const arma::mat a0_inv =
+            structural ? structural_inverse(a0, draw, diag_k) : arma::mat();
+
         for (int i = 0; i < h; i++)
         {
             if (use_a)
@@ -237,12 +262,20 @@ ForecastDraws VarNormalWishartSampler::forecast(const VarNormalWishartInput &inp
                     update_forecast_lags(z, fcst, draw, i, k, p, diag_k);
                 }
                 // Update forecast
-                fcst.submat(i * k, draw, (i + 1) * k - 1, draw) = z.rows(i * k, (i + 1) * k - 1) * coefficients.a.col(draw);
+                fcst.submat(i * k, draw, (i + 1) * k - 1, draw) = z.rows(i * k, (i + 1) * k - 1) * a.col(draw);
             }
 
             // Add error
             arma::eig_sym(eigval, eigvec, arma::solve(arma::reshape(coefficients.u_sigma_inv.col(draw), k, k), diag_k));
             fcst.submat(i * k, draw, (i + 1) * k - 1, draw) = fcst.submat(i * k, draw, (i + 1) * k - 1, draw) + eigvec * arma::diagmat(arma::sqrt(eigval)) * arma::trans(eigvec) * arma::randn(k);
+
+            // A_0 y_t = A_1 y_{t-1} + ... + u_t, so the inverse applies to the
+            // whole right-hand side, signal and error alike.
+            if (structural)
+            {
+                fcst.submat(i * k, draw, (i + 1) * k - 1, draw) =
+                    a0_inv * fcst.submat(i * k, draw, (i + 1) * k - 1, draw);
+            }
         }
     }
 

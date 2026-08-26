@@ -124,6 +124,7 @@ inline bayests::VarSpec read_spec(const Rcpp::List &model, const char *covar_err
   spec.n = optional_int(model, "n", 0);
   spec.n_restricted = optional_int(model, "n_restricted", 0);
   spec.rank = optional_int(model, "rank", 0);
+  spec.k_beta = optional_int(model, "k_beta", 0);
   // Absent until add_forecast_input_data() has been called.
   spec.h = optional_int(model, "h", 0);
   spec.varsel = bayests::var_selection_from_string(optional_string(model, "varsel", "none"));
@@ -149,6 +150,18 @@ inline bayests::ConstantCointSpacePrior read_coint_space_prior_constant(const Rc
   bayests::ConstantCointSpacePrior prior;
   read_double_if_present(group, "v_inv", prior.v_inv);
   read_mat_if_present(group, "p_tau_inv", prior.p_tau_inv);
+  return prior;
+}
+
+/// The cointegration space prior of a model whose cointegration vectors move.
+/// `rho` is the autoregression of their state equation and is not drawn, so it
+/// arrives as a prior rather than as an initial value; a group that omits it
+/// keeps the struct's default.
+inline bayests::TvpCointSpacePrior read_coint_space_prior_tvp(const Rcpp::List &group)
+{
+  bayests::TvpCointSpacePrior prior;
+  prior.initial_state = read_normal_prior(group);
+  read_double_if_present(group, "rho", prior.rho);
   return prior;
 }
 

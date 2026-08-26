@@ -21,7 +21,10 @@ using core::bvs_sweep;
 using core::draw_normal_precision;
 using core::fill_psi_path;
 using core::fill_strict_lower_triangle;
+using core::fill_strict_lower_triangle_by_column;
+using core::split_structural_coefficients;
 using core::stacked_response;
+using core::structural_inverse;
 using core::require_forecast_regressors;
 using core::update_forecast_lags;
 
@@ -226,7 +229,8 @@ VarTvpGammaDraws VarTvpGammaSampler::draw_coefficients(const VarTvpGammaInput &i
             }
 
             // Update a
-            a = kalman_durbin_koopman_2002(ymat, z, u_sigma, a_sigma, a_B, a0, a_sigma).cols(1, tt);
+            a = kalman_durbin_koopman_2002(ymat, z, u_sigma, a_sigma, a_B, a0, a_sigma)
+                    .cols(0, tt - 1);
 
             // Draw a_sigma
             a_lag.col(0) = a0;
@@ -293,7 +297,7 @@ VarTvpGammaDraws VarTvpGammaSampler::draw_coefficients(const VarTvpGammaInput &i
             psi = kalman_durbin_koopman_2002(psi_y, psi_z,
                                              psi_sigma_u,
                                              psi_sigma, psi_B, psi0, psi_sigma)
-                      .cols(1, tt);
+                      .cols(0, tt - 1);
 
             // Draw psi_sigma
             psi_lag.col(0) = psi0;
@@ -461,15 +465,7 @@ ForecastDraws VarTvpGammaSampler::forecast(const VarTvpGammaInput &input,
     }
 
     arma::mat a = coefficients.a;
-    arma::mat a0;
-    if (structural)
-    {
-        a0 = a.rows(nparams - n_structural, nparams - 1);
-        if (use_a)
-        {
-            a = a.rows(0, nparams - n_structural - 1);
-        }
-    }
+    const arma::mat a0 = split_structural_coefficients(input.spec, a, nparams);
 
     const arma::uword draws = coefficients.iterations();
     const bool p_larger_than_0 = p > 0;
@@ -478,13 +474,16 @@ ForecastDraws VarTvpGammaSampler::forecast(const VarTvpGammaInput &input,
     const arma::mat diag_k = arma::eye<arma::mat>(k, k);
     arma::vec eigval;
     arma::mat eigvec;
-    arma::mat A0_inv;
 
     // Calculate forecasts
     for (arma::uword draw = 0; draw < draws; draw++)
     {
         reporter.check_interrupt();
         reporter.progress(static_cast<long long>(draw) + 1, static_cast<long long>(draws));
+
+        // Once per draw: nothing in it depends on the horizon.
+        const arma::mat a0_inv =
+            structural ? structural_inverse(a0, draw, diag_k) : arma::mat();
 
         for (int i = 0; i < h; i++)
         {
@@ -505,13 +504,8 @@ ForecastDraws VarTvpGammaSampler::forecast(const VarTvpGammaInput &input,
 
             if (structural)
             {
-                A0_inv = arma::eye<arma::mat>(k, k);
-                for (int j = 1; j < k; j++)
-                {
-                    A0_inv.submat(j, 0, j, j - 1) = arma::trans(a0.submat(j * (j - 1) / 2, draw, (j + 1) * j / 2 - 1, draw));
-                }
-                A0_inv = arma::solve(A0_inv, diag_k);
-                fcst.submat(i * k, draw, (i + 1) * k - 1, draw) = A0_inv * fcst.submat(i * k, draw, (i + 1) * k - 1, draw);
+                fcst.submat(i * k, draw, (i + 1) * k - 1, draw) =
+                    a0_inv * fcst.submat(i * k, draw, (i + 1) * k - 1, draw);
             }
         }
     }

@@ -4,9 +4,9 @@
 #include "bayests/vec_normal_wishart.h"
 
 #include "bayests/var_normal_wishart.h"
+#include "bayests/vec_to_var.h"
 #include "core/algorithms/bvs.h"
 #include "core/algorithms/ssvs.h"
-#include "core/algorithms/vec_to_var.h"
 #include "core/algorithms/wishart.h"
 #include "core/models/model_support.h"
 
@@ -41,12 +41,12 @@ namespace bayests
 
         const int n_a = static_cast<int>(z.n_cols);
         const int rank = static_cast<int>(input.spec.rank);
+        const int k_beta = static_cast<int>(input.spec.k_beta);
         const int n_alpha = static_cast<int>(input.spec.n_alpha());
         const bool use_non_alpha = n_a > n_alpha;
         const int n_beta = static_cast<int>(input.spec.n_beta());
-        const int k_ect = static_cast<int>(input.spec.k_ect());
         const bool use_a = n_a > 0;
-        const bool use_beta = n_beta > 0;
+        const bool use_beta = rank > 0;
         const int tt = static_cast<int>(y.n_elem) / k;
 
         const bool use_ssvs = input.spec.varsel == VarSelection::ssvs;
@@ -117,7 +117,7 @@ namespace bayests
             diag_r = arma::eye(rank, rank);
             beta = input.initial.beta;
             w_cross = w_t * arma::trans(w_t);
-            beta_mat = arma::reshape(beta, k_ect, rank);
+            beta_mat = arma::reshape(beta, k_beta, rank);
             coint_v_inv = input.beta_prior.v_inv;
             coint_p_tau_inv = input.beta_prior.p_tau_inv;
             out.beta = arma::mat(n_beta, iterations);
@@ -149,7 +149,7 @@ namespace bayests
                     // space prior of Koop, Leon-Gonzalez and Strachan (2010).
                     // The leading factor is the scalar shrinkage, not P_tau^-1
                     // again: as a matrix it conforms only when rank happens to
-                    // equal k_ect, and the product of two symmetric matrices is
+                    // equal k_beta, and the product of two symmetric matrices is
                     // not symmetric, so the posterior precision it built failed
                     // its Cholesky.
                     prior_a_vinv.submat(0, 0, n_alpha - 1, n_alpha - 1) = arma::kron(coint_v_inv * (arma::trans(beta_mat) * coint_p_tau_inv * beta_mat), u_sigma_inv);
@@ -226,7 +226,7 @@ namespace bayests
                 Beta = draw_normal_precision(post_beta_v,
                                              arma::vectorise(w_t * arma::trans(arma::reshape(y_beta, k, tt)) *
                                                              u_sigma_inv * Alpha));
-                Beta_mat = arma::reshape(Beta, k_ect, rank);
+                Beta_mat = arma::reshape(Beta, k_beta, rank);
 
                 // Final cointegration values. Only the product alpha beta' is
                 // identified, so the draw is split between the two by the
@@ -234,7 +234,7 @@ namespace bayests
                 // forward together.
                 BB_sqrt = arma::sqrtmat_sympd(arma::trans(Beta_mat) * Beta_mat);
                 beta_mat = Beta_mat * arma::solve(BB_sqrt, diag_r);
-                
+
                 alpha = Alpha * BB_sqrt;
                 a.subvec(0, n_alpha - 1) = arma::vectorise(alpha);
 
@@ -326,11 +326,11 @@ namespace bayests
         // the VAR's forecast rejects a `z` that does not match the converted
         // coefficients.
         VarNormalWishartInput var_input;
-        var_input.spec = core::vec_to_var_spec(input.spec);
+        var_input.spec = vec_to_var_spec(input.spec);
         var_input.forecast = input.forecast;
 
         const VarNormalWishartDraws var_coefficients =
-            core::vec_to_var_coefficients(input.spec, coefficients);
+            vec_to_var_coefficients(input.spec, coefficients);
 
         return VarNormalWishartSampler{}.forecast(var_input, var_coefficients, reporter);
     }
@@ -352,10 +352,10 @@ namespace bayests
         const arma::vec y = stacked_response(input.train);
         arma::mat z = input.train.z;
         const arma::mat w_t = arma::trans(input.train.w);
-        const int k_ect = static_cast<int>(input.spec.k_ect());
+        const int k_beta = static_cast<int>(input.spec.k_beta);
         const int rank = static_cast<int>(input.spec.rank);
         const bool use_a = z.n_cols > 0;
-        const bool use_beta = input.spec.n_beta() > 0;
+        const bool use_beta = rank > 0;
         const int n_alpha = static_cast<int>(input.spec.n_alpha());
         const arma::mat diag_k = arma::eye<arma::mat>(k, k);
 
@@ -381,7 +381,7 @@ namespace bayests
             {
                 for (arma::uword draw = 0; draw < draws; draw++)
                 {
-                    z.cols(0, n_alpha - 1) = arma::kron(arma::trans(arma::trans(arma::reshape(coefficients.beta.col(draw), k_ect, rank)) * w_t), diag_k);
+                    z.cols(0, n_alpha - 1) = arma::kron(arma::trans(arma::trans(arma::reshape(coefficients.beta.col(draw), k_beta, rank)) * w_t), diag_k);
                     u.col(draw) = y - z * coefficients.a.col(draw);
                 }
             }

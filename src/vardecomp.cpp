@@ -1,11 +1,12 @@
-#include <RcppArmadillo.h>
 // [[Rcpp::depends(RcppArmadillo)]]
+
+#include <RcppArmadillo.h>
+
 // [[Rcpp::export(.vardecomp)]]
 arma::mat vardecomp(Rcpp::List A, int h, std::string type, int response) {
   
   // Get posterior draws and shock
   arma::mat a = Rcpp::as<arma::mat>(A["A"]);
-  
   std::string oir ("oir");
   std::string sir ("sir");
   std::string gir ("gir");

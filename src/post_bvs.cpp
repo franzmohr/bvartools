@@ -2,9 +2,13 @@
 #include <RcppArmadillo.h>
 // [[Rcpp::depends(RcppArmadillo)]]
 
+// Called as a plain C++ function rather than through this package's own C++
+// interface, which would rewind the random number stream. See the header.
+#include "sur_const_to_tvp.h"
+
 //' Bayesian Variable Selection
 //' 
-//' \code{bvs} employs Bayesian variable selection as proposed by Korobilis (2013)
+//' \code{post_bvs} employs Bayesian variable selection as proposed by Korobilis (2013)
 //' to produce a vector of inclusion parameters for the coefficient matrix
 //' of a VAR model.
 //' 
@@ -12,6 +16,8 @@
 //' @param z a \eqn{KT \times M} matrix of explanatory variables.
 //' @param a an M-dimensional vector of parameter draws. If time varying parameters are used,
 //' an \eqn{M \times T} coefficient matrix can be provided.
+//' @param k integer of the number of endogenous variables.
+//' @param m integer of the number of M 
 //' @param lambda an \eqn{M \times M} inclusion matrix that should be updated.
 //' @param sigma_i a sparse \eqn{KT \times KT} block diagonal matrix containing
 //' the inverse variance-covariance matrix.
@@ -58,12 +64,13 @@
 //' 
 //' @references
 //' 
-//' Korobilis, D. (2013). VAR forecasting using Bayesian variable selection. \emph{Journal of Applied Econometrics, 28}(2), 204--230. \doi{10.1002/jae.1271}
+//' Korobilis, D. (2013). VAR forecasting using Bayesian variable selection.
+//' \emph{Journal of Applied Econometrics, 28}(2), 204--230. \doi{10.1002/jae.1271}
 //' 
 // [[Rcpp::export]]
-arma::sp_mat post_bvs(arma::vec y, arma::mat z, arma::vec a, arma::uword k, arma::uword m,
-                       arma::sp_mat lambda, arma::sp_mat sigma_i, arma::vec prob_prior,
-                       Rcpp::Nullable<Rcpp::IntegerVector> include = R_NilValue) {
+arma::sp_mat post_bvs(const arma::vec& y, const arma::mat& z, arma::vec& a, arma::uword k, arma::uword m,
+                      arma::sp_mat lambda, arma::sp_mat sigma_i, arma::vec prob_prior,
+                      Rcpp::Nullable<Rcpp::IntegerVector> include = R_NilValue) {
    
    arma::vec lpr_prior_0 = arma::log(1 - prob_prior);
    arma::vec lpr_prior_1 = arma::log(prob_prior);
@@ -77,7 +84,7 @@ arma::sp_mat post_bvs(arma::vec y, arma::mat z, arma::vec a, arma::uword k, arma
    
    arma::sp_mat zz;
    if (tvp) {
-     zz = bvartools::sur_const_to_tvp(z, k, tt);
+     zz = sur_const_to_tvp(z, k, tt);
    }
    
    arma::mat a_mat;
@@ -91,7 +98,7 @@ arma::sp_mat post_bvs(arma::vec y, arma::mat z, arma::vec a, arma::uword k, arma
    arma::mat theta1 = AG;
    arma::vec l0_res = arma::zeros<arma::vec>(k * tt);
    arma::vec l1_res = arma::zeros<arma::vec>(k * tt);
-   arma::vec g = arma::zeros<arma::vec>(1);
+   //arma::vec g = arma::zeros<arma::vec>(1);
    
    double l0 = 0;
    double l1 = 0;
@@ -115,10 +122,10 @@ arma::sp_mat post_bvs(arma::vec y, arma::mat z, arma::vec a, arma::uword k, arma
    // Start testing
    for (int j = 0; j < pos_size; j++){
      var = pos_res(j);
-     g = log(arma::randu<arma::vec>(1));
-     if (lambda(var, var) == 1 && g(0) >= lpr_prior_1(var)){continue;}
-     if (lambda(var, var) == 0 && g(0) >= lpr_prior_0(var)){continue;}
-     if ((lambda(var, var) == 1 && g(0) < lpr_prior_1(var)) || (lambda(var, var) == 0 && g(0) < lpr_prior_0(var))){
+     //g = log(arma::randu<arma::vec>(1));
+     //if (lambda(var, var) == 1 && g(0) >= lpr_prior_1(var)){continue;}
+     //if (lambda(var, var) == 0 && g(0) >= lpr_prior_0(var)){continue;}
+     //if ((lambda(var, var) == 1 && g(0) < lpr_prior_1(var)) || (lambda(var, var) == 0 && g(0) < lpr_prior_0(var))){
        theta0 = AG;
        theta1 = AG;
        theta1.row(var) = a_mat.row(var);
@@ -140,7 +147,7 @@ arma::sp_mat post_bvs(arma::vec y, arma::mat z, arma::vec a, arma::uword k, arma
        } else {
          lambda(var, var) = 0;
        }
-     }
+     //}
    }
    return lambda;
 }
@@ -149,7 +156,7 @@ arma::sp_mat post_bvs(arma::vec y, arma::mat z, arma::vec a, arma::uword k, arma
 data("e1")
 e1 <- diff(log(e1)) * 100
 
-object <- create_var_model(data = e1)
+object <- create_bvarmodel(data = e1)
 
 object <- add_priors(object, bvs = list(inprior = .1))
 
@@ -166,5 +173,5 @@ sigma_i <- object[["initial"]][["sigma_i"]]
 sigma_i <- kronecker(Diagonal(tt, 1), sigma_i)
 prob_prior <- object[["priors"]][["a"]][["bvs"]][["inprior"]]
 
-bvs(y, z, a, k, m, lambda, sigma_i, prob_prior)
+post_bvs(y, z, a, k, m, lambda, sigma_i, prob_prior)
 */

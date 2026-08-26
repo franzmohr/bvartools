@@ -19,7 +19,9 @@ using core::BvsBlock;
 using core::BvsScope;
 using core::bvs_sweep;
 using core::draw_normal_precision;
+using core::split_structural_coefficients;
 using core::stacked_response;
+using core::structural_inverse;
 using core::require_forecast_regressors;
 using core::update_forecast_lags;
 
@@ -137,7 +139,8 @@ VarTvpWishartDraws VarTvpWishartSampler::draw_coefficients(const VarTvpWishartIn
             }
 
             // Update a
-            a = kalman_durbin_koopman_2002(ymat, z, u_sigma, a_sigma, a_B, a0, a_sigma).cols(1, tt);
+            a = kalman_durbin_koopman_2002(ymat, z, u_sigma, a_sigma, a_B, a0, a_sigma)
+                    .cols(0, tt - 1);
 
             // Draw a_sigma
             a_lag.col(0) = a0;
@@ -213,6 +216,10 @@ ForecastDraws VarTvpWishartSampler::forecast(const VarTvpWishartInput &input,
     const int k = input.spec.k;
     const int p = input.spec.p;
     const int h = input.spec.h;
+    const bool structural = input.spec.structural;
+    const int n_structural = input.spec.n_structural();
+    const int n_non_structural = input.spec.n_non_structural();
+    const int nparams = n_non_structural + n_structural;
 
     if (k <= 0)
     {
@@ -230,8 +237,12 @@ ForecastDraws VarTvpWishartSampler::forecast(const VarTvpWishartInput &input,
     arma::mat z = input.forecast.z;
 
     require_forecast_regressors(input.spec, z);
-    const int nparams = static_cast<int>(z.n_cols);
-    const bool use_a = nparams > 0;
+
+    // Counted off the model's dimensions rather than off `z`: the coefficients
+    // move with time, so what the forecast starts from is the last in-sample
+    // period of the posterior, and the contemporaneous block at the end of it
+    // has no column in `z` to be counted by.
+    const bool use_a = n_non_structural > 0;
 
     if (nparams > 0 && !coefficients.has_a())
     {
@@ -240,15 +251,17 @@ ForecastDraws VarTvpWishartSampler::forecast(const VarTvpWishartInput &input,
     }
 
     // The caller hands over the period the forecast starts from, as the header
-    // says and as VarTvpGamma expects; slicing the path here as well would take
-    // the last period of a matrix that is already one period wide.
-    const arma::mat &a = coefficients.a;
+    // says; slicing the path here as well would take the last period of a
+    // matrix that is already one period wide.
+    arma::mat a = coefficients.a;
+    const arma::mat a0 = split_structural_coefficients(input.spec, a, nparams);
 
-    if (use_a && static_cast<int>(a.n_rows) != nparams)
+    if (use_a && z.n_cols != a.n_rows)
     {
-        throw std::invalid_argument("forecast regressors have " + std::to_string(nparams) +
-                                    " columns but the posterior holds " +
-                                    std::to_string(a.n_rows) + " coefficients per draw");
+        throw std::invalid_argument(
+            "forecast regressors and coefficient draws disagree: z has " +
+            std::to_string(z.n_cols) + " columns, a has " + std::to_string(a.n_rows) +
+            " rows after the structural split");
     }
 
     const arma::uword draws = coefficients.iterations();
@@ -264,6 +277,10 @@ ForecastDraws VarTvpWishartSampler::forecast(const VarTvpWishartInput &input,
     {
         reporter.check_interrupt();
         reporter.progress(static_cast<long long>(draw) + 1, static_cast<long long>(draws));
+
+        // Once per draw: nothing in it depends on the horizon.
+        const arma::mat a0_inv =
+            structural ? structural_inverse(a0, draw, diag_k) : arma::mat();
 
         for (int i = 0; i < h; i++)
         {
@@ -281,6 +298,14 @@ ForecastDraws VarTvpWishartSampler::forecast(const VarTvpWishartInput &input,
             // Add error
             arma::eig_sym(eigval, eigvec, arma::solve(arma::reshape(coefficients.u_sigma_inv.col(draw), k, k), diag_k));
             fcst.submat(i * k, draw, (i + 1) * k - 1, draw) = fcst.submat(i * k, draw, (i + 1) * k - 1, draw) + eigvec * arma::diagmat(arma::sqrt(eigval)) * arma::trans(eigvec) * arma::randn(k);
+
+            // A_0 y_t = A_1 y_{t-1} + ... + u_t, so the inverse applies to the
+            // whole right-hand side, signal and error alike.
+            if (structural)
+            {
+                fcst.submat(i * k, draw, (i + 1) * k - 1, draw) =
+                    a0_inv * fcst.submat(i * k, draw, (i + 1) * k - 1, draw);
+            }
         }
     }
 

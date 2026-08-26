@@ -9,23 +9,35 @@ bvar(
   exogen = NULL,
   y,
   x = NULL,
+  z = NULL,
   A0 = NULL,
   A = NULL,
   B = NULL,
   C = NULL,
-  Sigma = NULL
+  Sigma = NULL,
+  error = NULL,
+  varsel = NULL,
+  iterations = NULL,
+  burnin = 0
 )
 }
 \arguments{
-\item{data}{the original time-series object of endogenous variables.}
+\item{data}{the original time-series object of endogenous variables. If
+\code{NULL} (default), the object provided in argument \code{y} is used.}
 
-\item{exogen}{the original time-series object of unmodelled variables.}
+\item{exogen}{the original time-series object of unmodelled variables. If
+\code{NULL} (default), it is reconstructed from the current values of those
+variables in argument \code{x}.}
 
 \item{y}{a time-series object of endogenous variables with \eqn{T} observations,
-usually, a result of a call to \code{\link{gen_var}}.}
+usually, a result of a call to \code{\link{create_bvarmodel}}.}
 
 \item{x}{a time-series object of \eqn{(pK + (1+s)M + N)} regressor variables, usually, a result of a
-call to \code{\link{gen_var}}.}
+call to \code{\link{create_bvarmodel}}.}
+
+\item{z}{a \eqn{TK \times K (pK + (1+s)M + N + K)} data matrix, usually, a result of a
+call to \code{\link{create_bvarmodel}}. If \code{NULL} (default), it is
+generated from argument \code{x}.}
 
 \item{A0}{either a \eqn{K^2 \times S} matrix of MCMC coefficient draws of structural parameters or
 a named list, where element \code{coeffs} contains a \eqn{K^2 \times S} matrix of MCMC coefficient
@@ -58,35 +70,48 @@ equation can be provided as a \eqn{KN \times S} matrix in an additional list ele
 \item{Sigma}{a \eqn{K^2 \times S} matrix of MCMC draws for the error variance-covariance matrix or
 a named list, where element \code{coeffs} contains a \eqn{K^2 \times S} matrix of MCMC draws for the
 error variance-covariance matrix and element \code{lambda} contains the corresponding draws of inclusion
-parameters in case variable selection algorithms were employed to the covariances. For time varying parameter models
-the coefficient matrix must be \eqn{TK^2 \times S}. Draws of the error covariance matrix of the state
-equation can be provided as a \eqn{K^2 \times S} matrix in an additional list element.}
+parameters in case variable selection algorithms were employed to the covariances. For models with
+stochastic volatility the matrix must be \eqn{TK^2 \times S}.}
+
+\item{error}{a character specifying the model that was used for the estimation
+of the covariance matrix of the error term. If \code{NULL} (default), it is
+inferred from the draws in argument \code{Sigma}, which can only distinguish
+a constant covariance matrix from a time varying one. See
+\code{\link{create_bvarmodel}}.}
+
+\item{varsel}{a character specifying the variable selection algorithm that was
+employed. If \code{NULL} (default), it is inferred from the presence of draws
+of inclusion parameters. See \code{\link{create_bvarmodel}}.}
+
+\item{iterations}{an integer of the number of MCMC draws in the provided
+coefficient matrices. If \code{NULL} (default), it is obtained from those
+matrices.}
+
+\item{burnin}{an integer of the number of MCMC draws that were used to
+initialise the sampler. Defaults to zero, since the draws provided to the
+function are assumed to exclude them already.}
 }
 \value{
-An object of class \code{"bvar"} containing the following components, if specified:
-\item{data}{the original time-series object of endogenous variables.}
-\item{exogen}{the original time-series object of unmodelled variables.}
-\item{y}{a \eqn{K \times T} matrix of endogenous variables.}
-\item{x}{a \eqn{(pK + (1+s)M + N) \times T} matrix of regressor variables.}
-\item{A0}{an \eqn{S \times K^2} "mcmc" object of coefficient draws of structural parameters. In case of time varying parameters a list of such objects.}
-\item{A0_lambda}{an \eqn{S \times K^2} "mcmc" object of inclusion parameters for structural parameters.}
-\item{A0_sigma}{an \eqn{S \times K^2} "mcmc" object of the error covariance matrices of the structural parameters in a model with time varying parameters.}
-\item{A}{an \eqn{S \times pK^2} "mcmc" object of coefficient draws of lagged endogenous variables. In case of time varying parameters a list of such objects.}
-\item{A_lambda}{an \eqn{S \times pK^2} "mcmc" object of inclusion parameters for lagged endogenous variables.}
-\item{A_sigma}{an \eqn{S \times pK^2} "mcmc" object of the error covariance matrices of coefficients of lagged endogenous variables in a model with time varying parameters.}
-\item{B}{an \eqn{S \times ((1 + s)MK)} "mcmc" object of coefficient draws of unmodelled, non-deterministic variables. In case of time varying parameters a list of such objects.}
-\item{B_lambda}{an \eqn{S \times ((1 + s)MK)} "mcmc" object of inclusion parameters for unmodelled, non-deterministic variables.}
-\item{B_sigma}{an \eqn{S \times ((1 + s)MK)} "mcmc" object of the error covariance matrices of coefficients of unmodelled, non-deterministic variables in a model with time varying parameters.}
-\item{C}{an \eqn{S \times NK} "mcmc" object of coefficient draws of deterministic terms. In case of time varying parameters a list of such objects.}
-\item{C_lambda}{an \eqn{S \times NK} "mcmc" object of inclusion parameters for deterministic terms.}
-\item{C_sigma}{an \eqn{S \times NK} "mcmc" object of the error covariance matrices of coefficients of deterministic terms in a model with time varying parameters.}
-\item{Sigma}{an \eqn{S \times K^2} "mcmc" object of variance-covariance draws. In case of time varying parameters a list of such objects.}
-\item{Sigma_lambda}{an \eqn{S \times K^2} "mcmc" object of inclusion parameters for error covariances.}
-\item{Sigma_sigma}{an \eqn{S \times K^2} "mcmc" object of the error covariance matrices of the coefficients of the error covariance matrix of the measurement equation of a model with time varying parameters.}
-\item{specifications}{a list containing information on the model specification.}
+An object of class \code{"bvarmodel"} containing the following components:
+\item{model}{a list containing information on the model specification.}
+\item{data}{a list of data objects. Element \code{original} contains the
+original time-series objects of endogenous, unmodelled and deterministic
+variables. Element \code{train} contains the time-series objects \code{y} and
+\code{x} of dependent variables and regressors as well as the matrix \code{z}
+of regressors in SUR form.}
+\item{posterior}{a list of posterior draws. Element \code{a} contains an
+\eqn{S \times (K(pK + (1 + s)M + N) + K(K - 1) / 2)} "mcmc" object of the
+draws of the coefficients of the conditional mean and, if provided, the
+corresponding draws of inclusion parameters in element \code{lambda} and of
+the error covariance matrix of the state equation in element \code{sigma}.
+Element \code{u_sigma_inv} contains an \eqn{S \times K^2} "mcmc" object of
+the draws of the inverse of the error variance-covariance matrix. For time
+varying parameter and stochastic volatility models the draws of all periods
+are appended to each other.}
 }
 \description{
-\code{bvar} is used to create objects of class \code{"bvar"}.
+\code{bvar} collects the posterior draws of a vector autoregressive model in
+an object of class 'bvarmodel'.
 }
 \details{
 For the VARX model
@@ -106,6 +131,23 @@ error covariance matrix of the above model are assumed to be time varying, respe
 
 The draws of the different coefficient matrices provided in \code{A0}, \code{A},
 \code{B}, \code{C} and \code{Sigma} have to correspond to the same MCMC iterations.
+
+The result is the same kind of object as the output of
+\code{\link{create_bvarmodel}} in combination with
+\code{\link{draw_posterior}}, so it can be used with the methods of class
+'bvarmodel' such as \code{\link{irf.bvarmodel}},
+\code{\link{predict.bvarmodel}} or \code{\link{summary.bvarmodel}}.
+Accordingly, the draws are stored in the parameterisation those methods
+expect: the coefficients of the conditional mean are collected in a single
+matrix \code{a} in the order in which their regressors enter the data matrix
+and the draws of the error term are stored as draws of the inverse of
+\eqn{\Sigma_u}. Draws of \eqn{A_0} are reduced to the free elements below its
+diagonal, which are the elements that are estimated.
+
+Since a model that is constructed from posterior draws does not contain the
+specification of its priors, the elements \code{priors} and \code{initial} of
+the resulting object are empty. Use \code{\link{add_priors}} and
+\code{\link{add_initial_values}} if the model should be re-estimated.
 }
 \examples{
 
@@ -115,14 +157,14 @@ e1 <- diff(log(e1))
 e1 <- window(e1, end = c(1978, 4))
 
 # Generate model data
-data <- gen_var(e1, p = 2, deterministic = "const")
+data <- create_bvarmodel(e1, p = 2, deterministic = "const")
 
 # Add priors
 model <- add_priors(data,
                     coef = list(v_i = 0, v_i_det = 0),
                     sigma = list(df = 0, scale = .00001))
 
-# Set RNG seed for reproducibility 
+# Set RNG seed for reproducibility
 set.seed(1234567)
 
 iterations <- 400 # Number of iterations of the Gibbs sampler
@@ -130,18 +172,18 @@ iterations <- 400 # Number of iterations of the Gibbs sampler
 burnin <- 100 # Number of burn-in draws
 draws <- iterations + burnin # Total number of MCMC draws
 
-y <- t(model$data$Y)
-x <- t(model$data$Z)
+y <- t(model$data$train$y)
+x <- t(model$data$train$x)
 tt <- ncol(y) # Number of observations
 k <- nrow(y) # Number of endogenous variables
 m <- k * nrow(x) # Number of estimated coefficients
 
 # Priors
-a_mu_prior <- model$priors$coefficients$mu # Vector of prior parameter means
-a_v_i_prior <- model$priors$coefficients$v_i # Inverse of the prior covariance matrix
+a_mu_prior <- model$priors$a$mu # Vector of prior parameter means
+a_v_i_prior <- model$priors$a$v_inv # Inverse of the prior covariance matrix
 
-u_sigma_df_prior <- model$priors$sigma$df # Prior degrees of freedom
-u_sigma_scale_prior <- model$priors$sigma$scale # Prior covariance matrix
+u_sigma_df_prior <- model$priors$u_sigma$df # Prior degrees of freedom
+u_sigma_scale_prior <- model$priors$u_sigma$scale # Prior covariance matrix
 u_sigma_df_post <- tt + u_sigma_df_prior # Posterior degrees of freedom
 
 # Initial values
@@ -168,9 +210,10 @@ for (draw in 1:draws) {
  }
 }
 
-# Generate bvar object
-bvar_est <- bvar(y = model$data$Y, x = model$data$Z,
+# Generate bvarmodel object
+bvar_est <- bvar(data = e1,
+                 y = model$data$train$y, x = model$data$train$x,
                  A = draws_a[1:18,], C = draws_a[19:21, ],
                  Sigma = draws_sigma)
-                 
+
 }

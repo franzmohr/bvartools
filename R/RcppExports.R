@@ -73,6 +73,18 @@
     .Call(`_bvartools_VarTvpWishartLogLik`, object)
 }
 
+.VecKlgs2010Coefficients <- function(object) {
+    .Call(`_bvartools_VecKlgs2010Coefficients`, object)
+}
+
+.VecKlgs2010Forecasts <- function(object) {
+    .Call(`_bvartools_VecKlgs2010Forecasts`, object)
+}
+
+.VecKlgs2010LogLik <- function(object) {
+    .Call(`_bvartools_VecKlgs2010LogLik`, object)
+}
+
 .VecNormalGammaCoefficients <- function(object) {
     .Call(`_bvartools_VecNormalGammaCoefficients`, object)
 }

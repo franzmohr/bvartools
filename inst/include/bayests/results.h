@@ -176,6 +176,28 @@ struct VecNormalWishartDraws
     bool has_lambda() const { return a_lambda.n_elem > 0; }
 };
 
+/// Posterior draws of the non-SUR Koop, Leon-Gonzalez and Strachan (2010)
+/// sampler.
+///
+/// The same posterior VecNormalWishartDraws carries, minus the inclusion
+/// indicators: this sampler implements no variable selection. Laid out
+/// identically, `a` holding vec(alpha) first, so a draw of one is a draw of the
+/// other and the two can be compared coefficient by coefficient.
+struct VecKlgs2010Draws
+{
+    arma::mat a;    ///< n_a x iterations. Empty when the model has no regressors.
+    arma::mat beta; ///< n_beta x iterations. Empty without a cointegration relation.
+
+    /// (k * k) x iterations; each column is a vectorised precision matrix.
+    arma::mat u_sigma_inv;
+
+    /// Length of the chain these draws came from.
+    arma::uword iterations() const { return u_sigma_inv.n_cols; }
+
+    bool has_a() const { return a.n_elem > 0; }
+    bool has_beta() const { return beta.n_elem > 0; }
+};
+
 /// Posterior draws of a VEC with independent gamma priors on the error
 /// precisions and, optionally, a constant covariance block.
 struct VecNormalGammaDraws

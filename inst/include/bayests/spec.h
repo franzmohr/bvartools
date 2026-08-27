@@ -126,10 +126,20 @@ struct VarSpec
     /// against the s + 1 level blocks x_t..x_{t-s} they imply.
     int n_upsilon() const { return m > 0 ? s : 0; }
 
+    /// Regressors a VEC has besides its error correction term: the k(p-1)
+    /// lagged differences of the endogenous variables, the m*s differences of
+    /// the unmodelled ones and the n unrestricted deterministic terms.
+    ///
+    /// One column each, which is the compact per-period layout TrainData::x is
+    /// written in and the width a k x n coefficient matrix has. The SUR layout
+    /// spreads every one of them over k columns, so n_non_structural_vec() is k
+    /// times this.
+    int n_x_vec() const { return k * n_gamma() + m * n_upsilon() + n; }
+
     /// Coefficients of a VEC that are not loadings or contemporaneous terms:
     /// the Gamma blocks, the Upsilon blocks and the unrestricted deterministic
     /// terms. The restricted ones live in `beta`, not here.
-    int n_non_structural_vec() const { return k * (k * n_gamma() + m * n_upsilon() + n); }
+    int n_non_structural_vec() const { return k * n_x_vec(); }
 
     /// Coefficients a VEC draw carries for one period, loadings and
     /// contemporaneous terms included -- the width of its `a`, and the number of

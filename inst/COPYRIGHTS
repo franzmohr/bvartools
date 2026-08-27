@@ -34,6 +34,7 @@ BSD 3-Clause portion
     inst/include/bayests/var_tvp_gamma.h
     inst/include/bayests/var_tvp_stochvol.h
     inst/include/bayests/var_tvp_wishart.h
+    inst/include/bayests/vec_klgs_2010.h
     inst/include/bayests/vec_normal_gamma.h
     inst/include/bayests/vec_normal_stochvol.h
     inst/include/bayests/vec_normal_wishart.h
@@ -67,6 +68,7 @@ BSD 3-Clause portion
     src/core/models/var_tvp_gamma.cpp
     src/core/models/var_tvp_stochvol.cpp
     src/core/models/var_tvp_wishart.cpp
+    src/core/models/vec_klgs_2010.cpp
     src/core/models/vec_normal_gamma.cpp
     src/core/models/vec_normal_stochvol.cpp
     src/core/models/vec_normal_wishart.cpp

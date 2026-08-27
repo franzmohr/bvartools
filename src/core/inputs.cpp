@@ -693,6 +693,50 @@ void VecNormalWishartInput::validate() const
     validate_wishart_block(u_sigma_prior, initial.u_sigma_inv, k);
 }
 
+void VecKlgs2010Input::validate() const
+{
+    const arma::uword k = static_cast<arma::uword>(spec.k);
+    const arma::uword tt = checked_periods(spec, train);
+
+    require_identified_structural(spec, true, "a Wishart prior on the error precision");
+
+    // Both schemes act on the columns of the SUR design matrix -- SSVS by
+    // moving a column's prior between spike and slab, BVS by masking the column
+    // itself -- and this sampler exists precisely because it never builds one.
+    // Refused rather than silently ignored: a file that asks for selection and
+    // gets none back is output that looks like output.
+    if (spec.uses_varsel())
+    {
+        throw std::invalid_argument(
+            "variable selection is not implemented for the non-SUR Koop, Leon-Gonzalez and "
+            "Strachan (2010) sampler, which draws the coefficients without forming the design "
+            "matrix a selection scheme would act on; VecNormalWishart is the same model in SUR "
+            "form and carries both schemes");
+    }
+
+    if (use_a())
+    {
+        // One column per regressor, not k -- that is the whole difference from
+        // the other VECs, so it is worth a check of its own rather than
+        // require_stacked_regressors(). A model whose only regressor is the
+        // error correction term has no `x` at all, and an empty one is right.
+        const arma::uword n_x = static_cast<arma::uword>(spec.n_x_vec());
+        if (n_x > 0)
+        {
+            require_shape(train.x, tt, n_x, "compact regressors x");
+        }
+
+        validate_normal_block(a_prior, initial.a, static_cast<arma::uword>(n_a()), "a");
+    }
+
+    if (use_beta())
+    {
+        validate_constant_coint_block(spec, train, beta_prior, initial.beta, tt, use_a());
+    }
+
+    validate_wishart_block(u_sigma_prior, initial.u_sigma_inv, k);
+}
+
 void VecNormalGammaInput::validate() const
 {
     const arma::uword k = static_cast<arma::uword>(spec.k);

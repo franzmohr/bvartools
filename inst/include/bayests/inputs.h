@@ -307,6 +307,61 @@ struct VecNormalWishartInput
     void validate() const;
 };
 
+/// Where the VecKlgs2010 chain starts. No inclusion indicators: the sampler
+/// implements no variable selection.
+struct VecKlgs2010Initial
+{
+    arma::vec a;
+    arma::vec beta;
+    arma::mat u_sigma_inv;
+};
+
+/// The complete argument of the VecKlgs2010 sampler -- VecNormalWishartInput
+/// against the compact regressors.
+///
+/// `train.x` is read and `train.z` is not: this is the non-SUR reading of the
+/// same model, so the regressors arrive one column per regressor rather than
+/// kroneckered up with I_k. `forecast.z` is unaffected and stays in the level
+/// VAR layout every VEC forecast expects, since the forecast is the level VAR's
+/// either way.
+struct VecKlgs2010Input
+{
+    VarSpec spec;
+    TrainData train;
+    ForecastData forecast; ///< `z` empty when no forecast was requested.
+
+    NormalPrior a_prior;                ///< Unused when there are no regressors.
+    ConstantCointSpacePrior beta_prior; ///< Unused when the rank is zero.
+    WishartPrior u_sigma_prior;
+
+    VecKlgs2010Initial initial;
+
+    /// Coefficients in `a`, counted from the model dimensions rather than from
+    /// the data.
+    ///
+    /// The other models read this off `z.n_cols`, which cannot be done here:
+    /// the loadings have no column in `x` at all -- their regressor is
+    /// beta' w_{t-1}, a function of the current draw rather than data -- so `x`
+    /// is short by exactly the k*rank of them. Contemporaneous coefficients are
+    /// left out because validate() refuses a structural model outright; a
+    /// Wishart prior does not identify one.
+    int n_a() const { return spec.n_alpha() + spec.n_non_structural_vec(); }
+
+    /// Columns of the design matrix the sampler builds: the `rank` error
+    /// correction columns in front of the compact regressors.
+    int n_design() const { return spec.rank + spec.n_x_vec(); }
+
+    /// Whether the model has coefficients to draw at all.
+    bool use_a() const { return n_a() > 0; }
+    bool use_beta() const { return spec.uses_coint(); }
+
+    /// Throws std::invalid_argument describing the first inconsistency it
+    /// finds. Called by the sampler before the first draw, so a host that
+    /// forgets to call it still gets the message rather than a crash a
+    /// thousand iterations in.
+    void validate() const;
+};
+
 /// Where the VecNormalGamma chain starts.
 struct VecNormalGammaInitial
 {

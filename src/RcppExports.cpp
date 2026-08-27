@@ -212,6 +212,39 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// VecKlgs2010Coefficients
+Rcpp::List VecKlgs2010Coefficients(Rcpp::List object);
+RcppExport SEXP _bvartools_VecKlgs2010Coefficients(SEXP objectSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
+    rcpp_result_gen = Rcpp::wrap(VecKlgs2010Coefficients(object));
+    return rcpp_result_gen;
+END_RCPP
+}
+// VecKlgs2010Forecasts
+Rcpp::List VecKlgs2010Forecasts(Rcpp::List object);
+RcppExport SEXP _bvartools_VecKlgs2010Forecasts(SEXP objectSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
+    rcpp_result_gen = Rcpp::wrap(VecKlgs2010Forecasts(object));
+    return rcpp_result_gen;
+END_RCPP
+}
+// VecKlgs2010LogLik
+Rcpp::List VecKlgs2010LogLik(Rcpp::List object);
+RcppExport SEXP _bvartools_VecKlgs2010LogLik(SEXP objectSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
+    rcpp_result_gen = Rcpp::wrap(VecKlgs2010LogLik(object));
+    return rcpp_result_gen;
+END_RCPP
+}
 // VecNormalGammaCoefficients
 Rcpp::List VecNormalGammaCoefficients(Rcpp::List object);
 RcppExport SEXP _bvartools_VecNormalGammaCoefficients(SEXP objectSEXP) {
@@ -983,6 +1016,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"_bvartools_VarTvpWishartCoefficients", (DL_FUNC) &_bvartools_VarTvpWishartCoefficients, 1},
     {"_bvartools_VarTvpWishartForecasts", (DL_FUNC) &_bvartools_VarTvpWishartForecasts, 1},
     {"_bvartools_VarTvpWishartLogLik", (DL_FUNC) &_bvartools_VarTvpWishartLogLik, 1},
+    {"_bvartools_VecKlgs2010Coefficients", (DL_FUNC) &_bvartools_VecKlgs2010Coefficients, 1},
+    {"_bvartools_VecKlgs2010Forecasts", (DL_FUNC) &_bvartools_VecKlgs2010Forecasts, 1},
+    {"_bvartools_VecKlgs2010LogLik", (DL_FUNC) &_bvartools_VecKlgs2010LogLik, 1},
     {"_bvartools_VecNormalGammaCoefficients", (DL_FUNC) &_bvartools_VecNormalGammaCoefficients, 1},
     {"_bvartools_VecNormalGammaForecasts", (DL_FUNC) &_bvartools_VecNormalGammaForecasts, 1},
     {"_bvartools_VecNormalGammaLogLik", (DL_FUNC) &_bvartools_VecNormalGammaLogLik, 1},

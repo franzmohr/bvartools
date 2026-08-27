@@ -492,10 +492,7 @@ add_priors.bvecmodel <- function(object,
       if (object[["model"]][["tvp"]]) {
 
         # For a TVP model this is the prior precision of the state before the
-        # sample rather than of a constant coefficient. Base matrices throughout,
-        # not Matrix::Diagonal: the sampler reads these as dense matrices and an
-        # S4 sparse one does not convert, which fails with "Not a matrix." at the
-        # first draw.
+        # sample rather than of a constant coefficient.
         v_i <- diag(coef[["v_i"]], tot_par)
 
         # The loadings carry the compensating scale of the cointegration space.

@@ -42,6 +42,17 @@ struct VarSpec
     int rank = 0;
     int k_beta = 0;
 
+    /// Unobserved factors a dynamic factor model carries, the N of
+    ///
+    ///     x_t = Lambda f_t + u_t,   f_t = sum_j A_j f_{t-j} + v_t.
+    ///
+    /// Zero for every model that is not a DFM, exactly as `rank` is zero for
+    /// every model that is not a VEC. A DFM reads the rest of this struct its
+    /// own way and only two other fields carry a meaning for one: `k` is the
+    /// number of *observed* series, the M above, and `p` is the lag order of the
+    /// factor transition. `m`, `s`, `n`, `rank` and `n_restricted` are all zero.
+    int n_factors = 0;
+
     /// Deterministic terms restricted to the cointegration space. Zero for a
     /// VAR. The unrestricted ones are counted by `n`, so the two never overlap
     /// and a VEC's deterministic terms are `n + n_restricted`.
@@ -148,6 +159,29 @@ struct VarSpec
     {
         return n_alpha() + n_non_structural_vec() + n_structural();
     }
+
+    /// Whether the model carries unobserved factors to draw.
+    bool uses_factors() const { return n_factors > 0; }
+
+    /// Free elements of a DFM's M x N loading matrix.
+    ///
+    /// Lambda is not free throughout: only the product Lambda f_t is identified,
+    /// so its leading N x N block is fixed unit lower triangular -- ones on the
+    /// diagonal, zeros above -- which pins both the rotation and the scale of the
+    /// factors. That leaves min(i, N) free elements in row i, and summing them
+    /// over the M rows gives N(2M - N - 1)/2.
+    ///
+    /// Zero unless the model has factors, and zero as well if `n_factors`
+    /// exceeds `k`, which is not a model -- validate() rejects it, and this
+    /// declines to return a negative count in the meantime.
+    int n_lambda() const
+    {
+        return (uses_factors() && n_factors <= k) ? n_factors * (2 * k - n_factors - 1) / 2 : 0;
+    }
+
+    /// Coefficients of a DFM's factor transition, vec([A_1 .. A_p]). Zero when
+    /// the factors carry no dynamics of their own.
+    int n_factor_a() const { return n_factors * n_factors * p; }
 
     /// Throws std::invalid_argument if the counts cannot describe a model.
     /// Cheap, and the message is far better than the failure it prevents --

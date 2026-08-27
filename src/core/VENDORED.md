@@ -65,8 +65,33 @@ Keep this list short; every entry is something a refresh has to reapply.
 That is the whole list. `core/models/var_tvp_wishart.cpp` used to be a second
 entry -- it was not copied, because upstream neither listed it in
 `src/core/CMakeLists.txt` nor defined the `VarTvpWishartInput::validate()` its
-sampler calls. Both are fixed upstream, the file is vendored like any other, and
-the script's `skip` is empty again.
+sampler calls. Both are fixed upstream and the file is vendored like any other.
+
+## Not copied
+
+`skip` in the refresh script holds the upstream sources this package does not
+take. Each one needs the reason written here.
+
+**The dynamic factor model.** `bayests/dfm_normal_gamma.h`,
+`core/models/dfm_normal_gamma.cpp` and `core/models/dfm_support.h` are dfmtools'
+model, not this package's. Nothing here includes any of the three -- the R side
+of the DFM is gone and there was never a `src/DfmNormalGamma.cpp` binding -- so
+they compiled into the shared object with nothing able to reach them. 636 lines
+of the 12,592 vendored.
+
+Dropping them is safe to link precisely because nothing includes them: the only
+`Dfm` symbol any other translation unit defines is
+`DfmNormalGammaInput::validate()`, in `core/inputs.cpp`, and that function
+throws on bad input and calls nothing from the three files.
+
+This does **not** take the DFM out of the vendored core, and cannot.
+`DfmNormalGammaInitial` and `DfmNormalGammaInput` are in `bayests/inputs.h`,
+`DfmNormalGammaDraws` in `bayests/results.h`, `n_factors` and `n_lambda()` in
+`bayests/spec.h`, and the validator above in `core/inputs.cpp`. Those four are
+shared by every model and are copied whole, so the DFM's type surface and its
+input validation stay compiled in. What goes is the sampler that would act on
+them. `src/bayests_r_io.h` reads `n_factors` for the same reason: the field is
+there whether or not anything sets it.
 
 ## The simulation smoother
 
@@ -236,8 +261,11 @@ All six VAR algorithms are converted: `VarNormalWishart`, `VarNormalGamma`,
 `VarNormalStochvol`, `VarTvpGamma`, `VarTvpWishart` and `VarTvpStochvol`.
 Nothing in `src/` samples any more; the numerics all live in `src/core/`.
 
-`VecNormalWishart` is the exception, and the one thing here that is vendored
-without being reachable. Its sampler, `core/algorithms/vec_to_var.*` and
+`VecNormalWishart` is the exception, and now the only thing here that is
+vendored without being reachable -- the DFM sampler was the other one until it
+moved to `skip`; see *Not copied*. The difference is that this one is waiting on
+a binding rather than belonging to another package. Its sampler,
+`core/algorithms/vec_to_var.*` and
 `bayests/vec_normal_wishart.h` are all copied and compiled into the shared
 object, but there is no `src/VecNormalWishart.cpp` binding and no R entry point,
 so the VEC still runs through this package's own `src/bvecalg.cpp`. Until a

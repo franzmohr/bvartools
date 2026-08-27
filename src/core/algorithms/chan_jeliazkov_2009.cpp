@@ -109,7 +109,12 @@ arma::mat precision_of(const arma::mat &sigma, const char *what)
  * indexed `t - 1`. The last column has no observation of its own.
  *
  * @param y K x T matrix of observations, one period per column.
- * @param z KT x M matrix of regressors, the T blocks \f$Z_t\f$ stacked.
+ * @param z the regressors. Either one K x M matrix \f$Z\f$ that measures every
+ *   period -- which is what a dynamic factor model has, its loading matrix -- or
+ *   a KT x M stack of the T blocks \f$Z_t\f$. In the constant case
+ *   \f$Z'\Sigma_u^{-1}Z\f$ is the same block in every period and is formed once
+ *   rather than T times, which is the difference between O(T K M^2) and O(K M^2)
+ *   on the assembly; with many observed series that is the dominant cost.
  * @param sigma_u the error covariance. Either one K x K matrix for every period,
  *   or a KT x K stack of one per period.
  * @param sigma_v the state innovation covariance. Either one M x M matrix for
@@ -162,9 +167,10 @@ arma::mat chan_jeliazkov_2009(const arma::mat &y, const arma::mat &z,
   // Checks
   require(k > 0 && tt > 0, "'y' must have at least one row and one column, got " + dims(y));
   require(m > 0, "'z' must have at least one column");
-  require(z.n_rows == k * tt,
-          "'z' must have as many rows as 'y' has elements (" + std::to_string(k * tt) +
-              "), got " + std::to_string(z.n_rows));
+  require(z.n_rows == k || z.n_rows == k * tt,
+          "'z' must have " + std::to_string(k) + " rows to measure every period, or " +
+              std::to_string(k * tt) + " to give one block per period, got " +
+              std::to_string(z.n_rows));
   // The order of the transition is read off the width of B: p coefficient
   // matrices side by side. One of them is the first order case.
   require(B.n_cols > 0 && B.n_cols % m == 0,
@@ -185,11 +191,12 @@ arma::mat chan_jeliazkov_2009(const arma::mat &y, const arma::mat &z,
   require(all_finite(z), "'z' contains NaN or infinite values");
   require(all_finite(a_init), "'a_init' contains NaN or infinite values");
 
-  // Each of the three may arrive as one matrix that holds for every period, or
+  // Each of the four may arrive as one matrix that holds for every period, or
   // as a stack of one per period. A stride of zero is what lets the body be
   // written once, and it is also what lets a constant argument be inverted once
   // rather than T times -- the same arrangement `kalman_durbin_koopman_2002`
   // uses, for the same reason.
+  const arma::uword z_stride = (z.n_rows == k) ? 0 : k;
   const arma::uword u_stride = (sigma_u.n_rows == k) ? 0 : k;
   const arma::uword v_stride = (sigma_v.n_rows == m) ? 0 : m;
   const arma::uword b_stride = (B.n_rows == m) ? 0 : m;
@@ -247,13 +254,30 @@ arma::mat chan_jeliazkov_2009(const arma::mat &y, const arma::mat &z,
 
   // The measurements. Period t loads on state column t alone, so this reaches
   // the main diagonal only, whatever p is.
+  //
+  // When neither the regressors nor the error covariance move with time, both
+  // Z'U^-1 and Z'U^-1 Z are the same in every period, so they are formed once
+  // outside the loop and the body is two additions. That is the case a dynamic
+  // factor model is in -- Z is its loading matrix -- and there K is large by
+  // design, which makes the T copies of a K x M x M product the dominant cost of
+  // the assembly rather than a detail.
+  const bool measurement_is_constant = z_stride == 0 && u_stride == 0;
+  arma::mat zu, zuz;
+  if (measurement_is_constant) {
+    zu = z.t() * u_prec;
+    zuz = zu * z;
+  }
+
   for (arma::uword t = 0; t < tt; t++) {
-    if (u_stride != 0) {
-      u_prec = precision_of(sigma_u.rows(t * u_stride, t * u_stride + k - 1), "'sigma_u'");
+    if (!measurement_is_constant) {
+      if (u_stride != 0) {
+        u_prec = precision_of(sigma_u.rows(t * u_stride, t * u_stride + k - 1), "'sigma_u'");
+      }
+      const arma::mat Z_t = (z_stride == 0) ? z : z.rows(t * k, (t + 1) * k - 1);
+      zu = Z_t.t() * u_prec;
+      zuz = zu * Z_t;
     }
-    const arma::mat Z_t = z.rows(t * k, (t + 1) * k - 1);
-    const arma::mat zu = Z_t.t() * u_prec;
-    block(t, 0) += zu * Z_t;
+    block(t, 0) += zuz;
     rhs.col(t) += zu * y.col(t);
   }
 

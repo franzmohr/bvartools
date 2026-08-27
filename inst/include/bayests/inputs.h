@@ -266,6 +266,81 @@ struct VarTvpStochvolInput
     void validate() const;
 };
 
+/// Where the DfmNormalGamma chain starts.
+///
+/// The factor path is not among these: it is the first thing every draw
+/// produces, from the loadings and the two precisions, so there is nothing for a
+/// starting value to do.
+struct DfmNormalGammaInitial
+{
+    /// The `n_lambda` free loadings, in the order the sampler draws them --
+    /// row by row, and within a row left to right. See DfmNormalGammaInput.
+    arma::vec lambda;
+
+    /// vec([A_1 .. A_p]). Ignored when the factors have no dynamics.
+    arma::vec a;
+
+    /// k; the diagonal of the idiosyncratic precision. A vector rather than a
+    /// matrix because U is diagonal by assumption and nothing here would read
+    /// an off-diagonal element.
+    arma::vec u_sigma_inv;
+
+    /// n_factors; the diagonal of the factor innovation precision.
+    arma::vec v_sigma_inv;
+};
+
+/// Dynamic factor model with a normal prior on the loadings and on the factor
+/// transition, and independent gamma priors on both error precisions.
+///
+///     x_t = Lambda f_t + u_t,                  u_t ~ N(0, U),  U diagonal,
+///     f_t = sum_{j=1..p} A_j f_{t-j} + v_t,    v_t ~ N(0, V),  V diagonal.
+///
+/// `train.y` holds the observed series, tt x k, and is the only data the model
+/// takes -- a DFM has no regressors, so `z`, `x` and `w` are all unused. There is
+/// no ForecastData either: the forecast is a simulation of the transition
+/// forward from the last drawn factors, which needs no out-of-sample matrix.
+/// `spec.h` is the horizon.
+///
+/// Two orderings have to be agreed with the host and are the only ones that are
+/// not implied by a dimension:
+///
+///   - the free loadings, everywhere they appear as a vector -- `initial.lambda`
+///     and both halves of `lambda_prior` -- run row by row: row 1's single free
+///     element, then row 2's two, and so on, each row left to right. That is the
+///     order the equation-by-equation draw consumes them in, which is what makes
+///     a row's prior block contiguous. Note that the *posterior* is stored
+///     differently, as vec of the whole M x N matrix; see DfmNormalGammaDraws.
+///   - `a` is vec([A_1 .. A_p]) with the blocks side by side, so the first
+///     n_factors^2 elements are A_1 read column-wise.
+///
+/// Values of the factors before the sample are zero rather than drawn, which is
+/// what makes the first p periods' transitions well defined and is the
+/// convention bvartools' dfmpost() uses.
+struct DfmNormalGammaInput
+{
+    VarSpec spec;
+    TrainData train;
+
+    NormalPrior lambda_prior;  ///< Over the free loadings, in the row-major order above.
+    NormalPrior a_prior;       ///< Unused when the factors have no dynamics.
+
+    GammaPrior u_sigma_prior;  ///< k independent priors on the idiosyncratic precisions.
+    GammaPrior v_sigma_prior;  ///< n_factors independent priors on the factor innovations.
+
+    DfmNormalGammaInitial initial;
+
+    /// Whether the factors carry dynamics to draw. A DFM of transition order
+    /// zero is a static factor model with serially independent factors, which
+    /// this sampler estimates -- it is not an error.
+    bool use_a() const { return spec.n_factor_a() > 0; }
+
+    /// Throws std::invalid_argument describing the first inconsistency it
+    /// finds. Called by the sampler before the first draw, so a host that
+    /// forgets to call it still gets the message rather than a crash a
+    /// thousand iterations in.
+    void validate() const;
+};
+
 /// Where the VecNormalWishart chain starts.
 struct VecNormalWishartInitial
 {

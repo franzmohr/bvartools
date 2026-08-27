@@ -125,6 +125,10 @@ inline bayests::VarSpec read_spec(const Rcpp::List &model, const char *covar_err
   spec.n_restricted = optional_int(model, "n_restricted", 0);
   spec.rank = optional_int(model, "rank", 0);
   spec.k_beta = optional_int(model, "k_beta", 0);
+  // Unobserved factors. Zero for every model this package has -- a dynamic
+  // factor model is dfmtools' -- and read anyway, because the vendored core is
+  // a whole mirror of upstream and its VarSpec carries the field.
+  spec.n_factors = optional_int(model, "n_factors", 0);
   // Absent until add_forecast_input_data() has been called.
   spec.h = optional_int(model, "h", 0);
   spec.varsel = bayests::var_selection_from_string(optional_string(model, "varsel", "none"));

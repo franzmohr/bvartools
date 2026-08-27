@@ -333,6 +333,47 @@ struct VecTvpStochvolDraws
     bool has_psi() const { return psi.n_elem > 0; }
 };
 
+/// Posterior draws of a dynamic factor model with independent gamma priors on
+/// both error precisions.
+///
+/// Draws run along the columns, as everywhere else here. What is unusual about
+/// this posterior is that the factors are part of it: they are unobserved
+/// states, not parameters, so there is one whole path per draw and everything
+/// downstream -- the pointwise log likelihood, the forecast -- reads it back
+/// rather than re-filtering.
+struct DfmNormalGammaDraws
+{
+    /// (k * n_factors) x iterations; each column is vec of the whole M x N
+    /// loading matrix, the fixed ones and zeros of the identifying block
+    /// included.
+    ///
+    /// Deliberately not the free elements alone, which is how the prior and the
+    /// starting value are given. A caller wants Lambda, and reshaping k x
+    /// n_factors gets it without having to know the identification rule; the
+    /// free-element ordering is an implementation detail of the draw and stops
+    /// at the edge of this struct.
+    arma::mat lambda;
+
+    /// (n_factors * tt) x iterations; each column is vec of the N x tt factor
+    /// path, periods along the columns of that matrix.
+    arma::mat factors;
+
+    /// n_factor_a x iterations, vec([A_1 .. A_p]). Empty when the factors have
+    /// no dynamics.
+    arma::mat a;
+
+    /// k x iterations. U is diagonal, so only the diagonal is drawn and only it
+    /// is kept -- same convention as VarNormalGammaDraws::u_omega_inv.
+    arma::mat u_sigma_inv;
+
+    /// n_factors x iterations; the diagonal of the factor innovation precision.
+    arma::mat v_sigma_inv;
+
+    arma::uword iterations() const { return u_sigma_inv.n_cols; }
+    bool has_a() const { return a.n_elem > 0; }
+    bool has_factors() const { return factors.n_elem > 0; }
+};
+
 /// Simulated forecast paths, (h * k) x draws: one column per posterior draw,
 /// horizons stacked within a column in the same variable order as the sample.
 struct ForecastDraws

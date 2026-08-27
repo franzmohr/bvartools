@@ -807,21 +807,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// post_lambda
-arma::mat post_lambda(arma::mat& x, arma::mat& ff, arma::mat& prior_vinv, arma::sp_mat& uinv, arma::mat lambda);
-RcppExport SEXP _bvartools_post_lambda(SEXP xSEXP, SEXP ffSEXP, SEXP prior_vinvSEXP, SEXP uinvSEXP, SEXP lambdaSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat& >::type x(xSEXP);
-    Rcpp::traits::input_parameter< arma::mat& >::type ff(ffSEXP);
-    Rcpp::traits::input_parameter< arma::mat& >::type prior_vinv(prior_vinvSEXP);
-    Rcpp::traits::input_parameter< arma::sp_mat& >::type uinv(uinvSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type lambda(lambdaSEXP);
-    rcpp_result_gen = Rcpp::wrap(post_lambda(x, ff, prior_vinv, uinv, lambda));
-    return rcpp_result_gen;
-END_RCPP
-}
 // post_normal
 arma::vec post_normal(arma::mat y, arma::mat x, arma::mat sigma_i, arma::vec a_prior, arma::mat v_i_prior);
 RcppExport SEXP _bvartools_post_normal(SEXP ySEXP, SEXP xSEXP, SEXP sigma_iSEXP, SEXP a_priorSEXP, SEXP v_i_priorSEXP) {
@@ -1053,7 +1038,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_bvartools_post_coint_kls_sur", (DL_FUNC) &_bvartools_post_coint_kls_sur, 11},
     {"_bvartools_post_gamma_measurement_variance", (DL_FUNC) &_bvartools_post_gamma_measurement_variance, 4},
     {"_bvartools_post_gamma_state_variance", (DL_FUNC) &_bvartools_post_gamma_state_variance, 5},
-    {"_bvartools_post_lambda", (DL_FUNC) &_bvartools_post_lambda, 5},
     {"_bvartools_post_normal", (DL_FUNC) &_bvartools_post_normal, 5},
     {"_bvartools_post_normal_sur", (DL_FUNC) &_bvartools_post_normal_sur, 6},
     {"_bvartools_stochvol_ksc_1998_export", (DL_FUNC) &_bvartools_stochvol_ksc_1998_export, 5},

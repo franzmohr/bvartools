@@ -693,6 +693,81 @@ void VecNormalWishartInput::validate() const
     validate_wishart_block(u_sigma_prior, initial.u_sigma_inv, k);
 }
 
+void DfmNormalGammaInput::validate() const
+{
+    const arma::uword k = static_cast<arma::uword>(spec.k);
+    const arma::uword tt = checked_periods(spec, train);
+    const arma::uword n = static_cast<arma::uword>(spec.n_factors);
+
+    if (spec.n_factors <= 0)
+    {
+        throw std::invalid_argument("a dynamic factor model must have at least one factor "
+                                    "(n_factors), got " + std::to_string(spec.n_factors));
+    }
+
+    // More factors than series and the loading matrix has no identifying block
+    // to build: the rotation that Lambda's unit lower triangle pins down needs
+    // one row per factor to pin it with.
+    if (n > k)
+    {
+        throw std::invalid_argument(
+            "a dynamic factor model cannot have more factors (" + std::to_string(spec.n_factors) +
+            ") than observed series (" + std::to_string(spec.k) + ")");
+    }
+
+    // The transition regresses on p lags of the factors, and the factors are the
+    // sample: there has to be a sample left after the longest of them.
+    if (static_cast<arma::uword>(spec.p) >= tt)
+    {
+        throw std::invalid_argument(
+            "a factor transition of order " + std::to_string(spec.p) +
+            " needs more than that many periods, and the sample has " + std::to_string(tt));
+    }
+
+    if (spec.uses_varsel())
+    {
+        throw std::invalid_argument("variable selection is not implemented for a dynamic factor "
+                                    "model; expected varsel none");
+    }
+
+    if (spec.structural)
+    {
+        throw std::invalid_argument("a dynamic factor model has no contemporaneous coefficients "
+                                    "to identify; expected structural false");
+    }
+
+    // The free loadings, in the row-major order the sampler draws them.
+    const arma::uword n_lambda = static_cast<arma::uword>(spec.n_lambda());
+    validate_normal_block(lambda_prior, initial.lambda, n_lambda, "lambda");
+
+    if (use_a())
+    {
+        validate_normal_block(a_prior, initial.a, static_cast<arma::uword>(spec.n_factor_a()), "a");
+    }
+
+    // Both precisions are diagonal, so both arrive as the diagonal rather than
+    // as a matrix -- and a starting value that is not positive is not one, since
+    // the first factor draw inverts it.
+    require_length(u_sigma_prior.shape, k, "gamma prior shape of the idiosyncratic precision");
+    require_length(u_sigma_prior.rate, k, "gamma prior rate of the idiosyncratic precision");
+    require_length(initial.u_sigma_inv, k, "initial idiosyncratic precision");
+
+    require_length(v_sigma_prior.shape, n, "gamma prior shape of the factor innovation precision");
+    require_length(v_sigma_prior.rate, n, "gamma prior rate of the factor innovation precision");
+    require_length(initial.v_sigma_inv, n, "initial factor innovation precision");
+
+    if (initial.u_sigma_inv.min() <= 0.0)
+    {
+        throw std::invalid_argument("every element of the initial idiosyncratic precision must be "
+                                    "positive");
+    }
+    if (initial.v_sigma_inv.min() <= 0.0)
+    {
+        throw std::invalid_argument("every element of the initial factor innovation precision must "
+                                    "be positive");
+    }
+}
+
 void VecKlgs2010Input::validate() const
 {
     const arma::uword k = static_cast<arma::uword>(spec.k);

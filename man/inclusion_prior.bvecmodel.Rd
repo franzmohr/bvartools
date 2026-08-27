@@ -13,8 +13,8 @@
 )
 }
 \arguments{
-\item{object}{an object of class \code{"bvecmodel"}, usually, a result of a
-call to \code{\link{create_vec_model}}.}
+\item{object}{an object of class 'bvecmodel', usually, a result of a
+call to \code{\link{create_bvecmodel}}.}
 
 \item{prob}{a numeric specifying the prior inclusion probability of all model parameters.}
 
@@ -48,16 +48,6 @@ are calculated as
 }
 for lag \eqn{r} with \eqn{\kappa_1}, \eqn{\kappa_2}, \eqn{\kappa_3}, \eqn{\kappa_4} as the first, second,
 third and forth element in \code{kappa}, respectively.
-
-For vector error correction models the function generates prior inclusion probabilities for differenced
-variables and unrestricted deterministc terms as described above. For variables in the error
-correction term prior inclusion probabilites are calculated as
-\tabular{cl}{
-\eqn{\kappa_1} \tab fow own levels of endogenous variables, \cr
-\eqn{\kappa_2} \tab for levels of other endogenous variables, \cr
-\eqn{\kappa_3} \tab for levels of exogenous variables, \cr
-\eqn{\kappa_4} \tab for deterministic variables.
-}
 }
 \examples{
 
@@ -65,9 +55,9 @@ correction term prior inclusion probabilites are calculated as
 data("e6")
 
 # Generate model input
-object <- create_vec_model(e6, r = 1)
+object <- create_bvecmodel(e6, r = 1)
 
 # Obtain inclusion prior
-pi_prior <- inclusion_prior(object)
+priors <- inclusion_prior(object)
 
 }

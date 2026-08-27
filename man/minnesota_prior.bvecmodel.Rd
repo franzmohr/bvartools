@@ -6,30 +6,29 @@
 \usage{
 \method{minnesota_prior}{bvecmodel}(
   object,
-  kappa0 = 2,
-  kappa1 = 0.5,
-  kappa2 = NULL,
-  kappa3 = 5,
+  kappa1 = 2,
+  kappa2 = 1,
+  kappa3 = NULL,
+  kappa4 = 10,
   max_var = NULL,
   sigma = "AR"
 )
 }
 \arguments{
-\item{object}{an object of class \code{"bvarmodel"}, usually, a result of a call to \code{\link{gen_var}}
-or \code{\link{gen_vec}}.}
+\item{object}{an object of class 'bvecmodel', usually, a result of a call to \code{\link{create_bvecmodel}}.}
 
-\item{kappa0}{a numeric specifying the prior variance of coefficients that correspond to
+\item{kappa1}{a numeric specifying the prior variance of coefficients that correspond to
 own lags of endogenous variables.}
 
-\item{kappa1}{a numeric specifying the size of the prior variance of endogenous
-variables, which do not correspond to own lags, relative to argument \code{kappa0}.}
+\item{kappa2}{a numeric specifying the size of the prior variance of endogenous
+variables, which do not correspond to own lags.}
 
-\item{kappa2}{a numeric specifying the size of the prior variance of non-deterministic exogenous
-variables relative to argument \code{kappa0}. Default is \code{NULL}, which indicates that the formula
+\item{kappa3}{a numeric specifying the size of the prior variance of non-deterministic exogenous
+variables. Default is \code{NULL}, which indicates that the formula
 for the calculation of the prior variance of deterministic terms is used for all exogenous variables.}
 
-\item{kappa3}{a numeric specifying the size of the prior variance of deterministic
-terms relative to argument \code{kappa0}.}
+\item{kappa4}{a numeric specifying the size of the prior variance of deterministic
+terms.}
 
 \item{max_var}{a positive numeric specifying the maximum prior variance that is allowed for
 coefficients of non-deterministic variables. If \code{NULL} (default), the prior variances are not limited.}
@@ -44,19 +43,19 @@ A list containing a matrix of prior means and the precision matrix of the coffic
 inverse variance-covariance matrix of the error term, which was obtained by an LS estimation.
 }
 \description{
-Calculates the Minnesota prior for a VAR model.
+Calculates the Minnesota prior for a VEC model.
 }
 \details{
 The function calculates the Minnesota prior of a VAR model. For the endogenous variable
 \eqn{i} the prior variance of the \eqn{l}th lag of regressor \eqn{j} is obtained as
-\deqn{ \frac{\kappa_{0}}{l^2} \textrm{ for own lags of endogenous variables,}} 
-\deqn{ \frac{\kappa_{0} \kappa_{1}}{l^2} \frac{\sigma_{i}^2}{\sigma_{j}^2} \textrm{ for endogenous variables other than own lags,}}
-\deqn{ \frac{\kappa_{0} \kappa_{2}}{(l + 1)^2} \frac{\sigma_{i}^2}{\sigma_{j}^2} \textrm{ for exogenous variables,}}
-\deqn{ \kappa_{0} \kappa_{3} \sigma_{i}^2 \textrm{ for deterministic terms,}}
+\deqn{ \frac{\kappa_{1}}{l^2} \textrm{ for own lags of endogenous variables,}} 
+\deqn{ \frac{\kappa_{2}}{l^2} \frac{\sigma_{i}^2}{\sigma_{j}^2} \textrm{ for endogenous variables other than own lags,}}
+\deqn{ \frac{\kappa_{3}}{(l + 1)^2} \frac{\sigma_{i}^2}{\sigma_{j}^2} \textrm{ for exogenous variables,}}
+\deqn{ \kappa_{4} \sigma_{i}^2 \textrm{ for deterministic terms,}}
 where \eqn{\sigma_{i}} is the residual standard deviation of variable \eqn{i} of an unrestricted
 LS estimate. For exogenous variables \eqn{\sigma_{i}} is the sample standard deviation.
 
-For VEC models the function only provides priors for the non-cointegration part of the model. The
+The function only provides priors for the non-cointegration part of the model. The
 residual standard errors \eqn{\sigma_i} are based on an unrestricted LS regression of the
 endogenous variables on the error correction term and the non-cointegration regressors.
 }
@@ -66,7 +65,7 @@ endogenous variables on the error correction term and the non-cointegration regr
 data("e6")
 
 # Generate model input
-object <- create_vec_model(e6, r = 1)
+object <- create_bvecmodel(e6, r = 1)
 
 # Obtain Minnesota prior
 prior <- minnesota_prior(object)

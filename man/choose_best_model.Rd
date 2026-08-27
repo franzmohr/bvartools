@@ -7,7 +7,7 @@
 choose_best_model(object, ...)
 }
 \arguments{
-\item{object}{a list of estimated models.}
+\item{object}{an object with suitable input data passed forward to method.}
 
 \item{...}{arguments passed forward to method.}
 }

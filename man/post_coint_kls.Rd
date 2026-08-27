@@ -92,17 +92,22 @@ The final draws of \eqn{\alpha} and \eqn{\beta} are calculated using
 \eqn{\alpha = A (B^{\prime} B)^{\frac{1}{2}}}.
 }
 \examples{
-
+ 
 # Load data
 data("e6")
 
 # Generate model data
-temp <- gen_vec(e6, p = 1, r = 1)
-y <- t(temp$data$Y)
-ect <- t(temp$data$W)
+temp <- create_bvecmodel(e6, p = 2, r = 1)
+y <- t(temp$data$y)
+w <- t(temp$data$w)
+x <- t(temp$data$x)
 
 k <- nrow(y) # Endogenous variables
 tt <- ncol(y) # Number of observations
+
+# Priors
+gamma_mu_prior <- matrix(0, 6)
+gamma_v_i_prior <- diag(0, 6)
 
 # Initial value of Sigma
 sigma <- tcrossprod(y) / tt
@@ -112,8 +117,9 @@ sigma_i <- solve(sigma)
 beta <- matrix(c(1, -4), k)
 
 # Draw parameters
-coint <- post_coint_kls(y = y, beta = beta, w = ect, sigma_i = sigma_i,
-                        v_i = 0, p_tau_i = diag(1, k), g_i = sigma_i)
+coint <- post_coint_kls(y = y, beta = beta, w = ect, x = x, sigma_i = sigma_i,
+                        v_i = 0, p_tau_i = diag(1, k), g_i = sigma_i,
+                        gamma_mu_prior = gamma_mu_prior, gamma_v_i_prior = gamma_v_i_prior)
 
 }
 \references{

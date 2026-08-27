@@ -4,24 +4,26 @@
 \alias{selection_criteria}
 \alias{print.selcritlist}
 \alias{print.selcrit}
-\title{Model Selection Criteria
- 
-A generic function used to calculate selection criteria.}
+\title{Model Selection Criteria}
 \usage{
 selection_criteria(object, ...)
 
-\method{print}{selcritlist}(x, digits = max(3L, getOption("digits") - 3L), ...)
+\method{print}{selcritlist}(x, digits = max(3L, getOption("digits") - 3L), relative = 0, ...)
 
 \method{print}{selcrit}(x, digits = max(3L, getOption("digits") - 3L), ...)
 }
 \arguments{
-\item{object}{an object of class \code{"posteriorlist"}, \code{"bvarmodel"} or
-\code{"bvecmodel"}.}
+\item{object}{an object with suitable input data passed forward to method.}
 
 \item{...}{arguments passed forward to method.}
+
+\item{x}{an object used to select a method. Usually, the result of a call to
+\code{\link{selection_criteria}}.}
+
+\item{relative}{an integer specifying the model that is used as the reference
+of relative forecast performance. Default is `0`, which indicates that results
+are not displayed in relation to each other.}
 }
 \description{
-Model Selection Criteria
- 
-A generic function used to calculate selection criteria.
+Generic function used to calculate selection criteria.
 }

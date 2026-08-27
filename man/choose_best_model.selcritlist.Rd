@@ -27,3 +27,37 @@ Chooses the best model according the selection criteria in an object of class
 If argument \code{criterion} is "LL", the model with the maximum value is chosen,
 otherwise, the model with the minimum value.
 }
+\examples{
+# Load data
+data("e1")
+e1 <- diff(log(e1)) * 100
+
+# Create model
+model <- create_bvarmodel(e1, p = 1:3, deterministic = "const",
+                          iterations = 50, burnin = 10)
+# Number of iterations and burnin should be much higher.
+
+# Add priors
+model <- add_priors(model,
+                    coef = list(v_i = 1, v_i_det = 1 / 10),
+                    sigma = list(df = "k", scale = 1))
+
+# Add initial values
+model <- add_initial_values(model)
+
+# Obtain posterior draws 
+object <- draw_posterior(model)
+
+# Calculate selection criteria
+sel <- selection_criteria(object)
+
+# View results
+sel
+
+# Choose best model according to AIC
+choose_best_model(sel, criterion = "AIC")
+
+# Choose best model according to BIC
+choose_best_model(sel, criterion = "BIC")
+
+}

@@ -4,17 +4,17 @@
 \alias{plot.selcritlist}
 \title{Plotting Selection Criteria}
 \usage{
-\method{plot}{selcritlist}(x, criterion = "LL", ...)
+\method{plot}{selcritlist}(x, criterion = "BIC", ...)
 }
 \arguments{
-\item{x}{an object of class \code{"selcritlist"}, usually, a result of a call
+\item{x}{an object of class 'selcritlist', usually, a result of a call
 to \code{\link{selection_criteria}}.}
 
 \item{criterion}{the selection criterion that should be plotted. Available choices
-are \code{"LL"}, \code{"AIC"}, \code{"BIC"}, \code{"HQ"}.}
+are \code{"LL"}, \code{"AIC"}, \code{"BIC"} (default), \code{"HQ"}.}
 
-\item{...}{further graphical parameters passed on to \link[graphics]{boxplot}.}
+\item{...}{further graphical parameters.}
 }
 \description{
-A plot function for objects of class \code{"selcritlist"}.
+A plot function for objects of class 'selcritlist'.
 }

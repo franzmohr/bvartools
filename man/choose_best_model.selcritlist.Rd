@@ -46,10 +46,13 @@ model <- add_priors(model,
 model <- add_initial_values(model)
 
 # Obtain posterior draws 
-object <- draw_posterior(model)
+model <- add_posterior_coefficients(model)
+
+# Obtain posterior log-likelihoods
+model <- add_posterior_loglik(model)
 
 # Calculate selection criteria
-sel <- selection_criteria(object)
+sel <- selection_criteria(model)
 
 # View results
 sel

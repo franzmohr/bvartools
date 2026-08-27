@@ -884,10 +884,6 @@ post_gamma_state_variance <- function(a, a_init, shape_prior, rate_prior, invers
     .Call(`_bvartools_post_gamma_state_variance`, a, a_init, shape_prior, rate_prior, inverse)
 }
 
-.post_lambda <- function(x, ff, prior_vinv, uinv, lambda) {
-    .Call(`_bvartools_post_lambda`, x, ff, prior_vinv, uinv, lambda)
-}
-
 #' Posterior Draw from a Normal Distribution
 #' 
 #' Produces a draw of coefficients from a normal posterior density.

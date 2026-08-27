@@ -10,7 +10,7 @@ Depends:
     coda,
     Matrix
 Imports: grDevices, graphics, hdf5r, lifecycle, methods, parallel, Rcpp (>= 1.0.12), stats
-LinkingTo: Rcpp, RcppArmadillo, Matrix
+LinkingTo: Rcpp, RcppArmadillo
 SystemRequirements: GNU make
 Encoding: UTF-8
 URL: https://github.com/franzmohr/bvartools
@@ -68,8 +68,6 @@ Collate:
     'combine_models.R'
     'create_bvarmodel.R'
     'create_bvecmodel.R'
-    'create_first_difference_matrix.R'
-    'create_second_difference_matrix.R'
     'data.R'
     'fevd.R'
     'fevd.bvarmodel.R'
@@ -106,8 +104,6 @@ Collate:
     'plot.posteriorlist.R'
     'plot.selcritlist.R'
     'plot.summary.fcsterrorlist.R'
-    'post_normal_covar_const.R'
-    'post_normal_covar_tvp.R'
     'predict.bvarmodel.R'
     'predict.expandwindposteriorlist.R'
     'predict.posteriorlist.R'

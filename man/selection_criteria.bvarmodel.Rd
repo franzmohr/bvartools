@@ -27,7 +27,7 @@ data("e1")
 e1 <- diff(log(e1)) * 100
 
 # Create model
-model <- create_bvarmodel(e1, p = 2, deterministic = "const",
+model <- create_bvarmodel(e1, p = 1:2, deterministic = "const",
                           iterations = 10, burnin = 10)
 # Number of iterations and burnin should be much higher.
 

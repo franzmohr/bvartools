@@ -7,8 +7,7 @@ Description: Assists in the set-up of algorithms for Bayesian inference of vecto
 License: GPL (>= 2)
 Depends: 
     R (>= 3.5),
-    coda,
-    Matrix
+    coda
 Imports: grDevices, graphics, hdf5r, lifecycle, methods, parallel, Rcpp (>= 1.0.12), stats
 LinkingTo: Rcpp, RcppArmadillo
 SystemRequirements: GNU make

@@ -28,7 +28,7 @@ combine_models <- function(...) {
   classes <- unlist(lapply(input, class))
   classes <- classes[-which(classes == "list")]
   
-  supported_models <- c("bvarmodel", "bvecmodel", "dfmodel", "klgs2010", "modellist",
+  supported_models <- c("bvarmodel", "bvecmodel", "klgs2010", "modellist",
                         "expandwindmodellist")
   supported_total <- supported_models
   if (!all(classes %in% supported_total)) {
@@ -38,7 +38,7 @@ combine_models <- function(...) {
   result <- NULL
   
   for (i in 1:length(input)) {
-    if (any(c("bvarmodel", "bvecmodel", "dfmodel", "expandwindmodellist") %in% class(input[[i]]))) {
+    if (any(c("bvarmodel", "bvecmodel", "expandwindmodellist") %in% class(input[[i]]))) {
       result <- c(result, list(input[[i]]))
     }
     if (any(c("modellist") %in% class(input[[i]]))) {

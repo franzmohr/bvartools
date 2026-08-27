@@ -9,6 +9,7 @@
 #' @return An object of class 'modellist'.
 #' 
 #' @export
+#' @method thin modellist
 thin.modellist <- function(x, thin = 10, ...) {
   
   for (i in 1:length(x)) {

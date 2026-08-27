@@ -9,6 +9,7 @@
 #' @return An object of class 'expandingwindow'.
 #' 
 #' @export
+#' @method thin expandingwindow
 thin.expandingwindow <- function(x, thin = 10, ...) {
   
   for (i in 1:length(x)) {

@@ -1,9 +1,8 @@
 #' Model Selection Criteria
-#'  
-#' A generic function used to calculate selection criteria.
 #' 
-#' @param object an object of class \code{"posteriorlist"}, \code{"bvarmodel"} or
-#' \code{"bvecmodel"}.
+#' Generic function used to calculate selection criteria.
+#' 
+#' @param object an object with suitable input data passed forward to method.
 #' @param ... arguments passed forward to method.
 #' 
 #' @export

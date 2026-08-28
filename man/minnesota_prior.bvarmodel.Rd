@@ -28,7 +28,7 @@ variables, which do not correspond to own lags. See 'Details'.}
 \item{kappa3}{a numeric specifying the size of the prior variance of non-deterministic exogenous
 variables. Default is \code{NULL}, which indicates that the formula
 for the calculation of the prior variance of deterministic terms is used
-for all exogenous variables.  See 'Details'.}
+for all exogenous variables. See 'Details'.}
 
 \item{kappa4}{a numeric specifying the size of the prior variance of deterministic
 terms. See 'Details'.}
@@ -61,7 +61,7 @@ regressor \eqn{j} is obtained as
 \deqn{ \kappa_{1} \kappa_{4} \sigma_{i}^2 \textrm{ for deterministic terms,}}
 where \eqn{\sigma_{i}} is the residual standard deviation of variable \eqn{i} of an unrestricted
 LS estimate. For exogenous variables \eqn{\sigma_{i}} is the sample standard deviation.
-If the model does not contain exogenous variables, \code{kappa3} will be ignored.
+If the model does not contain exogenous variables, argument \code{kappa3} will be ignored.
 }
 \examples{
 

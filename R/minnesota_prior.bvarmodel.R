@@ -11,7 +11,7 @@
 #' @param kappa3 a numeric specifying the size of the prior variance of non-deterministic exogenous
 #' variables. Default is \code{NULL}, which indicates that the formula
 #' for the calculation of the prior variance of deterministic terms is used
-#' for all exogenous variables.  See 'Details'.
+#' for all exogenous variables. See 'Details'.
 #' @param kappa4 a numeric specifying the size of the prior variance of deterministic
 #' terms. See 'Details'.
 #' @param max_var a positive numeric specifying the maximum prior variance that is allowed for
@@ -32,7 +32,7 @@
 #' \deqn{ \kappa_{1} \kappa_{4} \sigma_{i}^2 \textrm{ for deterministic terms,}}
 #' where \eqn{\sigma_{i}} is the residual standard deviation of variable \eqn{i} of an unrestricted
 #' LS estimate. For exogenous variables \eqn{\sigma_{i}} is the sample standard deviation.
-#' If the model does not contain exogenous variables, \code{kappa3} will be ignored.
+#' If the model does not contain exogenous variables, argument \code{kappa3} will be ignored.
 #' 
 #' @return A list containing a matrix of prior means and the precision matrix of the coefficients and the
 #' inverse variance-covariance matrix of the error term, which was obtained by an LS estimation.
@@ -215,7 +215,13 @@ minnesota_prior.bvarmodel <- function(object, kappa1 = 2, kappa2 = 0.5, kappa3 =
                    "v_inv" = v_i)
     
     if (!is.null(object[["data"]][["train"]][["x"]])) {
-      result[["sigma_inv"]] = solve(ols_sigma) 
+      if (sigma == "AR") {
+        result[["sigma_inv"]] <- matrix(0, k, k)
+        diag(result[["sigma_inv"]]) = 1 / s_endo^2
+      }
+      if (sigma == "VAR") {
+        result[["sigma_inv"]] = solve(ols_sigma)  
+      }
     } 
   }
   

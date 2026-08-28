@@ -1,0 +1,170 @@
+---
+title: "Minnesota Prior"
+author: "Franz X. Mohr"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Minnesota Prior}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+  
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+collapse = TRUE,
+comment = "#>"
+)
+```
+
+## Introduction
+
+For the vector autoregressive (VAR) model
+
+$$ y_t = A_1 y_{t - 1} + ... + A_p y_{t - p}  + u_t$$
+
+the Minnesota prior reflects a belief that own lags of an endogenous variable in coefficient matrix $A$ are more likely to be important explanatory variables than other lags. Moreover, more recent lags are likely to be more important than those in the more distant past. In a Bayesian VAR model, this is reflected in the prior covariance matrix of the model's coefficients, where a small variance indicates a belief that the coefficient is not important. Mathematically, the Minnesota prior can be expressed by the following way: For the endogenous variable $i$ the prior variance of the $l$th lag of regressor $j$ is obtained as
+
+$$ \frac{\kappa_{1}}{l^2} \textrm{ for own lags of endogenous variables,}$$
+$$ \frac{\kappa_{1} \kappa_{2}}{l^2} \frac{\sigma_{i}^2}{\sigma_{j}^2} \textrm{ for endogenous variables other than own lags,}$$
+
+$$ \frac{\kappa_{1} \kappa_{3}}{(l+1)^2} \frac{\sigma_{i}^2}{\sigma_{j}^2} \textrm{ for unmodelled exogenous variables,} $$
+$$ \kappa_{1} \kappa_{4} \sigma_{i}^2 \textrm{ for deterministic terms,} $$
+where $\sigma_{i}$ is the residual standard deviation of variable $i$ of an unrestricted LS estimate. For exogenous variables $\sigma_{i}$ is the sample standard deviation. If the model does not contain exogenous variables, argument `kappa3` will be ignored.
+
+This vignette illustrates how to use the `bvartools` package to work with the Minnesota prior by reproducing the results of exercise 20.2 in Chan et al. (2020), which uses the quarterly time series for the US CPI inflation rate, unemployment rate, and Fed Funds rate from 1959Q2 to 2007Q4.
+
+```{r data, fig.align='center', message=FALSE, fig.height=5, fig.width=4.5}
+library(bvartools)
+
+# Load data
+data("us_macrodata")
+
+# Plot the series
+plot(us_macrodata)
+```
+
+## Workflow
+
+### Create a model
+
+The `create_bvarmodel` function produces an object, which contains information on the specification of the VAR model that should be estimated. The following code specifies a VAR(1) model with an intercept term. The number of iterations and burn-in draws is already specified at this stage.
+
+```{r}
+model <- create_bvarmodel(us_macrodata, p = 1, deterministic = "const",
+                          iterations = 5000, burnin = 1000)
+```
+
+### Adding model priors
+
+#### Direct approach
+
+Minnesota priors can be obtained with function `minnesota_prior`.
+
+```{r}
+minn <- minnesota_prior(
+  model,
+  kappa1 = 0.5,
+  kappa2 = 0.5,
+  kappa3 = NULL,
+  kappa4 = 200,
+  max_var = NULL,
+  coint_var = FALSE,
+  sigma = "AR"
+)
+```
+
+To check the output of the function, access element `mu`, i.e. the prior coefficient means of matrix $A$:
+
+```{r}
+matrix(minn[["mu"]], 3)
+```
+
+Also check the corresponding prior coefficient variances:
+
+```{r}
+matrix(1 / diag(minn[["v_inv"]]), 3)
+```
+
+
+#### Using `add_priors`
+
+Function `add_priors` produces priors for the specified model(s) in object `model` and augments the object accordingly.
+
+```{r}
+model <- add_priors(model,
+                    coef = list(minnesota = list(kappa1 = 0.5, kappa2 = 0.5, kappa3 = NULL, kappa4 = 200)),
+                    sigma = list(df = 1, scale = .0001))
+```
+
+### Adding initial values
+
+Function `add_initial_values` adds initial values of posterior coefficients. The default behaviour of the function is to obtain an LS estimate of the coefficients.
+
+```{r}
+model <- add_initial_values(model, method = "ols")
+```
+
+### Obtaining posterior draws
+
+
+```{r, message=FALSE, warning=FALSE}
+# Reset random number generator for reproducibility
+set.seed(1234567)
+
+iterations <- 10000 # Number of saved iterations of the Gibbs sampler
+burnin <- 5000 # Number of burn-in draws
+draws <- iterations + burnin # Total number of MCMC draws
+
+y <- t(model[["data"]][["train"]][["y"]])
+x <- t(model[["data"]][["train"]][["x"]])
+
+tt <- ncol(y) # Number of observations
+k <- nrow(y) # Number of endogenous variables
+m <- k * nrow(x) # Number of estimated coefficients
+
+# Coefficient priors
+a_mu_prior <- model[["priors"]][["a"]][["mu"]] # Vector of prior parameter means
+a_v_i_prior <- model[["priors"]][["a"]][["v_inv"]] # Inverse of the prior covariance matrix
+
+# Use the error variance estimates from minnesota_prior
+u_sigma_i <- minn[["sigma_inv"]]
+u_sigma <- solve(u_sigma_i)
+
+# Data containers for posterior draws
+draws_a <- matrix(NA, m, iterations)
+draws_sigma <- matrix(NA, k^2, iterations)
+
+# Start Gibbs sampler
+for (draw in 1:draws) {
+  # Draw conditional mean parameters
+  a <- post_normal(y, x, u_sigma_i, a_mu_prior, a_v_i_prior)
+  
+  # Store draws
+  if (draw > burnin) {
+    draws_a[, draw - burnin] <- a
+    draws_sigma[, draw - burnin] <- u_sigma
+  }
+}
+```
+
+Collect the results in a new `bvarmodel` object using `bvar`.
+
+```{r}
+result <- bvar(y = model[["data"]][["train"]][["y"]],
+               x = model[["data"]][["train"]][["x"]],
+               A = draws_a[1:9,],
+               C = draws_a[10:12, ],
+               Sigma = draws_sigma)
+```
+
+Look at the summary statistics, which are practically the same as in example 20.3 in Chan et al. (2020).
+
+```{r}
+summary(result)
+```
+
+
+
+## References
+
+Chan, J., Koop, G., Poirier, D. J., & Tobias, J. L. (2020). *Bayesian Econometric Methods* (2nd ed.). Cambridge: University Press.

@@ -42,7 +42,7 @@ plot(data)
 Functions `create_var_model` can be used to obtain a list of different model specifications. In the following example five models with an intercept and increasing lag orders are generated.
 
 ```{r}
-models <- create_var_model(data, p = 0:4,
+models <- create_bvarmodel(data, p = 0:4,
                            deterministic = "const",
                            iterations = 5000, burnin = 1000)
 ```
@@ -67,20 +67,19 @@ Function `add_initial_values` can be used to generate initial values of the Gibb
 models <- add_initial_values(models)
 ```
 
-## Estimation
+## Posterior simulation
 
-Posterior draws can be obtained using function `draw_posterior`. The function allows to specify the number of CPUs, which are available for parallel computing.
+Posterior draws can be obtained using function `add_posterior_coefficients`.
 
-```{r, message = FALSE, warning=FALSE, results='hide', eval = FALSE}
-models <- draw_posterior(models, mc.cores = 3)
-```
 ```{r, message = FALSE, warning=FALSE, results='hide', echo = FALSE}
-models <- draw_posterior(models)
+models <- add_posterior_coefficients(models)
 ```
-
-If multiple models are estimated, the function produces an object of class `posteriorlist`, which is a list of objects of class `bvar`. Thus, each element of the list can be used for further analysis.
 
 ## Model selection
+
+```{r, message = FALSE, warning=FALSE, results='hide', echo = FALSE}
+models <- add_posterior_loglik(models)
+```
 
 If function `selection_criteria` is applied to an object of class `posteriorlist`, it produces an object of class `selcritlist`. Its elements are of class `selcrit` and contain the log-likelihood, the number of estimated parameters and a table of selection criteria. The information criteria are calculated based on the posterior draws of the respective model and calculated in the following way:
 
@@ -107,10 +106,15 @@ Method `plot.selcritlist` plots the distribution for the above selection criteri
 plot(selcrit, criterion = "AIC")
 ```
 
+```{r}
+pos <- choose_best_model(selcrit, criterion = "AIC")
+pos
+```
+
 Since all information criteria have the lowest value for the model with $p = 2$, the third element of `models` is used for further analysis.
 
 ```{r}
-plot(irf(models[[3]], impulse = "income", response = "cons", n.ahead = 10))
+plot(irf(models[[pos]], impulse = "income", response = "cons", n_ahead = 10))
 ```
 
 ## Literature

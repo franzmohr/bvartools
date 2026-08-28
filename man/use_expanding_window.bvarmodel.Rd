@@ -7,8 +7,8 @@
 \method{use_expanding_window}{bvarmodel}(object, start, ...)
 }
 \arguments{
-\item{object}{a list of model specifications. Usually, the output of a call to 
-\code{\link{create_bvarmodel}}.}
+\item{object}{an object of class 'bvarmodel' containing model specifications
+and input data. Usually, the output of a call to  \code{\link{create_bvarmodel}}.}
 
 \item{start}{the start period of the prediction of the first iteration of the
 expanding window approach.}

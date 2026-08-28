@@ -12,7 +12,10 @@
 \item{n_pre}{number of plotted observations that precede the forecasts. If \code{NULL} (default),
 all available observations will be plotted.}
 
-\item{...}{further graphical parameters.}
+\item{ci}{interval used to calculate the credible bands of the forecasts.}
+
+\item{...}{further graphical parameters. Arguments \code{main}, \code{ylab},
+\code{lty} and \code{plot.type} overwrite the defaults of the function.}
 }
 \description{
 A plot function for objects of class 'bvarprd'.

@@ -7,13 +7,16 @@
 \method{use_expanding_window}{bvecmodel}(object, start, ...)
 }
 \arguments{
-\item{object}{a list of model specifications. Usually, the output of a call to 
-\code{\link{create_bvecmodel}}.}
+\item{object}{an object of class 'bvecmodel' containing model specifications
+and input data. Usually, the output of a call to  \code{\link{create_bvecmodel}}.}
 
 \item{start}{the start period of the prediction of the first iteration of the
 expanding window approach.}
 
 \item{...}{arguments passed forward to method.}
+}
+\value{
+A list of class 'expandingwindow'.
 }
 \description{
 Creates objects for expanding window posterior simulation.
@@ -30,6 +33,6 @@ model <- create_bvecmodel(e6, p = 1, r = 1, const = "restricted",
 # Chosen number of iterations and burn-in should be much higher.
 
 # Create multiple model objects for expanding window
-model <- use_expanding_window(model, start = start_period)
+model <- use_expanding_window(model, start = 1998)
 
 }

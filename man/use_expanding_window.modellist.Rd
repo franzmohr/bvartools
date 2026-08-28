@@ -7,8 +7,9 @@
 \method{use_expanding_window}{modellist}(object, start, ...)
 }
 \arguments{
-\item{object}{a list, usually, the output of a call to a model creation
-function such as \code{\link{create_bvarmodel}} or \code{\link{create_bvecmodel}}.}
+\item{object}{a list of objects containing model specifications and input data.
+Usually, the output of a call to a model creation function such as
+\code{\link{create_bvarmodel}} or \code{\link{create_bvecmodel}}.}
 
 \item{start}{the start period of the prediction of the first iteration of the
 expanding window approach.}
@@ -16,7 +17,8 @@ expanding window approach.}
 \item{...}{arguments passed forward to method.}
 }
 \value{
-A list of class 'modellist'.
+A list of class 'modellist', which consists of objects of class
+'expandingwindow'.
 }
 \description{
 Creates objects for expanding window posterior simulation.

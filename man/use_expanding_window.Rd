@@ -7,9 +7,9 @@
 use_expanding_window(object, ...)
 }
 \arguments{
-\item{object}{a list of model specifications. Usually, the output of a call to 
-a model creation function in combination with \code{\link{add_priors}} and
-\code{\link{add_initial_values}}.}
+\item{object}{an object containing model specifications and input data.
+Usually, the output of a call to  \code{\link{create_bvarmodel}} or
+\code{\link{create_bvecmodel}}.}
 
 \item{...}{arguments passed forward to method.}
 }

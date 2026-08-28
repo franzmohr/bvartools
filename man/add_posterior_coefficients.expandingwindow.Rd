@@ -27,7 +27,7 @@ train <- window(orig, end = c(1982, 2))
 
 # Create model
 model <- create_bvarmodel(data = train, p = 2, deterministic = "const",
-                          iterations = 20, burnin = 10)
+                          iterations = 10, burnin = 2)
 # Number of iterations and burnin should be much higher.
 
 model <- use_expanding_window(model, start = 1982.25)

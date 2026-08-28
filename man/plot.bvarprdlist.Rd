@@ -2,17 +2,26 @@
 % Please edit documentation in R/plot.bvarprdlist.R
 \name{plot.bvarprdlist}
 \alias{plot.bvarprdlist}
-\title{Plotting Posterior Draws of Bayesian Models}
+\title{Plotting Forecasts of a List of Bayesian VAR Models}
 \usage{
-\method{plot}{bvarprdlist}(x, ci = 0.95, ...)
+\method{plot}{bvarprdlist}(x, n_pre = NULL, ci = 0.95, ...)
 }
 \arguments{
-\item{x}{an object of class 'bvarprdlist', usually, a result of a call to \code{\link{predict.posteriorlist}}.}
+\item{x}{an object of class 'bvarprdlist', usually, a result of a call to
+\code{\link{predict.modellist}}.}
 
-\item{ci}{interval used to calculate credible bands for time-varying parameters.}
+\item{n_pre}{number of plotted observations that precede the forecasts.
+If \code{NULL} (default), all available observations will be plotted.}
 
-\item{...}{further graphical parameters.}
+\item{ci}{interval used to calculate the credible bands of the forecasts.}
+
+\item{...}{further graphical parameters, which are passed on to
+\code{\link[stats]{plot.ts}}.}
 }
 \description{
 A plot function for objects of class 'bvarprdlist'.
+}
+\details{
+The forecasts of the models in \code{x} are plotted on a grid, where
+each column corresponds to a model and each row to an endogenous variable.
 }

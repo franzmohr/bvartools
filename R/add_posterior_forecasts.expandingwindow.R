@@ -3,7 +3,7 @@
 #' Calculates and adds forecasts to the elements of an object of class 'expandingwindow'.
 #'
 #' @param object an object of class 'expandingwindow', usually, the result of a call
-#' to \code{\link{add_posterior_coefficients}} and \code{\link{add_forecast_input_data}}.
+#' to \code{\link{add_posterior_coefficients}} and \code{\link{add_forecast_input}}.
 #' @param ... arguments passed forward to method.
 #' 
 #' @return A list of class 'expandingwindow'.
@@ -18,7 +18,7 @@
 #' 
 #' # Create model
 #' model <- create_bvarmodel(data = train, p = 2, deterministic = "const",
-#'                           iterations = 10, burnin = 10)
+#'                           iterations = 10, burnin = 2)
 #' # Number of iterations and burnin should be much higher.
 #' 
 #' model <- use_expanding_window(model, start = 1982.25)
@@ -35,7 +35,7 @@
 #' model <- add_posterior_coefficients(model)
 #' 
 #' # Add data used for forecast calculation
-#' model <- add_forecast_input_data(model, n_ahead = 4)
+#' model <- add_forecast_input(model, n_ahead = 4)
 #' 
 #' # Add forecasts
 #' model <- add_posterior_forecasts(model)
@@ -43,9 +43,9 @@
 #' @export
 add_posterior_forecasts.expandingwindow <- function(object, ...){
   
-  for (i in 1:length(object)) {
-    object[[i]] <- add_posterior_forecasts(object[[i]], ...)
-  }
+  orig_class <- class(object)
+  object <- lapply(object, add_posterior_forecasts, ...)
+  class(object) <- orig_class
   
   return(object)
 }

@@ -35,7 +35,7 @@
 #' model <- add_posterior_coefficients(model)
 #' 
 #' # Add data used for forecast calculation
-#' model <- add_forecast_input_data(model, n_ahead = 4)
+#' model <- add_forecast_input(model, n_ahead = 4)
 #' 
 #' # Add log-likelihoods
 #' model <- add_posterior_loglik(model)
@@ -43,8 +43,9 @@
 #' @export
 add_posterior_loglik.expandingwindow <- function(object, ...){
   
+  orig_class <- class(object)
   object <- lapply(object, add_posterior_loglik, ...)
-  class(object) <- list("expandingwindow", "list")
+  class(object) <- orig_class
   
   return(object)
 }

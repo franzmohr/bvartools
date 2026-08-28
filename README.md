@@ -41,7 +41,7 @@ workflow into multiple steps:
 - *Application*
   - Forecasts
   - Impulse response functions
-  - Forecast error variance decompositions
+  - Forecast error variance decomposition
 
 In each step researchers are provided with the opportunity to fine-tune
 a model according to their specific requirements or to use the default
@@ -131,8 +131,6 @@ library(bvartools)
 
     ## Lade nötiges Paket: coda
 
-    ## Lade nötiges Paket: Matrix
-
 ``` r
 # Load data
 data("e1")
@@ -209,8 +207,8 @@ The output of `add_priors` and `add_initial_values` can be used as the
 input for user-written algorithms for posterior simulation. However,
 `bvartools` also comes with built-in posterior simulation functions from
 the [BayesTS](github.com/franzmohr/BayesTS) library. By using function
-`add_posterior_coefficients`, the model input is forwared to a posterior
-function and the output is added to the original object:
+`add_posterior_coefficients`, the model input is forwarded to a
+posterior function and the output is added to the original object:
 
 ``` r
 model <- add_posterior_coefficients(model)
@@ -292,49 +290,47 @@ summary(bvar_est)
     ## 
     ## Bayesian VAR model with p = 2 
     ## 
-    ## Model:
-    ## 
     ## Endogenous variables: invest, income, cons
     ## 
     ## Variable: invest 
     ## 
     ##              Mean     SD Naive SD Time-series SD    2.5%     50%    97.5%
-    ## invest.01 -0.3210 0.1280 0.001280       0.001286 -0.5734 -0.3216 -0.06831
-    ## income.01  0.1472 0.5654 0.005654       0.005654 -0.9602  0.1439  1.26083
-    ## cons.01    0.9662 0.6768 0.006768       0.006778 -0.3453  0.9560  2.32034
-    ## invest.02 -0.1600 0.1263 0.001263       0.001305 -0.4049 -0.1612  0.08747
-    ## income.02  0.1036 0.5519 0.005519       0.005439 -0.9653  0.1010  1.19676
-    ## cons.02    0.9348 0.6894 0.006894       0.006894 -0.4165  0.9283  2.28239
+    ## invest.l1 -0.3210 0.1280 0.001280       0.001286 -0.5734 -0.3216 -0.06831
+    ## income.l1  0.1472 0.5654 0.005654       0.005654 -0.9602  0.1439  1.26083
+    ## cons.l1    0.9662 0.6768 0.006768       0.006778 -0.3453  0.9560  2.32034
+    ## invest.l2 -0.1600 0.1263 0.001263       0.001305 -0.4049 -0.1612  0.08747
+    ## income.l2  0.1036 0.5519 0.005519       0.005439 -0.9653  0.1010  1.19676
+    ## cons.l2    0.9348 0.6894 0.006894       0.006894 -0.4165  0.9283  2.28239
     ## const     -1.6637 1.7556 0.017556       0.017556 -5.1131 -1.6428  1.81572
     ## 
     ## Variable: income 
     ## 
     ##                Mean      SD  Naive SD Time-series SD     2.5%       50%  97.5%
-    ## invest.01  0.043539 0.03283 0.0003283      0.0003340 -0.02134  0.043640 0.1078
-    ## income.01 -0.152587 0.14272 0.0014272      0.0014354 -0.43484 -0.152102 0.1278
-    ## cons.01    0.287003 0.17215 0.0017215      0.0017583 -0.05264  0.284572 0.6301
-    ## invest.02  0.049836 0.03215 0.0003215      0.0003215 -0.01315  0.049738 0.1135
-    ## income.02  0.019209 0.13846 0.0013846      0.0013846 -0.25074  0.020273 0.2888
-    ## cons.02   -0.008994 0.17079 0.0017079      0.0017079 -0.34237 -0.009633 0.3335
+    ## invest.l1  0.043539 0.03283 0.0003283      0.0003340 -0.02134  0.043640 0.1078
+    ## income.l1 -0.152587 0.14272 0.0014272      0.0014354 -0.43484 -0.152102 0.1278
+    ## cons.l1    0.287003 0.17215 0.0017215      0.0017583 -0.05264  0.284572 0.6301
+    ## invest.l2  0.049836 0.03215 0.0003215      0.0003215 -0.01315  0.049738 0.1135
+    ## income.l2  0.019209 0.13846 0.0013846      0.0013846 -0.25074  0.020273 0.2888
+    ## cons.l2   -0.008994 0.17079 0.0017079      0.0017079 -0.34237 -0.009633 0.3335
     ## const      1.577324 0.44978 0.0044978      0.0044978  0.69837  1.573286 2.4624
     ## 
     ## Variable: cons 
     ## 
     ##                Mean      SD  Naive SD Time-series SD      2.5%       50%
-    ## invest.01 -0.002623 0.02648 0.0002648      0.0002648 -0.054699 -0.002433
-    ## income.01  0.223178 0.11668 0.0011668      0.0011668 -0.003841  0.222297
-    ## cons.01   -0.263006 0.13888 0.0013888      0.0013888 -0.539179 -0.262530
-    ## invest.02  0.033789 0.02612 0.0002612      0.0002612 -0.017709  0.033990
-    ## income.02  0.354398 0.11138 0.0011138      0.0011302  0.131559  0.356159
-    ## cons.02   -0.020351 0.13878 0.0013878      0.0013661 -0.294508 -0.019763
+    ## invest.l1 -0.002623 0.02648 0.0002648      0.0002648 -0.054699 -0.002433
+    ## income.l1  0.223178 0.11668 0.0011668      0.0011668 -0.003841  0.222297
+    ## cons.l1   -0.263006 0.13888 0.0013888      0.0013888 -0.539179 -0.262530
+    ## invest.l2  0.033789 0.02612 0.0002612      0.0002612 -0.017709  0.033990
+    ## income.l2  0.354398 0.11138 0.0011138      0.0011302  0.131559  0.356159
+    ## cons.l2   -0.020351 0.13878 0.0013878      0.0013661 -0.294508 -0.019763
     ## const      1.292296 0.35786 0.0035786      0.0035786  0.590719  1.290012
     ##              97.5%
-    ## invest.01 0.049704
-    ## income.01 0.449267
-    ## cons.01   0.007515
-    ## invest.02 0.085769
-    ## income.02 0.571058
-    ## cons.02   0.254939
+    ## invest.l1 0.049704
+    ## income.l1 0.449267
+    ## cons.l1   0.007515
+    ## invest.l2 0.085769
+    ## income.l2 0.571058
+    ## cons.l2   0.254939
     ## const     2.006569
     ## 
     ## Variance-covariance matrix:
@@ -343,11 +339,8 @@ summary(bvar_est)
     ## invest_invest 22.3072 4.0178 0.040178       0.044990 15.8399 21.7999 31.327
     ## invest_income  0.7561 0.7313 0.007313       0.008046 -0.6330  0.7286  2.294
     ## invest_cons    1.2956 0.6022 0.006022       0.006781  0.2157  1.2701  2.576
-    ## income_invest  0.7561 0.7313 0.007313       0.008046 -0.6330  0.7286  2.294
     ## income_income  1.4378 0.2610 0.002610       0.002854  1.0191  1.4057  2.038
     ## income_cons    0.6442 0.1690 0.001690       0.001873  0.3596  0.6280  1.032
-    ## cons_invest    1.2956 0.6022 0.006022       0.006781  0.2157  1.2701  2.576
-    ## cons_income    0.6442 0.1690 0.001690       0.001873  0.3596  0.6280  1.032
     ## cons_cons      0.9348 0.1681 0.001681       0.001872  0.6610  0.9141  1.312
 
 Note that the means of the posterior draws are very close to the results
@@ -386,49 +379,47 @@ summary(bvar_est)
     ## 
     ## Bayesian VAR model with p = 2 
     ## 
-    ## Model:
-    ## 
     ## Endogenous variables: invest, income, cons
     ## 
     ## Variable: invest 
     ## 
     ##              Mean     SD Naive SD Time-series SD    2.5%     50%    97.5%
-    ## invest.01 -0.3210 0.1280 0.001280       0.001286 -0.5734 -0.3216 -0.06831
-    ## income.01  0.1472 0.5654 0.005654       0.005654 -0.9602  0.1439  1.26083
-    ## cons.01    0.9662 0.6768 0.006768       0.006778 -0.3453  0.9560  2.32034
-    ## invest.02 -0.1600 0.1263 0.001263       0.001305 -0.4049 -0.1612  0.08747
-    ## income.02  0.1036 0.5519 0.005519       0.005439 -0.9653  0.1010  1.19676
-    ## cons.02    0.9348 0.6894 0.006894       0.006894 -0.4165  0.9283  2.28239
+    ## invest.l1 -0.3210 0.1280 0.001280       0.001286 -0.5734 -0.3216 -0.06831
+    ## income.l1  0.1472 0.5654 0.005654       0.005654 -0.9602  0.1439  1.26083
+    ## cons.l1    0.9662 0.6768 0.006768       0.006778 -0.3453  0.9560  2.32034
+    ## invest.l2 -0.1600 0.1263 0.001263       0.001305 -0.4049 -0.1612  0.08747
+    ## income.l2  0.1036 0.5519 0.005519       0.005439 -0.9653  0.1010  1.19676
+    ## cons.l2    0.9348 0.6894 0.006894       0.006894 -0.4165  0.9283  2.28239
     ## const     -1.6637 1.7556 0.017556       0.017556 -5.1131 -1.6428  1.81572
     ## 
     ## Variable: income 
     ## 
     ##                Mean      SD  Naive SD Time-series SD     2.5%       50%  97.5%
-    ## invest.01  0.043539 0.03283 0.0003283      0.0003340 -0.02134  0.043640 0.1078
-    ## income.01 -0.152587 0.14272 0.0014272      0.0014354 -0.43484 -0.152102 0.1278
-    ## cons.01    0.287003 0.17215 0.0017215      0.0017583 -0.05264  0.284572 0.6301
-    ## invest.02  0.049836 0.03215 0.0003215      0.0003215 -0.01315  0.049738 0.1135
-    ## income.02  0.019209 0.13846 0.0013846      0.0013846 -0.25074  0.020273 0.2888
-    ## cons.02   -0.008994 0.17079 0.0017079      0.0017079 -0.34237 -0.009633 0.3335
+    ## invest.l1  0.043539 0.03283 0.0003283      0.0003340 -0.02134  0.043640 0.1078
+    ## income.l1 -0.152587 0.14272 0.0014272      0.0014354 -0.43484 -0.152102 0.1278
+    ## cons.l1    0.287003 0.17215 0.0017215      0.0017583 -0.05264  0.284572 0.6301
+    ## invest.l2  0.049836 0.03215 0.0003215      0.0003215 -0.01315  0.049738 0.1135
+    ## income.l2  0.019209 0.13846 0.0013846      0.0013846 -0.25074  0.020273 0.2888
+    ## cons.l2   -0.008994 0.17079 0.0017079      0.0017079 -0.34237 -0.009633 0.3335
     ## const      1.577324 0.44978 0.0044978      0.0044978  0.69837  1.573286 2.4624
     ## 
     ## Variable: cons 
     ## 
     ##                Mean      SD  Naive SD Time-series SD      2.5%       50%
-    ## invest.01 -0.002623 0.02648 0.0002648      0.0002648 -0.054699 -0.002433
-    ## income.01  0.223178 0.11668 0.0011668      0.0011668 -0.003841  0.222297
-    ## cons.01   -0.263006 0.13888 0.0013888      0.0013888 -0.539179 -0.262530
-    ## invest.02  0.033789 0.02612 0.0002612      0.0002612 -0.017709  0.033990
-    ## income.02  0.354398 0.11138 0.0011138      0.0011302  0.131559  0.356159
-    ## cons.02   -0.020351 0.13878 0.0013878      0.0013661 -0.294508 -0.019763
+    ## invest.l1 -0.002623 0.02648 0.0002648      0.0002648 -0.054699 -0.002433
+    ## income.l1  0.223178 0.11668 0.0011668      0.0011668 -0.003841  0.222297
+    ## cons.l1   -0.263006 0.13888 0.0013888      0.0013888 -0.539179 -0.262530
+    ## invest.l2  0.033789 0.02612 0.0002612      0.0002612 -0.017709  0.033990
+    ## income.l2  0.354398 0.11138 0.0011138      0.0011302  0.131559  0.356159
+    ## cons.l2   -0.020351 0.13878 0.0013878      0.0013661 -0.294508 -0.019763
     ## const      1.292296 0.35786 0.0035786      0.0035786  0.590719  1.290012
     ##              97.5%
-    ## invest.01 0.049704
-    ## income.01 0.449267
-    ## cons.01   0.007515
-    ## invest.02 0.085769
-    ## income.02 0.571058
-    ## cons.02   0.254939
+    ## invest.l1 0.049704
+    ## income.l1 0.449267
+    ## cons.l1   0.007515
+    ## invest.l2 0.085769
+    ## income.l2 0.571058
+    ## cons.l2   0.254939
     ## const     2.006569
     ## 
     ## Variance-covariance matrix:
@@ -437,11 +428,8 @@ summary(bvar_est)
     ## invest_invest 22.3072 4.0178 0.040178       0.044990 15.8399 21.7999 31.327
     ## invest_income  0.7561 0.7313 0.007313       0.008046 -0.6330  0.7286  2.294
     ## invest_cons    1.2956 0.6022 0.006022       0.006781  0.2157  1.2701  2.576
-    ## income_invest  0.7561 0.7313 0.007313       0.008046 -0.6330  0.7286  2.294
     ## income_income  1.4378 0.2610 0.002610       0.002854  1.0191  1.4057  2.038
     ## income_cons    0.6442 0.1690 0.001690       0.001873  0.3596  0.6280  1.032
-    ## cons_invest    1.2956 0.6022 0.006022       0.006781  0.2157  1.2701  2.576
-    ## cons_income    0.6442 0.1690 0.001690       0.001873  0.3596  0.6280  1.032
     ## cons_cons      0.9348 0.1681 0.001681       0.001872  0.6610  0.9141  1.312
 
 ### Thin results
@@ -454,14 +442,31 @@ bvar_est <- thin(bvar_est, thin = 10)
 
 ### Forecasts
 
-Forecasts can be obtained with the function `predict`. If the model
-contains deterministic terms, new values have to be provided in the
-argument `new_D`, which must be of the same length as the argument
-`n.ahead`.
+Forecasts are obtained in two steps. Function `add_forecast_input`
+generates the data of the forecast periods, where deterministic terms
+can be provided in the argument `deterministic` and unmodelled variables
+in the argument `exogen`. If they are not provided, the function tries
+to obtain them from the model. Function `add_posterior_forecasts` then
+simulates the forecasts.
 
 ``` r
-bvar_pred <- predict(bvar_est, n.ahead = 5, new_D = rep(1, 5))
+bvar_est <- add_forecast_input(bvar_est, n_ahead = 5)
+bvar_est <- add_posterior_forecasts(bvar_est)
+```
 
+Forecasts with credible bands can be extracted from the model using the
+`predict` function. The `n_ahead` argument can be used to set the given
+forecast horizon. However, the number of available forecast periods is
+limited to specification used in `add_forecast_input`.
+
+``` r
+bvar_pred <- predict(bvar_est)
+```
+
+    ## Warning in predict.bvarmodel(bvar_est): Argument 'n_ahead' is larger than the value in object$model$h.
+    ## Limiting the output to the latter.
+
+``` r
 plot(bvar_pred)
 ```
 
@@ -472,7 +477,7 @@ plot(bvar_pred)
 #### Forecast error impulse response
 
 ``` r
-IR <- irf(bvar_est, impulse = "income", response = "cons", n.ahead = 8)
+IR <- irf(bvar_est, impulse = "income", response = "cons", n_ahead = 8)
 
 plot(IR, main = "Forecast Error Impulse Response", xlab = "Period", ylab = "Response")
 ```
@@ -482,7 +487,7 @@ plot(IR, main = "Forecast Error Impulse Response", xlab = "Period", ylab = "Resp
 #### Orthogonalised impulse response
 
 ``` r
-OIR <- irf(bvar_est, impulse = "income", response = "cons", n.ahead = 8, type = "oir")
+OIR <- irf(bvar_est, impulse = "income", response = "cons", n_ahead = 8, type = "oir")
 
 plot(OIR, main = "Orthogonalised Impulse Response", xlab = "Period", ylab = "Response")
 ```
@@ -492,7 +497,7 @@ plot(OIR, main = "Orthogonalised Impulse Response", xlab = "Period", ylab = "Res
 #### Generalised impulse response
 
 ``` r
-GIR <- irf(bvar_est, impulse = "income", response = "cons", n.ahead = 8, type = "gir")
+GIR <- irf(bvar_est, impulse = "income", response = "cons", n_ahead = 8, type = "gir")
 
 plot(GIR, main = "Generalised Impulse Response", xlab = "Period", ylab = "Response")
 ```

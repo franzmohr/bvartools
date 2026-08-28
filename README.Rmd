@@ -253,12 +253,16 @@ bvar_est <- thin(bvar_est, thin = 10)
 
 ### Forecasts
 
-Forecasts are obtained in two steps. Function `add_forecast_input_data` generates the data of the forecast periods, where deterministic terms can be provided in the argument `deterministic` and unmodelled variables in the argument `exogen`. If they are not provided, the function tries to obtain them from the model. Function `add_posterior_forecasts` then simulates the forecasts, which can be extracted with the function `predict`.
+Forecasts are obtained in two steps. Function `add_forecast_input` generates the data of the forecast periods, where deterministic terms can be provided in the argument `deterministic` and unmodelled variables in the argument `exogen`. If they are not provided, the function tries to obtain them from the model. Function `add_posterior_forecasts` then simulates the forecasts.
+
+```{r}
+bvar_est <- add_forecast_input(bvar_est, n_ahead = 5)
+bvar_est <- add_posterior_forecasts(bvar_est)
+```
+
+Forecasts with credible bands can be extracted from the model using the `predict` function. The `n_ahead` argument can be used to set the given forecast horizon. However, the number of available forecast periods is limited to specification used in `add_forecast_input`.
 
 ```{r forecasts, fig.width=5.5, fig.height=5.5}
-bvar_est <- add_forecast_input_data(bvar_est, n_ahead = 5)
-bvar_est <- add_posterior_forecasts(bvar_est)
-
 bvar_pred <- predict(bvar_est)
 
 plot(bvar_pred)

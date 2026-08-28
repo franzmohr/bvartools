@@ -2,3 +2,7 @@
 ^\.Rproj\.user$
 ^tools$
 ^\.claude$
+^README\.Rmd$
+^README-.*\.png$
+^README-figs$
+^data-raw$

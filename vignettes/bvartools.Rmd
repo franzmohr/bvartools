@@ -4,12 +4,12 @@ author: "Franz X. Mohr"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-%\VignetteIndexEntry{Introduction to bvartools}
-  %\VignetteEngine{knitr::rmarkdown}
-  \usepackage[utf8]{inputenc}
-  ---
+ %\VignetteIndexEntry{Introduction to bvartools}
+ %\VignetteEngine{knitr::rmarkdown}
+ %\VignetteEncoding{UTF-8}
+---
   
-  ```{r setup, include = FALSE}
+```{r setup, include = FALSE}
 knitr::opts_chunk$set(
 collapse = TRUE,
 comment = "#>"
@@ -166,16 +166,17 @@ model <- thin(model, thin = 10)
 
 ### Forecasts
 
+Forecasts are obtained in two steps. Function `add_forecast_input` generates the data of the forecast periods, where deterministic terms can be provided in the argument `deterministic` and unmodelled variables in the argument `exogen`. If they are not provided, the function tries to obtain them from the model. Function `add_posterior_forecasts` then simulates the forecasts.
 
-```{r forecasts, fig.width=5.5, fig.height=5.5}
-model <- add_forecast_input_data(model, n_ahead = 10)
+```{r}
+model <- add_forecast_input(model, n_ahead = 10)
 model <- add_posterior_forecasts(model)
 ```
 
-Forecasts with credible bands can be obtained with the function `predict`. If the model contains deterministic terms, new values can be provided in the argument `new_d`. If no values are provided, the function sets them to zero. The number of rows of `new_d` must be the same as the argument `n.ahead`.
+Forecasts with credible bands can be extracted from the model using the `predict` function. The `n_ahead` argument can be used to set the given forecast horizon. However, the number of available forecast periods is limited to specification used in `add_forecast_input`.
 
 ```{r forecasts, fig.width=5.5, fig.height=5.5}
-bvar_pred <- predict(model, n.ahead = 10)
+bvar_pred <- predict(model, n_ahead = 10)
 
 plot(bvar_pred, n_pre = 20)
 ```
@@ -187,7 +188,7 @@ plot(bvar_pred, n_pre = 20)
 #### Forecast error impulse response
 
 ```{r feir, fig.width=5.5, fig.height=4.5}
-FEIR <- irf(model, impulse = "income", response = "cons", n.ahead = 8)
+FEIR <- irf(model, impulse = "income", response = "cons", n_ahead = 8)
 
 plot(FEIR, main = "Forecast Error Impulse Response", xlab = "Period", ylab = "Response")
 ```
@@ -195,7 +196,7 @@ plot(FEIR, main = "Forecast Error Impulse Response", xlab = "Period", ylab = "Re
 #### Orthogonalised impulse response
 
 ```{r oir, fig.width=5.5, fig.height=4.5}
-OIR <- irf(model, impulse = "income", response = "cons", n.ahead = 8, type = "oir")
+OIR <- irf(model, impulse = "income", response = "cons", n_ahead = 8, type = "oir")
 
 plot(OIR, main = "Orthogonalised Impulse Response", xlab = "Period", ylab = "Response")
 ```
@@ -203,7 +204,7 @@ plot(OIR, main = "Orthogonalised Impulse Response", xlab = "Period", ylab = "Res
 #### Generalised impulse response
 
 ```{r gir, fig.width=5.5, fig.height=4.5}
-GIR <- irf(model, impulse = "income", response = "cons", n.ahead = 8, type = "gir")
+GIR <- irf(model, impulse = "income", response = "cons", n_ahead = 8, type = "gir")
 
 plot(GIR, main = "Generalised Impulse Response", xlab = "Period", ylab = "Response")
 ```
@@ -295,13 +296,12 @@ for (draw in 1:draws) {
 }
 ```
 
-### `bvar` objects
+### `bvarmodel` objects
 
-The `bvar` function can be used to collect relevant output of the Gibbs sampler into a standardized object, which can be used by functions such as `predict` to obtain forecasts or `irf` for impulse respons analysis.
+The `bvar` function can be used to collect relevant output of the Gibbs sampler into a standardized object of class `bvarmodel`, which can be used by functions such as `predict` to obtain forecasts or `irf` for impulse respons analysis.
 
 ```{r bvar-object}
 y <- model[["data"]][["train"]][["y"]]
-tsp(y) <- tsp(model[["data"]][["train"]][["y"]])
 
 bvar_est_two <- bvar(y = y,
                      x = model[["data"]][["train"]][["x"]],
@@ -310,7 +310,7 @@ bvar_est_two <- bvar(y = y,
                      Sigma = draws_sigma)
 ```
 
-Since the output of function `draw_posterior` is an object of class `bvar`, the calculation of summary statistics, forecasts, impulse responses and forecast error variance decompositions is performed as described above.
+Since the output of function `draw_posterior` is an object of class `bvarmodel` as well, the calculation of summary statistics, forecasts, impulse responses and forecast error variance decompositions is performed as described above.
 
 ```{r}
 summary(bvar_est_two)

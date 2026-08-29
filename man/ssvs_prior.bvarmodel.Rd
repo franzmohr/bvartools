@@ -30,13 +30,14 @@ Calculates the priors for a Bayesian VAR model, which employs stochastic search 
 
 # Prepare data
 data("e1")
-data <- diff(log(e1))
+train <- diff(log(e1))
 
 # Generate model input
-object <- gen_var(data)
+model <- create_bvarmodel(train, p = 2, deterministic = "const",
+                          iterations = 5000, burnin = 1000)
 
 # Obtain SSVS prior
-prior <- ssvs_prior(object, semiautomatic = c(.1, 10))
+prior <- ssvs_prior(model, semiautomatic = c(.1, 10))
 
 }
 \references{

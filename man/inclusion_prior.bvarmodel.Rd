@@ -9,7 +9,10 @@
   prob = 0.5,
   exclude_deterministics = TRUE,
   minnesota_like = FALSE,
-  kappa = c(0.8, 0.5, 0.5, 0.8)
+  kappa1 = 0.8,
+  kappa2 = 0.5,
+  kappa3 = 0.5,
+  kappa4 = 0.8
 )
 }
 \arguments{
@@ -24,10 +27,22 @@ included variables does not include the positions of deterministic terms.}
 \item{minnesota_like}{logical. If \code{TRUE}, the prior inclusion probabilities of the
 parameters are calculated in a similar way as the Minnesota prior. See 'Details'.}
 
-\item{kappa}{a numeric vector of four elements containing the prior inclusion probabilities
-of coefficients that correspond to own lags of endogenous variables, to endogenous variables,
-which do not correspond to own lags, to exogenous variables and deterministic terms, respectively.
+\item{kappa1}{a numeric specifying the prior inclusion probability of
+coefficients that correspond to own lags of endogenous variables.
 Only used if \code{minnesota_like = TRUE}. See 'Details'.}
+
+\item{kappa2}{a numeric specifying the size of the prior inclusion probabilities
+of endogenous variables, which do not correspond to own lags.
+Only used if \code{minnesota_like = TRUE}. See 'Details'.}
+
+\item{kappa3}{a numeric specifying the size of the prior inclusion probabilities
+of non-deterministic exogenous variables. Default is \code{NULL}, which indicates that the formula
+for the calculation of the prior inclusion probabilities of deterministic terms
+is used for all exogenous variables.
+Only used if \code{minnesota_like = TRUE}. See 'Details'.}
+
+\item{kappa4}{a numeric specifying the size of the prior inclusion probabilities
+of deterministic terms. Only used if \code{minnesota_like = TRUE}. See 'Details'.}
 }
 \value{
 A list containing a matrix of prior inclusion probabilities and an integer vector

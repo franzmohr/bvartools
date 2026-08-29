@@ -159,7 +159,9 @@ selection_criteria.bvarmodel <- function(object, ci = 0.95, ...){
   }
   
   attr(result, "ci") <- c(paste0(ci_low * 100, "%"), paste0(ci_high * 100, "%"))
-  class(result) <- c("selcrit", "list")
+  # The classes of the model are maintained, so that methods, which use the model
+  # specifications, can be dispatched on them
+  class(result) <- c("selcrit", class(object))
   
   return(result)
 }

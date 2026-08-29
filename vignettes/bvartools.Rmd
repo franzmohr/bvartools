@@ -23,10 +23,10 @@ The package `bvartools` implements functions for Bayesian inference of linear ti
 - *Model set-up*
   * Produce data matrices for given lag orders and model types, which can be used for posterior simulation. This includes a set-up for expanding window estimation.
   * Set prior hyperparameters either manually or based on established approaches such as the Minnesota prior.
-  * Set initial values based on maximum likelihood estiamtes or drawing from a prior.
+  * Set initial values based on maximum likelihood estimates or drawing from a prior.
 - *Posterior simulation*
-  * Perform posterior simulation of coefficients, forecasts and likelihoods using algortihms from the [BayesTS](github.com/franzmohr/BayesTS) library.
-  * Researchers can also choose to use they own algorthms.
+  * Perform posterior simulation of coefficients, forecasts and likelihoods using algorithms from the [BayesTS](github.com/franzmohr/BayesTS) library.
+  * Researchers can also choose to use they own algorithms.
 - *Evaluation*
   * Traditional summary statistics for individual coefficients
   * In-sample performance measures (LL, AIC, BIC, HQ)
@@ -60,6 +60,10 @@ For Bayesian inference of *dynamic factor models* the package implements the alt
 
 This introduction to `bvartools` provides the code to set up and estimate a basic Bayesian VAR (BVAR) model.[^further] The first part covers a basic workflow, where the standard posterior simulation algorithm of the package is employed for Bayesian inference. The second part presents a workflow for a posterior algorithm as it could be implemented by a researcher.
 
+## Model set-up
+
+### Data
+
 For both illustrations the data set E1 from Lütkepohl (2006) is used. It contains data on West German fixed investment, disposable income and consumption expenditures in billions of DM from 1960Q1 to 1982Q4. Like in the textbook only the first 73 observations of the log-differenced series are used.
 
 ```{r data, fig.align='center', message=FALSE, fig.height=5, fig.width=4.5}
@@ -76,8 +80,6 @@ e1 <- window(e1, end = c(1978, 4))
 plot(e1)
 ```
 
-## Using `bvartools` with built-in algorithms
-
 ### Setting up a model
 
 The `create_bvarmodel` function produces an object, which contains information on the specification of the VAR model that should be estimated. The following code specifies a VAR(2) model with an intercept term. The number of iterations and burn-in draws is already specified at this stage.
@@ -89,7 +91,7 @@ model <- create_bvarmodel(e1, p = 2, deterministic = "const",
 
 Note that the function is also capable of generating more than one model. For example, specifying `p = 0:2` would result in three models.
 
-### Adding model priors
+### Adding prior hyperparameters
 
 Function `add_priors` produces priors for the specified model(s) in object `model` and augments the object accordingly.
 
@@ -109,7 +111,7 @@ Function `add_initial_values` adds initial values of posterior coefficients to `
 model <- add_initial_values(model, method = "ols")
 ```
 
-### Obtaining posterior draws
+## Obtaining posterior draws
 
 `bvartools` comes with built-in posterior simulation functions from the [BayesTS](github.com/franzmohr/BayesTS) library. By using function `add_posterior_coefficients` the model input is forwarded to a posterior function and the output is added to the original object:
 
@@ -118,6 +120,8 @@ model <- add_posterior_coefficients(model)
 ```
 
 If researchers prefer to use their own posterior algorithms, this can be done by specifying argument `posterior_function` with a function that uses object `model` as its input.
+
+## Evalutation
 
 ### Inspect posterior draws
 
@@ -164,9 +168,13 @@ The MCMC series in object `model` can be thinned using
 model <- thin(model, thin = 10)
 ```
 
+
+
+## Application
+
 ### Forecasts
 
-Forecasts are obtained in two steps. Function `add_forecast_input` generates the data of the forecast periods, where deterministic terms can be provided in the argument `deterministic` and unmodelled variables in the argument `exogen`. If they are not provided, the function tries to obtain them from the model. Function `add_posterior_forecasts` then simulates the forecasts.
+Forecasts are obtained in two steps. First, function `add_forecast_input` generates the data of the forecast periods, where deterministic terms can be provided in the argument `deterministic` and unmodelled variables in the argument `exogen`. If they are not provided, the function tries to obtain them from the model and gives a message, if it does not succeed. Second, function `add_posterior_forecasts` then simulates the forecasts.
 
 ```{r}
 model <- add_forecast_input(model, n_ahead = 10)
@@ -286,12 +294,12 @@ for (draw in 1:draws) {
   u <- y - matrix(a, k) %*% x # Obtain residuals
   u_sigma_scale_post <- solve(u_sigma_scale_prior + tcrossprod(u))
   u_sigma_i <- matrix(rWishart(1, u_sigma_df_post, u_sigma_scale_post)[,, 1], k)
-  u_sigma <- solve(u_sigma_i) # Invert Sigma_i to obtain Sigma
   
   # Store draws
   if (draw > burnin) {
     draws_a[, draw - burnin] <- a
-    draws_sigma[, draw - burnin] <- u_sigma
+    # Store inverted Sigma_i to obtain Sigma
+    draws_sigma[, draw - burnin] <- solve(u_sigma_i)
   }
 }
 ```

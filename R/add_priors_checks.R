@@ -75,7 +75,7 @@
     if (!all(c("kappa1", "kappa2", "kappa4") %in% names(coef[["minnesota"]]))) {
       stop("Argument coeff$minnesota must contain at least the elements 'kappa1', 'kappa2' and 'kappa4'.")
     }
-    if (object[["$model"]][["error"]] %in% c("gamma+covar", "sv+covar") & is.null(coef[["v_i"]])) {
+    if (object[["model"]][["error"]] %in% c("gamma+covar", "sv+covar") & is.null(coef[["v_i"]])) {
       stop("If error covarances should be estimated, argument coef$v_i must be provided also when the Minnesota prior is used.")
     }
   }

@@ -5,7 +5,9 @@
 #' @param x an object of class 'bvarprd', usually, a result of a call to \code{\link{predict.bvarmodel}}.
 #' @param n_pre number of plotted observations that precede the forecasts. If \code{NULL} (default),
 #' all available observations will be plotted.
-#' @param ... further graphical parameters.
+#' @param ci interval used to calculate the credible bands of the forecasts.
+#' @param ... further graphical parameters. Arguments \code{main}, \code{ylab},
+#' \code{lty} and \code{plot.type} overwrite the defaults of the function.
 #' 
 #' @examples
 #' 
@@ -41,39 +43,13 @@ plot.bvarprd <- function(x, n_pre = NULL, ci = 0.95, ...) {
   
   dots <- list(...)
 
-  y <- x[["y"]]
-  k <- ncol(y)
-  tt <- nrow(y)
-  var_names <- dimnames(y)[[2]]
-  
-  ci_low <- (1 - ci) / 2
-  ci_high <- 1 - ci_low
-  temp <- apply(x[["fcst"]], c(1, 2), stats::quantile, probs = c(ci_low, .5, ci_high))
-  result <- c()
-  for (i in 1:k) {
-    result <- c(result, list(stats::ts(t(temp[,, i]))))
-  }
-  names(result) <- dimnames(y)[[2]]
-  
-  ts_temp <- stats::tsp(y)
-  for (i in 1:k) {
-    result[[i]] <- stats::ts(result[[i]], start = ts_temp[2] + 1 / ts_temp[3], frequency = ts_temp[3])
-  }
-  
-  for (i in var_names) {
-    n_ahead <- nrow(result[[i]])
-    temp <- cbind(y[, i], result[[i]])
-    temp[tt, 2:4] <- y[tt, i]
-    if (!is.null(n_pre)) {
-      if (n_pre < tt) {
-        temp <- temp[-c(1:(tt - n_pre)), ]
-      }
-      temp <- stats::ts(temp, end = stats::tsp(result[[i]])[2], frequency = stats::tsp(result[[i]])[3])
-    }
+  series <- forecast_plot_series(x, n_pre = n_pre, ci = ci)
+
+  for (i in names(series)) {
     # Defaults that may be overridden via '...'
     args <- list(plot.type = "single", lty = c(1, 2, 3, 2), main = i, ylab = "")
     args <- args[!(names(args) %in% names(dots))]
 
-    do.call(stats::plot.ts, c(list(temp), args, dots))
+    do.call(stats::plot.ts, c(list(series[[i]]), args, dots))
   }
 }

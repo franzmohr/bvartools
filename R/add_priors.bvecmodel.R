@@ -476,7 +476,11 @@ add_priors.bvecmodel <- function(object,
       
       ssvs_temp <- ssvs_prior(object, tau = varsel[["tau"]], semiautomatic = varsel[["semiautomatic"]])
       temp <- inclusion_prior(object, prob = varsel[["inprior"]], exclude_deterministics = varsel[["exclude_det"]],
-                              minnesota_like = !is.null(varsel[["minnesota"]]), kappa = varsel[["minnesota"]])
+                              minnesota_like = !is.null(varsel[["minnesota"]]),
+                              kappa1 = varsel[["minnesota"]][1],
+                              kappa2 = varsel[["minnesota"]][2],
+                              kappa3 = varsel[["minnesota"]][3],
+                              kappa4 = varsel[["minnesota"]][4])
       object[["priors"]][["a"]][["v_inv"]] <- diag(1 / ssvs_temp[["tau1"]][, 1]^2, tot_par)
       object[["priors"]][["a"]][["inprior"]] <- temp[["prior"]]
       object[["priors"]][["a"]][["include"]] <- temp[["include"]]
@@ -523,8 +527,11 @@ add_priors.bvecmodel <- function(object,
     
     if (use_bvs) {
       temp <- inclusion_prior(object, prob = varsel[["inprior"]], exclude_deterministics = varsel[["exclude_det"]],
-                              minnesota_like = !is.null(varsel[["minnesota"]]), kappa = varsel[["minnesota"]])
-      
+                              minnesota_like = !is.null(varsel[["minnesota"]]),
+                              kappa1 = varsel[["minnesota"]][1],
+                              kappa2 = varsel[["minnesota"]][2],
+                              kappa3 = varsel[["minnesota"]][3],
+                              kappa4 = varsel[["minnesota"]][4])
       object[["priors"]][["a"]][["inprior"]] <- temp[["prior"]]
       object[["priors"]][["a"]][["include"]] <- temp[["include"]]
       rm(temp)

@@ -59,10 +59,8 @@ are calculated as
 \eqn{\frac{\kappa_1}{r}} \tab for own lags of endogenous variables, \cr
 \eqn{\frac{\kappa_2}{r}} \tab for other endogenous variables, \cr
 \eqn{\frac{\kappa_3}{1 + r}} \tab for unmodelled exogenous variables, \cr
-\eqn{\kappa_{4}} \tab for deterministic variables, 
+\eqn{\kappa_{4}} \tab for deterministic variables.
 }
-for lag \eqn{r} with \eqn{\kappa_1}, \eqn{\kappa_2}, \eqn{\kappa_3}, \eqn{\kappa_4} as the first, second,
-third and forth element in \code{kappa}, respectively.
 }
 \examples{
 

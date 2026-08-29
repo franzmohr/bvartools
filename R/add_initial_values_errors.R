@@ -13,7 +13,7 @@
     z <- object[["data"]][["train"]][["z"]]
     k <- object[["model"]][["k"]]
     tvp <- object[["model"]][["tvp"]]
-    tt <- length(y) / k
+    tt <- nrow(y)
     
     # Errors
     if (object[["model"]][["error"]] %in% c("gamma", "gamma+covar")) {

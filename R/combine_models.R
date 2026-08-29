@@ -29,7 +29,7 @@ combine_models <- function(...) {
   classes <- classes[-which(classes == "list")]
   
   supported_models <- c("bvarmodel", "bvecmodel", "klgs2010", "modellist",
-                        "expandwindmodellist")
+                        "expandingwindow")
   supported_total <- supported_models
   if (!all(classes %in% supported_total)) {
     stop("The class for at least one input object could not be recognised.")
@@ -38,7 +38,7 @@ combine_models <- function(...) {
   result <- NULL
   
   for (i in 1:length(input)) {
-    if (any(c("bvarmodel", "bvecmodel", "expandwindmodellist") %in% class(input[[i]]))) {
+    if (any(c("bvarmodel", "bvecmodel", "expandingwindow") %in% class(input[[i]]))) {
       result <- c(result, list(input[[i]]))
     }
     if (any(c("modellist") %in% class(input[[i]]))) {

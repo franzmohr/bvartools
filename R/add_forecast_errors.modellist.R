@@ -44,9 +44,9 @@
 #' @export
 add_forecast_errors.modellist <- function(object, test_sample, ...){
   
-  for (i in 1:length(object)) {
-    object[[i]] <- add_forecast_errors(object[[i]], test_sample = test_sample)
-  }
+  orig_class <- class(object)
+  object <- lapply(object, add_forecast_errors, test_sample = test_sample, ...)
+  class(object) <- orig_class
   
   return(object)
 }

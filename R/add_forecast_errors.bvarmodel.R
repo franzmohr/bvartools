@@ -62,7 +62,7 @@ add_forecast_errors.bvarmodel <- function(object, test_sample, ...){
   test_sample <- stats::na.omit(test_sample)
   
   # Determine when the forecasts start
-  tsp_train <- stats::tsp(object[["data"]][["original"]][["endogen"]])
+  tsp_train <- stats::tsp(object[["data"]][["train"]][["y"]])
   forecast_starts_at <- tsp_train[2] + 1 / tsp_train[3]
   
   if (forecast_starts_at %in% stats::time(test_sample)) {
@@ -76,7 +76,7 @@ add_forecast_errors.bvarmodel <- function(object, test_sample, ...){
     mc_stats <- coda::mcpar(object[["posterior"]][["forecast"]])
     
     # Repeat the available test data and subtract corresponding forecasts without loop
-    object[["posterior"]][["forecast_errors"]] <- coda::mcmc(t(matrix(t(test_sample), h * k, draws)) - object[["posterior"]][["forecast"]][, h * k],
+    object[["posterior"]][["forecast_errors"]] <- coda::mcmc(t(matrix(t(test_sample), h * k, draws)) - object[["posterior"]][["forecast"]][, 1:(h * k)],
                                                              start = mc_stats[1], end = mc_stats[2], thin = mc_stats[3])
   }
   

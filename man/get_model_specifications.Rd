@@ -2,9 +2,7 @@
 % Please edit documentation in R/get_model_specifications.R
 \name{get_model_specifications}
 \alias{get_model_specifications}
-\title{Get Model Specifications
- 
-A generic function used to obtain the model specifications of model.}
+\title{Get Model Specifications}
 \usage{
 get_model_specifications(object, ...)
 }
@@ -13,8 +11,39 @@ get_model_specifications(object, ...)
 
 \item{...}{arguments passed forward to method.}
 }
+\value{
+A one-row data frame with the specifications of the model. Which columns
+are returned depends on the class of argument \code{object}:
+\describe{
+  \item{type}{the type of the model.}
+  \item{k}{the number of endogenous variables.}
+  \item{p}{the lag order of the endogenous variables.}
+  \item{m}{the number of unmodelled, non-deterministic variables.}
+  \item{s}{the lag order of the unmodelled, non-deterministic variables.}
+  \item{n}{the number of deterministic terms. For objects of class 'bvecmodel'
+  the columns \code{n_unrestricted} and \code{n_restricted} are returned instead.}
+  \item{rank}{the rank of the cointegration matrix. Only for objects of class
+  'bvecmodel'.}
+  \item{T}{the number of observations used for estimation. Not for objects of
+  class 'expandingwindow', where it differs across the estimation windows, and
+  not for objects of class 'selcrit', which do not contain the input data.}
+  \item{varsel}{the used variable selection algorithm.}
+}
+}
 \description{
-Get Model Specifications
- 
-A generic function used to obtain the model specifications of model.
+A generic function used to obtain the model specifications of a model.
+}
+\examples{
+
+# Load data
+data("e1")
+e1 <- diff(log(e1)) * 100
+
+# Create model
+model <- create_bvarmodel(e1, p = 2, deterministic = "const",
+                          iterations = 10, burnin = 10)
+
+# Obtain model specifications
+get_model_specifications(model)
+
 }

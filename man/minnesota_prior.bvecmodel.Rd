@@ -15,20 +15,22 @@
 )
 }
 \arguments{
-\item{object}{an object of class 'bvecmodel', usually, a result of a call to \code{\link{create_bvecmodel}}.}
+\item{object}{an object of class 'bvecmodel', usually, a result of a call to
+\code{\link{create_bvecmodel}}.}
 
 \item{kappa1}{a numeric specifying the prior variance of coefficients that correspond to
-own lags of endogenous variables.}
+own lags of endogenous variables. See 'Details'.}
 
 \item{kappa2}{a numeric specifying the size of the prior variance of endogenous
-variables, which do not correspond to own lags.}
+variables, which do not correspond to own lags. See 'Details'.}
 
 \item{kappa3}{a numeric specifying the size of the prior variance of non-deterministic exogenous
 variables. Default is \code{NULL}, which indicates that the formula
-for the calculation of the prior variance of deterministic terms is used for all exogenous variables.}
+for the calculation of the prior variance of deterministic terms is used
+for all exogenous variables. See 'Details'.}
 
 \item{kappa4}{a numeric specifying the size of the prior variance of deterministic
-terms.}
+terms. See 'Details'.}
 
 \item{max_var}{a positive numeric specifying the maximum prior variance that is allowed for
 coefficients of non-deterministic variables. If \code{NULL} (default), the prior variances are not limited.}
@@ -39,14 +41,15 @@ the VAR form, respectively. In both cases all deterministic variables are used i
 if they appear in the model.}
 }
 \value{
-A list containing a matrix of prior means and the precision matrix of the cofficients and the
+A list containing a matrix of prior means and the precision matrix of the coefficients and the
 inverse variance-covariance matrix of the error term, which was obtained by an LS estimation.
 }
 \description{
 Calculates the Minnesota prior for a VEC model.
 }
 \details{
-The function calculates the Minnesota prior of a VAR model. For the endogenous variable
+The function calculates the Minnesota prior in the same manner as for
+a traditional VAR model. For the endogenous variable
 \eqn{i} the prior variance of the \eqn{l}th lag of regressor \eqn{j} is obtained as
 \deqn{ \frac{\kappa_{1}}{l^2} \textrm{ for own lags of endogenous variables,}} 
 \deqn{ \frac{\kappa_{2}}{l^2} \frac{\sigma_{i}^2}{\sigma_{j}^2} \textrm{ for endogenous variables other than own lags,}}

@@ -11,10 +11,42 @@
 to \code{\link{selection_criteria}}.}
 
 \item{criterion}{the selection criterion that should be plotted. Available choices
-are \code{"LL"}, \code{"AIC"}, \code{"BIC"} (default), \code{"HQ"}.}
+are the in-sample criteria \code{"LL"}, \code{"AIC"}, \code{"BIC"} (default),
+\code{"HQ"} and the out-of-sample statistics \code{"FE"}, \code{"AFE"} and
+\code{"RSFE"}.}
 
 \item{...}{further graphical parameters.}
 }
 \description{
 A plot function for objects of class 'selcritlist'.
+}
+\details{
+For in-sample criteria each model is represented by a horizontal error
+bar, which covers the credible band of the criterion and which is marked by the
+median and the mean of its posterior draws. The criterion is measured on the
+x-axis and the models are arranged along the y-axis, beginning with the first
+model of \code{x} at the top. This keeps the plot readable, if \code{x} contains
+many models. The position of a model in \code{x} is added at the upper end of its
+error bar.
+
+The specifications of the models are used as labels of the y-axis, where only the
+specifications that differ across the models are used, as in
+\code{\link{print.modellist}}. The lag order is always used. The left margin is
+adjusted to the width of the labels.
+
+No title is added by default. Space above the plot is only used, if argument
+\code{main} is specified.
+
+For out-of-sample statistics each row of the plot corresponds to an endogenous
+variable and the x-axis to the forecast horizon. Within a forecast horizon each
+model is represented by an error bar, which covers the credible band of the
+respective statistic and which is marked by the median and the mean of its
+posterior draws. The position of a model in \code{x} is added above its error
+bar. Since forecast errors can be positive and negative, a horizontal reference
+line is added at zero for \code{criterion = "FE"}.
+
+For both types of criteria arguments \code{col}, \code{pch}, \code{cex},
+\code{lwd}, \code{main} and \code{xlab} can be used to change the appearance of
+the plot, where \code{col} and \code{lwd} are recycled over the models in
+\code{x}.
 }

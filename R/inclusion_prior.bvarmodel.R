@@ -10,10 +10,19 @@
 #' included variables does not include the positions of deterministic terms.
 #' @param minnesota_like logical. If \code{TRUE}, the prior inclusion probabilities of the
 #' parameters are calculated in a similar way as the Minnesota prior. See 'Details'.
-#' @param kappa a numeric vector of four elements containing the prior inclusion probabilities
-#' of coefficients that correspond to own lags of endogenous variables, to endogenous variables,
-#' which do not correspond to own lags, to exogenous variables and deterministic terms, respectively.
+#' @param kappa1 a numeric specifying the prior inclusion probability of
+#' coefficients that correspond to own lags of endogenous variables.
 #' Only used if \code{minnesota_like = TRUE}. See 'Details'.
+#' @param kappa2 a numeric specifying the size of the prior inclusion probabilities
+#' of endogenous variables, which do not correspond to own lags.
+#' Only used if \code{minnesota_like = TRUE}. See 'Details'.
+#' @param kappa3 a numeric specifying the size of the prior inclusion probabilities
+#' of non-deterministic exogenous variables. Default is \code{NULL}, which indicates that the formula
+#' for the calculation of the prior inclusion probabilities of deterministic terms
+#' is used for all exogenous variables.
+#' Only used if \code{minnesota_like = TRUE}. See 'Details'.
+#' @param kappa4 a numeric specifying the size of the prior inclusion probabilities
+#' of deterministic terms. Only used if \code{minnesota_like = TRUE}. See 'Details'.
 #' 
 #' @details If \code{minnesota_like = TRUE}, prior inclusion probabilities \eqn{\underline{\pi}_1}
 #' are calculated as
@@ -42,8 +51,14 @@
 #' incl <- inclusion_prior(object)
 #' 
 #' @export
-inclusion_prior.bvarmodel <- function(object, prob = .5, exclude_deterministics = TRUE,
-                                      minnesota_like = FALSE, kappa = c(0.8, 0.5, 0.5, 0.8)) {
+inclusion_prior.bvarmodel <- function(object,
+                                      prob = .5,
+                                      exclude_deterministics = TRUE,
+                                      minnesota_like = FALSE,
+                                      kappa1 = 0.8,
+                                      kappa2 = 0.5,
+                                      kappa3 = 0.5,
+                                      kappa4 = 0.8) {
   
   if (!minnesota_like) {
     if (prob > 1 | prob < 0) {
@@ -51,9 +66,36 @@ inclusion_prior.bvarmodel <- function(object, prob = .5, exclude_deterministics 
     } 
   }
   if (minnesota_like) {
-    if (any(kappa > 1) | any(kappa < 0)) {
-      stop("Argument 'kappa' may only contain values between 0 and 1.")
-    } 
+    
+    if (kappa1 < 0) {
+      stop("Argument 'kappa1' must not be negative.")
+    }
+    if (kappa1 > 1) {
+      stop("Argument 'kappa1' must not be larger than 1.")
+    }
+    
+    if (kappa2 <= 0) {
+      stop("Argument 'kappa2' must not be negative.")
+    }
+    if (kappa2 > 1) {
+      stop("Argument 'kappa2' must not be larger than 1.")
+    }
+    
+    if (!is.null(kappa3)) {
+      if (kappa3 <= 0) {
+        stop("Argument 'kappa3' must not be negative.")
+      } 
+      if (kappa3 > 1) {
+        stop("Argument 'kappa3' must not be larger than 1.")
+      }
+    }
+    
+    if (kappa4 <= 0) {
+      stop("Argument 'kappa4' must not be negative.")
+    }
+    if (kappa4 > 1) {
+      stop("Argument 'kappa4' must not be larger than 1.")
+    }
   }
   
   result <- NULL
@@ -78,26 +120,26 @@ inclusion_prior.bvarmodel <- function(object, prob = .5, exclude_deterministics 
       
       if (p > 0) {
         for (i in 1:p) {
-          incl_matrix[, (i - 1) * k + 1:k] <- kappa[2] / i
+          incl_matrix[, (i - 1) * k + 1:k] <- kappa2 / i
           if (k > 1) {
-            diag(incl_matrix[, (i - 1) * k + 1:k]) <- kappa[1] / i 
+            diag(incl_matrix[, (i - 1) * k + 1:k]) <- kappa1 / i 
           } else {
-            incl_matrix[, (i - 1) * k + 1] <- kappa[1] / i
+            incl_matrix[, (i - 1) * k + 1] <- kappa1 / i
           }
         }
       }
       
       if (m > 0) {
-        incl_matrix[, n_a + 1:m] <- kappa[3]
+        incl_matrix[, n_a + 1:m] <- kappa3
         if (s > 0) {
           for (i in 1:s) {
-            incl_matrix[, n_a + m + (i - 1) * m + 1:m] <- kappa[3] / (1 + i)
+            incl_matrix[, n_a + m + (i - 1) * m + 1:m] <- kappa3 / (1 + i)
           }
         }
       }
       
       if (n_c > 0) {
-        incl_matrix[, n_a + n_b + 1:n_c] <- kappa[4]
+        incl_matrix[, n_a + n_b + 1:n_c] <- kappa4
       }
       
       inprior[1:(k * (n_a + n_b + n_c))] <- c(incl_matrix)

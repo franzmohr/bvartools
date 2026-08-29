@@ -25,18 +25,19 @@
 #' 
 #' # Prepare data
 #' data("e1")
-#' data <- diff(log(e1))
+#' train <- diff(log(e1))
 #' 
 #' # Generate model input
-#' object <- gen_var(data)
+#' model <- create_bvarmodel(train, p = 2, deterministic = "const",
+#'                           iterations = 5000, burnin = 1000)
 #' 
 #' # Obtain SSVS prior
-#' prior <- ssvs_prior(object, semiautomatic = c(.1, 10))
+#' prior <- ssvs_prior(model, semiautomatic = c(.1, 10))
 #' 
 #' @export
 ssvs_prior.bvarmodel <- function(object, tau = c(0.05, 10), semiautomatic = NULL) {
   
-  if (object[["model"]][["error"]] %in% c("sv", "sv-covar")) {
+  if (object[["model"]][["error"]] %in% c("sv", "sv+covar")) {
     stop("SSVS cannot be used with models with stochastic volatility.")
   }
   
@@ -53,46 +54,30 @@ ssvs_prior.bvarmodel <- function(object, tau = c(0.05, 10), semiautomatic = NULL
     }
   }
   
-  y <- t(object$data$y)
-  tt <- NCOL(y)
-  k <- NROW(y)
-  
-  if (!is.null(object$data$x)) {
-    x <- t(object$data$x)
-  } else {
-    x <- NULL
-  }
-  z <- object$data$z
+  z <- object[["data"]][["train"]][["z"]]
   
   if (!is.null(z)) {
     
     if (!is.null(semiautomatic)) {
       
       # Semiautomatic approach
-      if (!is.null(x)) {
-        ols <- tcrossprod(y, x) %*% solve(tcrossprod(x))
-        u <- y - ols %*% x
-        sigma_ols <- tcrossprod(u) / (tt - nrow(x)) # OLS error covariance matrix
-        cov_ols <- kronecker(solve(tcrossprod(x)), sigma_ols) # Sqrt of diagonal elements are the t-ratios
-        se_ols <- matrix(sqrt(diag(cov_ols))) # OLS standard errors 
+      if (!is.null(z)) {
+        
+        y <- matrix(t(object[["data"]][["train"]][["y"]]))
+        k <- object[["model"]][["k"]]
+        tt <- nrow(object[["data"]][["train"]][["y"]])
+        
+        ols <- solve(crossprod(z)) %*% crossprod(z, y)
+        u <- matrix(y - z %*% ols, k)
+        sigma_ols <- tcrossprod(u) / (tt - ncol(z) / k) # OLS error covariance matrix
+        cov_ols <- solve(crossprod(z, kronecker(diag(1, tt), solve(sigma_ols))) %*% z)
+        se_ols <- matrix(sqrt(diag(cov_ols))) # OLS standard errors
         
         tau0 <- se_ols * semiautomatic[1] # Prior if excluded
         tau1 <- se_ols * semiautomatic[2] # Prior if included
       } else {
         tau0 <- NULL
         tau1 <- NULL
-      }
-      
-      if (object[["model"]][["structural"]]) {
-        message("Semiautomatic approach to SSVS not available for structural coefficients yet. Using values of argument 'tau' instead.")
-        tau0 <- rbind(tau0, matrix(tau[1], k * (k - 1) / 2))
-        tau1 <- rbind(tau1, matrix(tau[2], k * (k - 1) / 2))
-      }
-      
-      if (object[["model"]][["error"]] %in% c("gamma-covar")) {
-        message("Semiautomatic approach to SSVS not available for covariance coefficients yet. Using values of argument 'tau' instead.")
-        tau0 <- rbind(tau0, matrix(tau[1], k * (k - 1) / 2))
-        tau1 <- rbind(tau1, matrix(tau[2], k * (k - 1) / 2))
       }
       
     } else {

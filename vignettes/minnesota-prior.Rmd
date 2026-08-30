@@ -43,7 +43,7 @@ data("us_macrodata")
 plot(us_macrodata)
 ```
 
-## Workflow
+## Workflow for VAR models
 
 ### Create a model
 

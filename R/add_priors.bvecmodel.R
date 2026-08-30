@@ -35,17 +35,16 @@
 #'   to the intercept. If a numeric is provided, all prior means are set to this value.
 #'   If \code{coef$const = "mean"}, the mean of the respective endogenous variable is used as prior mean.
 #'   If \code{coef$const = "first"}, the first values of the respective endogenous variable is used as prior mean.}
-#'   \item{\code{minnesota}}{a list of length 4 containing parameters for the calculation of
-#'   the Minnesota prior, where the element names must be \code{kappa0}, \code{kappa1}, \code{kappa2} and \code{kappa3}.
+#'   \item{\code{minnesota}}{a named list containing for parameters for the calculation of
+#'   the Minnesota prior, where the element names must be \code{kappa1}, \code{kappa2}, \code{kappa3} and \code{kappa4}.
 #'   For the endogenous variable \eqn{i} the prior variance of the \eqn{l}th lag of regressor \eqn{j} is obtained as
-#'   \deqn{ \frac{\kappa_{0}}{l^2} \textrm{ for own lags of endogenous variables,}} 
-#'   \deqn{ \frac{\kappa_{0} \kappa_{1}}{l^2} \frac{\sigma_{i}^2}{\sigma_{j}^2} \textrm{ for endogenous variables other than own lags,}}
-#'   \deqn{ \frac{\kappa_{0} \kappa_{2}}{(l+1)^2} \frac{\sigma_{i}^2}{\sigma_{j}^2} \textrm{ for exogenous variables,}}
-#'   \deqn{ \kappa_{0} \kappa_{3} \sigma_{i}^2 \textrm{ for deterministic terms,}}
+#'   \deqn{ \frac{\kappa_{1}}{l^2} \textrm{ for own lags of endogenous variables,}} 
+#'   \deqn{ \frac{\kappa_{1} \kappa_{2}}{l^2} \frac{\sigma_{i}^2}{\sigma_{j}^2} \textrm{ for endogenous variables other than own lags,}}
+#'   \deqn{ \frac{\kappa_{1} \kappa_{3}}{(l+1)^2} \frac{\sigma_{i}^2}{\sigma_{j}^2} \textrm{ for exogenous variables,}}
+#'   \deqn{ \kappa_{1} \kappa_{4} \sigma_{i}^2 \textrm{ for deterministic terms,}}
 #'   where \eqn{\sigma_{i}} is the residual standard deviation of variable \eqn{i} of an unrestricted
 #'   LS estimate. For exogenous variables \eqn{\sigma_{i}} is the sample standard deviation.
-#'   If \code{kappa2 = NULL}, \eqn{\kappa_{0} \kappa_{3} \sigma_{i}^2} will be used for
-#'   exogenous variables instead.
+#'   If the model does not contain exogenous variables, \code{kappa3} will be ignored.
 #'   The function only provides priors for the non-cointegration part of the model. However,
 #'   the residual standard errors \eqn{\sigma_i} are based on an unrestricted LS regression of the
 #'   endogenous variables on the error correction term and the non-cointegration regressors.}
@@ -453,10 +452,10 @@ add_priors.bvecmodel <- function(object,
     if (minnesota) {
       # Minnesota prior ----
       minn <- minnesota_prior(object = object,
-                              kappa0 = coef[["minnesota"]][["kappa0"]],
                               kappa1 = coef[["minnesota"]][["kappa1"]],
                               kappa2 = coef[["minnesota"]][["kappa2"]],
                               kappa3 = coef[["minnesota"]][["kappa3"]],
+                              kappa4 = coef[["minnesota"]][["kappa4"]],
                               max_var = NULL,
                               sigma = "AR")
       

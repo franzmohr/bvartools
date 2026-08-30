@@ -53,7 +53,7 @@ Argument \code{coef} can contain the following elements:
   If \code{coef$const = "mean"}, the mean of the respective endogenous variable is used as prior mean.
   If \code{coef$const = "first"}, the first values of the respective endogenous variable is used as prior mean.
   This can be useful for trend estimation when using a TVP model.}
-  \item{\code{minnesota}}{a list containing for parameters for the calculation of
+  \item{\code{minnesota}}{a named list containing for parameters for the calculation of
   the Minnesota prior, where the element names must be \code{kappa1}, \code{kappa2}, \code{kappa3} and \code{kappa4}.
   For the endogenous variable \eqn{i} the prior variance of the \eqn{l}th lag of regressor \eqn{j} is obtained as
   \deqn{ \frac{\kappa_{1}}{l^2} \textrm{ for own lags of endogenous variables,}} 
@@ -62,7 +62,7 @@ Argument \code{coef} can contain the following elements:
   \deqn{ \kappa_{1} \kappa_{4} \sigma_{i}^2 \textrm{ for deterministic terms,}}
   where \eqn{\sigma_{i}} is the residual standard deviation of variable \eqn{i} of an unrestricted
   LS estimate. For exogenous variables \eqn{\sigma_{i}} is the sample standard deviation.
-  If the model does not contain exogenous variables, \code{kappa2} will be ignored.}
+  If the model does not contain exogenous variables, \code{kappa3} will be ignored.}
   \item{\code{max_var}}{a numeric specifying the maximum prior variance that is allowed for
   non-deterministic coefficients. This argument can be used to overwrite prior variances that are
   based on LS estimates, but should not exceed a certain threshold. This can

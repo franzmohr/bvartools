@@ -46,6 +46,13 @@ object <- create_bvecmodel(e6, p = 4, r = 1,
 
 Argument `p` represents the lag order of the VAR form of the model and `r` is the cointegration rank of `Pi`. Function `create_bvecmodel` requires to specify the inclusion of intercepts, trends and seasonal dummies separately. This allows to decide on whether they enter the cointegration term (`"restricted"`) or the non-cointegration part (`"unrestricted"`) of the model.
 
+Models such as the one proposed in Koop, Leon-Gonzalez and Strachan (2010) put a restriction on the space spanned by $\beta$. This means, that the scale of the variables in the error correction term becomes important. A reasonable approach to handle this, is to rescale the series in the error correction term. Function `rescale_error_correction_term` can be used for this purpose. It rescales all non-deterministic elements by their respective differenced series' standard deviation. If `object[["data"]][["train"]][["w"]]` contains a column named `trend`, its valus are replaced by $(t - T/2) / T$.
+
+```{r}
+object <- rescale_error_correction_term(object)
+```
+
+
 ## Priors
 
 Function `add_priors` adds the necessary prior specifications to object `object`. For the current application we use non-informative priors to compare the with the result in Lütkepohl (2006):
@@ -65,6 +72,13 @@ Function `add_initial_values` generates of first draws of the Gibbs sampler for 
 object <- add_initial_values(object, method = "maxlik")
 ```
 
+Note that despite the 
+```{r}
+rescale_factor %*% matrix(object[["initial"]][["a"]][1:2])
+round(matrix(object[["initial"]][["a"]], 2), 3)
+```
+
+
 ## Estimation
 
 ### User-specific algorithm
@@ -78,6 +92,8 @@ set.seed(7654321)
 # Obtain data matrices
 y <- t(object[["data"]][["train"]][["y"]])
 w <- t(object[["data"]][["train"]][["w"]])
+rescale_factor <- diag(attr(w, "sd"))
+rescale_factor_inv <- solve(rescale_factor)
 x <- t(object[["data"]][["train"]][["x"]])
 
 r <- object[["model"]][["rank"]] # Set rank
@@ -143,8 +159,8 @@ for (draw in 1:draws) {
   
   # Store draws
   if (draw > burnin) {
-    draws_alpha[, draw - burnin] <- alpha
-    draws_beta[, draw - burnin] <- beta
+    draws_alpha[, draw - burnin] <- rescale_factor %*% alpha
+    draws_beta[, draw - burnin] <- rescale_factor_inv %*% beta
     draws_pi[, draw - burnin] <- Pi
     draws_gamma[, draw - burnin] <- gamma
     draws_sigma[, draw - burnin] <- sigma

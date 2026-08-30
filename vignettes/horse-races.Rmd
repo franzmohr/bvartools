@@ -1,0 +1,187 @@
+---
+title: "Horse Races"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Horse Races}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup, message=FALSE}
+library(bvartools)
+```
+
+## Introduction
+
+
+## Workflow
+
+```{r}
+data("us_macrodata")
+
+#us_macrodata <- diff(us_macrodata)
+
+expanding_window_start <- 2006
+```
+
+
+### Producing candidate models
+
+```{r}
+# Shared specifications
+iterations <- 2000
+burnin <- 1000
+```
+
+
+First, create a series of traditional VAR models:
+
+```{r}
+var_default <- create_bvarmodel(us_macrodata,
+                                p = 1:4,
+                                deterministic = "const",
+                                iterations = iterations,
+                                burnin = burnin)
+
+var_default <- use_expanding_window(var_default, start = expanding_window_start)
+
+var_default <- add_priors(var_default,
+                          coef = list(v_i = 1 / 10, v_i_det = 1 / 100),
+                          sigma = list(df = 3, scale = 1))
+
+var_default <- add_initial_values(var_default)
+```
+
+Second, create a series of VAR models with stochastic search variable selection (SSVS):
+
+```{r}
+var_ssvs <- create_bvarmodel(us_macrodata,
+                            p = 4,
+                            varsel = "ssvs",
+                            deterministic = "const",
+                            iterations = iterations,
+                            burnin = burnin)
+
+var_ssvs <- use_expanding_window(var_ssvs, start = expanding_window_start)
+
+var_ssvs <- add_priors(var_ssvs,
+                          coef = list(v_i = 1 / 10, v_i_det = 1 / 100),
+                          sigma = list(df = 3, scale = 1),
+                          varsel = list(inprior = 0.5, tau = c(0.05, 10), exclude_deterministic = TRUE))
+
+var_ssvs <- add_initial_values(var_ssvs)
+```
+
+Thrird, create a series of VAR models with Bayesian variable selection à la Korobilis (2013):
+
+```{r}
+var_bvs <- create_bvarmodel(us_macrodata,
+                            p = 4,
+                            varsel = "bvs",
+                            deterministic = "const",
+                            iterations = iterations,
+                            burnin = burnin)
+
+var_bvs <- use_expanding_window(var_bvs, start = expanding_window_start)
+
+var_bvs <- add_priors(var_bvs,
+                          coef = list(v_i = 1 / 10, v_i_det = 1 / 100),
+                          sigma = list(df = 3, scale = 1),
+                          varsel = list(inprior = 0.5, exclude_deterministic = TRUE))
+
+var_bvs <- add_initial_values(var_bvs)
+```
+
+Use `combine_models` to make one object:
+
+```{r}
+models <- combine_models(var_default,
+                         var_ssvs,
+                         var_bvs)
+```
+
+<!-- Ensure that all models look at the same time series: -->
+
+<!-- ```{r} -->
+<!-- models <- align_model_obs(models) -->
+<!-- ``` -->
+
+
+### Draw posteriors
+
+```{r}
+models <- add_posterior_coefficients(models)
+```
+
+
+### Forecasting
+
+Forecasts are obtained in two steps. First, function `add_forecast_input` generates the data of the forecast periods, where deterministic terms can be provided in the argument `deterministic` and unmodelled variables in the argument `exogen`. If they are not provided, the function tries to obtain them from the model and gives a message, if it does not succeed. Second, function `add_posterior_forecasts` then simulates the forecasts.
+
+```{r}
+models <- add_forecast_input(models, n_ahead = 4)
+models <- add_posterior_forecasts(models)
+```
+
+Calculate forecast errors on which out-of-sample selection criteria will be based:
+
+```{r}
+models <- add_forecast_errors(models, test_sample = us_macrodata)
+```
+
+
+### Evaluation
+
+Use function `add_posterior_loglik` to add log-likelihoods, on which in-sample selection criteria will be based:
+
+```{r}
+models <- add_posterior_loglik(models)
+```
+
+Calculate in-sample and out-of-sample selection criteria:
+
+```{r}
+sc <- selection_criteria(models)
+```
+
+Compare the selection criteria. For out-of-sample criteria, the first model is used as a reference for comparison:
+
+```{r}
+print(sc, relative = 1)
+```
+
+
+#### In-sample plots
+
+```{r, fig.width=5.5, fig.height=4.5}
+plot(sc, criterion = "BIC")
+```
+
+```{r, fig.width=5.5, fig.height=4.5}
+plot(sc, criterion = "AIC")
+```
+
+#### Out-of-sample plots
+
+```{r, fig.width=5.5, fig.height=4.5}
+plot(sc, criterion = "FE")
+```
+```{r, fig.width=5.5, fig.height=4.5}
+plot(sc, criterion = "AFE")
+```
+
+```{r, fig.width=5.5, fig.height=4.5}
+plot_forecast_errors_by_period(models, criterion = "FE")
+```
+
+
+## References
+
+Korobilis, D. (2013). VAR forecasting using Bayesian variable selection. *Journal of Applied Econometrics, 28*(2), 204-230. <https://doi.org/10.1002/jae.1271>

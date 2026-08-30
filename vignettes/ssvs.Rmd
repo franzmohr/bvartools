@@ -50,8 +50,8 @@ The prior variances of the parameters are set in accordance with the semiautomat
 set.seed(1234567)
 
 # Get data matrices
-y <- t(data$data$y)
-x <- t(data$data$x)
+y <- t(data$data$train$y)
+x <- t(data$data$train$x)
 
 tt <- ncol(y) # Number of observations
 k <- nrow(y) # Number of endogenous variables
@@ -121,10 +121,10 @@ for (draw in 1:draws) {
 }
 ```
 
-The output of a Gibbs sampler with SSVS can be further analysed in the usual way. With the `bvartools` package the posterior draws can be collected in a `bvar` object and the `summary` method provides summary statistics. It is also possible to add information on the inclusion parameters to the `bvar` object by providing a named list as an argument. The list must contain an element `coeffs`, which contains the MCMC draws of the coefficients, and element `lambda` contains the corresponding draw of the inclusion parameter.
+The output of a Gibbs sampler with SSVS can be further analysed in the usual way. With the `bvartools` package the posterior draws can be collected in a `bvarmodel` object and the `summary` method provides summary statistics. It is also possible to add information on the inclusion parameters to the `bvarmodel` object by providing a named list as an argument. The list must contain an element `coeffs`, which contains the MCMC draws of the coefficients, and element `lambda` contains the corresponding draw of the inclusion parameter.
 
 ```{r}
-bvar_est <- bvar(y = data$data$y, x = data$data$x,
+bvar_est <- bvar(y = data$data$train$y, x = data$data$train$x,
                  A = list(coeffs = draws_a[1:36,],
                           lambda = draws_lambda[1:36,]),
                  C = list(coeffs = draws_a[37:39, ],
@@ -150,7 +150,7 @@ However, if the researcher prefers not to work with a model, where the relevance
 
 ```{r}
 # Get inclusion probabilities
-lambda <- bvar_summary$coefficients$lambda
+lambda <- bvar_summary$a$lambda
 
 # Select variables that should be included
 include_var <- c(lambda >= .4)
@@ -185,7 +185,7 @@ for (draw in 1:draws) {
 The means of the posterior draws are similar to the OLS estimates in Lütkepohl (2006, Section 5.2.10):
 
 ```{r}
-bvar_est <- bvar(y = data$data$y, x = data$data$x, A = draws_a[1:36,],
+bvar_est <- bvar(y = data$data$train$y, x = data$data$train$x, A = draws_a[1:36,],
                  C = draws_a[37:39, ], Sigma = draws_sigma)
 
 summary(bvar_est)
@@ -216,7 +216,7 @@ Posterior draws can be obtained using function `draw_posterior`. It will recogni
 ssvs_est <- draw_posterior(model_with_priors)
 ```
 
-The output of `draw_posterior` is an object of class `bvar`. Thus, further analytical steps can be done as described above.
+The output of `draw_posterior` is an object of class `bvarmodel`. Thus, further analytical steps can be done as described above.
 
 ## References
 

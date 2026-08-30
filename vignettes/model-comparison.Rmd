@@ -39,7 +39,7 @@ plot(data)
 
 ## Set up models
 
-Functions `create_var_model` can be used to obtain a list of different model specifications. In the following example five models with an intercept and increasing lag orders are generated.
+Functions `create_bvarmodel` can be used to obtain a list of different model specifications. In the following example five models with an intercept and increasing lag orders are generated.
 
 ```{r}
 models <- create_bvarmodel(data, p = 0:4,

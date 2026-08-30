@@ -58,9 +58,6 @@
 #' If an integer vector is provided as argument \code{p}, \code{s} or \code{r}, the function will
 #' produce a distinct model for all possible combinations of those specifications.
 #' 
-#' If \code{tvp} is \code{TRUE}, the respective coefficients
-#' of the above model are assumed to be time varying.
-#' 
 #' Argument \code{error} specifies the structure of the covariance matrix of
 #' the error term and how it is estimated. Possible specifications are:
 #' \itemize{
@@ -87,14 +84,7 @@
 #'  \item{\code{"KLGS2010"}: Algorithm proposed in Koop, León-González & Strachan (2010).}
 #' }
 #' 
-#' @return An object of class \code{'bvecmodel'}, which contains the following elements:
-#' \item{data}{A list of data objects, which can be used for posterior simulation. Element
-#' \code{Y} is a time-series object of dependent variables. Element \code{W} is a timer-series
-#' object of variables in the cointegration term and element \code{X} is a time-series
-#' object of variables that do not enter the cointegration term. Element \code{SUR} contains a
-#' matrix of element \code{X} in its SUR form.}
-#' \item{model}{A list of model specifications.}
-#' 
+#' @return An object of class \code{'bvecmodel'}.
 #' @examples 
 #' 
 #' # Load data

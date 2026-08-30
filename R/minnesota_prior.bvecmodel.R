@@ -174,15 +174,15 @@ minnesota_prior.bvecmodel <- function(object, kappa1 = 2, kappa2 = 1, kappa3 = N
       # Exogenous variables
       if (m > 0) {
         s <- s - 1
-        s_exo <- sqrt(apply(matrix(x[p * k + 1:m,], m), 1, stats::var))
+        s_exo <- sqrt(apply(matrix(x[n_ect + k * p + 1:m,], m), 1, stats::var))
         for (r in 1:(s + 1)) {
           for (l in 1:k) {
             for (j in 1:m) {
               # Note that in the loop r starts at 1, so that this is equivalent to l + 1
               if (is.null(kappa3)) {
-                V[l, n_ect + p * k + (r - 1) * m + j] <- kappa1 * kappa4 * s_endo[l]^2
+                V[l, n_ect + k * p + (r - 1) * m + j] <- kappa1 * kappa4 * s_endo[l]^2
               } else {
-                V[l, n_ect + p * k + (r - 1) * m + j] <- kappa1 * kappa3 / r^2 * s_endo[l]^2 / s_exo[j]^2 
+                V[l, n_ect + k * p + (r - 1) * m + j] <- kappa1 * kappa3 / r^2 * s_endo[l]^2 / s_exo[j]^2 
               }
             }
           }
@@ -198,9 +198,7 @@ minnesota_prior.bvecmodel <- function(object, kappa1 = 2, kappa2 = 1, kappa3 = N
       
       # Deterministic variables
       if (object[["model"]][["n"]] > 0){
-        for (i in 1:k) {
-          V[, -(1:(n_ect + k * p + m * s))] <- kappa1 * kappa4 * s_endo^2 
-        }
+        V[, -(1:(n_ect + k * p + m * s))] <- kappa1 * kappa4 * s_endo^2 
       }
       
       # Drop cointegration priors
@@ -214,7 +212,7 @@ minnesota_prior.bvecmodel <- function(object, kappa1 = 2, kappa2 = 1, kappa3 = N
       
       V <- matrix(V)
       
-    }else {
+    } else {
       s_endo <- sqrt(diag(stats::var(t(y))))
     }
     

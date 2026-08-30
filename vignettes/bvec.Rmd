@@ -49,7 +49,7 @@ Argument `p` represents the lag order of the VAR form of the model and `r` is th
 Models such as the one proposed in Koop, Leon-Gonzalez and Strachan (2010) put a restriction on the space spanned by $\beta$. This means, that the scale of the variables in the error correction term becomes important. A reasonable approach to handle this, is to rescale the series in the error correction term. Function `rescale_error_correction_term` can be used for this purpose. It rescales all non-deterministic elements by their respective differenced series' standard deviation. If `object[["data"]][["train"]][["w"]]` contains a column named `trend`, its valus are replaced by $(t - T/2) / T$.
 
 ```{r}
-object <- rescale_error_correction_term(object)
+object <- rescale_error_correction(object)
 ```
 
 

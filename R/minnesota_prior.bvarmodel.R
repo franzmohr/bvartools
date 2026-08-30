@@ -32,6 +32,10 @@
 #' \deqn{ \kappa_{1} \kappa_{4} \sigma_{i}^2 \textrm{ for deterministic terms,}}
 #' where \eqn{\sigma_{i}} is the residual standard deviation of variable \eqn{i} of an unrestricted
 #' LS estimate. For exogenous variables \eqn{\sigma_{i}} is the sample standard deviation.
+#' In case structural parameters are estimated, the formula
+#' \eqn{\kappa_{1} \kappa_{2} \frac{\sigma_{i}^2}{\sigma_{j}^2}} is used.
+#' If \eqn{kappa_{3}} is not provided, prior variances are calculated in the same way as for
+#' deterministic terms.
 #' If the model does not contain exogenous variables, argument \code{kappa3} will be ignored.
 #' 
 #' @return A list containing a matrix of prior means and the precision matrix of the coefficients and the
@@ -43,18 +47,6 @@
 #' (2nd ed.). Cambridge: University Press.
 #' 
 #' Lütkepohl, H. (2006). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
-#' 
-#' @examples
-#' 
-#' # Load data
-#' data("e1")
-#' data <- diff(log(e1))
-#' 
-#' # Generate model input
-#' object <- create_bvarmodel(data)
-#' 
-#' # Obtain Minnesota prior
-#' prior <- minnesota_prior(object)
 #' 
 #' @export
 minnesota_prior.bvarmodel <- function(object, kappa1 = 2, kappa2 = 0.5, kappa3 = NULL, kappa4 = 5,
@@ -163,9 +155,9 @@ minnesota_prior.bvarmodel <- function(object, kappa1 = 2, kappa2 = 0.5, kappa3 =
             for (j in 1:m) {
               # Note that in the loop r starts at 1, so that this is equivalent to l + 1
               if (is.null(kappa3)) {
-                V[l, p * k + (r - 1) * m + j] <- kappa1 * kappa3 * s_endo[l]^2
+                V[l, p * k + (r - 1) * m + j] <- kappa1 * kappa4 * s_endo[l]^2
               } else {
-                V[l, p * k + (r - 1) * m + j] <- kappa1 * kappa4 / r^2 * s_endo[l]^2 / s_exo[j]^2 
+                V[l, p * k + (r - 1) * m + j] <- kappa1 * kappa3 / r^2 * s_endo[l]^2 / s_exo[j]^2 
               }
             }
           }

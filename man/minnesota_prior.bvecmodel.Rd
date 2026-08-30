@@ -52,11 +52,16 @@ The function calculates the Minnesota prior in the same manner as for
 a traditional VAR model. For the endogenous variable
 \eqn{i} the prior variance of the \eqn{l}th lag of regressor \eqn{j} is obtained as
 \deqn{ \frac{\kappa_{1}}{l^2} \textrm{ for own lags of endogenous variables,}} 
-\deqn{ \frac{\kappa_{2}}{l^2} \frac{\sigma_{i}^2}{\sigma_{j}^2} \textrm{ for endogenous variables other than own lags,}}
-\deqn{ \frac{\kappa_{3}}{(l + 1)^2} \frac{\sigma_{i}^2}{\sigma_{j}^2} \textrm{ for exogenous variables,}}
-\deqn{ \kappa_{4} \sigma_{i}^2 \textrm{ for deterministic terms,}}
+\deqn{ \frac{\kappa_{1} \kappa_{2}}{l^2} \frac{\sigma_{i}^2}{\sigma_{j}^2} \textrm{ for endogenous variables other than own lags,}}
+\deqn{ \frac{\kappa_{1} \kappa_{3}}{(l+1)^2} \frac{\sigma_{i}^2}{\sigma_{j}^2} \textrm{ for unmodelled exogenous variables,}}
+\deqn{ \kappa_{1} \kappa_{4} \sigma_{i}^2 \textrm{ for deterministic terms,}}
 where \eqn{\sigma_{i}} is the residual standard deviation of variable \eqn{i} of an unrestricted
 LS estimate. For exogenous variables \eqn{\sigma_{i}} is the sample standard deviation.
+In case structural parameters are estimated, the formula
+\eqn{\kappa_{1} \kappa_{2} \frac{\sigma_{i}^2}{\sigma_{j}^2}} is used.
+If \code{kappa3} is not provided, prior variances are calculated in the same way as for
+deterministic terms.
+If the model does not contain exogenous variables, argument \code{kappa3} will be ignored.
 
 The function only provides priors for the non-cointegration part of the model. The
 residual standard errors \eqn{\sigma_i} are based on an unrestricted LS regression of the

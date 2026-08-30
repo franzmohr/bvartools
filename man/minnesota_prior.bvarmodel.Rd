@@ -61,20 +61,11 @@ regressor \eqn{j} is obtained as
 \deqn{ \kappa_{1} \kappa_{4} \sigma_{i}^2 \textrm{ for deterministic terms,}}
 where \eqn{\sigma_{i}} is the residual standard deviation of variable \eqn{i} of an unrestricted
 LS estimate. For exogenous variables \eqn{\sigma_{i}} is the sample standard deviation.
+In case structural parameters are estimated, the formula
+\eqn{\kappa_{1} \kappa_{2} \frac{\sigma_{i}^2}{\sigma_{j}^2}} is used.
+If \eqn{kappa_{3}} is not provided, prior variances are calculated in the same way as for
+deterministic terms.
 If the model does not contain exogenous variables, argument \code{kappa3} will be ignored.
-}
-\examples{
-
-# Load data
-data("e1")
-data <- diff(log(e1))
-
-# Generate model input
-object <- create_bvarmodel(data)
-
-# Obtain Minnesota prior
-prior <- minnesota_prior(object)
-
 }
 \references{
 Chan, J., Koop, G., Poirier, D. J., & Tobias, J. L. (2020). \emph{Bayesian Econometric Methods}

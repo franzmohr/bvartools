@@ -6,13 +6,15 @@ output:
 
 # bvartools
 
-<!-- badges: start -->
 [![CRAN status](https://www.r-pkg.org/badges/version/bvartools)](https://cran.r-project.org/package=bvartools)
 [![CRAN downloads](https://cranlogs.r-pkg.org/badges/bvartools)](https://cran.r-project.org/package=bvartools)
 [![Total downloads](https://cranlogs.r-pkg.org/badges/grand-total/bvartools)](https://cran.r-project.org/package=bvartools)
 [![R-CMD-check](https://github.com/franzmohr/bvartools/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/franzmohr/bvartools/actions/workflows/R-CMD-check.yaml)
 [![License: GPL (>= 2)](https://img.shields.io/badge/license-GPL%20%28%3E%3D%202%29-blue.svg)](https://www.gnu.org/licenses/gpl-2.0)
-<!-- badges: end -->
+
+[![GitHub Sponsors](https://img.shields.io/badge/Sponsor-%E2%9D%A4-ea4aaa?logo=github-sponsors&logoColor=white)](https://github.com/sponsors/franzmohr)
+[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-FFDD00?logo=buymeacoffee&logoColor=black)](https://www.buymeacoffee.com/franzmohr)
+
 
 ## Overview
 

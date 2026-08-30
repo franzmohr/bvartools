@@ -46,10 +46,10 @@ object <- create_bvecmodel(e6, p = 4, r = 1,
 
 Argument `p` represents the lag order of the VAR form of the model and `r` is the cointegration rank of `Pi`. Function `create_bvecmodel` requires to specify the inclusion of intercepts, trends and seasonal dummies separately. This allows to decide on whether they enter the cointegration term (`"restricted"`) or the non-cointegration part (`"unrestricted"`) of the model.
 
-Models such as the one proposed in Koop, Leon-Gonzalez and Strachan (2010) put a restriction on the space spanned by $\beta$. This means, that the scale of the variables in the error correction term becomes important. A reasonable approach to handle this, is to rescale the series in the error correction term. Function `rescale_error_correction_term` can be used for this purpose. It rescales all non-deterministic elements by their respective differenced series' standard deviation. If `object[["data"]][["train"]][["w"]]` contains a column named `trend`, its valus are replaced by $(t - T/2) / T$.
+Models such as the one proposed in Koop, Leon-Gonzalez and Strachan (2010) put a restriction on the space spanned by $\beta$. This means, that the scale of the variables in the error correction term becomes important. A reasonable approach to handle this, is to rescale the series in the error correction term. Function `scale_error_correction_term` can be used for this purpose. It rescales all non-deterministic elements by their respective differenced series' standard deviation. If `object[["data"]][["train"]][["w"]]` contains a column named `trend`, its valus are replaced by $(t - T/2) / T$.
 
 ```{r}
-object <- rescale_error_correction(object)
+object <- scale_error_correction(object)
 ```
 
 

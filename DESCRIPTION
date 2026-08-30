@@ -90,6 +90,7 @@ Collate:
     'minnesota_prior.R'
     'minnesota_prior.bvarmodel.R'
     'minnesota_prior.bvecmodel.R'
+    'minnesota_prior.modellist.R'
     'plot.bvarfevd.R'
     'plot.bvarirf.R'
     'plot.bvarmodel.R'

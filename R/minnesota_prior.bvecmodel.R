@@ -56,12 +56,15 @@
 #' data("e6")
 #' 
 #' # Generate model input
-#' object <- create_bvecmodel(e6, r = 1)
+#' object <- create_bvecmodel(e6, r = 0:2, p = 1:4,
+#'                            const = "unrestricted",
+#'                            seasonal = "unrestricted")
 #' 
 #' # Obtain Minnesota prior
 #' prior <- minnesota_prior(object)
 #' 
 #' @export
+#' @method minnesota_prior bvecmodel
 minnesota_prior.bvecmodel <- function(object, kappa1 = 2, kappa2 = 1, kappa3 = NULL, kappa4 = 10,
                                       max_var = NULL, sigma = "AR") {
   
@@ -89,7 +92,7 @@ minnesota_prior.bvecmodel <- function(object, kappa1 = 2, kappa2 = 1, kappa3 = N
   }
   
   y <- t(object[["data"]][["train"]][["y"]])
-  k <- object[["data"]][["model"]][["k"]]
+  k <- object[["model"]][["k"]]
 
   mu <- NULL  
   V <- NULL
@@ -104,14 +107,14 @@ minnesota_prior.bvecmodel <- function(object, kappa1 = 2, kappa2 = 1, kappa3 = N
       n_ect <- NCOL(object[["data"]][["train"]][["w"]])
       tt <- NCOL(y)
       tot_par <- k * NROW(x)
-      p <- object[["data"]][["model"]][["p"]]
+      p <- object[["model"]][["p"]]
       p <- p - 1
       
       m <- 0
       s <- 0
-      if (object[["data"]][["model"]][["m"]] > 0) {
-        m <- object[["data"]][["model"]][["m"]]
-        s <- object[["data"]][["model"]][["s"]]
+      if (object[["model"]][["m"]] > 0) {
+        m <- object[["model"]][["m"]]
+        s <- object[["model"]][["s"]]
       }
       
       V <- matrix(rep(NA, tot_par), k) # Set up matrix for variances
@@ -121,12 +124,12 @@ minnesota_prior.bvecmodel <- function(object, kappa1 = 2, kappa2 = 1, kappa3 = N
       
       # Determine positions of deterministic terms for calculation of sigma
       pos_det <- NULL
-      if (object[["data"]][["model"]][["n_restricted"]] > 0 | object[["data"]][["model"]][["n"]] > 0) {
-        if (object[["data"]][["model"]][["n_restricted"]] > 0) {
-          pos_det <- c(pos_det, k + m + 1:length(object[["data"]][["model"]][["n_restricted"]]))
+      if (object[["model"]][["n_restricted"]] > 0 | object[["model"]][["n"]] > 0) {
+        if (object[["model"]][["n_restricted"]] > 0) {
+          pos_det <- c(pos_det, k + m + 1:length(object[["model"]][["n_restricted"]]))
         }
-        if (object[["data"]][["model"]][["n"]] > 0) {
-          pos_det <- c(pos_det, n_ect + k * p + m * s + 1:length(object[["data"]][["model"]][["n"]]))
+        if (object[["model"]][["n"]] > 0) {
+          pos_det <- c(pos_det, n_ect + k * p + m * s + 1:length(object[["model"]][["n"]]))
         }
       }
       
@@ -196,7 +199,7 @@ minnesota_prior.bvecmodel <- function(object, kappa1 = 2, kappa2 = 1, kappa3 = N
       # Deterministic variables
       if (object[["model"]][["n"]] > 0){
         for (i in 1:k) {
-          V[, -(1:(n_ect + k * p + m * s))] <- kapp1 * kappa4 * s_endo^2 
+          V[, -(1:(n_ect + k * p + m * s))] <- kappa1 * kappa4 * s_endo^2 
         }
       }
       
@@ -231,7 +234,7 @@ minnesota_prior.bvecmodel <- function(object, kappa1 = 2, kappa2 = 1, kappa3 = N
     if (object[["model"]][["rank"]] > 0) {
       n_alpha <- k * object[["model"]][["rank"]]
       mu <- rbind(matrix(0, n_alpha), mu)
-      V <- rbind(matrix(kappa0, k, object[["model"]][["rank"]]), V)
+      V <- rbind(matrix(kappa1, n_alpha), V)
     }
     
     # Prior precision

@@ -48,7 +48,23 @@
 #' 
 #' Lütkepohl, H. (2006). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
 #' 
+#' 
+#' @examples
+#' 
+#' # Load data
+#' data("e1")
+#' e1 <- diff(log(e1)) * 100
+#' 
+#' # Generate model input
+#' object <- create_bvarmodel(e6, p = 1:4,
+#'                            deterministic = "both",
+#'                            seasonal = TRUE)
+#' 
+#' # Obtain Minnesota prior
+#' prior <- minnesota_prior(object)
+#' 
 #' @export
+#' @method minnesota_prior bvarmodel
 minnesota_prior.bvarmodel <- function(object, kappa1 = 2, kappa2 = 0.5, kappa3 = NULL, kappa4 = 5,
                                       max_var = NULL, coint_var = FALSE, sigma = "AR") {
   

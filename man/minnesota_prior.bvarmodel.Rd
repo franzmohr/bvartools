@@ -67,6 +67,21 @@ If \eqn{kappa_{3}} is not provided, prior variances are calculated in the same w
 deterministic terms.
 If the model does not contain exogenous variables, argument \code{kappa3} will be ignored.
 }
+\examples{
+
+# Load data
+data("e1")
+e1 <- diff(log(e1)) * 100
+
+# Generate model input
+object <- create_bvarmodel(e6, p = 1:4,
+                           deterministic = "both",
+                           seasonal = TRUE)
+
+# Obtain Minnesota prior
+prior <- minnesota_prior(object)
+
+}
 \references{
 Chan, J., Koop, G., Poirier, D. J., & Tobias, J. L. (2020). \emph{Bayesian Econometric Methods}
 (2nd ed.). Cambridge: University Press.

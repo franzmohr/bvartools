@@ -73,7 +73,9 @@ endogenous variables on the error correction term and the non-cointegration regr
 data("e6")
 
 # Generate model input
-object <- create_bvecmodel(e6, r = 1)
+object <- create_bvecmodel(e6, r = 0:2, p = 1:4,
+                           const = "unrestricted",
+                           seasonal = "unrestricted")
 
 # Obtain Minnesota prior
 prior <- minnesota_prior(object)

@@ -1,47 +1,36 @@
 
-# Extracts the names of the regressors from a 'bvar' object
+
+# Extracts the names of the regressors from a 'bvarmodel' object
 # add_block adds the letter of the block of endogenous, exogensous, deterministic, structural and sigma coefficients
 
-.get_regressor_names_var <- function(object, add_block = FALSE) {
+.get_regressor_names_bvarmodel <- function(object, add_block = FALSE) {
   
-  k <- object[["specifications"]][["dims"]][["K"]]
-  tvp <- object[["specifications"]][["tvp"]]
-  y_names <- dimnames(object[["y"]])[[2]]
+  k <- object[["model"]][["k"]]
+  p <- object[["model"]][["p"]]
+  m <- object[["model"]][["m"]]
+  s <- object[["model"]][["s"]]
+  n <- object[["model"]][["n"]]
+  tvp <- object[["model"]][["tvp"]]
+  y_names <- dimnames(object[["data"]][["original"]][["endogen"]])[[2]]
   x_names <- NULL
   
-  m <- n <- o <- 0
-  if (!is.null(object[["A"]])) {
-    if (tvp[["A"]]) {
-      m <- NCOL(object[["A"]][[1]]) / k
-    } else {
-      m <- NCOL(object[["A"]]) / k 
-    }
-    p <- m / k
+  if (p > 0) {
     temp_names <- NULL
-    if (!is.null(object[["x"]])) {
-      temp_names <- c(temp_names, dimnames(object[["x"]])[[2]][1:m])
-    } else {
-      for (i in 1:p) {
+    for (i in 1:p) {
         temp_names <- c(temp_names, paste(y_names, ".l", i, sep = ""))
-      } 
-    }
+    } 
     if (add_block) {
       temp_names <- paste0("A\n", temp_names)
     }
     x_names <- c(x_names, temp_names)
   }
   
-  if (!is.null(object[["B"]])) {
-    if (tvp[["B"]]) {
-      n <- NCOL(object[["B"]][[1]]) / k
-    } else {
-      n <- NCOL(object[["B"]]) / k
-    }
+  if (m > 0) {
     temp_names <- NULL
-    if (!is.null(object[["x"]])) {
-      temp_names <- c(temp_names, dimnames(object[["x"]])[[2]][m + 1:n])
-    } else {
-      temp_names <- c(temp_names, paste("x", 1:n, sep = ""))
+    exogen_names <- dimnames(object[["data"]][["original"]][["exogen"]])[[2]]
+    temp_names <- paste0(exogen_names, ".l0")
+    if (s > 0) {
+      temp_names <- c(temp_names, paste0(exogen_names, ".l", rep(1:s, each = m))) 
     }
     if (add_block) {
       temp_names <- paste0("B\n", temp_names)
@@ -49,27 +38,16 @@
     x_names <- c(x_names, temp_names)
   }
   
-  if (!is.null(object[["C"]])) {
-    if (tvp[["C"]]) {
-      o <- NCOL(object[["C"]][[1]]) / k
-    } else {
-      o <- NCOL(object[["C"]]) / k 
-    }
-    temp_names <- NULL
-    if (!is.null(object[["x"]])) {
-      temp_names <- c(temp_names, dimnames(object[["x"]])[[2]][m + n + 1:o])
-    } else {
-      temp_names <- c(temp_names, paste("det", 1:o, sep = ""))
-    }
+  if (n > 0) {
+    temp_names <- dimnames(object[["data"]][["original"]][["deterministic"]])[[2]]
     if (add_block) {
       temp_names <- paste0("C\n", temp_names)
     }
     x_names <- c(x_names, temp_names)
   }
   
-  if (!is.null(object[["A0"]])) {
-    temp_names <- NULL
-    temp_names <- dimnames(object[["y"]])[[2]]
+  if (object[["model"]][["structural"]]) {
+    temp_names <- y_names
     if (add_block) {
       temp_names <- paste0("A0\n", temp_names)
     }
@@ -79,140 +57,74 @@
   return(x_names)
 }
 
-.get_regressor_names_vec <- function(object, add_block = FALSE) {
-  
-  k <- object[["specifications"]][["dims"]][["K"]]
-  tvp <- object[["specifications"]][["tvp"]]
-  y_names <- dimnames(object[["y"]])[[2]]
-  ect_names <- NULL
+
+# Extracts the names of the regressors from a 'bvecmodel' object
+# add_block adds the name of the block of cointegration, endogenous, exogenous,
+# deterministic and structural coefficients
+# The regressors of the error correction term are those of the cointegration
+# matrix Pi and not those of the loading matrix alpha, since the draws of the
+# former are what is reported for a VEC model
+
+.get_regressor_names_bvecmodel <- function(object, add_block = FALSE) {
+
+  k <- object[["model"]][["k"]]
+  p <- object[["model"]][["p"]]
+  m <- object[["model"]][["m"]]
+  s <- object[["model"]][["s"]]
+  n <- object[["model"]][["n"]]
+  rank <- object[["model"]][["rank"]]
+
   x_names <- NULL
-  
-  n_pi <- n_pi_x <- n_pi_d <- m <- n <- o <- 0
-  
-  # Cointegration coefficients ----
-  
-  if (!is.null(object[["Pi"]])) {
-    if (tvp[["Pi"]]) {
-      n_pi <- NCOL(object[["Pi"]][[1]]) / k
-    } else {
-      n_pi <- NCOL(object[["Pi"]]) / k 
+
+  add <- function(names, count, fallback, block) {
+    if (count == 0) {
+      return(NULL)
     }
-    temp_names <- NULL
-    if (!is.null(object[["w"]])) {
-      temp_names <- c(temp_names, dimnames(object[["w"]])[[2]][1:n_pi])
-    } else {
-      temp_names <- c(temp_names, paste0("l.", gsub("d.", "", y_names)))
+    if (length(names) != count) {
+      names <- fallback
     }
     if (add_block) {
-      temp_names <- paste0("Pi\n", temp_names)
+      names <- paste0(block, "\n", names)
     }
-    ect_names <- c(ect_names, temp_names)
+    return(names)
   }
-  
-  if (!is.null(object[["Pi_x"]])) {
-    if (tvp[["Pi_x"]]) {
-      n_pi_x <- NCOL(object[["Pi_x"]][[1]]) / k
-    } else {
-      n_pi_x <- NCOL(object[["Pi_x"]]) / k 
-    }
-    temp_names <- NULL
-    if (!is.null(object[["w_x"]])) {
-      temp_names <- c(temp_names, dimnames(object[["w_x"]])[[2]][1:n_pi_x])
-    } else {
-      temp_names <- c(temp_names, paste0("l.x", 1:n_pi_x))
-    }
-    if (add_block) {
-      temp_names <- paste0("Pi_x\n", temp_names)
-    }
-    ect_names <- c(ect_names, temp_names)
+
+  if (rank > 0) {
+    ect_names <- dimnames(object[["data"]][["train"]][["w"]])[[2]]
+    k_beta <- k + m + object[["model"]][["n_restricted"]]
+    fallback <- c(paste0("l.", object[["model"]][["endogen"]]),
+                  if (m > 0) paste0("l.", object[["model"]][["exogen"]]),
+                  if (object[["model"]][["n_restricted"]] > 0) paste0("l.d", 1:object[["model"]][["n_restricted"]]))
+    x_names <- c(x_names, add(ect_names, k_beta, fallback, "Pi"))
   }
-  
-  if (!is.null(object[["Pi_d"]])) {
-    if (tvp[["Pi_d"]]) {
-      n_pi_d <- NCOL(object[["Pi_d"]][[1]]) / k
-    } else {
-      n_pi_d <- NCOL(object[["Pi_d"]]) / k 
-    }
-    temp_names <- NULL
-    if (!is.null(object[["w_d"]])) {
-      temp_names <- c(temp_names, dimnames(object[["w_d"]])[[2]][1:n_pi_d])
-    } else {
-      temp_names <- c(temp_names, paste0("l.d", 1:n_pi_d))
-    }
-    
-    if (add_block) {
-      temp_names <- paste0("Pi_d\n", temp_names)
-    }
-    ect_names <- c(ect_names, temp_names)
+
+  reg_names <- dimnames(object[["data"]][["train"]][["x"]])[[2]]
+  pos <- 0
+
+  n_gamma <- k * (p - 1)
+  if (n_gamma > 0) {
+    fallback <- paste0("d.", rep(object[["model"]][["endogen"]], times = p - 1),
+                       ".l", rep(.lag_label(1:(p - 1), p - 1), each = k))
+    x_names <- c(x_names, add(reg_names[pos + 1:n_gamma], n_gamma, fallback, "Gamma"))
+    pos <- pos + n_gamma
   }
-  
-  # Non-cointegration coefficients ----
-  
-  if (!is.null(object[["Gamma"]])) {
-    if (tvp[["Gamma"]]) {
-      m <- NCOL(object[["Gamma"]][[1]]) / k
-    } else {
-      m <- NCOL(object[["Gamma"]]) / k 
-    }
-    p <- m / k
-    temp_names <- NULL
-    if (!is.null(object[["x"]])) {
-      temp_names <- c(temp_names, dimnames(object[["x"]])[[2]][1:m])
-    } else {
-      for (i in 1:p) {
-        temp_names <- c(temp_names, paste(y_names, ".l", i, sep = ""))
-      } 
-    }
-    if (add_block) {
-      temp_names <- paste0("Gamma\n", temp_names)
-    }
-    x_names <- c(x_names, temp_names)
+
+  n_upsilon <- m * s
+  if (n_upsilon > 0) {
+    fallback <- paste0("d.", rep(object[["model"]][["exogen"]], times = s),
+                       ".l", rep(.lag_label(0:(s - 1), s - 1), each = m))
+    x_names <- c(x_names, add(reg_names[pos + 1:n_upsilon], n_upsilon, fallback, "Upsilon"))
+    pos <- pos + n_upsilon
   }
-  
-  if (!is.null(object[["Upsilon"]])) {
-    if (tvp[["Upsilon"]]) {
-      n <- NCOL(object[["Upsilon"]][[1]]) / k
-    } else {
-      n <- NCOL(object[["Upsilon"]]) / k
-    }
-    temp_names <- NULL
-    if (!is.null(object[["x_x"]])) {
-      temp_names <- c(temp_names, dimnames(object[["x_x"]])[[2]])
-    } else {
-      temp_names <- c(temp_names, paste0("x", 1:n))
-    }
-    if (add_block) {
-      temp_names <- paste0("Upsilon\n", temp_names)
-    }
-    x_names <- c(x_names, temp_names)
+
+  if (n > 0) {
+    x_names <- c(x_names, add(reg_names[pos + 1:n], n, paste0("det.", 1:n), "C"))
   }
-  
-  if (!is.null(object[["C"]])) {
-    if (tvp[["C"]]) {
-      o <- NCOL(object[["C"]][[1]]) / k
-    } else {
-      o <- NCOL(object[["C"]]) / k 
-    }
-    temp_names <- NULL
-    if (!is.null(object[["x_d"]])) {
-      temp_names <- c(temp_names, dimnames(object[["x_d"]])[[2]])
-    } else {
-      temp_names <- c(temp_names, paste("det.", 1:o, sep = ""))
-    }
-    if (add_block) {
-      temp_names <- paste0("C\n", temp_names)
-    }
-    x_names <- c(x_names, temp_names)
+
+  if (object[["model"]][["structural"]]) {
+    x_names <- c(x_names, add(object[["model"]][["endogen"]], k,
+                              paste0("y", 1:k), "A0"))
   }
-  
-  if (!is.null(object[["A0"]])) {
-    temp_names <- NULL
-    temp_names <- dimnames(object[["y"]])[[2]]
-    if (add_block) {
-      temp_names <- paste0("A0\n", temp_names)
-    }
-    x_names <- c(x_names, temp_names)
-  }
-  
-  return(list("pi" = ect_names, "x" = x_names))
+
+  return(x_names)
 }

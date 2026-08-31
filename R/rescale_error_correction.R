@@ -35,7 +35,7 @@ rescale_error_correction.bvecmodel <- function(object, ...) {
   if (!is.null(attr(object[["data"]][["train"]][["w"]], "scale"))) {
     rescale_factor <- attr(object[["data"]][["train"]][["w"]], "scale")
     rescale_matrix <- diag(rescale_factor)
-    rescale_matrix_inv <- solve(rescale_matrix)
+    rescale_matrix_inv <- diag(1 / rescale_factor)
   } else {
     stop("Element 'object$data$train$w' does not have an attribute 'scale'.")
   }

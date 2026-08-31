@@ -72,11 +72,6 @@ Function `add_initial_values` generates of first draws of the Gibbs sampler for 
 object <- add_initial_values(object, method = "maxlik")
 ```
 
-Note that despite the 
-```{r}
-rescale_factor %*% matrix(object[["initial"]][["a"]][1:2])
-round(matrix(object[["initial"]][["a"]], 2), 3)
-```
 
 
 ## Estimation
@@ -92,7 +87,7 @@ set.seed(7654321)
 # Obtain data matrices
 y <- t(object[["data"]][["train"]][["y"]])
 w <- t(object[["data"]][["train"]][["w"]])
-rescale_factor <- diag(attr(w, "sd"))
+rescale_factor <- diag(attr(w, "scale"))
 rescale_factor_inv <- solve(rescale_factor)
 x <- t(object[["data"]][["train"]][["x"]])
 
@@ -218,6 +213,13 @@ As an alternative to a user-specific algorithm, function `add_posterior_coeffici
 bvec_est <- add_posterior_coefficients(object)
 ```
 
+Rescale
+
+```{r}
+bvec_est <- rescale_error_correction(bvec_est)
+```
+
+
 ## Evaluation
 
 Posterior draws can be thinned with function `thin`:
@@ -240,7 +242,6 @@ summary(bvar_form)
 
 ### Forecasts
 
-Forecasts with credible bands can be obtained with the function `predict`. If the model contains deterministic terms, new values can be provided in the argument `new_d`. If no values are provided, the function sets them to zero. For the current model, seasonal dummies need to be provided. They are taken from the original series. The number of rows of `new_d` must be the same as the argument `n.ahead`.
 
 ```{r}
 bvar_form <- add_forecast_input(bvar_form, n_ahead = 10)
@@ -253,7 +254,7 @@ bvar_form <- add_posterior_forecasts(bvar_form)
 
 ```{r forecasts, fig.width=5.5, fig.height=5.5}
 # Genrate forecasts
-bvar_pred <- predict(bvar_form, n.ahead = 10)
+bvar_pred <- predict(bvar_form, n_ahead = 10)
 
 # Plot forecasts
 plot(bvar_pred, n_pre = 20)

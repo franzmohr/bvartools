@@ -59,10 +59,10 @@ rescale_error_correction.bvecmodel <- function(object, ...) {
     
     for (i in 1:draws) {
       alpha_i <- rescale_matrix %*% matrix(object[["posterior"]][["a"]][["coeffs"]][i, pos_alpha], k)
-      object[["posterior"]][["a"]][["coeffs"]][i, pos_alpha] <- alpha_i
+      object[["posterior"]][["a"]][["coeffs"]][draw, pos_alpha] <- alpha_i
       
       beta_i <- rescale_matrix_inv %*% matrix(object[["posterior"]][["beta"]][["coeffs"]][i,], k_ect)
-      object[["posterior"]][["beta"]][["coeffs"]][i,] <- beta_i
+      object[["posterior"]][["beta"]][["coeffs"]][draw,] <- beta_i
     }
   }
   

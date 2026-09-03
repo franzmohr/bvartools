@@ -16,7 +16,7 @@
  * @file stochvol_mixture.h
  * @brief The stochastic volatility draw that both mixture approximations share.
  *
- * Kohn, Shephard and Chib (1998) and Omori, Chib, Shephard and Nakajima (2007)
+ * Kim, Shephard and Chib (1998) and Omori, Chib, Shephard and Nakajima (2007)
  * are the same algorithm run with a different table: seven normal components
  * against ten, approximating the same log chi-squared distribution. Everything
  * around the table -- the checks, the indicator draw, the banded draw of the

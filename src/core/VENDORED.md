@@ -72,26 +72,33 @@ sampler calls. Both are fixed upstream and the file is vendored like any other.
 `skip` in the refresh script holds the upstream sources this package does not
 take. Each one needs the reason written here.
 
-**The dynamic factor model.** `bayests/dfm_normal_gamma.h`,
-`core/models/dfm_normal_gamma.cpp` and `core/models/dfm_support.h` are dfmtools'
-model, not this package's. Nothing here includes any of the three -- the R side
-of the DFM is gone and there was never a `src/DfmNormalGamma.cpp` binding -- so
-they compiled into the shared object with nothing able to reach them. 636 lines
-of the 12,592 vendored.
+**The dynamic factor models.** Upstream has four of them --
+`DfmNormalGamma`, `DfmNormalStochvol`, `DfmTvpGamma` and `DfmTvpStochvol` -- and
+all four are dfmtools' models rather than this package's. Their headers and
+sources are skipped, along with `core/models/dfm_support.h`, which is the shared
+half none of them compiles without. Nothing here includes any of them: the R side
+of the DFM is gone and there was never a `src/Dfm*.cpp` binding, so they compiled
+into the shared object with nothing able to reach them.
 
 Dropping them is safe to link precisely because nothing includes them: the only
-`Dfm` symbol any other translation unit defines is
-`DfmNormalGammaInput::validate()`, in `core/inputs.cpp`, and that function
-throws on bad input and calls nothing from the three files.
+`Dfm` symbols any other translation unit defines are the four
+`Dfm*Input::validate()` methods in `core/inputs.cpp`, and each of those throws on
+bad input and calls nothing from the skipped files.
 
-This does **not** take the DFM out of the vendored core, and cannot.
-`DfmNormalGammaInitial` and `DfmNormalGammaInput` are in `bayests/inputs.h`,
-`DfmNormalGammaDraws` in `bayests/results.h`, `n_factors` and `n_lambda()` in
-`bayests/spec.h`, and the validator above in `core/inputs.cpp`. Those four are
-shared by every model and are copied whole, so the DFM's type surface and its
-input validation stay compiled in. What goes is the sampler that would act on
-them. `src/bayests_r_io.h` reads `n_factors` for the same reason: the field is
-there whether or not anything sets it.
+**A new DFM upstream has to be added to `skip` by hand, and forgetting does more
+than bloat the object.** `dfm_support.h` is skipped, so a sampler copied without
+it does not compile at all -- which is how the omission surfaces, at the next
+build rather than at the refresh. The refresh script says how many DFMs upstream
+has beside the list, so the two can be compared.
+
+This does **not** take the DFMs out of the vendored core, and cannot. Every
+`Dfm*Initial` and `Dfm*Input` is in `bayests/inputs.h`, every `Dfm*Draws` in
+`bayests/results.h`, `n_factors` and `n_lambda()` in `bayests/spec.h`, and the
+four validators in `core/inputs.cpp`. Those four files are shared by every model
+and are copied whole, so the DFMs' type surface and their input validation stay
+compiled in. What goes is the samplers that would act on them.
+`src/bayests_r_io.h` reads `n_factors` for the same reason: the field is there
+whether or not anything sets it.
 
 ## The simulation smoother
 
@@ -262,7 +269,7 @@ All six VAR algorithms are converted: `VarNormalWishart`, `VarNormalGamma`,
 Nothing in `src/` samples any more; the numerics all live in `src/core/`.
 
 `VecNormalWishart` is the exception, and now the only thing here that is
-vendored without being reachable -- the DFM sampler was the other one until it
+vendored without being reachable -- the DFM samplers were the others until they
 moved to `skip`; see *Not copied*. The difference is that this one is waiting on
 a binding rather than belonging to another package. Its sampler,
 `core/algorithms/vec_to_var.*` and

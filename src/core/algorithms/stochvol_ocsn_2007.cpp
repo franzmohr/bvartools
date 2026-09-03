@@ -20,7 +20,7 @@ namespace
 {
 
 /// The ten-component normal mixture of Omori, Chib, Shephard and Nakajima
-/// (2007). Three components more than the mixture of Kohn, Shephard and Chib
+/// (2007). Three components more than the mixture of Kim, Shephard and Chib
 /// (1998) next door, and a closer approximation to the same log chi-squared
 /// distribution for it.
 const bayests::core::NormalMixture kMixture = {

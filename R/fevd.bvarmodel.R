@@ -108,70 +108,11 @@ fevd.bvarmodel <- function(x, response = NULL, n_ahead = 5, type = "oir", normal
   if (length(response) == 0){stop("Response variable not available.")}
   
   k <- x[["model"]][["k"]]
-  kk <- k * k
-  p <- x[["model"]][["p"]]
-  tt <- nrow(x[["data"]][["train"]][["y"]]) / k
-  tvp <- x[["model"]][["tvp"]]
-  tvp_and_covar <- tvp & x[["model"]][["error"]] %in% c("gamma", "gamma+covar")
-  if (tvp) {
-    nparams <- ncol(x[["data"]][["train"]][["z"]])
-  }
-  sv <- x[["model"]][["error"]] %in% c("sv", "sv+covar")
-  if (tvp || sv) {
-    if (is.null(period)) {
-      period <- tt
-    } else {
-      if (period > tt | period < 1) {
-        stop("Implausible specification of argument 'period'.")
-      }
-    }
-  }
-  
-  if (need_A0) {
-    n_struct <- k * (k - 1) / 2
-    
-    if (tvp) {
-      pos_a <- nparams * period - n_struct + 1:n_struct
-    } else {
-      n_a <- ncol(x[["posterior"]][["a"]][["coeffs"]])
-      pos_a <- n_a - n_struct + 1:n_struct 
-    }
-    
-    pos_a0 <- t(matrix(1:kk, k , k))
-    pos_a0 <- pos_a0[upper.tri(pos_a0)]
-  }
-  
-  store <- nrow(x[["posterior"]][["u_sigma_inv"]][["coeffs"]])
-  
-  A <- NULL
-  for (i in 1:store) {
-    temp <- NULL
-    if (p > 0) {
-      if (tvp) {
-        temp[["A"]] <- matrix(x[["posterior"]][["a"]][["coeffs"]][i, (period - 1) * nparams + 1:(kk * p)], k)
-      } else {
-        temp[["A"]] <- matrix(x[["posterior"]][["a"]][["coeffs"]][i, 1:(kk * p)], k) 
-      }
-    } else {
-      temp[["A"]] <- matrix(0, k, k)
-    }
-    
-    if (need_A0) {
-      a0_temp <- diag(1, k)
-      a0_temp[pos_a0] <- x[["posterior"]][["a"]][["coeffs"]][i, pos_a]
-      temp[["A0"]] <- a0_temp
-      temp[["A"]] <- solve(a0_temp) %*% temp[["A"]]
-    }
-    
-    if (sv | tvp_and_covar) {
-      temp[["Sigma"]] <- solve(matrix(x[["posterior"]][["u_sigma_inv"]][["coeffs"]][i, (period - 1) * kk + 1:kk], k))
-    } else {
-      temp[["Sigma"]] <- solve(matrix(x[["posterior"]][["u_sigma_inv"]][["coeffs"]][i, ], k))
-    }
-    
-    A[[i]] <- temp
-  }
-  
+
+  # The draws in the shape .vardecomp wants them, shared with spillover() so
+  # that the two cannot disagree about which slice of a row is `period`.
+  A <- .collect_draws(x, period = period, need_A0 = need_A0)
+
   phi <- lapply(A, .vardecomp, h = n_ahead, type = type, response = response)
   
   result <- matrix(rowMeans(matrix(unlist(phi), (n_ahead + 1) * k)), n_ahead + 1)

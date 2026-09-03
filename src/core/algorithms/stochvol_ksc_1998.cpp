@@ -9,7 +9,7 @@
 /**
  * @file stochvol_ksc_1998.cpp
  * @brief Posterior draw of a stochastic volatility state with the normal
- *   mixture of Kohn, Shephard and Chib (1998).
+ *   mixture of Kim, Shephard and Chib (1998).
  *
  * The mixture is all that distinguishes this from `stochvol_ocsn_2007.cpp`. The
  * draw itself is in `core/algorithms/stochvol_mixture.h`, which says why the two
@@ -19,7 +19,7 @@
 namespace
 {
 
-/// The seven-component normal mixture of Kohn, Shephard and Chib (1998).
+/// The seven-component normal mixture of Kim, Shephard and Chib (1998).
 /// Three components fewer than the mixture of Omori, Chib, Shephard and
 /// Nakajima (2007) next door, and a coarser approximation to the same log
 /// chi-squared distribution for it.
@@ -35,7 +35,7 @@ const bayests::core::NormalMixture kMixture = {
  *
  * The measurement equation is linearised by squaring and taking logarithms, and
  * the log chi-squared error that leaves is approximated by the seven-component
- * normal mixture of Kohn, Shephard and Chib (1998). Conditional on a mixture
+ * normal mixture of Kim, Shephard and Chib (1998). Conditional on a mixture
  * indicator per period the state space is linear and Gaussian, so the whole path
  * is drawn in one block from its normal conditional posterior. Each column of
  * `y` is handled independently.

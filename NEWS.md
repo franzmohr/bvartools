@@ -1,3 +1,84 @@
+# bvartools (development version)
+
+* **`spillover()`**, the connectedness measures of Diebold and Yilmaz (2012):
+  the total spillover index, the directional spillovers to and from each
+  variable, their net difference and the net pairwise table. Methods for
+  `bvarmodel`, `modellist` and `expandingwindow`, the last of which gives the
+  index over a growing sample -- the chart that literature is built around --
+  from the windows `use_expanding_window()` already produces. VEC models go
+  through `vec_to_var()` first, as they do for `fevd()`.
+
+    Every measure is computed once per posterior draw and only then summarised,
+    which is not the same as computing it from the mean decomposition table: the
+    measures are ratios, so the index of the mean is not the mean of the index.
+    It also gives the index a credible interval, which the point estimate based
+    original does not have. `keep_draws = TRUE` returns the draws themselves.
+
+    The generalised decomposition it uses is the one of Pesaran and Shin (1998),
+    which divides by the variance of the *shock* variable. This is **not** what
+    `fevd(type = "gir")` computes -- see the next entry -- so `spillover()`
+    carries its own worker, `.spillover_table()`, rather than calling
+    `.vardecomp()`. That worker also fills the whole k x k table in one pass,
+    where looping `.vardecomp()` over responses would rebuild the impulse
+    responses once per row.
+
+* **Fixed: `fevd()` read the wrong period of a time-varying or stochastic
+  volatility model.** **Draws are unchanged; the variance decomposition of those
+  models changes, and the old numbers were wrong.** The sample length was taken
+  as `nrow(train$y) / k`, which was right when `gen_var()` stacked the series
+  into one column and is wrong for the one-row-per-period layout
+  `create_bvarmodel()` produces. With `k` variables it understated the sample by
+  a factor of `k`, so the default `period` was fractional -- indexing the
+  posterior at a truncated row -- and any `period` past `tt / k` was refused as
+  "implausible" although it was in the sample. Constant-coefficient models are
+  unaffected: they never read `tt`.
+
+    The count now comes from the regressor matrix, whose row count is
+    unambiguously `k` times the sample length, and falls back on `y` only where
+    a model has no regressors, handling both layouts. Shared by `fevd()` and
+    `spillover()` through a new internal `.collect_draws()`, lifted out of
+    `fevd.bvarmodel()` so the two cannot disagree about which slice of a row a
+    period is.
+
+* **Known inconsistency, not changed.** `fevd(type = "gir")` divides by
+  `sqrt(sigma_jj)` of the *response* variable (`src/vardecomp.cpp`), where
+  Pesaran and Shin (1998) divide by `sigma_kk` of the *shock*. The package's own
+  documentation states a third thing, `1 / sigma_jj` of the response without the
+  square root. The factor cancels when a row is normalised, so
+  `normalise_gir = TRUE` output is unaffected by the discrepancy between the
+  documented and the coded version -- but neither equals Pesaran and Shin, and
+  the two coincide only when every variable has unit residual variance.
+  `bgvars::gfevd()` carries the same line. Correcting it would move existing
+  `fevd()` and `gfevd()` numbers, so it is left for a deliberate decision;
+  `test-spillover.R` pins the current behaviour in both directions so that a
+  change to it fails loudly.
+
+* **Vendored BayesTS core refreshed.** **Draws are unchanged**, for every VAR and
+  VEC model this package samples. Upstream's own fingerprint comparison was run
+  over the change and reports 74 fixtures unchanged and none moved, twice: once
+  over the one piece of shared code it touched and once over the sampler added on
+  top of it.
+
+    Nothing that arrived is reachable from here. Upstream added two dynamic
+    factor models, `DfmTvpGamma` and `DfmTvpStochvol`, which belong to
+    `dfmtools`; both are in the refresh script's `skip` list beside the two that
+    were already there, so neither is copied. What does arrive is what the two
+    added to the files every model shares -- their `Input`, `Initial` and `Draws`
+    structs in `bayests/inputs.h` and `bayests/results.h`, and their
+    `validate()` methods in `core/inputs.cpp` -- which is the same arrangement
+    the first two DFMs have had since they moved to `skip`, and which compiles
+    their type surface in without their samplers.
+
+    Beyond that: `core/models/model_support.h` gains `draw_random_walk_state()`,
+    a helper the dynamic factor models share and nothing here calls, and three
+    files in `core/algorithms/` gain a corrected citation in a comment -- Kim,
+    Shephard and Chib rather than Kohn. No line of numerics changed.
+
+    One thing worth knowing for the next refresh: the skip list now has to be
+    extended by hand whenever upstream adds a dynamic factor model, and
+    forgetting is not merely wasteful. `core/models/dfm_support.h` is skipped, so
+    a sampler copied without it fails to compile, which is how this refresh found
+    the two new ones. `src/core/VENDORED.md` says so beside the list.
 
 # bvartools 1.0.0
 

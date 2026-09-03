@@ -426,6 +426,208 @@ struct DfmNormalStochvolInput
     void validate() const;
 };
 
+/// Where the DfmTvpGamma chain starts.
+///
+/// DfmNormalGammaInitial with the two coefficient blocks widened from a point to
+/// a path, and each of them carrying the two extra pieces every random walk here
+/// needs: the precision of its innovations and the state of the period before
+/// the sample. The factor path is still not among these -- it is the first thing
+/// every draw produces.
+struct DfmTvpGammaInitial
+{
+    /// n_lambda x tt. Each column holds the free loadings of one period, row by
+    /// row and within a row left to right -- the same ordering
+    /// DfmNormalGammaInitial::lambda uses for its single vector, repeated once
+    /// per period.
+    arma::mat lambda;
+
+    /// n_lambda x n_lambda; only the diagonal is read.
+    arma::mat lambda_sigma_inv;
+
+    /// n_lambda; the free loadings of the period before the sample.
+    arma::vec lambda_init;
+
+    /// n_factor_a x tt, each column vec([A_1 .. A_p]) of one period. Ignored
+    /// when the factors have no dynamics.
+    arma::mat a;
+
+    /// n_factor_a x n_factor_a; only the diagonal is read.
+    arma::mat a_sigma_inv;
+
+    /// n_factor_a; the transition of the period before the sample.
+    arma::vec a_init;
+
+    /// k; the diagonal of the idiosyncratic precision, which does not move.
+    arma::vec u_sigma_inv;
+
+    /// n_factors; the diagonal of the factor innovation precision.
+    arma::vec v_sigma_inv;
+};
+
+/// Dynamic factor model whose loadings and factor transition follow random
+/// walks, with independent gamma priors on both error precisions.
+///
+///     x_t = Lambda_t f_t + u_t,                  u_t ~ N(0, U),  U diagonal,
+///     f_t = sum_{j=1..p} A_{j,t} f_{t-j} + v_t,  v_t ~ N(0, V),  V diagonal,
+///
+/// with every free element of Lambda and every element of [A_1 .. A_p] a random
+/// walk of its own. `Tvp` names the coefficients, exactly as it does in
+/// VarTvpGammaInput against VarNormalGammaInput, and it names *both* coefficient
+/// blocks: a model in which only the loadings drifted would be a different one,
+/// and is not what this is.
+///
+/// The identifying block of Lambda does not drift, because it is not drawn: the
+/// leading N x N block stays unit lower triangular in every period. Letting it
+/// move would leave the rotation and scale of the factors free to wander over
+/// the sample, and a loading path would then be a statement about the
+/// normalisation as much as about the exposure it is read as.
+///
+/// Everything DfmNormalGammaInput says about the data holds here unchanged:
+/// `train.y` holds the observed series and is the only data the model takes,
+/// there is no ForecastData, `spec.h` is the horizon, the free loadings run row
+/// by row, `a` is vec([A_1 .. A_p]) with the blocks side by side, and the
+/// factors before the sample are zero rather than drawn.
+///
+/// Del Negro, M., & Otrok, C. (2008). Dynamic factor models with time-varying
+/// parameters: measuring changes in international business cycles. Federal
+/// Reserve Bank of New York Staff Report No. 326.
+struct DfmTvpGammaInput
+{
+    VarSpec spec;
+    TrainData train;
+
+    /// The state equation of the free loadings, in the row-major order above.
+    RandomWalkPrior lambda_prior;
+
+    /// The state equation of the factor transition. Unused when the factors
+    /// have no dynamics.
+    RandomWalkPrior a_prior;
+
+    GammaPrior u_sigma_prior;  ///< k independent priors on the idiosyncratic precisions.
+    GammaPrior v_sigma_prior;  ///< n_factors independent priors on the factor innovations.
+
+    DfmTvpGammaInitial initial;
+
+    /// Whether the factors carry dynamics to draw. A transition of order zero is
+    /// a static factor model with serially independent factors, which this
+    /// sampler estimates -- there is then no transition path either, and the
+    /// model is a DFM with drifting loadings alone.
+    bool use_a() const { return spec.n_factor_a() > 0; }
+
+    void validate() const;
+};
+
+/// Where the DfmTvpStochvol chain starts.
+///
+/// DfmTvpGammaInitial with the two precisions replaced by a log-volatility path
+/// each -- which is exactly what DfmNormalStochvolInitial does to
+/// DfmNormalGammaInitial. Every one of the four blocks this model carries is a
+/// path, and the factor path is still not among them: it is the first thing every
+/// draw produces.
+struct DfmTvpStochvolInitial
+{
+    /// n_lambda x tt, one column per period, each in the row-major order the
+    /// sampler draws the free loadings in.
+    arma::mat lambda;
+
+    /// n_lambda x n_lambda; only the diagonal is read.
+    arma::mat lambda_sigma_inv;
+
+    /// n_lambda; the free loadings of the period before the sample.
+    arma::vec lambda_init;
+
+    /// n_factor_a x tt, each column vec([A_1 .. A_p]) of one period. Ignored
+    /// when the factors have no dynamics.
+    arma::mat a;
+
+    /// n_factor_a x n_factor_a; only the diagonal is read.
+    arma::mat a_sigma_inv;
+
+    /// n_factor_a; the transition of the period before the sample.
+    arma::vec a_init;
+
+    /// tt x k log-volatilities of the idiosyncratic errors, one column per
+    /// observed series. One period per *row*, unlike the coefficient paths
+    /// above: that is the orientation the mixture routine works in, and the two
+    /// are not interchangeable.
+    arma::mat u_h;
+
+    /// k; the idiosyncratic log-volatility before the first period.
+    arma::vec u_h_init;
+
+    /// k; variance of the idiosyncratic log-volatility innovations. A state
+    /// rather than a prior -- the sampler redraws it every iteration -- even
+    /// though the files keep it next to the prior it is drawn under.
+    arma::vec u_h_sigma;
+
+    /// tt x n_factors log-volatilities of the factor innovations.
+    arma::mat v_h;
+
+    /// n_factors; the factor-innovation log-volatility before the first period.
+    arma::vec v_h_init;
+
+    /// n_factors; variance of the factor-innovation log-volatility innovations.
+    arma::vec v_h_sigma;
+};
+
+/// Dynamic factor model whose loadings and factor transition follow random walks
+/// and whose two error terms carry stochastic volatility.
+///
+///     x_t = Lambda_t f_t + u_t,                  u_t ~ N(0, U_t),
+///     f_t = sum_{j=1..p} A_{j,t} f_{t-j} + v_t,  v_t ~ N(0, V_t),
+///
+/// with U_t = diag(exp(h^u_t)) and V_t = diag(exp(h^v_t)), and every free element
+/// of Lambda, every element of [A_1 .. A_p] and every element of both
+/// log-volatilities a random walk of its own.
+///
+/// The widest model here: everything that can move does. It is DfmTvpGamma's
+/// coefficients over DfmNormalStochvol's errors, and both halves earn their
+/// place for the reasons those two set out -- a series' exposure to the common
+/// component is not a constant of nature, and neither is the scale of the shocks
+/// it is measured against. The two are also easy to confuse for one another in a
+/// model that has only one of them: a series whose loading fell will look like a
+/// series whose idiosyncratic variance rose, and a period of common turbulence
+/// will look like a transition that changed. Carrying both is what lets the data
+/// say which.
+///
+/// The identifying block does not drift, exactly as in DfmTvpGamma: Lambda's
+/// leading N x N block stays unit lower triangular in every period, because it is
+/// the normalisation rather than a parameter.
+///
+/// Everything DfmNormalGammaInput says about the data holds here unchanged:
+/// `train.y` is the only data, there is no ForecastData, `spec.h` is the horizon,
+/// the free loadings run row by row, `a` is vec([A_1 .. A_p]) with the blocks
+/// side by side, and the factors before the sample are zero rather than drawn.
+///
+/// Del Negro, M., & Otrok, C. (2008). Dynamic factor models with time-varying
+/// parameters: measuring changes in international business cycles. Federal
+/// Reserve Bank of New York Staff Report No. 326.
+struct DfmTvpStochvolInput
+{
+    VarSpec spec;
+    TrainData train;
+
+    /// The state equation of the free loadings, in the row-major order above.
+    RandomWalkPrior lambda_prior;
+
+    /// The state equation of the factor transition. Unused when the factors
+    /// have no dynamics.
+    RandomWalkPrior a_prior;
+
+    StochvolPrior u_sigma_prior;  ///< k idiosyncratic log-volatilities.
+    StochvolPrior v_sigma_prior;  ///< n_factors factor-innovation log-volatilities.
+
+    DfmTvpStochvolInitial initial;
+
+    /// Whether the factors carry dynamics to draw. A transition of order zero is
+    /// a static factor model with serially independent -- but still
+    /// heteroskedastic -- factors and drifting loadings, which this sampler
+    /// estimates.
+    bool use_a() const { return spec.n_factor_a() > 0; }
+
+    void validate() const;
+};
+
 /// Where the VecNormalWishart chain starts.
 struct VecNormalWishartInitial
 {

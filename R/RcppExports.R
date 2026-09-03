@@ -1003,6 +1003,32 @@ post_normal_sur <- function(y, z, sigma_i, a_prior, v_i_prior, svd = FALSE) {
     .Call(`_bvartools_post_normal_sur`, y, z, sigma_i, a_prior, v_i_prior, svd)
 }
 
+#' Connectedness table of one posterior draw
+#'
+#' The normalised forecast error variance decomposition table behind the
+#' spillover index of Diebold and Yilmaz (2012): row \eqn{j} column \eqn{k} is
+#' the share of the \eqn{h} step forecast error variance of variable \eqn{j}
+#' that is attributed to a shock to variable \eqn{k}, and every row sums to one.
+#'
+#' Separate from \code{.vardecomp} rather than a loop over it, for two reasons.
+#' The forecast error impulse responses do not depend on the response variable,
+#' so filling the whole table in one pass costs what \code{.vardecomp} costs for
+#' a single row of it. And the generalised decomposition here divides by the
+#' variance of the \emph{impulse} variable, as in Pesaran and Shin (1998), which
+#' is the quantity the spillover index is defined on; \code{.vardecomp} divides
+#' by the standard deviation of the response instead, a factor that cancels
+#' when a row is normalised and so cannot serve here.
+#'
+#' @param A a list with elements \code{A}, the k x kp coefficients of one draw,
+#'   and \code{Sigma}, its k x k error covariance.
+#' @param h an integer of the forecast horizon, at least one.
+#' @param type either \code{"gir"} or \code{"oir"}.
+#'
+#' @noRd
+.spillover_table <- function(A, h, type) {
+    .Call(`_bvartools_spillover_table`, A, h, type)
+}
+
 #' Stochastic Volatility
 #'
 #' Produces a draw of log-volatilities based on Kim, Shephard and Chib (1998).

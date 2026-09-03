@@ -838,6 +838,19 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// spillover_table
+arma::mat spillover_table(Rcpp::List A, int h, std::string type);
+RcppExport SEXP _bvartools_spillover_table(SEXP ASEXP, SEXP hSEXP, SEXP typeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type A(ASEXP);
+    Rcpp::traits::input_parameter< int >::type h(hSEXP);
+    Rcpp::traits::input_parameter< std::string >::type type(typeSEXP);
+    rcpp_result_gen = Rcpp::wrap(spillover_table(A, h, type));
+    return rcpp_result_gen;
+END_RCPP
+}
 // stochvol_ksc_1998_export
 arma::mat stochvol_ksc_1998_export(const arma::mat& y, const arma::mat& h, const arma::vec& sigma, const arma::vec& h_init, const arma::vec& constant);
 RcppExport SEXP _bvartools_stochvol_ksc_1998_export(SEXP ySEXP, SEXP hSEXP, SEXP sigmaSEXP, SEXP h_initSEXP, SEXP constantSEXP) {
@@ -1040,6 +1053,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_bvartools_post_gamma_state_variance", (DL_FUNC) &_bvartools_post_gamma_state_variance, 5},
     {"_bvartools_post_normal", (DL_FUNC) &_bvartools_post_normal, 5},
     {"_bvartools_post_normal_sur", (DL_FUNC) &_bvartools_post_normal_sur, 6},
+    {"_bvartools_spillover_table", (DL_FUNC) &_bvartools_spillover_table, 3},
     {"_bvartools_stochvol_ksc_1998_export", (DL_FUNC) &_bvartools_stochvol_ksc_1998_export, 5},
     {"_bvartools_stochvol_ocsn_2007_export", (DL_FUNC) &_bvartools_stochvol_ocsn_2007_export, 5},
     {"_bvartools_sur_const_to_tvp", (DL_FUNC) &_bvartools_sur_const_to_tvp, 3},

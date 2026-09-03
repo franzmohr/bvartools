@@ -211,6 +211,49 @@ inline void build_psi_regressors(arma::mat &psi_z, const arma::mat &u)
     }
 }
 
+/// The two draws that follow a random walk coefficient path: the variance of its
+/// innovations, and the state of the period before the sample. Both are written
+/// in place.
+///
+/// `path` is n x tt, one period per column, as the simulation smoother returns
+/// it. The innovations are differences of the path against its own lag with the
+/// period before the sample taken from `init`, so their sum of squares is what
+/// the inverse gamma posterior of the variance adds to the prior rate; `init` is
+/// then normal, its only data being the first period of the path.
+///
+/// `sigma` is the variance itself, not its inverse -- which is what the next draw
+/// of the path is handed. `post_shape` is the prior shape plus tt/2, which does
+/// not change over the chain and is formed once by the caller.
+///
+/// The same two draws draw_stochvol_state() makes below, over a path in the
+/// other orientation: a log-volatility path is tt x k, one period per row,
+/// because that is what the mixture routine works in. Sharing one function would
+/// mean transposing one of them, which would reassociate the sums and move the
+/// posteriors of four samplers to save a dozen lines. The VAR and VEC
+/// time-varying models predate both and carry a copy each inline.
+inline void draw_random_walk_state(arma::vec &sigma, arma::vec &init, const arma::mat &path,
+                                   const arma::vec &post_shape, const arma::vec &prior_rate,
+                                   const NormalPrior &init_prior)
+{
+    const arma::uword n = path.n_rows;
+    const arma::uword tt = path.n_cols;
+
+    arma::mat differences(n, tt);
+    differences.col(0) = path.col(0) - init;
+    differences.cols(1, tt - 1) = path.cols(1, tt - 1) - path.cols(0, tt - 2);
+
+    const arma::vec sse = arma::sum(arma::square(differences), 1);
+    for (arma::uword i = 0; i < n; i++)
+    {
+        sigma(i) = 1.0 / arma::randg<double>(arma::distr_param(
+                             post_shape(i), 1.0 / (prior_rate(i) + sse(i) * 0.5)));
+    }
+
+    const arma::mat init_precision = arma::diagmat(1.0 / sigma);
+    init = draw_normal_precision(init_prior.v_inv + init_precision,
+                                 init_prior.v_inv * init_prior.mu + init_precision * path.col(0));
+}
+
 /// The two draws that follow the log-volatility path in a stochastic volatility
 /// model: the variance of its random walk innovations, and the state of the
 /// period before the sample. Both are written in place.

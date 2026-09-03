@@ -1,6 +1,89 @@
 
 # bvartools 1.0.0
 
+* Added a `testthat` test suite, run by `R CMD check` and so by the existing
+  R-CMD-check workflow. 591 assertions over 25 files, about ten seconds end to
+  end, covering the workflow from `create_bvarmodel` and `create_bvecmodel`
+  through priors, initial values, posterior simulation, model selection,
+  impulse responses, forecast error variance decomposition, forecasts and the
+  HDF5 round trip, plus the exported numerical helpers on their own. Fitted
+  models are cached across files in `tests/testthat/helper-fixtures.R`, so the
+  samplers run once per session rather than once per file.
+
+  The tests check arithmetic wherever there is arithmetic to check, rather than
+  only that a call returns without error: `loglik_normal` against the
+  multivariate normal density written out, `minnesota_prior` against the
+  Minnesota variance formula term by term, the information criteria against
+  their definitions, the impulse response against the `Phi_h = A_1 Phi_{h-1}`
+  recursion run by hand over the draws, `vec_to_var` against
+  `A_1 = alpha beta' + I`, the forecast error variance decomposition against the
+  shares summing to one, `post_normal` and the two variance samplers against the
+  analytic posterior they draw from, and `covar_vector_to_matrix`,
+  `generate_lower_block_diagonal`, `sur_const_to_tvp` and
+  `coint_prepare_sur_data` against their block structures element by element.
+
+  Four tests are written but skipped, each naming the defect that keeps it
+  skipped, so that fixing the defect is a matter of removing one line.
+  `add_initial_values(method = "prior")` reads the error variance prior from
+  `priors$sigma`, which `add_priors` has never written -- it writes
+  `priors$u_sigma` -- and `k` and `tt` are bound only in the `"ols"`/`"maxlik"`
+  branch of `.add_initial_values_measurement_errors`, so the branch cannot run
+  for any error specification or either model class. The same helper derives
+  `tt` from the stacked `KT` vector of endogenous variables, so a stochastic
+  volatility model gets an initial log volatility of `KT x K` and the sampler
+  rejects it, which `add_posterior_coefficients` reports by returning the model
+  with `error = TRUE`; `error = "sv"` therefore cannot currently be estimated
+  through this workflow. `predict.bvarmodel` clamps `n_ahead` against
+  `model$h` but then builds its result from `model$h` throughout, so a shorter
+  horizon than was simulated is silently ignored. And
+  `read_expanding_window_model_from_folder` calls `import_model_from_hdf5`,
+  which no longer exists, and labels its result `expandwindmodellist` rather
+  than the `expandingwindow` class `write_to_hdf5` took, so no
+  `expandingwindow` method would dispatch on it even once the call is fixed.
+
+  Two smaller things the tests record as they stand rather than skip. The
+  guard in `combine_models` cannot fire: `classes[-which(classes == "list")]`
+  drops every element when no input carries a `"list"` class, so an
+  unsupported object passes the check and fails further down on
+  `class(result) <- ...` of `NULL`. And `Matrix` is not declared in
+  `DESCRIPTION` although `covar_vector_to_matrix`,
+  `generate_lower_block_diagonal`, `sur_const_to_tvp`, `covar_prepare_data`,
+  `coint_prepare_sur_data`, `post_bvs` and the two `post_gamma_*` functions all
+  return or require its sparse classes; it is added to `Suggests` for the tests,
+  which load its namespace explicitly before touching a result.
+
+* The vendored core is refreshed to pick up `DfmNormalStochvol`, dfmtools'
+  dynamic factor model with stochastic volatility in both error terms. Neither
+  the sampler nor its header is compiled into this package -- `dfm_normal_stochvol.h`
+  and `src/core/models/dfm_normal_stochvol.cpp` join `dfm_normal_gamma.h` and
+  `dfm_normal_gamma.cpp` on `tools/update-bayests-core.R`'s skip list, for the
+  same reason: nothing here includes either, since the dynamic factor models are
+  dfmtools' rather than this package's. `DfmNormalStochvolInitial`,
+  `DfmNormalStochvolInput`, `DfmNormalStochvolDraws` and
+  `DfmNormalStochvolInput::validate()` are compiled in all the same, because they
+  live in `inputs.h`, `results.h` and `inputs.cpp`, which every model shares and
+  which are copied whole.
+
+  Three shared files moved as part of that refresh, and none of them changes a
+  draw of any model here. `chan_jeliazkov_2009`'s `precision_of` gained a
+  diagonal fast path -- a scan and a reciprocal in place of a dense `inv_sympd`
+  -- which every time varying parameter model in this package reaches with a
+  diagonal state covariance and returns the same numbers from; `dfm_support.h`'s
+  `initial_state_covariance` gained a second accepted shape that this package's
+  models never pass; and `DfmNormalGammaInput::validate()`'s checks moved into a
+  function two dynamic factor models now share, unchanged. Verified against the
+  BayesTS source tree: the five touched files vendored here are byte-identical
+  to upstream, `inst/COPYRIGHTS` needed no edit, and no vendored source collided
+  with one of this package's own. Both additions to `model_support.h` and
+  `chan_jeliazkov_2009` are new functions and a new accepted argument shape
+  respectively, neither called by anything this package's models reach, so what
+  every `VarNormalStochvol`, `VarTvpStochvol` and `VarTvpWishart` model already
+  drew is untouched; a `VarTvpWishart` model drawn end to end after the refresh
+  confirms the touched translation unit still compiles into a working sampler.
+  This package has no test suite of its own; BayesTS's own golden fingerprint
+  harness, the only regression check either side of the vendoring boundary has,
+  passed 145 of 145 before this was vendored.
+
 * Dynamic factor models have moved to [dfmtools](https://github.com/franzmohr/dfmtools). `create_dfmodel`, `dfmpost`, `dfm`, `add_priors.dfmodel`, `add_initial_values.dfmodel`, `plot.dfm`, `summary.dfm`, `thin.dfm` and the `bem_dfmdata` data set are gone from this package, as is the C++ helper `.post_lambda` behind `dfmpost`. That package now implements the same model through the vendored BayesTS core rather than in R, so its posterior simulation is faster and no longer limited to one factor and a transition of order at most two -- see its NEWS for what changed about the numbers. Nothing else here referenced them; the one internal mention was the list of classes `combine_models` accepts. The vendored core still carries the sampler's sources, `src/core/models/dfm_normal_gamma.cpp` among them, because `src/core/` is a verbatim mirror of upstream and is not curated per package -- it already carried `chan_jeliazkov_2009`, which nothing here calls either.
 * Added `VecKlgs2010`, the vendored core's non-SUR implementation of the cointegration sampler of Koop, León-González and Strachan (2010), with the R entry points `.VecKlgs2010Coefficients`, `.VecKlgs2010Forecasts` and `.VecKlgs2010LogLik`. It draws the same posterior as `VecNormalWishart` -- from the same seed the two agree to 1.4e-14 on `a`, 2.4e-15 on `beta`, 3.2e-14 on the error precision and 6.0e-14 on the pointwise log likelihood -- and does it by exploiting the fact that a VEC's `k` equations share their regressors: the SUR design matrix is `kron(W_x, I_k)`, so the posterior precision of the coefficient block is `kron(W_x' W_x, Sigma^-1)` and can be formed from the compact regressors without building the SUR matrix at all. On a three-variable VEC of level order four over 160 periods and 1000 draws that is 0.05 s against 0.41 s. It reads `data$train$x`, which `create_bvecmodel` already assembles alongside `data$train$z`, so no model object has to change; what it does not offer is variable selection, since both schemes act on the columns of the matrix it declines to build, and it rejects either scheme with a message pointing at `VecNormalWishart`. Nothing in this package dispatches to it yet -- `draw_posterior.bvecmodel` still calls `VecNormalWishart` -- so no existing result changes.
 * `add_priors` accepts a VEC model with time varying parameters, where it used to stop with "TVP priors need to be implemented." The cointegration vectors are then a state path rather than a draw from a cointegration space prior, so `coint` takes `rho`, the autocorrelation of that path, in place of the `v_i` and `p_tau_i` that describe the space's shrinkage and central location; `coef` takes `shape` and `rate` for the state error variances, as it already did for a TVP VAR. The prior on the cointegration state before the sample is the state equation's own stationary distribution, `N(0, I / (1 - rho^2))`, which is what makes it proper -- at `rho = 1` the path is a random walk whose variance grows without bound and which, `beta` being identified only up to scale, has nothing to pull it back. The loadings carry the compensating scale: only the product `alpha beta'` is identified, so their prior variance is shrunk by `1 - rho^2`, leaving the product on the scale `coef$v_i` asks for. Two things in the unreachable code behind that stop would not have worked as written and are fixed: the cointegration prior precision was named `v_i` where every reader of a normal prior in this package expects `v_inv`, and the prior precisions were built with `Matrix::Diagonal`, which the samplers cannot read -- they take a dense matrix, and an S4 sparse one fails the conversion with "Not a matrix." at the first draw. The prior precision of the non-loading coefficients now follows `coef$v_i` rather than being fixed at 1, as it already did for a TVP VAR and for a constant VEC. Nothing changes for a VEC with constant cointegration parameters.

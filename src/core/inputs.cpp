@@ -693,10 +693,18 @@ void VecNormalWishartInput::validate() const
     validate_wishart_block(u_sigma_prior, initial.u_sigma_inv, k);
 }
 
-void DfmNormalGammaInput::validate() const
+namespace
+{
+
+/// The checks both dynamic factor models share: what makes the dimensions a
+/// factor model at all, and the two coefficient blocks. Only the error
+/// specification differs between them -- gamma priors on two precisions against
+/// two stochastic volatility blocks -- so only that is left to the callers.
+void validate_dfm_shape(const VarSpec &spec, arma::uword tt, const NormalPrior &lambda_prior,
+                        const arma::vec &initial_lambda, const NormalPrior &a_prior,
+                        const arma::vec &initial_a, bool use_a)
 {
     const arma::uword k = static_cast<arma::uword>(spec.k);
-    const arma::uword tt = checked_periods(spec, train);
     const arma::uword n = static_cast<arma::uword>(spec.n_factors);
 
     if (spec.n_factors <= 0)
@@ -738,12 +746,23 @@ void DfmNormalGammaInput::validate() const
 
     // The free loadings, in the row-major order the sampler draws them.
     const arma::uword n_lambda = static_cast<arma::uword>(spec.n_lambda());
-    validate_normal_block(lambda_prior, initial.lambda, n_lambda, "lambda");
+    validate_normal_block(lambda_prior, initial_lambda, n_lambda, "lambda");
 
-    if (use_a())
+    if (use_a)
     {
-        validate_normal_block(a_prior, initial.a, static_cast<arma::uword>(spec.n_factor_a()), "a");
+        validate_normal_block(a_prior, initial_a, static_cast<arma::uword>(spec.n_factor_a()), "a");
     }
+}
+
+} // namespace
+
+void DfmNormalGammaInput::validate() const
+{
+    const arma::uword k = static_cast<arma::uword>(spec.k);
+    const arma::uword tt = checked_periods(spec, train);
+    const arma::uword n = static_cast<arma::uword>(spec.n_factors);
+
+    validate_dfm_shape(spec, tt, lambda_prior, initial.lambda, a_prior, initial.a, use_a());
 
     // Both precisions are diagonal, so both arrive as the diagonal rather than
     // as a matrix -- and a starting value that is not positive is not one, since
@@ -765,6 +784,74 @@ void DfmNormalGammaInput::validate() const
     {
         throw std::invalid_argument("every element of the initial factor innovation precision must "
                                     "be positive");
+    }
+}
+
+void DfmNormalStochvolInput::validate() const
+{
+    const arma::uword k = static_cast<arma::uword>(spec.k);
+    const arma::uword tt = checked_periods(spec, train);
+    const arma::uword n = static_cast<arma::uword>(spec.n_factors);
+
+    validate_dfm_shape(spec, tt, lambda_prior, initial.lambda, a_prior, initial.a, use_a());
+
+    // Both random walks difference their path against its own lag, so a single
+    // period leaves nothing to difference -- the same floor every stochastic
+    // volatility model here has.
+    if (tt < 2)
+    {
+        throw std::invalid_argument("a stochastic volatility model needs at least two periods");
+    }
+
+    // The idiosyncratic volatility: one log-volatility per observed series.
+    require_length(u_sigma_prior.offset, k, "log-volatility offset of the idiosyncratic errors");
+    require_length(u_sigma_prior.state.sigma.shape, k,
+                   "prior shape of the idiosyncratic log-volatility variance");
+    require_length(u_sigma_prior.state.sigma.rate, k,
+                   "prior rate of the idiosyncratic log-volatility variance");
+    require_length(u_sigma_prior.state.initial_state.mu, k,
+                   "prior mean of the initial idiosyncratic log-volatility");
+    require_square(u_sigma_prior.state.initial_state.v_inv, k,
+                   "prior precision of the initial idiosyncratic log-volatility");
+
+    require_shape(initial.u_h, tt, k, "initial idiosyncratic log-volatility");
+    require_length(initial.u_h_init, k,
+                   "initial idiosyncratic log-volatility before the sample");
+    require_length(initial.u_h_sigma, k,
+                   "initial variance of the idiosyncratic log-volatility innovations");
+
+    // The factor innovations': one per factor, not per series. This is the pair
+    // of lengths a file is most likely to get wrong, k and n_factors being the
+    // two counts a factor model carries.
+    require_length(v_sigma_prior.offset, n, "log-volatility offset of the factor innovations");
+    require_length(v_sigma_prior.state.sigma.shape, n,
+                   "prior shape of the factor-innovation log-volatility variance");
+    require_length(v_sigma_prior.state.sigma.rate, n,
+                   "prior rate of the factor-innovation log-volatility variance");
+    require_length(v_sigma_prior.state.initial_state.mu, n,
+                   "prior mean of the initial factor-innovation log-volatility");
+    require_square(v_sigma_prior.state.initial_state.v_inv, n,
+                   "prior precision of the initial factor-innovation log-volatility");
+
+    require_shape(initial.v_h, tt, n, "initial factor-innovation log-volatility");
+    require_length(initial.v_h_init, n,
+                   "initial factor-innovation log-volatility before the sample");
+    require_length(initial.v_h_sigma, n,
+                   "initial variance of the factor-innovation log-volatility innovations");
+
+    // Both variances are divided by, once per period, inside the banded draw of
+    // the log-volatility path. A zero there is an infinity that only surfaces as
+    // a non-finite draw several steps later.
+    if (initial.u_h_sigma.min() <= 0.0)
+    {
+        throw std::invalid_argument("every element of the initial variance of the idiosyncratic "
+                                    "log-volatility innovations must be positive");
+    }
+    if (initial.v_h_sigma.min() <= 0.0)
+    {
+        throw std::invalid_argument("every element of the initial variance of the "
+                                    "factor-innovation log-volatility innovations must be "
+                                    "positive");
     }
 }
 

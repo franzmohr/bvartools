@@ -301,7 +301,7 @@ object <- add_initial_values(object)
 object <- .VecTvpStochvolCoefficients(object)
 object <- .VecTvpStochvolLogLik(object)
 
-object <- add_forecast_input_data(object, n_ahead = 10)
+object <- add_forecast_input(object, n_ahead = 10)
 object <- .VecTvpStochvolForecasts(object)
 
 */

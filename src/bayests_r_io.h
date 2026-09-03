@@ -129,7 +129,7 @@ inline bayests::VarSpec read_spec(const Rcpp::List &model, const char *covar_err
   // factor model is dfmtools' -- and read anyway, because the vendored core is
   // a whole mirror of upstream and its VarSpec carries the field.
   spec.n_factors = optional_int(model, "n_factors", 0);
-  // Absent until add_forecast_input_data() has been called.
+  // Absent until add_forecast_input() has been called.
   spec.h = optional_int(model, "h", 0);
   spec.varsel = bayests::var_selection_from_string(optional_string(model, "varsel", "none"));
   spec.structural = optional_bool(model, "structural", false);

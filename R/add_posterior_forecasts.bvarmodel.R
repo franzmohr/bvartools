@@ -3,7 +3,7 @@
 #' Calculates and adds forecasts to an object of class 'bvarmodel'.
 #'
 #' @param object an object of class 'bvarmodel', usually, the result of a call
-#' to \code{\link{add_posterior_coefficients}} and \code{\link{add_forecast_input_data}}.
+#' to \code{\link{add_posterior_coefficients}} and \code{\link{add_forecast_input}}.
 #' @param ... arguments passed forward to method.
 #'
 #' @return A list of class 'bvarmodel'.
@@ -31,7 +31,7 @@
 #' model <- add_posterior_coefficients(model)
 #' 
 #' # Add data used for forecast calculation
-#' model <- add_forecast_input_data(model, n_ahead = 4)
+#' model <- add_forecast_input(model, n_ahead = 4)
 #' 
 #' # Add forecasts
 #' model <- add_posterior_forecasts(model)
@@ -43,12 +43,12 @@ add_posterior_forecasts.bvarmodel <- function(object, ...){
   algorithm <- object[["model"]][["algorithm"]]
   
   if (is.null(object[["model"]][["h"]])) {
-    stop("Model specification does not contain forecast horizon 'h'. Consider using function add_forecast_input_data().")
+    stop("Model specification does not contain forecast horizon 'h'. Consider using function add_forecast_input().")
   }
   
   
   if (is.null(object[["data"]][["forecast"]][["z"]]) & !is.null(object[["data"]][["train"]][["z"]]) & !object[["model"]][["structural"]]) {
-    stop("Model specification does not contain input data. Consider using function add_forecast_input_data().")
+    stop("Model specification does not contain input data. Consider using function add_forecast_input().")
   }
   
   if (algorithm %in% c("VarNormalGamma", "VarNormalStochvol", "VarNormalWishart",

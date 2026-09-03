@@ -227,7 +227,7 @@ object <- add_initial_values(object)
 object <- .VecNormalGammaCoefficients(object)
 object <- .VecNormalGammaLogLik(object)
 
-object <- add_forecast_input_data(object, n_ahead = 10)
+object <- add_forecast_input(object, n_ahead = 10)
 object <- .VecNormalGammaForecasts(object)
 
 */

@@ -184,7 +184,7 @@ object <- add_priors(object,
                      sigma = list(df = 3, scale = 1))
 
 object <- add_initial_values(object)
-object <- add_forecast_input_data(object, n_ahead = 10)
+object <- add_forecast_input(object, n_ahead = 10)
 
 object <- .VarNormalWishartCoefficients(object)
 object <- .VarNormalWishartLogLik(object)

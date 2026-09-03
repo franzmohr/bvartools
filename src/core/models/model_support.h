@@ -5,6 +5,7 @@
 #define BAYESTS_CORE_MODELS_MODEL_SUPPORT_H
 
 #include "bayests/data.h"
+#include "bayests/priors.h"
 #include "bayests/spec.h"
 // Both unit lower triangular matrices a model carries are unpacked there, and
 // the two are packed in different orders -- read that file before reaching for
@@ -208,6 +209,48 @@ inline void build_psi_regressors(arma::mat &psi_z, const arma::mat &u)
                 -arma::trans(u.submat(0, j, i - 1, j));
         }
     }
+}
+
+/// The two draws that follow the log-volatility path in a stochastic volatility
+/// model: the variance of its random walk innovations, and the state of the
+/// period before the sample. Both are written in place.
+///
+/// `h` is tt x K, one column per series, as `stochvol_ocsn_2007` returns it. The
+/// random walk's innovations are h_t - h_{t-1} with h_0 taken from `h_init`, so
+/// their sum of squares is what the inverse gamma posterior of the variance adds
+/// to the prior rate. `h_init` is then normal, its only data being the first
+/// period of the path -- every row of the random walk precision sums to zero but
+/// the first.
+///
+/// `post_shape` is the prior shape plus tt/2, which does not change over the
+/// chain and is formed once by the caller.
+///
+/// Factored out because a fifth model wanted it. The four that predate it carry
+/// a copy each, and `stochvol_mixture.h` says at length what came of the last
+/// pair of copies in this library; they are left alone here only because
+/// rewriting a sampler's draw sequence and rewriting this are separate changes.
+inline void draw_stochvol_state(arma::vec &h_sigma, arma::vec &h_init, const arma::mat &h,
+                                const arma::vec &post_shape, const arma::vec &prior_rate,
+                                const NormalPrior &h_init_prior)
+{
+    const arma::uword tt = h.n_rows;
+    const arma::uword k = h.n_cols;
+
+    arma::mat differences(tt, k);
+    differences.row(0) = h.row(0) - arma::trans(h_init);
+    differences.rows(1, tt - 1) = h.rows(1, tt - 1) - h.rows(0, tt - 2);
+
+    const arma::vec sse = arma::trans(arma::sum(arma::square(differences)));
+    for (arma::uword i = 0; i < k; i++)
+    {
+        h_sigma(i) = 1.0 / arma::randg<double>(arma::distr_param(
+                               post_shape(i), 1.0 / (prior_rate(i) + sse(i) * 0.5)));
+    }
+
+    const arma::mat h_init_precision = arma::diagmat(1.0 / h_sigma);
+    h_init = draw_normal_precision(h_init_prior.v_inv + h_init_precision,
+                                   h_init_prior.v_inv * h_init_prior.mu +
+                                       h_init_precision * arma::trans(h.row(0)));
 }
 
 } // namespace bayests::core

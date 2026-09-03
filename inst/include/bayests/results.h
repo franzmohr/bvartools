@@ -374,6 +374,42 @@ struct DfmNormalGammaDraws
     bool has_factors() const { return factors.n_elem > 0; }
 };
 
+/// Posterior draws of a dynamic factor model with stochastic volatility in both
+/// error terms.
+///
+/// DfmNormalGammaDraws with the two precisions widened from a point to a path.
+/// The names are kept rather than renamed to the `u_omega_inv` the VAR and VEC
+/// stochastic volatility models use for their diagonal: those models have both a
+/// diagonal and a full precision to tell apart, and a dynamic factor model's
+/// U and V are diagonal by assumption, so there is only one object and
+/// DfmNormalGammaDraws already named it. A caller moving between the two DFMs
+/// then finds the same fields, only wider.
+struct DfmNormalStochvolDraws
+{
+    /// (k * n_factors) x iterations; each column is vec of the whole M x N
+    /// loading matrix, the identifying block's fixed ones and zeros included.
+    arma::mat lambda;
+
+    /// (n_factors * tt) x iterations; each column is vec of the N x tt factor
+    /// path, periods along the columns of that matrix.
+    arma::mat factors;
+
+    /// n_factor_a x iterations, vec([A_1 .. A_p]). Empty when the factors have
+    /// no dynamics.
+    arma::mat a;
+
+    /// (k * tt) x iterations: the diagonal of the idiosyncratic precision,
+    /// period by period, periods stacked within a column.
+    arma::mat u_sigma_inv;
+
+    /// (n_factors * tt) x iterations: the same for the factor innovations.
+    arma::mat v_sigma_inv;
+
+    arma::uword iterations() const { return u_sigma_inv.n_cols; }
+    bool has_a() const { return a.n_elem > 0; }
+    bool has_factors() const { return factors.n_elem > 0; }
+};
+
 /// Simulated forecast paths, (h * k) x draws: one column per posterior draw,
 /// horizons stacked within a column in the same variable order as the sample.
 struct ForecastDraws

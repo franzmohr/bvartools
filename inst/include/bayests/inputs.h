@@ -341,6 +341,91 @@ struct DfmNormalGammaInput
     void validate() const;
 };
 
+/// Where the DfmNormalStochvol chain starts.
+///
+/// DfmNormalGammaInitial plus a log-volatility path for each of the two error
+/// terms, and minus the two precisions those paths replace. As there, the factor
+/// path itself is not here: it is the first thing every draw produces.
+struct DfmNormalStochvolInitial
+{
+    /// The `n_lambda` free loadings, row by row and within a row left to right.
+    /// See DfmNormalStochvolInput.
+    arma::vec lambda;
+
+    /// vec([A_1 .. A_p]). Ignored when the factors have no dynamics.
+    arma::vec a;
+
+    /// tt x k log-volatilities of the idiosyncratic errors, one column per
+    /// observed series.
+    arma::mat u_h;
+
+    /// k; the idiosyncratic log-volatility before the first period.
+    arma::vec u_h_init;
+
+    /// k; variance of the idiosyncratic log-volatility innovations. A state
+    /// rather than a prior -- the sampler redraws it every iteration -- even
+    /// though the files keep it next to the prior it is drawn under, which is
+    /// the convention VarNormalStochvolInitial already set.
+    arma::vec u_h_sigma;
+
+    /// tt x n_factors log-volatilities of the factor innovations.
+    arma::mat v_h;
+
+    /// n_factors; the factor-innovation log-volatility before the first period.
+    arma::vec v_h_init;
+
+    /// n_factors; variance of the factor-innovation log-volatility innovations.
+    arma::vec v_h_sigma;
+};
+
+/// Dynamic factor model with a normal prior on the loadings and on the factor
+/// transition, and stochastic volatility in both error terms.
+///
+///     x_t = Lambda f_t + u_t,                  u_t ~ N(0, U_t),
+///     f_t = sum_{j=1..p} A_j f_{t-j} + v_t,    v_t ~ N(0, V_t),
+///
+/// with U_t = diag(exp(h^u_t)) and V_t = diag(exp(h^v_t)), and each element of
+/// both log-volatilities following a random walk of its own.
+///
+/// `Normal` names the coefficients, as it does in VarNormalStochvolInput against
+/// VarTvpStochvolInput: the loadings and the factor transition are constant and
+/// carry normal priors. Only the two error covariances move.
+///
+/// The two placements do different work and neither substitutes for the other.
+/// Volatility in `u_t` reweights the series that identify the factors, so a
+/// series that was noisy early and quiet later stops contributing on the same
+/// terms throughout, and a single wild observation is absorbed where it happened
+/// rather than dragged into the factor. Volatility in `v_t` is the common
+/// component's own, and it is what stops the k idiosyncratic variances from
+/// jointly absorbing a shock that every series felt at once -- the factor is
+/// otherwise flattest exactly when it should move most.
+///
+/// Everything DfmNormalGammaInput says about the data and the two orderings
+/// holds here unchanged: `train.y` is the only data, there is no ForecastData,
+/// `spec.h` is the horizon, the free loadings run row by row, `a` is
+/// vec([A_1 .. A_p]) with the blocks side by side, and the factors before the
+/// sample are zero rather than drawn.
+struct DfmNormalStochvolInput
+{
+    VarSpec spec;
+    TrainData train;
+
+    NormalPrior lambda_prior;  ///< Over the free loadings, in the row-major order above.
+    NormalPrior a_prior;       ///< Unused when the factors have no dynamics.
+
+    StochvolPrior u_sigma_prior;  ///< k idiosyncratic log-volatilities.
+    StochvolPrior v_sigma_prior;  ///< n_factors factor-innovation log-volatilities.
+
+    DfmNormalStochvolInitial initial;
+
+    /// Whether the factors carry dynamics to draw. A transition order of zero is
+    /// a static factor model with serially independent -- but still
+    /// heteroskedastic -- factors, which this sampler estimates.
+    bool use_a() const { return spec.n_factor_a() > 0; }
+
+    void validate() const;
+};
+
 /// Where the VecNormalWishart chain starts.
 struct VecNormalWishartInitial
 {

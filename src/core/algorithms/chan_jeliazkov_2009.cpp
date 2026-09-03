@@ -64,12 +64,68 @@ bool all_finite(const arma::mat &m)
   return true;
 }
 
-/// The inverse of a covariance, by the symmetric positive definite route.
+/// True if every off-diagonal element is exactly zero.
+///
+/// Scanned column by column and bailing at the first non-zero, so a dense
+/// argument pays O(K^2) comparisons on top of the O(K^3) factorisation it was
+/// going to pay anyway -- a few percent -- and a diagonal one saves the
+/// factorisation outright.
+///
+/// Exact equality rather than a tolerance. The covariances this is meant to
+/// catch are built by `arma::diagmat`, which writes literal zeros; a matrix that
+/// is diagonal only to within rounding has off-diagonal information in it, and
+/// dropping that silently would be a different model rather than a faster route
+/// to the same one.
+bool is_diagonal(const arma::mat &sigma)
+{
+  if (sigma.n_rows != sigma.n_cols) {
+    return false;
+  }
+  const arma::uword n = sigma.n_rows;
+  for (arma::uword j = 0; j < n; j++) {
+    for (arma::uword i = 0; i < n; i++) {
+      if (i != j && sigma(i, j) != 0.0) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+/// The inverse of a covariance, by the symmetric positive definite route -- or,
+/// when the covariance is diagonal, by dividing.
+///
+/// The branch is here rather than at the call sites because it pays off in
+/// proportion to how often this runs, and that is a property of the caller's
+/// model rather than of the line: a constant covariance is inverted once per
+/// draw and the branch is noise, while a covariance that moves with time is
+/// inverted once per *period*. A dynamic factor model with stochastic volatility
+/// is the second case in both of its equations, and its K is the number of
+/// observed series -- at 100 series over 300 periods this is 300 dense
+/// factorisations of a matrix that is zero off the diagonal, some 3e8 flops a
+/// draw, against 3e6 for the scan and the divisions.
+///
+/// Every time-varying parameter model here also reaches this with a diagonal
+/// state covariance, and the dynamic factor models with a diagonal one in both
+/// equations, so nothing in this library that hits the branch takes the dense
+/// path.
 arma::mat precision_of(const arma::mat &sigma, const char *what)
 {
+  const std::string not_spd =
+      std::string(what) + " is not symmetric positive definite, so it has no precision";
+
+  if (is_diagonal(sigma)) {
+    // A diagonal matrix is positive definite exactly when its diagonal is, so
+    // this is the same check `inv_sympd` would have made, and it is worth making
+    // explicitly: `1.0 / 0.0` is an infinity that would otherwise travel into
+    // the band and only surface as a non-finite draw at the very end.
+    const arma::vec diagonal = sigma.diag();
+    require(all_finite(diagonal) && diagonal.min() > 0.0, not_spd);
+    return arma::diagmat(1.0 / diagonal);
+  }
+
   arma::mat out;
-  require(arma::inv_sympd(out, sigma),
-          std::string(what) + " is not symmetric positive definite, so it has no precision");
+  require(arma::inv_sympd(out, sigma), not_spd);
   return out;
 }
 

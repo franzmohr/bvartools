@@ -44,7 +44,7 @@ model <- add_initial_values(model)
 model <- add_posterior_coefficients(model)
 
 # Add data used for forecast calculation
-model <- add_forecast_input_data(model, n_ahead = 4)
+model <- add_forecast_input(model, n_ahead = 4)
 
 # Add forecasts
 model <- add_posterior_forecasts(model)

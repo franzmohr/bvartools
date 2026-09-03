@@ -206,7 +206,7 @@ object <- add_initial_values(object)
 object <- .VecNormalWishartCoefficients(object)
 object <- .VecNormalWishartLogLik(object)
 
-object <- add_forecast_input_data(object, n_ahead = 10)
+object <- add_forecast_input(object, n_ahead = 10)
 object <- .VecNormalWishartForecasts(object)
 
 */

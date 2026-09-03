@@ -4,7 +4,7 @@
 #' an object of class 'expandingwindow'.
 #'
 #' @param object an object of class 'expandingwindow' containing objects that can
-#' be forward to their respective `add_forecast_input_data` method.
+#' be forward to their respective `add_forecast_input` method.
 #' @param ... arguments passed forward to method.
 #' 
 #' @return A list of class 'expandingwindow'.

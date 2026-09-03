@@ -79,7 +79,7 @@
 #' object <- vec_to_var(model)
 #'
 #' # The result can be used like any other VAR model, e.g. for forecasting
-#' object <- add_forecast_input_data(object, n_ahead = 4)
+#' object <- add_forecast_input(object, n_ahead = 4)
 #' object <- add_posterior_forecasts(object)
 #'
 #' @references

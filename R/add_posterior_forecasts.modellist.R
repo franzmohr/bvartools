@@ -3,7 +3,7 @@
 #' Calculates and adds forecasts to the elements of an object of class 'modellist'.
 #'
 #' @param object an object of class 'modellist', usually, the result of a call
-#' to \code{\link{add_posterior_coefficients}} and \code{\link{add_forecast_input_data}}.
+#' to \code{\link{add_posterior_coefficients}} and \code{\link{add_forecast_input}}.
 #' @param ... arguments passed forward to method.
 #' 
 #' @return A list of class 'modellist'.
@@ -33,7 +33,7 @@
 #' model <- add_posterior_coefficients(model)
 #' 
 #' # Add data used for forecast calculation
-#' model <- add_forecast_input_data(model, n_ahead = 4)
+#' model <- add_forecast_input(model, n_ahead = 4)
 #' 
 #' # Add forecasts
 #' model <- add_posterior_forecasts(model)

@@ -49,7 +49,12 @@ models.
 The data matrices are reconstructed from the data of the VEC model, so the
 resulting object covers exactly the same periods. Since a VEC model of lag
 order \eqn{p} and its VAR representation use the same number of observations,
-no observations are gained or lost.
+no observations are gained or lost. The levels of the endogenous variables
+are recovered from their differences and their first lag in the error
+correction term, which requires both to be on the same scale. If the error
+correction term was rescaled with \code{\link{scale_error_correction}}, the
+function therefore expects \code{\link{rescale_error_correction}} to have
+been applied before the transformation.
 
 Note that the covariance matrix of the error term is not affected by the
 transformation, since both parameterisations describe the same error term.

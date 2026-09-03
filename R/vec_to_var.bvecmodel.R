@@ -36,7 +36,12 @@
 #' The data matrices are reconstructed from the data of the VEC model, so the
 #' resulting object covers exactly the same periods. Since a VEC model of lag
 #' order \eqn{p} and its VAR representation use the same number of observations,
-#' no observations are gained or lost.
+#' no observations are gained or lost. The levels of the endogenous variables
+#' are recovered from their differences and their first lag in the error
+#' correction term, which requires both to be on the same scale. If the error
+#' correction term was rescaled with \code{\link{scale_error_correction}}, the
+#' function therefore expects \code{\link{rescale_error_correction}} to have
+#' been applied before the transformation.
 #'
 #' Note that the covariance matrix of the error term is not affected by the
 #' transformation, since both parameterisations describe the same error term.
@@ -131,6 +136,13 @@ vec_to_var.bvecmodel <- function(object, ...) {
     stop("Argument 'object' must contain the data of the VEC model in elements 'y' and 'w'.")
   }
 
+  # The levels of the endogenous variables are recovered by adding up the
+  # differences in 'y' and their first lag in 'w', which requires both to be on
+  # the same scale.
+  if (!is.null(attr(w, "scale"))) {
+    stop("The series in the error correction term are still on the scale of 'scale_error_correction'. Use 'rescale_error_correction' to put them back on the scale of the input data before the model is transformed.")
+  }
+
   ts_info <- stats::tsp(y_diff)
 
   y_diff <- as.matrix(y_diff)
@@ -185,11 +197,19 @@ vec_to_var.bvecmodel <- function(object, ...) {
   # restricted ones follow, which is the order the transformed coefficients are
   # in as well.
   det_data <- NULL
+  det_names <- NULL
   if (n_det_ur > 0) {
     det_data <- x_diff[, k * n_gamma + m * n_upsilon + 1:n_det_ur, drop = FALSE]
+    det_names <- dimnames(det_data)[[2]]
   }
   if (n_det_r > 0) {
-    det_data <- cbind(det_data, w[, k + m + 1:n_det_r, drop = FALSE])
+    det_r <- w[, k + m + 1:n_det_r, drop = FALSE]
+    det_names <- c(det_names, dimnames(det_r)[[2]])
+    det_data <- cbind(det_data, det_r)
+    # The operands still carry the time-series class of the model data, so
+    # cbind() names the columns after its deparsed arguments instead of keeping
+    # the names of the deterministic terms.
+    dimnames(det_data) <- list(NULL, det_names)
   }
   if (!is.null(det_data)) {
     x <- c(x, list(det_data))

@@ -20,7 +20,14 @@ Rescales the series in the error correction series in an object of class
 }
 \details{
 The function transforms element \code{object$data$train$w} and
-the posterior draws of \eqn{alpha} and \eqn{beta} to the original scale
-of the input data, based on the scaling factors that are stored in attribute
-\code{"scale"} of \code{object$data$train$w}.
+the posterior draws of \eqn{\beta} to the original scale of the input data,
+based on the scaling factors that are stored in attribute \code{"scale"} of
+\code{object$data$train$w}.
+
+If \eqn{D} is the diagonal matrix of scaling factors, function
+\code{\link{scale_error_correction}} replaced \eqn{w_t} by
+\eqn{D^{-1} w_t}, so that the estimated error correction term is
+\eqn{\alpha \beta^{\prime} D^{-1} w_t}. The draws of \eqn{\beta} are
+therefore multiplied by \eqn{D^{-1}}, while the draws of \eqn{\alpha} are
+not affected by the transformation and are carried over unchanged.
 }

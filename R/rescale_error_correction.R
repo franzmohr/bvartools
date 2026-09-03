@@ -21,9 +21,16 @@ rescale_error_correction <- function (object, ...) {
 #' @param ... arguments passed forward to method.
 #' 
 #' @details The function transforms element \code{object$data$train$w} and
-#' the posterior draws of \eqn{alpha} and \eqn{beta} to the original scale
-#' of the input data, based on the scaling factors that are stored in attribute
-#' \code{"scale"} of \code{object$data$train$w}.
+#' the posterior draws of \eqn{\beta} to the original scale of the input data,
+#' based on the scaling factors that are stored in attribute \code{"scale"} of
+#' \code{object$data$train$w}.
+#' 
+#' If \eqn{D} is the diagonal matrix of scaling factors, function
+#' \code{\link{scale_error_correction}} replaced \eqn{w_t} by
+#' \eqn{D^{-1} w_t}, so that the estimated error correction term is
+#' \eqn{\alpha \beta^{\prime} D^{-1} w_t}. The draws of \eqn{\beta} are
+#' therefore multiplied by \eqn{D^{-1}}, while the draws of \eqn{\alpha} are
+#' not affected by the transformation and are carried over unchanged.
 #' 
 #' @return An object of class 'bvecmodel'.
 #' 
@@ -49,23 +56,24 @@ rescale_error_correction.bvecmodel <- function(object, ...) {
   
   r <- object[["model"]][["rank"]]
   
+  # Only the draws of beta are affected. Since the error correction term of the
+  # estimated model is alpha %*% t(beta) %*% solve(D) %*% w, the coefficients on
+  # the original scale are obtained by multiplying beta by solve(D), which
+  # leaves alpha unchanged.
   if (r > 0) {
-    draws <- nrow(object[["posterior"]][["u_sigma_inv"]][["coeffs"]])
-    k <- object[["model"]][["k"]]
-    n_alpha <- k * r
+    draws <- nrow(object[["posterior"]][["beta"]][["coeffs"]])
     k_ect <- ncol(object[["data"]][["train"]][["w"]])
-    n_beta <- k_ect * r
-    pos_alpha <- 1:n_alpha
     
     for (draw in 1:draws) {
-      alpha_i <- rescale_matrix %*% matrix(object[["posterior"]][["a"]][["coeffs"]][draw, pos_alpha], k)
-      object[["posterior"]][["a"]][["coeffs"]][draw, pos_alpha] <- alpha_i
-      
       beta_i <- rescale_matrix_inv %*% matrix(object[["posterior"]][["beta"]][["coeffs"]][draw,], k_ect)
       object[["posterior"]][["beta"]][["coeffs"]][draw,] <- beta_i
     }
   }
   
+  # The data are back on their original scale, so there is nothing left to
+  # rescale. Dropping the attribute makes a second call fail instead of
+  # silently transforming the model a second time.
+  attr(object[["data"]][["train"]][["w"]], "scale") <- NULL
   
   return(object)
 }

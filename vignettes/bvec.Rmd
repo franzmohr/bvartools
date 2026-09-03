@@ -87,8 +87,6 @@ set.seed(7654321)
 # Obtain data matrices
 y <- t(object[["data"]][["train"]][["y"]])
 w <- t(object[["data"]][["train"]][["w"]])
-rescale_factor <- diag(attr(w, "scale"))
-rescale_factor_inv <- solve(rescale_factor)
 x <- t(object[["data"]][["train"]][["x"]])
 
 r <- object[["model"]][["rank"]] # Set rank
@@ -154,24 +152,13 @@ for (draw in 1:draws) {
   
   # Store draws
   if (draw > burnin) {
-    draws_alpha[, draw - burnin] <- rescale_factor %*% alpha
-    draws_beta[, draw - burnin] <- rescale_factor_inv %*% beta
+    draws_alpha[, draw - burnin] <- alpha
+    draws_beta[, draw - burnin] <- beta
     draws_pi[, draw - burnin] <- Pi
     draws_gamma[, draw - burnin] <- gamma
     draws_sigma[, draw - burnin] <- sigma
   }
 }
-```
-
-Obtain point estimates of cointegration variables:
-
-```{r beta}
-beta <- apply(t(draws_beta) / t(draws_beta)[, 1], 2, median) # Obtain medians for every row
-beta <- matrix(beta, k_w) # Transform vector into a matrix
-beta <- round(beta, 3) # Round values
-dimnames(beta) <- list(dimnames(w)[[1]], NULL) # Rename matrix dimensions
-
-beta # Print
 ```
 
 The `bvec` function can be used to collect output of the above Gibbs sampler in a standardized object of class `bvecmodel`, which can be used further for forecasting, impulse response analysis or forecast error variance decomposition. The error correction term is described by the draws of `alpha` and `beta` and not by those of `Pi`, since the latter cannot be decomposed into the former.
@@ -193,6 +180,26 @@ bvec_est <- bvec(y = object[["data"]][["train"]][["y"]],
                  Sigma = draws_sigma)
 ```
 
+The draws were obtained from the rescaled error correction term, so they refer to the rescaled series in `w`. Function `rescale_error_correction` undoes the transformation of `scale_error_correction`: it puts the series in `object$data$train$w` back on the scale of the input data and multiplies the draws of `beta` by the inverse of the scaling factors. The draws of `alpha` are not affected, because the error correction term of the estimated model is $\alpha \beta^{\prime} D^{-1} w_t$, where $D$ is the diagonal matrix of scaling factors.
+
+```{r rescale}
+bvec_est <- rescale_error_correction(bvec_est)
+```
+
+This step is required before the model is used any further. Functions such as `vec_to_var` recover the levels of the endogenous variables from the differences in `y` and their lags in `w`, which is only possible if both are on the same scale.
+
+Obtain point estimates of cointegration variables:
+
+```{r beta}
+beta <- bvec_est[["posterior"]][["beta"]][["coeffs"]] # Obtain draws of beta
+beta <- apply(beta / beta[, 1], 2, median) # Normalise and obtain medians
+beta <- matrix(beta, k_w) # Transform vector into a matrix
+beta <- round(beta, 3) # Round values
+dimnames(beta) <- list(dimnames(w)[[1]], NULL) # Rename matrix dimensions
+
+beta # Print
+```
+
 Posterior draws can be inspected with `plot`. Note that the coefficients of the error correction term are displayed as draws of `Pi`, i.e. as the product of `alpha` and `beta`, since the two matrices are only identified up to a rotation.
 
 ```{r, message=FALSE, warning=FALSE, fig.align='center', fig.height=4, fig.width=10}
@@ -211,14 +218,8 @@ As an alternative to a user-specific algorithm, function `add_posterior_coeffici
 
 ```{r, eval = FALSE}
 bvec_est <- add_posterior_coefficients(object)
-```
-
-Rescale
-
-```{r}
 bvec_est <- rescale_error_correction(bvec_est)
 ```
-
 
 ## Evaluation
 

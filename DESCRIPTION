@@ -1,20 +1,20 @@
 Package: bvartools
 Title: Bayesian Inference of Vector Autoregressive and Error Correction Models
 Version: 1.0.0
-Date: 2026-08-31
+Date: 2026-09-04
 Authors@R: person(c("Franz", "X."), "Mohr", email = "franz.x.mohr@outlook.com", role = c("aut","cre"), comment = c(ORCiD = "0009-0003-8890-7781"))
 Description: Assists in the set-up of algorithms for Bayesian inference of vector autoregressive (VAR) and error correction (VEC) models. Functions for posterior simulation, forecasting, impulse response analysis and forecast error variance decomposition are largely based on the introductory texts of Chan, Koop, Poirier and Tobias (2019, ISBN: 9781108437493), Koop and Korobilis (2010) <doi:10.1561/0800000013> and Luetkepohl (2006, ISBN: 9783540262398).
 License: GPL (>= 2)
 Depends: 
     R (>= 3.5),
     coda
-Imports: grDevices, graphics, hdf5r, lifecycle, methods, parallel, Rcpp (>= 1.0.12), stats
+Imports: grDevices, graphics, hdf5r, Matrix, methods, Rcpp (>= 1.0.12), stats
 LinkingTo: Rcpp, RcppArmadillo
 SystemRequirements: GNU make
 Encoding: UTF-8
 URL: https://github.com/franzmohr/bvartools
 BugReports: https://github.com/franzmohr/bvartools/issues
-Suggests: knitr, Matrix, rmarkdown, testthat (>= 3.0.0)
+Suggests: knitr, rmarkdown, testthat (>= 3.0.0)
 VignetteBuilder: knitr
 Collate: 
     'RcppExports.R'

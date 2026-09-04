@@ -7,63 +7,62 @@
     stop("Unknown specification of argument 'method'.")
   }
   
+  # The calling method hands over the residuals as a k x T matrix, which is the
+  # only place where the number of observations can be read off reliably. The
+  # endogenous variables are stored in SUR form, so their number of rows is
+  # k * T and not T.
+  k <- object[["model"]][["k"]]
+  tt <- ncol(u)
+  error <- object[["model"]][["error"]]
+  sigma_prior <- object[["priors"]][["u_sigma"]]
+  
   if (method %in% c("ols", "maxlik")) {
     
-    y <- matrix(t(object[["data"]][["train"]][["y"]]))
-    z <- object[["data"]][["train"]][["z"]]
-    k <- object[["model"]][["k"]]
-    tvp <- object[["model"]][["tvp"]]
-    tt <- nrow(y)
-    
     # Errors
-    if (object[["model"]][["error"]] %in% c("gamma", "gamma+covar")) {
+    if (error %in% c("gamma", "gamma+covar")) {
       object[["initial"]][["u_omega_inv"]] <- diag(1 / apply(u, 1, stats::var), k)
     }
     
-    if (object[["model"]][["error"]] %in% c("sv", "sv+covar")) {
-      u <- apply(u, 1, stats::var)
-      object[["initial"]][["h"]] <- log(matrix(u, nrow = tt, ncol = k, byrow = TRUE))
-      object[["initial"]][["h_init"]] <- matrix(object[["initial"]][["h"]][1, ])
-      object[["initial"]][["h_state_variance"]] <- object[["priors"]][["sigma"]][["state_variance"]]
-      object[["initial"]][["h_offset"]] <- object[["priors"]][["sigma"]][["offset"]]
+    if (error %in% c("sv", "sv+covar")) {
+      h <- log(matrix(apply(u, 1, stats::var), nrow = tt, ncol = k, byrow = TRUE))
+      object[["initial"]][["h"]] <- h
+      object[["initial"]][["h_init"]] <- matrix(h[1, ])
     } 
     
-    if (object[["model"]][["error"]] == "wishart") {
+    if (error == "wishart") {
       object[["initial"]][["u_sigma_inv"]] <- solve(tcrossprod(u) / tt)
     }
   }
   
   if (method == "prior") {
     # Errors
-    if (object[["model"]][["error"]] %in% c("gamma", "gamma+covar")) {
-      sigma_shape <- object[["priors"]][["sigma"]][["shape"]]
-      sigma_rate <- 1 / object[["priors"]][["sigma"]][["rate"]]
+    if (error %in% c("gamma", "gamma+covar")) {
+      sigma_shape <- sigma_prior[["shape"]]
+      sigma_rate <- 1 / sigma_prior[["rate"]]
       object[["initial"]][["u_omega_inv"]] <- diag(1, k)
       for (i in 1:k) {
         object[["initial"]][["u_omega_inv"]][i, i] <- 1 / stats::rgamma(1, shape = sigma_shape[i] / 2, rate = sigma_rate[i] / 2)
       }
     }
     
-    if (object[["model"]][["error"]] %in% c("sv", "sv+covar")) {
-      mu <- object[["priors"]][["sigma"]][["mu"]]
-      vinv <- object[["priors"]][["sigma"]][["v_inv"]]
-      h_draw <- mu + chol(vinv) %*% stats::rnorm(tt)
-      object[["initial"]][["h"]] <- matrix(h_draw, nrow = tt, ncol = k, byrow = TRUE)
-      object[["initial"]][["h_init"]] <- matrix(object[["initial"]][["h"]][1, ])
-      object[["initial"]][["h_state_variance"]] <- object[["priors"]][["sigma"]][["state_variance"]]
-      object[["initial"]][["h_offset"]] <- object[["priors"]][["sigma"]][["offset"]]
+    if (error %in% c("sv", "sv+covar")) {
+      mu <- sigma_prior[["mu"]]
+      vinv <- sigma_prior[["v_inv"]]
+      h_draw <- mu + chol(vinv) %*% stats::rnorm(k)
+      h <- matrix(h_draw, nrow = tt, ncol = k, byrow = TRUE)
+      object[["initial"]][["h"]] <- h
+      object[["initial"]][["h_init"]] <- matrix(h[1, ])
     }
     
-    if (object[["model"]][["error"]] == "wishart") {
-      sigma_df <- object[["priors"]][["sigma"]][["df"]]
-      sigma_scale <- solve(object[["priors"]][["sigma"]][["scale"]])
+    if (error == "wishart") {
+      sigma_df <- sigma_prior[["df"]]
+      sigma_scale <- solve(sigma_prior[["scale"]])
       object[["initial"]][["u_sigma_inv"]] <- matrix(stats::rWishart(1, df = sigma_df, Sigma = sigma_scale)[,,1], k)
     }
   }
   
   return(object)
 }
-
 
 # Generates the initial values of the state equation in case of TVP models
 .add_initial_values_state_errors <- function(object) {

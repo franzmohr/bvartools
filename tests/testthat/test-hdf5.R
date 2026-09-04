@@ -100,12 +100,6 @@ test_that("an expanding window is written into its own subfolder", {
 })
 
 test_that("an expanding window can be read back from its folder", {
-  # Currently broken twice over: read_expanding_window_model_from_folder()
-  # calls import_model_from_hdf5(), which no longer exists, and labels its
-  # result "expandwindmodellist" rather than the "expandingwindow" class the
-  # writer took, so no expandingwindow method would dispatch on it.
-  skip("read_expanding_window_model_from_folder() calls a removed function")
-
   folder <- temp_model_dir()
   write_to_hdf5(fx_expanding_window(), folder = folder)
   restored <- read_expanding_window_model_from_folder(

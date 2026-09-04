@@ -21,9 +21,9 @@ read_expanding_window_model_from_folder <- function(folder) {
 
   result <- NULL
   for (i in 1:length(file_paths)) {
-    result[[i]] <- import_model_from_hdf5(filename = file_paths[i])
+    result[[i]] <- read_model_from_hdf5(filename = file_paths[i])
   }
-  class(result) <- c("expandwindmodellist", "list") 
+  class(result) <- c("expandingwindow", "list") 
   
   return(result)
 }

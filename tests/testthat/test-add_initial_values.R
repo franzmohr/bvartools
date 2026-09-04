@@ -37,12 +37,6 @@ test_that("VEC initial values include the cointegration vectors", {
 })
 
 test_that("initial values can be drawn from the prior instead", {
-  # Currently broken: .add_initial_values_measurement_errors() reads the error
-  # variance prior from priors$sigma, but add_priors() stores it in
-  # priors$u_sigma, and k and tt are only defined in the "ols"/"maxlik" branch
-  # of that helper. Remove the skip once the helper is fixed.
-  skip("method = 'prior' looks up priors$sigma instead of priors$u_sigma")
-
   # Drawing needs a proper prior, so the uninformative fixture is not usable.
   informative <- add_priors(fx_var_model(),
                             coef = list(v_i = 1, v_i_det = 1),

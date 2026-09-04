@@ -73,16 +73,19 @@ predict.bvarmodel <- function(object, n_ahead = 10, ...) {
   tt <- nrow(object[["data"]][["train"]][["y"]])
   varnames <- object[["model"]][["endogen"]]
   draws <- nrow(object[["posterior"]][["forecast"]])
+  k <- object[["model"]][["k"]]
   
   tsp_temp <- stats::tsp(object[["data"]][["train"]][["y"]])
-  prd_time <- tsp_temp[2] + 1:object[["model"]][["h"]] / tsp_temp[3]
+  prd_time <- tsp_temp[2] + 1:n_ahead / tsp_temp[3]
   
-  result <- array(NA_real_, dim = c(object[["model"]][["h"]], length(varnames), draws))
+  result <- array(NA_real_, dim = c(n_ahead, length(varnames), draws))
   dimnames(result) <- list(as.character(prd_time), varnames, NULL)
   attr(result, "tsp") <- c(min(prd_time), max(prd_time), tsp_temp[3])
   
+  # A draw contains the whole simulated horizon in SUR form. Only the first
+  # 'n_ahead' periods of it are requested.
   for (i in 1:draws) {
-    result[,,i] <- t(matrix(object[["posterior"]][["forecast"]][i,], object[["model"]][["k"]]))
+    result[,,i] <- t(matrix(object[["posterior"]][["forecast"]][i,], k)[, 1:n_ahead, drop = FALSE])
   }
   
   result <- list(fcst = result,

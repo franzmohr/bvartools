@@ -66,11 +66,6 @@ test_that("predict warns when more periods are requested than simulated", {
 })
 
 test_that("a shorter horizon can be requested", {
-  # Currently broken: predict.bvarmodel() clamps n_ahead against model$h but
-  # then builds the result from model$h throughout, so a shorter horizon is
-  # ignored. Remove the skip once n_ahead is used to subset the output.
-  skip("predict() ignores n_ahead and always returns model$h periods")
-
   forecast <- stats::predict(fx_var_forecast(), n_ahead = 2)
   expect_identical(dim(forecast[["fcst"]])[1], 2L)
 })

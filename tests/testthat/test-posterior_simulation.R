@@ -103,12 +103,6 @@ test_that("posterior simulation runs for every model of a modellist", {
 })
 
 test_that("stochastic volatility specifications produce draws", {
-  # Currently broken: .add_initial_values_measurement_errors() derives tt from
-  # the stacked k * T vector of endogenous variables, so the initial log
-  # volatility comes out as (k * T) x k and the sampler rejects it. Remove the
-  # skip once the helper uses the number of observations.
-  skip("initial log volatility is built with k * T rows instead of T")
-
   model <- create_bvarmodel(var_data(), p = 1, deterministic = "const",
                             error = "sv", iterations = 10, burnin = 5)
   model <- add_priors(model,
@@ -122,8 +116,11 @@ test_that("stochastic volatility specifications produce draws", {
 
   expect_identical(nrow(model[["posterior"]][["a"]][["coeffs"]]), 10L)
   expect_true(all(is.finite(model[["posterior"]][["a"]][["coeffs"]])))
-  # The volatility path is stored for every period and variable.
-  expect_true("h" %in% names(model[["posterior"]]))
+  # The volatility path is reported as one error precision matrix per period.
+  tt <- nrow(model[["data"]][["train"]][["y"]])
+  k <- model[["model"]][["k"]]
+  expect_identical(dim(model[["posterior"]][["u_sigma_inv"]][["coeffs"]]),
+                   c(10L, as.integer(k * k * tt)))
 })
 
 test_that("a failing sampler is reported instead of aborting", {

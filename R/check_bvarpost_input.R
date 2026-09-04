@@ -5,7 +5,7 @@
 # 
 # @param object a list containing the necesseary data objects required for
 # a Gibbs sampling algorithm. Usually, the output of a call to 
-# \code{\link{create_var_model}} in combination with \code{\link{add_priors}}
+# \code{\link{create_bvarmodel}} in combination with \code{\link{add_priors}}
 # and \code{\link{add_initial_values}}.
 # 
 # 

@@ -32,12 +32,12 @@ Generates the input matrix for the simulation of the cointegration matrix \eqn{\
 data("e6") # Load data
 
 # Generate model input
-mod <- gen_vec(e6, p = 4, r = 1,
-               const = "unrestricted", seasonal = "unrestricted")
+mod <- create_bvecmodel(e6, p = 4, r = 1,
+                        const = "unrestricted", seasonal = "unrestricted")
 
 # Obtain input data
 alpha <- matrix(c(-0.1, 0.16, -0.04, -0.02), 2)
-w <- mod$data$W
+w <- mod$data$train$w
 
 # Constant coefficients
 coint_prepare_sur_data(w, alpha, 2, 1, TRUE, FALSE)

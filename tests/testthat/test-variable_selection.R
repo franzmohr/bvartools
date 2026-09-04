@@ -45,7 +45,6 @@ test_that("ssvs can restrict selection to a subset of coefficients", {
 })
 
 test_that("post_bvs returns the inclusion matrix", {
-  skip_without_matrix()
   set.seed(5)
 
   k <- 2
@@ -69,7 +68,6 @@ test_that("post_bvs returns the inclusion matrix", {
 })
 
 test_that("post_bvs keeps coefficients that clearly matter", {
-  skip_without_matrix()
   set.seed(6)
 
   k <- 2
@@ -90,7 +88,6 @@ test_that("post_bvs keeps coefficients that clearly matter", {
 })
 
 test_that("post_bvs can restrict selection to a subset of coefficients", {
-  skip_without_matrix()
   set.seed(7)
 
   k <- 2

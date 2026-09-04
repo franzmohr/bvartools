@@ -179,12 +179,3 @@ temp_model_dir <- function() {
   dir.create(path)
   path
 }
-
-# Several exported functions return sparse matrices, but the Matrix package is
-# not declared in DESCRIPTION. Its namespace therefore has to be loaded before
-# the S4 classes of the returned objects are defined.
-skip_without_matrix <- function() {
-  testthat::skip_if_not_installed("Matrix")
-  loadNamespace("Matrix")
-  invisible(TRUE)
-}

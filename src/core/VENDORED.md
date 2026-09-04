@@ -91,6 +91,30 @@ it does not compile at all -- which is how the omission surfaces, at the next
 build rather than at the refresh. The refresh script says how many DFMs upstream
 has beside the list, so the two can be compared.
 
+**The factor augmented VAR.** `FavarNormalWishart` is a factor model, so it is
+dfmtools' rather than this package's, and it is skipped along with
+`core/models/favar_support.h`. The mechanism is not merely the same as the DFMs',
+it is the DFMs': `favar_support.h` includes the `dfm_support.h` skipped just
+above, so a copy of the sampler without them would fail to compile rather than
+merely sit unreachable in the shared object. Upstream has one of these.
+
+Everything the paragraph below says about the DFMs' type surface holds for it
+too. `FavarNormalWishartInitial` and `FavarNormalWishartInput` are in
+`bayests/inputs.h`, `FavarNormalWishartDraws` in `bayests/results.h`,
+`n_obs_factors`, `n_state()`, `n_favar_lambda()` and `n_favar_a()` in
+`bayests/spec.h`, `TrainData::f_obs` in `bayests/data.h`, and
+`FavarNormalWishartInput::validate()` in `core/inputs.cpp` -- all files every
+model shares and which are copied whole. That validator calls only the local
+helpers in `inputs.cpp`, so it links with the sampler absent, exactly as the four
+DFM validators do.
+
+`core/algorithms/chan_jeliazkov_2009.cpp` is copied and now carries a second
+entry point, `chan_jeliazkov_2009_conditional`, which holds the trailing elements
+of every state column at observed values instead of drawing them. Nothing here
+calls it -- it exists for the FAVAR -- and it costs one function in a file this
+package already vendors for the time-varying models. Upstream verified the split
+that introduced it left every fingerprint unmoved.
+
 This does **not** take the DFMs out of the vendored core, and cannot. Every
 `Dfm*Initial` and `Dfm*Input` is in `bayests/inputs.h`, every `Dfm*Draws` in
 `bayests/results.h`, `n_factors` and `n_lambda()` in `bayests/spec.h`, and the

@@ -7,8 +7,8 @@
 \method{ssvs_prior}{bvarmodel}(object, tau = c(0.05, 10), semiautomatic = NULL)
 }
 \arguments{
-\item{object}{an object of class \code{"bvarmodel"}, usually, a result of a call to \code{\link{gen_var}}
-or \code{\link{gen_vec}}.}
+\item{object}{an object of class \code{"bvarmodel"}, usually, a result of a call to \code{\link{create_bvarmodel}}
+or \code{\link{create_bvecmodel}}.}
 
 \item{tau}{a numeric vector of two elements containing the prior standard errors of restricted
 variables (\eqn{\tau_0}) as its first element and unrestricted variables (\eqn{\tau_1})

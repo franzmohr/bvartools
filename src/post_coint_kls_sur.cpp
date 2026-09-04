@@ -77,9 +77,9 @@
 //' data("e6")
 //' 
 //' # Generate model data
-//' temp <- gen_vec(e6, p = 1, r = 1)
-//' y <- t(temp$data$Y)
-//' ect <- t(temp$data$W)
+//' temp <- create_bvecmodel(e6, p = 1, r = 1)
+//' y <- t(temp$data$train$y)
+//' ect <- t(temp$data$train$w)
 //' 
 //' k <- nrow(y) # Endogenous variables
 //' tt <- ncol(y) # Number of observations

@@ -52,22 +52,35 @@ where \eqn{u_t \sim N(0, \Sigma_{t})}.
 data("e1")
 e1 <- diff(log(e1)) * 100
 
-object <- create_var_model(data = e1)
+# Generate model input, which uses BVS as variable selection algorithm
+object <- create_bvarmodel(data = e1, p = 2, deterministic = "const",
+                           varsel = "bvs")
 
-object <- add_priors(object, bvs = list(inprior = .1))
+# Add prior specifications, including the prior inclusion probabilities
+object <- add_priors(object,
+                     coef = list(v_i = 1, v_i_det = 1 / 10),
+                     sigma = list(df = "k", scale = 1),
+                     varsel = list(inprior = .1))
 
+# Add initial values
 object <- add_initial_values(object)
 
-y <- matrix(t(object[["data"]][["y"]]))
-k <- ncol(object[["data"]][["y"]])
-tt <- nrow(object[["data"]][["y"]])
-z <- Matrix(object[["data"]][["z"]])
+# Obtain data, initial values and priors
+y <- matrix(t(object[["data"]][["train"]][["y"]]))
+z <- object[["data"]][["train"]][["z"]] # Argument 'z' is taken dense
+k <- object[["model"]][["k"]]
+tt <- nrow(object[["data"]][["train"]][["y"]])
 m <- ncol(z)
 a <- object[["initial"]][["a"]]
-lambda <- Diagonal(ncol(z), 1)
-sigma_i <- object[["initial"]][["sigma_i"]]
-sigma_i <- kronecker(Diagonal(tt, 1), sigma_i)
-prob_prior <- object[["priors"]][["a"]][["bvs"]][["inprior"]]
+prob_prior <- object[["priors"]][["a"]][["inprior"]]
+
+# Arguments 'lambda' and 'sigma_i' have to be sparse
+lambda <- Matrix::Matrix(diag(1, m), sparse = TRUE)
+
+# Initial value of the inverse error covariance matrix
+u <- matrix(y - z \%*\% a, k)
+sigma_i <- Matrix::Matrix(kronecker(diag(1, tt), solve(tcrossprod(u) / tt)),
+                          sparse = TRUE)
 
 # Draw inclusion parameters
 post_bvs(y, z, a, k, m, lambda, sigma_i, prob_prior)

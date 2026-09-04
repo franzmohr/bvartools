@@ -7,8 +7,8 @@
 \method{ssvs_prior}{bvecmodel}(object, tau = c(0.05, 10), semiautomatic = NULL)
 }
 \arguments{
-\item{object}{an object of class \code{"bvarmodel"}, usually, a result of a call to \code{\link{gen_var}}
-or \code{\link{gen_vec}}.}
+\item{object}{an object of class \code{"bvarmodel"}, usually, a result of a call to \code{\link{create_bvarmodel}}
+or \code{\link{create_bvecmodel}}.}
 
 \item{tau}{a numeric vector of two elements containing the prior standard errors of restricted
 variables (\eqn{\tau_0}) as its first element and unrestricted variables (\eqn{\tau_1})
@@ -32,7 +32,7 @@ Calculates the priors for a Bayesian VAR model, which employs stochastic search 
 data("e6")
 
 # Generate model input
-object <- create_vec_model(e6, r = 1)
+object <- create_bvecmodel(e6, r = 1)
 
 # Obtain SSVS prior
 prior <- ssvs_prior(object, semiautomatic = c(.1, 10))

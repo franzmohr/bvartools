@@ -26,9 +26,9 @@ data("e1")
 e1 <- diff(log(e1))
 
 # Generate VAR model
-data <- gen_var(e1, p = 2, deterministic = "const")
-y <- t(data$data$Y)
-x <- t(data$data$Z)
+data <- create_bvarmodel(e1, p = 2, deterministic = "const")
+y <- t(data$data$train$y)
+x <- t(data$data$train$x)
 
 # LS estimate
 ols <- tcrossprod(y, x) \%*\% solve(tcrossprod(x))

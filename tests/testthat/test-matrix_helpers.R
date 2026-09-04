@@ -1,6 +1,4 @@
 test_that("covar_vector_to_matrix builds a unit lower triangular matrix", {
-  skip_without_matrix()
-
   # Three covariance coefficients fill the strict lower triangle of a 3 x 3
   # matrix, column by column.
   result <- as.matrix(covar_vector_to_matrix(matrix(1:3), 3, 2))
@@ -12,8 +10,6 @@ test_that("covar_vector_to_matrix builds a unit lower triangular matrix", {
 })
 
 test_that("time varying covariance coefficients become block diagonal", {
-  skip_without_matrix()
-
   result <- as.matrix(covar_vector_to_matrix(matrix(1:6), 3, 2))
 
   expect_identical(dim(result), c(6L, 6L))
@@ -27,8 +23,6 @@ test_that("time varying covariance coefficients become block diagonal", {
 })
 
 test_that("generate_lower_block_diagonal places the negative lag blocks", {
-  skip_without_matrix()
-
   # a = vec([A_1, A_2]) for k = 2.
   result <- as.matrix(generate_lower_block_diagonal(matrix(1:8), 2, 4))
   a1 <- matrix(1:4, 2)
@@ -47,8 +41,6 @@ test_that("generate_lower_block_diagonal places the negative lag blocks", {
 })
 
 test_that("sur_const_to_tvp spreads the regressors over the diagonal", {
-  skip_without_matrix()
-
   z <- matrix(1:8, 4, 2)
   result <- as.matrix(sur_const_to_tvp(z, 2, 2))
 
@@ -60,8 +52,6 @@ test_that("sur_const_to_tvp spreads the regressors over the diagonal", {
 })
 
 test_that("covar_prepare_data returns the pieces of the covariance regression", {
-  skip_without_matrix()
-
   k <- 3
   tt <- 4
   u <- matrix(1:(k * tt))
@@ -80,8 +70,6 @@ test_that("covar_prepare_data returns the pieces of the covariance regression", 
 })
 
 test_that("time varying covariance coefficients widen the regressor matrix", {
-  skip_without_matrix()
-
   k <- 3
   tt <- 4
   u <- matrix(1:(k * tt))
@@ -96,8 +84,6 @@ test_that("time varying covariance coefficients widen the regressor matrix", {
 })
 
 test_that("coint_prepare_sur_data builds the cointegration regressors", {
-  skip_without_matrix()
-
   k <- 2
   r <- 1
   # w holds one row per observation and one column per cointegration regressor.

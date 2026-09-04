@@ -506,8 +506,60 @@ struct DfmTvpStochvolDraws
     bool has_factors() const { return factors.n_elem > 0; }
 };
 
+/// Posterior draws of a factor augmented VAR with a Wishart prior on the
+/// precision of the state innovations.
+///
+/// DfmNormalGammaDraws with the state widened from the unobserved factors to
+/// the unobserved and observed ones together, and the factor innovation
+/// precision widened from a diagonal to a matrix. Draws run along the columns,
+/// as everywhere else here.
+///
+/// Only the unobserved half of the state is a draw. The observed half is data
+/// and is not copied into the posterior -- a caller that wants the whole state
+/// path already holds it, and storing a second copy of the input once per draw
+/// would be the largest thing in the file.
+struct FavarNormalWishartDraws
+{
+    /// (k * n_state) x iterations; each column is vec of the whole
+    /// k x n_state loading matrix [Lambda_f Lambda_y], the fixed ones and zeros
+    /// of the identifying block included.
+    ///
+    /// Deliberately not the free elements alone, which is how the prior and the
+    /// starting value are given, for the reason DfmNormalGammaDraws gives: a
+    /// caller wants Lambda, and reshaping k x n_state gets it without having to
+    /// know the identification rule.
+    arma::mat lambda;
+
+    /// (n_factors * tt) x iterations; each column is vec of the
+    /// n_factors x tt path of the *unobserved* factors, periods along the
+    /// columns of that matrix.
+    arma::mat factors;
+
+    /// n_favar_a x iterations, vec([Phi_1 .. Phi_p]) of the state transition.
+    /// Empty when the state has no dynamics.
+    arma::mat a;
+
+    /// k x iterations. R is diagonal, so only the diagonal is drawn and only it
+    /// is kept -- the convention DfmNormalGammaDraws set.
+    arma::mat u_sigma_inv;
+
+    /// (n_state * n_state) x iterations; each column is vec of the state
+    /// innovation precision Q^-1. A whole matrix, unlike every DFM's, which is
+    /// the point of this member of the family -- see FavarNormalWishartInput.
+    arma::mat v_sigma_inv;
+
+    arma::uword iterations() const { return u_sigma_inv.n_cols; }
+    bool has_a() const { return a.n_elem > 0; }
+    bool has_factors() const { return factors.n_elem > 0; }
+};
+
 /// Simulated forecast paths, (h * k) x draws: one column per posterior draw,
 /// horizons stacked within a column in the same variable order as the sample.
+///
+/// A factor augmented VAR is the one model here whose forecast is wider than
+/// `k`: it stacks (h * (k + n_obs_factors)), the panel of one horizon followed
+/// by the observed factors of that horizon. The observed factors are what a
+/// FAVAR is forecast for, and this is the only dataset that could carry them.
 struct ForecastDraws
 {
     arma::mat values;

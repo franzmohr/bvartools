@@ -628,6 +628,124 @@ struct DfmTvpStochvolInput
     void validate() const;
 };
 
+/// Where the FavarNormalWishart chain starts.
+///
+/// The state path is not among these, for the reason DfmNormalGammaInitial
+/// gives: it is the first thing every draw produces. Neither is the observed
+/// half of the state, which is data and arrives in `train`.
+struct FavarNormalWishartInitial
+{
+    /// The `n_favar_lambda` free loadings, in the order the sampler draws them
+    /// -- row by row, and within a row left to right. See
+    /// FavarNormalWishartInput.
+    arma::vec lambda;
+
+    /// vec([Phi_1 .. Phi_p]) of the state transition. Ignored when the state
+    /// carries no dynamics.
+    arma::vec a;
+
+    /// k; the diagonal of the idiosyncratic precision. A vector rather than a
+    /// matrix because R is diagonal by assumption -- that assumption is what
+    /// makes this a factor model -- exactly as in DfmNormalGammaInitial.
+    arma::vec u_sigma_inv;
+
+    /// n_state x n_state precision of the state innovations. A matrix, not a
+    /// diagonal, and that is the difference from the DFM beside it: see
+    /// FavarNormalWishartInput.
+    arma::mat v_sigma_inv;
+};
+
+/// Factor augmented VAR with a normal prior on the loadings and on the state
+/// transition, independent gamma priors on the idiosyncratic precisions and a
+/// Wishart prior on the precision of the state innovations.
+///
+///     x_t = Lambda_f f_t + Lambda_y y_t + e_t,   e_t ~ N(0, R),  R diagonal,
+///     s_t = sum_{j=1..p} Phi_j s_{t-j} + v_t,    v_t ~ N(0, Q),
+///
+/// with s_t = (f_t', y_t')', for `k` observed series in the panel x_t,
+/// `n_factors` unobserved factors f_t and `n_obs_factors` observed factors y_t,
+/// after Bernanke, Boivin and Eliasz (2005).
+///
+/// What it is, against the dynamic factor models beside it. A DFM's state is
+/// unobserved throughout; here half of it is data. The observed factors are the
+/// variables whose dynamics the model is actually about -- a policy rate, output
+/// -- and the panel is there to measure the common component they move with.
+/// They sit in the state vector rather than beside it because the transition is
+/// a VAR over both blocks jointly, and that coupling is the model: the factors
+/// respond to the policy variable and the policy variable responds to the
+/// factors.
+///
+/// Why the error precision is a Wishart here and a gamma in every DFM. R must
+/// stay diagonal -- a factor model whose idiosyncratic errors may correlate has
+/// nothing left for the factors to explain, which is why no `Dfm*` has the
+/// option. Q is a different object: it is the innovation covariance of a VAR,
+/// its observed block is an ordinary VAR covariance, and its cross block is the
+/// correlation between the factor innovations and the shock to the observed
+/// variables. Forcing that to zero would assert the policy shock is orthogonal
+/// to every factor innovation, which is the one thing a FAVAR exists to
+/// measure. So the third part of this model's name refers to Q, and R is
+/// gamma-diagonal in every member of the family.
+///
+/// That choice is what fixes the identification, and the two cannot be picked
+/// separately. A DFM pins the rotation of its factors with a unit lower
+/// triangular loading block *and* a diagonal V. With Q free the second half is
+/// gone, so the first half has to do the whole job: the leading `n_factors`
+/// square block of Lambda_f is the *identity* here, and the observed columns of
+/// those rows are zero. See VarSpec::n_favar_lambda(), which counts what that
+/// leaves.
+///
+/// The data. `train.y` holds the panel, tt x k; `train.f_obs` holds the observed
+/// factors, tt x n_obs_factors, one period per row. `z`, `x` and `w` are unused
+/// -- a FAVAR has no regressors of the kind a VAR does. There is no ForecastData:
+/// the forecast is the transition run forward, which needs no out-of-sample
+/// matrix. `spec.h` is the horizon.
+///
+/// Two orderings have to be agreed with the host and are the only ones not
+/// implied by a dimension:
+///
+///   - the free loadings, everywhere they appear as a vector -- `initial.lambda`
+///     and both halves of `lambda_prior` -- run row by row from row `n_factors`
+///     on, each row carrying its `n_state` elements with the factor loadings
+///     before the observed ones. The rows before that are the identifying block
+///     and carry none. That is the order the equation by equation draw consumes
+///     them in. The *posterior* is stored differently, as vec of the whole
+///     k x n_state matrix; see FavarNormalWishartDraws.
+///   - `a` is vec([Phi_1 .. Phi_p]) with the blocks side by side, so the first
+///     n_state^2 elements are Phi_1 read column-wise.
+///
+/// States before the sample are zero, both blocks of them, which is what makes
+/// the first p transitions well defined -- the convention every DFM here
+/// follows. It is a statement about the data: the observed factors are expected
+/// in deviations, as a FAVAR's are anyway.
+///
+/// Bernanke, B. S., Boivin, J., & Eliasz, P. (2005). Measuring the effects of
+/// monetary policy: a factor-augmented vector autoregressive (FAVAR) approach.
+/// Quarterly Journal of Economics, 120(1), 387-422.
+struct FavarNormalWishartInput
+{
+    VarSpec spec;
+    TrainData train;
+
+    NormalPrior lambda_prior;  ///< Over the free loadings, in the row-major order above.
+    NormalPrior a_prior;       ///< Unused when the state has no dynamics.
+
+    GammaPrior u_sigma_prior;    ///< k independent priors on the idiosyncratic precisions.
+    WishartPrior v_sigma_prior;  ///< On the n_state square precision of the state innovations.
+
+    FavarNormalWishartInitial initial;
+
+    /// Whether the state carries dynamics to draw. An order of zero is a static
+    /// model with serially independent states, which this sampler estimates --
+    /// it is not an error, though it is a strange thing to ask a FAVAR for.
+    bool use_a() const { return spec.n_favar_a() > 0; }
+
+    /// Throws std::invalid_argument describing the first inconsistency it
+    /// finds. Called by the sampler before the first draw, so a host that
+    /// forgets to call it still gets the message rather than a crash a
+    /// thousand iterations in.
+    void validate() const;
+};
+
 /// Where the VecNormalWishart chain starts.
 struct VecNormalWishartInitial
 {

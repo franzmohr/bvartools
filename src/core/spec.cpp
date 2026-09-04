@@ -59,6 +59,17 @@ void VarSpec::validate() const
         throw std::invalid_argument("the number of restricted deterministic terms cannot be "
                                     "negative");
     }
+    if (n_factors < 0 || n_obs_factors < 0)
+    {
+        throw std::invalid_argument("the number of factors (n_factors, n_obs_factors) cannot be "
+                                    "negative");
+    }
+    if (n_obs_factors > 0 && n_factors == 0)
+    {
+        throw std::invalid_argument("observed factors (n_obs_factors) belong to a factor augmented "
+                                    "VAR, which needs at least one unobserved factor (n_factors) "
+                                    "as well; a model with none of the second is a VAR");
+    }
     if (rank > k_beta)
     {
         throw std::invalid_argument("cointegration rank (" + std::to_string(rank) +

@@ -8,7 +8,7 @@ ssvs_prior(object, ...)
 }
 \arguments{
 \item{object}{an object of class \code{"bvarmodel"} or \code{"bvecmodel"},
-usually, a result of a call to \code{\link{create_var_model}} or \code{\link{create_vec_model}}.}
+usually, a result of a call to \code{\link{create_bvarmodel}} or \code{\link{create_bvecmodel}}.}
 
 \item{...}{arguments passed forward to method.}
 }
@@ -26,7 +26,7 @@ data("e1")
 data <- diff(log(e1))
 
 # Generate model input
-object <- gen_var(data)
+object <- create_bvarmodel(data)
 
 # Obtain SSVS prior
 prior <- ssvs_prior(object, semiautomatic = c(.1, 10))

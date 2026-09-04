@@ -213,12 +213,12 @@ coint_kls2010_reparameterise_two <- function(alpha, beta) {
 #' data("e6") # Load data
 #' 
 #' # Generate model input
-#' mod <- gen_vec(e6, p = 4, r = 1,
-#'                const = "unrestricted", seasonal = "unrestricted")
+#' mod <- create_bvecmodel(e6, p = 4, r = 1,
+#'                         const = "unrestricted", seasonal = "unrestricted")
 #' 
 #' # Obtain input data
 #' alpha <- matrix(c(-0.1, 0.16, -0.04, -0.02), 2)
-#' w <- mod$data$W
+#' w <- mod$data$train$w
 #' 
 #' # Constant coefficients
 #' coint_prepare_sur_data(w, alpha, 2, 1, TRUE, FALSE)
@@ -270,9 +270,9 @@ coint_prepare_sur_data <- function(w, alpha, k, r, reparameterise, tvp) {
 #' u <- matrix(1:(k * tt))
 #'   
 #' # Generate simple variance matrix
-#' omega_i <- Matrix(diag(1:k, k))
+#' omega_i <- Matrix::Matrix(diag(1:k, k))
 #' # Generate block diagonal variance matrix
-#' tv_omega_i <- Matrix(0, k * tt, k * tt)
+#' tv_omega_i <- Matrix::Matrix(0, k * tt, k * tt)
 #' for (i in 1:tt) {
 #'   tv_omega_i[(i - 1) * k + 1:k, (i - 1) * k + 1:k] <- omega_i
 #' }
@@ -495,9 +495,9 @@ kalman_durbin_koopman_2002 <- function(y, z, sigma_u, sigma_v, B, a_init, P_init
 #' e1 <- diff(log(e1))
 #' 
 #' # Generate VAR model
-#' data <- gen_var(e1, p = 2, deterministic = "const")
-#' y <- t(data$data$Y)
-#' x <- t(data$data$Z)
+#' data <- create_bvarmodel(e1, p = 2, deterministic = "const")
+#' y <- t(data$data$train$y)
+#' x <- t(data$data$train$x)
 #'
 #' # LS estimate
 #' ols <- tcrossprod(y, x) %*% solve(tcrossprod(x))
@@ -551,22 +551,35 @@ loglik_normal <- function(u, sigma) {
 #' data("e1")
 #' e1 <- diff(log(e1)) * 100
 #' 
-#' object <- create_var_model(data = e1)
+#' # Generate model input, which uses BVS as variable selection algorithm
+#' object <- create_bvarmodel(data = e1, p = 2, deterministic = "const",
+#'                            varsel = "bvs")
 #' 
-#' object <- add_priors(object, bvs = list(inprior = .1))
+#' # Add prior specifications, including the prior inclusion probabilities
+#' object <- add_priors(object,
+#'                      coef = list(v_i = 1, v_i_det = 1 / 10),
+#'                      sigma = list(df = "k", scale = 1),
+#'                      varsel = list(inprior = .1))
 #' 
+#' # Add initial values
 #' object <- add_initial_values(object)
 #' 
-#' y <- matrix(t(object[["data"]][["y"]]))
-#' k <- ncol(object[["data"]][["y"]])
-#' tt <- nrow(object[["data"]][["y"]])
-#' z <- Matrix(object[["data"]][["z"]])
+#' # Obtain data, initial values and priors
+#' y <- matrix(t(object[["data"]][["train"]][["y"]]))
+#' z <- object[["data"]][["train"]][["z"]] # Argument 'z' is taken dense
+#' k <- object[["model"]][["k"]]
+#' tt <- nrow(object[["data"]][["train"]][["y"]])
 #' m <- ncol(z)
 #' a <- object[["initial"]][["a"]]
-#' lambda <- Diagonal(ncol(z), 1)
-#' sigma_i <- object[["initial"]][["sigma_i"]]
-#' sigma_i <- kronecker(Diagonal(tt, 1), sigma_i)
-#' prob_prior <- object[["priors"]][["a"]][["bvs"]][["inprior"]]
+#' prob_prior <- object[["priors"]][["a"]][["inprior"]]
+#' 
+#' # Arguments 'lambda' and 'sigma_i' have to be sparse
+#' lambda <- Matrix::Matrix(diag(1, m), sparse = TRUE)
+#' 
+#' # Initial value of the inverse error covariance matrix
+#' u <- matrix(y - z %*% a, k)
+#' sigma_i <- Matrix::Matrix(kronecker(diag(1, tt), solve(tcrossprod(u) / tt)),
+#'                           sparse = TRUE)
 #' 
 #' # Draw inclusion parameters
 #' post_bvs(y, z, a, k, m, lambda, sigma_i, prob_prior)
@@ -759,9 +772,9 @@ post_coint_kls <- function(y, beta, w, sigma_i, v_i, p_tau_i, g_i, x = NULL, gam
 #' data("e6")
 #' 
 #' # Generate model data
-#' temp <- gen_vec(e6, p = 1, r = 1)
-#' y <- t(temp$data$Y)
-#' ect <- t(temp$data$W)
+#' temp <- create_bvecmodel(e6, p = 1, r = 1)
+#' y <- t(temp$data$train$y)
+#' ect <- t(temp$data$train$w)
 #' 
 #' k <- nrow(y) # Endogenous variables
 #' tt <- ncol(y) # Number of observations
@@ -916,9 +929,9 @@ post_gamma_state_variance <- function(a, a_init, shape_prior, rate_prior, invers
 #' data <- diff(log(e1))
 #' 
 #' # Generate model data
-#' temp <- gen_var(data, p = 2, deterministic = "const")
-#' y <- t(temp$data$Y)
-#' x <- t(temp$data$Z)
+#' temp <- create_bvarmodel(data, p = 2, deterministic = "const")
+#' y <- t(temp$data$train$y)
+#' x <- t(temp$data$train$x)
 #' k <- nrow(y)
 #' tt <- ncol(y)
 #' m <- k * nrow(x)
@@ -979,9 +992,9 @@ post_normal <- function(y, x, sigma_i, a_prior, v_i_prior) {
 #' data <- diff(log(e1))
 #' 
 #' # Generate model data
-#' temp <- gen_var(data, p = 2, deterministic = "const")
-#' y <- t(temp$data$Y)
-#' z <- temp$data$SUR
+#' temp <- create_bvarmodel(data, p = 2, deterministic = "const")
+#' y <- t(temp$data$train$y)
+#' z <- temp$data$train$z
 #' k <- nrow(y)
 #' tt <- ncol(y)
 #' m <- ncol(z)
@@ -1255,9 +1268,9 @@ sur_const_to_tvp <- function(z, k, tt) {
 #' data <- diff(log(e1))
 #' 
 #' # Generate model data
-#' temp <- gen_var(data, p = 2, deterministic = "const")
-#' y <- t(temp$data$Y)
-#' x <- t(temp$data$Z)
+#' temp <- create_bvarmodel(data, p = 2, deterministic = "const")
+#' y <- t(temp$data$train$y)
+#' x <- t(temp$data$train$x)
 #' k <- nrow(y)
 #' tt <- ncol(y)
 #' m <- k * nrow(x)

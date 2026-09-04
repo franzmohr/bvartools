@@ -49,6 +49,7 @@
 #' 
 #' @useDynLib bvartools, .registration = TRUE
 #' @importFrom coda thin
+#' @importFrom Matrix Matrix
 #' @importFrom Rcpp sourceCpp
 #' @importFrom stats window
 #' @import methods

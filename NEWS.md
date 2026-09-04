@@ -1,5 +1,38 @@
 # bvartools (development version)
 
+* **Vendored BayesTS core refreshed.** **Draws are unchanged**, for every VAR and
+  VEC model this package samples. Upstream's own fingerprint comparison was run
+  over the change and reports 76 fixtures unchanged and none moved, twice: once
+  over the shared algorithm it touched and once over the sampler added on top of
+  it.
+
+    Nothing that arrived is reachable from here. Upstream added
+    `FavarNormalWishart`, a factor augmented VAR, which is a factor model and so
+    belongs to `dfmtools`; it is in the refresh script's `skip` list beside the
+    four dynamic factor models, along with `core/models/favar_support.h`. That
+    file includes the already-skipped `core/models/dfm_support.h`, so an
+    unlisted copy would fail to compile rather than sit unreachable -- the same
+    mechanism the previous refresh describes, and the reason the list has to be
+    extended by hand.
+
+    What does arrive is what the new model added to the files every model shares:
+    `FavarNormalWishartInitial`, `FavarNormalWishartInput` and
+    `FavarNormalWishartDraws` in `bayests/inputs.h` and `bayests/results.h`, its
+    `validate()` in `core/inputs.cpp`, `n_obs_factors` with `n_state()`,
+    `n_favar_lambda()` and `n_favar_a()` in `bayests/spec.h`, and
+    `TrainData::f_obs` in `bayests/data.h`. The same arrangement the DFMs have
+    had since they moved to `skip`: their type surface compiles in, their
+    samplers do not.
+
+    One thing beyond that, in a file this package does vendor.
+    `core/algorithms/chan_jeliazkov_2009.cpp` gains a second entry point,
+    `chan_jeliazkov_2009_conditional`, which holds the trailing elements of every
+    state column at observed values instead of drawing them -- what a state
+    vector that is part data needs. Nothing here calls it. Its arrival split the
+    existing function into an assembly, a conditioning step and a draw; upstream
+    verified that split moved no fingerprint, and the three time-varying models
+    here that reach the band sampler are unaffected.
+
 * **`spillover()`**, the connectedness measures of Diebold and Yilmaz (2012):
   the total spillover index, the directional spillovers to and from each
   variable, their net difference and the net pairwise table. Methods for
@@ -79,8 +112,6 @@
     forgetting is not merely wasteful. `core/models/dfm_support.h` is skipped, so
     a sampler copied without it fails to compile, which is how this refresh found
     the two new ones. `src/core/VENDORED.md` says so beside the list.
-
-# bvartools 1.0.0
 
 * Added a `testthat` test suite, run by `R CMD check` and so by the existing
   R-CMD-check workflow. 591 assertions over 25 files, about ten seconds end to

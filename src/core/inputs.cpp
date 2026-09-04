@@ -939,6 +939,71 @@ void DfmNormalStochvolInput::validate() const
                                 n, tt, "factor innovations", "factor-innovation");
 }
 
+void FavarNormalWishartInput::validate() const
+{
+    const arma::uword k = static_cast<arma::uword>(spec.k);
+    const arma::uword tt = checked_periods(spec, train);
+    const arma::uword n_obs = static_cast<arma::uword>(spec.n_obs_factors);
+    const arma::uword n_state = static_cast<arma::uword>(spec.n_state());
+
+    // The unobserved half is a factor model and is checked as one: at least one
+    // factor, no more of them than series, a sample longer than the transition,
+    // and neither variable selection nor a structural block.
+    validate_dfm_dimensions(spec, tt);
+
+    if (spec.uses_covar())
+    {
+        throw std::invalid_argument("a factor augmented VAR has no psi block; its state "
+                                    "innovation covariance is the Wishart precision alone");
+    }
+
+    // The observed half is data, so this is the one dimension check that is
+    // about the sample rather than about the model. A file that leaves it out
+    // has described a dynamic factor model and should say so in the algorithm.
+    if (n_obs == 0)
+    {
+        throw std::invalid_argument("a factor augmented VAR must have at least one observed "
+                                    "factor (n_obs_factors); a model with none is a dynamic "
+                                    "factor model, and DfmNormalGamma estimates it");
+    }
+    require_shape(train.f_obs, tt, n_obs, "the observed factors (f_obs)");
+
+    // The free loadings, in the row-major order the sampler draws them -- the
+    // FAVAR count, which is n_lambda() only when there are no observed factors.
+    validate_normal_block(lambda_prior, initial.lambda,
+                          static_cast<arma::uword>(spec.n_favar_lambda()), "lambda");
+
+    if (use_a())
+    {
+        validate_normal_block(a_prior, initial.a, static_cast<arma::uword>(spec.n_favar_a()), "a");
+    }
+
+    require_length(u_sigma_prior.shape, k, "gamma prior shape of the idiosyncratic precision");
+    require_length(u_sigma_prior.rate, k, "gamma prior rate of the idiosyncratic precision");
+    require_length(initial.u_sigma_inv, k, "initial idiosyncratic precision");
+    if (initial.u_sigma_inv.min() <= 0.0)
+    {
+        throw std::invalid_argument("every element of the initial idiosyncratic precision must be "
+                                    "positive");
+    }
+
+    // The state innovation precision is a matrix here, not a diagonal, which is
+    // what separates this model from every DFM. Both of these are therefore
+    // n_state square rather than n_state long, and that is the shape a file
+    // written against a DFM gets wrong.
+    require_square(v_sigma_prior.scale, n_state,
+                   "Wishart prior scale of the state innovation precision");
+    require_square(initial.v_sigma_inv, n_state, "initial state innovation precision");
+
+    if (static_cast<arma::uword>(v_sigma_prior.df) < n_state)
+    {
+        throw std::invalid_argument(
+            "the Wishart prior on the state innovation precision needs at least " +
+            std::to_string(n_state) + " degrees of freedom, one per state element, got " +
+            std::to_string(v_sigma_prior.df));
+    }
+}
+
 void VecKlgs2010Input::validate() const
 {
     const arma::uword k = static_cast<arma::uword>(spec.k);

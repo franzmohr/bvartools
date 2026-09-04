@@ -8,6 +8,8 @@ downloads](https://cranlogs.r-pkg.org/badges/bvartools)](https://cran.r-project.
 [![Total
 downloads](https://cranlogs.r-pkg.org/badges/grand-total/bvartools)](https://cran.r-project.org/package=bvartools)
 [![R-CMD-check](https://github.com/franzmohr/bvartools/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/franzmohr/bvartools/actions/workflows/R-CMD-check.yaml)
+[![Codecov test
+coverage](https://codecov.io/gh/franzmohr/bvartools/graph/badge.svg)](https://app.codecov.io/gh/franzmohr/bvartools)
 [![License: GPL (\>=
 2)](https://img.shields.io/badge/license-GPL%20%28%3E%3D%202%29-blue.svg)](https://www.gnu.org/licenses/gpl-2.0)
 

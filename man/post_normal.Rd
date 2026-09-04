@@ -46,9 +46,9 @@ data("e1")
 data <- diff(log(e1))
 
 # Generate model data
-temp <- gen_var(data, p = 2, deterministic = "const")
-y <- t(temp$data$Y)
-x <- t(temp$data$Z)
+temp <- create_bvarmodel(data, p = 2, deterministic = "const")
+y <- t(temp$data$train$y)
+x <- t(temp$data$train$x)
 k <- nrow(y)
 tt <- ncol(y)
 m <- k * nrow(x)

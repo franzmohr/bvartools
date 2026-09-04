@@ -41,9 +41,9 @@
 //' u <- matrix(1:(k * tt))
 //'   
 //' # Generate simple variance matrix
-//' omega_i <- Matrix(diag(1:k, k))
+//' omega_i <- Matrix::Matrix(diag(1:k, k))
 //' # Generate block diagonal variance matrix
-//' tv_omega_i <- Matrix(0, k * tt, k * tt)
+//' tv_omega_i <- Matrix::Matrix(0, k * tt, k * tt)
 //' for (i in 1:tt) {
 //'   tv_omega_i[(i - 1) * k + 1:k, (i - 1) * k + 1:k] <- omega_i
 //' }
@@ -123,9 +123,9 @@ tt <- 4
 u <- matrix(1:(k * tt))
 
 # Generate simple variance matrix
-omega_i <- Matrix(diag(1:k, k))
+omega_i <- Matrix::Matrix(diag(1:k, k))
 # Generate block diagonal variance matrix
-tv_omega_i <- Matrix(0, k * tt, k * tt)
+tv_omega_i <- Matrix::Matrix(0, k * tt, k * tt)
 for (i in 1:tt) {
   tv_omega_i[(i - 1) * k + 1:k, (i - 1) * k + 1:k] <- omega_i
 }

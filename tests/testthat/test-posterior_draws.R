@@ -95,8 +95,6 @@ test_that("post_normal_sur can use the singular value decomposition", {
 })
 
 test_that("post_gamma_measurement_variance draws positive variances", {
-  skip_without_matrix()
-
   set.seed(8)
   k <- 4
   u <- matrix(stats::rnorm(k * 200))
@@ -112,8 +110,6 @@ test_that("post_gamma_measurement_variance draws positive variances", {
 })
 
 test_that("the inverse option returns the precision", {
-  skip_without_matrix()
-
   set.seed(9)
   k <- 3
   u <- matrix(stats::rnorm(k * 500))
@@ -131,8 +127,6 @@ test_that("the inverse option returns the precision", {
 })
 
 test_that("post_gamma_measurement_variance recovers a known variance", {
-  skip_without_matrix()
-
   set.seed(11)
   k <- 2
   tt <- 5000
@@ -144,8 +138,6 @@ test_that("post_gamma_measurement_variance recovers a known variance", {
 })
 
 test_that("post_gamma_state_variance recovers a known state variance", {
-  skip_without_matrix()
-
   set.seed(12)
   k <- 2
   tt <- 5000

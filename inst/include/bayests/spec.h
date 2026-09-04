@@ -46,12 +46,29 @@ struct VarSpec
     ///
     ///     x_t = Lambda f_t + u_t,   f_t = sum_j A_j f_{t-j} + v_t.
     ///
-    /// Zero for every model that is not a DFM, exactly as `rank` is zero for
-    /// every model that is not a VEC. A DFM reads the rest of this struct its
-    /// own way and only two other fields carry a meaning for one: `k` is the
-    /// number of *observed* series, the M above, and `p` is the lag order of the
-    /// factor transition. `m`, `s`, `n`, `rank` and `n_restricted` are all zero.
+    /// Zero for every model that is not a factor model, exactly as `rank` is
+    /// zero for every model that is not a VEC. A factor model reads the rest of
+    /// this struct its own way and only two other fields carry a meaning for
+    /// one: `k` is the number of *observed* series, the M above, and `p` is the
+    /// lag order of the factor transition. `m`, `s`, `n`, `rank` and
+    /// `n_restricted` are all zero.
     int n_factors = 0;
+
+    /// Observed factors a factor augmented VAR carries, the Ky of
+    ///
+    ///     x_t = Lambda_f f_t + Lambda_y y_t + e_t,
+    ///     s_t = sum_j Phi_j s_{t-j} + v_t,   s_t = (f_t', y_t')'.
+    ///
+    /// Zero for every model that is not a FAVAR, a dynamic factor model
+    /// included -- which is exactly what a FAVAR with none of them would be.
+    ///
+    /// `y_t` is data and not a state to draw, and it sits in the state vector
+    /// regardless: the transition is a VAR over the two blocks jointly, and that
+    /// coupling is the whole of what separates this from the DFM beside it. It
+    /// is why a FAVAR's state path draw conditions rather than draws, and why
+    /// `n_state()` rather than `n_factors` is the width of everything the
+    /// transition touches.
+    int n_obs_factors = 0;
 
     /// Deterministic terms restricted to the cointegration space. Zero for a
     /// VAR. The unrestricted ones are counted by `n`, so the two never overlap
@@ -182,6 +199,59 @@ struct VarSpec
     /// Coefficients of a DFM's factor transition, vec([A_1 .. A_p]). Zero when
     /// the factors carry no dynamics of their own.
     int n_factor_a() const { return n_factors * n_factors * p; }
+
+    /// Whether the model carries observed factors beside the unobserved ones.
+    bool uses_obs_factors() const { return n_obs_factors > 0; }
+
+    /// Elements of the state vector a FAVAR's transition runs over: the
+    /// unobserved factors and the observed ones together. Equal to `n_factors`
+    /// for a DFM, which is the case of none of the second kind.
+    int n_state() const { return n_factors + n_obs_factors; }
+
+    /// Free elements of a FAVAR's k x n_state loading matrix: the whole width of
+    /// every row from `n_factors` on, and nothing at all before that, so
+    /// (k - n_factors) n_state.
+    ///
+    /// The leading block is fixed, as in a DFM, and it is fixed *harder*: the
+    /// n_factors square block of the factor columns is the identity rather than
+    /// a unit lower triangle, and the observed columns of those same rows are
+    /// zero. The first n_factors series of the panel are therefore the factors
+    /// plus idiosyncratic noise and nothing else.
+    ///
+    /// That is not a stylistic difference from n_lambda() and the two do not
+    /// coincide at any dimension. A rotation F -> C F leaves the measurement
+    /// alone if Lambda_f absorbs it, so something has to rule C out. A dynamic
+    /// factor model rules it out with two restrictions at once -- a unit lower
+    /// triangular block and a *diagonal* V, which together admit only C = I,
+    /// the uniqueness of an LDL factorisation. A FAVAR cannot use the second
+    /// half of that: its Q is unrestricted by design, that being the whole point
+    /// of the model. A unit lower triangular block alone leaves every unit lower
+    /// triangular C admissible, and the model is then not identified -- it runs,
+    /// it produces plausible numbers, and its loadings wander along a ridge. The
+    /// identity block rules out C on its own, which is why Bernanke, Boivin and
+    /// Eliasz use it and why this does.
+    ///
+    /// The two restrictions cost the same. A unit triangle leaves
+    /// n_factors(n_factors - 1)/2 loadings free and spends that many on making V
+    /// diagonal; the identity spends them on the loadings and leaves Q free.
+    ///
+    /// Paired with n_lambda() rather than replacing it, the way
+    /// n_non_structural_vec() is paired with n_non_structural(): reading a
+    /// FAVAR's loadings off the DFM's count is the mistake the pair exists to
+    /// prevent, and here it is a mistake at every dimension rather than only
+    /// when there are observed factors.
+    ///
+    /// Zero unless the model has factors, and zero as well if `n_factors`
+    /// exceeds `k`, on the same grounds as n_lambda().
+    int n_favar_lambda() const
+    {
+        return (uses_factors() && n_factors <= k) ? (k - n_factors) * n_state() : 0;
+    }
+
+    /// Coefficients of a FAVAR's state transition, vec([Phi_1 .. Phi_p]). The
+    /// same pairing with n_factor_a(), and the same reason: the transition is a
+    /// VAR over the whole state, not over the factors alone.
+    int n_favar_a() const { return n_state() * n_state() * p; }
 
     /// Throws std::invalid_argument if the counts cannot describe a model.
     /// Cheap, and the message is far better than the failure it prevents --

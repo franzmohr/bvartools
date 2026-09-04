@@ -40,6 +40,17 @@ struct TrainData
     /// leaves the other empty; VecKlgs2010 is the one that reads this.
     arma::mat x;
 
+    /// The observed factors of a factor augmented VAR, tt x n_obs_factors, one
+    /// period per row. Empty for every other model.
+    ///
+    /// A member of its own rather than a reuse of `x`, which is the compact
+    /// regressor layout and means something else. These are not regressors: they
+    /// are the observed half of the state vector, they appear on the left of the
+    /// transition as well as the right, and the model's own dynamics run over
+    /// them. Handing them over as `x` would read as "a FAVAR is a regression
+    /// with these on the right", which is the one thing it is not.
+    arma::mat f_obs;
+
     /// Number of periods implied by `y` for a model with `k` variables.
     arma::uword periods(int k) const { return y.n_elem / static_cast<arma::uword>(k); }
 

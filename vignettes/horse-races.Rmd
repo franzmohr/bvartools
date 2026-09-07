@@ -182,6 +182,87 @@ plot_forecast_errors_by_period(models, criterion = "FE")
 ```
 
 
+## Adding forecasts from other sources
+
+A horse race becomes more informative, if the models do not only compete with each
+other, but also with the forecasts that institutions actually published. Function
+`create_external_forecast` turns such forecasts into an object, which can be added
+to the list of models and which is then treated as one more competitor by all the
+functions above.
+
+The example below uses the [repository of macroeconomic
+projections](https://github.com/franzmohr/macroprojections), which collects the
+published forecasts of public institutions in a machine-readable format. It is not
+evaluated, because it requires an internet connection and the actual values of the
+forecasted variables, which have to be obtained from a statistical office. Any other
+source can be used in the same way, as long as the forecasts are provided in long
+format with one point forecast per row.
+
+```{r, eval = FALSE}
+# Forecasts of Austrian institutions for Austria
+fcst <- read.csv("https://github.com/franzmohr/macroprojections/raw/master/data/forecasts.csv")
+fcst <- fcst[fcst[["ctry"]] == "122" &
+               fcst[["variable"]] %in% c("NGDP_RPCH", "PCPIPCH", "LUR"), ]
+
+# 'actual' contains the annual realisations of the three variables, where the
+# columns are named as the variables of the forecasts
+model <- create_bvarmodel(actual, p = 1, deterministic = "const",
+                          iterations = 5000, burnin = 1000)
+
+model <- use_expanding_window(model, start = 2015)
+
+model <- add_priors(model,
+                    coef = list(v_i = 1 / 10, v_i_det = 1 / 100),
+                    sigma = list(df = 3, scale = 1))
+
+model <- add_initial_values(model)
+model <- add_posterior_coefficients(model)
+model <- add_forecast_input(model, n_ahead = 3)
+model <- add_posterior_forecasts(model)
+```
+
+The columns of the data set do not have to follow a particular naming convention.
+They are specified in the arguments `period`, `origin`, `variable` and `value`,
+where `origin` contains the date, at which a forecast was published. Argument `by`
+produces one object per forecaster:
+
+```{r, eval = FALSE}
+external <- create_external_forecast(fcst, model,
+                                     period = "year",
+                                     origin = "pubdate",
+                                     variable = "variable",
+                                     value = "value",
+                                     by = "institution",
+                                     data_lag = 1)
+```
+
+An institution, which publishes a forecast in the course of 2021, does not know the
+annual figures of 2021 yet. Argument `data_lag` states this publication lag of the
+data in periods, so that each forecast is matched to the estimation window, which
+ends in 2020. The forecast for 2021 is then the one-step ahead forecast of both the
+institution and the model. If an institution published multiple forecasts between
+two annual figures, only one of them is used, the latest by default, so that no
+forecaster enters the comparison twice.
+
+From here on the external forecasts follow the workflow of the models. The functions,
+which add priors, initial values or posterior draws, are without effect for them:
+
+```{r, eval = FALSE}
+models <- combine_models(model, external)
+
+models <- add_forecast_errors(models, test_sample = actual)
+
+sc <- selection_criteria(models)
+
+print(sc, relative = 1)
+```
+
+Since external forecasts are point forecasts, each publication contributes a single
+value to the out-of-sample statistics instead of a full posterior. Accordingly, their
+credible bands are degenerate and in-sample criteria are not available for them,
+which the printed comparison and the plots indicate by an empty entry.
+
+
 ## References
 
 Korobilis, D. (2013). VAR forecasting using Bayesian variable selection. *Journal of Applied Econometrics, 28*(2), 204-230. <https://doi.org/10.1002/jae.1271>

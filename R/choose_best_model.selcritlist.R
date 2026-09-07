@@ -56,13 +56,24 @@
 #' @method choose_best_model selcritlist
 choose_best_model.selcritlist <- function(object, criterion = "BIC", ...) {
   
-  res <- lapply(object, function(y, criterion) {y[[criterion]][, "mean"]}, criterion = criterion)
+  # Models, which do not contain the criterion, cannot be chosen, but their
+  # positions in 'object' are maintained
+  res <- lapply(object, function(y, criterion) {
+    if (is.null(y[[criterion]])) {
+      return(NA_real_)
+    }
+    y[[criterion]][, "mean"]
+  }, criterion = criterion)
   res <- do.call("rbind", res)
-  
+
+  if (all(is.na(res))) {
+    stop("None of the models in argument 'object' contains criterion '", criterion, "'.")
+  }
+
   if (criterion == "LL") {
-    pos <- which(res == max(res))
+    pos <- which(res == max(res, na.rm = TRUE))
   } else {
-    pos <- which(res == min(res)) 
+    pos <- which(res == min(res, na.rm = TRUE))
   }
   
   return(pos)

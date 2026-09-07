@@ -66,8 +66,16 @@ plot.selcritlist <- function(x, criterion = "BIC", ...) {
 
   n_models <- length(x)
 
-  res <- lapply(x, function(y, criterion) {y[[criterion]]}, criterion = criterion)
-  res <- do.call("rbind", res)[, c("mean", "median", "qlower", "qupper")]
+  # Models, which do not contain the criterion, are not drawn, but their positions
+  # in 'x' are maintained
+  res <- lapply(x, function(y, criterion) {
+    if (is.null(y[[criterion]])) {
+      return(data.frame(mean = NA_real_, median = NA_real_,
+                        qlower = NA_real_, qupper = NA_real_))
+    }
+    y[[criterion]][, c("mean", "median", "qlower", "qupper")]
+  }, criterion = criterion)
+  res <- do.call("rbind", res)
 
   # Model specifications for x-axis
   specs <- lapply(x, get_model_specifications)

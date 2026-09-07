@@ -43,7 +43,13 @@ model <- add_initial_values(model)
 # Obtain posterior draws
 model <- add_posterior_coefficients(model)
 
-# Calculate forecasts
+# Add the data the forecasts are produced from
+model <- add_forecast_input(model, n_ahead = 10)
+
+# Simulate the forecasts
+model <- add_posterior_forecasts(model)
+
+# Collect them
 pred <- predict(model)
 
 # Plot forecasts

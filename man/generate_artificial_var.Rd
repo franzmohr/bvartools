@@ -76,7 +76,7 @@ set.seed(1)
 dt <- generate_artificial_var(nobs = 200, k = 3)
 
 # Time series with all intercept terms equal to 5
-dt <- generate_artificial_var(nobs = 200, k = 3
+dt <- generate_artificial_var(nobs = 200, k = 3,
                               const = TRUE, range_const = c(5, 5))
 
 

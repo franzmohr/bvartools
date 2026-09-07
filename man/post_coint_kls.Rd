@@ -98,28 +98,32 @@ data("e6")
 
 # Generate model data
 temp <- create_bvecmodel(e6, p = 2, r = 1)
-y <- t(temp$data$y)
-w <- t(temp$data$w)
-x <- t(temp$data$x)
+y <- t(temp$data$train$y)
+ect <- t(temp$data$train$w)
+x <- t(temp$data$train$x)
 
 k <- nrow(y) # Endogenous variables
 tt <- ncol(y) # Number of observations
+r <- temp$model$rank # Cointegration rank
 
-# Priors
-gamma_mu_prior <- matrix(0, 6)
-gamma_v_i_prior <- diag(0, 6)
+# Priors. They cover the alpha block as well as the Gamma coefficients,
+# so the length is k * r + k * nrow(x).
+n_ag <- k * (r + nrow(x))
+gamma_mu_prior <- matrix(0, n_ag)
+gamma_v_i_prior <- diag(0, n_ag)
 
 # Initial value of Sigma
 sigma <- tcrossprod(y) / tt
 sigma_i <- solve(sigma)
 
 # Initial values of beta
-beta <- matrix(c(1, -4), k)
+beta <- matrix(c(1, -4), nrow(ect))
 
 # Draw parameters
 coint <- post_coint_kls(y = y, beta = beta, w = ect, x = x, sigma_i = sigma_i,
-                        v_i = 0, p_tau_i = diag(1, k), g_i = sigma_i,
-                        gamma_mu_prior = gamma_mu_prior, gamma_v_i_prior = gamma_v_i_prior)
+                        v_i = 0, p_tau_i = diag(1, nrow(ect)), g_i = sigma_i,
+                        gamma_mu_prior = gamma_mu_prior,
+                        gamma_v_i_prior = gamma_v_i_prior)
 
 }
 \references{

@@ -45,10 +45,16 @@
 #' 
 #' # Obtain posterior draws
 #' model <- add_posterior_coefficients(model)
-#' 
-#' # Calculate forecasts
+#'
+#' # Add the data the forecasts are produced from
+#' model <- add_forecast_input(model, n_ahead = 10)
+#'
+#' # Simulate the forecasts
+#' model <- add_posterior_forecasts(model)
+#'
+#' # Collect them
 #' pred <- predict(model)
-#' 
+#'
 #' @references
 #' 
 #' Lütkepohl, H. (2006). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.

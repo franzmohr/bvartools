@@ -31,6 +31,7 @@
 //' sur_const_to_tvp(z, k, tt)
 //' 
 //' 
+//' @export
 // [[Rcpp::export]]
 arma::sp_mat sur_const_to_tvp(const arma::mat& z, const arma::uword& k, const int& tt) {
   

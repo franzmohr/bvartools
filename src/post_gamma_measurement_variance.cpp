@@ -41,6 +41,7 @@
 //' 
 //' @return A matrix.
 //' 
+//' @export
 // [[Rcpp::export]]
 arma::sp_mat post_gamma_measurement_variance(const arma::vec u, const arma::vec shape_prior, const arma::vec rate_prior, const bool inverse) {
   

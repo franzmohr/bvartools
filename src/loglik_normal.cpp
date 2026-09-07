@@ -33,6 +33,7 @@
 //' # Log-likelihood
 //' loglik_normal(u = u, sigma = sigma)
 //' 
+//' @export
 // [[Rcpp::export]]
 arma::vec loglik_normal(arma::mat u, arma::mat sigma) {
   int k = u.n_rows;

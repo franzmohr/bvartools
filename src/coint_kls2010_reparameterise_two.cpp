@@ -34,6 +34,7 @@
 //' # Reparameterise
 //' coint_kls2010_reparameterise_two(alpha, beta)
 //' 
+//' @export
 // [[Rcpp::export(coint_kls2010_reparameterise_two)]]
 Rcpp::List coint_kls2010_reparameterise_two(const arma::mat alpha, const arma::mat beta) {
   

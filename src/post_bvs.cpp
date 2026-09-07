@@ -80,6 +80,7 @@
 //' Korobilis, D. (2013). VAR forecasting using Bayesian variable selection.
 //' \emph{Journal of Applied Econometrics, 28}(2), 204--230. \doi{10.1002/jae.1271}
 //' 
+//' @export
 // [[Rcpp::export]]
 arma::sp_mat post_bvs(const arma::vec& y, const arma::mat& z, arma::vec& a, arma::uword k, arma::uword m,
                       arma::sp_mat lambda, arma::sp_mat sigma_i, arma::vec prob_prior,

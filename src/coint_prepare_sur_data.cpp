@@ -36,6 +36,7 @@
 //' coint_prepare_sur_data(w, alpha, 2, 1, FALSE, TRUE)
 //' 
 //' 
+//' @export
 // [[Rcpp::export(coint_prepare_sur_data)]]
 Rcpp::List coint_prepare_sur_data(const arma::mat w, arma::mat alpha, const int k, const int r, const bool reparameterise, const bool tvp) {
   

@@ -56,6 +56,7 @@
 //' 
 //' @return A vector.
 //' 
+//' @export
 // [[Rcpp::export]]
 arma::mat post_normal_sur(arma::mat y ,arma::mat z, arma::mat sigma_i,
                           arma::vec a_prior, arma::mat v_i_prior, bool svd = false) {

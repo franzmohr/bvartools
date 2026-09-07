@@ -72,6 +72,7 @@
 //' restrictions. \emph{Journal of Econometrics, 142}(1), 553--580.
 //' \doi{10.1016/j.jeconom.2007.08.017}
 //' 
+//' @export
 // [[Rcpp::export]]
   Rcpp::List ssvs(arma::vec a, arma::vec tau0, arma::vec tau1, arma::vec prob_prior,
                 Rcpp::Nullable<Rcpp::IntegerVector> include = R_NilValue) {

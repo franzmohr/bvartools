@@ -22,6 +22,7 @@
 //' a <- matrix(1:8)
 //' generate_lower_block_diagonal(a, 2, 5)
 //' 
+//' @export
 // [[Rcpp::export(generate_lower_block_diagonal)]]
 arma::sp_mat generate_lower_block_diagonal(arma::mat& a, int& k, int& tt) {
 

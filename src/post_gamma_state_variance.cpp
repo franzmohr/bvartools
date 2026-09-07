@@ -49,6 +49,7 @@
 //' 
 //' @return A matrix.
 //' 
+//' @export
 // [[Rcpp::export]]
 arma::sp_mat post_gamma_state_variance(const arma::vec a, const arma::vec a_init, const arma::vec shape_prior, const arma::vec rate_prior, const bool inverse) {
   

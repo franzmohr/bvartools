@@ -36,6 +36,7 @@
 //' psi <- matrix(1:(n_covar * tt))
 //' covar_vector_to_matrix(psi, k, tt)
 //' 
+//' @export
 // [[Rcpp::export(covar_vector_to_matrix)]]
 arma::sp_mat covar_vector_to_matrix(const arma::vec psi, const int k, const int tt) {
   

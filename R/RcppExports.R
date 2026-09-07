@@ -189,6 +189,7 @@
 #' # Reparameterise
 #' coint_kls2010_reparameterise_two(alpha, beta)
 #' 
+#' @export
 coint_kls2010_reparameterise_two <- function(alpha, beta) {
     .Call(`_bvartools_coint_kls2010_reparameterise_two`, alpha, beta)
 }
@@ -227,6 +228,7 @@ coint_kls2010_reparameterise_two <- function(alpha, beta) {
 #' coint_prepare_sur_data(w, alpha, 2, 1, FALSE, TRUE)
 #' 
 #' 
+#' @export
 coint_prepare_sur_data <- function(w, alpha, k, r, reparameterise, tvp) {
     .Call(`_bvartools_coint_prepare_sur_data`, w, alpha, k, r, reparameterise, tvp)
 }
@@ -292,6 +294,7 @@ coint_prepare_sur_data <- function(w, alpha, k, r, reparameterise, tvp) {
 #' # Time varying coefficients
 #' covar_prepare_data(u, tv_omega_i, k, tt, TRUE)
 #' 
+#' @export
 covar_prepare_data <- function(y, omega_i, k, tt, tvp) {
     .Call(`_bvartools_covar_prepare_data`, y, omega_i, k, tt, tvp)
 }
@@ -330,6 +333,7 @@ covar_prepare_data <- function(y, omega_i, k, tt, tvp) {
 #' psi <- matrix(1:(n_covar * tt))
 #' covar_vector_to_matrix(psi, k, tt)
 #' 
+#' @export
 covar_vector_to_matrix <- function(psi, k, tt) {
     .Call(`_bvartools_covar_vector_to_matrix`, psi, k, tt)
 }
@@ -362,6 +366,7 @@ covar_vector_to_matrix <- function(psi, k, tt) {
 #' a <- matrix(1:8)
 #' generate_lower_block_diagonal(a, 2, 5)
 #' 
+#' @export
 generate_lower_block_diagonal <- function(a, k, tt) {
     .Call(`_bvartools_generate_lower_block_diagonal`, a, k, tt)
 }
@@ -511,6 +516,7 @@ kalman_durbin_koopman_2002 <- function(y, z, sigma_u, sigma_v, B, a_init, P_init
 #' # Log-likelihood
 #' loglik_normal(u = u, sigma = sigma)
 #' 
+#' @export
 loglik_normal <- function(u, sigma) {
     .Call(`_bvartools_loglik_normal`, u, sigma)
 }
@@ -589,6 +595,7 @@ loglik_normal <- function(u, sigma) {
 #' Korobilis, D. (2013). VAR forecasting using Bayesian variable selection.
 #' \emph{Journal of Applied Econometrics, 28}(2), 204--230. \doi{10.1002/jae.1271}
 #' 
+#' @export
 post_bvs <- function(y, z, a, k, m, lambda, sigma_i, prob_prior, include = NULL) {
     .Call(`_bvartools_post_bvs`, y, z, a, k, m, lambda, sigma_i, prob_prior, include)
 }
@@ -663,28 +670,32 @@ post_bvs <- function(y, z, a, k, m, lambda, sigma_i, prob_prior, include = NULL)
 #' 
 #' # Generate model data
 #' temp <- create_bvecmodel(e6, p = 2, r = 1)
-#' y <- t(temp$data$y)
-#' w <- t(temp$data$w)
-#' x <- t(temp$data$x)
-#' 
+#' y <- t(temp$data$train$y)
+#' ect <- t(temp$data$train$w)
+#' x <- t(temp$data$train$x)
+#'
 #' k <- nrow(y) # Endogenous variables
 #' tt <- ncol(y) # Number of observations
-#' 
-#' # Priors
-#' gamma_mu_prior <- matrix(0, 6)
-#' gamma_v_i_prior <- diag(0, 6)
-#' 
+#' r <- temp$model$rank # Cointegration rank
+#'
+#' # Priors. They cover the alpha block as well as the Gamma coefficients,
+#' # so the length is k * r + k * nrow(x).
+#' n_ag <- k * (r + nrow(x))
+#' gamma_mu_prior <- matrix(0, n_ag)
+#' gamma_v_i_prior <- diag(0, n_ag)
+#'
 #' # Initial value of Sigma
 #' sigma <- tcrossprod(y) / tt
 #' sigma_i <- solve(sigma)
-#' 
+#'
 #' # Initial values of beta
-#' beta <- matrix(c(1, -4), k)
-#' 
+#' beta <- matrix(c(1, -4), nrow(ect))
+#'
 #' # Draw parameters
 #' coint <- post_coint_kls(y = y, beta = beta, w = ect, x = x, sigma_i = sigma_i,
-#'                         v_i = 0, p_tau_i = diag(1, k), g_i = sigma_i,
-#'                         gamma_mu_prior = gamma_mu_prior, gamma_v_i_prior = gamma_v_i_prior)
+#'                         v_i = 0, p_tau_i = diag(1, nrow(ect)), g_i = sigma_i,
+#'                         gamma_mu_prior = gamma_mu_prior,
+#'                         gamma_v_i_prior = gamma_v_i_prior)
 #' 
 #' @references
 #' 
@@ -692,6 +703,7 @@ post_bvs <- function(y, z, a, k, m, lambda, sigma_i, prob_prior, include = NULL)
 #' simulation for cointegrated models with priors on the cointegration space.
 #' \emph{Econometric Reviews, 29}(2), 224-242. \doi{10.1080/07474930903382208}
 #' 
+#' @export
 post_coint_kls <- function(y, beta, w, sigma_i, v_i, p_tau_i, g_i, x = NULL, gamma_mu_prior = NULL, gamma_v_i_prior = NULL) {
     .Call(`_bvartools_post_coint_kls`, y, beta, w, sigma_i, v_i, p_tau_i, g_i, x, gamma_mu_prior, gamma_v_i_prior)
 }
@@ -797,6 +809,7 @@ post_coint_kls <- function(y, beta, w, sigma_i, v_i, p_tau_i, g_i, x = NULL, gam
 #' simulation for cointegrated models with priors on the cointegration space.
 #' \emph{Econometric Reviews, 29}(2), 224-242. \doi{10.1080/07474930903382208}
 #' 
+#' @export
 post_coint_kls_sur <- function(y, beta, w, sigma_i, v_i, p_tau_i, g_i, x = NULL, gamma_mu_prior = NULL, gamma_v_i_prior = NULL, svd = FALSE) {
     .Call(`_bvartools_post_coint_kls_sur`, y, beta, w, sigma_i, v_i, p_tau_i, g_i, x, gamma_mu_prior, gamma_v_i_prior, svd)
 }
@@ -841,6 +854,7 @@ post_coint_kls_sur <- function(y, beta, w, sigma_i, v_i, p_tau_i, g_i, x = NULL,
 #' 
 #' @return A matrix.
 #' 
+#' @export
 post_gamma_measurement_variance <- function(u, shape_prior, rate_prior, inverse) {
     .Call(`_bvartools_post_gamma_measurement_variance`, u, shape_prior, rate_prior, inverse)
 }
@@ -893,6 +907,7 @@ post_gamma_measurement_variance <- function(u, shape_prior, rate_prior, inverse)
 #' 
 #' @return A matrix.
 #' 
+#' @export
 post_gamma_state_variance <- function(a, a_init, shape_prior, rate_prior, inverse) {
     .Call(`_bvartools_post_gamma_state_variance`, a, a_init, shape_prior, rate_prior, inverse)
 }
@@ -953,6 +968,7 @@ post_gamma_state_variance <- function(a, a_init, shape_prior, rate_prior, invers
 #' 
 #' Lütkepohl, H. (2006). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
 #' 
+#' @export
 post_normal <- function(y, x, sigma_i, a_prior, v_i_prior) {
     .Call(`_bvartools_post_normal`, y, x, sigma_i, a_prior, v_i_prior)
 }
@@ -1012,6 +1028,7 @@ post_normal <- function(y, x, sigma_i, a_prior, v_i_prior) {
 #' 
 #' @return A vector.
 #' 
+#' @export
 post_normal_sur <- function(y, z, sigma_i, a_prior, v_i_prior, svd = FALSE) {
     .Call(`_bvartools_post_normal_sur`, y, z, sigma_i, a_prior, v_i_prior, svd)
 }
@@ -1229,6 +1246,7 @@ stochvol_ocsn_2007 <- function(y, h, sigma, h_init, constant) {
 #' sur_const_to_tvp(z, k, tt)
 #' 
 #' 
+#' @export
 sur_const_to_tvp <- function(z, k, tt) {
     .Call(`_bvartools_sur_const_to_tvp`, z, k, tt)
 }
@@ -1304,6 +1322,7 @@ sur_const_to_tvp <- function(z, k, tt) {
 #' restrictions. \emph{Journal of Econometrics, 142}(1), 553--580.
 #' \doi{10.1016/j.jeconom.2007.08.017}
 #' 
+#' @export
 ssvs <- function(a, tau0, tau1, prob_prior, include = NULL) {
     .Call(`_bvartools_ssvs`, a, tau0, tau1, prob_prior, include)
 }

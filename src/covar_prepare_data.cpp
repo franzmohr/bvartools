@@ -63,6 +63,7 @@
 //' # Time varying coefficients
 //' covar_prepare_data(u, tv_omega_i, k, tt, TRUE)
 //' 
+//' @export
 // [[Rcpp::export(covar_prepare_data)]]
 Rcpp::List covar_prepare_data(const arma::vec y, const arma::sp_mat omega_i, const arma::uword k, const int tt, const bool tvp) {
   

@@ -94,19 +94,31 @@ add_initial_values.bvecmodel <- function(object, method = "maxlik", ...){
     n_z <- ncol(z)
   }
   
-  u <- matrix(y, k)
-  
+  # 'y' arrives one row per period. The residual is carried as k x T, one column
+  # per period, which is what the covariance block below and the error helpers
+  # read it as, so it is transposed rather than reshaped: matrix(y, k) on the
+  # wide series would fill each column with consecutive observations of the same
+  # variable instead of one period across variables.
+  u <- matrix(t(y), k)
+
   # Maximum likelihood ----
   if (method == "maxlik") {
     
     ## Coefficients ----
     if (tt >= r + k * (p - 1) + m * s + n) {
-      
+
+      # Outside the rank block below, because the least squares fit further down
+      # stacks 'y' with matrix(y) whether or not there is a cointegration term
+      # to estimate first. Transposing only under r > 0 meant a rank zero model
+      # was fitted against the series stacked variable by variable rather than
+      # period by period -- the wrong response for the SUR regressors, and wrong
+      # in silence.
+      y <- t(y)
+
       if (r > 0) {
-        
-        y <- t(y)
+
         w <- t(w)
-        
+
         if (k * (p - 1) + m * s + n > 0) {
           x <- t(x) 
           M <- diag(tt) - crossprod(x, solve(tcrossprod(x))) %*% x
@@ -180,13 +192,18 @@ add_initial_values.bvecmodel <- function(object, method = "maxlik", ...){
   
   # Initial values from priors ----
   if (method == "prior") {
-    
+
+    # Both, as the maximum likelihood branch above does: 'y' arrives one row per
+    # period, while the residual below is formed against the SUR regressors and
+    # so needs the series stacked variable-within-period. Transposing only 'w'
+    # left 'y' in its wide shape and the subtraction non-conformable.
+    y <- t(y)
     w <- t(w)
-    
+
     # Coefficients
     if (n_z > 0) {
       a_mu <- object[["priors"]][["a"]][["mu"]]
-      a_vinv <- object[["priors"]][["a"]][["v_i"]]
+      a_vinv <- object[["priors"]][["a"]][["v_inv"]]
       if (all(diag(a_vinv) == 0)) {
         stop("All diagonal elements of the prior precision matrix of 'a' are zero.")
       }
@@ -213,9 +230,10 @@ add_initial_values.bvecmodel <- function(object, method = "maxlik", ...){
       
     }
     
-    u <- matrix(y - z %*% a, k)
-    
-    
+    if (n_z > 0) {
+      u <- matrix(matrix(y) - z %*% a, k)
+    }
+
     # Covariances
     if (object[["model"]][["error"]] %in% c("gamma+covar", "sv+covar") & k > 1) {
       psi_mu <- object[["priors"]][["psi"]][["mu"]]
@@ -239,7 +257,25 @@ add_initial_values.bvecmodel <- function(object, method = "maxlik", ...){
   if (n_z > 0) {
     object[["data"]][["train"]][["z"]] <- z
   }
-  
+
+  # Inclusion indicators ----
+  # One per element of the coefficient vector, not one per selected position:
+  # the sampler masks the regressors with diag(lambda) as a whole, so a position
+  # the sweep never visits keeps whatever it starts with for the entire run.
+  # Starting every position at one therefore leaves the unselected coefficients
+  # in the model, which is what they are. That covers the k * r loadings at the
+  # front of 'a' in particular, which a VEC never selects over --
+  # inclusion_prior() drops them from 'include' and the sampler refuses them
+  # there -- and which a zero here would switch off permanently.
+  use_varsel <- object[["model"]][["varsel"]] %in% c("ssvs", "bvs")
+
+  if (use_varsel & !is.null(object[["data"]][["train"]][["z"]])) {
+    object[["initial"]][["a_lambda"]] <- matrix(1, ncol(object[["data"]][["train"]][["z"]]))
+  }
+  if (use_varsel & !is.null(object[["priors"]][["psi"]][["inprior"]])) {
+    object[["initial"]][["psi_lambda"]] <- matrix(1, nrow(object[["priors"]][["psi"]][["inprior"]]))
+  }
+
   # Variances of state equations ----
   object <- .add_initial_values_state_errors(object)
   

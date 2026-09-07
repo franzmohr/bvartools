@@ -57,6 +57,18 @@
     if (error == "wishart") {
       sigma_df <- sigma_prior[["df"]]
       sigma_scale <- solve(sigma_prior[["scale"]])
+      # Drawing from the prior needs the prior to be proper, which a Wishart on
+      # k variables only is from k degrees of freedom on. Fewer is a perfectly
+      # good prior to estimate with -- the posterior adds one degree of freedom
+      # per observation -- so this is a restriction on 'method', not on the
+      # prior, and rWishart's own message does not say which of the two is at
+      # fault.
+      if (sigma_df < k) {
+        stop("Initial values drawn from the prior need a proper prior for Sigma: ",
+             "argument 'sigma$df' of add_priors() is ", sigma_df,
+             " and must be at least the number of endogenous variables, ", k,
+             ". Use method = \"maxlik\" or raise 'sigma$df'.")
+      }
       object[["initial"]][["u_sigma_inv"]] <- matrix(stats::rWishart(1, df = sigma_df, Sigma = sigma_scale)[,,1], k)
     }
   }

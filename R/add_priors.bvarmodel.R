@@ -305,6 +305,23 @@ add_priors.bvarmodel <- function(object,
   if (covar & structural) {
     stop("Error covariances and structural coefficients cannot be estimated at the same time.")
   }
+
+  # A constant coefficient sampler selects over one set of coefficients or over
+  # both: it reads a single selection scheme for the whole model, so a
+  # covariance block it is given goes into the selection with the rest. Only the
+  # time varying samplers take the covariance block's scheme separately, which
+  # is why the same call is allowed there. Left to run, this combination fails
+  # inside the sampler on a prior it was never given.
+  if ((use_ssvs | use_bvs) & covar & !varsel_covar &
+      !object[["model"]][["tvp"]] & k > 1) {
+    stop("Variable selection cannot be restricted to the coefficients when the ",
+         "model has an error covariance block and constant coefficients: this ",
+         "sampler applies one selection scheme to both. Set 'varsel$covar' to ",
+         "TRUE to select over the covariances as well, drop the covariances with ",
+         "an 'error' of \"gamma\" or \"sv\", or use a time varying model, where ",
+         "the two blocks can differ.")
+  }
+
   n_struct <- 0
   if (structural & k > 1) {
     n_struct <- (k - 1) * k / 2

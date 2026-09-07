@@ -376,20 +376,22 @@ create_bvecmodel <- function(data, p = 2, exogen = NULL, s = 2, r = NULL,
         seas <- cbind(seas, rep(s_temp, length.out = tt))
         s_name <- c(s_name, paste("season.", i, sep = ""))
       }
-    }
-    
-    if (seasonal == "restricted") {
-      ect <- cbind(ect, seas)
-      ect_names <- c(ect_names, s_name)
-      det_name_r <- c(det_name_r, s_name)
-      n_ect <- n_ect + freq - 1
-    }
-    
-    if (seasonal == "unrestricted") {
-      x <- cbind(x, seas)
-      x_names <- c(x_names, s_name)
-      det_name_ur <- c(det_name_ur, s_name) 
-      n_det_ur <- n_det_ur + length(s_name)
+
+      # Inside the branch that produced 'seas': at a frequency of one there is
+      # nothing to add, and the warning above is the whole of the response.
+      if (seasonal == "restricted") {
+        ect <- cbind(ect, seas)
+        ect_names <- c(ect_names, s_name)
+        det_name_r <- c(det_name_r, s_name)
+        n_ect <- n_ect + length(s_name)
+      }
+
+      if (seasonal == "unrestricted") {
+        x <- cbind(x, seas)
+        x_names <- c(x_names, s_name)
+        det_name_ur <- c(det_name_ur, s_name)
+        n_det_ur <- n_det_ur + length(s_name)
+      }
     }
   }
   

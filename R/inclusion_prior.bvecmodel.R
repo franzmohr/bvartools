@@ -97,15 +97,23 @@ inclusion_prior.bvecmodel <- function(object,
   }
   
   result <- NULL
-  if (!is.null(object[["data"]][["z"]])) {
-    
+  if (!is.null(object[["data"]][["train"]][["z"]])) {
+
     z <- object[["data"]][["train"]][["z"]]
     k <- object[["model"]][["k"]]
     tt <- nrow(object[["data"]][["train"]][["y"]])
     r <- object[["model"]][["rank"]]
     n_c_unres <- object[["model"]][["n"]]
     n_alpha <- k * r
-    
+
+    # Block sizes, as in inclusion_prior.bvarmodel: the deterministic block is
+    # located from them below, whether or not the Minnesota-like branch runs.
+    p <- object[["model"]][["p"]]
+    n_gamma <- k * (p - 1)
+    m <- object[["model"]][["m"]]
+    s <- object[["model"]][["s"]]
+    n_upsilon <- m * s
+
     inprior <- rep(prob, ncol(z))
     exclude <- NULL
     include <- 1:ncol(z)
@@ -118,13 +126,7 @@ inclusion_prior.bvecmodel <- function(object,
     
     # non-alpha coefficients ----
     if (minnesota_like & !is.null(object[["data"]][["train"]][["x"]])) {
-      
-      p <- object[["model"]][["p"]]
-      n_gamma <- k * (p - 1)
-      m <- object[["model"]][["m"]]
-      s <- object[["model"]][["s"]]
-      n_upsilon <- m * s
-      
+
       incl_matrix <- matrix(NA, k, n_gamma + n_upsilon + n_c_unres)
       
       if (p > 1) {
@@ -157,9 +159,17 @@ inclusion_prior.bvecmodel <- function(object,
     # Exclude deterministics from variables selection algorithm
     if (n_c_unres > 0 & exclude_deterministics) {
       exclude <- append(exclude, n_alpha + k * (n_gamma + n_upsilon) + 1:(k * n_c_unres))
+    }
+
+    # Applied outside the branch above, because the loadings are excluded
+    # whether or not the deterministics are. A VEC never selects over the k * r
+    # coefficients at the front of 'a' -- the sampler rejects an 'include' that
+    # reaches into them -- and 'exclude_det' defaults to FALSE, so leaving this
+    # inside meant the loadings stayed selected in the default case.
+    if (length(exclude) > 0) {
       include <- include[-exclude]
     }
-    
+
     if (length(include) > 0) {
       result <- list("prior" = matrix(inprior),
                      "include" = matrix(include))

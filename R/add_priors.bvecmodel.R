@@ -351,6 +351,23 @@ add_priors.bvecmodel <- function(object,
   if (covar & structural) {
     stop("Error covariances and structural coefficients cannot be estimated at the same time.")
   }
+
+  # A constant coefficient sampler selects over one set of coefficients or over
+  # both: it reads a single selection scheme for the whole model, so a
+  # covariance block it is given goes into the selection with the rest. Only the
+  # time varying samplers take the covariance block's scheme separately, which
+  # is why the same call is allowed there. Left to run, this combination fails
+  # inside the sampler on a prior it was never given.
+  if ((use_ssvs | use_bvs) & covar & !varsel_covar &
+      !object[["model"]][["tvp"]] & k > 1) {
+    stop("Variable selection cannot be restricted to the coefficients when the ",
+         "model has an error covariance block and constant coefficients: this ",
+         "sampler applies one selection scheme to both. Set 'varsel$covar' to ",
+         "TRUE to select over the covariances as well, drop the covariances with ",
+         "an 'error' of \"gamma\" or \"sv\", or use a time varying model, where ",
+         "the two blocks can differ.")
+  }
+
   sv <- object[["model"]][["error"]] %in% c("sv", "sv+covar")
   n_struct <- 0
   n_z <- NCOL(object[["data"]][["train"]][["z"]])
@@ -419,21 +436,26 @@ add_priors.bvecmodel <- function(object,
       
       if (!is.null(coef[["const"]]))  {
         
-        pos <- which(dimnames(object[["data"]][["x"]])[[2]] == "const") + r
-        
+        # The columns of 'mu' are the r columns of alpha followed by the
+        # regressors in 'x', so the offset belongs on the position and must not
+        # be added a second time when indexing.
+        pos <- which(dimnames(object[["data"]][["train"]][["x"]])[[2]] == "const") + r
+
         if (length(pos) == 1) {
           if ("character" %in% class(coef[["const"]])) {
             if (coef[["const"]] == "first") {
-              mu[, r + pos] <- object[["data"]][["train"]][["y"]][1,]
+              mu[, pos] <- object[["data"]][["train"]][["y"]][1,]
             }
             if (coef[["const"]] == "mean") {
-              mu[, r + pos] <- colMeans(object[["data"]][["train"]][["y"]])
+              mu[, pos] <- colMeans(object[["data"]][["train"]][["y"]])
             }
           }
-          if (length(coef[["const"]]) == 1 | length(coef[["const"]]) == k) {
-            mu[, r + pos] <- coef[["const"]]
-          } else {
-            stop("When a numeric is provided in argument 'coef$const', it must be either a single number or a vector of the same length as the number of endogenous varibles in the model.")
+          if ("numeric" %in% class(coef[["const"]])) {
+            if (length(coef[["const"]]) == 1 | length(coef[["const"]]) == k) {
+              mu[, pos] <- coef[["const"]]
+            } else {
+              stop("When a numeric is provided in argument 'coef$const', it must be either a single number or a vector of the same length as the number of endogenous varibles in the model.")
+            }
           }
         }
       }
@@ -590,7 +612,7 @@ add_priors.bvecmodel <- function(object,
       object[["priors"]][[pos]][["rate"]] = matrix(sigma[["rate"]], k)
     }
     
-    if (minnesota & !is.null(object[["data"]][["x"]])) {
+    if (minnesota & !is.null(object[["data"]][["train"]][["x"]])) {
       # Store LS estimate of variance coviariance matrix for analytical solution
       object[["priors"]][[pos]][["u_sigma_inv"]] = minn[["sigma_inv"]]
     }

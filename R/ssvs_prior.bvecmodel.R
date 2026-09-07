@@ -52,14 +52,14 @@ ssvs_prior.bvecmodel <- function(object, tau = c(0.05, 10), semiautomatic = NULL
     }
   }
   
-  y <- t(object[["data"]][["y"]])
-  w <- t(object[["data"]][["w"]])
+  y <- t(object[["data"]][["train"]][["y"]])
+  w <- t(object[["data"]][["train"]][["w"]])
   tt <- NCOL(y)
   k <- NROW(y)
-  
+
   # The output must have the same length as the number of columns in Z
-  
-  if (!is.null(object$data$z)) {
+
+  if (!is.null(object[["data"]][["train"]][["z"]])) {
     
     tau0 <- NULL
     tau1 <- NULL
@@ -71,10 +71,10 @@ ssvs_prior.bvecmodel <- function(object, tau = c(0.05, 10), semiautomatic = NULL
     }
     
     # Non-alpha coefficients ----
-    if (!is.null(object[["data"]][["x"]])) {
-      
-      x <- t(object[["data"]][["x"]])
-      
+    if (!is.null(object[["data"]][["train"]][["x"]])) {
+
+      x <- t(object[["data"]][["train"]][["x"]])
+
       if (!is.null(semiautomatic)) {
         
         ols <- tcrossprod(y, x) %*% solve(tcrossprod(x))
@@ -84,7 +84,7 @@ ssvs_prior.bvecmodel <- function(object, tau = c(0.05, 10), semiautomatic = NULL
         se_ols <- sqrt(diag(cov_ols)) # OLS standard errors 
         
         tau0 <- append(tau0, se_ols * semiautomatic[1]) # Prior if excluded
-        tau1 <- append(tau0, se_ols * semiautomatic[2]) # Prior if included
+        tau1 <- append(tau1, se_ols * semiautomatic[2]) # Prior if included
         
       } else {
         tau0 <- append(tau0, rep(tau[1], k * nrow(x)))

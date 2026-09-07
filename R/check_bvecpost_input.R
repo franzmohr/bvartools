@@ -13,13 +13,13 @@
 .check_bvecpost_input <- function(object){
   
   # Coefficients ----
-  if (!is.null(object[["data"]][["z"]])) {
+  if (!is.null(object[["data"]][["train"]][["z"]])) {
     
     # Priors
     if (is.null(object[["priors"]][["a"]])) {
       stop("Missing element 'object$priors$a'.")
     }
-    for (i in c("mu", "v_i")) {
+    for (i in c("mu", "v_inv")) {
       if (is.null(object[["priors"]][["a"]][[i]])) {
         stop(paste0("Missing element 'object$priors$a$", i, "'."))
       }
@@ -37,7 +37,7 @@
       stop("Missing element 'object$inital$a'.")
     }
     if (object[["model"]][["tvp"]]) {
-      for (i in c("a_init", "a_v_i")) {
+      for (i in c("a_init", "a_sigma_inv")) {
         if (is.null(object[["initial"]][[i]])) {
           stop(paste0("Missing element 'object$initial$", i, "'."))
         }
@@ -52,7 +52,7 @@
     if (is.null(object[["priors"]][["psi"]])) {
       stop("Missing element 'object$priors$psi'.")
     }
-    for (i in c("mu", "v_i")) {
+    for (i in c("mu", "v_inv")) {
       if (is.null(object[["priors"]][["psi"]][[i]])) {
         stop(paste0("Missing element 'object$priors$psi$", i, "'."))
       }
@@ -70,7 +70,7 @@
       stop("Missing element 'object$inital$psi'.")
     }
     if (object[["model"]][["tvp"]]) {
-      for (i in c("psi_init", "psi_v_i")) {
+      for (i in c("psi_init", "psi_sigma_inv")) {
         if (is.null(object[["initial"]][[i]])) {
           stop(paste0("Missing element 'object$initial$", i, "'."))
         }
@@ -106,7 +106,7 @@
   
   # Stochastic volatility
   if (object[["model"]][["error"]] %in% c("sv", "sv+covar")) {
-    for (i in c("mu", "v_i", "shape", "rate")) {
+    for (i in c("mu", "v_inv", "shape", "rate")) {
       if (is.null(object[["priors"]][["u_sigma"]][[i]])) {
         stop(paste0("Missing element 'object$priors$u_sigma$", i, "'."))
       }

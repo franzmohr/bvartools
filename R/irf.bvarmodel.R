@@ -111,90 +111,30 @@ irf.bvarmodel <- function(x, impulse = NULL, response = NULL, n_ahead = 5, ci = 
   response <- which(varnames == response)
   if (length(response) == 0){stop("Response variable not available.")}
   
-  k <- x[["model"]][["k"]]
-  kk <- k * k
-  p <- x[["model"]][["p"]]
-  tt <- nrow(x[["data"]][["train"]][["y"]]) / k
-  tvp <- x[["model"]][["tvp"]]
-  tvp_and_covar <- tvp & x[["model"]][["error"]] %in% c("gamma", "gamma+covar")
-  if (tvp) {
-    nparams <- ncol(x[["data"]][["train"]][["z"]])
-  }
-  sv <- x[["model"]][["error"]] %in% c("sv", "sv+covar")
-  if (tvp | sv) {
-    if (is.null(period)) {
-      period <- tt
-    } else {
-      if (period > tt | period < 1) {
-        stop("Implausible specification of argument 'period'.")
-      }
-    }
-  }
-  
-  if (need_A0) {
-    n_struct <- k * (k - 1) / 2
-    
-    if (tvp) {
-      pos_a <- nparams * period - n_struct + 1:n_struct
-    } else {
-      n_a <- ncol(x[["posterior"]][["a"]][["coeffs"]])
-      pos_a <- n_a - n_struct + 1:n_struct 
-    }
-    
-    pos_a0 <- t(matrix(1:kk, k , k))
-    pos_a0 <- pos_a0[upper.tri(pos_a0)]
-  }
-  
-  store <- nrow(x[["posterior"]][["u_sigma_inv"]][["coeffs"]])
-  
-  A <- NULL
-  for (i in 1:store) {
-    temp <- NULL
-    
-    if (p > 0) {
-      if (tvp) {
-        temp[["A"]] <- matrix(x[["posterior"]][["a"]][["coeffs"]][i, (period - 1) * nparams + 1:(kk * p)], k)
-      } else {
-        temp[["A"]] <- matrix(x[["posterior"]][["a"]][["coeffs"]][i, 1:(kk * p)], k)  
-      }
-    } else {
-      temp[["A"]] <- matrix(0, k, k)
-    }
-    
-    if (need_A0) {
-      a0_temp <- diag(1, k)
-      a0_temp[pos_a0] <- x[["posterior"]][["a"]][["coeffs"]][i, pos_a]
-      temp[["A0"]] <- a0_temp
-      #temp[["A"]] <- solve(a0_temp) %*% temp[["A"]]
-    }
-    
-    
-    if (need_Sigma) {
-      if (sv | tvp_and_covar) {
-        temp[["Sigma"]] <- solve(matrix(x[["posterior"]][["u_sigma_inv"]][["coeffs"]][i, (period - 1) * kk + 1:kk], k))
-      } else {
-        temp[["Sigma"]] <- solve(matrix(x[["posterior"]][["u_sigma_inv"]][["coeffs"]][i, ], k))
-      }
-    }
-    
-    # Shock
+  # Shared with fevd() and spillover(), so that the three cannot disagree about
+  # which slice of a row belongs to `period`, nor about folding a structural
+  # model's contemporaneous block into the coefficients the recursion uses.
+  A <- .collect_draws(x, period = period, need_A0 = need_A0,
+                      need_Sigma = need_Sigma)
+
+  # Size of the shock, one value per draw. A numeric shock is the same for every
+  # draw; the standard deviation based sizes are read off that draw's Sigma.
+  for (i in seq_along(A)) {
     if (is.numeric(shock)) {
-      temp[["shock"]] <- shock
+      A[[i]][["shock"]] <- shock
     } else {
       if (type == "oir") {
-        temp[["shock"]] <- diag(chol(temp[["Sigma"]]))[impulse]
+        A[[i]][["shock"]] <- diag(chol(A[[i]][["Sigma"]]))[impulse]
       } else {
-        temp[["shock"]] <- sqrt(diag(temp[["Sigma"]])[impulse]) 
+        A[[i]][["shock"]] <- sqrt(diag(A[[i]][["Sigma"]])[impulse])
       }
-      
+
       if (shock == "nsd") {
-        temp[["shock"]] <- -temp[["shock"]]
-      } 
+        A[[i]][["shock"]] <- -A[[i]][["shock"]]
+      }
     }
-    
-    A[[i]] <- temp
   }
-  
+
   result <- lapply(A, .ir, h = n_ahead, type = type,
                    impulse = impulse, response = response)
   

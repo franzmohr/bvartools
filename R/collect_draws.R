@@ -11,8 +11,10 @@
 #
 # `x` is a bvarmodel with posterior draws, `period` the period to read for a TVP
 # or SV model, and `need_A0` whether the contemporaneous block has to be split
-# off and inverted. Returns a list of lists with elements `A`, `Sigma` and, when
-# asked for, `A0`.
+# off and inverted. `need_Sigma` is there for irf(), which does not need the
+# error covariance for a forecast error or structural response and would
+# otherwise pay for one inversion per draw to obtain it. Returns a list of lists
+# with elements `A`, `Sigma` and, when asked for, `A0`.
 
 # Number of periods in the estimation sample.
 #
@@ -34,7 +36,7 @@
   as.integer(NROW(y))
 }
 
-.collect_draws <- function(x, period = NULL, need_A0 = FALSE) {
+.collect_draws <- function(x, period = NULL, need_A0 = FALSE, need_Sigma = TRUE) {
 
   k <- x[["model"]][["k"]]
   kk <- k * k
@@ -92,10 +94,12 @@
       temp[["A"]] <- solve(a0_temp) %*% temp[["A"]]
     }
 
-    if (sv | tvp_and_covar) {
-      temp[["Sigma"]] <- solve(matrix(x[["posterior"]][["u_sigma_inv"]][["coeffs"]][i, (period - 1) * kk + 1:kk], k))
-    } else {
-      temp[["Sigma"]] <- solve(matrix(x[["posterior"]][["u_sigma_inv"]][["coeffs"]][i, ], k))
+    if (need_Sigma) {
+      if (sv | tvp_and_covar) {
+        temp[["Sigma"]] <- solve(matrix(x[["posterior"]][["u_sigma_inv"]][["coeffs"]][i, (period - 1) * kk + 1:kk], k))
+      } else {
+        temp[["Sigma"]] <- solve(matrix(x[["posterior"]][["u_sigma_inv"]][["coeffs"]][i, ], k))
+      }
     }
 
     A[[i]] <- temp

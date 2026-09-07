@@ -33,6 +33,38 @@
     verified that split moved no fingerprint, and the three time-varying models
     here that reach the band sampler are unaffected.
 
+* **`create_external_forecast()`** puts forecasts that were produced elsewhere
+  into a horse race against the models of this package. It takes any data frame
+  of point forecasts in long format -- a period, a publication date, a variable
+  and a value, under whatever column names the source uses -- and returns an
+  object that mimics the windows of `use_expanding_window()`. From there the
+  usual path applies: `combine_models()` puts it beside the models,
+  `add_forecast_errors()` scores it against the same test data, and
+  `selection_criteria()`, `print(relative = )`, `plot()` and
+  `plot_forecast_errors_by_period()` treat it as one more competitor. The
+  functions that add priors, initial values or posterior draws are without
+  effect for it, so a list that mixes models and external forecasts can be run
+  through the workflow in one go.
+
+    An external forecast has a publication date where a model has a training
+  sample, and the two are not the same thing: the forecaster did not know the
+  observations that had not been released yet. Each publication is therefore
+  matched to the last training sample that ends no later than `data_lag` periods
+  before it, which defaults to one period. With annual data that puts a forecast
+  published during 2021 against a model estimated through 2020, so the forecast
+  for 2021 is the one-step ahead forecast of both. Where several publications
+  fall to the same training sample -- two forecast rounds in one year, say --
+  only one is used, the latest by default, because a forecaster must not enter
+  the same comparison twice.
+
+    External forecasts are point forecasts, so each publication contributes a
+  single value rather than a posterior: the credible bands of their out-of-sample
+  statistics are degenerate and they have no in-sample criteria. Three functions
+  that previously assumed every model carries both kinds of criteria --
+  `print.selcritlist()`, `plot.selcritlist()` and `choose_best_model()` -- now
+  leave a model's row empty instead of failing when a criterion is missing from
+  it.
+
 * **`spillover()`**, the connectedness measures of Diebold and Yilmaz (2012):
   the total spillover index, the directional spillovers to and from each
   variable, their net difference and the net pairwise table. Methods for
@@ -72,6 +104,188 @@
     `spillover()` through a new internal `.collect_draws()`, lifted out of
     `fevd.bvarmodel()` so the two cannot disagree about which slice of a row a
     period is.
+
+* **Fixed: `irf()` had both defects the `fevd()` fix above describes.** **Draws
+  are unchanged; impulse responses of time-varying, stochastic volatility and
+  structural models change, and the old numbers were wrong.** `.collect_draws()`
+  was introduced for `fevd()` and `spillover()` but `irf.bvarmodel()` kept its
+  own copy of the code it replaced, so it carried the same `nrow(train$y) / k`
+  sample length -- reading a truncated row for the default `period` and refusing
+  any `period` past `tt / k` -- and, additionally, had the line that folds
+  `A_0^{-1}` into the coefficients commented out, so `type = "sir"` and
+  `type = "sgir"` built the recursion from the structural `A_i` instead of the
+  reduced-form `A_0^{-1} A_i` that `fevd()` uses. Constant-coefficient,
+  non-structural models are unaffected: they read neither `tt` nor `A_0`.
+
+    `irf.bvarmodel()` now calls `.collect_draws()` like the other two, and only
+    attaches the shock size itself. The helper gained a `need_Sigma` argument so
+    that a forecast error or structural response does not pay for one covariance
+    inversion per draw to obtain a matrix it never reads.
+
+* **Fixed: `create_bvecmodel(seasonal = ...)` failed on data of frequency one.**
+  The branch that builds the dummies is skipped at a frequency of one, with a
+  warning, but the `cbind()` calls that add them to the error correction term or
+  to the unrestricted regressors sat outside it and reached for a `seas` that was
+  never created, so the call stopped with `object 'seas' not found` instead of
+  proceeding without seasonal terms. They now sit inside the branch, as they
+  already did in `create_bvarmodel()`.
+
+* **Fixed: `ssvs_prior()` did not work on a `bvecmodel` at all.** The function
+  read `object$data$y`, `$w`, `$x` and `$z`, the layout that preceded the move of
+  the estimation sample under `object$data$train`, so every one of them was
+  `NULL` and the call stopped at `t(NULL)` with "argument is not a matrix". Its
+  own example failed. `ssvs_prior.bvarmodel()` was already on the current layout.
+
+    Reaching the rest of the function exposed a second defect: under
+    `semiautomatic`, `tau1` was assembled by appending to `tau0` rather than to
+    itself, so it came out with the alpha block, the whole of `tau0` and then its
+    own values -- longer than the coefficient vector it belongs to, and wrong
+    where it overlapped. Both vectors now have `ncol(z)` elements for every rank
+    and lag order, and `tau1` exceeds `tau0` element by element as the
+    semiautomatic approach intends.
+
+* **Fixed: four more places where the VEC code read the pre-`train` data
+  layout.** Unlike `ssvs_prior()` above, all four sat in an `is.null()` guard, so
+  they did not fail -- they took the wrong branch in silence.
+  `inclusion_prior.bvecmodel()` tested `object$data$z` while its body already
+  read `object$data$train$z`, so the body never ran and the function returned
+  `NULL`, which surfaced downstream as "a prior inclusion probabilities must have
+  n elements, got 0". `.check_bvecpost_input()` skipped every coefficient-side
+  check for VEC models. In `add_priors.bvecmodel()`, `coef$const` was never
+  applied and the least squares covariance the Minnesota prior needs for its
+  analytical solution was never stored.
+
+    Bringing each branch to life exposed what had drifted while it was
+    unreachable. `inclusion_prior.bvecmodel()` defined `n_gamma` and `n_upsilon`
+    inside its Minnesota-like branch but located the deterministic block from
+    them afterwards, so the default `minnesota_like = FALSE` would have stopped
+    at "object 'n_gamma' not found"; they are now defined once for both, as in
+    `inclusion_prior.bvarmodel()`. The `coef$const` block added its column offset
+    `r` twice, once to the position and once again when indexing, and had lost
+    the `is.numeric()` guard around its numeric branch, so `coef$const = "mean"`
+    would have written the string into the prior mean and coerced the whole
+    matrix to character. `.check_bvecpost_input()` still asked for `v_i`,
+    `a_v_i` and `psi_v_i`, the names these elements carried before they became
+    `v_inv`, `a_sigma_inv` and `psi_sigma_inv`; it now matches
+    `.check_bvarpost_input()` element for element.
+
+* **SSVS and BVS now work on VEC models.** `add_initial_values.bvecmodel()` had
+  no counterpart to the `a_lambda` and `psi_lambda` block of
+  `add_initial_values.bvarmodel()`, so a VEC model with `varsel` set stopped at
+  "a initial inclusion indicators must have n elements, got 0". It now writes
+  both, one indicator per element of the coefficient vector rather than one per
+  selected position: the sampler masks the regressors with `diag(lambda)` as a
+  whole, so a position the sweep never visits keeps whatever it starts with for
+  the whole run. Every position therefore starts at one, which leaves the
+  unselected coefficients in the model -- in particular the `k * r` loadings at
+  the front of `a`, which a zero would have switched off permanently.
+
+    `inclusion_prior.bvecmodel()` had to be corrected alongside it. It built the
+    list of excluded positions correctly, loadings first, but applied it only
+    inside `if (n_c_unres > 0 & exclude_deterministics)`, and `varsel$exclude_det`
+    defaults to `FALSE`. So in the default case the loadings stayed in `include`
+    and the sampler refused them: "variable selection cannot be applied to the
+    k * r loading coefficients at the front of a VEC's a". The exclusion is now
+    applied whether or not the deterministics are also dropped.
+
+    Verified for SSVS and BVS at ranks one and two, with and without
+    unrestricted deterministic terms, and for `error = "gamma+covar"` with
+    `varsel$covar = TRUE`, which exercises `psi_lambda`. Across draws the
+    loadings stay switched on and the selected positions move.
+
+    Unrelated to variable selection, `add_initial_values.bvecmodel()` read
+    `object$priors$a$v_i` in its `method = "prior"` branch, one more of the
+    pre-rename names; it is now `v_inv`, as it already was thirty lines below for
+    `psi`.
+
+* **Variable selection alongside an error covariance block is refused where the
+  sampler cannot do it, instead of failing inside the sampler.** A
+  constant-coefficient model with `error = "gamma+covar"` or `"sv+covar"` and
+  `varsel` set, but without `varsel$covar`, used to reach the sampler and stop
+  there on "psi prior inclusion probabilities must have n elements, got 0" -- a
+  prior it was never given, named after an argument the caller had not set.
+
+    The samplers for those models read one selection scheme for the whole model,
+    so a covariance block they are given is selected along with the
+    coefficients; only the time-varying ones take the covariance block's scheme
+    separately, which is why `varsel$covar = FALSE` is a real choice there and
+    not here. That asymmetry lives in the vendored core -- the constant
+    coefficient input types have no per-block field to set -- so `add_priors()`
+    now says so up front, and names the three ways out: select the covariances
+    too, drop them, or use a time-varying model. `varsel$covar = TRUE` and every
+    combination without a covariance block are unaffected.
+
+* **Fixed: maximum likelihood initial values of a rank zero VEC model were
+  fitted against the wrong response.** **Draws from such a model change, and the
+  old starting values were arbitrary.** `add_initial_values.bvecmodel()`
+  transposed `y` inside its `if (r > 0)` block, but the least squares fit below
+  stacks it with `matrix(y)` whether or not there is a cointegration term to
+  estimate first. With no such term the series went in stacked variable by
+  variable where the SUR regressors want it period by period, so the fit was
+  against a permuted response. Nothing failed -- the chain simply started
+  somewhere unrelated to the data. This is the default `method` and
+  `create_bvecmodel()` generates `r = 0` among its default ranks, so it was
+  easy to reach. The transpose now happens for every rank, and the initial
+  values reproduce the least squares fit their regressors imply at ranks zero,
+  one and two.
+
+    The fallback residual carried the same confusion: `matrix(y, k)` on the wide
+    series fills each column with consecutive observations of one variable
+    rather than one period across variables. It is now transposed. That value
+    survives only where the sample is too short for the fit above, the path that
+    warns and sets the coefficients to zero, and it is what the error
+    covariance's own initial value is then built from.
+
+* **Fixed: `add_initial_values(method = "prior")` on a VEC model.** The branch
+  transposed the error correction regressors but not the endogenous variables,
+  and then formed the residual against the SUR regressors, which need the series
+  stacked variable-within-period. The subtraction was non-conformable and the
+  call stopped at "non-conformable arrays". Both are now transposed, as the
+  maximum likelihood branch above already did, and the residual is only formed
+  where there are regressors to form it from. Verified for ranks one and two,
+  with and without unrestricted deterministic terms, and for `gamma+covar` and
+  time-varying specifications; each now yields initial values the sampler
+  accepts.
+
+    `method = "prior"` on a VAR model turned out not to be broken. What looked
+    like a defect was an improper prior: drawing Sigma from a Wishart with fewer
+    degrees of freedom than endogenous variables is not a draw from anything,
+    and `stats::rWishart()` refuses it with a message that names neither the
+    argument nor the function that set it. Since `sigma$df` below `k` is a
+    perfectly good prior to *estimate* with -- the posterior adds one degree of
+    freedom per observation, which is why the fixtures use `df = 1` -- the
+    restriction belongs to `method`, not to the prior, and is now reported that
+    way, pointing at `sigma$df` and at `method = "maxlik"`. `maxlik` is
+    unaffected.
+
+* **Fixed: three examples that no longer matched the API.** `predict.bvarmodel()`
+  and `plot.bvarprd()` called `predict()` straight after
+  `add_posterior_coefficients()`, from before forecasting moved into
+  `add_forecast_input()` and `add_posterior_forecasts()`; they now run those two
+  first. `post_coint_kls()` read `temp$data$y` and passed `w = ect` where the
+  example only ever defined `w`; it now follows `post_coint_kls_sur()`, which had
+  already been migrated, and sizes the priors from the data rather than by a
+  literal. With these and the missing comma above, all 88 documented examples run.
+
+* **`NAMESPACE` is no longer generated from a blanket pattern.** The package
+  carried `exportPattern("^[[:alpha:]]+")` from its Rcpp skeleton alongside an
+  otherwise explicit export list. It was exporting three internal plotting
+  helpers marked `@noRd` -- `draw_error_bars()`, `forecast_plot_series()` and
+  `plot_selcrit_forecast_errors()` -- which is what `R CMD check` reported as
+  undocumented code objects; those are now internal. In the other direction,
+  fifteen documented compiled functions (`post_normal()`, `post_normal_sur()`,
+  `post_bvs()`, `post_coint_kls()`, `post_coint_kls_sur()`,
+  `post_gamma_measurement_variance()`, `post_gamma_state_variance()`, `ssvs()`,
+  `coint_prepare_sur_data()`, `coint_kls2010_reparameterise_two()`,
+  `covar_prepare_data()`, `covar_vector_to_matrix()`,
+  `generate_lower_block_diagonal()`, `loglik_normal()` and
+  `sur_const_to_tvp()`) reached the namespace only through that pattern and now
+  carry `@export` in their own source, as `kalman_durbin_koopman_2002()` and the
+  two stochastic volatility functions already did. The set of exported objects is
+  otherwise unchanged.
+
+* **Fixed: a missing comma in the examples of `generate_artificial_var()`.** It
+  left `bvartools-Ex.R` unparseable, so `R CMD check` ran no examples at all.
 
 * **Known inconsistency, not changed.** `fevd(type = "gir")` divides by
   `sqrt(sigma_jj)` of the *response* variable (`src/vardecomp.cpp`), where

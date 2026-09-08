@@ -4,7 +4,7 @@
 \alias{ssvs_prior.bvarmodel}
 \title{Stochastic Search Variable Selection Prior}
 \usage{
-\method{ssvs_prior}{bvarmodel}(object, tau = c(0.05, 10), semiautomatic = NULL)
+\method{ssvs_prior}{bvarmodel}(object, tau = c(0.05, 10), semiautomatic = NULL, ...)
 }
 \arguments{
 \item{object}{an object of class \code{"bvarmodel"}, usually, a result of a call to \code{\link{create_bvarmodel}}
@@ -18,6 +18,8 @@ as its second. Default is \code{c(0.05, 10)}.}
 the standard errors associated with an unconstrained least squares estimate of the VAR model are
 multiplied to obtain the prior standard errors of restricted (\eqn{\tau_0}) and unrestricted
 (\eqn{\tau_1}) variables. This is the semiautomatic approach described in George et al. (2008).}
+
+\item{...}{arguments passed forward to method.}
 }
 \value{
 A list containing the vectors of prior standard deviations for restricted

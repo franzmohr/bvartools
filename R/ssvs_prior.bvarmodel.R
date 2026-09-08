@@ -11,6 +11,7 @@
 #' the standard errors associated with an unconstrained least squares estimate of the VAR model are
 #' multiplied to obtain the prior standard errors of restricted (\eqn{\tau_0}) and unrestricted
 #' (\eqn{\tau_1}) variables. This is the semiautomatic approach described in George et al. (2008).
+#' @param ... arguments passed forward to method.
 #' 
 #' @return A list containing the vectors of prior standard deviations for restricted
 #' and unrestricted variables, respectively.
@@ -35,7 +36,7 @@
 #' prior <- ssvs_prior(model, semiautomatic = c(.1, 10))
 #' 
 #' @export
-ssvs_prior.bvarmodel <- function(object, tau = c(0.05, 10), semiautomatic = NULL) {
+ssvs_prior.bvarmodel <- function(object, tau = c(0.05, 10), semiautomatic = NULL, ...) {
   
   if (object[["model"]][["error"]] %in% c("sv", "sv+covar")) {
     stop("SSVS cannot be used with models with stochastic volatility.")

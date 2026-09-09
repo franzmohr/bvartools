@@ -4,12 +4,16 @@
 \alias{write_to_hdf5.bvarmodel}
 \title{Export to HDF5 File}
 \usage{
-\method{write_to_hdf5}{bvarmodel}(object, filename, ...)
+\method{write_to_hdf5}{bvarmodel}(object, filename, group = "", ...)
 }
 \arguments{
 \item{object}{list of class 'bvarmodel'.}
 
 \item{filename}{path to the file, in which output should be stored.}
+
+\item{group}{the group the model's tree should hang under inside its file.
+Defaults to \code{""}, the root of the file, which is where a file holding a
+single model puts it. See 'Details'.}
 
 \item{...}{further arguments passed to or from other methods.}
 }
@@ -20,10 +24,22 @@ The path to the written file, invisibly.
 Exports the content of an object of class 'bvarmodel' to an HDF5 file.
 }
 \details{
-A write that cannot be completed raises the error rather than absorbing it.
-The incomplete file is removed on the way out, so that a retry meets the
-original problem instead of the \dQuote{file already exists} guard. A file
-that was already there before the call is refused and left untouched.
+With a \code{group} every path is written under it instead of at the root,
+so one file can hold several models side by side. The spelling is the one the
+BayesTS command line uses for its \code{--group} flag: a leading slash and no
+trailing slash, with \code{""} for the root. Intermediate groups are created
+as needed, and \code{\link{list_models_in_hdf5}} reports which groups of a
+file hold a model.
+
+What must not already be there is the model rather than the file. Without a
+\code{group} the model is the whole file, so an existing file is refused;
+with one, only that group has to be free, which is what lets a second model
+be added beside the first.
+
+A write that cannot be completed raises the error rather than absorbing it,
+and undoes what the call created: a file it made is removed, a group it added
+to an existing file is unlinked on its own so the models beside it survive.
+A retry then meets the original problem rather than the leftovers.
 }
 \examples{
 

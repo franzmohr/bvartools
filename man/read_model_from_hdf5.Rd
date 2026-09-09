@@ -4,11 +4,23 @@
 \alias{read_model_from_hdf5}
 \title{Import Models from HDF5 Files}
 \usage{
-read_model_from_hdf5(filename)
+read_model_from_hdf5(filename, group = "")
 }
 \arguments{
 \item{filename}{Path to an HDF5 file containing model data.}
+
+\item{group}{the group the model's tree hangs under inside its file.
+Defaults to \code{""}, the root of the file, which is where a file holding a
+single model puts it. See 'Details'.}
 }
 \description{
 Imports model information and posterior draws from an HDF5 file.
+}
+\details{
+With a \code{group} every path the reader looks for is read under it
+instead of at the root, so one file can hold several models side by side.
+\code{\link{list_models_in_hdf5}} reports which groups of a file hold one.
+
+The spelling is the one the BayesTS command line uses for its \code{--group}
+flag: a leading slash and no trailing slash, with \code{""} for the root.
 }

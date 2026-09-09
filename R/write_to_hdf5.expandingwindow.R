@@ -76,7 +76,16 @@ write_to_hdf5.expandingwindow <- function(object, folder, ...){
     model_id <- sprintf(paste0("%0", num_digits, "d"), 1:n_models)
     
     for (i in 1:n_models) {
-        write_to_hdf5(object[[i]], filename = file.path(folder, paste0("Window-", model_id[i], ".h5")), ...)
+        # Which collection a model belongs to is a property of the model, not of
+        # the directory it lands in. Recorded here so that a reader can restore
+        # the class of the collection from the files rather than by looking for
+        # "ExpWind" in a path. The per-model writer turns every element of
+        # 'model' into an attribute of the model's /model group, so this needs
+        # no support of its own there.
+        member <- object[[i]]
+        member[["model"]][["rclass_collection"]] <- class(object)
+
+        write_to_hdf5(member, filename = file.path(folder, paste0("Window-", model_id[i], ".h5")), ...)
     }
     
   } else {

@@ -4,16 +4,31 @@
 #'
 #' @param object list of class 'bvarmodel'.
 #' @param filename path to the file, in which output should be stored.
+#' @param group the group the model's tree should hang under inside its file.
+#' Defaults to \code{""}, the root of the file, which is where a file holding a
+#' single model puts it. See 'Details'.
 #' @param ... further arguments passed to or from other methods.
 #'
 #' @return The path to the written file, invisibly.
 #'
 #' @details
 #'
-#' A write that cannot be completed raises the error rather than absorbing it.
-#' The incomplete file is removed on the way out, so that a retry meets the
-#' original problem instead of the \dQuote{file already exists} guard. A file
-#' that was already there before the call is refused and left untouched.
+#' With a \code{group} every path is written under it instead of at the root,
+#' so one file can hold several models side by side. The spelling is the one the
+#' BayesTS command line uses for its \code{--group} flag: a leading slash and no
+#' trailing slash, with \code{""} for the root. Intermediate groups are created
+#' as needed, and \code{\link{list_models_in_hdf5}} reports which groups of a
+#' file hold a model.
+#'
+#' What must not already be there is the model rather than the file. Without a
+#' \code{group} the model is the whole file, so an existing file is refused;
+#' with one, only that group has to be free, which is what lets a second model
+#' be added beside the first.
+#'
+#' A write that cannot be completed raises the error rather than absorbing it,
+#' and undoes what the call created: a file it made is removed, a group it added
+#' to an existing file is unlinked on its own so the models beside it survive.
+#' A retry then meets the original problem rather than the leftovers.
 #' 
 #' @examples
 #' 
@@ -40,41 +55,62 @@
 #' write_to_hdf5(model, filename = path_to_model)
 #' 
 #' @export
-write_to_hdf5.bvecmodel <- function(object, filename, ...) {
+write_to_hdf5.bvecmodel <- function(object, filename, group = "", ...) {
+  
+  group <- .normalize_hdf5_group(group)
   
   # Check if filename is valid
   if (dir.exists(filename)) {
     stop("Argument 'filename' is not a path to a file.")
   }
   
-  # Check if output file already exists
-  if (file.exists(filename)) {
+  # What must not already be there is the model, not the file. Without a group a
+  # model is the whole file, so an existing file is still refused; with one,
+  # a file that already holds other models is exactly what is being added to,
+  # and only that group has to be free.
+  file_existed <- file.exists(filename)
+  if (group == "" && file_existed) {
     stop(paste0("File ", filename, " already exists."))
   }
   
   # Create or open an HDF5 file
-  output <- hdf5r::h5file(filename, mode = "a")
-
+  h5_file <- hdf5r::h5file(filename, mode = "a")
+  
   # The body below used to sit inside a try() that discarded its result: any
   # failure -- a full disk, an unwritable path, a malformed element of 'object'
   # -- was swallowed and the function returned as though it had worked, leaving
   # a half-written file that looked finished. The error reaches the caller now.
   #
-  # Two things still have to happen on the way out of a failure. The HDF5 handle
-  # has to be closed, or the file stays locked for the rest of the session; and
-  # the incomplete file has to go, or the next attempt fails on the "already
-  # exists" check above instead of on whatever actually went wrong. Only a file
-  # this call created is removed -- an existing one was refused before the
-  # handle was opened.
+  # What has to be undone on the way out of a failure depends on what this call
+  # created. A file it made is removed whole; a group it added to a file that
+  # was already there is unlinked on its own, so the models beside it survive.
+  # Either way the handle is closed, or the file stays locked for the rest of
+  # the session. HDF5 does not reclaim the space of an unlinked group, but the
+  # name is free again, which is what a retry needs.
   completed <- FALSE
+  group_existed <- FALSE
   on.exit({
-    if (output$is_valid) {
-      output$close_all()
+    if (!completed && group != "" && !group_existed && h5_file$is_valid) {
+      try(h5_file$link_delete(group), silent = TRUE)
     }
-    if (!completed) {
+    if (h5_file$is_valid) {
+      h5_file$close_all()
+    }
+    if (!completed && !file_existed) {
       unlink(filename)
     }
   }, add = TRUE)
+  
+  if (group != "") {
+    group_existed <- .hdf5_exists(h5_file, group)
+    if (group_existed) {
+      stop(paste0("Group ", group, " of file ", filename, " already exists."))
+    }
+  }
+  
+  # Every path below is named against this rather than against the file, which
+  # is all a group amounts to on the way out.
+  output <- .create_hdf5_group(h5_file, group)
 
   
   
@@ -367,7 +403,7 @@ write_to_hdf5.bvecmodel <- function(object, filename, ...) {
 
 
   # Close file
-  output$close_all()
+  h5_file$close_all()
   completed <- TRUE
 
   invisible(filename)

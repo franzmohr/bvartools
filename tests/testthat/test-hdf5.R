@@ -77,10 +77,13 @@ test_that("a modellist is written to a folder and read back", {
   expect_s3_class(restored, "modellist")
   expect_length(restored, length(fx_var_modellist()))
   expect_equal(
-    sort(vapply(restored, function(x) x[["model"]][["p"]], integer(1))),
-    sort(vapply(fx_var_modellist(), function(x) x[["model"]][["p"]],
-                integer(1)))
+    unname(sort(vapply(restored, function(x) x[["model"]][["p"]], integer(1)))),
+    unname(sort(vapply(fx_var_modellist(), function(x) x[["model"]][["p"]],
+                       integer(1))))
   )
+  # The models come back named after the files they were read from, which the
+  # list written here has no counterpart for.
+  expect_false(is.null(names(restored)))
 })
 
 test_that("an expanding window is written into its own subfolder", {
@@ -181,4 +184,193 @@ test_that("an existing file is refused and left untouched", {
   # Refused before the handle was opened, so the first file is still whole.
   expect_equal(file.info(path)[["size"]], before)
   expect_s3_class(read_model_from_hdf5(path), "bvarmodel")
+})
+
+# Groups: one file holding several models, addressed the way the BayesTS
+# command line addresses them.
+
+test_that("group names are normalised the way BayesTS spells them", {
+  expect_equal(bvartools:::.normalize_hdf5_group(""), "")
+  expect_equal(bvartools:::.normalize_hdf5_group("/"), "")
+  expect_equal(bvartools:::.normalize_hdf5_group(NULL), "")
+  expect_equal(bvartools:::.normalize_hdf5_group("/models/3"), "/models/3")
+  expect_equal(bvartools:::.normalize_hdf5_group("models/3"), "/models/3")
+  expect_equal(bvartools:::.normalize_hdf5_group("/models/3/"), "/models/3")
+  # Idempotent, so a name that has been through it can go through again.
+  expect_equal(bvartools:::.normalize_hdf5_group(
+    bvartools:::.normalize_hdf5_group("models/3/")), "/models/3")
+
+  for (bad in c("/models//3", "/models/./3", "/models/../3", "//")) {
+    expect_error(bvartools:::.normalize_hdf5_group(bad), info = bad)
+  }
+  expect_error(bvartools:::.normalize_hdf5_group(c("a", "b")))
+})
+
+test_that("a model survives a round trip through a group", {
+  path <- temp_h5_file()
+  write_to_hdf5(fx_var_fitted(), filename = path, group = "/models/3")
+
+  restored <- read_model_from_hdf5(path, group = "/models/3")
+
+  expect_s3_class(restored, "bvarmodel")
+  expect_equal(unclass(restored[["posterior"]][["a"]][["coeffs"]]),
+               unclass(fx_var_fitted()[["posterior"]][["a"]][["coeffs"]]),
+               ignore_attr = TRUE)
+  expect_equal(restored[["model"]][["p"]], fx_var_fitted()[["model"]][["p"]])
+})
+
+test_that("a model written under a group is at that group and nowhere else", {
+  path <- temp_h5_file()
+  write_to_hdf5(fx_var_fitted(), filename = path, group = "/models/3")
+
+  h5 <- hdf5r::h5file(path, mode = "r")
+  on.exit(h5$close_all(), add = TRUE)
+
+  # The raw paths, not only what comes back out: a prefix that was silently
+  # dropped would write to the root and read back the same numbers.
+  expect_true(h5$exists("/models/3/model"))
+  expect_true(h5$exists("/models/3/data/train/y"))
+  expect_false(h5$exists("/model"))
+  expect_false(h5$exists("/data"))
+  # The intermediate group is created on the way.
+  expect_true(h5$exists("/models"))
+})
+
+test_that("several models live side by side in one file", {
+  path <- temp_h5_file()
+  write_to_hdf5(fx_var_fitted(), filename = path, group = "/submodels/US")
+  write_to_hdf5(fx_var_fitted(), filename = path, group = "/submodels/JP")
+  write_to_hdf5(fx_vec_fitted(), filename = path, group = "/submodels/CA")
+
+  expect_equal(list_models_in_hdf5(path),
+               c("/submodels/CA", "/submodels/JP", "/submodels/US"))
+
+  # Each is read back as the model it is, VEC included.
+  expect_s3_class(read_model_from_hdf5(path, "/submodels/US"), "bvarmodel")
+  expect_s3_class(read_model_from_hdf5(path, "/submodels/CA"), "bvecmodel")
+})
+
+test_that("writing into a group that is taken is refused", {
+  path <- temp_h5_file()
+  write_to_hdf5(fx_var_fitted(), filename = path, group = "/models/3")
+
+  expect_error(write_to_hdf5(fx_var_fitted(), filename = path, group = "/models/3"),
+               "already exists")
+  # An existing file is still refused when no group is given: without one the
+  # model is the whole file.
+  expect_error(write_to_hdf5(fx_var_fitted(), filename = path), "already exists")
+})
+
+test_that("a failed write into a group leaves the models beside it alone", {
+  path <- temp_h5_file()
+  write_to_hdf5(fx_var_fitted(), filename = path, group = "/submodels/US")
+
+  broken <- fx_var_fitted()
+  broken[["data"]][["train"]][["y"]] <- function() NULL
+  expect_error(write_to_hdf5(broken, filename = path, group = "/submodels/JP"))
+
+  # The file is still there, the model that was already in it is intact, and
+  # the half-written group is gone so the name can be used again.
+  expect_true(file.exists(path))
+  expect_equal(list_models_in_hdf5(path), "/submodels/US")
+  expect_s3_class(read_model_from_hdf5(path, "/submodels/US"), "bvarmodel")
+  expect_no_error(write_to_hdf5(fx_var_fitted(), filename = path,
+                                group = "/submodels/JP"))
+})
+
+test_that("reading a group that is not there is an error", {
+  path <- temp_h5_file()
+  write_to_hdf5(fx_var_fitted(), filename = path, group = "/models/3")
+
+  expect_error(read_model_from_hdf5(path, group = "/models/9"),
+               "does not contain group")
+  expect_error(list_models_in_hdf5(path, group = "/models/9"),
+               "does not contain group")
+})
+
+test_that("list_models_in_hdf5 finds models and nothing else", {
+  path <- temp_h5_file()
+  write_to_hdf5(fx_var_fitted(), filename = path, group = "/submodels/US")
+
+  # A model at the root of its own file is reported as the root.
+  root_path <- temp_h5_file()
+  write_to_hdf5(fx_var_fitted(), filename = root_path)
+  expect_equal(list_models_in_hdf5(root_path), "")
+
+  # A group that is not a model is not reported, and the walk does not descend
+  # into a model's own subtree.
+  h5 <- hdf5r::h5file(path, mode = "a")
+  h5$create_group("global")
+  h5$close_all()
+
+  found <- list_models_in_hdf5(path)
+  expect_equal(found, "/submodels/US")
+  expect_false(any(grepl("/data|/priors|/posterior", found)))
+
+  # A root that restricts the walk.
+  expect_equal(list_models_in_hdf5(path, group = "/submodels"), "/submodels/US")
+  expect_equal(list_models_in_hdf5(path, group = "/global"), character(0))
+})
+
+test_that("read_models_from_folder names every model it returns", {
+  folder <- temp_model_dir()
+  dir.create(file.path(folder, "US"))
+  dir.create(file.path(folder, "JP"))
+  write_to_hdf5(fx_var_fitted(), filename = file.path(folder, "US", "001.h5"))
+  write_to_hdf5(fx_var_fitted(), filename = file.path(folder, "JP", "001.h5"))
+
+  restored <- read_models_from_folder(folder)
+
+  # Flat and named, so a caller can tell which sub-model is which. The nesting
+  # this used to return dropped the names entirely.
+  expect_s3_class(restored, "modellist")
+  expect_length(restored, 2)
+  expect_equal(names(restored), c("JP/001", "US/001"))
+  expect_true(all(vapply(restored, inherits, logical(1), "bvarmodel")))
+})
+
+test_that("read_models_from_folder reads every model of a multi-model file", {
+  folder <- temp_model_dir()
+  path <- file.path(folder, "models.h5")
+  write_to_hdf5(fx_var_fitted(), filename = path, group = "/submodels/US")
+  write_to_hdf5(fx_var_fitted(), filename = path, group = "/submodels/JP")
+
+  restored <- read_models_from_folder(folder)
+
+  expect_length(restored, 2)
+  expect_equal(names(restored),
+               c("models:/submodels/JP", "models:/submodels/US"))
+})
+
+test_that("the shape of the result does not depend on how deep the caller points", {
+  folder <- temp_model_dir()
+  dir.create(file.path(folder, "US"))
+  write_to_hdf5(fx_var_fitted(), filename = file.path(folder, "US", "001.h5"))
+
+  outer <- read_models_from_folder(folder)
+  inner <- read_models_from_folder(file.path(folder, "US"))
+
+  # One flat list either way; only the names differ, because the models sit at
+  # different depths below what was asked for.
+  expect_length(outer, 1)
+  expect_length(inner, 1)
+  expect_equal(names(outer), "US/001")
+  expect_equal(names(inner), "001")
+  expect_equal(outer[[1]][["model"]], inner[[1]][["model"]])
+})
+
+test_that("an expanding window is recognised from the files, not the path", {
+  folder <- temp_model_dir()
+  write_to_hdf5(fx_expanding_window(), folder = folder)
+
+  restored <- read_models_from_folder(folder)
+  expect_s3_class(restored, "expandingwindow")
+
+  # The models say so themselves, so a directory renamed away from "ExpWind"
+  # is still read as one.
+  written <- list.dirs(folder, recursive = FALSE)
+  renamed <- file.path(folder, "plain-name")
+  file.rename(written, renamed)
+
+  expect_s3_class(read_models_from_folder(folder), "expandingwindow")
 })

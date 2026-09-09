@@ -1,5 +1,40 @@
 # bvartools (development version)
 
+* **A model can be addressed by group, so one HDF5 file can hold several.**
+  `write_to_hdf5()` and `read_model_from_hdf5()` take a `group` argument, and
+  the new `list_models_in_hdf5()` reports which groups of a file hold a model.
+  Without a `group` nothing changes: the model is the whole file, and an
+  existing file is still refused.
+
+    A model is a group with a `model` subgroup carrying an `algorithm`
+  attribute, and the search stops at one rather than descending into its
+  `data`, `priors` and `posterior`. The spelling of a group name -- leading
+  slash, no trailing slash, `""` for the root -- is the one the BayesTS command
+  line uses, so a group named here and a `--group` or `--all-groups` passed
+  there mean the same thing. Verified against it: R and `bayests` list the same
+  three models of a file that also holds a non-model group, and neither picks
+  up the latter.
+
+    What must not already exist is the model rather than the file, which is what
+  lets a second model be written beside the first. A failure part way through
+  undoes only what the call created: a file it made is removed, a group it added
+  to an existing file is unlinked on its own, so the models beside it survive.
+
+* **`read_models_from_folder()` returns a flat, named list.** It used to mirror
+  the directory tree into a nesting and give the result no names at all, so a
+  folder of sub-models came back as `[[1]]`, `[[2]]`, `[[3]]` with no way to
+  tell which was which except by re-deriving it from the order `list.dirs()`
+  happened to return. Each model is now named for the file it came from,
+  relative to the folder, with its group appended where a file holds more than
+  one. Files holding several models contribute all of them.
+
+    The class of the collection is read off the models instead of being guessed
+  from a path. An expanding window was recognised by looking for `"ExpWind"` in
+  the first file's *full* path, so the class of the result depended on the names
+  of every directory above it as well. `write_to_hdf5()` now records the
+  collection in the models themselves; the old name is still honoured, so
+  folders written before this are read the same way as before.
+
 * **`write_to_hdf5()` no longer swallows a failed write.** The bodies of the
   'bvarmodel' and 'bvecmodel' methods were wrapped in `try()` whose result was
   discarded, so any failure part way through -- an unwritable path, a full disk,

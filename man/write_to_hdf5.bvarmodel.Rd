@@ -13,8 +13,17 @@
 
 \item{...}{further arguments passed to or from other methods.}
 }
+\value{
+The path to the written file, invisibly.
+}
 \description{
 Exports the content of an object of class 'bvarmodel' to an HDF5 file.
+}
+\details{
+A write that cannot be completed raises the error rather than absorbing it.
+The incomplete file is removed on the way out, so that a retry meets the
+original problem instead of the \dQuote{file already exists} guard. A file
+that was already there before the call is refused and left untouched.
 }
 \examples{
 

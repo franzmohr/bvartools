@@ -110,3 +110,75 @@ test_that("an expanding window can be read back from its folder", {
   expect_length(restored, length(fx_expanding_window()))
   expect_true(all(vapply(restored, inherits, logical(1), "bvarmodel")))
 })
+
+# A write that cannot finish used to be wrapped in try(): the error was
+# discarded, the function returned as though it had worked, and a half-written
+# file was left where a complete one was expected. The three tests below are
+# about the failure path, which the round trips above never reach.
+
+test_that("a write that cannot finish raises the error", {
+  path <- temp_h5_file()
+
+  # An element hdf5r has no way to store. Everything before it writes, and then
+  # the write fails part way through.
+  broken <- fx_var_fitted()
+  broken[["data"]][["train"]][["y"]] <- function() NULL
+
+  expect_error(write_to_hdf5(broken, filename = path))
+})
+
+test_that("a write that cannot finish leaves no file behind", {
+  path <- temp_h5_file()
+
+  broken <- fx_var_fitted()
+  broken[["data"]][["train"]][["y"]] <- function() NULL
+  try(write_to_hdf5(broken, filename = path), silent = TRUE)
+
+  # Nothing on disk, so the "already exists" guard does not turn the next
+  # attempt into a second, misleading error.
+  expect_false(file.exists(path))
+  expect_no_error(write_to_hdf5(fx_var_fitted(), filename = path))
+  expect_true(file.exists(path))
+})
+
+test_that("a failed write does not leave the file open", {
+  path <- temp_h5_file()
+
+  broken <- fx_var_fitted()
+  broken[["data"]][["train"]][["y"]] <- function() NULL
+  try(write_to_hdf5(broken, filename = path), silent = TRUE)
+
+  # An HDF5 handle left open would keep the file locked for the rest of the
+  # session, so a fresh write to the same path has to work.
+  expect_no_error(write_to_hdf5(fx_var_fitted(), filename = path))
+  expect_s3_class(read_model_from_hdf5(path), "bvarmodel")
+})
+
+test_that("a successful write returns the path invisibly", {
+  path <- temp_h5_file()
+
+  expect_invisible(result <- write_to_hdf5(fx_var_fitted(), filename = path))
+  expect_equal(result, path)
+})
+
+test_that("a VEC write that cannot finish behaves the same way", {
+  path <- temp_h5_file()
+
+  broken <- fx_vec_fitted()
+  broken[["data"]][["train"]][["y"]] <- function() NULL
+
+  expect_error(write_to_hdf5(broken, filename = path))
+  expect_false(file.exists(path))
+  expect_no_error(write_to_hdf5(fx_vec_fitted(), filename = path))
+})
+
+test_that("an existing file is refused and left untouched", {
+  path <- temp_h5_file()
+  write_to_hdf5(fx_var_fitted(), filename = path)
+  before <- file.info(path)[["size"]]
+
+  expect_error(write_to_hdf5(fx_var_fitted(), filename = path), "already exists")
+  # Refused before the handle was opened, so the first file is still whole.
+  expect_equal(file.info(path)[["size"]], before)
+  expect_s3_class(read_model_from_hdf5(path), "bvarmodel")
+})

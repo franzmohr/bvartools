@@ -1,5 +1,26 @@
 # bvartools (development version)
 
+* **`write_to_hdf5()` no longer swallows a failed write.** The bodies of the
+  'bvarmodel' and 'bvecmodel' methods were wrapped in `try()` whose result was
+  discarded, so any failure part way through -- an unwritable path, a full disk,
+  an element of `object` HDF5 cannot store -- was silently absorbed. The
+  function returned as though it had worked and left a half-written file on
+  disk. Worse, the "File already exists" guard then turned the *next*, correct
+  attempt at the same path into a second and misleading error.
+
+    The error now reaches the caller. On the way out of a failure the HDF5
+  handle is closed, so the file is not left locked for the rest of the session,
+  and the incomplete file is removed, so a retry meets the real problem rather
+  than the leftovers. Only a file the call created is removed; an existing one
+  is still refused before the handle is opened, and is left untouched.
+
+    A successful write now returns the path invisibly instead of the open
+  `H5File` object it used to leak.
+
+    **Draws are unchanged.** No sampler is involved: this is the file writer
+  only. The whole test suite passes, and `test-hdf5.R` gained six tests covering
+  the failure path, which the existing round trips never reached.
+
 * **Vendored BayesTS core refreshed.** **Draws are unchanged**, for every VAR and
   VEC model this package samples. Upstream's own fingerprint comparison was run
   over the change and reports 76 fixtures unchanged and none moved, twice: once

@@ -42,7 +42,8 @@
 #'
 #' @export
 post_normal_covar_const <- function(y, u_omega_i, k, prior_mean, prior_covariance_i) {
-  
+  .transition_message("post_normal_covar_const")
+
   if (k == 1L) {
     stop("Argument 'y' must contain at least two variables.")
   }

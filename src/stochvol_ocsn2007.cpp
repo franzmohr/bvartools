@@ -69,6 +69,15 @@ arma::mat stochvol_ocsn2007(arma::mat y, arma::mat h, arma::vec sigma, arma::vec
   if (y.n_cols != h.n_cols) {
     Rcpp::stop("Arguments 'y' and 'h' do not have the same number of columns.");
   }
+  if (sigma.n_elem != y.n_cols) {
+    Rcpp::stop("Argument 'sigma' must have as many elements as 'y' has columns.");
+  }
+  if (h_init.n_elem != y.n_cols) {
+    Rcpp::stop("Argument 'h_init' must have as many elements as 'y' has columns.");
+  }
+  if (constant.n_elem != y.n_cols) {
+    Rcpp::stop("Argument 'constant' must have as many elements as 'y' has columns.");
+  }
   
   // Components of the mixture model
   arma::rowvec p_i(10), mu(10), sigma2(10);
@@ -85,7 +94,7 @@ arma::mat stochvol_ocsn2007(arma::mat y, arma::mat h, arma::vec sigma, arma::vec
   
   int k = y.n_cols;
   int tt = y.n_rows;
-  arma::mat q, sigh_hh, sigs, post_h_v, post_h_mu;
+  arma::mat q, log_q, sigh_hh, sigs, post_h_v, post_h_mu;
   arma::umat s;
   
   arma::mat hh = arma::eye<arma::mat>(tt, tt);
@@ -97,9 +106,17 @@ arma::mat stochvol_ocsn2007(arma::mat y, arma::mat h, arma::vec sigma, arma::vec
     y.col(i) = log(arma::pow(y.col(i), 2) + constant(i));
     
     // Sample s
-    q = arma::repmat(p_i, tt, 1) % arma::normpdf(arma::repmat(y.col(i), 1, 10), arma::repmat(h.col(i), 1, 10) + arma::repmat(mu, tt, 1), arma::repmat(sqrt(sigma2), tt, 1));
+    // The component weights are formed in logs and shifted by their row maximum
+    // before they are exponentiated. Formed as densities and normalised by their
+    // sum, an observation that lies far out in the tails of every component
+    // underflows to zero in each of them, so that the row sums to zero, the
+    // weights become NaN and the sampled indicator runs past the last component.
+    log_q = arma::repmat(arma::log(p_i), tt, 1) + arma::log_normpdf(arma::repmat(y.col(i), 1, 10), arma::repmat(h.col(i), 1, 10) + arma::repmat(mu, tt, 1), arma::repmat(sqrt(sigma2), tt, 1));
+    log_q.each_col() -= arma::max(log_q, 1);
+    q = arma::exp(log_q);
     q = q / arma::repmat(sum(q, 1), 1, 10);
     s = 10 - sum(arma::repmat(arma::randu<arma::vec>(tt), 1, 10) < cumsum(q, 1), 1);
+    s = arma::clamp(s, 0, 9); // Guard against a rounding error in the last cumulated weight
     
     // Sample log-volatility
     sigh_hh = hh / sigma(i);

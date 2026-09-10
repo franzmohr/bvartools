@@ -51,7 +51,8 @@
 #'
 #' @export
 post_normal_covar_tvp <- function(y, u_omega_i, k, v_sigma_i, psi_init) {
-  
+  .transition_message("post_normal_covar_tvp")
+
   if (k == 1L) {
     stop("Argument 'y' must contain at least two variables.")
   }

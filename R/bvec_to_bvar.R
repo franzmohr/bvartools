@@ -118,7 +118,8 @@
 #' 
 #' @export
 bvec_to_bvar <- function(object) {
-  
+  .transition_message("bvec_to_bvar", "vec_to_var")
+
   if (!any(class(object) %in% "bvec")) {
     stop("Argument 'object' must be of class 'bvec'.")
   }

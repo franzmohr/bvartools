@@ -100,8 +100,21 @@ fevd.bvar <- function(object, response = NULL, n.ahead = 5, type = "oir", normal
       stop("Structural FEVD requires that draws of 'A0' are contained in the 'bvar' object.")
     }
     need_A0 <- TRUE
+  } else {
+    # A structural model stores the contemporaneous block separately, so its
+    # coefficient draws are the structural A_i and its covariance draws the
+    # covariance of the structural errors. The impulse responses behind these
+    # types want the reduced form, and reading the structural quantities in
+    # their place silently produces a decomposition of no model at all.
+    if (!is.null(object[["A0"]])) {
+      stop("Variance decompositions of type \"", type, "\" are not defined for a structural model: ",
+           "they would be calculated from the structural coefficients and the covariance of the ",
+           "structural errors instead of the reduced form the impulse responses need. Use type ",
+           "\"sir\" or \"sgir\" for a structural model, or estimate the model with ",
+           "'structural = FALSE'.")
+    }
   }
-  
+
   response <- which(dimnames(object$y)[[2]] == response)
   if (length(response) == 0){stop("Response variable not available.")}
   

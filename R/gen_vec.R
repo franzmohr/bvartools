@@ -84,7 +84,8 @@ gen_vec <- function(data, p = 2, exogen = NULL, s = 2, r = NULL,
                     structural = FALSE, tvp = FALSE, sv = FALSE,
                     fcst = NULL,
                     iterations = 50000, burnin = 5000) {
-  
+  .transition_message("gen_vec", "create_bvecmodel")
+
   # rm(list = ls()[which(ls() != "data")]); p = 1:3; r = NULL; exogen = NULL; s = 1:2; const = "unrestricted"; trend = NULL; seasonal = "unrestricted"; structural = FALSE; iterations = 50000; burnin = 5000
   
   # Check data ----
@@ -296,20 +297,24 @@ gen_vec <- function(data, p = 2, exogen = NULL, s = 2, r = NULL,
         seas <- cbind(seas, rep(s_temp, length.out = tt))
         s_name <- c(s_name, paste("season.", i, sep = ""))
       }
-    }
-    
-    if (seasonal == "restricted") {
-      ect <- cbind(ect, seas)
-      ect_names <- c(ect_names, s_name)
-      det_name_r <- c(det_name_r, s_name)
-      n_ect <- n_ect + freq - 1
-    }
-    
-    if (seasonal == "unrestricted") {
-      x <- cbind(x, seas)
-      x_names <- c(x_names, s_name)
-      det_name_ur <- c(det_name_ur, s_name) 
-      n_det_ur <- n_det_ur + length(s_name)
+
+      # The dummies are only added where they were generated. Outside this
+      # branch 'seas' and 's_name' do not exist, so a series of frequency one
+      # used to stop with "object 'seas' not found" immediately after the
+      # warning that says no dummies are generated.
+      if (seasonal == "restricted") {
+        ect <- cbind(ect, seas)
+        ect_names <- c(ect_names, s_name)
+        det_name_r <- c(det_name_r, s_name)
+        n_ect <- n_ect + freq - 1
+      }
+
+      if (seasonal == "unrestricted") {
+        x <- cbind(x, seas)
+        x_names <- c(x_names, s_name)
+        det_name_ur <- c(det_name_ur, s_name)
+        n_det_ur <- n_det_ur + length(s_name)
+      }
     }
   }
   

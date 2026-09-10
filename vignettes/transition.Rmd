@@ -1,0 +1,170 @@
+---
+title: "Moving from bvartools 0.3.0 to 1.0.0"
+author: "Franz X. Mohr"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Moving from bvartools 0.3.0 to 1.0.0}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = FALSE
+)
+```
+
+## What this release is for
+
+Version 0.3.0 is a transition release. It is the functionality of bvartools as
+it has been on CRAN, with a small number of correctness fixes, and it is the
+last version before 1.0.0 reorganises the package around a different set of
+functions.
+
+Nothing in this release stops working. What it adds is a message: the first
+time in a session that you use a function which 1.0.0 does not have any more,
+bvartools says so and names what takes its place. Upgrading to this release is
+therefore a way to find out what a later upgrade to 1.0.0 will cost you, while
+everything still runs.
+
+The messages are shown once per function per session. To switch them off:
+
+```{r}
+options(bvartools.transition.messages = FALSE)
+```
+
+## Renamed functions
+
+These do the same thing under a new name. The arguments are unchanged.
+
+| 0.3.0 | 1.0.0 |
+|---|---|
+| `gen_var()` | `create_bvarmodel()` |
+| `gen_vec()` | `create_bvecmodel()` |
+| `bvec_to_bvar()` | `vec_to_var()` |
+| `kalman_dk()` | `kalman_durbin_koopman_2002()` |
+| `stochvol_ksc1998()` | `stochvol_ksc_1998()` |
+| `stochvol_ocsn2007()` | `stochvol_ocsn_2007()` |
+| `stoch_vol()` | `stochvol_ksc_1998()` |
+| `bvs()` | `post_bvs()` |
+
+`stoch_vol()` was a wrapper for the algorithm of Kim, Shephard and Chib (1998),
+which `stochvol_ksc_1998()` implements directly, so the wrapper has no separate
+successor.
+
+## A changed workflow for posterior simulation
+
+`draw_posterior()`, `bvarpost()` and `bvecpost()` are replaced by a sequence of
+functions, each of which adds one thing to the model object. Where 0.3.0 has
+
+```{r}
+object <- gen_var(data, p = 2, deterministic = "const")
+object <- add_priors(object)
+object <- draw_posterior(object)
+```
+
+1.0.0 has
+
+```{r}
+object <- create_bvarmodel(data, p = 2, deterministic = "const")
+object <- add_priors(object)
+object <- add_initial_values(object)
+object <- add_posterior_coefficients(object)
+```
+
+with `add_posterior_forecasts()` and `add_posterior_loglik()` producing the
+forecasts and the log likelihood that `draw_posterior()` used to produce in the
+same call. Splitting them apart is what lets a model be estimated once and then
+have forecasts added, or the log likelihood recomputed, without repeating the
+simulation.
+
+## Removed without a successor
+
+Dynamic factor models are removed from bvartools in 1.0.0 entirely. That covers
+`dfm()`, `dfmpost()` and `gen_dfm()`, the `add_priors()`, `plot()`, `summary()`
+and `thin()` methods for objects of class `dfm`, and the example data set
+`bem_dfmdata`. A data set cannot announce itself, so this is the only notice
+`bem_dfmdata` gets.
+
+`post_normal_covar_const()` and `post_normal_covar_tvp()` are also removed with
+nothing taking their place.
+
+## Renamed classes, and the methods that follow them
+
+The model classes are renamed in 1.0.0. The generics are the same, so code that
+calls `plot()`, `summary()`, `predict()` or `thin()` on a model object keeps
+working; what changes is the name of the class those methods are written for,
+which matters if you dispatch on it yourself or test for it with `inherits()`.
+
+| 0.3.0 | 1.0.0 |
+|---|---|
+| `bvar` | `bvarmodel` |
+| `bvec` | `bvecmodel` |
+| `bvarlist` | `modellist` |
+
+These do not produce a message, because the function you call is unchanged.
+
+## Same name, different input
+
+These functions exist in 1.0.0 under the same name but do not take the same
+input, because they take the reorganised model object. They produce no message
+either, for the same reason: the name is still there. Read their documentation
+before assuming a call carries over.
+
+`add_priors()`, `bvar()`, `bvec()`, `irf()`, `fevd()`, `inclusion_prior()`,
+`minnesota_prior()`, `ssvs_prior()`.
+
+## Fixes in this release
+
+Four defects in the CRAN sources are fixed here. Two of them change results.
+
+* **Stochastic volatility with an observation far out in the tails.**
+  `stochvol_ksc1998()` and `stochvol_ocsn2007()` sampled the mixture indicator
+  from weights formed as densities and normalised by their sum. Where an
+  observation lies far enough out in the tails of every component, each density
+  underflows to zero, the row sums to zero, the weights become `NaN`, and the
+  indicator runs one past the last component -- which ends the call with
+  `Mat::elem(): index out of bounds`. The weights are now formed in logs and
+  shifted by their row maximum before they are exponentiated. This is
+  algebraically the same calculation, and draws from a given seed are
+  unchanged: verified bit for bit against the previous implementation. Only the
+  case that used to fail behaves differently, and it now returns a draw.
+
+* **Argument checking in the same two functions.** `sigma`, `h_init` and
+  `constant` were indexed on trust, so a vector of the wrong length surfaced as
+  `Mat::elem(): index out of bounds` rather than as a statement about the
+  argument. Each is now checked against the number of columns of `y` and named
+  in the error.
+
+* **Impulse responses and variance decompositions of structural models.** A
+  structural model keeps its contemporaneous block separately, so its
+  coefficient draws are the structural `A_i` and its covariance draws the
+  covariance of the structural errors. The forecast error, orthogonalised and
+  generalised recursions want the reduced form. Given the structural quantities
+  they returned numbers that belong to no model at all -- and the same numbers
+  for all three types, since the structural error covariance makes the
+  orthogonalisation degenerate. `irf()` with `type` of `"feir"`, `"oir"` or
+  `"gir"`, and `fevd()` with `"oir"` or `"gir"`, now refuse a structural model
+  and say why. Use `"sir"` or `"sgir"`, which are what a structural model is
+  for and are unchanged, or estimate the model with `structural = FALSE`.
+
+* **Seasonal terms for data of frequency one.** `gen_vec()` warned that no
+  seasonal dummies are generated for a series of frequency one and then added
+  them anyway, stopping with `object 'seas' not found`. It now does what the
+  warning says. `gen_var()` was never affected.
+
+## Getting the messages out of a script
+
+Beyond the option above, the messages are ordinary conditions, so
+`suppressMessages()` works on any single call:
+
+```{r}
+object <- suppressMessages(gen_var(data, p = 2, deterministic = "const"))
+```
+
+They are messages rather than warnings deliberately: they will not become
+errors under `options(warn = 2)`, and they will not fail a check that treats
+warnings as failures.

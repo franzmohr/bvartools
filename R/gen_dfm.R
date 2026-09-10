@@ -53,7 +53,8 @@
 #' 
 #' @export
 gen_dfm <- function(x, p = 2, n = 1, iterations = 50000, burnin = 5000) {
-  
+  .transition_message("gen_dfm", note = "Dynamic factor models are removed from bvartools in 1.0.0 entirely.")
+
   # Check data ----
   if (!"ts" %in% class(x)) {
     stop("Argument 'data' must be an object of class 'ts'.")

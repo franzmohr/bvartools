@@ -5,6 +5,22 @@
 status](https://www.r-pkg.org/badges/version/bvartools)](https://cran.r-project.org/package=bvartools)
 [![R-CMD-check](https://github.com/franzmohr/bvartools/workflows/R-CMD-check/badge.svg)](https://github.com/franzmohr/bvartools/actions)
 
+## Transition to version 1.0.0
+
+This is version 0.3.0, a transition release. Version 1.0.0 reorganises the
+package around a different set of functions, and this release is the step in
+between: it is the previous functionality with a small number of correctness
+fixes, and it announces what is going to change. The first time in a session
+that you use a function which 1.0.0 does not have any more, `bvartools` emits a
+message naming its successor -- `gen_var()` becomes `create_bvarmodel()`,
+`draw_posterior()` becomes `add_posterior_coefficients()`, and so on. Nothing
+in this release stops working.
+
+The messages are shown once per function per session and can be switched off
+with `options(bvartools.transition.messages = FALSE)`. The vignette *Moving
+from bvartools 0.3.0 to 1.0.0* lists every change, including the renamed model
+classes and the functions that keep their name but take different input.
+
 ## Overview
 
 The package `bvartools` implements functions for Bayesian inference of

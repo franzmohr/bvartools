@@ -76,7 +76,8 @@ gen_var <- function(data, p = 2, exogen = NULL, s = NULL,
                     structural = FALSE, tvp = FALSE, sv = FALSE,
                     fcst = NULL,
                     iterations = 50000, burnin = 5000) {
-  
+  .transition_message("gen_var", "create_bvarmodel")
+
   # Check data ----
   if (!"ts" %in% class(data)) {
     stop("Argument 'data' must be an object of class 'ts'.")

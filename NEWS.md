@@ -1,12 +1,88 @@
+# bvartools 0.3.0
 
-# bvartools 0.2.5
+This is a transition release. It is the functionality of the previous CRAN
+version with the fixes listed below, and it is the last release before 1.0.0
+reorganises the package around a different set of functions. Nothing here stops
+working.
 
-* Added function `covar_vector_to_matrix`.
-* Added function `sur_const_to_tvp`.
-* Updated `Rcpp` dependency in DESCRIPTION file to version 1.0.12.
-* Added `post_gamma_state_variance` for posterior simulation of constant error variances of the state equation.
-* Added `post_gamma_measurement_variance` for posterior simulation of constant error variances of the measurement equation.
-* Renamed `.prep_covar_data` to `covar_prepare_data` and made it visible in R and also callable from C++.
+* **Functions that bvartools 1.0.0 does not have any more announce themselves.**
+  The first time in a session that such a function is used it emits a message
+  naming its successor, or saying that it has no replacement. The message is
+  shown once per function per session and can be switched off with
+  `options(bvartools.transition.messages = FALSE)`. It is a message rather than
+  a warning, so it cannot become an error under `options(warn = 2)`.
+
+    Renamed: `gen_var` to `create_bvarmodel`, `gen_vec` to `create_bvecmodel`,
+  `bvec_to_bvar` to `vec_to_var`, `kalman_dk` to `kalman_durbin_koopman_2002`,
+  `stochvol_ksc1998` to `stochvol_ksc_1998`, `stochvol_ocsn2007` to
+  `stochvol_ocsn_2007`, `stoch_vol` to `stochvol_ksc_1998`, and `bvs` to
+  `post_bvs`. Replaced by a different workflow: `draw_posterior`, `bvarpost`
+  and `bvecpost`, which become `add_posterior_coefficients` alongside
+  `add_posterior_forecasts` and `add_posterior_loglik`. Removed with no
+  successor: `post_normal_covar_const`, `post_normal_covar_tvp`, and the whole
+  dynamic factor model branch -- `dfm`, `dfmpost`, `gen_dfm`, their methods, and
+  the data set `bem_dfmdata`, which cannot announce itself.
+
+    Methods on the renamed classes `bvar`, `bvec` and `bvarlist` are silent,
+  because the generic that dispatches them is unchanged and only the class is
+  renamed, to `bvarmodel`, `bvecmodel` and `modellist`. So are the functions
+  that keep their name in 1.0.0 but take the reorganised model object:
+  `add_priors`, `bvar`, `bvec`, `irf`, `fevd`, `inclusion_prior`,
+  `minnesota_prior` and `ssvs_prior`. The new vignette, *Moving from bvartools
+  0.3.0 to 1.0.0*, lists all of it.
+
+* **Fixed: `stochvol_ksc1998` and `stochvol_ocsn2007` failed on an observation
+  far out in the tails of every mixture component.** Both sampled the mixture
+  indicator from weights formed as densities and normalised by their sum. Where
+  the log of the squared observation lies far enough below the log-volatility --
+  about 112 for the seven components of Kim, Shephard and Chib, about 158 for
+  the ten of Omori, Chib, Shephard and Nakajima -- every density underflows to
+  zero, the row sums to zero, the weights become `NaN`, and the sampled
+  indicator runs one past the last component, ending the call with
+  `Mat::elem(): index out of bounds`. The weights are now formed in logs and
+  shifted by their row maximum before they are exponentiated, and the indicator
+  is clamped to the components that exist.
+
+    This is algebraically the same calculation, and draws are unchanged where
+  they were being produced at all: verified bit for bit against the previous
+  implementation over the `us_macrodata` series from a fixed seed. `stoch_vol`
+  is a wrapper for the first of the two and inherits the fix.
+
+* **Fixed: neither function checked the size of `sigma`, `h_init` or
+  `constant`.** They were indexed on trust, so a vector of the wrong length was
+  reported as `Mat::elem(): index out of bounds` instead of as a statement about
+  the argument. Each is now checked against the number of columns of `y`.
+
+* **Fixed: `irf` and `fevd` produced reduced form quantities from a structural
+  model.** A structural model keeps its contemporaneous block separately, so its
+  coefficient draws are the structural `A_i` and its covariance draws the
+  covariance of the structural errors. The forecast error, orthogonalised and
+  generalised recursions want the reduced form. Given the structural quantities
+  they returned numbers that belong to no model at all, and the same numbers for
+  all three types, since the structural error covariance makes the
+  orthogonalisation degenerate. `irf` with `type` of `"feir"`, `"oir"` or
+  `"gir"`, and `fevd` with `"oir"` or `"gir"`, now stop on a structural model
+  and say why. The structural types `"sir"` and `"sgir"` are unchanged, as is
+  every reduced form model.
+
+* **Fixed: `gen_vec` stopped on seasonal terms for data of frequency one.** It
+  warned that no seasonal dummies are generated and then added them anyway,
+  failing with `object 'seas' not found` because the dummies had never been
+  built. It now does what the warning says. `gen_var` was never affected.
+
+* Added a test suite, which the package did not have before. It covers the
+  announcements and carries one regression test per fix above.
+
+
+* Carried over from the development version that was never released as 0.2.5.
+  All six survive into 1.0.0 and so announce nothing.
+
+    * Added function `covar_vector_to_matrix`.
+    * Added function `sur_const_to_tvp`.
+    * Updated `Rcpp` dependency in DESCRIPTION file to version 1.0.12.
+    * Added `post_gamma_state_variance` for posterior simulation of constant error variances of the state equation.
+    * Added `post_gamma_measurement_variance` for posterior simulation of constant error variances of the measurement equation.
+    * Renamed `.prep_covar_data` to `covar_prepare_data` and made it visible in R and also callable from C++.
 
 # bvartools 0.2.4
 

@@ -54,7 +54,8 @@
 #' 
 #' @export
 bvarpost <- function(object) {
-  
+  .transition_message("bvarpost", "add_posterior_coefficients")
+
   if (object[["model"]][["tvp"]]) {
     object <- .bvartvpalg(object) # Use C++ code to draw posteriors
   } else {

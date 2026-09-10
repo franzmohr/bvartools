@@ -38,7 +38,8 @@
 #' 
 #' @export
 dfmpost <- function(object) {
-  
+  .transition_message("dfmpost", note = "Dynamic factor models are removed from bvartools in 1.0.0 entirely.")
+
   object <- .dfmalg(object) # Use C++ code to draw posteriors
 
   #x = object$data$X; lambda = object$posteriors$lambda; fac = object$posteriors$factor; sigma_v = object$posteriors$sigma_v; a = object$posteriors$a; sigma_u = object$posteriors$sigma_u

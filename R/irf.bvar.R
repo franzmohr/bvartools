@@ -103,8 +103,20 @@ irf.bvar <- function(x, impulse = NULL, response = NULL, n.ahead = 5, ci = .95, 
       stop("Structural IR requires that draws of 'A0' are contained in the 'bvar' x.")
     }
     need_A0 <- TRUE
+  } else {
+    # A structural model stores the contemporaneous block separately, so its
+    # coefficient draws are the structural A_i and its covariance draws the
+    # covariance of the structural errors. The recursion behind these types
+    # wants the reduced form, and reading the structural quantities in their
+    # place silently produces responses that belong to no model at all.
+    if (!is.null(x[["A0"]])) {
+      stop("Impulse responses of type \"", type, "\" are not defined for a structural model: ",
+           "they would be calculated from the structural coefficients and the covariance of the ",
+           "structural errors instead of the reduced form the recursion needs. Use type \"sir\" ",
+           "or \"sgir\" for a structural model, or estimate the model with 'structural = FALSE'.")
+    }
   }
-  
+
   if (!(is.numeric(shock) | shock %in% c("sd", "nsd"))) {
     stop("Invalid specification of argument 'shock'.")
   }

@@ -57,6 +57,7 @@
 #' @export
 dfm <- function(x, lambda = NULL, fac, sigma_u = NULL,
                 a = NULL, sigma_v = NULL) {
+  .transition_message("dfm", note = "Dynamic factor models are removed from bvartools in 1.0.0 entirely.")
 
   result <- NULL
   

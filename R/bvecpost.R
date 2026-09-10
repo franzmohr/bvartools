@@ -68,7 +68,8 @@
 #' 
 #' @export
 bvecpost <- function(object) {
-  
+  .transition_message("bvecpost", "add_posterior_coefficients")
+
   if (object[["model"]][["tvp"]]) {
     object <- .bvectvpalg(object) # Use C++ code to draw posteriors
   } else {

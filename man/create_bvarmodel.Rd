@@ -170,7 +170,7 @@ Korobilis, D. (2013). VAR forecasting using Bayesian variable selection.
 
 Kozumi, H., & Kobayashi, G. (2011). Gibbs sampling methods for Bayesian quantile regression.
 \emph{Journal of Statistical Computation and Simulation, 81}(11), 1565--1578.
-\doi{10.1080/00949650903260125}
+\doi{10.1080/00949655.2010.496117}
 
 Lütkepohl, H. (2006). \emph{New Introduction to Multiple Time Series Analysis} (2nd ed.). Berlin: Springer.
 }

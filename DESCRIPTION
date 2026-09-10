@@ -104,7 +104,6 @@ Collate:
     'plot.bvarspillover.R'
     'plot.bvecmodel.R'
     'plot.expwindbvarprdlist.R'
-    'plot.fcsterrorlist.R'
     'plot.modellist.R'
     'plot.selcritlist.R'
     'plot_forecast_errors_by_period.R'

@@ -4,7 +4,8 @@
 ^\.claude$
 ^\.github$
 ^README\.Rmd$
-^README-.*\.png$
-^README-figs$
+^cran-comments\.md$
 ^data-raw$
 ^src/core/.*\.(o|so|dll)$
+^vignettes/.*\.orig$
+^vignettes/precompile\.R$

@@ -149,7 +149,7 @@ e1 <- window(e1, end = c(1978, 4))
 plot(e1)
 ```
 
-<img src="README_files/figure-gfm/data-1.png" alt="" style="display: block; margin: auto;" />
+<img src="man/figures/README-data-1.png" alt="" style="display: block; margin: auto;" />
 
 ### Setting up a model
 
@@ -385,7 +385,7 @@ coefficients.
 plot(bvar_est)
 ```
 
-<img src="README_files/figure-gfm/unnamed-chunk-6-1.png" alt="" style="display: block; margin: auto;" />
+<img src="man/figures/README-unnamed-chunk-6-1.png" alt="" style="display: block; margin: auto;" />
 
 Alternatively, the trace plot of the post-burnin draws can be draws by
 adding the argument `type = "trace"`:
@@ -394,7 +394,7 @@ adding the argument `type = "trace"`:
 plot(bvar_est, type = "trace")
 ```
 
-<img src="README_files/figure-gfm/unnamed-chunk-7-1.png" alt="" style="display: block; margin: auto;" />
+<img src="man/figures/README-unnamed-chunk-7-1.png" alt="" style="display: block; margin: auto;" />
 
 ### Summary statistics
 
@@ -522,7 +522,7 @@ bvar_pred <- predict(bvar_est)
 plot(bvar_pred)
 ```
 
-![](README_files/figure-gfm/forecasts-1.png)<!-- -->![](README_files/figure-gfm/forecasts-2.png)<!-- -->![](README_files/figure-gfm/forecasts-3.png)<!-- -->
+![](man/figures/README-forecasts-1.png)<!-- -->![](man/figures/README-forecasts-2.png)<!-- -->![](man/figures/README-forecasts-3.png)<!-- -->
 
 ### Impulse response analysis
 
@@ -534,7 +534,7 @@ IR <- irf(bvar_est, impulse = "income", response = "cons", n_ahead = 8)
 plot(IR, main = "Forecast Error Impulse Response", xlab = "Period", ylab = "Response")
 ```
 
-![](README_files/figure-gfm/feir-1.png)<!-- -->
+![](man/figures/README-feir-1.png)<!-- -->
 
 #### Orthogonalised impulse response
 
@@ -544,7 +544,7 @@ OIR <- irf(bvar_est, impulse = "income", response = "cons", n_ahead = 8, type = 
 plot(OIR, main = "Orthogonalised Impulse Response", xlab = "Period", ylab = "Response")
 ```
 
-![](README_files/figure-gfm/oir-1.png)<!-- -->
+![](man/figures/README-oir-1.png)<!-- -->
 
 #### Generalised impulse response
 
@@ -554,7 +554,7 @@ GIR <- irf(bvar_est, impulse = "income", response = "cons", n_ahead = 8, type = 
 plot(GIR, main = "Generalised Impulse Response", xlab = "Period", ylab = "Response")
 ```
 
-![](README_files/figure-gfm/gir-1.png)<!-- -->
+![](man/figures/README-gir-1.png)<!-- -->
 
 ### Forecast error variance decomposition
 
@@ -564,7 +564,7 @@ bvar_fevd <- fevd(bvar_est, response = "cons")
 plot(bvar_fevd, main = "FEVD of consumption")
 ```
 
-![](README_files/figure-gfm/fevd-1.png)<!-- -->
+![](man/figures/README-fevd-1.png)<!-- -->
 
 ## References
 

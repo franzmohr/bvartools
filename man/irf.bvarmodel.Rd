@@ -34,7 +34,9 @@ credible intervals. Defaults to 0.95.}
 
 \item{type}{type of the impulse response. Possible choices are forecast error \code{"feir"}
 (default), orthogonalised \code{"oir"}, structural \code{"sir"}, generalised \code{"gir"},
-and structural generalised \code{"sgir"} impulse responses.}
+and structural generalised \code{"sgir"} impulse responses. For a structural model only
+\code{"sir"} and \code{"sgir"} are available; the other three require a non-structural
+model. See 'Details'.}
 
 \item{cumulative}{logical specifying whether a cumulative IRF should be calculated.}
 
@@ -67,6 +69,13 @@ Orthogonalised impulse responses \eqn{\Theta^o_i} are calculated as \eqn{\Theta^
 where P is the lower triangular Choleski decomposition of \eqn{\Sigma}.
 
 Structural impulse responses \eqn{\Theta^s_i} are calculated as \eqn{\Theta^s_i = \Phi_i A_0^{-1}}.
+
+For a structural model the posterior draws describe the structural form: the coefficients are
+the \eqn{A_i} of the equation above and \eqn{\Sigma} is the covariance of the structural errors.
+The recursion for \eqn{\Phi_i} needs the reduced form, i.e. \eqn{A_0^{-1} A_i} and
+\eqn{A_0^{-1} \Sigma A_0^{-1\prime}}, which only \code{"sir"} and \code{"sgir"} form. The other
+types are therefore not available for a structural model, and the two structural types not for
+any other.
 
 (Structural) Generalised impulse responses for variable \eqn{j}, i.e. \eqn{\Theta^g_ji} are calculated as
 \eqn{\Theta^g_{ji} = \sigma_{jj}^{-1/2} \Phi_i A_0^{-1} \Sigma e_j}, where \eqn{\sigma_{jj}} is the variance

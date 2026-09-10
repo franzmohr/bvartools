@@ -96,6 +96,25 @@ test_that("structural impulse responses need a structural model", {
   }
 })
 
+test_that("a structural model rejects the reduced-form types", {
+  for (type in c("feir", "oir", "gir")) {
+    expect_error(irf(fx_svar_fitted(), impulse = "income", response = "cons",
+                     n_ahead = 3, type = type),
+                 "not defined for a structural model")
+  }
+})
+
+test_that("a structural model still produces structural responses", {
+  for (type in c("sir", "sgir")) {
+    response <- irf(fx_svar_fitted(), impulse = "income", response = "cons",
+                    n_ahead = 3, type = type)
+
+    expect_s3_class(response, "bvarirf")
+    expect_identical(nrow(response), 4L)
+    expect_true(all(is.finite(response)))
+  }
+})
+
 test_that("unknown variable names are rejected", {
   expect_error(irf(fx_var_fitted(), impulse = "nonexistent", response = "cons"))
   expect_error(irf(fx_var_fitted(), impulse = "income", response = "nope"))

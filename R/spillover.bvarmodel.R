@@ -8,7 +8,8 @@
 #' and Yilmaz (2012).
 #' @param type type of the impulse responses the decomposition is based on.
 #' Possible choices are generalised \code{gir} (default) and orthogonalised
-#' \code{oir}. See 'Details'.
+#' \code{oir}. Both decompose the reduced form of the model, so a structural
+#' model is not supported. See 'Details'.
 #' @param ci a numeric between 0 and 1 specifying the probability mass covered by the
 #' credible intervals. Defaults to 0.95.
 #' @param keep_draws logical specifying whether the function should return all draws of
@@ -128,6 +129,16 @@ spillover.bvarmodel <- function(object, n_ahead = 10, type = "gir", ci = .95,
 
   if (!type %in% c("gir", "oir")) {
     stop("Argument 'type' must be either 'gir' or 'oir'.")
+  }
+
+  # Both types decompose the reduced form, which a structural model does not
+  # store: its draws are the structural A_i and the covariance of the structural
+  # errors. See irf.bvarmodel for the same restriction.
+  if (object[["model"]][["structural"]]) {
+    stop("Spillover measures are not defined for a structural model: types \"gir\" and \"oir\" ",
+         "would be calculated from the structural coefficients and the covariance of the ",
+         "structural errors instead of the reduced form the recursion needs. Estimate the model ",
+         "with 'structural = FALSE' to obtain them.")
   }
 
   if (length(n_ahead) != 1 || n_ahead < 1) {

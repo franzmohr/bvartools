@@ -61,6 +61,24 @@ fx_var_fitted <- function() {
   })
 }
 
+# --- structural VAR fixture -------------------------------------------------
+
+# A recursively identified model: A_0 is lower triangular with a unit diagonal
+# and the error covariance is diagonal, which is what `structural = TRUE`
+# together with a gamma prior on the error variances produces.
+fx_svar_fitted <- function() {
+  cached_fixture("svar_fitted", {
+    model <- create_bvarmodel(var_data(), p = 1, deterministic = "const",
+                              structural = TRUE, error = "gamma",
+                              iterations = fx_iterations, burnin = fx_burnin)
+    model <- add_priors(model, coef = list(v_i = 0, v_i_det = 0),
+                        sigma = list(shape = 1e-6, rate = 1e-6))
+    model <- add_initial_values(model)
+    set.seed(202401)
+    add_posterior_coefficients(model)
+  })
+}
+
 # --- VEC fixtures -----------------------------------------------------------
 
 fx_vec_model <- function() {

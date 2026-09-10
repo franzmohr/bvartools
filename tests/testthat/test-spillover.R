@@ -290,3 +290,10 @@ test_that("the printed table is in one set of units and adds up", {
   expect_gt(tab[k + 1, k + 1], sp$total["2.5%", 1])
   expect_lt(tab[k + 1, k + 1], sp$total["97.5%", 1])
 })
+
+test_that("a structural model is rejected", {
+  for (type in c("gir", "oir")) {
+    expect_error(spillover(fx_svar_fitted(), n_ahead = 3, type = type),
+                 "not defined for a structural model")
+  }
+})

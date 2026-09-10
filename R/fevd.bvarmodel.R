@@ -6,7 +6,10 @@
 #' @param response name of the response variable.
 #' @param n_ahead number of steps ahead.
 #' @param type type of the impulse responses used to calculate forecast error variable decompositions.
-#' Possible choices are orthogonalised \code{oir} (default) and generalised \code{gir} impulse responses.
+#' Possible choices are orthogonalised \code{"oir"} (default), structural \code{"sir"}, generalised
+#' \code{"gir"} and structural generalised \code{"sgir"} impulse responses. For a structural model
+#' only \code{"sir"} and \code{"sgir"} are available; the other two require a non-structural
+#' model. See 'Details'.
 #' @param normalise_gir logical. Should the GIR-based FEVD be normalised?
 #' @param period integer. Index of the period, for which the variance decomposition should be generated.
 #' Only used for TVP or SV models. Default is \code{NULL}, so that the posterior draws of the last time period
@@ -23,6 +26,11 @@
 #' with \eqn{u_t \sim N(0, \Sigma)}. For non-structural models matrix \eqn{A_0} is set to the identiy matrix
 #' and can therefore be omitted, where not relevant.
 #' 
+#' For a structural model the posterior draws describe the structural form, so only \code{"sir"} and
+#' \code{"sgir"}, which invert \eqn{A_0}, recover the reduced form the recursion for \eqn{\Phi_i}
+#' needs. The other types are therefore not available for a structural model, and the two structural
+#' types not for any other.
+#' 
 #' If the FEVD is based on the orthogonalised impulse resonse (OIR), the FEVD will be calculated as
 #' \deqn{\omega^{OIR}_{jk, h} = \frac{\sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i P e_k )^2}{\sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i \Sigma \Phi_i^{\prime} e_j )},}
 #' where \eqn{\Phi_i} is the forecast error impulse response for the \eqn{i}th period,
@@ -31,8 +39,10 @@
 #' \eqn{e_k} a selection vector for the impulse variable.
 #'
 #' If \code{type = "sir"}, the structural FEVD will be
-#' calculated as \deqn{\omega^{SIR}_{jk, h} = \frac{\sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i A_0^{-1} e_k )^2}{\sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i A_0^{-1} A_0^{-1\prime} \Phi_i^{\prime} e_j )},}
-#' where \eqn{\sigma_{jj}} is the diagonal element of the \eqn{j}th variable of the variance covariance matrix.
+#' calculated as \deqn{\omega^{SIR}_{jk, h} = \frac{\sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i A_0^{-1} P e_k )^2}{\sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i A_0^{-1} \Sigma A_0^{-1\prime} \Phi_i^{\prime} e_j )},}
+#' where \eqn{P} is the lower triangular Choleski decomposition of \eqn{\Sigma}. Since \eqn{\Sigma}
+#' is the covariance matrix of the structural errors, the decomposition weighs each structural
+#' shock by its own variance.
 #'
 #' If \code{type = "gir"}, the generalised FEVD will be
 #' calculated as \deqn{\omega^{GIR}_{jk, h} = \frac{\sigma^{-1}_{jj} \sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i \Sigma e_k )^2}{\sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i \Sigma \Phi_i^{\prime} e_j )},}
@@ -107,6 +117,15 @@ fevd.bvarmodel <- function(x, response = NULL, n_ahead = 5, type = "oir", normal
       stop("Structural FEVD requires a structural model as input.")
     }
     need_A0 <- TRUE
+  } else {
+    # See irf.bvarmodel: without the contemporaneous block these types would
+    # decompose the variance of the structural form rather than of the model.
+    if (x[["model"]][["structural"]]) {
+      stop("A variance decomposition of type \"", type, "\" is not defined for a structural model: ",
+           "it would be calculated from the structural coefficients and the covariance of the ",
+           "structural errors instead of the reduced form the recursion needs. Use type \"sir\" ",
+           "or \"sgir\" for a structural model, or estimate the model with 'structural = FALSE'.")
+    }
   }
 
   max_groups <- .check_max_groups(max_groups)

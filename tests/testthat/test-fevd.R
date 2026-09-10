@@ -41,6 +41,50 @@ test_that("an unnormalised generalised decomposition need not add up to one", {
                                 rep(1, nrow(decomposition)))))
 })
 
+test_that("a structural model rejects the reduced-form types", {
+  for (type in c("oir", "gir")) {
+    expect_error(fevd(fx_svar_fitted(), response = "cons", n_ahead = 3,
+                      type = type),
+                 "not defined for a structural model")
+  }
+})
+
+test_that("the structural decomposition accounts for the structural variances", {
+  # A recursive structural model and the reduced form it implies. The two
+  # describe the same process, so the structural decomposition of the one has to
+  # equal the orthogonalised decomposition of the other -- which only holds if
+  # the structural variances enter the decomposition.
+  k <- 3
+  A0 <- diag(k)
+  A0[lower.tri(A0)] <- c(0.4, -0.7, 1.3)
+  Sigma <- diag(c(0.09, 0.64, 2.25)) # deliberately far from the identity
+  A <- matrix(c(0.5, 0.1, -0.2,
+                0.0, 0.3, 0.4,
+                0.1, -0.1, 0.6), k, k)
+
+  A0_inv <- solve(A0)
+  reduced <- list(A = A0_inv %*% A, Sigma = A0_inv %*% Sigma %*% t(A0_inv))
+
+  for (response in 1:k) {
+    structural <- bvartools:::.vardecomp(
+      list(A = A0_inv %*% A, Sigma = Sigma, A0 = A0),
+      h = 5, type = "sir", response = response)
+
+    expect_equal(structural, bvartools:::.vardecomp(reduced, h = 5, type = "oir",
+                                                    response = response))
+    expect_equal(rowSums(structural), rep(1, nrow(structural)))
+  }
+})
+
+test_that("a structural decomposition of a fitted model adds up", {
+  decomposition <- fevd(fx_svar_fitted(), response = "cons", n_ahead = 4,
+                        type = "sir")
+
+  expect_s3_class(decomposition, "bvarfevd")
+  expect_true(all(decomposition >= 0))
+  expect_equal(as.numeric(rowSums(decomposition)), rep(1, nrow(decomposition)))
+})
+
 test_that("unknown response variables are rejected", {
   expect_error(fevd(fx_var_fitted(), response = "nonexistent"))
 })

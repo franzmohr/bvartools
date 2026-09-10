@@ -22,7 +22,8 @@ and Yilmaz (2012).}
 
 \item{type}{type of the impulse responses the decomposition is based on.
 Possible choices are generalised \code{gir} (default) and orthogonalised
-\code{oir}. See 'Details'.}
+\code{oir}. Both decompose the reduced form of the model, so a structural
+model is not supported. See 'Details'.}
 
 \item{ci}{a numeric between 0 and 1 specifying the probability mass covered by the
 credible intervals. Defaults to 0.95.}

@@ -1,5 +1,33 @@
 # bvartools (development version)
 
+* **The structural variance decomposition now weighs each shock by its own
+  variance.** `fevd(type = "sir")` used `A_0^-1` as the impulse matrix and
+  `A_0^-1 A_0^-1'` as the forecast error covariance, leaving the covariance
+  `Sigma` of the structural errors out of both. The decomposition therefore
+  treated every structural shock as if it had unit variance, which moved weight
+  to whichever shock carried the largest loading in `A_0`: on a US
+  inflation/unemployment/interest rate VAR the share of the interest rate
+  variance attributed to the unemployment shock came out at 86 per cent against
+  the 57 per cent a recursive SVAR of the same model gives. The impulse matrix
+  is now `A_0^-1 P`, with `P` the Choleski factor of `Sigma`, and the forecast
+  error covariance `A_0^-1 Sigma A_0^-1'`. Decompositions from earlier versions
+  are only unaffected where the structural variances happened to be one, so
+  published `"sir"` numbers should be regenerated. Impulse responses were never
+  affected: `irf(type = "sir")` scales the shock through its own `shock`
+  argument, and `shock = "sd"` reproduces `vars::irf()` on the corresponding
+  `SVAR` to Monte Carlo error.
+
+* **Reduced-form impulse responses, decompositions and spillovers are refused
+  for a structural model.** A structural model stores the contemporaneous block
+  separately, so its draws are the structural `A_i` and the covariance of the
+  structural errors. The recursion behind `"feir"`, `"oir"` and `"gir"` needs
+  the reduced form instead, and reading the structural quantities in its place
+  produced responses that belonged to no model at all -- on the same VAR an
+  `"oir"` response was out by up to 3.8 against the Choleski response of the
+  reduced form. `irf()`, `fevd()` and `spillover()` now stop with an explanation
+  rather than return those numbers. Use `"sir"` or `"sgir"` on a structural
+  model, or estimate it with `structural = FALSE`.
+
 * **`fevd()` and its `plot()` method can pool the smaller contributions into one
   group.** The new argument `max_groups` caps the number of groups shown: the
   `max_groups - 1` variables with the largest contribution across the whole

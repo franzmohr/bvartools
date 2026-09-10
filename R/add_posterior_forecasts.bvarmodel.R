@@ -42,6 +42,12 @@ add_posterior_forecasts.bvarmodel <- function(object, ...){
   
   algorithm <- object[["model"]][["algorithm"]]
   
+  if (algorithm %in% c("VarNormalAld", "VarTvpAld")) {
+    stop("A quantile regression model does not forecast: the h step ahead quantile is not the ",
+         "quantile of the iterated one step ahead quantiles, so a simulated path could not be ",
+         "read as a quantile of anything.")
+  }
+  
   if (is.null(object[["model"]][["h"]])) {
     stop("Model specification does not contain forecast horizon 'h'. Consider using function add_forecast_input().")
   }

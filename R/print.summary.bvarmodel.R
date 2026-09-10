@@ -15,6 +15,9 @@ print.summary.bvarmodel <- function(x, digits = max(3L, getOption("digits") - 3L
   if (x[["model"]][["error"]] %in% c("sv", "sv+covar")) {
     title_text <- paste0(title_text, "SV-")
   }
+  if (x[["model"]][["error"]] == "ald") {
+    title_text <- paste0(title_text, "Quantile-")
+  }
   if (x[["model"]][["structural"]]) {
     title_text <- paste0(title_text, "S")
   }
@@ -28,8 +31,14 @@ print.summary.bvarmodel <- function(x, digits = max(3L, getOption("digits") - 3L
   if (x[["model"]][["m"]] > 0) {
     s_text <- paste0("s = ", x[["model"]][["s"]])
   }
-  if (any(!is.null(c(p_text, s_text)))) {
-    lag_text <- paste0(c(p_text, s_text), collapse = " and ")
+  # The quantile is part of what the model is, not of how it was fitted, so it
+  # is reported beside the lag orders rather than left to the specification.
+  q_text <- NULL
+  if (!is.null(x[["model"]][["quantile"]])) {
+    q_text <- paste0("q = ", x[["model"]][["quantile"]])
+  }
+  if (any(!is.null(c(p_text, s_text, q_text)))) {
+    lag_text <- paste0(c(p_text, s_text, q_text), collapse = " and ")
   } else {
     lag_text <- NULL
   }

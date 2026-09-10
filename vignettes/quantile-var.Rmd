@@ -1,0 +1,205 @@
+---
+title: "Bayesian Quantile VARs in bvartools"
+author: "Franz X. Mohr"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Bayesian Quantile VARs in bvartools}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+collapse = TRUE,
+comment = "#>"
+)
+```
+
+## Introduction
+
+A standard VAR describes the conditional *mean* of a series. A quantile VAR describes a conditional *quantile* of it: with `quantile = 0.9` the coefficients say how the upper tail of each variable moves with the regressors, which need not be how its middle moves. That is the question behind growth-at-risk exercises and, more generally, behind any statement of the form "the relationship is different when things go badly".
+
+`bvartools` estimates these models through the asymmetric Laplace distribution. Minimising the quantile loss at $q$ is the same as maximising the likelihood of an asymmetric Laplace distribution, and that distribution is a scale mixture of normal distributions: with
+
+$$\theta = \frac{1 - 2q}{q(1 - q)}, \qquad \tau^2 = \frac{2}{q(1 - q)},$$
+
+the model
+
+$$y_{it} = x_t^{\prime} a_i + \theta w_{it} + e_{it}, \qquad e_{it} \sim N(0, \tau^2 s_i w_{it}), \qquad w_{it} \sim \textrm{Exp}(1 / s_i)$$
+
+has its $q$-th conditional quantile at $x_t^{\prime} a_i$. Conditional on the latent scales $w$ every equation is an ordinary weighted normal regression, which is what makes this a Gibbs sampler like the others in the package rather than an optimiser (Kozumi & Kobayashi, 2011).
+
+The workflow is the one of the introduction to `bvartools` -- set up a model, add priors, add initial values, simulate. Only two things differ, and both follow from the estimand: the specification carries a quantile, and the prior of the error term is a prior on the scale $s_i$ of the asymmetric Laplace rather than on an error variance-covariance matrix.
+
+## Model set-up
+
+### Data
+
+The data set E1 from Lütkepohl (2006) is used, as in the introductory vignette. It contains West German fixed investment, disposable income and consumption expenditures, and only the log-differenced series are used.
+
+```{r data, message=FALSE}
+library(bvartools)
+
+data("e1")
+e1 <- diff(log(e1)) * 100
+e1 <- window(e1, end = c(1978, 4))
+```
+
+### Setting up a model
+
+A quantile VAR is a model with `error = "ald"`. Argument `quantile` says which quantile the coefficients should describe; it defaults to `0.5`, the median.
+
+```{r}
+model <- create_bvarmodel(e1, p = 1, deterministic = "const",
+                          error = "ald", quantile = 0.25,
+                          iterations = 2000, burnin = 500)
+
+model[["model"]][["algorithm"]]
+```
+
+### Adding prior hyperparameters
+
+Argument `coef` works as it does for every other model. Argument `sigma` specifies the inverse gamma prior of the scale of the asymmetric Laplace, one scale per equation, through its shape and rate.
+
+```{r}
+model <- add_priors(model,
+                    coef = list(v_i = 1),
+                    sigma = list(shape = 3, rate = .01))
+```
+
+### Adding initial values
+
+```{r}
+model <- add_initial_values(model, method = "ols")
+```
+
+The initial value of each scale is the mean of the check function of the LS residuals, which is the maximum likelihood scale of an asymmetric Laplace given those residuals. The latent scales are redrawn in the first sweep and only have to be positive to weight it.
+
+## Obtaining posterior draws
+
+```{r, message=FALSE, warning=FALSE}
+model <- add_posterior_coefficients(model)
+```
+
+## Evaluation
+
+### Summary statistics
+
+`summary` works as usual and reports the quantile beside the lag order, so a table cannot be mistaken for one of a mean VAR.
+
+```{r}
+summary(model)
+```
+
+### Does it estimate the quantile it was asked for?
+
+This is worth checking, because a quantile model that has lost its skew term somewhere estimates the median instead and looks perfectly healthy while doing it. The defining property of the estimand is that the share of fitted residuals below zero is the quantile:
+
+```{r}
+share_below_zero <- function(object) {
+  a <- colMeans(object[["posterior"]][["a"]][["coeffs"]])
+  y <- matrix(object[["data"]][["train"]][["y"]])
+  z <- object[["data"]][["train"]][["z"]]
+  mean(y - z %*% a < 0)
+}
+
+share_below_zero(model)
+```
+
+### The scale of the asymmetric Laplace
+
+The draws of the scale are in `posterior$u_scale`, one column per equation. Their size is what a quantile model has instead of an error variance: a large scale means a wide asymmetric Laplace around the fitted quantile.
+
+```{r}
+round(colMeans(model[["posterior"]][["u_scale"]][["coeffs"]]), 3)
+```
+
+## A grid of quantiles
+
+One model is one quantile. A vector in argument `quantile` therefore produces a list of models, in the same way a vector of lag orders does, and that list runs through the same functions:
+
+```{r, message=FALSE, warning=FALSE}
+models <- create_bvarmodel(e1, p = 1, deterministic = "const",
+                           error = "ald", quantile = c(0.1, 0.5, 0.9),
+                           iterations = 2000, burnin = 500)
+
+models <- add_priors(models,
+                     coef = list(v_i = 1),
+                     sigma = list(shape = 3, rate = .01))
+models <- add_initial_values(models)
+models <- add_posterior_coefficients(models)
+```
+
+Each model estimates its own quantile:
+
+```{r}
+data.frame(quantile = sapply(models, function(x) {x[["model"]][["quantile"]]}),
+           share_below_zero = round(sapply(models, share_below_zero), 3))
+```
+
+The shares sit near their quantiles rather than on them. With 73 observations one of them is worth 1.4 percentage points, and these are posterior means under an informative prior rather than the frequentist estimator, whose first order condition would pin the share exactly. What a model that had lost its quantile would show is different in kind: three shares near 0.5.
+
+Comparing one coefficient across the grid is what the exercise is usually for. The following extracts the posterior mean of the effect of lagged income on consumption at each quantile:
+
+```{r, fig.align='center', fig.height=4, fig.width=5.5}
+coefficient <- function(object) {
+  colMeans(object[["posterior"]][["a"]][["coeffs"]])[6]
+}
+
+quantiles <- sapply(models, function(x) {x[["model"]][["quantile"]]})
+estimates <- sapply(models, coefficient)
+
+plot(quantiles, estimates, type = "b", pch = 19,
+     xlab = "Quantile", ylab = "Posterior mean",
+     main = "Effect of lagged income on consumption")
+abline(h = 0, lty = "dashed")
+```
+
+Since the models are independent of each other, a grid of this kind can be estimated in parallel without the samplers knowing about it.
+
+## Time varying parameters
+
+Adding `tvp = TRUE` lets the coefficients follow a random walk, which separates "the tail became noisier" from "the relationship in the tail changed" -- two different claims about the same widening fan. The state equation needs a prior, exactly as it does for the other time varying models.
+
+```{r, message=FALSE, warning=FALSE}
+tvp_model <- create_bvarmodel(e1, p = 1, deterministic = "const",
+                              error = "ald", quantile = 0.25, tvp = TRUE,
+                              iterations = 2000, burnin = 500)
+
+tvp_model <- add_priors(tvp_model,
+                        coef = list(v_i = 1, shape = 3, rate = .0001),
+                        sigma = list(shape = 3, rate = .01))
+tvp_model <- add_initial_values(tvp_model)
+tvp_model <- add_posterior_coefficients(tvp_model)
+
+tvp_model[["model"]][["algorithm"]]
+```
+
+## What these models do not do
+
+Three things, each on purpose rather than for want of an implementation.
+
+**No error covariances.** `error = "ald"` estimates no covariance block, and asking for one is refused. The covariance block of the other models is a triangular rotation of the errors, and rotating the equations into each other is exactly what stops the estimand being a quantile: the rotated residual is a combination of equations, and the $q$-th quantile of a combination is not the combination of $q$-th quantiles.
+
+**No forecasts.** `add_posterior_forecasts` refuses a quantile model:
+
+```{r, error=TRUE}
+add_posterior_forecasts(model)
+```
+
+The reason is not a missing algorithm. The $h$ step ahead quantile is not the quantile of the iterated one step ahead quantiles, so a simulated path could not be read as a quantile of anything.
+
+**No calibrated credible intervals.** The asymmetric Laplace is a working likelihood, not a claim about the data. The posterior locates the quantile, but the spread of the draws is not a credible interval without the sandwich adjustment of Yang, Wang and He (2016), which the package does not apply. Read the spread as a diagnostic.
+
+Variable selection is available as `varsel = "bvs"`. SSVS is not implemented for these models and is refused when the specification is made.
+
+## References
+
+Kozumi, H., & Kobayashi, G. (2011). Gibbs sampling methods for Bayesian quantile regression. *Journal of Statistical Computation and Simulation, 81*(11), 1565-1578. <https://doi.org/10.1080/00949650903260125>
+
+Korobilis, D. (2013). VAR forecasting using Bayesian variable selection. *Journal of Applied Econometrics, 28*(2), 204-230. <https://doi.org/10.1002/jae.1271>
+
+Lütkepohl, H. (2006). *New introduction to multiple time series analysis* (2nd ed.). Berlin: Springer.
+
+Yang, Y., Wang, H. J., & He, X. (2016). Posterior inference in Bayesian quantile regression with asymmetric Laplace likelihood. *International Statistical Review, 84*(3), 327-344. <https://doi.org/10.1111/insr.12114>

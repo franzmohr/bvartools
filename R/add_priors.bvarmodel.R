@@ -264,6 +264,19 @@ add_priors.bvarmodel <- function(object,
     stop("Wishart prior not allowed when BVS or SSVS are applied to covariance matrix.")
   }
   
+  if (error_prior == "ald") {
+    # Both refusals are the sampler's, and both are properties of the estimand
+    # rather than gaps: rotating the equations into each other leaves a residual
+    # whose quantile is not the one that was asked for, and SSVS is not
+    # implemented for a quantile regression model.
+    if (use_ssvs_error | use_bvs_error) {
+      stop("A quantile regression model has no error covariance matrix to apply BVS or SSVS to.")
+    }
+    if (use_ssvs) {
+      stop("SSVS is not available for a quantile regression model. Consider using BVS instead.")
+    }
+  }
+  
   varsel_covar <- use_ssvs_error | use_bvs_error
   
   # Generate priors ----
@@ -501,6 +514,16 @@ add_priors.bvarmodel <- function(object,
   if (error_prior == "sv") {
     
     object <- .add_priors_sv_helper(object, sigma, k)
+    
+  } else if (error_prior == "ald") {
+    
+    # The scale of the asymmetric Laplace, one per equation, with an inverse
+    # gamma prior. Its shape and rate enter the sampler as they are given here,
+    # unlike the gamma prior on the error variances, which is specified in the
+    # chi-squared convention and halved on the way in.
+    object[["priors"]][["u_scale"]][["type"]] <- "ald"
+    object[["priors"]][["u_scale"]][["shape"]] <- matrix(sigma[["shape"]], k)
+    object[["priors"]][["u_scale"]][["rate"]] <- matrix(sigma[["rate"]], k)
     
   } else {
     

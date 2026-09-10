@@ -45,12 +45,14 @@ add_posterior_loglik.bvarmodel <- function(object, ...) {
   
   algorithm <- object[["model"]][["algorithm"]]
   
-  if (algorithm %in% c("VarNormalGamma", "VarNormalStochvol", "VarNormalWishart",
-                       "VarTvpGamma", "VarTvpStochvol", "VarTvpWishart")) {
+  if (algorithm %in% c("VarNormalAld", "VarNormalGamma", "VarNormalStochvol", "VarNormalWishart",
+                       "VarTvpAld", "VarTvpGamma", "VarTvpStochvol", "VarTvpWishart")) {
     object <- switch(algorithm,
+                     VarNormalAld = .VarNormalAldLogLik(object),
                      VarNormalGamma = .VarNormalGammaLogLik(object),
                      VarNormalStochvol = .VarNormalStochvolLogLik(object),
                      VarNormalWishart = .VarNormalWishartLogLik(object),
+                     VarTvpAld = .VarTvpAldLogLik(object),
                      VarTvpGamma = .VarTvpGammaLogLik(object),
                      VarTvpStochvol = .VarTvpStochvolLogLik(object),
                      VarTvpWishart = .VarTvpWishartLogLik(object))

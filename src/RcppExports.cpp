@@ -14,6 +14,28 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// VarNormalAldCoefficients
+Rcpp::List VarNormalAldCoefficients(Rcpp::List object);
+RcppExport SEXP _bvartools_VarNormalAldCoefficients(SEXP objectSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
+    rcpp_result_gen = Rcpp::wrap(VarNormalAldCoefficients(object));
+    return rcpp_result_gen;
+END_RCPP
+}
+// VarNormalAldLogLik
+Rcpp::List VarNormalAldLogLik(Rcpp::List object);
+RcppExport SEXP _bvartools_VarNormalAldLogLik(SEXP objectSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
+    rcpp_result_gen = Rcpp::wrap(VarNormalAldLogLik(object));
+    return rcpp_result_gen;
+END_RCPP
+}
 // VarNormalGammaCoefficients
 Rcpp::List VarNormalGammaCoefficients(Rcpp::List object);
 RcppExport SEXP _bvartools_VarNormalGammaCoefficients(SEXP objectSEXP) {
@@ -110,6 +132,28 @@ BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
     rcpp_result_gen = Rcpp::wrap(VarNormalWishartLogLik(object));
+    return rcpp_result_gen;
+END_RCPP
+}
+// VarTvpAldCoefficients
+Rcpp::List VarTvpAldCoefficients(Rcpp::List object);
+RcppExport SEXP _bvartools_VarTvpAldCoefficients(SEXP objectSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
+    rcpp_result_gen = Rcpp::wrap(VarTvpAldCoefficients(object));
+    return rcpp_result_gen;
+END_RCPP
+}
+// VarTvpAldLogLik
+Rcpp::List VarTvpAldLogLik(Rcpp::List object);
+RcppExport SEXP _bvartools_VarTvpAldLogLik(SEXP objectSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
+    rcpp_result_gen = Rcpp::wrap(VarTvpAldLogLik(object));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -996,6 +1040,8 @@ RcppExport SEXP _bvartools_RcppExport_registerCCallable() {
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_bvartools_VarNormalAldCoefficients", (DL_FUNC) &_bvartools_VarNormalAldCoefficients, 1},
+    {"_bvartools_VarNormalAldLogLik", (DL_FUNC) &_bvartools_VarNormalAldLogLik, 1},
     {"_bvartools_VarNormalGammaCoefficients", (DL_FUNC) &_bvartools_VarNormalGammaCoefficients, 1},
     {"_bvartools_VarNormalGammaForecasts", (DL_FUNC) &_bvartools_VarNormalGammaForecasts, 1},
     {"_bvartools_VarNormalGammaLogLik", (DL_FUNC) &_bvartools_VarNormalGammaLogLik, 1},
@@ -1005,6 +1051,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_bvartools_VarNormalWishartCoefficients", (DL_FUNC) &_bvartools_VarNormalWishartCoefficients, 1},
     {"_bvartools_VarNormalWishartForecasts", (DL_FUNC) &_bvartools_VarNormalWishartForecasts, 1},
     {"_bvartools_VarNormalWishartLogLik", (DL_FUNC) &_bvartools_VarNormalWishartLogLik, 1},
+    {"_bvartools_VarTvpAldCoefficients", (DL_FUNC) &_bvartools_VarTvpAldCoefficients, 1},
+    {"_bvartools_VarTvpAldLogLik", (DL_FUNC) &_bvartools_VarTvpAldLogLik, 1},
     {"_bvartools_VarTvpGammaCoefficients", (DL_FUNC) &_bvartools_VarTvpGammaCoefficients, 1},
     {"_bvartools_VarTvpGammaForecasts", (DL_FUNC) &_bvartools_VarTvpGammaForecasts, 1},
     {"_bvartools_VarTvpGammaLogLik", (DL_FUNC) &_bvartools_VarTvpGammaLogLik, 1},

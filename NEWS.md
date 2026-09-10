@@ -1,5 +1,54 @@
 # bvartools (development version)
 
+* **Bayesian quantile VARs.** `create_bvarmodel()` takes `error = "ald"` and a
+  `quantile`, and estimates a conditional quantile of the endogenous variables
+  instead of their conditional mean -- the question behind a growth-at-risk
+  exercise, and behind any claim that a relationship differs when things go
+  badly. Constant and time varying coefficients both, through the vendored
+  `VarNormalAld` and `VarTvpAld` samplers, which arrived with the previous
+  refresh and had no way into R until now.
+
+    The model is the asymmetric Laplace one of Kozumi and Kobayashi (2011).
+  Minimising the quantile loss at `q` is maximising the likelihood of that
+  distribution, and it is a scale mixture of normals, so conditional on the
+  latent scales every equation is an ordinary weighted normal regression. That
+  is what makes these the stochastic volatility samplers with a different rule
+  for where the per-period variance comes from rather than a new kind of model.
+
+    The workflow is the usual one. `add_priors()` takes the inverse gamma prior
+  of the scale of the asymmetric Laplace, one per equation, through
+  `sigma = list(shape = , rate = )`, and stores it in `priors$u_scale`; note
+  that these are used as given, unlike the gamma prior on the error variances,
+  which is halved on the way in. `add_initial_values()` starts each scale at the
+  mean of the check function of the residuals. `add_posterior_coefficients()`
+  and `add_posterior_loglik()` dispatch as they do for every other algorithm,
+  and the draws of the scale arrive in `posterior$u_scale`. `summary()` and
+  `plot()` report the model as a Quantile-VAR and print the quantile beside the
+  lag order.
+
+    **A vector in `quantile` produces a list of models**, one per quantile, in
+  the same way a vector of lag orders does -- so a quantile grid is a
+  `modellist` that runs through the same functions and can be estimated in
+  parallel without the samplers knowing about it.
+
+    **Three things these models do not do**, each because of what a quantile is
+  rather than for want of an implementation. They estimate no error covariances,
+  since rotating the equations into each other leaves a residual whose quantile
+  is not the one that was asked for. They do not forecast, since the `h` step
+  ahead quantile is not the quantile of the iterated one step ahead quantiles;
+  `add_posterior_forecasts()` says so rather than producing a path that cannot
+  be read as one. And the spread of the draws is not a calibrated credible
+  interval: the asymmetric Laplace is a working likelihood, the posterior
+  locates the quantile, and the adjustment of Yang, Wang and He (2016) is not
+  applied. Variable selection is available as `"bvs"`; `"ssvs"` is refused when
+  the specification is made.
+
+    A new vignette, *Bayesian Quantile VARs in bvartools*, walks through the
+  whole of it, including the check that matters for a model whose failure mode
+  is silent: the share of fitted residuals below zero is the quantile. A model
+  that had dropped its skew term would estimate the median and pass every other
+  test there is.
+
 * **`summary()` and `plot()` label the deterministic terms of every model that
   has them.** Both take those labels from `model$deterministic`, and only
   `create_bvarmodel()` ever recorded it: a model assembled by `bvar()` from the

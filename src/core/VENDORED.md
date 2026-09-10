@@ -302,9 +302,10 @@ not vendored because it translates from files rather than from R:
 | `src/bayests_r_io.h` | the parts every model shares: spec, priors, positions, the transposes |
 | `src/<Model>.cpp` | one file per model: its readers and writer in an anonymous namespace, then the three `[[Rcpp::export]]` entry points |
 
-All six VAR algorithms are converted: `VarNormalWishart`, `VarNormalGamma`,
-`VarNormalStochvol`, `VarTvpGamma`, `VarTvpWishart` and `VarTvpStochvol`.
-Nothing in `src/` samples any more; the numerics all live in `src/core/`.
+All eight VAR algorithms are converted: `VarNormalWishart`, `VarNormalGamma`,
+`VarNormalStochvol`, `VarNormalAld`, `VarTvpGamma`, `VarTvpWishart`,
+`VarTvpStochvol` and `VarTvpAld`. Nothing in `src/` samples any more; the
+numerics all live in `src/core/`.
 
 The seven VEC algorithms are converted too -- `VecNormalWishart`,
 `VecNormalGamma`, `VecNormalStochvol`, `VecKlgs2010`, `VecTvpGamma`,
@@ -314,27 +315,33 @@ wait on a binding, and while it did the two were separate implementations of the
 same model with only the vendored one carrying the fixes recorded in BayesTS.
 One implementation each now.
 
-`VarNormalAld` and `VarTvpAld` are the exception, and the only thing here that
-is vendored without being reachable -- `VecNormalWishart` held that position
-until it got a binding, and the DFM samplers until they moved to `skip`; see
-*Not copied*. These two are Bayesian quantile VARs, so they belong to this
-package rather than to `dfmtools` and are not candidates for `skip`; they are
-waiting on a binding. Their samplers, `core/models/ald_support.h` and
-`core/algorithms/inverse_gaussian.*` are copied and compiled into the shared
-object, but there is no `src/VarNormalAld.cpp` or `src/VarTvpAld.cpp` and no R
-entry point, so nothing in R can reach them.
+Nothing here is now vendored without being reachable. `VecNormalWishart` held
+that position until it got a binding, `VarNormalAld` and `VarTvpAld` until
+theirs, and the DFM samplers until they moved to `skip`; see *Not copied*.
 
-Two more things a binding for those two has to get right, beyond the three
-below.
-`read_spec()` in `src/bayests_r_io.h` does not read `VarSpec::quantile`, so the
-quantile would arrive as its 0.5 default and the model would estimate the median
-while looking like it had been asked for something else. And the two refusals
-these models make are part of the estimand rather than gaps to be filled in: no
-covariance block, because rotating the errors makes the estimand a combination
-of quantiles rather than the quantile of a combination, and no forecast, because
-the `h` step quantile is not the quantile of the iterated one step quantiles.
-`validate()` rejects both, and a binding should let it rather than work around
-it.
+The two quantile VARs are the exception to the file-per-model rule above in one
+respect: each has `.Var*AldCoefficients` and `.Var*AldLogLik` and no
+`.Var*AldForecasts`, because the sampler's `forecast()` always throws. Three
+things about them a reader of those two files should know, all of them silent
+when wrong:
+
+1. **The quantile has to cross.** `read_spec()` reads `model$quantile` into
+   `VarSpec::quantile`, which defaults to 0.5. Lose that line and a model asked
+   for the 0.8 quantile estimates the median, runs to completion and says
+   nothing -- which is the failure `test-quantile_var.R` checks the estimand
+   against rather than the shape of the output.
+2. **The refusals are the estimand's, not gaps.** No covariance block, because
+   rotating the errors makes the estimand a combination of quantiles rather than
+   the quantile of a combination; no forecast, because the `h` step quantile is
+   not the quantile of the iterated one step quantiles. `validate()` rejects
+   both, the bindings let it, and `add_posterior_forecasts()` refuses before
+   reaching C++ so the message names the model rather than the horizon.
+3. **`u_sigma_inv` is read for its column count alone.** The log likelihood of
+   these models is the asymmetric Laplace density, which is closed form and
+   marginal of the latent scales, so nothing reads the precision path for its
+   values -- but `iterations()` counts its columns. The two loglik readers take
+   the last period only, which is `k * k` numbers per draw instead of
+   `k * k * tt`.
 
 The R pipeline above all of this did not change: `bvarpost()`,
 `add_posterior_forecasts()` and `add_posterior_loglik()` still dispatch on

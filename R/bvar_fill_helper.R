@@ -289,6 +289,17 @@
 }
 
 
+# TRUE if the posterior draws of the error precision hold one matrix per period
+# rather than one for the whole sample, which decides whether a reader of those
+# draws has to slice a period out of them first. Stochastic volatility is the
+# obvious case. A quantile regression model is the other: its variance moves
+# with the latent scale of the asymmetric Laplace, so it varies by period
+# without anything about it being called volatility.
+.error_varies_by_period <- function(error) {
+  return(error %in% c("sv", "sv+covar", "ald"))
+}
+
+
 # Name of the posterior simulation algorithm of a VEC model with the given
 # specification of the error term, as determined by create_bvecmodel()
 .vec_algorithm <- function(error, tvp) {

@@ -18,6 +18,9 @@
 #' Defaults to \code{FALSE}.
 #' @param error character specifying the model that should be used for the estimation
 #' of the covariance matrix of the error term. Default is \code{"wishart"}. See 'Details'.
+#' @param quantile a numeric vector of quantiles in the interval \eqn{(0, 1)} that should be
+#' estimated. Only used, if \code{error = "ald"}. Defaults to \code{0.5}, the median. One model
+#' is created per quantile, so a vector produces a list of models. See 'Details'.
 #' @param varsel character specifying the type of variable selection algorithm
 #' that should be employed. Default is \code{"none"}. See 'Details'.
 #' @param iterations an integer of MCMC draws excluding burn-in draws (defaults
@@ -71,7 +74,26 @@
 #' algorithm. Off-diagonal elements are not estimated and set to zero.}
 #'  \item{\code{"sv+covar"}: Only the diagonal elements of the covariance matrix are estimated using a stochastic volatility
 #' algorithm. Covariances are estimated based on a triangular decomposition.}
+#'  \item{\code{"ald"}: The errors are assumed to follow an asymmetric Laplace distribution, which
+#' turns the model into a Bayesian quantile regression: the coefficients describe the conditional
+#' quantile specified in argument \code{quantile} instead of the conditional mean. Off-diagonal
+#' elements of the covariance matrix are not estimated and set to zero. See 'Details'.}
 #' }
+#' 
+#' Models with \code{error = "ald"} estimate a conditional quantile after Kozumi and Kobayashi (2011).
+#' Minimising the quantile loss at \eqn{q} corresponds to maximising the likelihood of an asymmetric
+#' Laplace distribution, which is a scale mixture of normal distributions. Conditional on the latent
+#' scales of that mixture every equation is a weighted normal regression, which is what makes the
+#' model a Gibbs sampler like the others.
+#' 
+#' Three properties of these models differ from the rest of the package. Covariances are not
+#' estimated, since rotating the equations into each other leaves a residual whose quantile is not
+#' the one that was asked for. Forecasts are not available, since the \eqn{h} step ahead quantile is
+#' not the quantile of the iterated one step ahead quantiles. And the asymmetric Laplace is a working
+#' likelihood rather than a claim about the data, so the posterior locates the quantile, but the
+#' spread of the draws is not a calibrated credible interval without the adjustment of Yang et al.
+#' (2016), which is not applied. Variable selection is available as \code{"bvs"}, not as
+#' \code{"ssvs"}.
 #' 
 #' Available specifications for argument \code{varsel} are:
 #' \itemize{
@@ -110,6 +132,10 @@
 #' Korobilis, D. (2013). VAR forecasting using Bayesian variable selection.
 #' \emph{Journal of Applied Econometrics, 28}(2), 204--230. \doi{10.1002/jae.1271}
 #' 
+#' Kozumi, H., & Kobayashi, G. (2011). Gibbs sampling methods for Bayesian quantile regression.
+#' \emph{Journal of Statistical Computation and Simulation, 81}(11), 1565--1578.
+#' \doi{10.1080/00949650903260125}
+#' 
 #' Lütkepohl, H. (2006). \emph{New Introduction to Multiple Time Series Analysis} (2nd ed.). Berlin: Springer.
 #' 
 #' @export
@@ -119,6 +145,7 @@ create_bvarmodel <- function(data, p = 2,
                              seasonal = FALSE,
                              structural = FALSE,
                              error = "wishart",
+                             quantile = 0.5,
                              tvp = FALSE,
                              varsel = "none",
                              iterations = 20000,
@@ -140,11 +167,27 @@ create_bvarmodel <- function(data, p = 2,
   }
   
   if ("character" %in% class(error)) {
-    if (!error %in% c("wishart", "gamma", "gamma+covar", "sv", "sv+covar")) {
+    if (!error %in% c("wishart", "gamma", "gamma+covar", "sv", "sv+covar", "ald")) {
       stop("Invalid specification of argument 'error'.")
     }
   } else {
     stop("Argument 'error' must be of class 'character'.")
+  }
+  
+  # The quantile is the one specification that produces several models on its
+  # own, so it is checked here and looped over below. It is meaningless for
+  # every model that is not an asymmetric Laplace one, which is why an object
+  # of theirs does not carry it at all.
+  if (error == "ald") {
+    if (!"numeric" %in% class(quantile)) {
+      stop("Argument 'quantile' must be of class 'numeric'.")
+    }
+    if (length(quantile) == 0 | any(is.na(quantile))) {
+      stop("Argument 'quantile' must contain at least one non-missing value.")
+    }
+    if (any(quantile <= 0 | quantile >= 1)) {
+      stop("Argument 'quantile' must contain values between 0 and 1.")
+    }
   }
   
   # Endogenous variables ----
@@ -188,6 +231,14 @@ create_bvarmodel <- function(data, p = 2,
     stop("Specification of argument 'varsel' is not supported.")
   }
   
+  # Refused where the specification is made rather than where the priors are
+  # added, since a quantile regression model with SSVS is not a model this
+  # package has at all.
+  if (error == "ald" & varsel == "ssvs") {
+    stop("Variable selection algorithm 'ssvs' is not available for a quantile ",
+         "regression model. Consider using 'bvs' instead.")
+  }
+  
   data_name <- dimnames(data)[[2]]
   k <- NCOL(data)
   p_max <- max(p)
@@ -206,6 +257,9 @@ create_bvarmodel <- function(data, p = 2,
   }
   if (error %in% c("sv", "sv+covar")) {
     model_type <- paste0(model_type, "Stochvol")
+  }
+  if (error == "ald") {
+    model_type <- paste0(model_type, "Ald")
   }
   model_type <- paste0("Var", model_type)
   
@@ -340,7 +394,7 @@ create_bvarmodel <- function(data, p = 2,
   
   ## errors ----
   if ("character" %in% class(error)) {
-    if (!error %in% c("wishart", "gamma", "gamma+covar", "sv", "sv+covar")) {
+    if (!error %in% c("wishart", "gamma", "gamma+covar", "sv", "sv+covar", "ald")) {
       stop("Invalid specification of argument 'error'.")
     }
     model[["error"]] <- error
@@ -378,11 +432,21 @@ create_bvarmodel <- function(data, p = 2,
   }
   
   # Create model list ----
+  # A quantile grid is a list of models, in the same way a grid of lag orders
+  # is: one quantile per model, so the grid parallelises without the sampler
+  # knowing about it. Models that are not asymmetric Laplace ones pass through
+  # this loop once and never see the field.
+  quantiles <- if (error == "ald") quantile else NA_real_
+  
   result <- NULL
   for (i in p) { # for each lag p
     for (j in s) { # for each lag s
+     for (q in quantiles) { # for each quantile
       pos <- NULL
       model_i <- model
+      if (error == "ald") {
+        model_i[["quantile"]] <- q
+      }
       if (i >= 1) {
         pos <- c(pos, k + 1:(k * i))
         model_i[["p"]] <- as.integer(i)
@@ -425,6 +489,7 @@ create_bvarmodel <- function(data, p = 2,
       
       result <- c(result, list(result_i)) 
       
+     }
     }
   }
   

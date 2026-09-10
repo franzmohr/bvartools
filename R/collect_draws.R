@@ -47,7 +47,7 @@
   if (tvp) {
     nparams <- ncol(x[["data"]][["train"]][["z"]])
   }
-  sv <- x[["model"]][["error"]] %in% c("sv", "sv+covar")
+  sv <- .error_varies_by_period(x[["model"]][["error"]])
   if (tvp || sv) {
     if (is.null(period)) {
       period <- tt

@@ -65,6 +65,8 @@ For Bayesian inference of *VAR models* the package covers
 - Stochastic volatility (SV) of the errors à la Kim, Shephard and Chip
   (1998)
 - Time varying parameter models (TVP-VAR)
+- Bayesian quantile VARs, which estimate a conditional quantile instead
+  of the conditional mean, à la Kozumi and Kobayashi (2011)
 
 For Bayesian inference of *cointegrated VAR models* the package
 implements the algorithm of Koop, León-González and Strachan (2010)

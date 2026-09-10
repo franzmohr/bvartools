@@ -33,7 +33,7 @@ summary.bvarmodel <- function(object, ci = .95, period = NULL, ...){
   tt <- nrow(object[["data"]][["train"]][["y"]])
   use_incl <- object[["model"]][["varsel"]] %in% c("ssvs", "bvs")
   structural <- object[["model"]][["structural"]]
-  sv <- object[["model"]][["error"]] %in% c("sv", "sv+covar")
+  sv <- .error_varies_by_period(object[["model"]][["error"]])
   tvp <- object[["model"]][["tvp"]]
   tvp_and_covar <- tvp & object[["model"]][["error"]] %in% c("gamma", "gamma+covar")
   if (sv | tvp) {

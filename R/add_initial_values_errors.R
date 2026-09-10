@@ -32,6 +32,10 @@
     if (error == "wishart") {
       object[["initial"]][["u_sigma_inv"]] <- solve(tcrossprod(u) / tt)
     }
+    
+    if (error == "ald") {
+      object <- .add_initial_values_ald(object, u = u, from_prior = FALSE)
+    }
   }
   
   if (method == "prior") {
@@ -71,7 +75,41 @@
       }
       object[["initial"]][["u_sigma_inv"]] <- matrix(stats::rWishart(1, df = sigma_df, Sigma = sigma_scale)[,,1], k)
     }
+    
+    if (error == "ald") {
+      object <- .add_initial_values_ald(object, u = u, from_prior = TRUE)
+    }
   }
+  
+  return(object)
+}
+
+# Initial values of the two blocks a quantile regression model has and a mean
+# regression does not: the scale of the asymmetric Laplace, one per equation,
+# and the latent scales of the mixture it is written as, one per observation
+# and equation.
+.add_initial_values_ald <- function(object, u, from_prior) {
+  
+  k <- object[["model"]][["k"]]
+  tt <- ncol(u)
+  
+  if (from_prior) {
+    scale_prior <- object[["priors"]][["u_scale"]]
+    u_scale <- 1 / stats::rgamma(k, shape = scale_prior[["shape"]], rate = scale_prior[["rate"]])
+  } else {
+    # Given residuals, the maximum likelihood scale of an asymmetric Laplace is
+    # the mean of the check function, which is what makes it the starting value
+    # to take from a fit. Residuals of exactly zero would put it at zero, which
+    # the sampler divides by, so it is floored.
+    q <- object[["model"]][["quantile"]]
+    u_scale <- apply(u, 1, function(z) {mean(z * (q - as.numeric(z < 0)))})
+  }
+  
+  object[["initial"]][["u_scale"]] <- matrix(pmax(u_scale, 1e-8), k)
+  # The latent scales are redrawn in the first sweep, before anything reads them
+  # for their own sake, so they only have to be positive: they are the variance
+  # the first draw of the coefficients is weighted by.
+  object[["initial"]][["w"]] <- matrix(1, tt, k)
   
   return(object)
 }

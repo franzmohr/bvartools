@@ -334,6 +334,9 @@ vec_to_var.bvecmodel <- function(object, ...) {
   if (error %in% c("sv", "sv+covar")) {
     algorithm <- paste0(algorithm, "Stochvol")
   }
+  if (error == "ald") {
+    algorithm <- paste0(algorithm, "Ald")
+  }
 
   return(paste0("Var", algorithm))
 }

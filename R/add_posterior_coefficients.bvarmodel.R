@@ -56,12 +56,14 @@ add_posterior_coefficients.bvarmodel <- function(object, posterior_function = NU
         
         algorithm <- object[["model"]][["algorithm"]]
         
-        if (algorithm %in% c("VarNormalGamma", "VarNormalStochvol", "VarNormalWishart",
-                             "VarTvpGamma", "VarTvpStochvol", "VarTvpWishart")) {
+        if (algorithm %in% c("VarNormalAld", "VarNormalGamma", "VarNormalStochvol", "VarNormalWishart",
+                             "VarTvpAld", "VarTvpGamma", "VarTvpStochvol", "VarTvpWishart")) {
           object <- switch(algorithm,
+                           VarNormalAld = .VarNormalAldCoefficients(object),
                            VarNormalGamma = .VarNormalGammaCoefficients(object),
                            VarNormalStochvol = .VarNormalStochvolCoefficients(object),
                            VarNormalWishart = .VarNormalWishartCoefficients(object),
+                           VarTvpAld = .VarTvpAldCoefficients(object),
                            VarTvpGamma = .VarTvpGammaCoefficients(object),
                            VarTvpStochvol = .VarTvpStochvolCoefficients(object),
                            VarTvpWishart = .VarTvpWishartCoefficients(object))
@@ -69,7 +71,7 @@ add_posterior_coefficients.bvarmodel <- function(object, posterior_function = NU
           stop("Algorithm '", algorithm, "' not supported.")
         }
         
-        for (i in c("a", "psi", "u_sigma_inv", "u_omega_inv")) {
+        for (i in c("a", "psi", "u_sigma_inv", "u_omega_inv", "u_scale")) {
           if (!is.null(object[["posterior"]][[i]][["coeffs"]])) {
             object[["posterior"]][[i]][["coeffs"]] <- coda::as.mcmc(object[["posterior"]][[i]][["coeffs"]])
           }

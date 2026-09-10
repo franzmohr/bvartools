@@ -114,6 +114,20 @@
       error_prior <- "sv"
     }
     
+    if (object$model$error == "ald") {
+      if (all(c("shape", "rate") %in% names(sigma))) {
+        error_prior <- "ald"
+      } else {
+        stop("An asymmetric Laplace model requires specification of elements 'shape' and 'rate' in 'sigma'.")
+      }
+      if (sigma$shape <= 0) {
+        stop("Argument 'sigma$shape' must be larger than 0.")
+      }
+      if (sigma$rate <= 0) {
+        stop("Argument 'sigma$rate' must be larger than 0.")
+      }
+    }
+    
     if (object$model$error == "wishart") {
       if (all(c("df", "scale") %in% names(sigma))) {
         error_prior <- "wishart"

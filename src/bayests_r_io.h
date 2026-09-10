@@ -131,6 +131,11 @@ inline bayests::VarSpec read_spec(const Rcpp::List &model, const char *covar_err
   spec.n_factors = optional_int(model, "n_factors", 0);
   // Absent until add_forecast_input() has been called.
   spec.h = optional_int(model, "h", 0);
+  // The quantile an asymmetric Laplace model estimates. Every other model
+  // ignores it, and VarSpec defaults it to 0.5 -- which is why it has to be
+  // read rather than left alone: a model asked for the 0.8 quantile whose
+  // spec never reaches the sampler estimates the median and says nothing.
+  read_double_if_present(model, "quantile", spec.quantile);
   spec.varsel = bayests::var_selection_from_string(optional_string(model, "varsel", "none"));
   spec.structural = optional_bool(model, "structural", false);
 

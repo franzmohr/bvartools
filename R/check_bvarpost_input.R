@@ -80,6 +80,26 @@
   
   
   # Errors ----
+  if (object[["model"]][["error"]] == "ald") {
+    # A quantile regression model has no error variance-covariance matrix. What
+    # it has instead is the scale of the asymmetric Laplace, one per equation,
+    # and the latent scales of the mixture that distribution is written as.
+    if (is.null(object[["priors"]][["u_scale"]])) {
+      stop("Missing element 'object$priors$u_scale'.")
+    }
+    for (i in c("shape", "rate")) {
+      if (is.null(object[["priors"]][["u_scale"]][[i]])) {
+        stop(paste0("Missing element 'object$priors$u_scale$", i, "'."))
+      }
+    }
+    for (i in c("w", "u_scale")) {
+      if (is.null(object[["initial"]][[i]])) {
+        stop(paste0("Missing element 'object$initial$", i, "'."))
+      }
+    }
+    return(invisible(NULL))
+  }
+  
   if (is.null(object[["priors"]][["u_sigma"]])) {
     stop("Missing element 'object$priors$u_sigma'.")
   }

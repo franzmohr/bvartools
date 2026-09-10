@@ -46,7 +46,7 @@ summary.bvarmodel <- function(object, ci = .95, period = NULL, ...){
     }
   }
   
-  y_names <- dimnames(object[["data"]][["original"]][["endogen"]])[[2]]
+  y_names <- object[["model"]][["endogen"]]
   x_names <- .get_regressor_names_bvarmodel(object, add_block = FALSE)
   dim_names <- list(y_names, x_names)
   

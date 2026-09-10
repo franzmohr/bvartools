@@ -111,272 +111,132 @@ write_to_hdf5.bvarmodel <- function(object, filename, group = "", ...) {
   }
   
   # Every path below is named against this rather than against the file, which
-  # is all a group amounts to on the way out.
+  # is all a group amounts to on the way out. What the write opens below it is
+  # collected as it goes, so that it can be closed again without asking the
+  # file what is open.
+  handles <- .hdf5_handles()
   output <- .create_hdf5_group(h5_file, group)
+  if (inherits(output, "H5Group")) {
+    .hdf5_keep(handles, output)
+  }
 
   
   
   # Model information ----
-  if (!"model" %in% names(output)) {
-    group_model <- output$create_group("model")
-  } else {
-    group_model <- output[["model"]]
-  }
-  
+  group_model <- .hdf5_group(handles, output, "model")
+
   # Save each available element in 'model'
   # Also useful if user adds additional elements in 'model' manually
+  #
+  # What the group already carries is read once instead of once per element:
+  # the only thing that changes it is this loop, which keeps track itself.
+  attrs_model <- hdf5r::h5attr_names(group_model)
   for (i in names(object[["model"]])) {
-    if (!i %in% hdf5r::h5attr_names(group_model)) {
-      hdf5r::h5attr(group_model, i) <- object[["model"]][[i]] 
+    if (!i %in% attrs_model) {
+      hdf5r::h5attr(group_model, i) <- object[["model"]][[i]]
+      attrs_model <- c(attrs_model, i)
     }
   }
   hdf5r::h5attr(group_model, "rclass") <- class(object)
-  
+
   # Data ----
-  if (!"data" %in% names(output)) {
-    group_data <- output$create_group("data")
-  } else {
-    group_data <- output[["data"]]
-  }
-  
+  group_data <- .hdf5_group(handles, output, "data")
+
   ## Original ----
-  if (!"original" %in% names(group_data)) {
-    group_data_original <- group_data$create_group("original")
-  } else {
-    group_data_original <- group_data[["original"]]
-  }
+  group_data_original <- .hdf5_group(handles, group_data, "original")
   for (i in c("endogen", "exogen", "deterministic")) {
-    if (!is.null(object[["data"]][["original"]][[i]]) & !i %in% names(group_data_original)) {
-      group_data_original[[i]] <- object[["data"]][["original"]][[i]]
-      hdf5r::h5attr(group_data_original[[i]], "variables") <- dimnames(object[["data"]][["original"]][[i]])[[2]]
-      hdf5r::h5attr(group_data_original[[i]], "tsp") <- stats::tsp(object[["data"]][["original"]][[i]])
-    } 
+    series <- object[["data"]][["original"]][[i]]
+    if (!is.null(series)) {
+      .hdf5_write(group_data_original, i, series, .hdf5_series_attrs(series))
+    }
   }
-  
+
   ## Train ----
-  if (!"train" %in% names(group_data)) {
-    group_data_train <- group_data$create_group("train")
-  } else {
-    group_data_train <- group_data[["train"]]
-  }
+  group_data_train <- .hdf5_group(handles, group_data, "train")
   for (i in c("y", "x")) {
-    if (!is.null(object[["data"]][["train"]][[i]]) & !i %in% names(group_data_train)) {
-      group_data_train[[i]] <- object[["data"]][["train"]][[i]]
-      hdf5r::h5attr(group_data_train[[i]], "variables") <- dimnames(object[["data"]][["train"]][[i]])[[2]]
-      hdf5r::h5attr(group_data_train[[i]], "tsp") <- stats::tsp(object[["data"]][["train"]][[i]])
-    }  
+    series <- object[["data"]][["train"]][[i]]
+    if (!is.null(series)) {
+      .hdf5_write(group_data_train, i, series, .hdf5_series_attrs(series))
+    }
   }
   # Data without time series information
   for (i in "z") {
-    if (!is.null(object[["data"]][["train"]][[i]]) & !i %in% names(group_data_train)) {
-      group_data_train[[i]] <- object[["data"]][["train"]][[i]]
-    } 
+    if (!is.null(object[["data"]][["train"]][[i]])) {
+      .hdf5_write(group_data_train, i, object[["data"]][["train"]][[i]])
+    }
   }
-  
+
   ## Forecast input ----
   if (!is.null(object[["data"]][["forecast"]][["z"]])) {
-    if (!"forecast" %in% names(group_data)) {
-      group_data_forecast <- group_data$create_group("forecast")
-    } else {
-      group_data_forecast <- group_data[["forecast"]]
-    }
-    group_data_forecast[["z"]] <- object[["data"]][["forecast"]][["z"]]
+    group_data_forecast <- .hdf5_group(handles, group_data, "forecast")
+    .hdf5_write(group_data_forecast, "z", object[["data"]][["forecast"]][["z"]])
   }
-  
-  
-  
+
   # Priors ----
-  if (!"priors" %in% names(output)) {
-    group_priors <- output$create_group("priors")
-  } else {
-    group_priors <- output[["priors"]]
-  }
-  
-  ## a ----
-  if (!is.null(object[["priors"]][["a"]])) {
-    if (!"a" %in% names(group_priors)) {
-      group_priors_a <- group_priors$create_group("a")
-    } else {
-      group_priors_a <- group_priors[["a"]]
-    }
-    for (i in names(object[["priors"]][["a"]])) {
-      if (!i %in% names(group_priors_a)) {
-        group_priors_a[[i]] <- object[["priors"]][["a"]][[i]]
+  group_priors <- .hdf5_group(handles, output, "priors")
+
+  ## Those kept in a group of their own ----
+  for (i in c("a", "psi")) {
+    if (!is.null(object[["priors"]][[i]])) {
+      group_prior <- .hdf5_group(handles, group_priors, i)
+      for (j in names(object[["priors"]][[i]])) {
+        .hdf5_write(group_prior, j, object[["priors"]][[i]][[j]])
       }
     }
   }
-  
-  # psi ----
-  if (!is.null(object[["priors"]][["psi"]])) {
-    if (!"psi" %in% names(group_priors)) {
-      group_priors_psi <- group_priors$create_group("psi")
-    } else {
-      group_priors_psi <- group_priors[["psi"]]
-    }
-    for (i in names(object[["priors"]][["psi"]])) {
-      if (!i %in% names(group_priors_psi)) {
-        group_priors_psi[[i]] <- object[["priors"]][["psi"]][[i]]
-      }
-    }
-  }
-  
-  
+
   ## u_sigma_inv ----
-  if (!"u_sigma" %in% names(group_priors)) {
-    group_priors_u_sigma <- group_priors$create_group("u_sigma")
-  } else {
-    group_priors_u_sigma <- group_priors[["u_sigma"]]
+  group_priors_u_sigma <- .hdf5_group(handles, group_priors, "u_sigma")
+  # Which hyperparameters there are is decided by the error specification.
+  u_sigma_priors <- switch(object[["model"]][["error"]],
+                           "wishart" = c("df", "scale"),
+                           "gamma" = ,
+                           "gamma+covar" = c("shape", "rate"),
+                           "sv" = ,
+                           "sv+covar" = c("mu", "v_inv", "shape", "rate", "sigma", "offset"),
+                           stop("Error specification not implemented"))
+  for (i in u_sigma_priors) {
+    .hdf5_write(group_priors_u_sigma, i, object[["priors"]][["u_sigma"]][[i]])
   }
-  if (!object[["model"]][["error"]] %in% c("wishart", "gamma", "gamma+covar", "sv", "sv+covar")) {
-    stop("Error specification not implemented")
-  }
-  if (object[["model"]][["error"]] == "wishart") {
-    for (i in c("df", "scale")) {
-      if (!i %in% names(group_priors_u_sigma)) {
-        group_priors_u_sigma[[i]] <- object[["priors"]][["u_sigma"]][[i]]
-      }
-    }
-  }
-  if (object[["model"]][["error"]] %in% c("gamma", "gamma+covar")) {
-    for (i in c("shape", "rate")) {
-      if (!i %in% names(group_priors_u_sigma)) {
-        group_priors_u_sigma[[i]] <- object[["priors"]][["u_sigma"]][[i]]
-      }
-    }
-  }
-  if (object[["model"]][["error"]] %in% c("sv", "sv+covar")) {
-    for (i in c("mu", "v_inv", "shape", "rate", "sigma", "offset")) {
-      if (!i %in% names(group_priors_u_sigma)) {
-        group_priors_u_sigma[[i]] <- object[["priors"]][["u_sigma"]][[i]]
-      }
-    }
-  }
-  
-  
+
   # Initial values ----
   if (!is.null(object[["initial"]])) {
-    if (!"initial" %in% names(output)) {
-      group_initial <- output$create_group("initial")
-    } else {
-      group_initial <- output[["initial"]]
-    }
+    group_initial <- .hdf5_group(handles, output, "initial")
     for (i in names(object[["initial"]])) {
-      if (!i %in% names(group_initial)) {
-        group_initial[[i]] <- object[["initial"]][[i]] 
-      }
-    } 
+      .hdf5_write(group_initial, i, object[["initial"]][[i]])
+    }
   }
-  
+
   # Posterior ----
   if (!is.null(object[["posterior"]])) {
-    if (!"posterior" %in% names(output)) {
-      group_posterior <- output$create_group("posterior")
-    } else {
-      group_posterior <- output[["posterior"]]
-    }
-    
-    if ("a" %in% names(object[["posterior"]])) {
-      if (!"a" %in% names(group_posterior)) {
-        group_posterior_a <- group_posterior$create_group("a")
-      } else {
-        group_posterior_a <- group_posterior[["a"]]
-      }
-      for (i in names(object[["posterior"]][["a"]])) {
-        if (!i %in% names(group_posterior_a)) {
-          group_posterior_a[[i]] <- object[["posterior"]][["a"]][[i]] 
-          mcpar_temp <- coda::mcpar(object[["posterior"]][["a"]][[i]])
-          hdf5r::h5attr(group_posterior_a[[i]], "start") <- mcpar_temp[1]
-          hdf5r::h5attr(group_posterior_a[[i]], "end") <- mcpar_temp[2]
-          hdf5r::h5attr(group_posterior_a[[i]], "thin") <- mcpar_temp[3]
+    group_posterior <- .hdf5_group(handles, output, "posterior")
+
+    ## Draws kept in a group of their own ----
+    #
+    # One shape for all of them. These used to be a block of the same code
+    # each, and one of the blocks attached its attributes to the datasets of
+    # the block above it rather than to its own.
+    for (i in c("a", "psi", "u_omega_inv", "u_sigma_inv")) {
+      if (i %in% names(object[["posterior"]])) {
+        group_draws <- .hdf5_group(handles, group_posterior, i)
+        for (j in names(object[["posterior"]][[i]])) {
+          draws <- object[["posterior"]][[i]][[j]]
+          .hdf5_write(group_draws, j, draws, .hdf5_draws_attrs(draws))
         }
-      }  
-    }
-    
-    if ("psi" %in% names(object[["posterior"]])) {
-      if (!"psi" %in% names(group_posterior)) {
-        group_posterior_psi <- group_posterior$create_group("psi")
-      } else {
-        group_posterior_psi <- group_posterior[["psi"]]
-      }
-      for (i in names(object[["posterior"]][["psi"]])) {
-        if (!i %in% names(group_posterior_psi)) {
-          group_posterior_psi[[i]] <- object[["posterior"]][["psi"]][[i]] 
-          mcpar_temp <- coda::mcpar(object[["posterior"]][["psi"]][[i]])
-          hdf5r::h5attr(group_posterior_a[[i]], "start") <- mcpar_temp[1]
-          hdf5r::h5attr(group_posterior_a[[i]], "end") <- mcpar_temp[2]
-          hdf5r::h5attr(group_posterior_a[[i]], "thin") <- mcpar_temp[3]
-        }
-      }  
-    }
-    
-    if ("u_omega_inv" %in% names(object[["posterior"]])) {
-      if (!"u_omega_inv" %in% names(group_posterior)) {
-        group_posterior_u_omega_inv <- group_posterior$create_group("u_omega_inv")
-      } else {
-        group_posterior_u_omega_inv <- group_posterior[["u_omega_inv"]]
-      }
-      for (i in names(object[["posterior"]][["u_omega_inv"]])) {
-        if (!i %in% names(group_posterior_u_omega_inv)) {
-          group_posterior_u_omega_inv[[i]] <- object[["posterior"]][["u_omega_inv"]][[i]]
-          mcpar_temp <- coda::mcpar(object[["posterior"]][["u_omega_inv"]][[i]])
-          hdf5r::h5attr(group_posterior_u_omega_inv[[i]], "start") <- mcpar_temp[1]
-          hdf5r::h5attr(group_posterior_u_omega_inv[[i]], "end") <- mcpar_temp[2]
-          hdf5r::h5attr(group_posterior_u_omega_inv[[i]], "thin") <- mcpar_temp[3]
-        }
-      }  
-    }
-    
-    if ("u_sigma_inv" %in% names(object[["posterior"]])) {
-      if (!"u_sigma_inv" %in% names(group_posterior)) {
-        group_posterior_u_sigma_inv <- group_posterior$create_group("u_sigma_inv")
-      } else {
-        group_posterior_u_sigma_inv <- group_posterior[["u_sigma_inv"]]
-      }
-      for (i in names(object[["posterior"]][["u_sigma_inv"]])) {
-        if (!i %in% names(group_posterior_u_sigma_inv)) {
-          group_posterior_u_sigma_inv[[i]] <- object[["posterior"]][["u_sigma_inv"]][[i]]
-          mcpar_temp <- coda::mcpar(object[["posterior"]][["u_sigma_inv"]][[i]])
-          hdf5r::h5attr(group_posterior_u_sigma_inv[[i]], "start") <- mcpar_temp[1]
-          hdf5r::h5attr(group_posterior_u_sigma_inv[[i]], "end") <- mcpar_temp[2]
-          hdf5r::h5attr(group_posterior_u_sigma_inv[[i]], "thin") <- mcpar_temp[3]
-        }
-      }  
-    }
-    
-    if ("loglik" %in% names(object[["posterior"]])) {
-      if (!"loglik" %in% names(group_posterior)) {
-        group_posterior[["loglik"]] <- object[["posterior"]][["loglik"]]
-        mcpar_temp <- coda::mcpar(object[["posterior"]][["loglik"]])
-        hdf5r::h5attr(group_posterior[["loglik"]], "start") <- mcpar_temp[1]
-        hdf5r::h5attr(group_posterior[["loglik"]], "end") <- mcpar_temp[2]
-        hdf5r::h5attr(group_posterior[["loglik"]], "thin") <- mcpar_temp[3]
       }
     }
-    
-    if ("forecast" %in% names(object[["posterior"]])) {
-      if (!"forecast" %in% names(group_posterior)) {
-        group_posterior[["forecast"]] <- object[["posterior"]][["forecast"]]
-        mcpar_temp <- coda::mcpar(object[["posterior"]][["forecast"]])
-        hdf5r::h5attr(group_posterior[["forecast"]], "start") <- mcpar_temp[1]
-        hdf5r::h5attr(group_posterior[["forecast"]], "end") <- mcpar_temp[2]
-        hdf5r::h5attr(group_posterior[["forecast"]], "thin") <- mcpar_temp[3]
-      }
-    }
-    
-    if ("forecast_error" %in% names(object[["posterior"]])) {
-      if (!"forecast_error" %in% names(group_posterior)) {
-        group_posterior[["forecast_error"]] <- object[["posterior"]][["forecast_error"]]
-        mcpar_temp <- coda::mcpar(object[["posterior"]][["forecast_error"]])
-        hdf5r::h5attr(group_posterior[["forecast_error"]], "start") <- mcpar_temp[1]
-        hdf5r::h5attr(group_posterior[["forecast_error"]], "end") <- mcpar_temp[2]
-        hdf5r::h5attr(group_posterior[["forecast_error"]], "thin") <- mcpar_temp[3]
+
+    ## Draws kept on their own ----
+    for (i in c("loglik", "forecast", "forecast_error")) {
+      if (i %in% names(object[["posterior"]])) {
+        draws <- object[["posterior"]][[i]]
+        .hdf5_write(group_posterior, i, draws, .hdf5_draws_attrs(draws))
       }
     }
   }
 
-
   # Close file
-  h5_file$close_all()
+  .hdf5_close(handles, h5_file)
   completed <- TRUE
 
   invisible(filename)

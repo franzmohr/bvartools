@@ -86,6 +86,7 @@ Collate:
     'get_model_specifications.selcrit.R'
     'get_regressor_names.R'
     'hdf5_groups.R'
+    'hdf5_write.R'
     'inclusion_prior.R'
     'inclusion_prior.bvarmodel.R'
     'inclusion_prior.bvecmodel.R'

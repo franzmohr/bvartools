@@ -115,7 +115,11 @@
   for (i in components) {
     path <- paste0(path, "/", i)
     if (!.hdf5_exists(h5_file, path)) {
-      h5_file$create_group(path)
+      # Closed again straight away. The handle of a group made on the way to a
+      # deeper one is of no use to anybody, and left open it is one more object
+      # the file carries until it is closed.
+      created <- h5_file$create_group(path)
+      created$close()
     }
   }
 

@@ -1,5 +1,23 @@
 # bvartools (development version)
 
+* **Writing a model to HDF5 is about a third faster.** `write_to_hdf5()` used to
+  ask the file whether a dataset was there before writing it, and then name the
+  dataset again for each of its attributes, so a series with two attributes was
+  opened three times over. It now writes through the handle that creating the
+  dataset hands back. It also closes the handles it opened instead of ending
+  with `close_all()`, which finds out what to close by enumerating every open
+  object of the file -- an enumeration that cost more per model than writing the
+  numbers in it. On a sub-model of 27 models that is 208 ms per model rather
+  than 294. What is written is unchanged.
+
+* **`write_to_hdf5()` records the chain of the `psi` draws correctly.** The
+  `start`, `end` and `thin` of the draws in `posterior/psi` were attached to the
+  datasets of `posterior/a` rather than to their own, so `psi` came back without
+  the parameters of its chain, and those of `a` were overwritten with `psi`'s.
+  The blocks that write each set of draws into a group of its own are now one
+  loop over the names, which is what let two of them disagree.
+
+
 * **A model can be addressed by group, so one HDF5 file can hold several.**
   `write_to_hdf5()` and `read_model_from_hdf5()` take a `group` argument, and
   the new `list_models_in_hdf5()` reports which groups of a file hold a model.

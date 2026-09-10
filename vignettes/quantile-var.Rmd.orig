@@ -8,7 +8,13 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+collapse = TRUE,
+comment = "#>",
+fig.path = "figures/quantile-var-"
+)
+```
 
 ## Introduction
 
@@ -32,8 +38,7 @@ The workflow is the one of the introduction to `bvartools` -- set up a model, ad
 
 The data set E1 from Lütkepohl (2006) is used, as in the introductory vignette. It contains West German fixed investment, disposable income and consumption expenditures, and only the log-differenced series are used.
 
-
-``` r
+```{r data, message=FALSE}
 library(bvartools)
 
 data("e1")
@@ -45,22 +50,19 @@ e1 <- window(e1, end = c(1978, 4))
 
 A quantile VAR is a model with `error = "ald"`. Argument `quantile` says which quantile the coefficients should describe; it defaults to `0.5`, the median.
 
-
-``` r
+```{r}
 model <- create_bvarmodel(e1, p = 1, deterministic = "const",
                           error = "ald", quantile = 0.25,
                           iterations = 2000, burnin = 500)
 
 model[["model"]][["algorithm"]]
-#> [1] "VarNormalAld"
 ```
 
 ### Adding prior hyperparameters
 
 Argument `coef` works as it does for every other model. Argument `sigma` specifies the inverse gamma prior of the scale of the asymmetric Laplace, one scale per equation, through its shape and rate.
 
-
-``` r
+```{r}
 model <- add_priors(model,
                     coef = list(v_i = 1),
                     sigma = list(shape = 3, rate = .01))
@@ -68,8 +70,7 @@ model <- add_priors(model,
 
 ### Adding initial values
 
-
-``` r
+```{r}
 model <- add_initial_values(model, method = "ols")
 ```
 
@@ -77,8 +78,7 @@ The initial value of each scale is the mean of the check function of the LS resi
 
 ## Obtaining posterior draws
 
-
-``` r
+```{r, message=FALSE, warning=FALSE}
 model <- add_posterior_coefficients(model)
 ```
 
@@ -88,79 +88,15 @@ model <- add_posterior_coefficients(model)
 
 `summary` works as usual and reports the quantile beside the lag order, so a table cannot be mistaken for one of a mean VAR.
 
-
-``` r
+```{r}
 summary(model)
-#> 
-#> Bayesian Quantile-VAR model with p = 1 and q = 0.25 
-#> 
-#> Endogenous variables: invest, income, cons
-#> 
-#> Period: 74 
-#> 
-#> Variable: invest 
-#> 
-#>                 Mean        SD    Naive SD Time-series SD       2.5%        50%
-#> invest.l1 -0.2499916 0.1265408 0.002829539    0.006521918 -0.4855568 -0.2515090
-#> income.l1 -0.1842446 0.3668780 0.008203642    0.015533150 -0.8435089 -0.2084327
-#> cons.l1    0.7173854 0.4583144 0.010248223    0.021231528 -0.2919987  0.7542851
-#> const     -1.2866146 0.6811147 0.015230189    0.024332232 -2.5745908 -1.2856790
-#>                 97.5% 
-#> invest.l1 0.003965224 
-#> income.l1 0.593213743 
-#> cons.l1   1.523630817 
-#> const     0.130730664 
-#> 
-#> Variable: income 
-#> 
-#>                 Mean         SD     Naive SD Time-series SD        2.5%
-#> invest.l1 0.03164391 0.02704526 0.0006047504    0.001224549 -0.01842892
-#> income.l1 0.01028951 0.10460894 0.0023391270    0.004867314 -0.20531754
-#> cons.l1   0.20655200 0.13600850 0.0030412424    0.006279125 -0.07568837
-#> const     0.91719670 0.27022073 0.0060423193    0.012749267  0.37088864
-#>                  50%      97.5%  
-#> invest.l1 0.02994940 0.09330294  
-#> income.l1 0.01415679 0.22047400  
-#> cons.l1   0.21102414 0.48314810  
-#> const     0.93046801 1.38764887 *
-#> 
-#> Variable: cons 
-#> 
-#>                   Mean         SD     Naive SD Time-series SD        2.5%
-#> invest.l1 -0.006534665 0.02113293 0.0004725468   0.0008851391 -0.04886185
-#> income.l1  0.311466463 0.09523797 0.0021295857   0.0042278468  0.09795884
-#> cons.l1   -0.105008265 0.11285464 0.0025235064   0.0050858447 -0.33475107
-#> const      1.034913977 0.22467309 0.0050238431   0.0098373799  0.59990697
-#>                   50%      97.5%  
-#> invest.l1 -0.00669705 0.03530426  
-#> income.l1  0.31782763 0.49004559 *
-#> cons.l1   -0.10323100 0.10674922  
-#> const      1.03809961 1.48558110 *
-#> 
-#> Variance-covariance matrix:
-#> 
-#>                     Mean         SD   Naive SD Time-series SD      2.5%
-#> invest_invest 20.0028344 14.3980374 0.32194990     0.33436464 4.0825264
-#> invest_income  0.0000000  0.0000000 0.00000000     0.00000000 0.0000000
-#> invest_cons    0.0000000  0.0000000 0.00000000     0.00000000 0.0000000
-#> income_income  0.9999155  0.8741512 0.01954662     0.02074690 0.1213951
-#> income_cons    0.0000000  0.0000000 0.00000000     0.00000000 0.0000000
-#> cons_cons      1.0784698  0.8309770 0.01858121     0.01858121 0.1939432
-#>                      50%     97.5%  
-#> invest_invest 16.1582693 60.639497 *
-#> invest_income  0.0000000  0.000000  
-#> invest_cons    0.0000000  0.000000  
-#> income_income  0.7436536  3.248074 *
-#> income_cons    0.0000000  0.000000  
-#> cons_cons      0.8526235  3.399272 *
 ```
 
 ### Does it estimate the quantile it was asked for?
 
 This is worth checking, because a quantile model that has lost its skew term somewhere estimates the median instead and looks perfectly healthy while doing it. The defining property of the estimand is that the share of fitted residuals below zero is the quantile:
 
-
-``` r
+```{r}
 share_below_zero <- function(object) {
   a <- colMeans(object[["posterior"]][["a"]][["coeffs"]])
   y <- matrix(object[["data"]][["train"]][["y"]])
@@ -169,25 +105,21 @@ share_below_zero <- function(object) {
 }
 
 share_below_zero(model)
-#> [1] 0.2657658
 ```
 
 ### The scale of the asymmetric Laplace
 
 The draws of the scale are in `posterior$u_scale`, one column per equation. Their size is what a quantile model has instead of an error variance: a large scale means a wide asymmetric Laplace around the fitted quantile.
 
-
-``` r
+```{r}
 round(colMeans(model[["posterior"]][["u_scale"]][["coeffs"]]), 3)
-#> [1] 1.303 0.347 0.315
 ```
 
 ## A grid of quantiles
 
 One model is one quantile. A vector in argument `quantile` therefore produces a list of models, in the same way a vector of lag orders does, and that list runs through the same functions:
 
-
-``` r
+```{r, message=FALSE, warning=FALSE}
 models <- create_bvarmodel(e1, p = 1, deterministic = "const",
                            error = "ald", quantile = c(0.1, 0.5, 0.9),
                            iterations = 2000, burnin = 500)
@@ -201,22 +133,16 @@ models <- add_posterior_coefficients(models)
 
 Each model estimates its own quantile:
 
-
-``` r
+```{r}
 data.frame(quantile = sapply(models, function(x) {x[["model"]][["quantile"]]}),
            share_below_zero = round(sapply(models, share_below_zero), 3))
-#>   quantile share_below_zero
-#> 1      0.1            0.149
-#> 2      0.5            0.450
-#> 3      0.9            0.838
 ```
 
 The shares sit near their quantiles rather than on them. With 73 observations one of them is worth 1.4 percentage points, and these are posterior means under an informative prior rather than the frequentist estimator, whose first order condition would pin the share exactly. What a model that had lost its quantile would show is different in kind: three shares near 0.5.
 
 Comparing one coefficient across the grid is what the exercise is usually for. The following extracts the posterior mean of the effect of lagged income on consumption at each quantile:
 
-
-``` r
+```{r, fig.align='center', fig.height=4, fig.width=5.5}
 coefficient <- function(object) {
   colMeans(object[["posterior"]][["a"]][["coeffs"]])[6]
 }
@@ -230,19 +156,13 @@ plot(quantiles, estimates, type = "b", pch = 19,
 abline(h = 0, lty = "dashed")
 ```
 
-<div class="figure" style="text-align: center">
-<img src="figures/quantile-var-unnamed-chunk-10-1.png" alt="plot of chunk unnamed-chunk-10"  />
-<p class="caption">plot of chunk unnamed-chunk-10</p>
-</div>
-
 Since the models are independent of each other, a grid of this kind can be estimated in parallel without the samplers knowing about it.
 
 ## Time varying parameters
 
 Adding `tvp = TRUE` lets the coefficients follow a random walk, which separates "the tail became noisier" from "the relationship in the tail changed" -- two different claims about the same widening fan. The state equation needs a prior, exactly as it does for the other time varying models.
 
-
-``` r
+```{r, message=FALSE, warning=FALSE}
 tvp_model <- create_bvarmodel(e1, p = 1, deterministic = "const",
                               error = "ald", quantile = 0.25, tvp = TRUE,
                               iterations = 2000, burnin = 500)
@@ -254,7 +174,6 @@ tvp_model <- add_initial_values(tvp_model)
 tvp_model <- add_posterior_coefficients(tvp_model)
 
 tvp_model[["model"]][["algorithm"]]
-#> [1] "VarTvpAld"
 ```
 
 ## What these models do not do
@@ -265,11 +184,8 @@ Three things, each on purpose rather than for want of an implementation.
 
 **No forecasts.** `add_posterior_forecasts` refuses a quantile model:
 
-
-``` r
+```{r, error=TRUE}
 add_posterior_forecasts(model)
-#> Error in `add_posterior_forecasts.bvarmodel()`:
-#> ! A quantile regression model does not forecast: the h step ahead quantile is not the quantile of the iterated one step ahead quantiles, so a simulated path could not be read as a quantile of anything.
 ```
 
 The reason is not a missing algorithm. The $h$ step ahead quantile is not the quantile of the iterated one step ahead quantiles, so a simulated path could not be read as a quantile of anything.

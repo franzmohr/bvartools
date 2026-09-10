@@ -9,7 +9,6 @@ Depends: R (>= 3.4.0), coda, Matrix
 Imports: grDevices, graphics, methods, parallel, Rcpp (>= 1.0.12), stats
 LinkingTo: Rcpp, RcppArmadillo
 Encoding: UTF-8
-RoxygenNote: 7.3.0
 URL: https://github.com/franzmohr/bvartools
 BugReports: https://github.com/franzmohr/bvartools/issues
 Suggests: knitr, rmarkdown, testthat (>= 3.1.5)
@@ -70,3 +69,4 @@ Collate:
     'transition_wrappers.R'
     'tvpribbon.R'
     'zzz.R'
+Config/roxygen2/version: 8.1.0

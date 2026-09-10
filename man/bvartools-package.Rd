@@ -17,7 +17,12 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Franz X. Mohr \email{franz.x.mohr@outlook.com} (0009-0003-8890-7781)
+\strong{Maintainer}: Franz X. Mohr \email{franz.x.mohr@outlook.com} (ORCiD: 0009-0003-8890-7781)
+
+Authors:
+\itemize{
+  \item Franz X. Mohr \email{franz.x.mohr@outlook.com} (ORCiD: 0009-0003-8890-7781)
+}
 
 }
 \keyword{internal}

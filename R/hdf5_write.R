@@ -72,6 +72,15 @@
 # one more the file has to carry.
 .hdf5_write <- function(group, name, value, attrs = NULL) {
 
+  # A model that has not been through add_priors() yet carries no value for the
+  # hyperparameters its error specification calls for, and hdf5r cannot infer a
+  # dataset type from NULL. Nothing is written, which is what the reader expects:
+  # it rebuilds each group from the names that are actually in the file, so an
+  # element that was never written simply comes back absent.
+  if (is.null(value)) {
+    return(invisible(NULL))
+  }
+
   if (group$exists(name)) {
     return(invisible(NULL))
   }

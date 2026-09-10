@@ -173,30 +173,42 @@ write_to_hdf5.bvarmodel <- function(object, filename, group = "", ...) {
   }
 
   # Priors ----
-  group_priors <- .hdf5_group(handles, output, "priors")
+  # Nothing is written at all for a model that has not been through
+  # add_priors(), because an empty group is worse than no group: the reader
+  # rebuilds 'priors' from the names the file actually holds, so a group that
+  # is present but empty comes back as an empty list rather than as absent.
+  if (length(object[["priors"]]) > 0) {
+    group_priors <- .hdf5_group(handles, output, "priors")
 
-  ## Those kept in a group of their own ----
-  for (i in c("a", "psi")) {
-    if (!is.null(object[["priors"]][[i]])) {
-      group_prior <- .hdf5_group(handles, group_priors, i)
-      for (j in names(object[["priors"]][[i]])) {
-        .hdf5_write(group_prior, j, object[["priors"]][[i]][[j]])
+    ## Those kept in a group of their own ----
+    for (i in c("a", "psi")) {
+      if (!is.null(object[["priors"]][[i]])) {
+        group_prior <- .hdf5_group(handles, group_priors, i)
+        for (j in names(object[["priors"]][[i]])) {
+          .hdf5_write(group_prior, j, object[["priors"]][[i]][[j]])
+        }
       }
     }
-  }
 
-  ## u_sigma_inv ----
-  group_priors_u_sigma <- .hdf5_group(handles, group_priors, "u_sigma")
-  # Which hyperparameters there are is decided by the error specification.
-  u_sigma_priors <- switch(object[["model"]][["error"]],
-                           "wishart" = c("df", "scale"),
-                           "gamma" = ,
-                           "gamma+covar" = c("shape", "rate"),
-                           "sv" = ,
-                           "sv+covar" = c("mu", "v_inv", "shape", "rate", "sigma", "offset"),
-                           stop("Error specification not implemented"))
-  for (i in u_sigma_priors) {
-    .hdf5_write(group_priors_u_sigma, i, object[["priors"]][["u_sigma"]][[i]])
+    ## u_sigma_inv ----
+    # Which hyperparameters there are is decided by the error specification.
+    u_sigma_priors <- switch(object[["model"]][["error"]],
+                             "wishart" = c("df", "scale"),
+                             "gamma" = ,
+                             "gamma+covar" = c("shape", "rate"),
+                             "sv" = ,
+                             "sv+covar" = c("mu", "v_inv", "shape", "rate", "sigma", "offset"),
+                             stop("Error specification not implemented"))
+    # Created only once there is something to put in it, for the same reason the
+    # priors group is. Single-bracket indexing is what makes the subset safe when
+    # a name is absent, where [[ would throw instead of giving NULL.
+    u_sigma_values <- object[["priors"]][["u_sigma"]][u_sigma_priors]
+    if (any(!vapply(u_sigma_values, is.null, logical(1)))) {
+      group_priors_u_sigma <- .hdf5_group(handles, group_priors, "u_sigma")
+      for (i in seq_along(u_sigma_priors)) {
+        .hdf5_write(group_priors_u_sigma, u_sigma_priors[i], u_sigma_values[[i]])
+      }
+    }
   }
 
   # Initial values ----

@@ -28,9 +28,11 @@ BSD 3-Clause portion
     inst/include/bayests/reporter.h
     inst/include/bayests/results.h
     inst/include/bayests/spec.h
+    inst/include/bayests/var_normal_ald.h
     inst/include/bayests/var_normal_gamma.h
     inst/include/bayests/var_normal_stochvol.h
     inst/include/bayests/var_normal_wishart.h
+    inst/include/bayests/var_tvp_ald.h
     inst/include/bayests/var_tvp_gamma.h
     inst/include/bayests/var_tvp_stochvol.h
     inst/include/bayests/var_tvp_wishart.h
@@ -48,6 +50,8 @@ BSD 3-Clause portion
     src/core/algorithms/bvs.h
     src/core/algorithms/chan_jeliazkov_2009.cpp
     src/core/algorithms/chan_jeliazkov_2009.h
+    src/core/algorithms/inverse_gaussian.cpp
+    src/core/algorithms/inverse_gaussian.h
     src/core/algorithms/kalman_durbin_koopman_2002.cpp
     src/core/algorithms/kalman_durbin_koopman_2002.h
     src/core/algorithms/ssvs.cpp
@@ -61,10 +65,13 @@ BSD 3-Clause portion
     src/core/algorithms/vec_to_var.cpp
     src/core/algorithms/wishart.cpp
     src/core/algorithms/wishart.h
+    src/core/models/ald_support.h
     src/core/models/model_support.h
+    src/core/models/var_normal_ald.cpp
     src/core/models/var_normal_gamma.cpp
     src/core/models/var_normal_stochvol.cpp
     src/core/models/var_normal_wishart.cpp
+    src/core/models/var_tvp_ald.cpp
     src/core/models/var_tvp_gamma.cpp
     src/core/models/var_tvp_stochvol.cpp
     src/core/models/var_tvp_wishart.cpp
@@ -78,9 +85,10 @@ BSD 3-Clause portion
     src/core/models/vec_tvp_wishart.cpp
 
     That is every file under inst/include/bayests/ and every source under
-    src/core/. inst/include/bayests/arma.h has no upstream counterpart --
-    it exists only here, to route Armadillo through RcppArmadillo -- but is
-    released on the same terms as the headers it sits beside.
+    src/core/. inst/include/bayests/arma.h, the header that routes Armadillo
+    through RcppArmadillo, began in this package and has since been adopted
+    upstream unchanged; it is BayesTS's like the headers it sits beside, and
+    under the same terms.
 
     inst/include/bayests_reporter.h is *not* part of this set. It lives one
     directory up, belongs to this package rather than to BayesTS, and is

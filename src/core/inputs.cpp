@@ -272,6 +272,74 @@ void require_vec_regressors(const VarSpec &spec, bool use_a)
 /// rho scales the cointegration state path itself, so a value outside (0, 1]
 /// either reverses the sign of the relation from period to period or lets it
 /// grow without bound. One is the random walk bvartools' .bvectvpalg uses.
+
+/// The quantile a quantile regression model estimates, and the shared checks
+/// every asymmetric Laplace model makes before it looks at its own blocks.
+///
+/// Three refusals rather than one. The quantile has to be a proper one: at zero
+/// or one the loss has no minimiser and theta is infinite. A covariance block
+/// has to be absent, because Psi rotates the equations into each other and the
+/// q-th quantile of a combination is not the combination of q-th quantiles --
+/// silently ignoring it would leave a file whose name says quantile and whose
+/// numbers do not. And the horizon has to be zero, because iterating a one step
+/// quantile does not give an h step one; refusing here rather than in forecast()
+/// means the file is rejected before a chain is spent on it.
+void validate_ald_spec(const VarSpec &spec)
+{
+    if (!(spec.quantile > 0.0 && spec.quantile < 1.0))
+    {
+        throw std::invalid_argument(
+            "the quantile of an asymmetric Laplace model must lie in (0, 1), got " +
+            std::to_string(spec.quantile));
+    }
+
+    if (spec.covar)
+    {
+        throw std::invalid_argument(
+            "a covariance block is not available for a quantile regression model: rotating the "
+            "equations into each other leaves a residual whose quantile is not the one asked for");
+    }
+
+    if (spec.h != 0)
+    {
+        throw std::invalid_argument(
+            "a quantile regression model does not forecast, so its horizon must be zero, got " +
+            std::to_string(spec.h) +
+            "; the h step quantile is not the quantile of the iterated one step quantiles");
+    }
+
+    if (spec.varsel == VarSelection::ssvs)
+    {
+        throw std::invalid_argument("SSVS is not implemented for a quantile regression model; "
+                                    "expected one of none, bvs");
+    }
+}
+
+/// The latent scales and the scale of the asymmetric Laplace, shared by both
+/// quantile models: the same two blocks at the same widths whatever the
+/// coefficients do.
+void validate_ald_errors(const GammaPrior &u_scale_prior, const arma::mat &w,
+                         const arma::vec &u_scale, arma::uword k, arma::uword tt)
+{
+    require_length(u_scale_prior.shape, k, "prior shape of the asymmetric Laplace scale");
+    require_length(u_scale_prior.rate, k, "prior rate of the asymmetric Laplace scale");
+
+    require_shape(w, tt, k, "initial latent scales");
+    require_length(u_scale, k, "initial scale of the asymmetric Laplace");
+
+    if (w.min() <= 0.0)
+    {
+        throw std::invalid_argument(
+            "every initial latent scale must be positive: it is the variance the first draw of the "
+            "coefficients is weighted by, and a zero divides by nothing");
+    }
+
+    if (u_scale.min() <= 0.0)
+    {
+        throw std::invalid_argument("every initial scale of the asymmetric Laplace must be positive");
+    }
+}
+
 void validate_tvp_coint_rho(double rho)
 {
     if (!(rho > 0.0 && rho <= 1.0))
@@ -402,6 +470,63 @@ void VarNormalStochvolInput::validate() const
     if (tt < 2)
     {
         throw std::invalid_argument("a stochastic volatility model needs at least two periods");
+    }
+}
+
+void VarNormalAldInput::validate() const
+{
+    const arma::uword k = static_cast<arma::uword>(spec.k);
+    const arma::uword tt = checked_periods(spec, train);
+    const arma::uword nparams = train.nparams();
+
+    validate_ald_spec(spec);
+
+    // Sigma is diagonal here and always will be, so a structural model is
+    // identified by that alone -- which is what this call says with `false`.
+    require_identified_structural(spec, false, "a covariance block");
+
+    if (use_a())
+    {
+        require_stacked_regressors(train, tt, k);
+        validate_normal_block(a_prior, initial.a, nparams, "a");
+
+        if (spec.uses_varsel())
+        {
+            validate_varsel(a_varsel_prior, initial.a_lambda, nparams, spec.varsel, "a");
+        }
+    }
+
+    validate_ald_errors(u_scale_prior, initial.w, initial.u_scale, k, tt);
+}
+
+void VarTvpAldInput::validate() const
+{
+    const arma::uword k = static_cast<arma::uword>(spec.k);
+    const arma::uword tt = checked_periods(spec, train);
+    const arma::uword nparams = train.nparams();
+
+    validate_ald_spec(spec);
+    require_identified_structural(spec, false, "a covariance block");
+
+    if (use_a())
+    {
+        require_stacked_regressors(train, tt, k);
+        validate_tvp_block(a_prior, initial.a, initial.a_sigma_inv, initial.a_init, nparams, tt,
+                           "coefficient", "a");
+
+        if (spec.uses_varsel())
+        {
+            validate_varsel(a_varsel_prior, initial.a_lambda, nparams, spec.varsel, "a");
+        }
+    }
+
+    validate_ald_errors(u_scale_prior, initial.w, initial.u_scale, k, tt);
+
+    // The random walk differences a against its own lag, so a single period
+    // leaves nothing to difference.
+    if (tt < 2)
+    {
+        throw std::invalid_argument("a time-varying parameter model needs at least two periods");
     }
 }
 
@@ -969,7 +1094,9 @@ void FavarNormalWishartInput::validate() const
     require_shape(train.f_obs, tt, n_obs, "the observed factors (f_obs)");
 
     // The free loadings, in the row-major order the sampler draws them -- the
-    // FAVAR count, which is n_lambda() only when there are no observed factors.
+    // FAVAR count, never n_lambda(). The two agree at more than one dimension
+    // (see VarSpec::n_favar_lambda()), so this length passing is not on its own
+    // evidence that the file was written to a FAVAR's convention.
     validate_normal_block(lambda_prior, initial.lambda,
                           static_cast<arma::uword>(spec.n_favar_lambda()), "lambda");
 

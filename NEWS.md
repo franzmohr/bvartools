@@ -1,5 +1,58 @@
 # bvartools (development version)
 
+* **Vendored BayesTS core refreshed.** **Draws are unchanged**, for every VAR and
+  VEC model this package samples. Upstream's own fingerprint comparison was run
+  over the change and reports 78 fixtures recorded before and after, 78
+  unchanged and none moved. (Its raw output calls all 78 moved, because the
+  recording gained a row -- `/posterior/u_scale/coeffs`, `absent` for every model
+  that does not write one. With that row dropped the two recordings are
+  identical.)
+
+    What arrived is two models, and nothing else that executes. `VarNormalAld`
+  and `VarTvpAld` are Bayesian quantile VARs: they estimate a conditional
+  *quantile* rather than a conditional mean, through the normal scale mixture
+  representation of the asymmetric Laplace distribution, which makes them the
+  stochastic volatility samplers with a different rule for where the per-period
+  variance comes from rather than a new kind of model. They are VARs, so they
+  belong here rather than to `dfmtools` and are not candidates for the refresh
+  script's `skip` list: their samplers, `core/models/ald_support.h` and the
+  `core/algorithms/inverse_gaussian.*` draw the latent scales need are all
+  compiled into the shared object.
+
+    **Nothing in R can reach them.** There is no `src/VarNormalAld.cpp` or
+  `src/VarTvpAld.cpp` binding and no R entry point, so the two sit vendored and
+  unreachable -- the position `VecNormalWishart` was in until it got a binding.
+  A binding will have to read `VarSpec::quantile`, which `read_spec()` in
+  `src/bayests_r_io.h` does not, so the quantile would otherwise arrive as its
+  0.5 default and the model would estimate the median while looking like it had
+  been asked for something else. It will also have to leave two refusals alone:
+  these models take no covariance block and produce no forecast, both rejected
+  by `validate()`, because a rotation of the errors is a combination of
+  quantiles rather than the quantile of a combination, and an `h` step quantile
+  is not the quantile of the iterated one step quantiles.
+
+    Beyond the two samplers the refresh is what they added to the files every
+  model shares: their `Initial`, `Input` and `Draws` structs in
+  `bayests/inputs.h` and `bayests/results.h`, their `validate()` in
+  `core/inputs.cpp`, and `quantile` in `bayests/spec.h`, `VarSpec`'s first
+  non-integer member. The only other upstream change to a file this package
+  vendors is comment text in `bayests/spec.h` and `core/inputs.cpp` about which
+  loading count a FAVAR reads -- a model that is skipped here in any case.
+
+    One thing changed hands rather than arriving. `bayests/arma.h`, the header
+  that routes Armadillo through RcppArmadillo, was this package's own and is now
+  upstream's, byte for byte, with the destination chosen by a
+  `BAYESTS_ARMA_HEADER` define that `src/Makevars` and `src/Makevars.win` set to
+  `<RcppArmadillo.h>`. Nothing about the build changes and no file under
+  `src/core/` reaches for `<armadillo>` any more, so the rewrite the refresh
+  script applies has nothing left to do; it and `src/bayests_rng_guard.cpp`'s
+  `static_assert` that Armadillo came out configured for R's RNG both stay, as
+  the cheap half of a failure that is otherwise silent.
+
+    `inst/COPYRIGHTS` gained the seven new files. The refresh script compares
+  that list against what is vendored and stops until they agree, which is what
+  it did here.
+
 * **Writing a model to HDF5 is about a third faster.** `write_to_hdf5()` used to
   ask the file whether a dataset was there before writing it, and then name the
   dataset again for each of its attributes, so a series with two attributes was

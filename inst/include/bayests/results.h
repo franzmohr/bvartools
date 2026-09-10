@@ -84,6 +84,36 @@ struct VarNormalStochvolDraws
     bool has_psi() const { return psi.n_elem > 0; }
 };
 
+/// Posterior draws of a VAR estimated at a conditional quantile.
+///
+/// The error variance moves with the latent scale of the asymmetric Laplace, so
+/// like the stochastic volatility models a draw carries a whole path rather than
+/// a single matrix. Unlike them there is no covariance block, so every stored
+/// precision matrix is diagonal -- kept in the k x k form all the same, because
+/// that is the shape every reader of this library expects and the one
+/// iterations() is counted off.
+///
+/// The latent scales themselves are not kept. They are k * tt numbers per draw
+/// of pure nuisance, and `u_omega_inv` together with `u_scale` recovers them.
+struct VarNormalAldDraws
+{
+    arma::mat a;        ///< nparams x iterations.
+    arma::mat a_lambda;
+
+    /// k x iterations: the scale of the asymmetric Laplace, one per equation.
+    arma::mat u_scale;
+
+    /// (k * tt) x iterations: the diagonal of the precision, period by period.
+    arma::mat u_omega_inv;
+
+    /// (k * k * tt) x iterations: one vectorised precision matrix per period,
+    /// periods stacked within a column. Diagonal throughout.
+    arma::mat u_sigma_inv;
+
+    arma::uword iterations() const { return u_sigma_inv.n_cols; }
+    bool has_a() const { return a.n_elem > 0; }
+};
+
 /// Posterior draws of a VAR whose coefficients follow a random walk.
 ///
 /// `a` holds a whole path per draw, which is what makes this model's output
@@ -150,6 +180,32 @@ struct VarTvpStochvolDraws
     bool has_psi() const { return psi.n_elem > 0; }
 };
 
+
+/// Posterior draws of a VAR estimated at a conditional quantile whose
+/// coefficients follow a random walk.
+///
+/// VarNormalAldDraws with the coefficients widened to a path and their state
+/// innovation variance beside them, exactly as VarTvpStochvolDraws widens
+/// VarNormalStochvolDraws.
+struct VarTvpAldDraws
+{
+    arma::mat a;        ///< (nparams * tt) x iterations.
+    arma::mat a_sigma;  ///< nparams x iterations.
+    arma::mat a_lambda;
+
+    /// k x iterations: the scale of the asymmetric Laplace, one per equation.
+    arma::mat u_scale;
+
+    /// (k * tt) x iterations: the diagonal of the precision, period by period.
+    arma::mat u_omega_inv;
+
+    /// (k * k * tt) x iterations: one vectorised precision matrix per period,
+    /// periods stacked within a column. Diagonal throughout.
+    arma::mat u_sigma_inv;
+
+    arma::uword iterations() const { return u_sigma_inv.n_cols; }
+    bool has_a() const { return a.n_elem > 0; }
+};
 
 /// Posterior draws of a VEC with a normal prior on the coefficients and a
 /// Wishart prior on the error precision.

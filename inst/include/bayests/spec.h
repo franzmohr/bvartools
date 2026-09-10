@@ -91,6 +91,18 @@ struct VarSpec
     /// before a forecast path is simulated.
     bool structural = false;
 
+    /// The quantile a quantile regression model estimates, in (0, 1). The only
+    /// field here that is not an integer, and the only one a model may leave at
+    /// its default while still being well specified: every model that is not an
+    /// asymmetric Laplace one ignores it, and the ALD samplers are the only ones
+    /// whose validate() checks the range.
+    ///
+    /// One quantile per model file rather than a vector, so that a grid of
+    /// quantiles is a list of models -- which is what the R level already does
+    /// with a vector of lag orders, and which lets the grid be run in parallel
+    /// without the sampler knowing.
+    double quantile = 0.5;
+
     /// Total length of the chain.
     int draws() const { return iterations + burnin; }
 
@@ -218,8 +230,8 @@ struct VarSpec
     /// zero. The first n_factors series of the panel are therefore the factors
     /// plus idiosyncratic noise and nothing else.
     ///
-    /// That is not a stylistic difference from n_lambda() and the two do not
-    /// coincide at any dimension. A rotation F -> C F leaves the measurement
+    /// That is not a stylistic difference from n_lambda(), and the two counts
+    /// are not interchangeable. A rotation F -> C F leaves the measurement
     /// alone if Lambda_f absorbs it, so something has to rule C out. A dynamic
     /// factor model rules it out with two restrictions at once -- a unit lower
     /// triangular block and a *diagonal* V, which together admit only C = I,
@@ -238,8 +250,22 @@ struct VarSpec
     /// Paired with n_lambda() rather than replacing it, the way
     /// n_non_structural_vec() is paired with n_non_structural(): reading a
     /// FAVAR's loadings off the DFM's count is the mistake the pair exists to
-    /// prevent, and here it is a mistake at every dimension rather than only
-    /// when there are observed factors.
+    /// prevent.
+    ///
+    /// It is not a mistake a length check will catch for you. The two differ by
+    ///
+    ///     n_lambda() - n_favar_lambda() = n(n - 1)/2 - (k - n) n_obs,
+    ///
+    /// which is zero on a whole family of dimensions rather than nowhere. With
+    /// one observed factor it vanishes at every k = n(n + 1)/2 -- (k, n, n_obs)
+    /// of (3, 2, 1), (6, 3, 1), (10, 4, 1), (15, 5, 1) and on up -- and beyond
+    /// that wherever (k - n) n_obs happens to hit n(n - 1)/2, as (4, 3, 3) and
+    /// (7, 4, 2) do. At those dimensions a /priors/lambda laid out to the DFM's
+    /// unit lower triangular convention has exactly the length a FAVAR's
+    /// validate() asks for, passes it, and is then read row by row as something
+    /// it is not: the chain runs to completion and estimates a different model.
+    /// Which count applies is decided by which model the file is, never by
+    /// which one its lambda happens to fit.
     ///
     /// Zero unless the model has factors, and zero as well if `n_factors`
     /// exceeds `k`, on the same grounds as n_lambda().

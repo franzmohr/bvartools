@@ -8,7 +8,8 @@ prints nothing and reads no files, which is what makes it embeddable in an R
 package at all.
 
 Upstream layout is preserved, so a refresh is a copy of two directories plus
-the patch below. `tools/update-bayests-core.R` does both:
+the patch below -- which upstream has since made unnecessary, though the script
+still applies it. `tools/update-bayests-core.R` does both:
 
 ```bash
 Rscript tools/update-bayests-core.R path/to/BayesTS/source_tree
@@ -40,27 +41,40 @@ that added or removed a file stops until the list is brought into line by hand.
 
 ## Local modifications
 
-Keep this list short; every entry is something a refresh has to reapply.
+Keep this list short; every entry is something a refresh has to reapply. It is
+down to one, and that one no longer needs reapplying.
 
-1. **Armadillo comes from RcppArmadillo.** Upstream opens with
+1. **Armadillo comes from RcppArmadillo** -- which is now upstream's own
+   arrangement rather than something reapplied here. Every copied header and
+   source reaches Armadillo through `bayests/arma.h`, and that header includes
+   whatever `BAYESTS_ARMA_HEADER` names, defaulting to `<armadillo>` for a
+   standalone build. `src/Makevars` and `src/Makevars.win` define it as
+   `<RcppArmadillo.h>`, which is what points Armadillo's RNG at R's, so
+   `set.seed()` reaches the samplers.
+
+   It began as a patch. `arma.h` existed only here, and the refresh script
+   rewrote every
 
    ```cpp
    #define ARMA_DONT_PRINT_FAST_MATH_WARNING
    #include <armadillo>
    ```
 
-   and every such `#include <armadillo>` is replaced by
-   `#include "bayests/arma.h"`, a header that exists only here and includes
-   `<RcppArmadillo.h>`. That is what points Armadillo's RNG at R's, so
-   `set.seed()` reaches the samplers. The rule is uniform -- every copied file
-   that includes Armadillo, header or source -- which is why it can be applied
-   by a script rather than kept as a list of file names that goes stale.
+   into an include of it. Upstream has since adopted both the header -- byte for
+   byte the same file -- and the rule, so nothing under `include/bayests/` or
+   `src/core/` includes `<armadillo>` any more and the rewrite has nothing left
+   to do. It is kept all the same, as is the script's refusal to finish while a
+   copied file still includes `<armadillo>`: neither costs anything, and either
+   would catch a file upstream forgot. The script's `keep` list still names
+   `arma.h`, which is now merely redundant -- upstream's copy is identical, so
+   copying it over ours is a no-op.
 
-   Losing this patch is the only way to break the vendored core silently: it
-   compiles, links and runs, and merely stops honouring `set.seed()`. Two things
-   watch for it. The script refuses to finish while any copied file still
-   includes `<armadillo>`, and `src/bayests_rng_guard.cpp` fails the build with
-   a `static_assert` if Armadillo ends up configured for its own RNG.
+   What is load-bearing is the define. Lose it and the vendored core breaks
+   silently: it compiles, links and runs, and merely stops honouring
+   `set.seed()`. `src/bayests_rng_guard.cpp` fails the build with a
+   `static_assert` if Armadillo ends up configured for its own RNG, which is the
+   one thing standing between a dropped `-D` and a package whose seeds do
+   nothing.
 
 That is the whole list. `core/models/var_tvp_wishart.cpp` used to be a second
 entry -- it was not copied, because upstream neither listed it in
@@ -292,18 +306,35 @@ All six VAR algorithms are converted: `VarNormalWishart`, `VarNormalGamma`,
 `VarNormalStochvol`, `VarTvpGamma`, `VarTvpWishart` and `VarTvpStochvol`.
 Nothing in `src/` samples any more; the numerics all live in `src/core/`.
 
-`VecNormalWishart` is the exception, and now the only thing here that is
-vendored without being reachable -- the DFM samplers were the others until they
-moved to `skip`; see *Not copied*. The difference is that this one is waiting on
-a binding rather than belonging to another package. Its sampler,
-`core/algorithms/vec_to_var.*` and
-`bayests/vec_normal_wishart.h` are all copied and compiled into the shared
-object, but there is no `src/VecNormalWishart.cpp` binding and no R entry point,
-so the VEC still runs through this package's own `src/bvecalg.cpp`. Until a
-binding exists the two are separate implementations of the same model, and only
-the vendored one has the fixes recorded in BayesTS -- among them the
-cointegration space prior's scalar shrinkage, the loadings being written back
-after reparameterisation, and the lag ordering of a simulated forecast path.
+The seven VEC algorithms are converted too -- `VecNormalWishart`,
+`VecNormalGamma`, `VecNormalStochvol`, `VecKlgs2010`, `VecTvpGamma`,
+`VecTvpStochvol` and `VecTvpWishart` -- so `src/bvecalg.cpp`, this package's own
+implementation of the VEC, is gone. `VecNormalWishart` was the last of them to
+wait on a binding, and while it did the two were separate implementations of the
+same model with only the vendored one carrying the fixes recorded in BayesTS.
+One implementation each now.
+
+`VarNormalAld` and `VarTvpAld` are the exception, and the only thing here that
+is vendored without being reachable -- `VecNormalWishart` held that position
+until it got a binding, and the DFM samplers until they moved to `skip`; see
+*Not copied*. These two are Bayesian quantile VARs, so they belong to this
+package rather than to `dfmtools` and are not candidates for `skip`; they are
+waiting on a binding. Their samplers, `core/models/ald_support.h` and
+`core/algorithms/inverse_gaussian.*` are copied and compiled into the shared
+object, but there is no `src/VarNormalAld.cpp` or `src/VarTvpAld.cpp` and no R
+entry point, so nothing in R can reach them.
+
+Two more things a binding for those two has to get right, beyond the three
+below.
+`read_spec()` in `src/bayests_r_io.h` does not read `VarSpec::quantile`, so the
+quantile would arrive as its 0.5 default and the model would estimate the median
+while looking like it had been asked for something else. And the two refusals
+these models make are part of the estimand rather than gaps to be filled in: no
+covariance block, because rotating the errors makes the estimand a combination
+of quantiles rather than the quantile of a combination, and no forecast, because
+the `h` step quantile is not the quantile of the iterated one step quantiles.
+`validate()` rejects both, and a binding should let it rather than work around
+it.
 
 The R pipeline above all of this did not change: `bvarpost()`,
 `add_posterior_forecasts()` and `add_posterior_loglik()` still dispatch on

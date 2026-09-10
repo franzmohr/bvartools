@@ -125,6 +125,69 @@ struct VarNormalStochvolInput
     void validate() const;
 };
 
+/// Where the VarNormalAld chain starts.
+///
+/// `w` is the latent scale of the asymmetric Laplace mixture, one per
+/// observation, and it is a state rather than data: the sampler redraws every
+/// element of it each sweep. It sits here rather than in the priors because a
+/// chain has to start somewhere, and a file that supplies it can resume one.
+struct VarNormalAldInitial
+{
+    arma::vec a;
+    arma::vec a_lambda;
+
+    arma::mat w;         ///< tt x k latent scales, one column per equation.
+    arma::vec u_scale;    ///< k; the scale of the asymmetric Laplace, one per equation.
+};
+
+/// VAR estimated at a conditional quantile, through the normal-exponential
+/// scale mixture representation of the asymmetric Laplace distribution.
+///
+/// For quantile q, with theta = (1 - 2q) / (q(1 - q)) and tau2 = 2 / (q(1 - q)),
+///
+///     y_it = x_t' a_i + theta w_it + e_it,  e_it ~ N(0, tau2 s_i w_it),
+///     w_it ~ Exp(1 / s_i),
+///
+/// so that conditional on the latent scales every equation is an ordinary
+/// weighted normal regression -- which is what makes this the stochastic
+/// volatility sampler with a different rule for where the per-period variance
+/// comes from, rather than a new kind of model.
+///
+/// Two things this model does not have. There is **no covariance block**: Psi is
+/// a triangular rotation of the errors, the equations are independent given w,
+/// and rotating them is what stops the estimand being a quantile. And there is
+/// **no forecast**: the h step quantile is not the quantile of the iterated one
+/// step quantiles, so validate() rejects a horizon rather than letting the
+/// front-end produce a number that cannot be read as one.
+///
+/// The asymmetric Laplace is a working likelihood, not a claim about the data.
+/// The posterior locates the quantile, but its spread is not calibrated without
+/// the adjustment of Yang, Wang and He (2016), which this does not apply.
+///
+/// Only BVS reaches this model; SSVS is not implemented for it.
+///
+/// Kozumi, H., & Kobayashi, G. (2011). Gibbs sampling methods for Bayesian
+/// quantile regression. Journal of Statistical Computation and Simulation,
+/// 81(11), 1565-1578.
+struct VarNormalAldInput
+{
+    VarSpec spec;
+    TrainData train;
+    ForecastData forecast; ///< Always empty: this model does not forecast.
+
+    NormalPrior a_prior;
+    VarSelPrior a_varsel_prior;
+
+    /// Inverse gamma on the scale of the asymmetric Laplace, one per equation.
+    GammaPrior u_scale_prior;
+
+    VarNormalAldInitial initial;
+
+    bool use_a() const { return train.nparams() > 0; }
+
+    void validate() const;
+};
+
 /// Where the VarTvpGamma chain starts.
 ///
 /// The coefficients are paths rather than points, so most of this is a matrix
@@ -262,6 +325,48 @@ struct VarTvpStochvolInput
     bool use_a() const { return train.nparams() > 0; }
     bool use_psi() const { return spec.uses_covar(); }
     bool uses_psi_varsel() const { return psi_varsel != VarSelection::none; }
+
+    void validate() const;
+};
+
+/// Where the VarTvpAld chain starts.
+///
+/// VarTvpStochvolInitial's coefficient half beside VarNormalAldInitial's error
+/// half: the coefficients are paths, and the scale of the asymmetric Laplace is
+/// a latent per observation.
+struct VarTvpAldInitial
+{
+    arma::mat a;           ///< nparams x tt.
+    arma::mat a_sigma_inv; ///< nparams x nparams; only the diagonal is read.
+    arma::vec a_init;      ///< nparams; the state before the first period.
+    arma::vec a_lambda;
+
+    arma::mat w;        ///< tt x k latent scales, one column per equation.
+    arma::vec u_scale;  ///< k; the scale of the asymmetric Laplace.
+};
+
+/// VAR estimated at a conditional quantile whose coefficients follow a random
+/// walk. VarNormalAld's every word applies, including the two things it does not
+/// have -- no covariance block and no forecast -- and the coefficients are drawn
+/// as whole paths with the simulation smoother, as in VarTvpStochvol.
+///
+/// What the drift buys here is the thing a constant-coefficient quantile model
+/// cannot say: that the *relationship* at the tail moved, rather than only the
+/// spread of the errors around a fixed one.
+struct VarTvpAldInput
+{
+    VarSpec spec;
+    TrainData train;
+    ForecastData forecast; ///< Always empty: this model does not forecast.
+
+    RandomWalkPrior a_prior;
+    VarSelPrior a_varsel_prior;
+
+    GammaPrior u_scale_prior;
+
+    VarTvpAldInitial initial;
+
+    bool use_a() const { return train.nparams() > 0; }
 
     void validate() const;
 };

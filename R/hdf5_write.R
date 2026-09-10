@@ -97,8 +97,21 @@
 }
 
 # The attributes that make a stored matrix a time series again on the way back.
+#
+# The error correction term of a model that has been through
+# scale_error_correction() carries the factors it was divided by, and they are
+# the only way back to the scale of the data. Without them an exported model
+# that was scaled could never be interpreted again, so they travel with it. The
+# names are not stored: they are the variable names, which are written anyway.
 .hdf5_series_attrs <- function(x) {
-  list("variables" = dimnames(x)[[2]], "tsp" = stats::tsp(x))
+
+  result <- list("variables" = dimnames(x)[[2]], "tsp" = stats::tsp(x))
+
+  if (!is.null(attr(x, "scale"))) {
+    result[["scale"]] <- unname(attr(x, "scale"))
+  }
+
+  return(result)
 }
 
 # The attributes that make stored draws a chain again on the way back.

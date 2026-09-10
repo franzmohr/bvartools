@@ -58,9 +58,20 @@ read_model_from_hdf5 <- function(filename, group = "") {
       result[["data"]][["train"]] <- list()
       for (i in c("y", "w", "x")) {
         if (i %in% names(h5_root[["data"]][["train"]])) {
-          result[["data"]][["train"]][[i]] <- stats::ts(as.matrix(hdf5r::readDataSet(h5_root[["data"]][["train"]][[i]])))
-          dimnames(result[["data"]][["train"]][[i]]) <- list(NULL, hdf5r::h5attr(h5_root[["data"]][["train"]][[i]], "variables"))
-          stats::tsp(result[["data"]][["train"]][[i]]) <- hdf5r::h5attr(h5_root[["data"]][["train"]][[i]], "tsp")
+          dataset <- h5_root[["data"]][["train"]][[i]]
+          variables <- hdf5r::h5attr(dataset, "variables")
+          result[["data"]][["train"]][[i]] <- stats::ts(as.matrix(hdf5r::readDataSet(dataset)))
+          dimnames(result[["data"]][["train"]][[i]]) <- list(NULL, variables)
+          stats::tsp(result[["data"]][["train"]][[i]]) <- hdf5r::h5attr(dataset, "tsp")
+
+          # A model that was exported while its error correction term was
+          # scaled carries the factors it was divided by. They are named after
+          # the variables, which is why the names are not stored separately.
+          if ("scale" %in% hdf5r::h5attr_names(dataset)) {
+            factors <- hdf5r::h5attr(dataset, "scale")
+            names(factors) <- variables
+            attr(result[["data"]][["train"]][[i]], "scale") <- factors
+          }
         }
       }
       for (i in c("z")) {

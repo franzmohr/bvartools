@@ -65,6 +65,19 @@ working.
   and say why. The structural types `"sir"` and `"sgir"` are unchanged, as is
   every reduced form model.
 
+* **Fixed: the structural variance decomposition ignored the variances of the
+  structural shocks.** `fevd` with `type = "sir"` used `A_0^-1` as the impulse
+  matrix and `A_0^-1 A_0^-1'` as the forecast error covariance, leaving the
+  covariance of the structural errors out of both, so every structural shock was
+  decomposed as if it had unit variance. Weight moved to whichever shock loads
+  most heavily in `A_0`, and since the shares are normalised they still summed
+  to one, so the output gave nothing away. On a three variable example whose
+  shock variances stand at 4, 1 and 0.25 the reported shares were 0.21, 0.13 and
+  0.65 where they should be 0.74, 0.12 and 0.14. The impulse matrix is now
+  `A_0^-1 chol(Sigma)'` and the forecast error covariance `A_0^-1 Sigma A_0^-1'`.
+  `"sgir"` already carried `Sigma` and is unchanged, as is every reduced form
+  type.
+
 * **Fixed: `gen_vec` stopped on seasonal terms for data of frequency one.** It
   warned that no seasonal dummies are generated and then added them anyway,
   failing with `object 'seas' not found` because the dummies had never been

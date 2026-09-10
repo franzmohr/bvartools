@@ -119,7 +119,7 @@ before assuming a call carries over.
 
 ## Fixes in this release
 
-Four defects in the CRAN sources are fixed here. Two of them change results.
+Five defects in the CRAN sources are fixed here. Three of them change results.
 
 * **Stochastic volatility with an observation far out in the tails.**
   `stochvol_ksc1998()` and `stochvol_ocsn2007()` sampled the mixture indicator
@@ -150,6 +150,16 @@ Four defects in the CRAN sources are fixed here. Two of them change results.
   `"gir"`, and `fevd()` with `"oir"` or `"gir"`, now refuse a structural model
   and say why. Use `"sir"` or `"sgir"`, which are what a structural model is
   for and are unchanged, or estimate the model with `structural = FALSE`.
+
+* **The structural variance decomposition ignored the variances of the
+  structural shocks.** `fevd()` with `type = "sir"` used `A_0^-1` as the impulse
+  matrix and `A_0^-1 A_0^-1'` as the forecast error covariance, leaving the
+  covariance of the structural errors out of both. Every structural shock was
+  then decomposed as if it had unit variance, which moves weight to whichever
+  shock loads most heavily in `A_0`. Because the shares are normalised they
+  still summed to one, so nothing in the output showed that anything was wrong.
+  `"sgir"` already carried the covariance and is unchanged, as is every reduced
+  form type.
 
 * **Seasonal terms for data of frequency one.** `gen_vec()` warned that no
   seasonal dummies are generated for a series of frequency one and then added

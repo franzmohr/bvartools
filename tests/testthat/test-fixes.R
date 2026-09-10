@@ -136,3 +136,55 @@ test_that("gen_vec() still adds seasonal dummies where the frequency allows it",
                     seasonal = "unrestricted", iterations = 10, burnin = 5)
   expect_true(any(grepl("season", unlist(object[["model"]][["deterministic"]]))))
 })
+
+# --- Structural shock variances in the FEVD ---------------------------------
+
+# The 'sir' decomposition used A_0^-1 as the impulse matrix and A_0^-1 A_0^-1'
+# as the forecast error covariance, leaving the covariance of the structural
+# errors out of both. Every structural shock was then treated as if it had unit
+# variance, which moves weight to whichever shock loads most heavily in A_0.
+# The shares still sum to one, so nothing about the output gave it away.
+test_that("the structural FEVD weighs the shocks by their variances", {
+  k <- 3
+  h <- 5
+  response <- 3
+
+  A <- matrix(c(0.5, 0.1, 0.0,
+                0.2, 0.4, 0.1,
+                0.0, 0.1, 0.3), k, k, byrow = TRUE)
+  A0 <- matrix(c( 1.0,  0.0, 0.0,
+                 -0.6,  1.0, 0.0,
+                 -0.3, -0.4, 1.0), k, k, byrow = TRUE)
+  # Deliberately uneven, so that dropping Sigma cannot go unnoticed.
+  Sigma <- diag(c(4, 1, 0.25))
+
+  # The structural decomposition written out independently. The reduced form is
+  # y_t = A_0^-1 A y_{t-1} + A_0^-1 e_t with Var(e) = Sigma, so the impulse
+  # matrix is A_0^-1 chol(Sigma)' and the forecast error covariance is
+  # A_0^-1 Sigma A_0^-1'.
+  a0i <- solve(A0)
+  P <- a0i %*% t(chol(Sigma))
+  S <- a0i %*% Sigma %*% t(a0i)
+  ej <- rep(0, k)
+  ej[response] <- 1
+
+  phi <- list(diag(k))
+  numerator <- rep(0, k)
+  mse <- 0
+  reference <- matrix(NA_real_, h + 1, k)
+  for (i in 0:h) {
+    if (i > 0) {
+      phi[[i + 1]] <- phi[[i]] %*% A
+    }
+    ph <- phi[[i + 1]]
+    numerator <- numerator + as.numeric(ej %*% ph %*% P)^2
+    mse <- mse + as.numeric(ej %*% ph %*% S %*% t(ph) %*% ej)
+    reference[i + 1, ] <- numerator / mse
+  }
+
+  got <- bvartools:::.vardecomp(list(A = A, A0 = A0, Sigma = Sigma),
+                                h = h, type = "sir", response = response)
+
+  expect_equal(got, reference, tolerance = 1e-12)
+  expect_equal(rowSums(got), rep(1, h + 1), tolerance = 1e-12)
+})

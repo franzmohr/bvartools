@@ -30,9 +30,14 @@ arma::mat vardecomp(Rcpp::List A, int h, std::string type, int response) {
     sigma_mse = sigma;
   }
   if (type == sir) {
+    // The structural shocks carry the variances in Sigma, so the impulse matrix
+    // is A_0^{-1} times a factor of Sigma and the forecast error covariance is
+    // A_0^{-1} Sigma A_0^{-1}'. Dropping Sigma here would decompose the variance
+    // as if every structural shock had unit variance, which shifts weight to
+    // whichever shock has the largest loading in A_0.
     a0i = arma::solve(Rcpp::as<arma::mat>(A["A0"]), arma::eye<arma::mat>(k, k));
-    P = a0i;
-    sigma_mse = a0i * arma::trans(a0i);
+    P = a0i * arma::trans(arma::chol(sigma));
+    sigma_mse = a0i * sigma * arma::trans(a0i);
   }
   if (type == gir) {
     P = sigma;

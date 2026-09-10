@@ -377,13 +377,11 @@ create_bvecmodel <- function(data, p = 2, exogen = NULL, s = 2, r = NULL,
         s_name <- c(s_name, paste("season.", i, sep = ""))
       }
 
-      # Inside the branch that produced 'seas': at a frequency of one there is
-      # nothing to add, and the warning above is the whole of the response.
       if (seasonal == "restricted") {
         ect <- cbind(ect, seas)
         ect_names <- c(ect_names, s_name)
         det_name_r <- c(det_name_r, s_name)
-        n_ect <- n_ect + length(s_name)
+        n_ect <- n_ect + freq - 1
       }
 
       if (seasonal == "unrestricted") {
@@ -395,15 +393,22 @@ create_bvecmodel <- function(data, p = 2, exogen = NULL, s = 2, r = NULL,
     }
   }
   
-  use_det_r <- FALSE
-  if (length(det_name_r) > 0) {
-    use_det_r <- TRUE
-    model[["n_restricted"]] <- length(det_name_r)
-  }
+  det_data <- NULL
+  
   use_det_ur <- FALSE
   if (length(det_name_ur) > 0) {
     use_det_ur <- TRUE
     model[["n"]] <- length(det_name_ur)
+    model[["deterministic"]] <- det_name_ur
+    det_data <- x[, which(x_names %in% det_name_ur)]
+  }
+  
+  use_det_r <- FALSE
+  if (length(det_name_r) > 0) {
+    use_det_r <- TRUE
+    model[["n_restricted"]] <- length(det_name_r)
+    model[["deterministic_restricted"]] <- det_name_r
+    det_data <- cbind(det_data, ect[, which(ect_names %in% det_name_r)])
   }
   
   if (is.null(r)) {
@@ -422,7 +427,7 @@ create_bvecmodel <- function(data, p = 2, exogen = NULL, s = 2, r = NULL,
   if ("logical" %in% class(structural)) {
     model[["structural"]] <- structural
     if (structural) {
-      model[["type"]] <- "SVECX" 
+      model[["type"]] <- "SVEC" 
     }
   } else {
     stop("Argument 'structural' must be of class 'logical'.")
@@ -460,6 +465,12 @@ create_bvecmodel <- function(data, p = 2, exogen = NULL, s = 2, r = NULL,
     x <- NULL
   }
   
+  if (!is.null(det_data)) {
+    det_data <- stats::ts(as.matrix(det_data), class = c("mts", "ts", "matrix"))
+    stats::tsp(det_data) <- ts_info
+    dimnames(det_data)[[2]] <- c(det_name_ur, det_name_r)
+  }
+  
   # Structural data
   y_A0 <- NULL
   if (structural & k > 1) {
@@ -475,6 +486,7 @@ create_bvecmodel <- function(data, p = 2, exogen = NULL, s = 2, r = NULL,
   for (i in p) {
     for (j in s) {
       for (rank in r) {
+        
         pos <- NULL
         model_i <- model
         
@@ -500,9 +512,11 @@ create_bvecmodel <- function(data, p = 2, exogen = NULL, s = 2, r = NULL,
         
         model_i[["k_beta"]] <- as.integer(n_ect)
         model_i[["rank"]] = as.integer(rank)
+        
         x_i <- NULL
         z <- NULL
         if (length(pos) > 0) {
+          # Create data input matrix of the respective model
           x_i <- stats::ts(as.matrix(x[, pos]), class = c("mts", "ts", "matrix")) 
           stats::tsp(x_i) <- ts_info
           dimnames(x_i)[[2]] <- x_names[pos]
@@ -510,7 +524,7 @@ create_bvecmodel <- function(data, p = 2, exogen = NULL, s = 2, r = NULL,
         }
         
         if (rank > 0) {
-          z <- cbind(matrix(NA, tt * k, rank * k) , z)
+          z <- cbind(matrix(NA_real_, tt * k, rank * k) , z)
         }
         
         if (!is.null(y_A0)) {
@@ -520,7 +534,8 @@ create_bvecmodel <- function(data, p = 2, exogen = NULL, s = 2, r = NULL,
         
         result_i <- list("model" = model_i,
                          "data" = list("original" = list("endogen" = data,
-                                                         "exogen" = exogen),
+                                                         "exogen" = exogen,
+                                                         "deterministic" = det_data),
                                        "train" = list("y" = y,
                                                       "w" = ect,
                                                       "x" = x_i,

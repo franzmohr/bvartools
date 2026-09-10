@@ -13,6 +13,7 @@ create_bvarmodel(
   seasonal = FALSE,
   structural = FALSE,
   error = "wishart",
+  quantile = 0.5,
   tvp = FALSE,
   varsel = "none",
   iterations = 20000,
@@ -41,6 +42,10 @@ structural VAR model. Defaults to \code{FALSE}.}
 
 \item{error}{character specifying the model that should be used for the estimation
 of the covariance matrix of the error term. Default is \code{"wishart"}. See 'Details'.}
+
+\item{quantile}{a numeric vector of quantiles in the interval \eqn{(0, 1)} that should be
+estimated. Only used, if \code{error = "ald"}. Defaults to \code{0.5}, the median. One model
+is created per quantile, so a vector produces a list of models. See 'Details'.}
 
 \item{tvp}{logical indicating whether the model parameters are time varying.
 Defaults to \code{FALSE}.}
@@ -112,7 +117,26 @@ Covariances are estimated based on a triangular decomposition.}
 algorithm. Off-diagonal elements are not estimated and set to zero.}
  \item{\code{"sv+covar"}: Only the diagonal elements of the covariance matrix are estimated using a stochastic volatility
 algorithm. Covariances are estimated based on a triangular decomposition.}
+ \item{\code{"ald"}: The errors are assumed to follow an asymmetric Laplace distribution, which
+turns the model into a Bayesian quantile regression: the coefficients describe the conditional
+quantile specified in argument \code{quantile} instead of the conditional mean. Off-diagonal
+elements of the covariance matrix are not estimated and set to zero. See 'Details'.}
 }
+
+Models with \code{error = "ald"} estimate a conditional quantile after Kozumi and Kobayashi (2011).
+Minimising the quantile loss at \eqn{q} corresponds to maximising the likelihood of an asymmetric
+Laplace distribution, which is a scale mixture of normal distributions. Conditional on the latent
+scales of that mixture every equation is a weighted normal regression, which is what makes the
+model a Gibbs sampler like the others.
+
+Three properties of these models differ from the rest of the package. Covariances are not
+estimated, since rotating the equations into each other leaves a residual whose quantile is not
+the one that was asked for. Forecasts are not available, since the \eqn{h} step ahead quantile is
+not the quantile of the iterated one step ahead quantiles. And the asymmetric Laplace is a working
+likelihood rather than a claim about the data, so the posterior locates the quantile, but the
+spread of the draws is not a calibrated credible interval without the adjustment of Yang et al.
+(2016), which is not applied. Variable selection is available as \code{"bvs"}, not as
+\code{"ssvs"}.
 
 Available specifications for argument \code{varsel} are:
 \itemize{
@@ -143,6 +167,10 @@ restrictions. \emph{Journal of Econometrics, 142}(1), 553--580.
 
 Korobilis, D. (2013). VAR forecasting using Bayesian variable selection.
 \emph{Journal of Applied Econometrics, 28}(2), 204--230. \doi{10.1002/jae.1271}
+
+Kozumi, H., & Kobayashi, G. (2011). Gibbs sampling methods for Bayesian quantile regression.
+\emph{Journal of Statistical Computation and Simulation, 81}(11), 1565--1578.
+\doi{10.1080/00949650903260125}
 
 Lütkepohl, H. (2006). \emph{New Introduction to Multiple Time Series Analysis} (2nd ed.). Berlin: Springer.
 }

@@ -210,6 +210,7 @@
 #'                     sigma = list(df = "k", scale = 1))
 #'
 #' @export
+#' @method add_priors bvecmodel
 add_priors.bvecmodel <- function(object,
                                  coef,
                                  coint,

@@ -31,7 +31,7 @@ for the calculation of the prior variance of deterministic terms is used
 for all exogenous variables. See 'Details'.}
 
 \item{kappa4}{a numeric specifying the size of the prior variance of deterministic
-terms. See 'Details'.}
+terms relative to argument \code{kappa1}.}
 
 \item{max_var}{a positive numeric specifying the maximum prior variance that is allowed for
 coefficients of non-deterministic variables. If \code{NULL} (default), the prior variances are not limited.}
@@ -74,7 +74,7 @@ data("e1")
 e1 <- diff(log(e1)) * 100
 
 # Generate model input
-object <- create_bvarmodel(e6, p = 1:4,
+object <- create_bvarmodel(e6, p = 1,
                            deterministic = "both",
                            seasonal = TRUE)
 

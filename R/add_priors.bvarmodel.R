@@ -157,6 +157,7 @@
 #'                     sigma = list(df = "k", scale = 1))
 #' 
 #' @export
+#' @method add_priors bvarmodel
 add_priors.bvarmodel <- function(object,
                                  coef,
                                  sigma,
@@ -441,7 +442,8 @@ add_priors.bvarmodel <- function(object,
     
     #### BVS prior ----
     if (use_bvs) {
-      temp <- inclusion_prior(object, prob = varsel[["inprior"]], exclude_deterministics = varsel[["exclude_det"]],
+      temp <- inclusion_prior(object, prob = varsel[["inprior"]],
+                              exclude_deterministics = varsel[["exclude_det"]],
                               minnesota_like = !is.null(varsel[["minnesota"]]),
                               kappa1 = varsel[["minnesota"]][1],
                               kappa2 = varsel[["minnesota"]][2],

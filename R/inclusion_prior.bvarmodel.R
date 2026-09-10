@@ -3,7 +3,7 @@
 #' Prior inclusion probabilities as required for stochastic search variable selection (SSVS) à la
 #' George et al. (2008) and Bayesian variable selection (BVS) à la Korobilis (2013).
 #' 
-#' @param object an object of class 'bvarmodel', usually, a result of a
+#' @param object an object of class \code{"bvarmodel"}, usually, a result of a
 #' call to \code{\link{create_bvarmodel}}.
 #' @param prob a numeric specifying the prior inclusion probability of all model parameters.
 #' @param exclude_deterministics logical. If \code{TRUE} (default), the vector of the positions of
@@ -49,6 +49,7 @@
 #' incl <- inclusion_prior(object)
 #' 
 #' @export
+#' @method inclusion_prior bvarmodel
 inclusion_prior.bvarmodel <- function(object,
                                       prob = .5,
                                       exclude_deterministics = TRUE,

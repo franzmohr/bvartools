@@ -16,7 +16,7 @@
 )
 }
 \arguments{
-\item{object}{an object of class 'bvarmodel', usually, a result of a
+\item{object}{an object of class \code{"bvarmodel"}, usually, a result of a
 call to \code{\link{create_bvarmodel}}.}
 
 \item{prob}{a numeric specifying the prior inclusion probability of all model parameters.}

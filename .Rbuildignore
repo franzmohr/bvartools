@@ -2,7 +2,9 @@
 ^\.Rproj\.user$
 ^tools$
 ^\.claude$
+^\.github$
 ^README\.Rmd$
 ^README-.*\.png$
 ^README-figs$
 ^data-raw$
+^src/core/.*\.(o|so|dll)$

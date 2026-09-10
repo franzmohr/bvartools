@@ -4,22 +4,11 @@
 #' 
 #' @param object an object of class 'bvarmodel'.
 #' @param n_ahead number of steps ahead at which to predict.
-#' @param deterministic a time-series object with deterministic data. If not
-#' specified, the function will try to identify the deterministic terms
-#' automatically. If this is not successful, an error message we be returned.
-#' @param exogen a time-series object with unmodeled, non-deterministic data.
-#' See 'Details'.
 #' @param ... additional arguments.
 #' 
 #' @details For the VAR model
 #' \deqn{A_0 y_t = \sum_{i = 1}^{p} A_{i} y_{t-i} + \sum_{i = 0}^{s} B_{i} x_{t-i} + C D_t + u_t,}
 #' with \eqn{u_t \sim N(0, \Sigma)} the function produces \code{n_ahead} forecasts.
-#' 
-#' Data provided in argument \code{exogen} will be prepared according to the
-#' model specifications in argument \code{object} and joined with the prediction
-#' data set using the time stamp as a key. Therefore, \code{exogen} should
-#' only contain the series that should be used. It is \emph{not} necessary to add further
-#' columns with lags of the time series.
 #' 
 #' @return An array of class 'bvarprd'.
 #' 

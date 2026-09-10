@@ -1,5 +1,5 @@
-#' Check Gibbs Sampler Input
-#' 
+# Check Gibbs Sampler Input
+# 
 # Checks if the input to function \code{\link{bvarpost}} is suitable for the
 # package's own Gibbs sampling algorithms.
 # 

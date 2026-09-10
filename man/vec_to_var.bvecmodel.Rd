@@ -9,7 +9,7 @@
 \arguments{
 \item{object}{an object of class \code{'bvecmodel'}, usually, the result of a
 call to \code{\link{create_bvecmodel}}, optionally already estimated with
-\code{\link{draw_posterior}}.}
+\code{\link{add_posterior_coefficients}}.}
 
 \item{...}{arguments passed forward to method.}
 }

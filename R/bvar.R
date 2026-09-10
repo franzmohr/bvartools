@@ -79,7 +79,7 @@
 #'
 #' The result is the same kind of object as the output of
 #' \code{\link{create_bvarmodel}} in combination with
-#' \code{\link{draw_posterior}}, so it can be used with the methods of class
+#' \code{\link{add_posterior_coefficients}}, so it can be used with the methods of class
 #' 'bvarmodel' such as \code{\link{irf.bvarmodel}},
 #' \code{\link{predict.bvarmodel}} or \code{\link{summary.bvarmodel}}.
 #' Accordingly, the draws are stored in the parameterisation those methods

@@ -2,6 +2,7 @@
 #'
 #' @param x an object used to select a method. Usually, the result of a call to
 #' \code{\link{selection_criteria}}.
+#' @param digits the minimum number of significant digits to be printed in values.
 #' @param relative an integer specifying the model that is used as the reference
 #' of relative forecast performance. Default is `0`, which indicates that results
 #' are not displayed in relation to each other.

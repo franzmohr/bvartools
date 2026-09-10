@@ -172,7 +172,7 @@ The draws of the different coefficient matrices provided in \code{alpha}, \code{
 
 The result is the same kind of object as the output of
 \code{\link{create_bvecmodel}} in combination with
-\code{\link{draw_posterior}}, so it can be used with the methods of class
+\code{\link{add_posterior_coefficients}}, so it can be used with the methods of class
 'bvecmodel' such as \code{\link{vec_to_var.bvecmodel}} or
 \code{\link{summary.bvecmodel}}. Accordingly, the draws are stored in the
 parameterisation those methods expect. The error correction term is described

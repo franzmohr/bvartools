@@ -6,7 +6,7 @@
 #'
 #' @param object an object of class \code{'bvecmodel'}, usually, the result of a
 #' call to \code{\link{create_bvecmodel}}, optionally already estimated with
-#' \code{\link{draw_posterior}}.
+#' \code{\link{add_posterior_coefficients}}.
 #' @param ... arguments passed forward to method.
 #'
 #' @details A VEC model and its VAR representation in levels are the same model

@@ -167,5 +167,9 @@ import(methods)
 importFrom(Matrix,Matrix)
 importFrom(Rcpp,sourceCpp)
 importFrom(coda,thin)
-importFrom(stats,window)
+importFrom(stats,
+  predict,
+  sd,
+  window
+)
 useDynLib(bvartools, .registration = TRUE)

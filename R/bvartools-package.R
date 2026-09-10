@@ -51,7 +51,7 @@
 #' @importFrom coda thin
 #' @importFrom Matrix Matrix
 #' @importFrom Rcpp sourceCpp
-#' @importFrom stats window
+#' @importFrom stats predict sd window
 #' @import methods
 ## usethis namespace: end
 NULL

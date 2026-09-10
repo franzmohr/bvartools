@@ -314,6 +314,7 @@ create_bvarmodel <- function(data, p = 2,
   use_det <- FALSE
   if (length(det_name) > 0) {
     model[["n"]] <- length(det_name)
+    model[["deterministic"]] <- det_name
     use_det <- TRUE
     det_data <- temp[, det_pos + 1:model[["n"]]]
     

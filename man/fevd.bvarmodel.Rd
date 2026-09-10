@@ -11,6 +11,7 @@
   type = "oir",
   normalise_gir = FALSE,
   period = NULL,
+  max_groups = NULL,
   ...
 )
 }
@@ -29,6 +30,12 @@ Possible choices are orthogonalised \code{oir} (default) and generalised \code{g
 \item{period}{integer. Index of the period, for which the variance decomposition should be generated.
 Only used for TVP or SV models. Default is \code{NULL}, so that the posterior draws of the last time period
 are used.}
+
+\item{max_groups}{integer. Maximum number of variables the decomposition should contain.
+The \code{max_groups - 1} variables with the largest contributions across the whole horizon
+are kept and the contributions of the remaining variables are added up in a further column
+named \code{"Other"}. This keeps the legend of the corresponding plot readable for models
+with many variables. Default is \code{NULL}, so that a column is returned for every variable.}
 
 \item{...}{further arguments passed to or from other methods.}
 }

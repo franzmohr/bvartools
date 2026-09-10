@@ -1,5 +1,17 @@
 # bvartools (development version)
 
+* **`fevd()` and its `plot()` method can pool the smaller contributions into one
+  group.** The new argument `max_groups` caps the number of groups shown: the
+  `max_groups - 1` variables with the largest contribution across the whole
+  horizon are kept, in the order of the endogenous variables, and the remaining
+  ones are added up in a further group `"Other"`. The row sums are untouched, so
+  a decomposition that added up to one still does. Passed to `fevd()`, the
+  returned decomposition itself has at most `max_groups` columns; passed to
+  `plot()`, the full decomposition is kept and only the bars and the legend are
+  pooled -- which is the point of the argument, since a model with many
+  variables produced a legend that crowded out the bars. The default is `NULL`
+  in both, which shows a group per variable as before.
+
 * **Bayesian quantile VARs.** `create_bvarmodel()` takes `error = "ald"` and a
   `quantile`, and estimates a conditional quantile of the endogenous variables
   instead of their conditional mean -- the question behind a growth-at-risk

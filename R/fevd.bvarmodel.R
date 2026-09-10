@@ -11,6 +11,11 @@
 #' @param period integer. Index of the period, for which the variance decomposition should be generated.
 #' Only used for TVP or SV models. Default is \code{NULL}, so that the posterior draws of the last time period
 #' are used.
+#' @param max_groups integer. Maximum number of variables the decomposition should contain.
+#' The \code{max_groups - 1} variables with the largest contributions across the whole horizon
+#' are kept and the contributions of the remaining variables are added up in a further column
+#' named \code{"Other"}. This keeps the legend of the corresponding plot readable for models
+#' with many variables. Default is \code{NULL}, so that a column is returned for every variable.
 #' @param ... further arguments passed to or from other methods.
 #' 
 #' @details The function produces forecast error variance decompositions (FEVD) for the VAR model
@@ -76,7 +81,8 @@
 #' Pesaran, H. H., & Shin, Y. (1998). Generalized impulse response analysis in linear multivariate models. \emph{Economics Letters, 58}, 17-29.
 #' 
 #' @export
-fevd.bvarmodel <- function(x, response = NULL, n_ahead = 5, type = "oir", normalise_gir = FALSE, period = NULL, ...) {
+fevd.bvarmodel <- function(x, response = NULL, n_ahead = 5, type = "oir", normalise_gir = FALSE, period = NULL,
+                           max_groups = NULL, ...) {
   
   
   if (is.null(x[["posterior"]][["u_sigma_inv"]][["coeffs"]])) {
@@ -102,7 +108,9 @@ fevd.bvarmodel <- function(x, response = NULL, n_ahead = 5, type = "oir", normal
     }
     need_A0 <- TRUE
   }
-  
+
+  max_groups <- .check_max_groups(max_groups)
+
   varnames <- x[["model"]][["endogen"]]
   response <- which(varnames == response)
   if (length(response) == 0){stop("Response variable not available.")}
@@ -123,9 +131,54 @@ fevd.bvarmodel <- function(x, response = NULL, n_ahead = 5, type = "oir", normal
     }
   }
   
+  colnames(result) <- varnames # Name columns
+
+  if (!is.null(max_groups) && max_groups < k) {
+    result <- .limit_fevd_groups(result, max_groups)
+  }
+
   result <- stats::ts(result, start = 0, frequency = 1)
-  dimnames(result) <- list(NULL, varnames) # Name columns
   
   class(result) <- append("bvarfevd", class(result))
   return(result)
+}
+
+# Reduce a variance decomposition to at most `max_groups` columns, so that the
+# legend of the plot stays readable for a model with many variables.
+#
+# The `max_groups - 1` columns with the largest contribution across the whole
+# horizon are kept in the order of the endogenous variables and the remaining
+# ones are added up in a column "Other", which occupies the last of the slots.
+# Row sums are left untouched, so a decomposition that added up to one before
+# still does afterwards.
+.limit_fevd_groups <- function(x, max_groups) {
+
+  keep <- sort(order(colSums(x), decreasing = TRUE)[seq_len(max_groups - 1)])
+  rest <- setdiff(seq_len(ncol(x)), keep)
+
+  label <- "Other"
+  while (label %in% colnames(x)[keep]) {
+    label <- paste0(label, "_")
+  }
+
+  result <- cbind(x[, keep, drop = FALSE], rowSums(x[, rest, drop = FALSE]))
+  colnames(result) <- c(colnames(x)[keep], label)
+
+  return(result)
+}
+
+# Validate the `max_groups` argument of fevd() and plot.bvarfevd(), which offer
+# it with the same meaning and should refuse the same input. Returns NULL, which
+# stands for "show every variable", or the value as an integer.
+.check_max_groups <- function(max_groups) {
+
+  if (is.null(max_groups)) {
+    return(NULL)
+  }
+
+  if (length(max_groups) != 1 || !is.numeric(max_groups) || is.na(max_groups) || max_groups < 1) {
+    stop("Argument 'max_groups' must be a single positive integer.")
+  }
+
+  return(as.integer(max_groups))
 }

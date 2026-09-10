@@ -9,7 +9,7 @@ A generic function used to calculate forecast error variance decompositions.}
 \usage{
 fevd(object, ...)
 
-\method{plot}{bvarfevd}(x, ...)
+\method{plot}{bvarfevd}(x, max_groups = NULL, ...)
 }
 \arguments{
 \item{object}{an object with suitable input data passed forward to method.}
@@ -17,6 +17,12 @@ fevd(object, ...)
 \item{...}{further graphical parameters.}
 
 \item{x}{an object of class "bvarfevd", usually, a result of a call to \code{\link{fevd}}.}
+
+\item{max_groups}{integer. Maximum number of variables shown in the plot. The
+\code{max_groups - 1} variables with the largest contributions across the whole horizon
+are kept and the contributions of the remaining variables are added up in a further bar
+segment named \code{"Other"}, so that the legend does not become too large. Default is
+\code{NULL}, so that a segment is shown for every variable of the decomposition.}
 }
 \description{
 A plot function for objects of class "bvarfevd".

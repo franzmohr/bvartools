@@ -32,3 +32,31 @@ test_that("a modellist can be plotted", {
 test_that("selection criteria can be plotted", {
   expect_plots(plot(selection_criteria(fx_var_modellist())))
 })
+
+test_that("a decomposition can be plotted with a limited number of groups", {
+  decomposition <- fevd(fx_var_fitted(), response = "cons", n_ahead = 5)
+
+  expect_plots(plot(decomposition, max_groups = 2))
+  expect_plots(plot(decomposition, max_groups = ncol(decomposition)))
+  expect_plots(plot(decomposition, max_groups = 2, main = "Decomposition"))
+})
+
+test_that("the plotted groups are the largest contributions plus 'Other'", {
+  decomposition <- fevd(fx_var_fitted(), response = "cons", n_ahead = 5)
+  largest <- colnames(decomposition)[which.max(colSums(decomposition))]
+
+  # The bars are drawn from the same matrix the legend is labelled with, so the
+  # pooling is checked on that matrix rather than on the device.
+  pooled <- bvartools:::.limit_fevd_groups(unclass(decomposition), 2)
+
+  expect_identical(colnames(pooled), c(largest, "Other"))
+  expect_equal(as.numeric(rowSums(pooled)),
+               as.numeric(rowSums(decomposition)))
+})
+
+test_that("an implausible number of groups is rejected by the plot method", {
+  decomposition <- fevd(fx_var_fitted(), response = "cons", n_ahead = 5)
+
+  expect_error(plot(decomposition, max_groups = 0), "positive integer")
+  expect_error(plot(decomposition, max_groups = "two"), "positive integer")
+})

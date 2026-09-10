@@ -3,6 +3,11 @@
 #' A plot function for objects of class "bvarfevd".
 #' 
 #' @param x an object of class "bvarfevd", usually, a result of a call to \code{\link{fevd}}.
+#' @param max_groups integer. Maximum number of variables shown in the plot. The
+#' \code{max_groups - 1} variables with the largest contributions across the whole horizon
+#' are kept and the contributions of the remaining variables are added up in a further bar
+#' segment named \code{"Other"}, so that the legend does not become too large. Default is
+#' \code{NULL}, so that a segment is shown for every variable of the decomposition.
 #' @param ... further graphical parameters.
 
 #' @examples
@@ -36,13 +41,25 @@
 #' 
 #' @export
 #' @rdname fevd
-plot.bvarfevd <- function(x, ...) {
+plot.bvarfevd <- function(x, max_groups = NULL, ...) {
   # Only save and restore 'mar'. Restoring all parameters would also reset
   # 'mfg' and thus overwrite the current panel of a user-defined layout.
   orig_par <- graphics::par(mar = graphics::par("mar"))
   on.exit(graphics::par(orig_par))
 
-  legend_names <- dimnames(x)[[2]]
+  periods <- stats::time(x)
+
+  # Pool the smallest contributions into one segment, if asked for. Done on a
+  # plain matrix, since the time index is already taken and subsetting a "ts"
+  # drops the column names the legend is built from.
+  max_groups <- .check_max_groups(max_groups)
+  shares <- unclass(x)
+  attr(shares, "tsp") <- NULL
+  if (!is.null(max_groups) && max_groups < ncol(shares)) {
+    shares <- .limit_fevd_groups(shares, max_groups)
+  }
+
+  legend_names <- colnames(shares)
 
   char_width <- graphics::par("cin")[1] # Width of a character in inches
   line_height <- graphics::par("csi")   # Height of a line of text in inches
@@ -63,14 +80,14 @@ plot.bvarfevd <- function(x, ...) {
 
   # Defaults that may be overridden via '...'
   dots <- list(...)
-  args <- list(ylab = "Percentage", xlab = "Period", names.arg = stats::time(x))
+  args <- list(ylab = "Percentage", xlab = "Period", names.arg = periods)
   args <- args[!(names(args) %in% names(dots))]
 
-  do.call(graphics::barplot, c(list(t(x)), args, dots))
+  do.call(graphics::barplot, c(list(t(shares)), args, dots))
 
   # Place the legend in the right margin, vertically centred on the plot region
   usr <- graphics::par("usr")
   graphics::legend(x = usr[2] + .02 * (usr[2] - usr[1]), y = mean(usr[3:4]),
                    xjust = 0, yjust = .5, xpd = TRUE, cex = legend_cex,
-                   legend = legend_names, fill = grDevices::gray.colors(NCOL(x)))
+                   legend = legend_names, fill = grDevices::gray.colors(ncol(shares)))
 }

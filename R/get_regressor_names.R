@@ -11,7 +11,7 @@
   s <- object[["model"]][["s"]]
   n <- object[["model"]][["n"]]
   tvp <- object[["model"]][["tvp"]]
-  y_names <- dimnames(object[["data"]][["original"]][["endogen"]])[[2]]
+  y_names <- object[["model"]][["endogen"]]
   x_names <- NULL
   
   if (p > 0) {
@@ -27,7 +27,7 @@
   
   if (m > 0) {
     temp_names <- NULL
-    exogen_names <- dimnames(object[["data"]][["original"]][["exogen"]])[[2]]
+    exogen_names <- object[["model"]][["exogen"]]
     temp_names <- paste0(exogen_names, ".l0")
     if (s > 0) {
       temp_names <- c(temp_names, paste0(exogen_names, ".l", rep(1:s, each = m))) 
@@ -39,7 +39,7 @@
   }
   
   if (n > 0) {
-    temp_names <- dimnames(object[["data"]][["original"]][["deterministic"]])[[2]]
+    temp_names <- object[["model"]][["deterministic"]]
     if (add_block) {
       temp_names <- paste0("C\n", temp_names)
     }

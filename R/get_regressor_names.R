@@ -28,6 +28,9 @@
   if (m > 0) {
     temp_names <- NULL
     exogen_names <- object[["model"]][["exogen"]]
+    if (length(exogen_names) != m) {
+      exogen_names <- paste0("x", 1:m)
+    }
     temp_names <- paste0(exogen_names, ".l0")
     if (s > 0) {
       temp_names <- c(temp_names, paste0(exogen_names, ".l", rep(1:s, each = m))) 
@@ -40,6 +43,11 @@
   
   if (n > 0) {
     temp_names <- object[["model"]][["deterministic"]]
+    # A model that does not carry the names still has the terms, so fall back
+    # rather than return a vector too short for the coefficients it labels.
+    if (length(temp_names) != n) {
+      temp_names <- paste0("det.", 1:n)
+    }
     if (add_block) {
       temp_names <- paste0("C\n", temp_names)
     }

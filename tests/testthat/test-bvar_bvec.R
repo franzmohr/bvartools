@@ -28,6 +28,9 @@ test_that("bvar assembles a model object from posterior draws", {
   expect_identical(object[["model"]][["p"]], 1L)
   expect_identical(object[["model"]][["n"]], 1L)
   expect_identical(object[["model"]][["endogen"]], c("invest", "income", "cons"))
+  # The names of the deterministic terms travel with the specification, which is
+  # where summary() and plot() look for the labels of their coefficients.
+  expect_identical(object[["model"]][["deterministic"]], "const")
 })
 
 test_that("bvar puts the draws back in the internal layout", {

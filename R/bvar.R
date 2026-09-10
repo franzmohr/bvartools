@@ -317,6 +317,9 @@ bvar <- function(data = NULL, exogen = NULL, y, x = NULL, z = NULL,
   if (m > 0) {
     model[["exogen"]] <- exogen_names
   }
+  if (n > 0 & !is.null(det_data)) {
+    model[["deterministic"]] <- dimnames(det_data)[[2]]
+  }
   model[["structural"]] <- structural
   model[["error"]] <- error
   model[["tvp"]] <- tvp

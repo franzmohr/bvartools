@@ -258,6 +258,9 @@ vec_to_var.bvecmodel <- function(object, ...) {
   if (m > 0) {
     model[["exogen"]] <- specs[["exogen"]]
   }
+  if (model[["n"]] > 0) {
+    model[["deterministic"]] <- det_names
+  }
   model[["structural"]] <- structural
   model[["error"]] <- specs[["error"]]
   model[["tvp"]] <- specs[["tvp"]]

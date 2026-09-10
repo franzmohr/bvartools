@@ -1,5 +1,24 @@
 # bvartools (development version)
 
+* **`summary()` and `plot()` label the deterministic terms of every model that
+  has them.** Both take those labels from `model$deterministic`, and only
+  `create_bvarmodel()` ever recorded it: a model assembled by `bvar()` from the
+  draws of a user-written sampler, or converted from a VEC by `vec_to_var()`,
+  carried the terms but not their names. The vector of regressor names then came
+  back `n` short, and `summary()` stopped with `length of 'dimnames' [2] not
+  equal to array extent` instead of labelling anything.
+
+    Both now record the names they already had to hand: the deterministic
+  columns `bvar()` isolates from `x`, and the ones `vec_to_var()` collects while
+  it rebuilds the regressors of the VAR. Nothing numeric reads these labels, so
+  no result changes -- `irf()` and `fevd()` were unaffected throughout, which is
+  why this surfaced only in the two methods that print.
+
+    The name helper no longer trusts the field either. A missing or wrong-length
+  vector of deterministic names is replaced by `det.1`, `det.2`, ... and of
+  exogenous ones by `x1`, `x2`, ..., which is the rule the 'bvecmodel' helper
+  already followed -- and the reason no VEC summary ever hit this.
+
 * **Vendored BayesTS core refreshed.** **Draws are unchanged**, for every VAR and
   VEC model this package samples. Upstream's own fingerprint comparison was run
   over the change and reports 78 fixtures recorded before and after, 78

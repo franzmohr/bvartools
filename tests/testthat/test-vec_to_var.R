@@ -44,6 +44,9 @@ test_that("the level coefficients follow from Pi and the short-run terms", {
 test_that("the converted model is usable by the application functions", {
   var <- vec_to_var(fx_vec_fitted())
 
+  # The deterministic terms of the VEC keep their names across the conversion.
+  expect_identical(var[["model"]][["deterministic"]], "const")
+
   expect_s3_class(irf(var, impulse = "R", response = "Dp", n_ahead = 3),
                   "bvarirf")
   expect_s3_class(fevd(var, response = "Dp", n_ahead = 3), "bvarfevd")

@@ -11,7 +11,8 @@
   kappa3 = NULL,
   kappa4 = 10,
   max_var = NULL,
-  sigma = "AR"
+  sigma = "AR",
+  ...
 )
 }
 \arguments{
@@ -39,6 +40,8 @@ coefficients of non-deterministic variables. If \code{NULL} (default), the prior
 variables \eqn{\sigma^2} are calculated based on a univariate AR regression or a least squares estimate of
 the VAR form, respectively. In both cases all deterministic variables are used in the regressions,
 if they appear in the model.}
+
+\item{...}{further arguments passed to or from other methods.}
 }
 \value{
 A list containing a matrix of prior means and the precision matrix of the coefficients and the

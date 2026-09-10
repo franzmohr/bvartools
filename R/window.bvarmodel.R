@@ -6,6 +6,7 @@
 #' @param x an object of class 'bvarmodel'.
 #' @param start the start time of the period of interest.
 #' @param end the end time of the period of interest.
+#' @param ... further arguments passed to or from other methods.
 #' 
 #' @return An object of class 'bvarmodel'.
 #' 

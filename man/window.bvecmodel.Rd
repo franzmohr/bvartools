@@ -12,6 +12,8 @@
 \item{start}{the start time of the period of interest.}
 
 \item{end}{the end time of the period of interest.}
+
+\item{...}{further arguments passed to or from other methods.}
 }
 \value{
 An object of class 'bvecmodel'.

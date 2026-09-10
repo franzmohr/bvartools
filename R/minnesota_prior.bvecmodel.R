@@ -21,6 +21,8 @@
 #' the VAR form, respectively. In both cases all deterministic variables are used in the regressions,
 #' if they appear in the model.
 #' 
+#' @param ... further arguments passed to or from other methods.
+#' 
 #' @details The function calculates the Minnesota prior in the same manner as for
 #' a traditional VAR model. For the endogenous variable
 #' \eqn{i} the prior variance of the \eqn{l}th lag of regressor \eqn{j} is obtained as
@@ -66,7 +68,7 @@
 #' @export
 #' @method minnesota_prior bvecmodel
 minnesota_prior.bvecmodel <- function(object, kappa1 = 2, kappa2 = 1, kappa3 = NULL, kappa4 = 10,
-                                      max_var = NULL, sigma = "AR") {
+                                      max_var = NULL, sigma = "AR", ...) {
   
   if (kappa1 <= 0) {
     stop("Argument 'kappa1' must be positive.")

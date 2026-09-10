@@ -12,7 +12,8 @@
   kappa1 = 0.8,
   kappa2 = 0.5,
   kappa3 = 0.5,
-  kappa4 = 0.8
+  kappa4 = 0.8,
+  ...
 )
 }
 \arguments{
@@ -43,6 +44,8 @@ Only used if \code{minnesota_like = TRUE}. See 'Details'.}
 
 \item{kappa4}{a numeric specifying the size of the prior inclusion probabilities
 of deterministic terms. Only used if \code{minnesota_like = TRUE}. See 'Details'.}
+
+\item{...}{further arguments passed to or from other methods.}
 }
 \value{
 A list containing a matrix of prior inclusion probabilities and an integer vector

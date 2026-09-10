@@ -24,6 +24,8 @@
 #' @param kappa4 a numeric specifying the size of the prior inclusion probabilities
 #' of deterministic terms. Only used if \code{minnesota_like = TRUE}. See 'Details'.
 #' 
+#' @param ... further arguments passed to or from other methods.
+#' 
 #' @details If \code{minnesota_like = TRUE}, prior inclusion probabilities \eqn{\underline{\pi}_1}
 #' are calculated as
 #' \tabular{cl}{
@@ -55,7 +57,7 @@ inclusion_prior.bvecmodel <- function(object,
                                       kappa1 = 0.8,
                                       kappa2 = 0.5,
                                       kappa3 = 0.5,
-                                      kappa4 = 0.8) {
+                                      kappa4 = 0.8, ...) {
   
   # Input checks
   if (!minnesota_like) {

@@ -1,5 +1,16 @@
 # bvartools (development version)
 
+* **`summary()` no longer marks a covariance that was never estimated as
+  significant.** The asterisk says that the credible interval of a value
+  excludes zero, and it was placed by comparing the signs of the two bounds.
+  Wherever no covariance is estimated -- a gamma prior on the error variances,
+  a structural model, a quantile VAR -- both bounds are exactly zero, and zero
+  shares its sign with itself, so every off-diagonal entry of the printed
+  variance-covariance matrix carried a mark. The test is now the definition:
+  the lower bound is above zero, or the upper one below it. Estimated
+  coefficients and variances are marked exactly as before, and nothing beyond
+  the printed output changes.
+
 * **The structural variance decomposition now weighs each shock by its own
   variance.** `fevd(type = "sir")` used `A_0^-1` as the impulse matrix and
   `A_0^-1 A_0^-1'` as the forecast error covariance, leaving the covariance

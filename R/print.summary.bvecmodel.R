@@ -99,7 +99,7 @@ print.summary.bvecmodel <- function(x, digits = max(3L, getOption("digits") - 3L
         cat("\nVariable:", y_names[i], "\n\n") 
       }
       temp <- as.data.frame(temp)
-      temp[, "Signif."] <- (temp[, 1] != "Mean") & (sign(temp[, x[["model"]][["ci"]][1]]) == sign(temp[, x[["model"]][["ci"]][2]]))
+      temp[, "Signif."] <- temp[, x[["model"]][["ci"]][1]] > 0 | temp[, x[["model"]][["ci"]][2]] < 0
       temp[, "Signif."] <- ifelse(temp[, "Signif."], "*", "")
       names(temp)[length(names(temp))] <- ""
       print(temp, ...)
@@ -144,7 +144,7 @@ print.summary.bvecmodel <- function(x, digits = max(3L, getOption("digits") - 3L
       cat("\nVariance-covariance matrix:\n\n") 
     }
     temp <- as.data.frame(temp)
-    temp[, "Signif."] <- (temp[, 1] != "Mean") & (sign(temp[, x[["model"]][["ci"]][1]]) == sign(temp[, x[["model"]][["ci"]][2]]))
+    temp[, "Signif."] <- temp[, x[["model"]][["ci"]][1]] > 0 | temp[, x[["model"]][["ci"]][2]] < 0
     temp[, "Signif."] <- ifelse(temp[, "Signif."], "*", "")
     names(temp)[length(names(temp))] <- ""
     print(temp, ...)

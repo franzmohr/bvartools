@@ -110,3 +110,23 @@ test_that("printing a list of selection criteria shows every model", {
   expect_true(any(grepl("Model 1", output)))
   expect_true(any(grepl("Model 2", output)))
 })
+
+test_that("covariances that were never estimated carry no significance mark", {
+  # A gamma prior on the error variances estimates no covariances, so the
+  # off-diagonal entries and both of their credible bounds are exactly zero.
+  # Comparing the signs of the two bounds alone marks such a zero as
+  # significant, since zero shares its sign with itself.
+  output <- utils::capture.output(print(summary(fx_svar_fitted())))
+  block <- output[seq(grep("Variance-covariance matrix", output)[1],
+                      length(output))]
+  marked <- function(row) {
+    any(grepl(paste0("^", row, "[[:space:]].*\\*[[:space:]]*$"), block))
+  }
+
+  expect_false(marked("invest_income"))
+  expect_false(marked("invest_cons"))
+  expect_false(marked("income_cons"))
+  # A variance is positive by construction, so the ones that are estimated
+  # keep their mark.
+  expect_true(marked("invest_invest"))
+})

@@ -131,12 +131,14 @@ plot(sp)
 \references{
 Diebold, F. X., & Yilmaz, K. (2012). Better to give than to receive: Predictive
 directional measurement of volatility spillovers. \emph{International Journal of
-Forecasting, 28}(1), 57--66.
+Forecasting, 28}(1), 57--66. \doi{10.1016/j.ijforecast.2011.02.006}
 
 Diebold, F. X., & Yilmaz, K. (2014). On the network topology of variance
 decompositions: Measuring the connectedness of financial firms.
 \emph{Journal of Econometrics, 182}(1), 119--134.
+\doi{10.1016/j.jeconom.2014.04.012}
 
 Pesaran, H. H., & Shin, Y. (1998). Generalized impulse response analysis in
 linear multivariate models. \emph{Economics Letters, 58}, 17--29.
+\doi{10.1016/S0165-1765(97)00214-0}
 }

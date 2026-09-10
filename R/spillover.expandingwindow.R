@@ -51,7 +51,7 @@
 #'
 #' Diebold, F. X., & Yilmaz, K. (2012). Better to give than to receive: Predictive
 #' directional measurement of volatility spillovers. \emph{International Journal of
-#' Forecasting, 28}(1), 57--66.
+#' Forecasting, 28}(1), 57--66. \doi{10.1016/j.ijforecast.2011.02.006}
 #'
 #' @export
 spillover.expandingwindow <- function(object, ...) {

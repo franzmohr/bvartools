@@ -11,3 +11,6 @@ src/core/*/*.o
 .Rproj
 inst/doc
 tools
+# Written by the plot tests when the suite is run outside R CMD check,
+# which has no graphics device open.
+Rplots.pdf

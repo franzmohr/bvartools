@@ -9,3 +9,4 @@
 ^src/core/.*\.(o|so|dll)$
 ^vignettes/.*\.orig$
 ^vignettes/precompile\.R$
+Rplots\.pdf$

@@ -239,10 +239,14 @@ column is therefore identical in both tables.
 
 ### Coefficient paths
 
-`plot` draws the whole model: one panel per coefficient with the median and the
-bounds of a credible band over time, and the panels of $\Sigma_t$ beside them.
+`plot` draws one figure per block of coefficients -- the lags of the endogenous
+variables, the deterministic terms, and the covariance matrix of the error term
+-- with one panel per coefficient showing the median and the bounds of a
+credible band over time. A block with more regressors than `max_cols` is split
+over several figures, which is what keeps the panels of a model with many
+regressors large enough to read.
 
-```{r paths, fig.align='center', fig.height=6, fig.width=9}
+```{r paths, fig.align='center', fig.height=4.5, fig.width=7}
 plot(model)
 ```
 

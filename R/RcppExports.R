@@ -1049,6 +1049,35 @@ post_normal_sur <- function(y, z, sigma_i, a_prior, v_i_prior, svd = FALSE) {
     .Call(`_bvartools_post_normal_sur`, y, z, sigma_i, a_prior, v_i_prior, svd)
 }
 
+#' One rotation of a draw that satisfies a set of sign restrictions
+#'
+#' Draws orthogonal matrices \eqn{Q} until the impulse responses of the
+#' rotated model \eqn{\Phi_i P Q}, with \eqn{P} the Choleski factor of the
+#' error covariance, carry the signs the caller asked for. Every such rotation
+#' leaves \eqn{P Q (P Q)^{\prime} = \Sigma}, so the rotated model describes the
+#' data exactly as well as the draw it came from: the restrictions choose among
+#' models the likelihood cannot tell apart, which is what makes the
+#' identification set valued rather than a point.
+#'
+#' The forecast error responses do not involve \eqn{Q}, so they are built once
+#' per draw and every attempt reads them. That is what makes a high rejection
+#' rate affordable.
+#'
+#' @param A a list with elements \code{A}, the k x kp coefficients of one draw,
+#'   and \code{Sigma}, its k x k error covariance.
+#' @param restrictions a matrix with one row per restriction and four columns:
+#'   the shock, the response variable, the sign, and the horizon. The first two
+#'   are counted from one, the horizon from zero.
+#' @param max_tries the number of rotations to try before giving up on the
+#'   draw.
+#'
+#' @return The accepted k x k rotation, or a 0 x 0 matrix if none was found.
+#'
+#' @noRd
+.draw_sign_restricted_q <- function(A, restrictions, max_tries) {
+    .Call(`_bvartools_draw_sign_restricted_q`, A, restrictions, max_tries)
+}
+
 #' Connectedness table of one posterior draw
 #'
 #' The normalised forecast error variance decomposition table behind the

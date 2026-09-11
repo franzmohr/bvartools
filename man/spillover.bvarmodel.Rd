@@ -23,8 +23,9 @@ and Yilmaz (2012).}
 
 \item{type}{type of the impulse responses the decomposition is based on.
 Possible choices are generalised \code{gir} (default), orthogonalised
-\code{oir} and \code{custom}. All three decompose the reduced form of the
-model, so a structural model is not supported. See 'Details'.}
+\code{oir}, sign restricted \code{sign} and \code{custom}. All four decompose
+the reduced form of the model, so a structural model is not supported. See
+'Details'.}
 
 \item{ci}{a numeric between 0 and 1 specifying the probability mass covered by the
 credible intervals. Defaults to 0.95.}
@@ -78,7 +79,10 @@ do not add up over \eqn{k}, so each row is normalised,
 Under \code{type = "oir"} the decomposition uses the Choleski factor of
 \eqn{\Sigma}, adds up by construction and depends on the ordering of the
 variables, which is what the generalised version of Diebold and Yilmaz (2012)
-avoids. Under \code{type = "custom"} it uses the matrix supplied in argument
+avoids. Under \code{type = "sign"} it uses the Choleski factor rotated by
+what \code{\link{add_sign_restrictions}} accepted for that draw, leaving out
+the draws no rotation was found for. Under \code{type = "custom"} it uses the
+matrix supplied in argument
 \code{impact} in place of that factor and is otherwise the orthogonalised
 case, the scaling by \eqn{\sigma^{-1}_{kk}} included: an impact matrix
 carries the scale of its own shocks in its columns. The row normalisation is

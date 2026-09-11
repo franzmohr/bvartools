@@ -132,12 +132,37 @@ write_to_hdf5.bvarmodel <- function(object, filename, group = "", ...) {
   # the only thing that changes it is this loop, which keeps track itself.
   attrs_model <- hdf5r::h5attr_names(group_model)
   for (i in names(object[["model"]])) {
+    # A specification that is itself a list does not fit in an attribute and
+    # gets a group of its own below. Skipping it here rather than letting
+    # hdf5r fail on it keeps a model that carries one exportable at all.
+    if (is.list(object[["model"]][[i]])) {
+      next
+    }
     if (!i %in% attrs_model) {
       hdf5r::h5attr(group_model, i) <- object[["model"]][[i]]
       attrs_model <- c(attrs_model, i)
     }
   }
   hdf5r::h5attr(group_model, "rclass") <- class(object)
+
+  ## Sign restrictions ----
+  #
+  # The restriction table is the one piece of a specification that is a table
+  # rather than a value, so it is written as a dataset with the settings it was
+  # applied under beside it. The variables are already stored as positions, so
+  # nothing here depends on the order of the endogenous variables surviving
+  # separately.
+  sign_restrictions <- object[["model"]][["sign_restrictions"]]
+  if (!is.null(sign_restrictions)) {
+    group_sign <- .hdf5_group(handles, group_model, "sign_restrictions")
+    restrictions <- as.matrix(sign_restrictions[["restrictions"]])
+    .hdf5_write(group_sign, "restrictions", restrictions,
+                list("columns" = colnames(restrictions)))
+    hdf5r::h5attr(group_sign, "max_tries") <- sign_restrictions[["max_tries"]]
+    if (!is.null(sign_restrictions[["period"]])) {
+      hdf5r::h5attr(group_sign, "period") <- sign_restrictions[["period"]]
+    }
+  }
 
   # Data ----
   group_data <- .hdf5_group(handles, output, "data")
@@ -228,7 +253,7 @@ write_to_hdf5.bvarmodel <- function(object, filename, group = "", ...) {
     # One shape for all of them. These used to be a block of the same code
     # each, and one of the blocks attached its attributes to the datasets of
     # the block above it rather than to its own.
-    for (i in c("a", "psi", "u_omega_inv", "u_sigma_inv")) {
+    for (i in c("a", "psi", "u_omega_inv", "u_sigma_inv", "q")) {
       if (i %in% names(object[["posterior"]])) {
         group_draws <- .hdf5_group(handles, group_posterior, i)
         for (j in names(object[["posterior"]][[i]])) {

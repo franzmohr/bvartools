@@ -239,6 +239,15 @@ summary.bvarmodel <- function(object, ci = .95, period = NULL, ...){
   
   result[["model"]][["ci"]] <- paste(c(ci_low, ci_high) * 100, "%", sep = "")
   result[["model"]][["period"]] <- period
+
+  # How much of the posterior a sign restricted identification actually covers.
+  # Counted here rather than stored by add_sign_restrictions(), so that thin()
+  # cannot leave a stale number behind.
+  rotations <- object[["posterior"]][["q"]][["coeffs"]]
+  if (!is.null(rotations)) {
+    result[["model"]][["sign_restrictions"]][["draws"]] <- nrow(rotations)
+    result[["model"]][["sign_restrictions"]][["accepted"]] <- sum(!is.na(rotations[, 1]))
+  }
   
   class(result) <- list("summary.bvarmodel", "list")
   return(result)

@@ -56,7 +56,31 @@ print.summary.bvarmodel <- function(x, digits = max(3L, getOption("digits") - 3L
     }
     cat("\nVariable selection algorithm: ", varsel_algo, "\n", sep = "")
   }
-  
+
+  # A sign restricted identification is set valued and its sample is not the
+  # posterior sample, so both the restrictions and how many draws survived them
+  # are reported. An acceptance rate is not a diagnostic of the sampler: a low
+  # one says that the model rarely produces the pattern that was asked of it,
+  # which is a finding about the restrictions.
+  sign_restrictions <- x[["model"]][["sign_restrictions"]]
+  if (!is.null(sign_restrictions)) {
+    varnames <- x[["model"]][["endogen"]]
+    printed <- sign_restrictions[["restrictions"]]
+    printed[["impulse"]] <- varnames[printed[["impulse"]]]
+    printed[["response"]] <- varnames[printed[["response"]]]
+    printed[["sign"]] <- ifelse(printed[["sign"]] > 0, "+", "-")
+
+    cat("\nSign restrictions:\n\n")
+    print(printed, row.names = FALSE)
+
+    accepted <- sign_restrictions[["accepted"]]
+    draws <- sign_restrictions[["draws"]]
+    if (!is.null(accepted) && !is.null(draws) && draws > 0) {
+      cat("\nIdentified draws: ", accepted, " of ", draws, " (",
+          format(round(100 * accepted / draws, 1), nsmall = 1), "%)\n", sep = "")
+    }
+  }
+
   # Model
   
   if (is.null(x[["a"]][["means"]])) {

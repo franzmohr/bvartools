@@ -7,9 +7,9 @@
 #' @param n_ahead number of steps ahead.
 #' @param type type of the impulse responses used to calculate forecast error variable decompositions.
 #' Possible choices are orthogonalised \code{"oir"} (default), structural \code{"sir"}, generalised
-#' \code{"gir"}, structural generalised \code{"sgir"} and \code{"custom"} impulse responses. For a
-#' structural model only \code{"sir"} and \code{"sgir"} are available; the other three require a
-#' non-structural model. See 'Details'.
+#' \code{"gir"}, structural generalised \code{"sgir"}, sign restricted \code{"sign"} and
+#' \code{"custom"} impulse responses. For a structural model only \code{"sir"} and \code{"sgir"}
+#' are available; the other four require a non-structural model. See 'Details'.
 #' @param normalise_gir logical. Should the GIR-based FEVD be normalised?
 #' @param period integer. Index of the period, for which the variance decomposition should be generated.
 #' Only used for TVP or SV models. Default is \code{NULL}, so that the posterior draws of the last time period
@@ -40,6 +40,11 @@
 #' \eqn{P} is the lower triangular Choleski decomposition of the variance-covariance
 #' matrix \eqn{\Sigma}, \eqn{e_j} is a selection vector for the response variable and
 #' \eqn{e_k} a selection vector for the impulse variable.
+#'
+#' If \code{type = "sign"}, the decomposition uses \eqn{P Q}, with \eqn{Q} the rotation that
+#' \code{\link{add_sign_restrictions}} accepted for that draw, and is otherwise the orthogonalised
+#' case. A rotation of the Choleski factor still factorises \eqn{\Sigma}, so the shares add up as
+#' they do there. Draws that no admissible rotation was found for are left out.
 #'
 #' If \code{type = "custom"}, the decomposition uses the matrix \eqn{P} supplied in argument
 #' \code{impact} in place of the Choleski factor, while the denominator stays the one of the
@@ -111,12 +116,18 @@ fevd.bvarmodel <- function(x, response = NULL, n_ahead = 5, type = "oir", normal
     stop("Argument 'object' must include draws of the variance-covariance matrix Sigma.")
   }
   
-  if (!type %in% c("oir", "sir", "gir", "sgir", "custom")) {
+  if (!type %in% c("oir", "sir", "gir", "sgir", "sign", "custom")) {
     stop("The specified type of the used impulse response is not known.")
   }
 
   if (type == "custom" && is.null(impact)) {
     stop("A variance decomposition of type \"custom\" needs an impact matrix in argument 'impact'.")
+  }
+
+  # See irf.bvarmodel: a sign restricted identification is a custom one the
+  # model is already carrying.
+  if (type == "sign") {
+    impact <- .sign_impact(x, "Variance decompositions")
   }
   
   if(is.null(response)) {
@@ -156,7 +167,8 @@ fevd.bvarmodel <- function(x, response = NULL, n_ahead = 5, type = "oir", normal
   # that the two cannot disagree about which slice of a row is `period`.
   A <- .collect_draws(x, period = period, need_A0 = need_A0, impact = impact)
 
-  phi <- lapply(A, .vardecomp, h = n_ahead, type = type, response = response)
+  phi <- lapply(A, .vardecomp, h = n_ahead,
+                type = if (type == "sign") "custom" else type, response = response)
   
   result <- matrix(rowMeans(matrix(unlist(phi), (n_ahead + 1) * k)), n_ahead + 1)
   

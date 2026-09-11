@@ -882,6 +882,19 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// draw_sign_restricted_q
+arma::mat draw_sign_restricted_q(Rcpp::List A, const arma::mat& restrictions, int max_tries);
+RcppExport SEXP _bvartools_draw_sign_restricted_q(SEXP ASEXP, SEXP restrictionsSEXP, SEXP max_triesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type A(ASEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type restrictions(restrictionsSEXP);
+    Rcpp::traits::input_parameter< int >::type max_tries(max_triesSEXP);
+    rcpp_result_gen = Rcpp::wrap(draw_sign_restricted_q(A, restrictions, max_tries));
+    return rcpp_result_gen;
+END_RCPP
+}
 // spillover_table
 arma::mat spillover_table(Rcpp::List A, int h, std::string type);
 RcppExport SEXP _bvartools_spillover_table(SEXP ASEXP, SEXP hSEXP, SEXP typeSEXP) {
@@ -1101,6 +1114,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_bvartools_post_gamma_state_variance", (DL_FUNC) &_bvartools_post_gamma_state_variance, 5},
     {"_bvartools_post_normal", (DL_FUNC) &_bvartools_post_normal, 5},
     {"_bvartools_post_normal_sur", (DL_FUNC) &_bvartools_post_normal_sur, 6},
+    {"_bvartools_draw_sign_restricted_q", (DL_FUNC) &_bvartools_draw_sign_restricted_q, 3},
     {"_bvartools_spillover_table", (DL_FUNC) &_bvartools_spillover_table, 3},
     {"_bvartools_stochvol_ksc_1998_export", (DL_FUNC) &_bvartools_stochvol_ksc_1998_export, 5},
     {"_bvartools_stochvol_ocsn_2007_export", (DL_FUNC) &_bvartools_stochvol_ocsn_2007_export, 5},

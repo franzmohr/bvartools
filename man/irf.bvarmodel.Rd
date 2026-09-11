@@ -35,9 +35,9 @@ credible intervals. Defaults to 0.95.}
 
 \item{type}{type of the impulse response. Possible choices are forecast error \code{"feir"}
 (default), orthogonalised \code{"oir"}, structural \code{"sir"}, generalised \code{"gir"},
-structural generalised \code{"sgir"} and \code{"custom"} impulse responses. For a structural
-model only \code{"sir"} and \code{"sgir"} are available; the other four require a
-non-structural model. See 'Details'.}
+structural generalised \code{"sgir"}, sign restricted \code{"sign"} and \code{"custom"}
+impulse responses. For a structural model only \code{"sir"} and \code{"sgir"} are available;
+the other five require a non-structural model. See 'Details'.}
 
 \item{cumulative}{logical specifying whether a cumulative IRF should be calculated.}
 
@@ -81,6 +81,13 @@ The recursion for \eqn{\Phi_i} needs the reduced form, i.e. \eqn{A_0^{-1} A_i} a
 \eqn{A_0^{-1} \Sigma A_0^{-1\prime}}, which only \code{"sir"} and \code{"sgir"} form. The other
 types are therefore not available for a structural model, and the two structural types not for
 any other.
+
+Sign restricted impulse responses \eqn{\Theta^r_i} are calculated as
+\eqn{\Theta^r_i = \Phi_i P Q}, where \eqn{P} is the lower triangular Choleski decomposition of
+\eqn{\Sigma} and \eqn{Q} the rotation that \code{\link{add_sign_restrictions}} accepted for that
+draw. Draws for which no admissible rotation was found are left out, so the responses cover
+fewer draws than the posterior holds and the credible interval is one over the set of models the
+restrictions admit rather than over a single identified model.
 
 Custom impulse responses \eqn{\Theta^c_i} are calculated as \eqn{\Theta^c_i = \Phi_i P}, where
 \eqn{P} is the matrix supplied in argument \code{impact}. This is the route by which an

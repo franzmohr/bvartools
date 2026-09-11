@@ -1,5 +1,25 @@
 # bvartools (development version)
 
+* **Sign restrictions.** `add_sign_restrictions()` identifies the shocks of a
+  VAR by the signs of the impulse responses they produce, and `irf()`, `fevd()`
+  and `spillover()` use that identification under `type = "sign"`. The
+  restrictions are given as a data frame of `impulse`, `response`, `sign` and
+  an optional `horizon`, one row per restriction, naming variables rather than
+  positions. For every posterior draw the function searches rotations of the
+  Choleski factor until one produces the pattern that was asked for; since a
+  sign restriction cannot tell a shock from its own negative, a column that
+  fails is retried flipped before the rotation is discarded. A draw that no
+  admissible rotation is found for within `max_tries` is dropped, and
+  `summary()` reports both the restrictions and how much of the posterior
+  survived them -- a low rate being a finding about the restrictions rather
+  than a technicality. The identification is set valued: what comes back is
+  the collection of responses the restrictions admit, not one response per
+  draw, so the credible interval spans models rather than estimates. The
+  accepted rotations are stored beside the other posterior draws, and are
+  carried by `thin()` and by the HDF5 export along with the restriction table.
+  Zero restrictions are not supported: they cannot be imposed by rejection and
+  need the algorithm of Arias, Rubio-Ramirez and Waggoner (2018).
+
 * **`irf()`, `fevd()` and `spillover()` accept a caller supplied impact
   matrix.** The new type `"custom"` takes the matrix `P` that the forecast
   error responses are post-multiplied by from argument `impact`, either as one

@@ -79,6 +79,26 @@ fx_svar_fitted <- function() {
   })
 }
 
+# --- sign restricted fixture ------------------------------------------------
+
+# The restrictions the fixture below imposes: a shock named after investment
+# that raises investment and consumption on impact. Loose enough that every
+# draw is identified, which keeps the fixture about the identification rather
+# than about the acceptance rate.
+fx_sign_restrictions <- function() {
+  data.frame(impulse = "invest",
+             response = c("invest", "cons"),
+             sign = c(1, 1),
+             horizon = 0)
+}
+
+fx_var_sign <- function() {
+  cached_fixture("var_sign", {
+    set.seed(20240301)
+    add_sign_restrictions(fx_var_fitted(), fx_sign_restrictions())
+  })
+}
+
 # --- VEC fixtures -----------------------------------------------------------
 
 fx_vec_model <- function() {

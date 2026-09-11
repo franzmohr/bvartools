@@ -8,8 +8,9 @@
 #' and Yilmaz (2012).
 #' @param type type of the impulse responses the decomposition is based on.
 #' Possible choices are generalised \code{gir} (default), orthogonalised
-#' \code{oir} and \code{custom}. All three decompose the reduced form of the
-#' model, so a structural model is not supported. See 'Details'.
+#' \code{oir}, sign restricted \code{sign} and \code{custom}. All four decompose
+#' the reduced form of the model, so a structural model is not supported. See
+#' 'Details'.
 #' @param ci a numeric between 0 and 1 specifying the probability mass covered by the
 #' credible intervals. Defaults to 0.95.
 #' @param keep_draws logical specifying whether the function should return all draws of
@@ -40,7 +41,10 @@
 #' Under \code{type = "oir"} the decomposition uses the Choleski factor of
 #' \eqn{\Sigma}, adds up by construction and depends on the ordering of the
 #' variables, which is what the generalised version of Diebold and Yilmaz (2012)
-#' avoids. Under \code{type = "custom"} it uses the matrix supplied in argument
+#' avoids. Under \code{type = "sign"} it uses the Choleski factor rotated by
+#' what \code{\link{add_sign_restrictions}} accepted for that draw, leaving out
+#' the draws no rotation was found for. Under \code{type = "custom"} it uses the
+#' matrix supplied in argument
 #' \code{impact} in place of that factor and is otherwise the orthogonalised
 #' case, the scaling by \eqn{\sigma^{-1}_{kk}} included: an impact matrix
 #' carries the scale of its own shocks in its columns. The row normalisation is
@@ -137,12 +141,18 @@ spillover.bvarmodel <- function(object, n_ahead = 10, type = "gir", ci = .95,
     stop("Argument 'object' must include draws of the variance-covariance matrix Sigma.")
   }
 
-  if (!type %in% c("gir", "oir", "custom")) {
-    stop("Argument 'type' must be one of 'gir', 'oir' and 'custom'.")
+  if (!type %in% c("gir", "oir", "sign", "custom")) {
+    stop("Argument 'type' must be one of 'gir', 'oir', 'sign' and 'custom'.")
   }
 
   if (type == "custom" && is.null(impact)) {
     stop("Spillover measures of type \"custom\" need an impact matrix in argument 'impact'.")
+  }
+
+  # See irf.bvarmodel: a sign restricted identification is a custom one the
+  # model is already carrying.
+  if (type == "sign") {
+    impact <- .sign_impact(object, "Spillover measures")
   }
 
   # Both types decompose the reduced form, which a structural model does not
@@ -177,7 +187,8 @@ spillover.bvarmodel <- function(object, n_ahead = 10, type = "gir", ci = .95,
   A <- .collect_draws(object, period = period, need_A0 = FALSE, impact = impact)
   store <- length(A)
 
-  tables <- lapply(A, .spillover_table, h = n_ahead, type = type)
+  tables <- lapply(A, .spillover_table, h = n_ahead,
+                   type = if (type == "sign") "custom" else type)
 
   # One set of measures per draw. The table is normalised, so it sums to k and
   # that is the denominator of every one of them.

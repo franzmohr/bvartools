@@ -43,7 +43,7 @@ thin.bvarmodel <- function(x, thin = 10, ...) {
   end <- pos_thin[length(pos_thin)]
   
   # Posteriors with sub-lists
-  vars <- c("a", "psi", "u_sigma_inv", "u_omega_inv")
+  vars <- c("a", "psi", "u_sigma_inv", "u_omega_inv", "q")
   subvars <- c("coeffs", "lambda")
   for (i in vars) {
     if (!is.null(x[["posterior"]][[i]])){

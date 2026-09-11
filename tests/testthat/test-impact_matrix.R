@@ -110,7 +110,7 @@ test_that("a custom identification is checked before it reaches the recursion", 
                "one per posterior draw")
   expect_error(irf(model, impulse = "income", response = "cons",
                    type = "custom", impact = "chol"),
-               "matrix or a list of matrices")
+               "matrix, a list of matrices or a function")
 
   # The size of a custom shock is carried by the impact matrix, so there is no
   # standard deviation left for the recursion to read off Sigma.

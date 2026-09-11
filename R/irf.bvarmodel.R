@@ -11,9 +11,9 @@
 #' @param shock size of the shock.
 #' @param type type of the impulse response. Possible choices are forecast error \code{"feir"}
 #' (default), orthogonalised \code{"oir"}, structural \code{"sir"}, generalised \code{"gir"},
-#' structural generalised \code{"sgir"} and \code{"custom"} impulse responses. For a structural
-#' model only \code{"sir"} and \code{"sgir"} are available; the other four require a
-#' non-structural model. See 'Details'.
+#' structural generalised \code{"sgir"}, sign restricted \code{"sign"} and \code{"custom"}
+#' impulse responses. For a structural model only \code{"sir"} and \code{"sgir"} are available;
+#' the other five require a non-structural model. See 'Details'.
 #' @param cumulative logical specifying whether a cumulative IRF should be calculated.
 #' @param keep_draws logical specifying whether the function should return all draws of
 #' the posterior impulse response function. Defaults to \code{FALSE} so that
@@ -46,6 +46,13 @@
 #' types are therefore not available for a structural model, and the two structural types not for
 #' any other.
 #' 
+#' Sign restricted impulse responses \eqn{\Theta^r_i} are calculated as
+#' \eqn{\Theta^r_i = \Phi_i P Q}, where \eqn{P} is the lower triangular Choleski decomposition of
+#' \eqn{\Sigma} and \eqn{Q} the rotation that \code{\link{add_sign_restrictions}} accepted for that
+#' draw. Draws for which no admissible rotation was found are left out, so the responses cover
+#' fewer draws than the posterior holds and the credible interval is one over the set of models the
+#' restrictions admit rather than over a single identified model.
+#'
 #' Custom impulse responses \eqn{\Theta^c_i} are calculated as \eqn{\Theta^c_i = \Phi_i P}, where
 #' \eqn{P} is the matrix supplied in argument \code{impact}. This is the route by which an
 #' identification that the package does not derive itself reaches the recursion; \code{shock}
@@ -98,12 +105,20 @@ irf.bvarmodel <- function(x, impulse = NULL, response = NULL, n_ahead = 5, ci = 
                           type = "feir", cumulative = FALSE, keep_draws = FALSE, period = NULL,
                           impact = NULL, ...) {
   
-  if (!type %in% c("feir", "oir", "gir", "sir", "sgir", "custom")) {
+  if (!type %in% c("feir", "oir", "gir", "sir", "sgir", "sign", "custom")) {
     stop("Argument 'type' not known.")
   }
 
   if (type == "custom" && is.null(impact)) {
     stop("Impulse responses of type \"custom\" need an impact matrix in argument 'impact'.")
+  }
+
+  # A sign restricted identification is a custom one whose impact matrices the
+  # model is already carrying, so it is assembled here and travels the same
+  # path. `type` keeps its own name until then, so that the checks below and
+  # any message they produce speak of what was asked for.
+  if (type == "sign") {
+    impact <- .sign_impact(x, "Impulse responses")
   }
   
   if (x[["model"]][["p"]] == 0 & !x[["model"]][["structural"]]) {
@@ -139,12 +154,13 @@ irf.bvarmodel <- function(x, impulse = NULL, response = NULL, n_ahead = 5, ci = 
   # statement about the reduced form errors and not about the shocks a custom
   # impact matrix defines. Whatever scale those shocks have is already in the
   # columns of that matrix, so there is nothing here left to infer.
-  if (type == "custom" && !is.numeric(shock)) {
-    stop("Argument 'shock' must be numeric for an impulse response of type \"custom\": ",
-         "the size of a shock is carried by the impact matrix in argument 'impact'.")
+  if (type %in% c("custom", "sign") && !is.numeric(shock)) {
+    stop("Argument 'shock' must be numeric for an impulse response of type \"", type, "\": ",
+         "the size of a shock is carried by the impact matrix.")
   }
   
-  if (type %in% c("oir", "gir", "sgir") | shock %in% c("sd", "nsd")) {
+  # "sign" needs it to build the Choleski factor its rotation acts on.
+  if (type %in% c("oir", "gir", "sgir", "sign") | shock %in% c("sd", "nsd")) {
     need_Sigma <- TRUE
   } else {
     need_Sigma <- FALSE
@@ -180,7 +196,7 @@ irf.bvarmodel <- function(x, impulse = NULL, response = NULL, n_ahead = 5, ci = 
     }
   }
 
-  result <- lapply(A, .ir, h = n_ahead, type = type,
+  result <- lapply(A, .ir, h = n_ahead, type = if (type == "sign") "custom" else type,
                    impulse = impulse, response = response)
   
   result <- t(matrix(unlist(result), n_ahead + 1))

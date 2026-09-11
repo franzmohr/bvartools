@@ -25,9 +25,9 @@
 
 \item{type}{type of the impulse responses used to calculate forecast error variable decompositions.
 Possible choices are orthogonalised \code{"oir"} (default), structural \code{"sir"}, generalised
-\code{"gir"}, structural generalised \code{"sgir"} and \code{"custom"} impulse responses. For a
-structural model only \code{"sir"} and \code{"sgir"} are available; the other three require a
-non-structural model. See 'Details'.}
+\code{"gir"}, structural generalised \code{"sgir"}, sign restricted \code{"sign"} and
+\code{"custom"} impulse responses. For a structural model only \code{"sir"} and \code{"sgir"}
+are available; the other four require a non-structural model. See 'Details'.}
 
 \item{normalise_gir}{logical. Should the GIR-based FEVD be normalised?}
 
@@ -70,6 +70,11 @@ where \eqn{\Phi_i} is the forecast error impulse response for the \eqn{i}th peri
 \eqn{P} is the lower triangular Choleski decomposition of the variance-covariance
 matrix \eqn{\Sigma}, \eqn{e_j} is a selection vector for the response variable and
 \eqn{e_k} a selection vector for the impulse variable.
+
+If \code{type = "sign"}, the decomposition uses \eqn{P Q}, with \eqn{Q} the rotation that
+\code{\link{add_sign_restrictions}} accepted for that draw, and is otherwise the orthogonalised
+case. A rotation of the Choleski factor still factorises \eqn{\Sigma}, so the shares add up as
+they do there. Draws that no admissible rotation was found for are left out.
 
 If \code{type = "custom"}, the decomposition uses the matrix \eqn{P} supplied in argument
 \code{impact} in place of the Choleski factor, while the denominator stays the one of the

@@ -34,6 +34,27 @@ read_model_from_hdf5 <- function(filename, group = "") {
   
   if ("model" %in% h5_names) {
     result[["model"]] <- hdf5r::h5attributes(h5_root[["model"]])
+
+    # Written as a group of its own, because the restriction table is a table
+    # and the rest of a specification is a set of values. See
+    # write_to_hdf5.bvarmodel.
+    if ("sign_restrictions" %in% names(h5_root[["model"]])) {
+      group_sign <- h5_root[["model"]][["sign_restrictions"]]
+      dataset <- group_sign[["restrictions"]]
+      restrictions <- as.matrix(hdf5r::readDataSet(dataset))
+      colnames(restrictions) <- hdf5r::h5attr(dataset, "columns")
+
+      period <- NULL
+      if ("period" %in% hdf5r::h5attr_names(group_sign)) {
+        period <- hdf5r::h5attr(group_sign, "period")
+      }
+
+      result[["model"]][["sign_restrictions"]] <- list(
+        "restrictions" = as.data.frame(restrictions),
+        "max_tries" = hdf5r::h5attr(group_sign, "max_tries"),
+        "period" = period
+      )
+    }
   } else {
     stop("File ", filename, " does not contain model specification",
          if (group != "") paste0(" in group ", group), ".")

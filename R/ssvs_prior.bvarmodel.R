@@ -68,6 +68,18 @@ ssvs_prior.bvarmodel <- function(object, tau = c(0.05, 10), semiautomatic = NULL
         k <- object[["model"]][["k"]]
         tt <- nrow(object[["data"]][["train"]][["y"]])
         
+        # The semiautomatic approach scales the prior by least squares
+        # standard errors, which do not exist unless the training sample is
+        # longer than the number of regressors per equation. Without this the
+        # failure surfaces as a singular matrix from solve().
+        if (tt <= ncol(z) / k) {
+          stop("Argument 'semiautomatic' scales the prior by least squares ",
+               "standard errors, but the training sample has ", tt,
+               " observations for ", ncol(z) / k, " regressors per equation. ",
+               "Omit 'semiautomatic' to use the fixed values in 'tau', reduce ",
+               "the lag order, or provide a longer training sample.")
+        }
+
         ols <- solve(crossprod(z)) %*% crossprod(z, y)
         u <- matrix(y - z %*% ols, k)
         sigma_ols <- tcrossprod(u) / (tt - ncol(z) / k) # OLS error covariance matrix

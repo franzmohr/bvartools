@@ -118,8 +118,22 @@ minnesota_prior.bvarmodel <- function(object, kappa1 = 2, kappa2 = 0.5, kappa3 =
       
       V <- matrix(rep(NA, tot_par), k) # Set up matrix for variances
       
-      # Obtain OLS sigma
-      ols_sigma <- y %*% (diag(1, tt) - t(x) %*% solve(tcrossprod(x)) %*% x) %*% t(y) / (tt - nrow(x))
+      # Obtain OLS sigma. Only sigma = "VAR" uses this, and it needs more
+      # observations than the model has regressors per equation. The "AR" path
+      # below has no such requirement, since it regresses each variable on its
+      # own lags and the deterministic terms only. Computing this
+      # unconditionally made short training samples fail on a quantity that was
+      # then discarded.
+      if (sigma == "VAR") {
+        if (tt <= nrow(x)) {
+          stop("Argument 'sigma = \"VAR\"' needs a least squares estimate of ",
+               "the VAR form, but the training sample has ", tt,
+               " observations for ", nrow(x), " regressors per equation. ",
+               "Use the default 'sigma = \"AR\"', reduce the lag order, or ",
+               "provide a longer training sample.")
+        }
+        ols_sigma <- y %*% (diag(1, tt) - t(x) %*% solve(tcrossprod(x)) %*% x) %*% t(y) / (tt - nrow(x))
+      }
       
       # Determine positions of deterministic terms for calculation of sigma
       pos_det <- NULL
@@ -131,6 +145,14 @@ minnesota_prior.bvarmodel <- function(object, kappa1 = 2, kappa2 = 0.5, kappa3 =
       if (sigma == "AR") { # Univariate AR
         s_endo <- diag(0, k)
         if (p > 0 | !is.null(pos_det)) {
+          n_ar <- (if (p > 0) p else 0) + length(pos_det)
+          if (tt <= n_ar) {
+            stop("The residual variances of the Minnesota prior come from one ",
+                 "regression of each variable on its own lags and the ",
+                 "deterministic terms, but the training sample has ", tt,
+                 " observations for ", n_ar, " such regressors. Reduce the lag ",
+                 "order or provide a longer training sample.")
+          }
           for (i in 1:k) {
             if (p > 0) {
               pos <- c(i + k * ((1:p) - 1), pos_det) 

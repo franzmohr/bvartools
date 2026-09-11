@@ -1,0 +1,284 @@
+---
+title: "Time Varying Parameters and Stochastic Volatility in Error Correction Models"
+author: "Franz X. Mohr"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Time Varying Parameters and Stochastic Volatility in Error Correction Models}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "figures/tvp-sv-vec-"
+)
+```
+
+## Introduction
+
+The companion vignette on TVP-SV-VAR models describes what the arguments `tvp`
+and `error` do and which priors they require. They mean the same thing for a
+vector error correction model, and `create_bvecmodel` takes them in the same
+way. What changes is the object they are applied to, and that change is not
+cosmetic: in a VEC model the time varying block includes the cointegration term,
+so the model allows the long-run relationship itself to move.
+
+The estimated model is
+
+$$\Delta y_t = \Pi_t w_t + \sum_{l=1}^{p-1} \Gamma_{l,t} \Delta y_{t-l} + C_t d_t + u_t,
+\qquad u_t \sim N(0, \Sigma_t),$$
+
+with $\Pi_t = \alpha_t \beta_t^{\prime}$ of rank $r$. The coefficients of the
+non-cointegration part and the loadings $\alpha_t$ follow random walks and
+$\Sigma_t$ is the stochastic volatility specification of the VAR vignette. The
+cointegration vectors get a state equation of their own,
+
+$$\beta_t = \rho \beta_{t-1} + \eta_t, \qquad \eta_t \sim N(0, I),$$
+
+which is the specification of Koop, León-González and Strachan (2011). A
+constant coefficient VEC model instead puts a matric-variate prior on the
+cointegration space, so `add_priors` asks for different arguments in the two
+cases: `coint$v_i` and `coint$p_tau_i` for a constant model, `coint$rho` for a
+time varying one.
+
+## Data
+
+Data set `uk_macrodata` contains a UK short-term interest rate, a long-term
+interest rate and inflation from 1957Q2 to 2009Q2. It is the data set of Koop,
+León-González and Strachan (2011), whose subject is exactly the question this
+model is for: whether the long-run relationship between the two rates and
+inflation is the same in 2009 as it was in 1957.
+
+```{r data, message=FALSE, fig.align='center', fig.height=4.5, fig.width=5.5}
+library(bvartools)
+
+data("uk_macrodata")
+
+plot(uk_macrodata, main = "UK interest and inflation rates")
+```
+
+## Model set-up
+
+```{r}
+model <- create_bvecmodel(uk_macrodata, p = 2, r = 1, const = "unrestricted",
+                          tvp = TRUE, error = "sv+covar", varsel = "bvs",
+                          iterations = 3000, burnin = 1000)
+
+model[["model"]][["algorithm"]]
+```
+
+`p` is the lag order of the level VAR, so the model contains $p - 1 = 1$ lag of
+the differenced series. The cointegration rank is fixed at one, which for a term
+structure is the natural specification.
+
+Models with a prior on the cointegration space are sensitive to the scale of the
+series in the error correction term, and `scale_error_correction` divides them
+by the standard deviation of their differences. Since it changes what
+`coef$v_i` and `coint$rho` are a prior about, it belongs before `add_priors`.
+
+```{r}
+model <- scale_error_correction(model)
+```
+
+## Priors
+
+```{r}
+model <- add_priors(model,
+                    coef = list(v_i = 1, v_i_det = 1 / 10,
+                                shape = 3, rate = 0.0001, rate_det = 0.01),
+                    coint = list(rho = 0.999),
+                    sigma = list(shape = 3, rate = 0.01,
+                                 mu = 0, v_i = 0.01,
+                                 state_variance = 0.05, offset = 1e-8),
+                    varsel = list(inprior = 0.5, exclude_det = TRUE))
+```
+
+Arguments `coef` and `sigma` are the ones of the VAR vignette: prior precisions
+for the initial state of the coefficients, an inverse gamma prior for the
+variances of their state equation, and the prior of the stochastic volatility
+block.
+
+Argument `coint` is where a VEC model differs. `rho` is the autocorrelation of
+the state equation of $\beta$ and must be smaller than one. The prior on the
+state before the sample is that equation's own stationary distribution,
+$N(0, I / (1 - \rho^2))$, which is what makes the prior proper, so a value close
+to one is intended and a value far from it draws a warning. Only the product
+$\alpha_t \beta_t^{\prime}$ is identified, and the prior variance of the
+loadings is shrunk by $1 - \rho^2$ to compensate, which leaves the product on
+the scale that `coef$v_i` asks for.
+
+The loadings are never subject to variable selection, so the cointegration term
+is always in the model. Variable selection applies to the coefficients of the
+differenced regressors, and `exclude_det = TRUE` keeps the unrestricted constant
+out of it as well.
+
+## Initial values and posterior draws
+
+```{r}
+model <- add_initial_values(model)
+```
+
+```{r, message=FALSE, warning=FALSE}
+model <- add_posterior_coefficients(model)
+```
+
+Before anything is read off the error correction term, the series in it are put
+back on the scale of the input data. The function multiplies the draws of
+$\beta$ by the inverse of the scaling matrix and leaves $\alpha$ unchanged,
+which leaves $\Pi_t w_t$ where it was.
+
+```{r}
+model <- rescale_error_correction(model)
+```
+
+## Evaluation
+
+### Summary statistics for a period
+
+As for a TVP-SV-VAR, a summary table is the summary of a period, and the last
+one is used by default. The first block of columns is the cointegration matrix
+$\Pi_t$ rather than $\alpha_t$ and $\beta_t$ separately, since the factors are
+identified only up to an invertible $r \times r$ transformation while their
+product is not.
+
+```{r}
+summary(model)
+```
+
+```{r}
+period_of <- function(object, year, quarter) {
+  which(stats::time(object[["data"]][["train"]][["y"]]) == year + (quarter - 1) / 4)
+}
+
+summary(model, period = period_of(model, 1975, 1))
+```
+
+The inclusion probabilities of the $\Pi$ columns are one by construction, as
+explained above, and the inclusion probabilities of the remaining columns do not
+carry a period: variable selection decides on a regressor for the whole sample.
+
+### Coefficient and volatility paths
+
+`plot` draws the paths of $\Pi_t$, of the coefficients of the non-cointegration
+part, and of the error covariance matrix.
+
+```{r paths, fig.align='center', fig.height=6, fig.width=9}
+plot(model)
+```
+
+The first $K$ columns are $\Pi_t$. Reading down one of them gives the response
+of each differenced series to the level of one variable, and reading across a
+row gives the error correction of one equation. A panel that sits at zero among
+the $\Gamma$ columns is a coefficient that variable selection has switched off.
+
+A single element of $\Pi_t$ is easier to read on its own. The following computes
+it from the draws of the loadings, which are the first $Kr$ coefficients of each
+period of `posterior$a$coeffs`, and the draws of the cointegration vectors in
+`posterior$beta$coeffs`.
+
+```{r pi-path, fig.align='center', fig.height=4, fig.width=5.5}
+pi_path <- function(object, equation, variable, ci = 0.9) {
+  k <- object[["model"]][["k"]]
+  r <- object[["model"]][["rank"]]
+  m <- ncol(object[["data"]][["train"]][["z"]])
+  k_ect <- ncol(object[["data"]][["train"]][["w"]])
+  tt <- nrow(object[["data"]][["train"]][["y"]])
+  draws <- nrow(object[["posterior"]][["a"]][["coeffs"]])
+
+  i <- which(object[["model"]][["endogen"]] == equation)
+  j <- which(dimnames(object[["data"]][["train"]][["w"]])[[2]] == variable)
+
+  result <- matrix(NA_real_, draws, tt)
+  for (period in 1:tt) {
+    alpha <- object[["posterior"]][["a"]][["coeffs"]][, (period - 1) * m + 1:(k * r)]
+    beta <- object[["posterior"]][["beta"]][["coeffs"]][, (period - 1) * k_ect * r + 1:(k_ect * r)]
+    result[, period] <- rowSums(matrix(alpha, draws, k * r)[, k * 0:(r - 1) + i, drop = FALSE] *
+                                  matrix(beta, draws, k_ect * r)[, k_ect * 0:(r - 1) + j, drop = FALSE])
+  }
+
+  bands <- t(apply(result, 2, stats::quantile,
+                   probs = c((1 - ci) / 2, .5, 1 - (1 - ci) / 2)))
+
+  stats::ts(bands, start = stats::start(object[["data"]][["train"]][["y"]]),
+            frequency = stats::frequency(object[["data"]][["train"]][["y"]]))
+}
+
+path <- pi_path(model, equation = "rs", variable = "l.rs")
+
+stats::ts.plot(path, lty = c(2, 1, 2),
+               main = "Short rate: adjustment to its own level",
+               ylab = "Element of Pi")
+abline(h = 0, lty = "dotted")
+```
+
+Note what is *not* plotted here. The path of $\beta_t$ on its own is not a
+quantity to read: a cointegration vector is identified only up to
+normalisation, and normalising it on a variable whose coefficient wanders near
+zero produces a path that swings between large values without anything having
+happened to the model. $\Pi_t$ carries the same information and is identified.
+
+The volatilities are extracted from the draws of the error precision exactly as
+in the VAR case.
+
+```{r volatility, fig.align='center', fig.height=4.5, fig.width=5.5}
+volatility <- function(object) {
+  k <- object[["model"]][["k"]]
+  kk <- k * k
+  tt <- nrow(object[["data"]][["train"]][["y"]])
+  draws <- object[["posterior"]][["u_sigma_inv"]][["coeffs"]]
+
+  result <- matrix(NA_real_, tt, k)
+  for (i in 1:tt) {
+    result[i, ] <- rowMeans(apply(draws[, (i - 1) * kk + 1:kk], 1,
+                                  function(x) {sqrt(diag(solve(matrix(x, k))))}))
+  }
+
+  stats::ts(result, start = stats::start(object[["data"]][["train"]][["y"]]),
+            frequency = stats::frequency(object[["data"]][["train"]][["y"]]),
+            names = object[["model"]][["endogen"]])
+}
+
+plot(volatility(model),
+     main = "Posterior mean of the residual standard deviations")
+```
+
+For these data the volatility block does most of the work that a constant
+covariance matrix would have got wrong. The 1970s and early 1980s are an
+order of magnitude noisier than the rest of the sample, and a model that
+averaged over them would report credible bands for the 1990s that are far too
+wide.
+
+## What a time varying VEC model does not do
+
+`vec_to_var` refuses to transform the posterior draws of a time varying model:
+
+```{r, error=TRUE}
+vec_to_var(model)
+```
+
+The transformation writes the VEC coefficients of one draw as the coefficients
+of the corresponding level VAR, and impulse responses and forecast error
+variance decompositions are computed from that VAR form. A time varying model
+has one such VAR per period and per draw, so what would come back is not a
+`bvarmodel` of the kind the rest of the package works with. Analysis of a
+TVP-SV-VEC model therefore stays with the paths above and with the period-wise
+summaries.
+
+A constant coefficient model transforms as usual, so the practical route to
+impulse responses is to estimate the same specification with `tvp = FALSE` --
+which is worth doing in any case, since the constant coefficient model with
+stochastic volatility is the model a TVP-SV specification has to beat.
+
+## References
+
+Koop, G., León-González, R., & Strachan R. W. (2011). Bayesian inference in a time varying cointegration model. *Journal of Econometrics, 165*(2), 210-220. <https://doi.org/10.1016/j.jeconom.2011.07.007>
+
+Koop, G., León-González, R., & Strachan R. W. (2010). Efficient posterior simulation for cointegrated models with priors on the cointegration space. *Econometric Reviews, 29*(2), 224-242. <https://doi.org/10.1080/07474930903382208>
+
+Korobilis, D. (2013). VAR forecasting using Bayesian variable selection. *Journal of Applied Econometrics, 28*(2), 204-230. <https://doi.org/10.1002/jae.1271>
+
+Lütkepohl, H. (2006). *New introduction to multiple time series analysis* (2nd ed.). Berlin: Springer.
+
+Primiceri, G. E. (2005). Time varying structural vector autoregressions and monetary policy. *Review of Economic Studies, 72*(3), 821-852. <https://doi.org/10.1111/j.1467-937X.2005.00353.x>

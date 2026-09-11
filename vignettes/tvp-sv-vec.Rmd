@@ -1,0 +1,478 @@
+---
+title: "Time Varying Parameters and Stochastic Volatility in Error Correction Models"
+author: "Franz X. Mohr"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Time Varying Parameters and Stochastic Volatility in Error Correction Models}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+
+## Introduction
+
+The companion vignette on TVP-SV-VAR models describes what the arguments `tvp`
+and `error` do and which priors they require. They mean the same thing for a
+vector error correction model, and `create_bvecmodel` takes them in the same
+way. What changes is the object they are applied to, and that change is not
+cosmetic: in a VEC model the time varying block includes the cointegration term,
+so the model allows the long-run relationship itself to move.
+
+The estimated model is
+
+$$\Delta y_t = \Pi_t w_t + \sum_{l=1}^{p-1} \Gamma_{l,t} \Delta y_{t-l} + C_t d_t + u_t,
+\qquad u_t \sim N(0, \Sigma_t),$$
+
+with $\Pi_t = \alpha_t \beta_t^{\prime}$ of rank $r$. The coefficients of the
+non-cointegration part and the loadings $\alpha_t$ follow random walks and
+$\Sigma_t$ is the stochastic volatility specification of the VAR vignette. The
+cointegration vectors get a state equation of their own,
+
+$$\beta_t = \rho \beta_{t-1} + \eta_t, \qquad \eta_t \sim N(0, I),$$
+
+which is the specification of Koop, León-González and Strachan (2011). A
+constant coefficient VEC model instead puts a matric-variate prior on the
+cointegration space, so `add_priors` asks for different arguments in the two
+cases: `coint$v_i` and `coint$p_tau_i` for a constant model, `coint$rho` for a
+time varying one.
+
+## Data
+
+Data set `uk_macrodata` contains a UK short-term interest rate, a long-term
+interest rate and inflation from 1957Q2 to 2009Q2. It is the data set of Koop,
+León-González and Strachan (2011), whose subject is exactly the question this
+model is for: whether the long-run relationship between the two rates and
+inflation is the same in 2009 as it was in 1957.
+
+
+``` r
+library(bvartools)
+
+data("uk_macrodata")
+
+plot(uk_macrodata, main = "UK interest and inflation rates")
+```
+
+<div class="figure" style="text-align: center">
+<img src="figures/tvp-sv-vec-data-1.png" alt="plot of chunk data"  />
+<p class="caption">plot of chunk data</p>
+</div>
+
+## Model set-up
+
+
+``` r
+model <- create_bvecmodel(uk_macrodata, p = 2, r = 1, const = "unrestricted",
+                          tvp = TRUE, error = "sv+covar", varsel = "bvs",
+                          iterations = 3000, burnin = 1000)
+
+model[["model"]][["algorithm"]]
+#> [1] "VecTvpStochvol"
+```
+
+`p` is the lag order of the level VAR, so the model contains $p - 1 = 1$ lag of
+the differenced series. The cointegration rank is fixed at one, which for a term
+structure is the natural specification.
+
+Models with a prior on the cointegration space are sensitive to the scale of the
+series in the error correction term, and `scale_error_correction` divides them
+by the standard deviation of their differences. Since it changes what
+`coef$v_i` and `coint$rho` are a prior about, it belongs before `add_priors`.
+
+
+``` r
+model <- scale_error_correction(model)
+```
+
+## Priors
+
+
+``` r
+model <- add_priors(model,
+                    coef = list(v_i = 1, v_i_det = 1 / 10,
+                                shape = 3, rate = 0.0001, rate_det = 0.01),
+                    coint = list(rho = 0.999),
+                    sigma = list(shape = 3, rate = 0.01,
+                                 mu = 0, v_i = 0.01,
+                                 state_variance = 0.05, offset = 1e-8),
+                    varsel = list(inprior = 0.5, exclude_det = TRUE))
+```
+
+Arguments `coef` and `sigma` are the ones of the VAR vignette: prior precisions
+for the initial state of the coefficients, an inverse gamma prior for the
+variances of their state equation, and the prior of the stochastic volatility
+block.
+
+Argument `coint` is where a VEC model differs. `rho` is the autocorrelation of
+the state equation of $\beta$ and must be smaller than one. The prior on the
+state before the sample is that equation's own stationary distribution,
+$N(0, I / (1 - \rho^2))$, which is what makes the prior proper, so a value close
+to one is intended and a value far from it draws a warning. Only the product
+$\alpha_t \beta_t^{\prime}$ is identified, and the prior variance of the
+loadings is shrunk by $1 - \rho^2$ to compensate, which leaves the product on
+the scale that `coef$v_i` asks for.
+
+The loadings are never subject to variable selection, so the cointegration term
+is always in the model. Variable selection applies to the coefficients of the
+differenced regressors, and `exclude_det = TRUE` keeps the unrestricted constant
+out of it as well.
+
+## Initial values and posterior draws
+
+
+``` r
+model <- add_initial_values(model)
+```
+
+
+``` r
+model <- add_posterior_coefficients(model)
+```
+
+Before anything is read off the error correction term, the series in it are put
+back on the scale of the input data. The function multiplies the draws of
+$\beta$ by the inverse of the scaling matrix and leaves $\alpha$ unchanged,
+which leaves $\Pi_t w_t$ where it was.
+
+
+``` r
+model <- rescale_error_correction(model)
+```
+
+## Evaluation
+
+### Summary statistics for a period
+
+As for a TVP-SV-VAR, a summary table is the summary of a period, and the last
+one is used by default. The first block of columns is the cointegration matrix
+$\Pi_t$ rather than $\alpha_t$ and $\beta_t$ separately, since the factors are
+identified only up to an invertible $r \times r$ transformation while their
+product is not.
+
+
+``` r
+summary(model)
+#> 
+#> Bayesian TVP-SV-VEC model with p = 2 
+#> 
+#> Variable selection algorithm: Bayesian variable selection (Korobilis, 2013)
+#> 
+#> Endogenous variables: rs, rl, Dp
+#> 
+#> Period: 208 
+#> 
+#> Variable: rs 
+#> 
+#>                  Mean         SD    Naive SD Time-series SD        2.5%
+#> l.rs      0.004313958 0.05999282 0.001095314    0.002142646 -0.13023884
+#> l.rl      0.013010712 0.04468770 0.000815882    0.001267414 -0.07533986
+#> l.Dp     -0.053706810 0.06142627 0.001121485    0.001943210 -0.17435588
+#> d.rs.l01  0.372405721 0.09271429 0.001692724    0.013355881  0.19232010
+#> d.rl.l01  0.233543050 0.09191074 0.001678053    0.010554935  0.04493989
+#> d.Dp.l01  0.000000000 0.00000000 0.000000000    0.000000000  0.00000000
+#> const    -0.083182445 0.15761648 0.002877670    0.005098031 -0.39424297
+#>                   50%      97.5% Incl. prob.  
+#> l.rs      0.001259171 0.13712058       1.000  
+#> l.rl      0.006502816 0.11624492       1.000  
+#> l.Dp     -0.054337603 0.06977889       1.000  
+#> d.rs.l01  0.370199804 0.56130548       1.000 *
+#> d.rl.l01  0.233709772 0.41799660       0.991 *
+#> d.Dp.l01  0.000000000 0.00000000       0.000  
+#> const    -0.078039788 0.22344507       1.000  
+#> 
+#> Variable: rl 
+#> 
+#>                  Mean         SD     Naive SD Time-series SD        2.5%
+#> l.rs     -0.001008036 0.03056385 0.0005580171   0.0005797191 -0.06574580
+#> l.rl      0.001533378 0.02562429 0.0004678333   0.0005280175 -0.05203690
+#> l.Dp     -0.007278268 0.04252918 0.0007764731   0.0015048773 -0.08745775
+#> d.rs.l01 -0.031660225 0.06044998 0.0011036606   0.0095248535 -0.19821646
+#> d.rl.l01  0.279752980 0.08765981 0.0016004418   0.0121159491  0.10183218
+#> d.Dp.l01  0.000000000 0.00000000 0.0000000000   0.0000000000  0.00000000
+#> const     0.027875640 0.11727814 0.0021411961   0.0024747848 -0.20224677
+#>                    50%      97.5% Incl. prob.  
+#> l.rs     -0.0003556518 0.06423938       1.000  
+#> l.rl      0.0005873143 0.05721986       1.000  
+#> l.Dp     -0.0079783106 0.07913322       1.000  
+#> d.rs.l01  0.0000000000 0.01245538       0.357  
+#> d.rl.l01  0.2813181195 0.45373563       1.000 *
+#> d.Dp.l01  0.0000000000 0.00000000       0.000  
+#> const     0.0263980520 0.26329658       1.000  
+#> 
+#> Variable: Dp 
+#> 
+#>                  Mean         SD     Naive SD Time-series SD        2.5%
+#> l.rs      0.174927641 0.80984560 0.0147856901    0.060688942 -1.47132450
+#> l.rl      0.331359755 0.58460799 0.0106734327    0.033658830 -0.82684879
+#> l.Dp     -1.126515777 0.21743057 0.0039697208    0.009062020 -1.54887012
+#> d.rs.l01  0.714821826 0.42246032 0.0077130349    0.113208337  0.00000000
+#> d.rl.l01  0.353386219 0.33311814 0.0060818773    0.069219606 -0.03729928
+#> d.Dp.l01 -0.002389303 0.04299147 0.0007849132    0.004806855 -0.12947888
+#> const    -0.249552444 1.02973298 0.0188002661    0.135486512 -2.22862338
+#>                 50%       97.5% Incl. prob.  
+#> l.rs      0.1840020  1.75151003   1.0000000  
+#> l.rl      0.3396264  1.46339826   1.0000000  
+#> l.Dp     -1.1241972 -0.70748331   1.0000000 *
+#> d.rs.l01  0.8404489  1.35779130   0.9110000  
+#> d.rl.l01  0.2769192  0.96296728   0.7916667  
+#> d.Dp.l01  0.0000000  0.09510578   0.1870000  
+#> const    -0.2461091  1.89025461   1.0000000  
+#> 
+#> Variance-covariance matrix:
+#> 
+#>            Mean        SD    Naive SD Time-series SD        2.5%       50%
+#> rs_rs 0.6165196 0.6429660 0.011738900    0.020840422  0.10883715 0.4591841
+#> rs_rl 0.2836526 0.3020908 0.005515398    0.009466336  0.04730514 0.2088281
+#> rs_Dp 0.4775176 0.6482349 0.011835097    0.049387351 -0.05771867 0.3346949
+#> rl_rl 0.2004822 0.1602598 0.002925931    0.004890710  0.06417214 0.1638665
+#> rl_Dp 0.3175548 0.3306808 0.006037377    0.021102246  0.04817349 0.2438875
+#> Dp_Dp 7.4488517 3.0486013 0.055659590    0.213313463  3.55132168 6.8796708
+#>            97.5%  
+#> rs_rs  2.0789663 *
+#> rs_rl  0.9650165 *
+#> rs_Dp  1.9238014  
+#> rl_rl  0.5479050 *
+#> rl_Dp  1.0532898 *
+#> Dp_Dp 15.0717252 *
+```
+
+
+``` r
+period_of <- function(object, year, quarter) {
+  which(stats::time(object[["data"]][["train"]][["y"]]) == year + (quarter - 1) / 4)
+}
+
+summary(model, period = period_of(model, 1975, 1))
+#> 
+#> Bayesian TVP-SV-VEC model with p = 2 
+#> 
+#> Variable selection algorithm: Bayesian variable selection (Korobilis, 2013)
+#> 
+#> Endogenous variables: rs, rl, Dp
+#> 
+#> Period: 70 
+#> 
+#> Variable: rs 
+#> 
+#>                 Mean         SD     Naive SD Time-series SD        2.5%
+#> l.rs     -0.08878407 0.08767529 0.0016007245    0.005768154 -0.28988969
+#> l.rl     -0.03870180 0.04895181 0.0008937337    0.001976920 -0.15515043
+#> l.Dp      0.06457001 0.05166573 0.0009432828    0.001594482 -0.03809103
+#> d.rs.l01  0.30899866 0.07782209 0.0014208304    0.019334722  0.15713080
+#> d.rl.l01  0.23133763 0.08025224 0.0014651987    0.019168206  0.07968857
+#> d.Dp.l01  0.00000000 0.00000000 0.0000000000    0.000000000  0.00000000
+#> const     0.02114358 0.17066156 0.0031158395    0.004308959 -0.30615000
+#>                  50%      97.5% Incl. prob.  
+#> l.rs     -0.07495137 0.03750144       1.000  
+#> l.rl     -0.03079823 0.04050449       1.000  
+#> l.Dp      0.06439644 0.16682185       1.000  
+#> d.rs.l01  0.30933461 0.46231900       1.000 *
+#> d.rl.l01  0.22919198 0.39772628       0.991 *
+#> d.Dp.l01  0.00000000 0.00000000       0.000  
+#> const     0.01584378 0.37219845       1.000  
+#> 
+#> Variable: rl 
+#> 
+#>                 Mean         SD     Naive SD Time-series SD        2.5%
+#> l.rs     -0.04441671 0.06010853 0.0010974266    0.002679056 -0.18080796
+#> l.rl     -0.02491764 0.03633668 0.0006634140    0.002074488 -0.11409320
+#> l.Dp      0.03495019 0.03982622 0.0007271240    0.001526519 -0.04370432
+#> d.rs.l01 -0.01324025 0.03675726 0.0006710927    0.007606794 -0.11392800
+#> d.rl.l01  0.29575920 0.07028108 0.0012831512    0.017507408  0.15473821
+#> d.Dp.l01  0.00000000 0.00000000 0.0000000000    0.000000000  0.00000000
+#> const     0.07863819 0.12223882 0.0022317653    0.002811678 -0.16573360
+#>                  50%      97.5% Incl. prob.  
+#> l.rs     -0.03586657 0.06061301       1.000  
+#> l.rl     -0.01681523 0.03157594       1.000  
+#> l.Dp      0.03494498 0.11559610       1.000  
+#> d.rs.l01  0.00000000 0.04117499       0.357  
+#> d.rl.l01  0.29936813 0.43636121       1.000 *
+#> d.Dp.l01  0.00000000 0.00000000       0.000  
+#> const     0.07626149 0.31504731       1.000  
+#> 
+#> Variable: Dp 
+#> 
+#>                   Mean         SD     Naive SD Time-series SD        2.5%
+#> l.rs      1.4440213431 0.72986093 0.0133253765    0.088402306  0.02495080
+#> l.rl      0.7210015964 0.51918428 0.0094789647    0.053634399 -0.23647056
+#> l.Dp     -1.1079051788 0.18225761 0.0033275535    0.013816574 -1.47460260
+#> d.rs.l01  0.7022893205 0.41102659 0.0075042846    0.098734784  0.00000000
+#> d.rl.l01  0.3497049130 0.32304940 0.0058980481    0.072475442 -0.01278406
+#> d.Dp.l01  0.0008891842 0.03121552 0.0005699149    0.004182282 -0.07196395
+#> const    -0.3136857851 0.89481800 0.0163370668    0.236098436 -1.95825830
+#>                 50%       97.5% Incl. prob.  
+#> l.rs      1.4313399  2.92160290   1.0000000 *
+#> l.rl      0.7062796  1.75075871   1.0000000  
+#> l.Dp     -1.1100246 -0.74987165   1.0000000 *
+#> d.rs.l01  0.8334290  1.29788461   0.9110000  
+#> d.rl.l01  0.2504851  0.89775340   0.7916667  
+#> d.Dp.l01  0.0000000  0.08437938   0.1870000  
+#> const    -0.2688838  1.55906057   1.0000000  
+#> 
+#> Variance-covariance matrix:
+#> 
+#>            Mean        SD    Naive SD Time-series SD        2.5%       50%
+#> rs_rs 0.6165196 0.6429660 0.011738900    0.020840422  0.10883715 0.4591841
+#> rs_rl 0.2836526 0.3020908 0.005515398    0.009466336  0.04730514 0.2088281
+#> rs_Dp 0.4775176 0.6482349 0.011835097    0.049387351 -0.05771867 0.3346949
+#> rl_rl 0.2004822 0.1602598 0.002925931    0.004890710  0.06417214 0.1638665
+#> rl_Dp 0.3175548 0.3306808 0.006037377    0.021102246  0.04817349 0.2438875
+#> Dp_Dp 7.4488517 3.0486013 0.055659590    0.213313463  3.55132168 6.8796708
+#>            97.5%  
+#> rs_rs  2.0789663 *
+#> rs_rl  0.9650165 *
+#> rs_Dp  1.9238014  
+#> rl_rl  0.5479050 *
+#> rl_Dp  1.0532898 *
+#> Dp_Dp 15.0717252 *
+```
+
+The inclusion probabilities of the $\Pi$ columns are one by construction, as
+explained above, and the inclusion probabilities of the remaining columns do not
+carry a period: variable selection decides on a regressor for the whole sample.
+
+### Coefficient and volatility paths
+
+`plot` draws the paths of $\Pi_t$, of the coefficients of the non-cointegration
+part, and of the error covariance matrix.
+
+
+``` r
+plot(model)
+```
+
+<div class="figure" style="text-align: center">
+<img src="figures/tvp-sv-vec-paths-1.png" alt="plot of chunk paths"  />
+<p class="caption">plot of chunk paths</p>
+</div>
+
+The first $K$ columns are $\Pi_t$. Reading down one of them gives the response
+of each differenced series to the level of one variable, and reading across a
+row gives the error correction of one equation. A panel that sits at zero among
+the $\Gamma$ columns is a coefficient that variable selection has switched off.
+
+A single element of $\Pi_t$ is easier to read on its own. The following computes
+it from the draws of the loadings, which are the first $Kr$ coefficients of each
+period of `posterior$a$coeffs`, and the draws of the cointegration vectors in
+`posterior$beta$coeffs`.
+
+
+``` r
+pi_path <- function(object, equation, variable, ci = 0.9) {
+  k <- object[["model"]][["k"]]
+  r <- object[["model"]][["rank"]]
+  m <- ncol(object[["data"]][["train"]][["z"]])
+  k_ect <- ncol(object[["data"]][["train"]][["w"]])
+  tt <- nrow(object[["data"]][["train"]][["y"]])
+  draws <- nrow(object[["posterior"]][["a"]][["coeffs"]])
+
+  i <- which(object[["model"]][["endogen"]] == equation)
+  j <- which(dimnames(object[["data"]][["train"]][["w"]])[[2]] == variable)
+
+  result <- matrix(NA_real_, draws, tt)
+  for (period in 1:tt) {
+    alpha <- object[["posterior"]][["a"]][["coeffs"]][, (period - 1) * m + 1:(k * r)]
+    beta <- object[["posterior"]][["beta"]][["coeffs"]][, (period - 1) * k_ect * r + 1:(k_ect * r)]
+    result[, period] <- rowSums(matrix(alpha, draws, k * r)[, k * 0:(r - 1) + i, drop = FALSE] *
+                                  matrix(beta, draws, k_ect * r)[, k_ect * 0:(r - 1) + j, drop = FALSE])
+  }
+
+  bands <- t(apply(result, 2, stats::quantile,
+                   probs = c((1 - ci) / 2, .5, 1 - (1 - ci) / 2)))
+
+  stats::ts(bands, start = stats::start(object[["data"]][["train"]][["y"]]),
+            frequency = stats::frequency(object[["data"]][["train"]][["y"]]))
+}
+
+path <- pi_path(model, equation = "rs", variable = "l.rs")
+
+stats::ts.plot(path, lty = c(2, 1, 2),
+               main = "Short rate: adjustment to its own level",
+               ylab = "Element of Pi")
+abline(h = 0, lty = "dotted")
+```
+
+<div class="figure" style="text-align: center">
+<img src="figures/tvp-sv-vec-pi-path-1.png" alt="plot of chunk pi-path"  />
+<p class="caption">plot of chunk pi-path</p>
+</div>
+
+Note what is *not* plotted here. The path of $\beta_t$ on its own is not a
+quantity to read: a cointegration vector is identified only up to
+normalisation, and normalising it on a variable whose coefficient wanders near
+zero produces a path that swings between large values without anything having
+happened to the model. $\Pi_t$ carries the same information and is identified.
+
+The volatilities are extracted from the draws of the error precision exactly as
+in the VAR case.
+
+
+``` r
+volatility <- function(object) {
+  k <- object[["model"]][["k"]]
+  kk <- k * k
+  tt <- nrow(object[["data"]][["train"]][["y"]])
+  draws <- object[["posterior"]][["u_sigma_inv"]][["coeffs"]]
+
+  result <- matrix(NA_real_, tt, k)
+  for (i in 1:tt) {
+    result[i, ] <- rowMeans(apply(draws[, (i - 1) * kk + 1:kk], 1,
+                                  function(x) {sqrt(diag(solve(matrix(x, k))))}))
+  }
+
+  stats::ts(result, start = stats::start(object[["data"]][["train"]][["y"]]),
+            frequency = stats::frequency(object[["data"]][["train"]][["y"]]),
+            names = object[["model"]][["endogen"]])
+}
+
+plot(volatility(model),
+     main = "Posterior mean of the residual standard deviations")
+```
+
+<div class="figure" style="text-align: center">
+<img src="figures/tvp-sv-vec-volatility-1.png" alt="plot of chunk volatility"  />
+<p class="caption">plot of chunk volatility</p>
+</div>
+
+For these data the volatility block does most of the work that a constant
+covariance matrix would have got wrong. The 1970s and early 1980s are an
+order of magnitude noisier than the rest of the sample, and a model that
+averaged over them would report credible bands for the 1990s that are far too
+wide.
+
+## What a time varying VEC model does not do
+
+`vec_to_var` refuses to transform the posterior draws of a time varying model:
+
+
+``` r
+vec_to_var(model)
+#> Error in `vec_to_var.bvecmodel()`:
+#> ! Posterior draws of models with time varying parameters cannot be transformed.
+```
+
+The transformation writes the VEC coefficients of one draw as the coefficients
+of the corresponding level VAR, and impulse responses and forecast error
+variance decompositions are computed from that VAR form. A time varying model
+has one such VAR per period and per draw, so what would come back is not a
+`bvarmodel` of the kind the rest of the package works with. Analysis of a
+TVP-SV-VEC model therefore stays with the paths above and with the period-wise
+summaries.
+
+A constant coefficient model transforms as usual, so the practical route to
+impulse responses is to estimate the same specification with `tvp = FALSE` --
+which is worth doing in any case, since the constant coefficient model with
+stochastic volatility is the model a TVP-SV specification has to beat.
+
+## References
+
+Koop, G., León-González, R., & Strachan R. W. (2011). Bayesian inference in a time varying cointegration model. *Journal of Econometrics, 165*(2), 210-220. <https://doi.org/10.1016/j.jeconom.2011.07.007>
+
+Koop, G., León-González, R., & Strachan R. W. (2010). Efficient posterior simulation for cointegrated models with priors on the cointegration space. *Econometric Reviews, 29*(2), 224-242. <https://doi.org/10.1080/07474930903382208>
+
+Korobilis, D. (2013). VAR forecasting using Bayesian variable selection. *Journal of Applied Econometrics, 28*(2), 204-230. <https://doi.org/10.1002/jae.1271>
+
+Lütkepohl, H. (2006). *New introduction to multiple time series analysis* (2nd ed.). Berlin: Springer.
+
+Primiceri, G. E. (2005). Time varying structural vector autoregressions and monetary policy. *Review of Economic Studies, 72*(3), 821-852. <https://doi.org/10.1111/j.1467-937X.2005.00353.x>

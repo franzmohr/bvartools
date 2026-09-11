@@ -163,14 +163,34 @@ inline bayests::ConstantCointSpacePrior read_coint_space_prior_constant(const Rc
 }
 
 /// The cointegration space prior of a model whose cointegration vectors move.
-/// `rho` is the autoregression of their state equation and is not drawn, so it
-/// arrives as a prior rather than as an initial value; a group that omits it
-/// keeps the struct's default.
+/// `rho` is the autoregression of their state equation.
+///
+/// Without `rho_min` and `rho_max` it is a fixed hyperparameter, and a group
+/// that omits it keeps the struct's default. With them it is drawn, under a
+/// uniform prior on that interval, and `rho` becomes the value the chain starts
+/// at. Both ends or neither: one alone would leave the sampler to invent the
+/// other, and which end is missing changes the model rather than a detail of it.
 inline bayests::TvpCointSpacePrior read_coint_space_prior_tvp(const Rcpp::List &group)
 {
   bayests::TvpCointSpacePrior prior;
   prior.initial_state = read_normal_prior(group);
   read_double_if_present(group, "rho", prior.rho);
+
+  const bool has_min = has(group, "rho_min");
+  const bool has_max = has(group, "rho_max");
+
+  if (has_min != has_max) {
+    Rcpp::stop("the prior support of rho needs both ends: priors$beta$%s is missing. "
+               "Leave both out to hold rho fixed at priors$beta$rho",
+               has_min ? "rho_max" : "rho_min");
+  }
+
+  if (has_min) {
+    prior.rho_prior.draw = true;
+    prior.rho_prior.min = Rcpp::as<double>(group["rho_min"]);
+    prior.rho_prior.max = Rcpp::as<double>(group["rho_max"]);
+  }
+
   return prior;
 }
 

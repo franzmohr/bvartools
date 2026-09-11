@@ -318,12 +318,18 @@ struct VecTvpWishartDraws
 
     arma::mat beta;     ///< (n_beta * tt) x iterations.
 
+    /// 1 x iterations: the autoregression of the cointegration state equation.
+    /// Empty unless the file put a prior on it -- it is a fixed hyperparameter
+    /// otherwise, and one the file already holds.
+    arma::mat rho;
+
     /// (k * k) x iterations; the precision does not move with time here.
     arma::mat u_sigma_inv;
 
     arma::uword iterations() const { return u_sigma_inv.n_cols; }
     bool has_a() const { return a.n_elem > 0; }
     bool has_beta() const { return beta.n_elem > 0; }
+    bool has_rho() const { return rho.n_elem > 0; }
 };
 
 /// Posterior draws of a VEC whose coefficients -- loadings and cointegration
@@ -341,6 +347,11 @@ struct VecTvpGammaDraws
 
     arma::mat beta;
 
+    /// 1 x iterations: the autoregression of the cointegration state equation.
+    /// Empty unless the file put a prior on it -- it is a fixed hyperparameter
+    /// otherwise, and one the file already holds.
+    arma::mat rho;
+
     arma::mat psi;
     arma::mat psi_sigma;
     arma::mat psi_lambda;
@@ -351,6 +362,7 @@ struct VecTvpGammaDraws
     arma::uword iterations() const { return u_sigma_inv.n_cols; }
     bool has_a() const { return a.n_elem > 0; }
     bool has_beta() const { return beta.n_elem > 0; }
+    bool has_rho() const { return rho.n_elem > 0; }
     bool has_psi() const { return psi.n_elem > 0; }
 };
 
@@ -372,6 +384,11 @@ struct VecTvpStochvolDraws
     /// without which Pi cannot be reconstructed.
     arma::mat beta;
 
+    /// 1 x iterations: the autoregression of the cointegration state equation.
+    /// Empty unless the file put a prior on it -- it is a fixed hyperparameter
+    /// otherwise, and one the file already holds.
+    arma::mat rho;
+
     arma::mat psi;
     arma::mat psi_sigma;
     arma::mat psi_lambda;
@@ -386,6 +403,7 @@ struct VecTvpStochvolDraws
     arma::uword iterations() const { return u_sigma_inv.n_cols; }
     bool has_a() const { return a.n_elem > 0; }
     bool has_beta() const { return beta.n_elem > 0; }
+    bool has_rho() const { return rho.n_elem > 0; }
     bool has_psi() const { return psi.n_elem > 0; }
 };
 

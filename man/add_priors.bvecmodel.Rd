@@ -92,8 +92,15 @@ the second.
   \item{\code{rho}}{a numeric specifying the autocorrelation coefficient
   of the state equation of \eqn{\beta}. It must be smaller than 1.
   Required for models with time varying cointegration parameters and not used otherwise.
-  Note that in contrast to Koop et al. (2011) \eqn{\rho} is not drawn in the Gibbs sampler of
-  this package yet.}
+  If \code{rho_min} and \code{rho_max} are given as well, this is the value the
+  chain starts \eqn{\rho} at rather than the value it keeps, and it must lie
+  between them.}
+  \item{\code{rho_min}, \code{rho_max}}{numerics specifying the support of a
+  uniform prior on \eqn{\rho}, which makes it a drawn parameter rather than a
+  fixed hyperparameter. Optional, and either both or neither; they must
+  satisfy \eqn{0 < }\code{rho_min}\eqn{ < }\code{rho_max}\eqn{ \le 1}.
+  Koop et al. (2011) use \eqn{(0.999, 1)}.
+  Only used for models with time varying cointegration parameters.}
 }
 For a model with time varying cointegration parameters the state equation is
 \eqn{\beta_t = \rho \beta_{t-1} + \eta_t} with \eqn{\eta_t \sim N(0, I)}, and
@@ -104,6 +111,17 @@ a warning. The loadings carry the compensating scale: only the product
 \eqn{\alpha \beta^{\prime}} is identified, so their prior variance is shrunk
 by \eqn{1 - \rho^2}, leaving the product on the scale \code{coef$v_i} asks
 for.
+
+When \eqn{\rho} is drawn, those last two are computed from \code{coint$rho}
+once and do not follow the draw: the state before the sample keeps the normal
+prior built here, and the loadings keep the shrinkage built here. This is a
+deliberate departure from Koop et al. (2011), in whom the state before the
+sample is the stationary distribution of whatever \eqn{\rho} currently is.
+It is also what makes the draw an exact Gibbs block rather than their
+Metropolis-within-Gibbs step: with the state before the sample free of
+\eqn{\rho}, the conditional posterior of \eqn{\rho} is a normal truncated to
+the prior's support. Draws of \eqn{\rho} are returned in
+\code{object$posterior$beta$rho}.
 
 Argument \code{sigma} can contain the following elements:
 \describe{

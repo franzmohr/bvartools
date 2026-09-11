@@ -27,6 +27,27 @@ struct ConstantCointSpacePrior
     arma::mat p_tau_inv;
 };
 
+/// Uniform prior on the autoregression of a cointegration space that moves with
+/// time, and the switch that turns the draw of it on.
+///
+/// Koop, Leon-Gonzalez and Strachan (2011) treat rho as a parameter and put a
+/// uniform prior on a range close to one -- (0.999, 1) in their application --
+/// on the grounds that it is rho, the innovation variance being fixed at the
+/// identity, that controls how concentrated the distribution of the
+/// cointegration space at t is around the space at t - 1. The support is left
+/// to the file rather than fixed here, but the default is theirs.
+///
+/// Off unless a file asks for it, so a model file that does not name the
+/// support runs with the fixed `TvpCointSpacePrior::rho` it always did.
+struct CointRhoPrior
+{
+    /// Whether rho is drawn. The two bounds below mean nothing when it is not.
+    bool draw = false;
+
+    double min = 0.999; ///< Lower end of the support, above zero.
+    double max = 1.0;   ///< Upper end, at most one.
+};
+
 /// Prior on a cointegration space that moves with time:
 ///
 ///     beta_t = rho beta_{t-1} + eta_t,   eta_t ~ N(0, I).
@@ -39,18 +60,22 @@ struct ConstantCointSpacePrior
 /// relation then lives in alpha, whose own state variance is drawn.
 struct TvpCointSpacePrior
 {
-    /// Autoregression of the state equation, and not drawn -- Koop,
-    /// Leon-Gonzalez and Strachan (2011) sample it, bvartools does not, and
-    /// neither does this.
+    /// Autoregression of the state equation: the value the chain starts at, and
+    /// the value it keeps for the whole run unless `rho_prior` turns its draw
+    /// on.
     ///
-    /// The default is theirs rather than the random walk `.bvectvpalg`
-    /// hardcodes. Just below one, beta_t has the stationary distribution
-    /// N(0, I / (1 - rho^2)), so the prior is proper and the path is pulled back
-    /// towards the space `initial_state` names; at exactly one it is a random
-    /// walk, whose variance grows without bound over the sample and which,
-    /// beta being identified only up to scale, has nothing to pull it back.
-    /// One is still accepted, and is what a file that predates this field means.
+    /// The default is Koop, Leon-Gonzalez and Strachan's rather than the random
+    /// walk `.bvectvpalg` hardcodes. Just below one, beta_t has the stationary
+    /// distribution N(0, I / (1 - rho^2)), so the prior is proper and the path
+    /// is pulled back towards the space `initial_state` names; at exactly one it
+    /// is a random walk, whose variance grows without bound over the sample and
+    /// which, beta being identified only up to scale, has nothing to pull it
+    /// back. One is still accepted, and is what a file that predates this field
+    /// means.
     double rho = 0.999;
+
+    /// Uniform prior on `rho`, and the switch that turns its draw on.
+    CointRhoPrior rho_prior;
 
     /// Normal on the state of the period before the sample.
     NormalPrior initial_state;

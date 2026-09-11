@@ -1,5 +1,41 @@
 # bvartools (development version)
 
+* **The autocorrelation of a time varying cointegration space can be
+  estimated.** `add_priors()` takes `coint$rho_min` and `coint$rho_max`, the
+  support of a uniform prior on the `rho` of
+  `beta_t = rho beta_{t-1} + eta_t`, and with them `VecTvpWishart`,
+  `VecTvpGamma` and `VecTvpStochvol` draw `rho` in the Gibbs sampler rather
+  than holding it at `coint$rho`. Both ends or neither; `coint$rho` then names
+  the value the chain starts at and has to lie between them. The draws come
+  back as `object$posterior$beta$rho`, an `mcmc` object of one column. This is
+  the block of Koop, Leon-Gonzalez and Strachan (2011) that the package has
+  said it was missing since time varying cointegration was added. Nothing
+  changes for a model that does not name the two bounds.
+
+  The draw is an exact Gibbs block rather than the Metropolis-within-Gibbs step
+  of the paper, and the difference is in the model rather than in the
+  algorithm. In the paper the cointegration space at the start of the sample is
+  drawn from the state equation's own stationary distribution,
+  `N(0, I / (1 - rho^2))`, which makes `rho` appear where no
+  conjugacy survives. Here the prior on that state is built once from
+  `coint$rho` and does not follow the draw, so it drops out of `rho`'s
+  conditional and leaves a normal truncated to the prior's support. The
+  shrinkage the loadings carry is fixed the same way. `?add_priors` says so.
+
+* **A time varying cointegration space was centred on the wrong state in the
+  first period.** The simulation smoother is handed the prior mean of the state
+  the first observation loads on, and it does not put the transition through
+  it; `VecTvpWishart`, `VecTvpGamma` and `VecTvpStochvol` were passing
+  `beta_0` there unchanged, which is the random walk's answer and is right
+  only at `rho = 1`. Below one the smoother was centring `beta_1`
+  over `beta_0` while the draw of `beta_0` was centring it over
+  `rho beta_0`. **Draws of those three algorithms change** wherever
+  `rho` is below one, which is every setting the package suggests; the
+  move is about a tenth of a percent at `rho = 0.99` and smaller at the
+  0.999 the examples use. No other algorithm is affected. Fixed in the vendored
+  BayesTS core, which verified that every other model's draws are unchanged
+  digit for digit.
+
 * **Sign restrictions.** `add_sign_restrictions()` identifies the shocks of a
   VAR by the signs of the impulse responses they produce, and `irf()`, `fevd()`
   and `spillover()` use that identification under `type = "sign"`. The

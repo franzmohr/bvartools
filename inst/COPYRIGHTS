@@ -62,6 +62,8 @@ BSD 3-Clause portion
     src/core/algorithms/stochvol_ocsn_2007.cpp
     src/core/algorithms/stochvol_ocsn_2007.h
     src/core/algorithms/triangular_packing.h
+    src/core/algorithms/truncated_normal.cpp
+    src/core/algorithms/truncated_normal.h
     src/core/algorithms/vec_to_var.cpp
     src/core/algorithms/wishart.cpp
     src/core/algorithms/wishart.h

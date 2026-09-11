@@ -22,6 +22,7 @@ using core::build_psi_regressors;
 using core::BvsBlock;
 using core::BvsScope;
 using core::bvs_sweep;
+using core::draw_coint_rho;
 using core::draw_normal_precision;
 using core::fill_psi_path;
 using core::fill_strict_lower_triangle;
@@ -125,7 +126,11 @@ VecTvpStochvolDraws VecTvpStochvolSampler::draw_coefficients(const VecTvpStochvo
     arma::mat beta, beta_B, beta_sigma, z_b, ystar;
     arma::vec beta0;
     arma::mat beta0_post_v;
-    const double rho = input.beta_prior.rho;
+
+    // Not const, and neither is anything built from it: with a prior on rho the
+    // state equation is rebuilt at the end of every draw.
+    double rho = input.beta_prior.rho;
+    const CointRhoPrior &rho_prior = input.beta_prior.rho_prior;
 
     if (use_beta)
     {
@@ -146,6 +151,11 @@ VecTvpStochvolDraws VecTvpStochvolSampler::draw_coefficients(const VecTvpStochvo
         beta0_post_v = input.beta_prior.initial_state.v_inv + rho * rho * beta_sigma;
 
         out.beta = arma::mat(n_beta * tt, iterations);
+
+        if (rho_prior.draw)
+        {
+            out.rho = arma::mat(1, iterations);
+        }
 
         // The starting values of a and beta are unlikely to agree with each
         // other; the loadings' regressors belong to the beta that is actually
@@ -302,8 +312,18 @@ VecTvpStochvolDraws VecTvpStochvolSampler::draw_coefficients(const VecTvpStochvo
 
                 fill_z_beta(z_b, a, w_t, k, rank);
 
-                beta = kalman_durbin_koopman_2002(ystar, z_b, u_sigma, beta_sigma, beta_B, beta0,
-                                                  beta_sigma)
+                // rho * beta0, not beta0. The smoother's sixth argument is the
+                // prior mean of the state the *first* observation loads on, and
+                // it does not put the transition through it -- so what belongs
+                // there is beta_1's mean under beta_1 = rho beta_0 + eta, which
+                // is the state before the sample carried forward one period.
+                // Passing beta_0 itself would be the random walk's answer, and
+                // is only right at rho = 1; below it the smoother and the
+                // beta_0 draw a few lines down would be fitting different
+                // models, one centring beta_1 over beta_0 and the other over
+                // rho beta_0.
+                beta = kalman_durbin_koopman_2002(ystar, z_b, u_sigma, beta_sigma, beta_B,
+                                                  rho * beta0, beta_sigma)
                            .cols(0, tt - 1);
 
                 // Draw beta0
@@ -311,6 +331,20 @@ VecTvpStochvolDraws VecTvpStochvolSampler::draw_coefficients(const VecTvpStochvo
                     beta0_post_v, input.beta_prior.initial_state.v_inv *
                                           input.beta_prior.initial_state.mu +
                                       rho * beta.col(0));
+
+                // Draw rho
+                //
+                // Last of the cointegration block, because it is the one
+                // quantity there that conditions on the whole path and on the
+                // state before it. What it moves is the state equation itself,
+                // so the transition and the initial state's posterior precision
+                // are rebuilt from it for the next draw.
+                if (rho_prior.draw)
+                {
+                    rho = draw_coint_rho(beta, beta0, rho_prior);
+                    beta_B.diag().fill(rho);
+                    beta0_post_v = input.beta_prior.initial_state.v_inv + rho * rho * beta_sigma;
+                }
 
                 // Carry the new cointegration space into the regressors, for the
                 // residual below and for the next draw's a block.
@@ -448,6 +482,10 @@ VecTvpStochvolDraws VecTvpStochvolSampler::draw_coefficients(const VecTvpStochvo
             if (use_beta)
             {
                 out.beta.col(draw_pos) = arma::vectorise(beta);
+                if (rho_prior.draw)
+                {
+                    out.rho(0, draw_pos) = rho;
+                }
             }
 
             if (use_psi)

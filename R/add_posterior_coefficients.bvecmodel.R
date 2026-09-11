@@ -105,6 +105,12 @@ add_posterior_coefficients.bvecmodel <- function(object, posterior_function = NU
           if (!is.null(object[["posterior"]][[i]][["coeffs"]])) {
             object[["posterior"]][[i]][["coeffs"]] <- coda::as.mcmc(object[["posterior"]][[i]][["coeffs"]])
           }
+          # Only the cointegration block has one of these, and only when the
+          # prior made rho a parameter rather than a hyperparameter. NULL
+          # everywhere else, which is the same as not having it.
+          if (!is.null(object[["posterior"]][[i]][["rho"]])) {
+            object[["posterior"]][[i]][["rho"]] <- coda::as.mcmc(object[["posterior"]][[i]][["rho"]])
+          }
           if (!is.null(object[["posterior"]][[i]][["lambda"]])) {
             object[["posterior"]][[i]][["lambda"]] <- coda::as.mcmc(object[["posterior"]][[i]][["lambda"]])
           }

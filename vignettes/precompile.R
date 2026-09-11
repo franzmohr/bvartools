@@ -58,6 +58,7 @@ if (length(vignettes) == 0) {
     "bvec",
     "minnesota-prior",
     "ssvs",
+    "sign-restrictions",
     "quantile-var",
     "tvp-sv-var",
     "tvp-sv-vec",

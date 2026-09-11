@@ -18,7 +18,10 @@
   accepted rotations are stored beside the other posterior draws, and are
   carried by `thin()` and by the HDF5 export along with the restriction table.
   Zero restrictions are not supported: they cannot be imposed by rejection and
-  need the algorithm of Arias, Rubio-Ramirez and Waggoner (2018).
+  need the algorithm of Arias, Rubio-Ramirez and Waggoner (2018). The new
+  vignette `sign-restrictions` works through a monetary policy identification
+  on `us_macrodata` and says what a set identified credible band does and does
+  not mean.
 
 * **`irf()`, `fevd()` and `spillover()` accept a caller supplied impact
   matrix.** The new type `"custom"` takes the matrix `P` that the forecast

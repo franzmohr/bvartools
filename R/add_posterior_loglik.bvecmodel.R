@@ -47,8 +47,11 @@ add_posterior_loglik.bvecmodel <- function(object, ...) {
   
   algorithm <- object[["model"]][["algorithm"]]
   
-  if (algorithm %in% c("VecNormalWishart")) {
+  if (algorithm %in% c("VecKlgs2010", "VecNormalGamma", "VecNormalStochvol",
+                       "VecNormalWishart", "VecTvpGamma", "VecTvpStochvol",
+                       "VecTvpWishart")) {
     object <- switch(algorithm,
+                     VecKlgs2010 = .VecKlgs2010LogLik(object),
                      VecNormalGamma = .VecNormalGammaLogLik(object),
                      VecNormalStochvol = .VecNormalStochvolLogLik(object),
                      VecNormalWishart = .VecNormalWishartLogLik(object),

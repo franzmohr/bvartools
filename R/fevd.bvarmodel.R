@@ -4,7 +4,8 @@
 #' 
 #' @param x an object of class 'bvarmodel'.
 #' @param response name of the response variable.
-#' @param n_ahead number of steps ahead.
+#' @param n_ahead number of steps ahead. Zero is allowed and returns the decomposition on impact
+#' alone.
 #' @param type type of the impulse responses used to calculate forecast error variable decompositions.
 #' Possible choices are orthogonalised \code{"oir"} (default), structural \code{"sir"}, generalised
 #' \code{"gir"}, structural generalised \code{"sgir"} and \code{"custom"} impulse responses. For a
@@ -121,6 +122,13 @@ fevd.bvarmodel <- function(x, response = NULL, n_ahead = 5, type = "oir", normal
   
   if(is.null(response)) {
     stop("Please provide a valid response variable.")
+  }
+  
+  # A horizon of zero is the impact period on its own, which is well defined:
+  # the decomposition rests on Phi_0 = I alone, with no recursion behind it. A negative
+  # horizon is not, and reaches the C++ worker as a matrix of no rows.
+  if (length(n_ahead) != 1 || !is.numeric(n_ahead) || is.na(n_ahead) || n_ahead < 0) {
+    stop("Argument 'n_ahead' must be a single integer of at least 0.")
   }
   
   if (x[["model"]][["p"]] == 0 & !x[["model"]][["structural"]]) {

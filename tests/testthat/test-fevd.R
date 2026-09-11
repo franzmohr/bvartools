@@ -144,3 +144,36 @@ test_that("an implausible maximum is rejected", {
   expect_error(fevd(fx_var_fitted(), response = "cons", max_groups = "two"),
                "positive integer")
 })
+
+test_that("a variance decomposition at horizon zero is the impact period alone", {
+  decomposition <- fevd(fx_var_fitted(), response = "invest", n_ahead = 0)
+
+  expect_s3_class(decomposition, "bvarfevd")
+  expect_s3_class(decomposition, "ts")
+  expect_identical(nrow(decomposition), 1L)
+  # Phi_0 is the identity, so the decomposition on impact rests on the Choleski
+  # factor alone: invest is ordered first and only its own shock explains it.
+  expect_equal(as.numeric(decomposition[1, ]), c(1, 0, 0))
+  expect_equal(as.numeric(rowSums(decomposition)), 1)
+})
+
+test_that("the horizon zero decomposition is the impact row of a longer one", {
+  impact <- fevd(fx_var_fitted(), response = "cons", n_ahead = 0)
+  longer <- fevd(fx_var_fitted(), response = "cons", n_ahead = 4)
+
+  expect_equal(as.numeric(impact[1, ]), as.numeric(longer[1, ]))
+})
+
+test_that("a generalised decomposition at horizon zero is still a set of shares", {
+  decomposition <- fevd(fx_var_fitted(), response = "cons", n_ahead = 0,
+                        type = "gir", normalise_gir = TRUE)
+
+  expect_identical(nrow(decomposition), 1L)
+  expect_true(all(decomposition >= 0))
+  expect_equal(as.numeric(rowSums(decomposition)), 1)
+})
+
+test_that("a negative horizon is rejected", {
+  expect_error(fevd(fx_var_fitted(), response = "cons", n_ahead = -1),
+               "at least 0")
+})

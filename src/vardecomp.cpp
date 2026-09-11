@@ -22,12 +22,13 @@ arma::mat vardecomp(Rcpp::List A, int h, std::string type, int response) {
 
   // Collect information data
   int k = a.n_rows; // Number of endogenous variables
-  int p = a.n_cols / k; // Lag order
-  // If horizon is smaller than lag order...
-  if (h < p) {
-    p = h * k; // ...use reduced lag order for IRF
-  } else {
-    p = a.n_cols; // ...if not, use total number of regressors
+  const int lags = a.n_cols / k; // Lag order
+  // Regressor columns the recursion can reach: lags beyond the horizon never
+  // enter it. A count of columns, not a lag order, and zero on impact -- where
+  // there is no recursion and nothing to slice.
+  int n_use = a.n_cols;
+  if (h < lags) {
+    n_use = h * k;
   }
   
   arma::mat sigma = Rcpp::as<arma::mat>(A["Sigma"]);
@@ -73,9 +74,15 @@ arma::mat vardecomp(Rcpp::List A, int h, std::string type, int response) {
     sigmajj = sqrt(arma::as_scalar(sigma(response - 1, response - 1)));
   }
   
-  // Matrix of coefficients
-  arma::mat A_temp = arma::zeros<arma::mat>(k, h * k);
-  A_temp.cols(0, p - 1) = a.cols(0, p - 1); 
+  // Matrix of coefficients. Only needed once the recursion below runs: on
+  // impact the decomposition rests on Phi_0 = I alone.
+  arma::mat A_temp;
+  if (h > 0) {
+    A_temp = arma::zeros<arma::mat>(k, h * k);
+    if (n_use > 0) {
+      A_temp.cols(0, n_use - 1) = a.cols(0, n_use - 1);
+    }
+  }
   
   // Generate output object
   arma::mat result = arma::zeros<arma::mat>(h + 1, k);

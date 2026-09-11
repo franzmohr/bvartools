@@ -128,3 +128,70 @@ test_that("a converted VEC model can be used for impulse responses", {
   expect_identical(nrow(response), 5L)
   expect_true(all(is.finite(response)))
 })
+
+test_that("an impulse response at horizon zero is the impact period alone", {
+  model <- fx_var_fitted()
+
+  cross <- irf(model, impulse = "income", response = "cons", n_ahead = 0)
+  own <- irf(model, impulse = "cons", response = "cons", n_ahead = 0)
+
+  expect_s3_class(cross, "bvarirf")
+  expect_s3_class(cross, "ts")
+  expect_identical(nrow(cross), 1L)
+  expect_identical(colnames(cross), c("2.5%", "50%", "97.5%"))
+  # Phi_0 is the identity and there is no recursion to run, so the forecast
+  # error response on impact is one for the own response and zero across
+  # variables.
+  expect_equal(as.numeric(cross[1, ]), rep(0, 3))
+  expect_equal(as.numeric(own[1, ]), rep(1, 3))
+})
+
+test_that("the horizon zero response is the impact row of a longer horizon", {
+  model <- fx_var_fitted()
+
+  impact <- irf(model, impulse = "income", response = "cons", n_ahead = 0,
+                type = "oir")
+  longer <- irf(model, impulse = "income", response = "cons", n_ahead = 4,
+                type = "oir")
+
+  expect_equal(as.numeric(impact[1, ]), as.numeric(longer[1, ]))
+})
+
+test_that("an orthogonalised response at horizon zero is the Choleski factor", {
+  model <- fx_var_fitted()
+  k <- model[["model"]][["k"]]
+  sigma_draws <- model[["posterior"]][["u_sigma_inv"]][["coeffs"]]
+
+  # The impact matrix of an orthogonalised response is the lower Choleski
+  # factor with its columns scaled to unit shocks, so the response of cons to
+  # income on impact is L[3, 2] / L[2, 2] of that draw.
+  by_draw <- vapply(seq_len(nrow(sigma_draws)), function(i) {
+    l <- t(chol(solve(matrix(sigma_draws[i, ], k))))
+    l[3, 2] / l[2, 2]
+  }, numeric(1))
+
+  oir <- irf(model, impulse = "income", response = "cons", n_ahead = 0,
+             type = "oir")
+
+  expect_identical(nrow(oir), 1L)
+  expect_equal(as.numeric(oir[1, "50%"]), stats::median(by_draw))
+})
+
+test_that("a cumulative response at horizon zero keeps one column of draws", {
+  model <- fx_var_fitted()
+  store <- nrow(model[["posterior"]][["u_sigma_inv"]][["coeffs"]])
+
+  draws <- irf(model, impulse = "cons", response = "cons", n_ahead = 0,
+               cumulative = TRUE, keep_draws = TRUE)
+
+  # Nothing accumulates over a single period, so this is the impact response
+  # itself -- in the draws x horizon shape and not its transpose.
+  expect_identical(dim(draws), c(store, 1L))
+  expect_equal(as.numeric(draws), rep(1, store))
+})
+
+test_that("a negative horizon is rejected", {
+  expect_error(irf(fx_var_fitted(), impulse = "income", response = "cons",
+                   n_ahead = -1),
+               "at least 0")
+})

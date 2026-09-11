@@ -26,7 +26,8 @@
 
 \item{response}{name of the response variable.}
 
-\item{n_ahead}{number of steps ahead.}
+\item{n_ahead}{number of steps ahead. Zero is allowed and returns the impact response
+alone.}
 
 \item{ci}{a numeric between 0 and 1 specifying the probability mass covered by the
 credible intervals. Defaults to 0.95.}

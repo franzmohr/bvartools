@@ -139,17 +139,25 @@ read_model_from_hdf5 <- function(filename, group = "") {
     result[["posterior"]] <- list()
     
     for (i in names(h5_root[["posterior"]])) {
-      if (i %in% c("loglik", "forecast")) {
-        result[["posterior"]][[i]] <- coda::mcmc(hdf5r::readDataSet(h5_root[["posterior"]][[i]]))
-      } else {
-        for (j in c("coeffs", "lambda")) {
-          if (j %in% names(h5_root[["posterior"]][[i]])) {
-            result[["posterior"]][[i]][[j]] <- coda::mcmc(as.matrix(hdf5r::readDataSet(h5_root[["posterior"]][[i]][[j]])),
-                                                          start = hdf5r::h5attr(h5_root[["posterior"]][[i]][[j]], "start"),
-                                                          end = hdf5r::h5attr(h5_root[["posterior"]][[i]][[j]], "end"),
-                                                          thin = hdf5r::h5attr(h5_root[["posterior"]][[i]][[j]], "thin")) 
-          }
+      element <- h5_root[["posterior"]][[i]]
+      if (inherits(element, "H5Group")) {
+        # Whatever draws the group holds, rather than the names they were
+        # expected to have. Each is written with its own start, end and
+        # thinning interval, so a name left out of a list here is a dataset
+        # that is in the file and read back as nothing. `sigma`, which every
+        # time varying model keeps beside its coefficients, was exactly that.
+        for (j in names(element)) {
+          dataset <- element[[j]]
+          result[["posterior"]][[i]][[j]] <- coda::mcmc(as.matrix(hdf5r::readDataSet(dataset)),
+                                                        start = hdf5r::h5attr(dataset, "start"),
+                                                        end = hdf5r::h5attr(dataset, "end"),
+                                                        thin = hdf5r::h5attr(dataset, "thin")) 
         }
+      } else {
+        # The draws the writer keeps on their own rather than in a group,
+        # loglik and forecast among them. Told apart from a group by what they
+        # are rather than by name, so that another one needs nothing here.
+        result[["posterior"]][[i]] <- coda::mcmc(hdf5r::readDataSet(element))
       }
     }
   }

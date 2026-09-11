@@ -477,3 +477,52 @@ test_that("a quantile VAR without the class attribute is classed by algorithm", 
     expect_s3_class(read_model_from_hdf5(path), "bvarmodel")
   }
 })
+
+# A time varying model, whose coefficient draws come with the variance of the
+# state equation beside them. Local to this file.
+tvp_fitted_h5 <- function() {
+  cached_fixture("tvp_fitted_hdf5", {
+    object <- create_bvarmodel(var_data(), p = 1, deterministic = "const",
+                               tvp = TRUE, error = "wishart",
+                               iterations = fx_iterations, burnin = fx_burnin)
+    object <- add_priors(object, coef = list(v_i = 1, shape = 3, rate = 1e-8),
+                         sigma = list(df = 3, scale = 1))
+    set.seed(987654)
+    add_posterior_coefficients(add_initial_values(object))
+  })
+}
+
+test_that("the state variance of a time varying model survives the round trip", {
+  object <- tvp_fitted_h5()
+  # The thing that is easy to lose: a second set of draws in the same group as
+  # the coefficients.
+  expect_true("sigma" %in% names(object[["posterior"]][["a"]]))
+
+  path <- temp_h5_file()
+  write_to_hdf5(object, filename = path)
+  restored <- read_model_from_hdf5(path)
+
+  expect_identical(names(restored[["posterior"]][["a"]]),
+                   names(object[["posterior"]][["a"]]))
+  expect_equal(unclass(restored[["posterior"]][["a"]][["sigma"]]),
+               unclass(object[["posterior"]][["a"]][["sigma"]]),
+               ignore_attr = TRUE)
+  # Read with the start, end and thinning interval it was written with, so that
+  # window() and thin() still mean the same thing on the restored draws.
+  expect_identical(coda::mcpar(restored[["posterior"]][["a"]][["sigma"]]),
+                   coda::mcpar(object[["posterior"]][["a"]][["sigma"]]))
+})
+
+test_that("draws kept outside a group are still read", {
+  object <- add_posterior_loglik(tvp_fitted_h5())
+
+  path <- temp_h5_file()
+  write_to_hdf5(object, filename = path)
+  restored <- read_model_from_hdf5(path)
+
+  # loglik is a dataset of its own rather than a group of draws, and is told
+  # apart by that rather than by its name.
+  expect_equal(unclass(restored[["posterior"]][["loglik"]]),
+               unclass(object[["posterior"]][["loglik"]]),
+               ignore_attr = TRUE)
+})

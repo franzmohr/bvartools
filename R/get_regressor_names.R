@@ -1,5 +1,20 @@
 
 
+# Names of the requested columns of the regressor matrix of a model, or NULL if
+# the matrix does not carry names for them. Used wherever a model specification
+# does not name a block of coefficients itself.
+
+.regressor_columns <- function(object, pos) {
+
+  x_names <- dimnames(object[["data"]][["train"]][["x"]])[[2]]
+  if (is.null(x_names) || any(pos > length(x_names))) {
+    return(NULL)
+  }
+
+  x_names[pos]
+}
+
+
 # Extracts the names of the regressors from a 'bvarmodel' object
 # add_block adds the letter of the block of endogenous, exogensous, deterministic, structural and sigma coefficients
 
@@ -26,25 +41,40 @@
   }
   
   if (m > 0) {
-    temp_names <- NULL
     exogen_names <- object[["model"]][["exogen"]]
-    if (length(exogen_names) != m) {
-      exogen_names <- paste0("x", 1:m)
-    }
-    temp_names <- paste0(exogen_names, ".l0")
-    if (s > 0) {
-      temp_names <- c(temp_names, paste0(exogen_names, ".l", rep(1:s, each = m))) 
+    if (length(exogen_names) == m) {
+      temp_names <- paste0(exogen_names, ".l0")
+      if (s > 0) {
+        temp_names <- c(temp_names, paste0(exogen_names, ".l", rep(1:s, each = m)))
+      }
+    } else {
+      # A model whose specification does not name one variable per exogenous
+      # block -- a GVAR sub-model, whose exogenous block already contains the
+      # lags of the weakly exogenous and the global variables -- still carries
+      # the names on the columns of its regressor matrix.
+      temp_names <- .regressor_columns(object, k * p + 1:(m * (s + 1)))
+      if (is.null(temp_names)) {
+        exogen_names <- paste0("x", 1:m)
+        temp_names <- paste0(exogen_names, ".l0")
+        if (s > 0) {
+          temp_names <- c(temp_names, paste0(exogen_names, ".l", rep(1:s, each = m)))
+        }
+      }
     }
     if (add_block) {
       temp_names <- paste0("B\n", temp_names)
     }
     x_names <- c(x_names, temp_names)
   }
-  
+
   if (n > 0) {
     temp_names <- object[["model"]][["deterministic"]]
-    # A model that does not carry the names still has the terms, so fall back
+    # A model that does not carry the names still has the terms, so take them
+    # from the regressor matrix and fall back to placeholders only after that,
     # rather than return a vector too short for the coefficients it labels.
+    if (length(temp_names) != n) {
+      temp_names <- .regressor_columns(object, k * p + m * (s + 1) + 1:n)
+    }
     if (length(temp_names) != n) {
       temp_names <- paste0("det.", 1:n)
     }

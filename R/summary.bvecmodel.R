@@ -74,11 +74,25 @@ summary.bvecmodel <- function(object, ci = .95, period = NULL, ...){
   if (r > 0) {
     n_alpha <- r * k
     k_ect <- ncol(object[["data"]][["train"]][["w"]])
+    n_beta <- k_ect * r
     draws <- nrow(object[["posterior"]][["u_sigma_inv"]][["coeffs"]])
+    
+    # For a time varying model the loadings and the cointegration vectors are
+    # paths, so the reported Pi is the one of the period the summary is asked
+    # for. Draws of beta are time varying only if they cover every period.
+    pos_alpha <- 1:n_alpha
+    pos_beta <- 1:n_beta
+    if (tvp) {
+      pos_alpha <- (period - 1) * ncol(object[["data"]][["train"]][["z"]]) + pos_alpha
+      if (ncol(object[["posterior"]][["beta"]][["coeffs"]]) == tt * n_beta) {
+        pos_beta <- (period - 1) * n_beta + pos_beta
+      }
+    }
+    
     Pi <- matrix(NA_real_, draws, k * k_ect)
     for (i in 1:draws) {
-      Pi[i, ] <- tcrossprod(matrix(object[["posterior"]][["a"]][["coeffs"]][i, 1:n_alpha], k),
-                            matrix(object[["posterior"]][["beta"]][["coeffs"]][i, ], ncol = r))
+      Pi[i, ] <- tcrossprod(matrix(object[["posterior"]][["a"]][["coeffs"]][i, pos_alpha], k),
+                            matrix(object[["posterior"]][["beta"]][["coeffs"]][i, pos_beta], ncol = r))
     }
     temp_par <- coda::mcpar(object[["posterior"]][["a"]][["coeffs"]])
     Pi <- coda::mcmc(Pi, start = temp_par[1], end = temp_par[2], thin = temp_par[3])
@@ -181,6 +195,16 @@ summary.bvecmodel <- function(object, ci = .95, period = NULL, ...){
         res[pos_values] <- incl[pos_a]
         incl <- res
       }
+      
+      # The loadings are never subject to variable selection, so the
+      # cointegration term is always in the model. Their draws sit at the front
+      # of 'a' and are replaced here by one inclusion probability per column of
+      # Pi, since Pi is reported over the columns of w rather than over the r
+      # columns of alpha.
+      if (r > 0) {
+        incl <- c(rep(1, k * k_ect), incl[-(1:n_alpha)])
+      }
+      
       incl <- matrix(incl, k) 
     }
     

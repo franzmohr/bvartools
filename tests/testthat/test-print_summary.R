@@ -17,9 +17,20 @@ test_that("print tabulates the specification of a VEC model", {
   expect_match(output[2], "VEC")
 })
 
-test_that("regressor names fall back when the model does not name its terms", {
+test_that("regressor names fall back to the columns of the regressor matrix", {
   object <- fx_var_fitted()
   object[["model"]][["deterministic"]] <- NULL
+
+  # The specification no longer names the deterministic terms, but the data do.
+  expect_identical(.get_regressor_names_bvarmodel(object),
+                   c("invest.l1", "income.l1", "cons.l1", "const"))
+  expect_no_error(summary(object))
+})
+
+test_that("regressor names fall back when nothing names the terms", {
+  object <- fx_var_fitted()
+  object[["model"]][["deterministic"]] <- NULL
+  dimnames(object[["data"]][["train"]][["x"]]) <- NULL
 
   # A short vector of names would be silently misaligned with the coefficients
   # it labels, so the missing ones are generated instead.

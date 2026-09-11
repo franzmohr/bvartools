@@ -15,7 +15,7 @@ working.
     Renamed: `gen_var` to `create_bvarmodel`, `gen_vec` to `create_bvecmodel`,
   `bvec_to_bvar` to `vec_to_var`, `kalman_dk` to `kalman_durbin_koopman_2002`,
   `stochvol_ksc1998` to `stochvol_ksc_1998`, `stochvol_ocsn2007` to
-  `stochvol_ocsn_2007`, `stoch_vol` to `stochvol_ksc_1998`, and `bvs` to
+  `stochvol_ocsn_2007`, `stoch_vol` moved into `stochvol_ksc_1998`, and `bvs` to
   `post_bvs`. Replaced by a different workflow: `draw_posterior`, `bvarpost`
   and `bvecpost`, which become `add_posterior_coefficients` alongside
   `add_posterior_forecasts` and `add_posterior_loglik`. Removed with no

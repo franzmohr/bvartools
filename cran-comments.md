@@ -16,17 +16,12 @@ packages that link to bvartools continue to compile and run against it.
 
 ## Test environments
 
-* local Windows 11, R 4.6.1
+* ubuntu 24.04 (on GitHub Actions): R-devel, R-4.6.1, R-4.5.3
+* macOS (on GitHub Actions): R-4.6.1
+* local Windows 11, R-4.6.1
+* win-builder: R-devel
+
 
 ## R CMD check results
 
-0 errors | 0 warnings | 1 note
-
-The note is
-
-    * checking top-level files ... NOTE
-    Files 'README.md' or 'NEWS.md' cannot be checked without 'pandoc' being installed.
-
-which reflects the local machine rather than the package: pandoc is reachable
-there through `RSTUDIO_PANDOC` but is not on the `PATH` that `R CMD check`
-consults. Examples, tests and the re-building of all five vignettes pass.
+0 errors | 0 warnings | 0 note

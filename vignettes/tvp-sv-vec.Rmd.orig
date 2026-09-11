@@ -161,17 +161,18 @@ carry a period: variable selection decides on a regressor for the whole sample.
 
 ### Coefficient and volatility paths
 
-`plot` draws the paths of $\Pi_t$, of the coefficients of the non-cointegration
-part, and of the error covariance matrix.
+`plot` draws one figure per block of coefficients: the cointegration matrix
+$\Pi_t$, the lagged differences, the deterministic terms and the covariance
+matrix of the error term, each on its own.
 
-```{r paths, fig.align='center', fig.height=6, fig.width=9}
+```{r paths, fig.align='center', fig.height=4.5, fig.width=7}
 plot(model)
 ```
 
-The first $K$ columns are $\Pi_t$. Reading down one of them gives the response
-of each differenced series to the level of one variable, and reading across a
-row gives the error correction of one equation. A panel that sits at zero among
-the $\Gamma$ columns is a coefficient that variable selection has switched off.
+In the figure of $\Pi_t$, reading down a column gives the response of each
+differenced series to the level of one variable, and reading across a row gives
+the error correction of one equation. A panel that sits at zero among the
+$\Gamma$ coefficients is one that variable selection has switched off.
 
 A single element of $\Pi_t$ is easier to read on its own. The following computes
 it from the draws of the loadings, which are the first $Kr$ coefficients of each

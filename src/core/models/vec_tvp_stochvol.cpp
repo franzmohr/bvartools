@@ -22,6 +22,7 @@ using core::build_psi_regressors;
 using core::BvsBlock;
 using core::BvsScope;
 using core::bvs_sweep;
+using core::draw_coint_rho;
 using core::draw_normal_precision;
 using core::fill_psi_path;
 using core::fill_strict_lower_triangle;
@@ -125,7 +126,11 @@ VecTvpStochvolDraws VecTvpStochvolSampler::draw_coefficients(const VecTvpStochvo
     arma::mat beta, beta_B, beta_sigma, z_b, ystar;
     arma::vec beta0;
     arma::mat beta0_post_v;
-    const double rho = input.beta_prior.rho;
+
+    // Not const, and neither is anything built from it: with a prior on rho the
+    // state equation is rebuilt at the end of every draw.
+    double rho = input.beta_prior.rho;
+    const CointRhoPrior &rho_prior = input.beta_prior.rho_prior;
 
     if (use_beta)
     {
@@ -146,6 +151,11 @@ VecTvpStochvolDraws VecTvpStochvolSampler::draw_coefficients(const VecTvpStochvo
         beta0_post_v = input.beta_prior.initial_state.v_inv + rho * rho * beta_sigma;
 
         out.beta = arma::mat(n_beta * tt, iterations);
+
+        if (rho_prior.draw)
+        {
+            out.rho = arma::mat(1, iterations);
+        }
 
         // The starting values of a and beta are unlikely to agree with each
         // other; the loadings' regressors belong to the beta that is actually
@@ -322,6 +332,20 @@ VecTvpStochvolDraws VecTvpStochvolSampler::draw_coefficients(const VecTvpStochvo
                                           input.beta_prior.initial_state.mu +
                                       rho * beta.col(0));
 
+                // Draw rho
+                //
+                // Last of the cointegration block, because it is the one
+                // quantity there that conditions on the whole path and on the
+                // state before it. What it moves is the state equation itself,
+                // so the transition and the initial state's posterior precision
+                // are rebuilt from it for the next draw.
+                if (rho_prior.draw)
+                {
+                    rho = draw_coint_rho(beta, beta0, rho_prior);
+                    beta_B.diag().fill(rho);
+                    beta0_post_v = input.beta_prior.initial_state.v_inv + rho * rho * beta_sigma;
+                }
+
                 // Carry the new cointegration space into the regressors, for the
                 // residual below and for the next draw's a block.
                 fill_z_alpha(z, beta, w_t, k, k_beta, rank, diag_k);
@@ -458,6 +482,10 @@ VecTvpStochvolDraws VecTvpStochvolSampler::draw_coefficients(const VecTvpStochvo
             if (use_beta)
             {
                 out.beta.col(draw_pos) = arma::vectorise(beta);
+                if (rho_prior.draw)
+                {
+                    out.rho(0, draw_pos) = rho;
+                }
             }
 
             if (use_psi)

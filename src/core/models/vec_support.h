@@ -5,6 +5,10 @@
 #define BAYESTS_CORE_MODELS_VEC_SUPPORT_H
 
 #include "bayests/arma.h"
+#include "bayests/priors.h"
+#include "core/algorithms/truncated_normal.h"
+
+#include <cmath>
 
 namespace bayests::core
 {
@@ -90,6 +94,58 @@ inline void fill_z_beta(arma::mat &z_b, const arma::mat &a, const arma::mat &w_t
 inline arma::mat reparameterise_alpha(const arma::mat &alpha, const arma::mat &diag_r)
 {
     return alpha * arma::solve(arma::sqrtmat_sympd(arma::trans(alpha) * alpha), diag_r);
+}
+
+/// One draw of rho, the autoregression of the cointegration state equation
+///
+///     beta_t = rho beta_{t-1} + eta_t,   eta_t ~ N(0, I),   t = 1, ..., T,
+///
+/// given the path `beta` (n_beta x tt, one period per column) and the state
+/// `beta0` of the period before it.
+///
+/// With the innovation variance fixed at the identity, the path contributes a
+/// normal likelihood in rho whose sufficient statistics are the two sums below,
+/// and the prior is uniform on an interval, so the conditional is that normal
+/// truncated to the interval -- a Gibbs block, not the Metropolis-within-Gibbs
+/// step Koop, Leon-Gonzalez and Strachan (2011) need.
+///
+/// **The difference is the initial condition, and it is a difference in the
+/// model rather than in the algorithm.** Their beta_1 is drawn from the
+/// stationary distribution N(0, I / (1 - rho^2)) of the state equation itself,
+/// which puts rho in a place no conjugacy survives; here beta_0 has a normal
+/// prior of its own, `TvpCointSpacePrior::initial_state`, read from the file and
+/// free of rho, so it drops out of this conditional and the draw is exact.
+/// Anyone porting their sampler across should know that the prior over the
+/// space at the start of the sample is the piece that was not carried over.
+///
+/// beta_0 does enter through the t = 1 term of the likelihood, which is the
+/// whole reason it is an argument.
+inline double draw_coint_rho(const arma::mat &beta, const arma::vec &beta0,
+                             const CointRhoPrior &prior)
+{
+    const arma::uword tt = beta.n_cols;
+
+    // sum_t beta_{t-1}' beta_t and sum_t beta_{t-1}' beta_{t-1}, with the lagged
+    // path never formed: it is the path itself shifted by a column, plus beta_0
+    // in front.
+    double sum_cross = arma::dot(beta0, beta.col(0));
+    double sum_square = arma::dot(beta0, beta0);
+    if (tt > 1)
+    {
+        sum_cross += arma::accu(beta.cols(0, tt - 2) % beta.cols(1, tt - 1));
+        sum_square += arma::accu(arma::square(beta.cols(0, tt - 2)));
+    }
+
+    // A path that is identically zero says nothing about rho, and its posterior
+    // is the prior. Cannot happen to a drawn path, whose innovations have unit
+    // variance, but it is what the expressions below divide by.
+    if (!(sum_square > 0.0))
+    {
+        return prior.min + (prior.max - prior.min) * arma::randu<double>();
+    }
+
+    return truncated_normal(sum_cross / sum_square, 1.0 / std::sqrt(sum_square), prior.min,
+                            prior.max);
 }
 
 } // namespace bayests::core

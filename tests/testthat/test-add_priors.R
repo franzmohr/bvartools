@@ -101,3 +101,40 @@ test_that("a time varying cointegration prior needs an autocorrelation", {
   expect_no_error(
     do.call(add_priors, c(list(model), args, list(coint = list(rho = 0.999)))))
 })
+
+test_that("the prior support of rho is taken in pairs and has to hold rho", {
+  model <- create_bvecmodel(vec_data(), p = 2, r = 1, tvp = TRUE,
+                            const = "unrestricted", iterations = 10, burnin = 5)
+  args <- list(coef = list(v_i = 1, v_i_det = 0.1, shape = 3, rate = 0.0001),
+               sigma = list(df = "k", scale = 1))
+  priors <- function(coint) do.call(add_priors, c(list(model), args, list(coint = coint)))
+
+  # One end alone would leave the sampler to invent the other.
+  expect_error(priors(list(rho = 0.99, rho_min = 0.9)), "specified together")
+  expect_error(priors(list(rho = 0.99, rho_max = 0.999)), "specified together")
+
+  expect_error(priors(list(rho = 0.99, rho_min = 0.999, rho_max = 0.9)),
+               "rho_min < rho_max")
+  expect_error(priors(list(rho = 0.99, rho_min = 0, rho_max = 0.999)),
+               "rho_min < rho_max")
+
+  # Drawn, rho is where the chain starts, so a starting value its own prior
+  # gives no weight to is a specification that means two things at once.
+  expect_error(priors(list(rho = 0.99, rho_min = 0.995, rho_max = 0.999)),
+               "must lie between")
+
+  # Without the pair rho stays a hyperparameter, and the prior carries only it.
+  fixed <- priors(list(rho = 0.999))
+  expect_equal(fixed[["priors"]][["beta"]][["rho"]], 0.999)
+  expect_null(fixed[["priors"]][["beta"]][["rho_min"]])
+
+  drawn <- priors(list(rho = 0.99, rho_min = 0.9, rho_max = 0.999))
+  expect_equal(drawn[["priors"]][["beta"]][["rho"]], 0.99)
+  expect_equal(drawn[["priors"]][["beta"]][["rho_min"]], 0.9)
+  expect_equal(drawn[["priors"]][["beta"]][["rho_max"]], 0.999)
+
+  # The prior on the state before the sample is built from the starting value
+  # and does not follow the draw; that is the documented departure from Koop et
+  # al. (2011), and it is what makes the draw an exact Gibbs block.
+  expect_equal(unique(diag(drawn[["priors"]][["beta"]][["v_inv"]])), 1 - 0.99^2)
+})

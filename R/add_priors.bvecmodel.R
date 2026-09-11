@@ -75,8 +75,15 @@
 #'   \item{\code{rho}}{a numeric specifying the autocorrelation coefficient
 #'   of the state equation of \eqn{\beta}. It must be smaller than 1.
 #'   Required for models with time varying cointegration parameters and not used otherwise.
-#'   Note that in contrast to Koop et al. (2011) \eqn{\rho} is not drawn in the Gibbs sampler of
-#'   this package yet.}
+#'   If \code{rho_min} and \code{rho_max} are given as well, this is the value the
+#'   chain starts \eqn{\rho} at rather than the value it keeps, and it must lie
+#'   between them.}
+#'   \item{\code{rho_min}, \code{rho_max}}{numerics specifying the support of a
+#'   uniform prior on \eqn{\rho}, which makes it a drawn parameter rather than a
+#'   fixed hyperparameter. Optional, and either both or neither; they must
+#'   satisfy \eqn{0 < }\code{rho_min}\eqn{ < }\code{rho_max}\eqn{ \le 1}.
+#'   Koop et al. (2011) use \eqn{(0.999, 1)}.
+#'   Only used for models with time varying cointegration parameters.}
 #' }
 #' For a model with time varying cointegration parameters the state equation is
 #' \eqn{\beta_t = \rho \beta_{t-1} + \eta_t} with \eqn{\eta_t \sim N(0, I)}, and
@@ -87,6 +94,17 @@
 #' \eqn{\alpha \beta^{\prime}} is identified, so their prior variance is shrunk
 #' by \eqn{1 - \rho^2}, leaving the product on the scale \code{coef$v_i} asks
 #' for.
+#' 
+#' When \eqn{\rho} is drawn, those last two are computed from \code{coint$rho}
+#' once and do not follow the draw: the state before the sample keeps the normal
+#' prior built here, and the loadings keep the shrinkage built here. This is a
+#' deliberate departure from Koop et al. (2011), in whom the state before the
+#' sample is the stationary distribution of whatever \eqn{\rho} currently is.
+#' It is also what makes the draw an exact Gibbs block rather than their
+#' Metropolis-within-Gibbs step: with the state before the sample free of
+#' \eqn{\rho}, the conditional posterior of \eqn{\rho} is a normal truncated to
+#' the prior's support. Draws of \eqn{\rho} are returned in
+#' \code{object$posterior$beta$rho}.
 #' 
 #' Argument \code{sigma} can contain the following elements:
 #' \describe{
@@ -235,6 +253,27 @@ add_priors.bvecmodel <- function(object,
     }
     if (coint[["rho"]] < .8) {
       warning("Value of argument 'coint$rho' appears rather small.")
+    }
+
+    # rho is drawn only if the support of its prior is given, and then both ends
+    # of it are needed: one alone would leave the sampler to invent the other,
+    # and which end is missing changes the model rather than a detail of it.
+    has_rho_min <- "rho_min" %in% names(coint)
+    has_rho_max <- "rho_max" %in% names(coint)
+    if (xor(has_rho_min, has_rho_max)) {
+      stop("Arguments 'coint$rho_min' and 'coint$rho_max' must be specified together. ",
+           "Leave both out to hold rho fixed at 'coint$rho'.")
+    }
+    if (has_rho_min) {
+      if (coint[["rho_min"]] <= 0 | coint[["rho_max"]] > 1 |
+          coint[["rho_min"]] >= coint[["rho_max"]]) {
+        stop("Arguments 'coint$rho_min' and 'coint$rho_max' must satisfy ",
+             "0 < rho_min < rho_max <= 1.")
+      }
+      if (coint[["rho"]] < coint[["rho_min"]] | coint[["rho"]] > coint[["rho_max"]]) {
+        stop("Argument 'coint$rho' must lie between 'coint$rho_min' and 'coint$rho_max': ",
+             "when rho is drawn it is the value the chain starts at.")
+      }
     }
   } else {
     if (!"v_i" %in% names(coint)) {
@@ -402,8 +441,9 @@ add_priors.bvecmodel <- function(object,
     if (object[["model"]][["tvp"]]) {
 
       # The cointegration vectors are a state path of their own, with
-      # beta_t = rho beta_{t-1} + eta_t and eta_t ~ N(0, I). rho is fixed rather
-      # than drawn, so it belongs with the prior; the sampler reads it from here.
+      # beta_t = rho beta_{t-1} + eta_t and eta_t ~ N(0, I). rho belongs with the
+      # prior either way: fixed, it is the value the sampler keeps, and drawn, it
+      # is the value the chain starts at.
       #
       # The prior on the state before the sample is that path's own stationary
       # distribution, N(0, I / (1 - rho^2)), whose precision is (1 - rho^2) I.
@@ -418,6 +458,23 @@ add_priors.bvecmodel <- function(object,
                                            "rho" = coint[["rho"]],
                                            "mu" = matrix(0, n_beta),
                                            "v_inv" = diag(1 - coint[["rho"]]^2, n_beta))
+
+      # The support of the uniform prior on rho, which is what turns it from a
+      # fixed hyperparameter into a drawn one.
+      #
+      # Note what stays fixed when it is drawn: v_inv just above, and the
+      # shrinkage of the loadings further down, are both computed from
+      # coint$rho once and do not follow the draw. Under Koop et al. (2011) the
+      # state before the sample is the stationary distribution of whatever rho
+      # currently is, so those two would move with it; here they are an ordinary
+      # normal prior, pinned at the value rho starts from. That is a deliberate
+      # difference and the reason the draw is a plain Gibbs block rather than
+      # their Metropolis-within-Gibbs step -- see the vendored
+      # draw_coint_rho() in src/core/models/vec_support.h.
+      if (has_rho_min) {
+        object[["priors"]][["beta"]][["rho_min"]] <- coint[["rho_min"]]
+        object[["priors"]][["beta"]][["rho_max"]] <- coint[["rho_max"]]
+      }
     } else {
       object[["priors"]][["beta"]] <- list("type" = "cointspace",
                                            "v_inv" = coint[["v_i"]],

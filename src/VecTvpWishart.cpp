@@ -168,7 +168,15 @@ Rcpp::List write_draws(const bayests::VecTvpWishartDraws &draws) {
   // likelihood, both of which rebuild the loadings' regressors from it, could be
   // computed at all.
   if (draws.has_beta()) {
-    posteriors["beta"] = Rcpp::List::create(Rcpp::Named("coeffs") = draws_to_r(draws.beta));
+    // `rho` only where the model file put a prior on it. Held fixed it is a
+    // hyperparameter the caller already has in priors$beta$rho, and handing a
+    // column of the same number back would read as a posterior.
+    if (draws.has_rho()) {
+      posteriors["beta"] = Rcpp::List::create(Rcpp::Named("coeffs") = draws_to_r(draws.beta),
+                                              Rcpp::Named("rho") = draws_to_r(draws.rho));
+    } else {
+      posteriors["beta"] = Rcpp::List::create(Rcpp::Named("coeffs") = draws_to_r(draws.beta));
+    }
   }
 
   posteriors["u_sigma_inv"] = Rcpp::List::create(Rcpp::Named("coeffs") = draws_to_r(draws.u_sigma_inv));

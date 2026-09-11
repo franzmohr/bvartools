@@ -269,10 +269,6 @@ void require_vec_regressors(const VarSpec &spec, bool use_a)
     }
 }
 
-/// rho scales the cointegration state path itself, so a value outside (0, 1]
-/// either reverses the sign of the relation from period to period or lets it
-/// grow without bound. One is the random walk bvartools' .bvectvpalg uses.
-
 /// The quantile a quantile regression model estimates, and the shared checks
 /// every asymmetric Laplace model makes before it looks at its own blocks.
 ///
@@ -340,13 +336,46 @@ void validate_ald_errors(const GammaPrior &u_scale_prior, const arma::mat &w,
     }
 }
 
-void validate_tvp_coint_rho(double rho)
+/// rho scales the cointegration state path itself, so a value outside (0, 1]
+/// either reverses the sign of the relation from period to period or lets it
+/// grow without bound. One is the random walk bvartools' .bvectvpalg uses.
+///
+/// Where the file puts a prior on rho rather than fixing it, the support has to
+/// be an interval of the same (0, 1], and the value the chain starts at has to
+/// be inside it: a starting value its own prior gives no weight to is a file
+/// that means two different things at once, and the first draw would move it
+/// without saying so.
+void validate_tvp_coint_rho(const TvpCointSpacePrior &prior)
 {
-    if (!(rho > 0.0 && rho <= 1.0))
+    if (!(prior.rho > 0.0 && prior.rho <= 1.0))
     {
         throw std::invalid_argument(
             "the autoregression of the cointegration state equation (rho) must lie in (0, 1], "
-            "got " + std::to_string(rho));
+            "got " + std::to_string(prior.rho));
+    }
+
+    if (!prior.rho_prior.draw)
+    {
+        return;
+    }
+
+    const double min = prior.rho_prior.min;
+    const double max = prior.rho_prior.max;
+
+    if (!(min > 0.0 && max <= 1.0 && min < max))
+    {
+        throw std::invalid_argument(
+            "the prior support of the autoregression of the cointegration state equation must be "
+            "an interval within (0, 1], got [" + std::to_string(min) + ", " + std::to_string(max) +
+            "]");
+    }
+
+    if (prior.rho < min || prior.rho > max)
+    {
+        throw std::invalid_argument(
+            "the starting value of the autoregression of the cointegration state equation (rho) "
+            "lies outside its own prior support: got " + std::to_string(prior.rho) + " for [" +
+            std::to_string(min) + ", " + std::to_string(max) + "]");
     }
 }
 
@@ -742,7 +771,7 @@ void validate_tvp_coint_block(const VarSpec &spec, const TrainData &train,
     require_length(prior.initial_state.mu, n_beta, "prior mean of beta before the sample");
     require_square(prior.initial_state.v_inv, n_beta, "prior precision of beta before the sample");
 
-    validate_tvp_coint_rho(prior.rho);
+    validate_tvp_coint_rho(prior);
 }
 
 /// The two periods a random walk needs to be differenced against itself, and the

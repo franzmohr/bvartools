@@ -392,23 +392,88 @@ test_that("a file without the class attribute is classed by its algorithm", {
   expect_s3_class(restored, "bvarmodel")
 })
 
-test_that("a quantile VAR is classed by its algorithm as well", {
+# A quantile VAR. Local to this file: the fixtures of test-quantile_var.R are
+# not shared between test files.
+ald_fitted_h5 <- function(tvp = FALSE) {
+  cached_fixture(paste0("ald_fitted_hdf5_", tvp), {
+    object <- create_bvarmodel(var_data(), p = 1, deterministic = "const",
+                               error = "ald", quantile = 0.25, tvp = tvp,
+                               iterations = fx_iterations, burnin = fx_burnin)
+    object <- add_priors(object,
+                         coef = if (tvp) list(v_i = 1, shape = 3, rate = 1e-8)
+                                else list(v_i = 1),
+                         sigma = list(shape = 3, rate = 0.01))
+    set.seed(987654)
+    add_posterior_coefficients(add_initial_values(object))
+  })
+}
+
+test_that("a quantile VAR survives a write and read round trip", {
+  object <- ald_fitted_h5()
+  expect_identical(object[["model"]][["algorithm"]], "VarNormalAld")
+
+  path <- temp_h5_file()
+  write_to_hdf5(object, filename = path)
+  restored <- read_model_from_hdf5(path)
+
+  expect_s3_class(restored, "bvarmodel")
+  expect_identical(restored[["model"]][["algorithm"]], "VarNormalAld")
+  # The estimand itself. A model that loses its quantile estimates the median
+  # instead and looks entirely healthy, which is why it is checked by value.
+  expect_equal(restored[["model"]][["quantile"]], 0.25)
+  expect_equal(unclass(restored[["posterior"]][["a"]][["coeffs"]]),
+               unclass(object[["posterior"]][["a"]][["coeffs"]]),
+               ignore_attr = TRUE)
+})
+
+test_that("the scale of a quantile VAR survives the round trip", {
+  object <- ald_fitted_h5()
+
+  path <- temp_h5_file()
+  write_to_hdf5(object, filename = path)
+  restored <- read_model_from_hdf5(path)
+
+  # An ald error keeps its shape and rate under u_scale rather than u_sigma,
+  # because the scale it describes is not a prior on Sigma. Both the prior and
+  # the draws of the scale used to be dropped: the writer stopped on the error
+  # specification before reaching them.
+  expect_equal(as.numeric(restored[["priors"]][["u_scale"]][["shape"]]),
+               as.numeric(object[["priors"]][["u_scale"]][["shape"]]))
+  expect_equal(as.numeric(restored[["priors"]][["u_scale"]][["rate"]]),
+               as.numeric(object[["priors"]][["u_scale"]][["rate"]]))
+  expect_equal(unclass(restored[["posterior"]][["u_scale"]][["coeffs"]]),
+               unclass(object[["posterior"]][["u_scale"]][["coeffs"]]),
+               ignore_attr = TRUE)
+})
+
+test_that("a time varying quantile VAR is written as well", {
+  object <- ald_fitted_h5(tvp = TRUE)
+  expect_identical(object[["model"]][["algorithm"]], "VarTvpAld")
+
+  path <- temp_h5_file()
+  write_to_hdf5(object, filename = path)
+  restored <- read_model_from_hdf5(path)
+
+  expect_s3_class(restored, "bvarmodel")
+  expect_identical(restored[["model"]][["algorithm"]], "VarTvpAld")
+  expect_equal(restored[["model"]][["quantile"]], 0.25)
+  expect_equal(unclass(restored[["posterior"]][["u_scale"]][["coeffs"]]),
+               unclass(object[["posterior"]][["u_scale"]][["coeffs"]]),
+               ignore_attr = TRUE)
+})
+
+test_that("a quantile VAR without the class attribute is classed by algorithm", {
   # VarNormalAld and VarTvpAld were missing from the list the fallback reads,
-  # so a quantile VAR written before the class attribute existed lost its
-  # class. The writer cannot produce such a file today -- it has no branch for
-  # the priors of an ald error -- so the algorithm is relabelled here instead.
-  # The class is decided by that name alone, which is the thing under test.
-  for (algorithm in c("VarNormalAld", "VarTvpAld")) {
+  # so a quantile VAR written before the class attribute existed lost its class
+  # and came back as a bare list that no method applies to.
+  for (tvp in c(FALSE, TRUE)) {
     path <- temp_h5_file()
-    write_to_hdf5(fx_var_fitted(), filename = path)
+    write_to_hdf5(ald_fitted_h5(tvp = tvp), filename = path)
 
     handle <- hdf5r::H5File$new(path, mode = "r+")
     handle[["model"]]$attr_delete("rclass")
-    hdf5r::h5attr(handle[["model"]], "algorithm") <- algorithm
     handle$close_all()
 
-    restored <- read_model_from_hdf5(path)
-    expect_identical(restored[["model"]][["algorithm"]], algorithm)
-    expect_s3_class(restored, "bvarmodel")
+    expect_s3_class(read_model_from_hdf5(path), "bvarmodel")
   }
 })

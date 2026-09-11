@@ -206,7 +206,9 @@ write_to_hdf5.bvarmodel <- function(object, filename, group = "", ...) {
     group_priors <- .hdf5_group(handles, output, "priors")
 
     ## Those kept in a group of their own ----
-    for (i in c("a", "psi")) {
+    # u_scale belongs to an ald error, whose scale prior is not a prior on
+    # Sigma and so does not live under u_sigma the way every other one does.
+    for (i in c("a", "psi", "u_scale")) {
       if (!is.null(object[["priors"]][[i]])) {
         group_prior <- .hdf5_group(handles, group_priors, i)
         for (j in names(object[["priors"]][[i]])) {
@@ -223,6 +225,9 @@ write_to_hdf5.bvarmodel <- function(object, filename, group = "", ...) {
                              "gamma+covar" = c("shape", "rate"),
                              "sv" = ,
                              "sv+covar" = c("mu", "v_inv", "shape", "rate", "sigma", "offset"),
+                             # An ald model carries its shape and rate under
+                             # u_scale, written above, and has nothing here.
+                             "ald" = character(0),
                              stop("Error specification not implemented"))
     # Created only once there is something to put in it, for the same reason the
     # priors group is. Single-bracket indexing is what makes the subset safe when
@@ -253,7 +258,7 @@ write_to_hdf5.bvarmodel <- function(object, filename, group = "", ...) {
     # One shape for all of them. These used to be a block of the same code
     # each, and one of the blocks attached its attributes to the datasets of
     # the block above it rather than to its own.
-    for (i in c("a", "psi", "u_omega_inv", "u_sigma_inv", "q")) {
+    for (i in c("a", "psi", "u_omega_inv", "u_sigma_inv", "u_scale", "q")) {
       if (i %in% names(object[["posterior"]])) {
         group_draws <- .hdf5_group(handles, group_posterior, i)
         for (j in names(object[["posterior"]][[i]])) {

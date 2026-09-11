@@ -112,3 +112,65 @@ test_that("bvec reconstructs the levels from a scaled error correction term", {
                as.numeric(stats::window(vec_data(),
                                         start = stats::start(object[["data"]][["train"]][["y"]]))))
 })
+
+test_that("a second scaling is refused", {
+  # Scaling twice does not change the numbers -- dividing by the standard
+  # deviation of the differences makes that standard deviation one, so the
+  # second pass divides by one -- but it recomputes the factors from the series
+  # it is given and overwrites the stored ones, which makes the first scaling
+  # irreversible.
+  model <- scale_error_correction(fx_vec_model())
+
+  expect_error(scale_error_correction(model), "are already scaled")
+})
+
+test_that("rescaling does not require posterior draws", {
+  # A model is scaled before it is estimated when it is exported for an
+  # external sampler, and a sub-model whose run produced nothing is left in the
+  # same state. Neither could be put back when rescaling insisted on draws.
+  model <- fx_vec_model()
+  scaled <- scale_error_correction(model)
+
+  expect_null(scaled[["posterior"]])
+
+  restored <- rescale_error_correction(scaled)
+
+  expect_null(attr(restored[["data"]][["train"]][["w"]], "scale"))
+  expect_equal(unclass(restored[["data"]][["train"]][["w"]]),
+               unclass(model[["data"]][["train"]][["w"]]),
+               ignore_attr = TRUE)
+})
+
+test_that("the scaling factors survive a write and read round trip", {
+  skip_if_not_installed("hdf5r")
+
+  # Without them an exported model that was scaled could never be put back on
+  # the scale of the data, so the draws an external sampler writes into it
+  # would not be interpretable.
+  model <- scale_error_correction(fx_vec_model())
+  factors <- attr(model[["data"]][["train"]][["w"]], "scale")
+
+  path <- temp_h5_file()
+  write_to_hdf5(model, filename = path)
+  restored <- read_model_from_hdf5(path)
+
+  expect_equal(attr(restored[["data"]][["train"]][["w"]], "scale"), factors)
+  expect_equal(unclass(restored[["data"]][["train"]][["w"]]),
+               unclass(model[["data"]][["train"]][["w"]]),
+               ignore_attr = TRUE)
+
+  # And what came back can be put back on the scale of the data.
+  expect_equal(unclass(rescale_error_correction(restored)[["data"]][["train"]][["w"]]),
+               unclass(rescale_error_correction(model)[["data"]][["train"]][["w"]]),
+               ignore_attr = TRUE)
+})
+
+test_that("an unscaled model gets no scaling factors written", {
+  skip_if_not_installed("hdf5r")
+
+  path <- temp_h5_file()
+  write_to_hdf5(fx_vec_fitted(), filename = path)
+  restored <- read_model_from_hdf5(path)
+
+  expect_null(attr(restored[["data"]][["train"]][["w"]], "scale"))
+})

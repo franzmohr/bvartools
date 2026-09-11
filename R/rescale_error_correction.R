@@ -41,16 +41,22 @@ rescale_error_correction.bvecmodel <- function(object, ...) {
   # Get rescale factor
   if (!is.null(attr(object[["data"]][["train"]][["w"]], "scale"))) {
     rescale_factor <- attr(object[["data"]][["train"]][["w"]], "scale")
-    rescale_matrix <- diag(rescale_factor)
-    rescale_matrix_inv <- diag(1 / rescale_factor)
+    # Given an explicit size, because for a single factor diag() would read its
+    # argument as the size of an identity matrix rather than as the diagonal to
+    # build.
+    rescale_matrix <- diag(rescale_factor, nrow = length(rescale_factor))
+    rescale_matrix_inv <- diag(1 / rescale_factor, nrow = length(rescale_factor))
   } else {
     stop("Element 'object$data$train$w' does not have an attribute 'scale'.")
   }
   
-  if (is.null(object[["posterior"]][["u_sigma_inv"]][["coeffs"]])) {
-    stop("Model does not seem to contain posterior draws.")
-  }
-  
+  # Draws are not required. Putting the series back on the scale of the data is
+  # the part that always applies, and a model can be scaled before it has been
+  # estimated -- that is the state one is exported in for an external sampler,
+  # and the state a sub-model is left in when its run did not produce draws.
+  # Only the transformation of beta below needs them.
+  has_draws <- !is.null(object[["posterior"]][["beta"]][["coeffs"]])
+
   # Input data
   object[["data"]][["train"]][["w"]][] <- t(rescale_matrix %*% t(object[["data"]][["train"]][["w"]]))
   
@@ -60,7 +66,7 @@ rescale_error_correction.bvecmodel <- function(object, ...) {
   # estimated model is alpha %*% t(beta) %*% solve(D) %*% w, the coefficients on
   # the original scale are obtained by multiplying beta by solve(D), which
   # leaves alpha unchanged.
-  if (r > 0) {
+  if (r > 0 && has_draws) {
     draws <- nrow(object[["posterior"]][["beta"]][["coeffs"]])
     k_ect <- ncol(object[["data"]][["train"]][["w"]])
     

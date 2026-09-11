@@ -34,6 +34,19 @@ scale_error_correction <- function (object, ...) {
 scale_error_correction.bvecmodel <- function(object, ...) {
   
   w <- object[["data"]][["train"]][["w"]]
+
+  # Scaling twice is a no-op on the numbers -- dividing by the standard
+  # deviation of the differences makes that standard deviation one, so the
+  # second pass divides by one -- but it recomputes the factors from the series
+  # it is given and overwrites the stored ones with those ones. The first
+  # scaling would then be irreversible. Refused, the way a second rescaling is
+  # by the attribute being dropped.
+  if (!is.null(attr(w, "scale"))) {
+    stop("The series in the error correction term are already scaled. Use ",
+         "'rescale_error_correction' to put them back on the scale of the ",
+         "input data first.")
+  }
+
   tt <- nrow(w)
   
   rescale_factors <- rep(1, ncol(w))

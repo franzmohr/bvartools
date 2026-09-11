@@ -5,7 +5,8 @@
 #' @param x an object of class 'bvarmodel'.
 #' @param impulse name of the impulse variable.
 #' @param response name of the response variable.
-#' @param n_ahead number of steps ahead.
+#' @param n_ahead number of steps ahead. Zero is allowed and returns the impact response
+#' alone.
 #' @param ci a numeric between 0 and 1 specifying the probability mass covered by the
 #' credible intervals. Defaults to 0.95.
 #' @param shock size of the shock.
@@ -121,6 +122,13 @@ irf.bvarmodel <- function(x, impulse = NULL, response = NULL, n_ahead = 5, ci = 
     impact <- .sign_impact(x, "Impulse responses")
   }
   
+  # A horizon of zero is the impact period on its own, which is well defined:
+  # the response is Phi_0 P = P, with no recursion behind it. A negative
+  # horizon is not, and reaches the C++ worker as a matrix of no rows.
+  if (length(n_ahead) != 1 || !is.numeric(n_ahead) || is.na(n_ahead) || n_ahead < 0) {
+    stop("Argument 'n_ahead' must be a single integer of at least 0.")
+  }
+  
   if (x[["model"]][["p"]] == 0 & !x[["model"]][["structural"]]) {
     stop("Impulse responses only supported for models with p > 0 or structural models.")
   }
@@ -202,7 +210,10 @@ irf.bvarmodel <- function(x, impulse = NULL, response = NULL, n_ahead = 5, ci = 
   result <- t(matrix(unlist(result), n_ahead + 1))
   
   if (cumulative) {
-    result <- t(apply(result, 1, cumsum))
+    # apply() returns a plain vector when every row holds a single value, which
+    # t() would turn into one row of draws instead of one column of horizons --
+    # the shape at n_ahead = 0. Rebuild the draws x horizon matrix explicitly.
+    result <- matrix(apply(result, 1, cumsum), nrow = nrow(result), byrow = TRUE)
   }
   
   if (!keep_draws) {

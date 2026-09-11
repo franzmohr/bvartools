@@ -21,7 +21,8 @@
 
 \item{response}{name of the response variable.}
 
-\item{n_ahead}{number of steps ahead.}
+\item{n_ahead}{number of steps ahead. Zero is allowed and returns the decomposition on impact
+alone.}
 
 \item{type}{type of the impulse responses used to calculate forecast error variable decompositions.
 Possible choices are orthogonalised \code{"oir"} (default), structural \code{"sir"}, generalised

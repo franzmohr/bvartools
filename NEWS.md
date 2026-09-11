@@ -23,6 +23,19 @@
   on `us_macrodata` and says what a set identified credible band does and does
   not mean.
 
+* **`irf()` and `fevd()` return the impact period for `n_ahead = 0`.** A
+  horizon of zero is well defined -- the response is `Phi_0 P`, which is `P`,
+  and the decomposition rests on `Phi_0 = I` -- but both failed with
+  "Mat::cols(): indices out of bounds or incorrectly used" instead. The
+  recursions reused the lag order as a count of regressor columns, and on
+  impact that count is zero, so the slice of the coefficient matrix asked for
+  column `0` through column `-1` on unsigned indices. The count is now separate
+  from the lag order and the coefficients are only sliced where the recursion
+  actually runs. `irf()` and `fevd()` also validate `n_ahead` the way
+  `spillover()` already did, so a negative horizon is rejected in R with a
+  message rather than reaching the recursion, and a cumulative impulse response
+  over the impact period alone keeps its shape instead of transposing itself.
+
 * **`irf()`, `fevd()` and `spillover()` accept a caller supplied impact
   matrix.** The new type `"custom"` takes the matrix `P` that the forecast
   error responses are post-multiplied by from argument `impact`, either as one

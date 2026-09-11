@@ -9,7 +9,7 @@ arma::vec ir(Rcpp::List A, int h, std::string type, int impulse, int response) {
   arma::mat coef = Rcpp::as<arma::mat>(A["A"]);
   
   int k = coef.n_rows;
-  int p = coef.n_cols / k;
+  const int lags = coef.n_cols / k;
   
   std::string fe ("feir");
   std::string oir ("oir");
@@ -23,10 +23,12 @@ arma::vec ir(Rcpp::List A, int h, std::string type, int impulse, int response) {
     Rcpp::stop("ir: unknown type \"%s\".", type);
   }
 
-  if (h < p) {
-    p = h * k;
-  } else {
-    p = coef.n_cols;
+  // Regressor columns the recursion can reach: lags beyond the horizon never
+  // enter it. This is a count of columns, not a lag order, and it is zero on
+  // impact -- where there is no recursion and nothing to slice.
+  int n_use = coef.n_cols;
+  if (h < lags) {
+    n_use = h * k;
   }
   
   arma::mat Sigma, temp;
@@ -69,8 +71,15 @@ arma::vec ir(Rcpp::List A, int h, std::string type, int impulse, int response) {
   temp = phi_temp * P;
   theta(0) = arma::as_scalar(temp(response - 1, impulse - 1));
   
-  arma::mat A_temp = arma::zeros<arma::mat>(k, h * k);
-  A_temp.cols(0, p - 1) = coef.cols(0, p - 1);
+  // On impact the response is Phi_0 P = P, which theta(0) already holds, so the
+  // coefficients are only needed once the recursion below actually runs.
+  arma::mat A_temp;
+  if (h > 0) {
+    A_temp = arma::zeros<arma::mat>(k, h * k);
+    if (n_use > 0) {
+      A_temp.cols(0, n_use - 1) = coef.cols(0, n_use - 1);
+    }
+  }
   
   for (int i = 1; i <= h; i++) {
     // FEIR

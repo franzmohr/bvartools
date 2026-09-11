@@ -160,8 +160,9 @@ read_model_from_hdf5 <- function(filename, group = "") {
   # Determine the class of the returned object based on the used algorithm
   result_class <- result[["model"]][["rclass"]]
   if (is.null(result_class)) {
-    bvarmodel <- c("VarNormalGamma", "VarNormalStochvol", "VarNormalWishart",
-                   "VarTvpGamma", "VarTvpStochvol", "VarTvpWishart")
+    bvarmodel <- c("VarNormalAld", "VarNormalGamma", "VarNormalStochvol",
+                   "VarNormalWishart", "VarTvpAld", "VarTvpGamma",
+                   "VarTvpStochvol", "VarTvpWishart")
     if (result[["model"]][["algorithm"]] %in% bvarmodel) {
       result_class <- c("bvarmodel", "list")
     }

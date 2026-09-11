@@ -374,3 +374,41 @@ test_that("an expanding window is recognised from the files, not the path", {
 
   expect_s3_class(read_models_from_folder(folder), "expandingwindow")
 })
+
+test_that("a file without the class attribute is classed by its algorithm", {
+  # The writer stores the class of the object, so the algorithm behind this
+  # fallback is only consulted for a file written before it did. Every
+  # algorithm has to be named there: one that is not comes back as a bare list
+  # that no method of the package applies to.
+  path <- temp_h5_file()
+  write_to_hdf5(fx_var_fitted(), filename = path)
+
+  handle <- hdf5r::H5File$new(path, mode = "r+")
+  handle[["model"]]$attr_delete("rclass")
+  handle$close_all()
+
+  restored <- read_model_from_hdf5(path)
+  expect_null(restored[["model"]][["rclass"]])
+  expect_s3_class(restored, "bvarmodel")
+})
+
+test_that("a quantile VAR is classed by its algorithm as well", {
+  # VarNormalAld and VarTvpAld were missing from the list the fallback reads,
+  # so a quantile VAR written before the class attribute existed lost its
+  # class. The writer cannot produce such a file today -- it has no branch for
+  # the priors of an ald error -- so the algorithm is relabelled here instead.
+  # The class is decided by that name alone, which is the thing under test.
+  for (algorithm in c("VarNormalAld", "VarTvpAld")) {
+    path <- temp_h5_file()
+    write_to_hdf5(fx_var_fitted(), filename = path)
+
+    handle <- hdf5r::H5File$new(path, mode = "r+")
+    handle[["model"]]$attr_delete("rclass")
+    hdf5r::h5attr(handle[["model"]], "algorithm") <- algorithm
+    handle$close_all()
+
+    restored <- read_model_from_hdf5(path)
+    expect_identical(restored[["model"]][["algorithm"]], algorithm)
+    expect_s3_class(restored, "bvarmodel")
+  }
+})

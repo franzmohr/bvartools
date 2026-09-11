@@ -15,31 +15,53 @@
 }
 
 
-# Extracts the names of the regressors from a 'bvarmodel' object
-# add_block adds the letter of the block of endogenous, exogensous, deterministic, structural and sigma coefficients
+# Flattens the blocks of a model into one vector of regressor names, which is
+# what the summary methods label their columns with.
+# add_block prefixes every name with the symbol of the block it belongs to.
 
-.get_regressor_names_bvarmodel <- function(object, add_block = FALSE) {
-  
+.flatten_regressor_blocks <- function(blocks, add_block = FALSE) {
+
+  if (length(blocks) == 0) {
+    return(NULL)
+  }
+
+  unlist(lapply(names(blocks), function(i) {
+    if (add_block) {
+      paste0(i, "\n", blocks[[i]][["labels"]])
+    } else {
+      blocks[[i]][["labels"]]
+    }
+  }), use.names = FALSE)
+}
+
+
+# Blocks of coefficients of a 'bvarmodel' object, in the order in which they
+# appear among the regressors: the lags of the endogenous variables, the
+# exogenous variables, the deterministic terms and the contemporaneous
+# endogenous variables of a structural model.
+#
+# Each element carries the symbol the block is known by as its name, a title for
+# a reader, and one label per regressor of the block.
+
+.get_regressor_blocks_bvarmodel <- function(object) {
+
   k <- object[["model"]][["k"]]
   p <- object[["model"]][["p"]]
   m <- object[["model"]][["m"]]
   s <- object[["model"]][["s"]]
   n <- object[["model"]][["n"]]
-  tvp <- object[["model"]][["tvp"]]
   y_names <- object[["model"]][["endogen"]]
-  x_names <- NULL
-  
+  blocks <- list()
+
   if (p > 0) {
     temp_names <- NULL
     for (i in 1:p) {
         temp_names <- c(temp_names, paste(y_names, ".l", i, sep = ""))
-    } 
-    if (add_block) {
-      temp_names <- paste0("A\n", temp_names)
     }
-    x_names <- c(x_names, temp_names)
+    blocks[["A"]] <- list(title = "Lagged endogenous variables",
+                          labels = temp_names)
   }
-  
+
   if (m > 0) {
     exogen_names <- object[["model"]][["exogen"]]
     if (length(exogen_names) == m) {
@@ -61,10 +83,7 @@
         }
       }
     }
-    if (add_block) {
-      temp_names <- paste0("B\n", temp_names)
-    }
-    x_names <- c(x_names, temp_names)
+    blocks[["B"]] <- list(title = "Exogenous variables", labels = temp_names)
   }
 
   if (n > 0) {
@@ -78,32 +97,36 @@
     if (length(temp_names) != n) {
       temp_names <- paste0("det.", 1:n)
     }
-    if (add_block) {
-      temp_names <- paste0("C\n", temp_names)
-    }
-    x_names <- c(x_names, temp_names)
+    blocks[["C"]] <- list(title = "Deterministic terms", labels = temp_names)
   }
-  
+
   if (object[["model"]][["structural"]]) {
-    temp_names <- y_names
-    if (add_block) {
-      temp_names <- paste0("A0\n", temp_names)
-    }
-    x_names <- c(x_names, temp_names)
+    blocks[["A0"]] <- list(title = "Contemporaneous endogenous variables",
+                           labels = y_names)
   }
-  
-  return(x_names)
+
+  return(blocks)
 }
 
 
-# Extracts the names of the regressors from a 'bvecmodel' object
-# add_block adds the name of the block of cointegration, endogenous, exogenous,
-# deterministic and structural coefficients
+# Extracts the names of the regressors from a 'bvarmodel' object
+# add_block adds the letter of the block of endogenous, exogensous, deterministic, structural and sigma coefficients
+
+.get_regressor_names_bvarmodel <- function(object, add_block = FALSE) {
+
+  .flatten_regressor_blocks(.get_regressor_blocks_bvarmodel(object),
+                            add_block = add_block)
+}
+
+
+# Blocks of coefficients of a 'bvecmodel' object, in the order in which they
+# appear among the regressors.
+#
 # The regressors of the error correction term are those of the cointegration
 # matrix Pi and not those of the loading matrix alpha, since the draws of the
-# former are what is reported for a VEC model
+# former are what is reported for a VEC model.
 
-.get_regressor_names_bvecmodel <- function(object, add_block = FALSE) {
+.get_regressor_blocks_bvecmodel <- function(object) {
 
   k <- object[["model"]][["k"]]
   p <- object[["model"]][["p"]]
@@ -111,18 +134,11 @@
   s <- object[["model"]][["s"]]
   n <- object[["model"]][["n"]]
   rank <- object[["model"]][["rank"]]
+  blocks <- list()
 
-  x_names <- NULL
-
-  add <- function(names, count, fallback, block) {
-    if (count == 0) {
-      return(NULL)
-    }
+  named <- function(names, count, fallback) {
     if (length(names) != count) {
       names <- fallback
-    }
-    if (add_block) {
-      names <- paste0(block, "\n", names)
     }
     return(names)
   }
@@ -133,7 +149,8 @@
     fallback <- c(paste0("l.", object[["model"]][["endogen"]]),
                   if (m > 0) paste0("l.", object[["model"]][["exogen"]]),
                   if (object[["model"]][["n_restricted"]] > 0) paste0("l.d", 1:object[["model"]][["n_restricted"]]))
-    x_names <- c(x_names, add(ect_names, k_beta, fallback, "Pi"))
+    blocks[["Pi"]] <- list(title = "Cointegration matrix",
+                           labels = named(ect_names, k_beta, fallback))
   }
 
   reg_names <- dimnames(object[["data"]][["train"]][["x"]])[[2]]
@@ -143,7 +160,8 @@
   if (n_gamma > 0) {
     fallback <- paste0("d.", rep(object[["model"]][["endogen"]], times = p - 1),
                        ".l", rep(.lag_label(1:(p - 1), p - 1), each = k))
-    x_names <- c(x_names, add(reg_names[pos + 1:n_gamma], n_gamma, fallback, "Gamma"))
+    blocks[["Gamma"]] <- list(title = "Lagged differenced endogenous variables",
+                              labels = named(reg_names[pos + 1:n_gamma], n_gamma, fallback))
     pos <- pos + n_gamma
   }
 
@@ -151,18 +169,32 @@
   if (n_upsilon > 0) {
     fallback <- paste0("d.", rep(object[["model"]][["exogen"]], times = s),
                        ".l", rep(.lag_label(0:(s - 1), s - 1), each = m))
-    x_names <- c(x_names, add(reg_names[pos + 1:n_upsilon], n_upsilon, fallback, "Upsilon"))
+    blocks[["Upsilon"]] <- list(title = "Differenced exogenous variables",
+                                labels = named(reg_names[pos + 1:n_upsilon], n_upsilon, fallback))
     pos <- pos + n_upsilon
   }
 
   if (n > 0) {
-    x_names <- c(x_names, add(reg_names[pos + 1:n], n, paste0("det.", 1:n), "C"))
+    blocks[["C"]] <- list(title = "Unrestricted deterministic terms",
+                          labels = named(reg_names[pos + 1:n], n, paste0("det.", 1:n)))
   }
 
   if (object[["model"]][["structural"]]) {
-    x_names <- c(x_names, add(object[["model"]][["endogen"]], k,
-                              paste0("y", 1:k), "A0"))
+    blocks[["A0"]] <- list(title = "Contemporaneous endogenous variables",
+                           labels = named(object[["model"]][["endogen"]], k,
+                                          paste0("y", 1:k)))
   }
 
-  return(x_names)
+  return(blocks)
+}
+
+
+# Extracts the names of the regressors from a 'bvecmodel' object
+# add_block adds the name of the block of cointegration, endogenous, exogenous,
+# deterministic and structural coefficients
+
+.get_regressor_names_bvecmodel <- function(object, add_block = FALSE) {
+
+  .flatten_regressor_blocks(.get_regressor_blocks_bvecmodel(object),
+                            add_block = add_block)
 }

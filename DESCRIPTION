@@ -106,6 +106,7 @@ Collate:
     'plot.expwindbvarprdlist.R'
     'plot.modellist.R'
     'plot.selcritlist.R'
+    'plot_blocks.R'
     'plot_forecast_errors_by_period.R'
     'plot_selcrit_forecast_errors.R'
     'predict.bvarmodel.R'

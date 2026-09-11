@@ -4,7 +4,7 @@
 \alias{plot.bvecmodel}
 \title{Plotting Draws of a Bayesian VEC Model}
 \usage{
-\method{plot}{bvecmodel}(x, ci = 0.95, type = "hist", show_zero_y = TRUE, ...)
+\method{plot}{bvecmodel}(x, ci = 0.95, type = "hist", show_zero_y = TRUE, max_cols = 6, ...)
 }
 \arguments{
 \item{x}{an object of class 'bvecmodel'.}
@@ -17,7 +17,14 @@ or \code{"boxplot"} for a boxplot. Only used for parameter draws of constant coe
 \item{show_zero_y}{if \code{TRUE} (default), a horizontal line with y = 0 is
 added to the plot. Only used for time varying parameters.}
 
+\item{max_cols}{an integer of the maximum number of regressors per figure. A block
+with more regressors than this is drawn as several figures of nearly equal width.
+Defaults to 6.}
+
 \item{...}{further graphical parameters.}
+}
+\value{
+A plot per block of coefficients.
 }
 \description{
 A plot function for objects of class 'bvecmodel'.
@@ -28,6 +35,13 @@ of the cointegration matrix \eqn{\Pi = \alpha \beta^\prime} and not as draws
 of the loading matrix \eqn{\alpha} and the cointegration matrix \eqn{\beta}
 separately. The latter two are only identified up to a rotation, so their
 individual draws are not informative, while their product is.
+
+The function draws one figure per block of coefficients -- the cointegration
+matrix, the lagged differenced endogenous variables, the differenced exogenous
+variables, the deterministic terms, the contemporaneous endogenous variables of
+a structural model, and the covariance matrix of the error term -- instead of
+one figure for the whole model. A model with many regressors would otherwise
+produce panels too small to read.
 }
 \examples{
 

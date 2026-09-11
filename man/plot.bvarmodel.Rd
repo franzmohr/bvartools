@@ -4,7 +4,7 @@
 \alias{plot.bvarmodel}
 \title{Plotting Draws of a Bayesian VAR Model}
 \usage{
-\method{plot}{bvarmodel}(x, ci = 0.95, type = "hist", show_zero_y = TRUE, ...)
+\method{plot}{bvarmodel}(x, ci = 0.95, type = "hist", show_zero_y = TRUE, max_cols = 6, ...)
 }
 \arguments{
 \item{x}{an object of class 'bvarmodel'.}
@@ -17,10 +17,24 @@ or \code{"boxplot"} for a boxplot. Only used for parameter draws of constant coe
 \item{show_zero_y}{if \code{TRUE} (default), a horizontal line with y = 0 is
 added to the plot. Only used for time varying parameters.}
 
+\item{max_cols}{an integer of the maximum number of regressors per figure. A block
+with more regressors than this is drawn as several figures of nearly equal width.
+Defaults to 6.}
+
 \item{...}{further graphical parameters.}
+}
+\value{
+A plot per block of coefficients.
 }
 \description{
 A plot function for objects of class 'bvarmodel'.
+}
+\details{
+The function draws one figure per block of coefficients -- the lags of
+the endogenous variables, the exogenous variables, the deterministic terms, the
+contemporaneous endogenous variables of a structural model, and the covariance
+matrix of the error term -- instead of one figure for the whole model. A model
+with many regressors would otherwise produce panels too small to read.
 }
 \examples{
 
@@ -41,7 +55,7 @@ model <- add_priors(model,
 # Add initial values
 model <- add_initial_values(model)
 
-# Obtain posterior draws 
+# Obtain posterior draws
 model <- add_posterior_coefficients(model)
 
 # Plot

@@ -8,6 +8,9 @@
 #' or \code{"boxplot"} for a boxplot. Only used for parameter draws of constant coefficients.
 #' @param show_zero_y if \code{TRUE} (default), a horizontal line with y = 0 is
 #' added to the plot. Only used for time varying parameters.
+#' @param max_cols an integer of the maximum number of regressors per figure. A block
+#' with more regressors than this is drawn as several figures of nearly equal width.
+#' Defaults to 6.
 #' @param ... further graphical parameters.
 #'
 #' @details The coefficients of the error correction term are displayed as draws
@@ -15,6 +18,15 @@
 #' of the loading matrix \eqn{\alpha} and the cointegration matrix \eqn{\beta}
 #' separately. The latter two are only identified up to a rotation, so their
 #' individual draws are not informative, while their product is.
+#'
+#' The function draws one figure per block of coefficients -- the cointegration
+#' matrix, the lagged differenced endogenous variables, the differenced exogenous
+#' variables, the deterministic terms, the contemporaneous endogenous variables of
+#' a structural model, and the covariance matrix of the error term -- instead of
+#' one figure for the whole model. A model with many regressors would otherwise
+#' produce panels too small to read.
+#'
+#' @return A plot per block of coefficients.
 #'
 #' @examples
 #'
@@ -45,7 +57,8 @@
 #' plot(model, type = "boxplot")
 #'
 #' @export
-plot.bvecmodel <- function(x, ci = 0.95, type = "hist", show_zero_y = TRUE, ...) {
+plot.bvecmodel <- function(x, ci = 0.95, type = "hist", show_zero_y = TRUE,
+                           max_cols = 6, ...) {
 
   # 'layout' is called below, so all parameters have to be restored on exit
   orig_par <- graphics::par(no.readonly = TRUE)
@@ -89,19 +102,6 @@ plot.bvecmodel <- function(x, ci = 0.95, type = "hist", show_zero_y = TRUE, ...)
   ci_low <- (1 - ci) / 2
   ci_high <- 1 - ci_low
   y_names <- x[["model"]][["endogen"]]
-  x_names <- .get_regressor_names_bvecmodel(x, add_block = TRUE)
-  lab_size <- .05
-
-  nparams <- ifelse(rank > 0, k_beta, 0) + n_x + ifelse(structural, k, 0) + k
-
-  mat <- matrix(NA_integer_, k + 2 , nparams + 1)
-  mat[1, ] <- 1
-  mat[-1, 1] <- c(0, 2:(k + 1))
-  mat[2, -1] <- (k + 1) + 1:nparams
-  mat[-(1:2), -1] <- matrix(1:(k * nparams) + k + nparams + 1, k, nparams)
-  graphics::layout(mat,
-                   widths = c(lab_size, rep((1 - lab_size) / nparams, nparams)),
-                   heights = c(.07, lab_size, rep((1 - lab_size) / k, k)))
 
   # Title
   title_text <- "Bayesian "
@@ -122,24 +122,6 @@ plot.bvecmodel <- function(x, ci = 0.95, type = "hist", show_zero_y = TRUE, ...)
   spec_text <- c(spec_text, paste0("r = ", rank))
   title_text <- paste0(title_text, " with ", paste0(spec_text, collapse = ", "))
 
-  graphics::par(mar = c(0, 0, 0, 0))
-  graphics::plot.new(); graphics::text(0.5, 0.5, labels = title_text, cex = 1.5)
-  # Fill rows
-  graphics::par(mar = c(3, 0, 0, 0))
-  for (j in y_names) {
-    graphics::plot.new(); graphics::text(0.5, 0.5, labels = j, adj = 0.5)
-  }
-  # Fill columns
-  graphics::par(mar = c(0, 0, 0, 0))
-  for (j in x_names) {
-    graphics::plot.new(); graphics::text(0.5, 0.5, labels = j, adj = 0.5)
-  }
-  for (j in y_names) {
-    graphics::plot.new(); graphics::text(0.5, 0.5, labels = paste0("Sigma\n", j), adj = 0.5)
-  }
-
-  graphics::par(mar = c(3, 2.1, .5, 1))
-
   periods <- ifelse(tvp, tt, 1)
 
   # Draws of a coefficient of the measurement equation, either as a single
@@ -147,6 +129,9 @@ plot.bvecmodel <- function(x, ci = 0.95, type = "hist", show_zero_y = TRUE, ...)
   coeff_draws <- function(pos) {
     x[["posterior"]][["a"]][["coeffs"]][, ncoeffs * 0:(periods - 1) + pos, drop = !tvp]
   }
+
+  blocks <- list()
+  regressors <- .get_regressor_blocks_bvecmodel(x)
 
   # Cointegration matrix ----
 
@@ -171,50 +156,34 @@ plot.bvecmodel <- function(x, ci = 0.95, type = "hist", show_zero_y = TRUE, ...)
       }
     }
 
-    for (i in 1:n_pi) {
-      if (tvp) {
-        temp <- Pi[, n_pi * 0:(tt - 1) + i, drop = FALSE]
-        stats::ts.plot(t(apply(temp, 2, stats::quantile, probs = c(ci_low, .5, ci_high))), xlab = "")
-        if (show_zero_y) {
-          graphics::abline(h = 0)
-        }
-      } else {
-        if (type == "hist") {
-          graphics::hist(Pi[, i], plot = TRUE, main = NA)
-        }
-        if (type == "trace") {
-          stats::ts.plot(Pi[, i], xlab = "")
-        }
-        if (type == "boxplot") {
-          graphics::boxplot(Pi[, i])
-        }
-      }
-    }
+    blocks[["Pi"]] <- list(title = regressors[["Pi"]][["title"]],
+                           labels = regressors[["Pi"]][["labels"]],
+                           panel = function(i) {
+                             .plot_coefficient_panel(Pi[, n_pi * 0:(periods - 1) + i, drop = !tvp],
+                                                     tvp, type, ci_low, ci_high, show_zero_y)
+                           })
   }
 
   # Coefficients of the regressors outside the error correction term ----
 
-  n_nonect <- k * n_x
-  if (n_nonect > 0) {
-    for (i in 1:n_nonect) {
-      if (tvp) {
-        temp <- coeff_draws(n_alpha + i)
-        stats::ts.plot(t(apply(temp, 2, stats::quantile, probs = c(ci_low, .5, ci_high))), xlab = "")
-        if (show_zero_y) {
-          graphics::abline(h = 0)
-        }
-      } else {
-        if (type == "hist") {
-          graphics::hist(coeff_draws(n_alpha + i), plot = TRUE, main = NA)
-        }
-        if (type == "trace") {
-          stats::ts.plot(coeff_draws(n_alpha + i), xlab = "")
-        }
-        if (type == "boxplot") {
-          graphics::boxplot(coeff_draws(n_alpha + i))
-        }
-      }
-    }
+  offset <- 0
+  for (i in setdiff(names(regressors), c("Pi", "A0"))) {
+
+    spec <- regressors[[i]]
+
+    blocks[[i]] <- list(title = spec[["title"]],
+                        labels = spec[["labels"]],
+                        # The loadings come first among the coefficients, and
+                        # 'offset' counts the regressors of the preceding blocks.
+                        panel = local({
+                          pos_0 <- n_alpha + offset * k
+                          function(i) {
+                            .plot_coefficient_panel(coeff_draws(pos_0 + i), tvp, type,
+                                                    ci_low, ci_high, show_zero_y)
+                          }
+                        }))
+
+    offset <- offset + length(spec[["labels"]])
   }
 
   # Structural coefficients ----
@@ -230,39 +199,20 @@ plot.bvecmodel <- function(x, ci = 0.95, type = "hist", show_zero_y = TRUE, ...)
     temp <- matrix(NA, k , k)
     temp[upper.tri(temp)] <- 1:n_struct
     temp <- t(temp)
-    pos_a <- n_alpha + n_nonect + temp[lower.tri(temp)]
+    pos_a <- n_alpha + k * n_x + temp[lower.tri(temp)]
 
-    pos_i <- 0
-    for (i in 1:kk) {
-      if (i %in% pos_values) {
-        pos_i <- pos_i + 1
-
-        if (tvp) {
-          temp <- coeff_draws(pos_a[pos_i])
-          stats::ts.plot(t(apply(temp, 2, stats::quantile, probs = c(ci_low, .5, ci_high))), xlab = "")
-          if (show_zero_y) {
-            graphics::abline(h = 0)
-          }
-        } else {
-          if (type == "hist") {
-            graphics::hist(coeff_draws(pos_a[pos_i]), plot = TRUE, main = NA)
-          }
-          if (type == "trace") {
-            stats::ts.plot(coeff_draws(pos_a[pos_i]), xlab = "")
-          }
-          if (type == "boxplot") {
-            graphics::boxplot(coeff_draws(pos_a[pos_i]))
-          }
-        }
-      } else {
-        if (i %in% pos_zero) {
-          graphics::plot.new(); graphics::text(0.5, 0.5, labels = 0, adj = 0.5)
-        }
-        if (i %in% pos_one) {
-          graphics::plot.new(); graphics::text(0.5, 0.5, labels = 1, adj = 0.5)
-        }
-      }
-    }
+    blocks[["A0"]] <- list(title = regressors[["A0"]][["title"]],
+                           labels = regressors[["A0"]][["labels"]],
+                           panel = function(i) {
+                             if (i %in% pos_values) {
+                               .plot_coefficient_panel(coeff_draws(pos_a[sum(pos_values <= i)]),
+                                                       tvp, type, ci_low, ci_high, show_zero_y)
+                             } else {
+                               graphics::plot.new()
+                               graphics::text(0.5, 0.5, labels = ifelse(i %in% pos_one, 1, 0),
+                                              adj = 0.5)
+                             }
+                           })
   }
 
   # Covariance matrix of the error term ----
@@ -287,24 +237,21 @@ plot.bvecmodel <- function(x, ci = 0.95, type = "hist", show_zero_y = TRUE, ...)
     }
   }
 
-  for (i in 1:kk) {
-    if (sv | tvp_and_covar) {
-      pos <- kk * 0:(tt - 1) + i
-      stats::plot.ts(u_sigma[pos, ], plot.type = "single")
-    } else {
-      if (all(u_sigma[, i] == u_sigma[1, i])) {
-        graphics::plot.new(); graphics::text(0.5, 0.5, labels = u_sigma[1, i], adj = 0.5)
-      } else {
-        if (type == "hist") {
-          graphics::hist(u_sigma[, i], plot = TRUE, main = NA)
-        }
-        if (type == "trace") {
-          stats::ts.plot(u_sigma[, i], xlab = "")
-        }
-        if (type == "boxplot") {
-          graphics::boxplot(u_sigma[, i])
-        }
-      }
-    }
-  }
+  blocks[["Sigma"]] <- list(title = "Covariance matrix of the error term",
+                            labels = y_names,
+                            panel = function(i) {
+                              if (sv | tvp_and_covar) {
+                                stats::plot.ts(u_sigma[kk * 0:(tt - 1) + i, ], plot.type = "single")
+                              } else {
+                                if (all(u_sigma[, i] == u_sigma[1, i])) {
+                                  graphics::plot.new()
+                                  graphics::text(0.5, 0.5, labels = u_sigma[1, i], adj = 0.5)
+                                } else {
+                                  .plot_coefficient_panel(u_sigma[, i], FALSE, type,
+                                                          ci_low, ci_high, show_zero_y)
+                                }
+                              }
+                            })
+
+  .plot_blocks(blocks, row_names = y_names, title = title_text, max_cols = max_cols)
 }

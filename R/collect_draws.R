@@ -13,8 +13,10 @@
 # or SV model, and `need_A0` whether the contemporaneous block has to be split
 # off and inverted. `need_Sigma` is there for irf(), which does not need the
 # error covariance for a forecast error or structural response and would
-# otherwise pay for one inversion per draw to obtain it. Returns a list of lists
-# with elements `A`, `Sigma` and, when asked for, `A0`.
+# otherwise pay for one inversion per draw to obtain it. `impact` carries a
+# caller supplied identification through to the workers, which read it under
+# type "custom". Returns a list of lists with elements `A`, `Sigma` and, when
+# asked for, `A0` and `P`.
 
 # Number of periods in the estimation sample.
 #
@@ -36,7 +38,44 @@
   as.integer(NROW(y))
 }
 
-.collect_draws <- function(x, period = NULL, need_A0 = FALSE, need_Sigma = TRUE) {
+# Per-draw impact matrices from whatever the caller supplied.
+#
+# One k x k matrix identifies every draw the same way, which is what a fixed
+# identification looks like. A list of them is one matrix per draw, which is
+# what an identification drawn alongside the coefficients -- a sign restricted
+# rotation, say -- produces. Both are normalised to a list of length `store`
+# here, so that .collect_draws has a single case to attach and the workers
+# never learn which of the two the caller had.
+.impact_draws <- function(impact, k, store) {
+
+  if (is.matrix(impact)) {
+    impact <- rep(list(impact), store)
+  }
+
+  if (!is.list(impact)) {
+    stop("Argument 'impact' must be a matrix or a list of matrices.")
+  }
+
+  if (length(impact) != store) {
+    stop("Argument 'impact' must contain either a single matrix or one per posterior draw (",
+         store, "), but it contains ", length(impact), ".")
+  }
+
+  ok <- vapply(impact, function(p_i) {
+    is.matrix(p_i) && is.numeric(p_i) && nrow(p_i) == k && ncol(p_i) == k &&
+      all(is.finite(p_i))
+  }, logical(1))
+
+  if (!all(ok)) {
+    stop("Argument 'impact' must contain finite numeric ", k, " x ", k,
+         " matrices. Element ", which(!ok)[1], " is not one.")
+  }
+
+  impact
+}
+
+.collect_draws <- function(x, period = NULL, need_A0 = FALSE, need_Sigma = TRUE,
+                           impact = NULL) {
 
   k <- x[["model"]][["k"]]
   kk <- k * k
@@ -74,6 +113,10 @@
 
   store <- nrow(x[["posterior"]][["u_sigma_inv"]][["coeffs"]])
 
+  if (!is.null(impact)) {
+    impact <- .impact_draws(impact, k, store)
+  }
+
   A <- NULL
   for (i in 1:store) {
     temp <- NULL
@@ -100,6 +143,10 @@
       } else {
         temp[["Sigma"]] <- solve(matrix(x[["posterior"]][["u_sigma_inv"]][["coeffs"]][i, ], k))
       }
+    }
+
+    if (!is.null(impact)) {
+      temp[["P"]] <- impact[[i]]
     }
 
     A[[i]] <- temp

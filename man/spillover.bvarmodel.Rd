@@ -11,6 +11,7 @@
   ci = 0.95,
   keep_draws = FALSE,
   period = NULL,
+  impact = NULL,
   ...
 )
 }
@@ -21,9 +22,9 @@
 and Yilmaz (2012).}
 
 \item{type}{type of the impulse responses the decomposition is based on.
-Possible choices are generalised \code{gir} (default) and orthogonalised
-\code{oir}. Both decompose the reduced form of the model, so a structural
-model is not supported. See 'Details'.}
+Possible choices are generalised \code{gir} (default), orthogonalised
+\code{oir} and \code{custom}. All three decompose the reduced form of the
+model, so a structural model is not supported. See 'Details'.}
 
 \item{ci}{a numeric between 0 and 1 specifying the probability mass covered by the
 credible intervals. Defaults to 0.95.}
@@ -34,6 +35,11 @@ the indices. Defaults to \code{FALSE}, so that the credible intervals are return
 \item{period}{integer. Index of the period, for which the measures should be generated.
 Only used for TVP or SV models. Default is \code{NULL}, so that the posterior draws of
 the last time period are used.}
+
+\item{impact}{the impact matrix of a \code{custom} decomposition, either a single
+\eqn{K \times K} matrix that identifies every posterior draw the same way, or a list
+of such matrices with one entry per draw. Ignored for every other value of
+\code{type}. See 'Details'.}
 
 \item{...}{further arguments passed to or from other methods.}
 }
@@ -72,7 +78,13 @@ do not add up over \eqn{k}, so each row is normalised,
 Under \code{type = "oir"} the decomposition uses the Choleski factor of
 \eqn{\Sigma}, adds up by construction and depends on the ordering of the
 variables, which is what the generalised version of Diebold and Yilmaz (2012)
-avoids.
+avoids. Under \code{type = "custom"} it uses the matrix supplied in argument
+\code{impact} in place of that factor and is otherwise the orthogonalised
+case, the scaling by \eqn{\sigma^{-1}_{kk}} included: an impact matrix
+carries the scale of its own shocks in its columns. The row normalisation is
+applied to all three, so it will produce shares that sum to one even from an
+impact matrix that does not factorise \eqn{\Sigma} and is therefore not a
+check that one does.
 
 From the normalised table the measures are
 \describe{

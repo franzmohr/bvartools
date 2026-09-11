@@ -7,9 +7,9 @@
 #' @param n_ahead number of steps ahead. Defaults to 10, the horizon of Diebold
 #' and Yilmaz (2012).
 #' @param type type of the impulse responses the decomposition is based on.
-#' Possible choices are generalised \code{gir} (default) and orthogonalised
-#' \code{oir}. Both decompose the reduced form of the model, so a structural
-#' model is not supported. See 'Details'.
+#' Possible choices are generalised \code{gir} (default), orthogonalised
+#' \code{oir} and \code{custom}. All three decompose the reduced form of the
+#' model, so a structural model is not supported. See 'Details'.
 #' @param ci a numeric between 0 and 1 specifying the probability mass covered by the
 #' credible intervals. Defaults to 0.95.
 #' @param keep_draws logical specifying whether the function should return all draws of
@@ -17,6 +17,10 @@
 #' @param period integer. Index of the period, for which the measures should be generated.
 #' Only used for TVP or SV models. Default is \code{NULL}, so that the posterior draws of
 #' the last time period are used.
+#' @param impact the impact matrix of a \code{custom} decomposition, either a single
+#' \eqn{K \times K} matrix that identifies every posterior draw the same way, or a list
+#' of such matrices with one entry per draw. Ignored for every other value of
+#' \code{type}. See 'Details'.
 #' @param ... further arguments passed to or from other methods.
 #'
 #' @details The function produces the connectedness measures of Diebold and
@@ -36,7 +40,13 @@
 #' Under \code{type = "oir"} the decomposition uses the Choleski factor of
 #' \eqn{\Sigma}, adds up by construction and depends on the ordering of the
 #' variables, which is what the generalised version of Diebold and Yilmaz (2012)
-#' avoids.
+#' avoids. Under \code{type = "custom"} it uses the matrix supplied in argument
+#' \code{impact} in place of that factor and is otherwise the orthogonalised
+#' case, the scaling by \eqn{\sigma^{-1}_{kk}} included: an impact matrix
+#' carries the scale of its own shocks in its columns. The row normalisation is
+#' applied to all three, so it will produce shares that sum to one even from an
+#' impact matrix that does not factorise \eqn{\Sigma} and is therefore not a
+#' check that one does.
 #'
 #' From the normalised table the measures are
 #' \describe{
@@ -121,14 +131,18 @@
 #'
 #' @export
 spillover.bvarmodel <- function(object, n_ahead = 10, type = "gir", ci = .95,
-                                keep_draws = FALSE, period = NULL, ...) {
+                                keep_draws = FALSE, period = NULL, impact = NULL, ...) {
 
   if (is.null(object[["posterior"]][["u_sigma_inv"]][["coeffs"]])) {
     stop("Argument 'object' must include draws of the variance-covariance matrix Sigma.")
   }
 
-  if (!type %in% c("gir", "oir")) {
-    stop("Argument 'type' must be either 'gir' or 'oir'.")
+  if (!type %in% c("gir", "oir", "custom")) {
+    stop("Argument 'type' must be one of 'gir', 'oir' and 'custom'.")
+  }
+
+  if (type == "custom" && is.null(impact)) {
+    stop("Spillover measures of type \"custom\" need an impact matrix in argument 'impact'.")
   }
 
   # Both types decompose the reduced form, which a structural model does not
@@ -160,7 +174,7 @@ spillover.bvarmodel <- function(object, n_ahead = 10, type = "gir", ci = .95,
   varnames <- object[["model"]][["endogen"]]
 
   # Shared with fevd, so the two agree on which slice of a row is `period`.
-  A <- .collect_draws(object, period = period, need_A0 = FALSE)
+  A <- .collect_draws(object, period = period, need_A0 = FALSE, impact = impact)
   store <- length(A)
 
   tables <- lapply(A, .spillover_table, h = n_ahead, type = type)

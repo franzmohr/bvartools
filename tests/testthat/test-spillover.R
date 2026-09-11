@@ -202,7 +202,7 @@ test_that("print and plot work", {
 test_that("impossible arguments are refused", {
   object <- make_bvar()
 
-  expect_error(spillover(object, type = "sir"), "'gir' or 'oir'")
+  expect_error(spillover(object, type = "sir"), "'gir', 'oir' and 'custom'")
   expect_error(spillover(object, n_ahead = 0), "at least 1")
   expect_error(spillover(object, ci = 1), "between 0 and 1")
 

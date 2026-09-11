@@ -7,9 +7,9 @@
 #' @param n_ahead number of steps ahead.
 #' @param type type of the impulse responses used to calculate forecast error variable decompositions.
 #' Possible choices are orthogonalised \code{"oir"} (default), structural \code{"sir"}, generalised
-#' \code{"gir"} and structural generalised \code{"sgir"} impulse responses. For a structural model
-#' only \code{"sir"} and \code{"sgir"} are available; the other two require a non-structural
-#' model. See 'Details'.
+#' \code{"gir"}, structural generalised \code{"sgir"} and \code{"custom"} impulse responses. For a
+#' structural model only \code{"sir"} and \code{"sgir"} are available; the other three require a
+#' non-structural model. See 'Details'.
 #' @param normalise_gir logical. Should the GIR-based FEVD be normalised?
 #' @param period integer. Index of the period, for which the variance decomposition should be generated.
 #' Only used for TVP or SV models. Default is \code{NULL}, so that the posterior draws of the last time period
@@ -19,6 +19,9 @@
 #' are kept and the contributions of the remaining variables are added up in a further column
 #' named \code{"Other"}. This keeps the legend of the corresponding plot readable for models
 #' with many variables. Default is \code{NULL}, so that a column is returned for every variable.
+#' @param impact the impact matrix of a \code{"custom"} decomposition, either a single
+#' \eqn{K \times K} matrix that identifies every posterior draw the same way, or a list of such
+#' matrices with one entry per draw. Ignored for every other value of \code{type}. See 'Details'.
 #' @param ... further arguments passed to or from other methods.
 #' 
 #' @details The function produces forecast error variance decompositions (FEVD) for the VAR model
@@ -37,6 +40,15 @@
 #' \eqn{P} is the lower triangular Choleski decomposition of the variance-covariance
 #' matrix \eqn{\Sigma}, \eqn{e_j} is a selection vector for the response variable and
 #' \eqn{e_k} a selection vector for the impulse variable.
+#'
+#' If \code{type = "custom"}, the decomposition uses the matrix \eqn{P} supplied in argument
+#' \code{impact} in place of the Choleski factor, while the denominator stays the one of the
+#' orthogonalised case: an impact matrix relabels the shocks but says nothing about the model,
+#' so the forecast error variance being decomposed is still that of \eqn{\Sigma}. The shares
+#' therefore add up to one across shocks exactly when \eqn{P P^{\prime} = \Sigma}, which holds
+#' for a rotation of the Choleski factor and need not hold for an arbitrary matrix. This is not
+#' enforced: a decomposition that does not sum to one is the honest report of an impact matrix
+#' that does not factorise \eqn{\Sigma}.
 #'
 #' If \code{type = "sir"}, the structural FEVD will be
 #' calculated as \deqn{\omega^{SIR}_{jk, h} = \frac{\sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i A_0^{-1} P e_k )^2}{\sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i A_0^{-1} \Sigma A_0^{-1\prime} \Phi_i^{\prime} e_j )},}
@@ -92,15 +104,19 @@
 #' 
 #' @export
 fevd.bvarmodel <- function(x, response = NULL, n_ahead = 5, type = "oir", normalise_gir = FALSE, period = NULL,
-                           max_groups = NULL, ...) {
+                           max_groups = NULL, impact = NULL, ...) {
   
   
   if (is.null(x[["posterior"]][["u_sigma_inv"]][["coeffs"]])) {
     stop("Argument 'object' must include draws of the variance-covariance matrix Sigma.")
   }
   
-  if (!type %in% c("oir", "sir", "gir", "sgir")) {
+  if (!type %in% c("oir", "sir", "gir", "sgir", "custom")) {
     stop("The specified type of the used impulse response is not known.")
+  }
+
+  if (type == "custom" && is.null(impact)) {
+    stop("A variance decomposition of type \"custom\" needs an impact matrix in argument 'impact'.")
   }
   
   if(is.null(response)) {
@@ -138,7 +154,7 @@ fevd.bvarmodel <- function(x, response = NULL, n_ahead = 5, type = "oir", normal
 
   # The draws in the shape .vardecomp wants them, shared with spillover() so
   # that the two cannot disagree about which slice of a row is `period`.
-  A <- .collect_draws(x, period = period, need_A0 = need_A0)
+  A <- .collect_draws(x, period = period, need_A0 = need_A0, impact = impact)
 
   phi <- lapply(A, .vardecomp, h = n_ahead, type = type, response = response)
   

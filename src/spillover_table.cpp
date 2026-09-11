@@ -2,6 +2,8 @@
 
 #include <RcppArmadillo.h>
 
+#include "impact_matrix.h"
+
 //' Connectedness table of one posterior draw
 //'
 //' The normalised forecast error variance decomposition table behind the
@@ -19,9 +21,10 @@
 //' when a row is normalised and so cannot serve here.
 //'
 //' @param A a list with elements \code{A}, the k x kp coefficients of one draw,
-//'   and \code{Sigma}, its k x k error covariance.
+//'   and \code{Sigma}, its k x k error covariance. Under \code{type = "custom"}
+//'   it also carries the impact matrix of that draw in element \code{P}.
 //' @param h an integer of the forecast horizon, at least one.
-//' @param type either \code{"gir"} or \code{"oir"}.
+//' @param type one of \code{"gir"}, \code{"oir"} and \code{"custom"}.
 //'
 //' @noRd
 // [[Rcpp::export(.spillover_table)]]
@@ -43,8 +46,17 @@ arma::mat spillover_table(Rcpp::List A, int h, std::string type) {
   arma::mat P, sigma_mse;
   if (type == "oir") {
     P = arma::trans(arma::chol(sigma));
-  } else {
+  } else if (type == "gir") {
     P = sigma;
+  } else if (type == "custom") {
+    // As in .vardecomp: the impact matrix identifies the shocks, the forecast
+    // error covariance of the model stays Sigma. The row normalisation at the
+    // end hides a P that does not factorise Sigma, so the shares remain
+    // readable as shares either way -- which is the caller's responsibility to
+    // deserve.
+    P = bvartools_impact_matrix(A, k, "spillover");
+  } else {
+    Rcpp::stop("spillover_table: unknown type \"%s\".", type);
   }
   sigma_mse = sigma;
 
@@ -83,8 +95,10 @@ arma::mat spillover_table(Rcpp::List A, int h, std::string type) {
   theta.each_col() /= mse;
 
   // Column i by the variance of the shock it carries. This is the Pesaran and
-  // Shin scaling, and the one place this differs from .vardecomp.
-  if (type != "oir") {
+  // Shin scaling, and the one place this differs from .vardecomp. It belongs to
+  // the generalised decomposition alone: an orthogonalised or caller supplied
+  // impact matrix carries the scale of its shocks in its own columns already.
+  if (type == "gir") {
     arma::rowvec shock_var = arma::trans(sigma.diag());
     theta.each_row() /= shock_var;
   }

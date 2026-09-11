@@ -1066,9 +1066,10 @@ post_normal_sur <- function(y, z, sigma_i, a_prior, v_i_prior, svd = FALSE) {
 #' when a row is normalised and so cannot serve here.
 #'
 #' @param A a list with elements \code{A}, the k x kp coefficients of one draw,
-#'   and \code{Sigma}, its k x k error covariance.
+#'   and \code{Sigma}, its k x k error covariance. Under \code{type = "custom"}
+#'   it also carries the impact matrix of that draw in element \code{P}.
 #' @param h an integer of the forecast horizon, at least one.
-#' @param type either \code{"gir"} or \code{"oir"}.
+#' @param type one of \code{"gir"}, \code{"oir"} and \code{"custom"}.
 #'
 #' @noRd
 .spillover_table <- function(A, h, type) {

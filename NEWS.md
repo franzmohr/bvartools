@@ -1,5 +1,21 @@
 # bvartools (development version)
 
+* **`irf()`, `fevd()` and `spillover()` accept a caller supplied impact
+  matrix.** The new type `"custom"` takes the matrix `P` that the forecast
+  error responses are post-multiplied by from argument `impact`, either as one
+  matrix that identifies every posterior draw the same way or as a list with
+  one per draw. Until now the impact matrix could only be named, so every
+  identification scheme meant another branch in each of the three recursions;
+  it is now an argument, and the recursions need not learn about a scheme to
+  carry it. The types that were already there are unchanged, and the matrix
+  that reproduces one of them is not always the obvious one -- `irf()`
+  normalises the Choleski factor to a unit shock under `"oir"` while `fevd()`
+  does not, and the custom path normalises nothing at all. Under `"custom"`
+  the two decompositions keep `Sigma` as the forecast error covariance, so
+  their shares add up across shocks exactly when `P P'` equals `Sigma`, as it
+  does for a rotation of the Choleski factor. This is groundwork for sign
+  restrictions, which produce such a rotation per draw.
+
 * **`summary()` no longer marks a covariance that was never estimated as
   significant.** The asterisk says that the credible interval of a value
   excludes zero, and it was placed by comparing the signs of the two bounds.

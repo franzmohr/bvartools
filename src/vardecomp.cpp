@@ -2,6 +2,8 @@
 
 #include <RcppArmadillo.h>
 
+#include "impact_matrix.h"
+
 // [[Rcpp::export(.vardecomp)]]
 arma::mat vardecomp(Rcpp::List A, int h, std::string type, int response) {
   
@@ -11,7 +13,13 @@ arma::mat vardecomp(Rcpp::List A, int h, std::string type, int response) {
   std::string sir ("sir");
   std::string gir ("gir");
   std::string sgir ("sgir");
-  
+  std::string custom ("custom");
+
+  if (type != oir && type != sir && type != gir && type != sgir &&
+      type != custom) {
+    Rcpp::stop("vardecomp: unknown type \"%s\".", type);
+  }
+
   // Collect information data
   int k = a.n_rows; // Number of endogenous variables
   int p = a.n_cols / k; // Lag order
@@ -48,6 +56,16 @@ arma::mat vardecomp(Rcpp::List A, int h, std::string type, int response) {
     a0i = arma::solve(Rcpp::as<arma::mat>(A["A0"]), arma::eye<arma::mat>(k, k));
     P = a0i * sigma;
     sigma_mse = a0i * sigma * arma::trans(a0i);
+  }
+  if (type == custom) {
+    // A caller supplied impact matrix relabels the shocks but says nothing
+    // about the model, so the forecast error covariance stays Sigma. The
+    // shares then add up across shocks exactly when P P' = Sigma -- true of a
+    // rotation of the Cholesky factor, and not of an arbitrary matrix. Nothing
+    // here enforces it: a decomposition that does not sum to one is the honest
+    // report of an impact matrix that does not factorise Sigma.
+    P = bvartools_impact_matrix(A, k, "fevd");
+    sigma_mse = sigma;
   }
   
   double sigmajj = 1;

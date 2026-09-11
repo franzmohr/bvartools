@@ -1,4 +1,7 @@
 #include <RcppArmadillo.h>
+
+#include "impact_matrix.h"
+
 // [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::export(.ir)]]
 arma::vec ir(Rcpp::List A, int h, std::string type, int impulse, int response) {
@@ -13,7 +16,13 @@ arma::vec ir(Rcpp::List A, int h, std::string type, int impulse, int response) {
   std::string sir ("sir");
   std::string gir ("gir");
   std::string sgir ("sgir");
-  
+  std::string custom ("custom");
+
+  if (type != fe && type != oir && type != sir && type != gir &&
+      type != sgir && type != custom) {
+    Rcpp::stop("ir: unknown type \"%s\".", type);
+  }
+
   if (h < p) {
     p = h * k;
   } else {
@@ -42,6 +51,13 @@ arma::vec ir(Rcpp::List A, int h, std::string type, int impulse, int response) {
     Sigma = Rcpp::as<arma::mat>(A["Sigma"]);
     P = arma::solve(Rcpp::as<arma::mat>(A["A0"]), arma::eye<arma::mat>(k, k));
     P = P * Sigma / arma::as_scalar(Sigma(impulse - 1, impulse - 1)) * Rcpp::as<double>(A["shock"]);
+  }
+  if (type == custom) {
+    // The caller has already decided what a shock of size one is, so `shock`
+    // only rescales it. Nothing here normalises the columns of P the way the
+    // "oir" branch above does -- an identification that means to deliver unit
+    // shocks has to arrive that way.
+    P = bvartools_impact_matrix(A, k, "irf") * Rcpp::as<double>(A["shock"]);
   }
 
   arma::mat phi = arma::zeros<arma::mat>((h + 1) * k, k);

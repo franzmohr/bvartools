@@ -15,6 +15,7 @@
   cumulative = FALSE,
   keep_draws = FALSE,
   period = NULL,
+  impact = NULL,
   ...
 )
 }
@@ -34,9 +35,9 @@ credible intervals. Defaults to 0.95.}
 
 \item{type}{type of the impulse response. Possible choices are forecast error \code{"feir"}
 (default), orthogonalised \code{"oir"}, structural \code{"sir"}, generalised \code{"gir"},
-and structural generalised \code{"sgir"} impulse responses. For a structural model only
-\code{"sir"} and \code{"sgir"} are available; the other three require a non-structural
-model. See 'Details'.}
+structural generalised \code{"sgir"} and \code{"custom"} impulse responses. For a structural
+model only \code{"sir"} and \code{"sgir"} are available; the other four require a
+non-structural model. See 'Details'.}
 
 \item{cumulative}{logical specifying whether a cumulative IRF should be calculated.}
 
@@ -47,6 +48,10 @@ the median and the credible intervals of the posterior draws are returned.}
 \item{period}{integer. Index of the period, for which the IR should be generated.
 Only used for TVP or SV models. Default is \code{NULL}, so that the posterior draws of the last time period
 are used.}
+
+\item{impact}{the impact matrix of a \code{"custom"} impulse response, either a single
+\eqn{K \times K} matrix that identifies every posterior draw the same way, or a list of
+such matrices with one entry per draw. Ignored for every other value of \code{type}.}
 
 \item{...}{further arguments passed to or from other methods.}
 }
@@ -76,6 +81,12 @@ The recursion for \eqn{\Phi_i} needs the reduced form, i.e. \eqn{A_0^{-1} A_i} a
 \eqn{A_0^{-1} \Sigma A_0^{-1\prime}}, which only \code{"sir"} and \code{"sgir"} form. The other
 types are therefore not available for a structural model, and the two structural types not for
 any other.
+
+Custom impulse responses \eqn{\Theta^c_i} are calculated as \eqn{\Theta^c_i = \Phi_i P}, where
+\eqn{P} is the matrix supplied in argument \code{impact}. This is the route by which an
+identification that the package does not derive itself reaches the recursion; \code{shock}
+rescales the result but nothing normalises the columns of \eqn{P}, so an impact matrix that
+means to deliver unit shocks has to arrive that way.
 
 (Structural) Generalised impulse responses for variable \eqn{j}, i.e. \eqn{\Theta^g_ji} are calculated as
 \eqn{\Theta^g_{ji} = \sigma_{jj}^{-1/2} \Phi_i A_0^{-1} \Sigma e_j}, where \eqn{\sigma_{jj}} is the variance

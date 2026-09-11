@@ -11,9 +11,9 @@
 #' @param shock size of the shock.
 #' @param type type of the impulse response. Possible choices are forecast error \code{"feir"}
 #' (default), orthogonalised \code{"oir"}, structural \code{"sir"}, generalised \code{"gir"},
-#' and structural generalised \code{"sgir"} impulse responses. For a structural model only
-#' \code{"sir"} and \code{"sgir"} are available; the other three require a non-structural
-#' model. See 'Details'.
+#' structural generalised \code{"sgir"} and \code{"custom"} impulse responses. For a structural
+#' model only \code{"sir"} and \code{"sgir"} are available; the other four require a
+#' non-structural model. See 'Details'.
 #' @param cumulative logical specifying whether a cumulative IRF should be calculated.
 #' @param keep_draws logical specifying whether the function should return all draws of
 #' the posterior impulse response function. Defaults to \code{FALSE} so that
@@ -21,6 +21,9 @@
 #' @param period integer. Index of the period, for which the IR should be generated.
 #' Only used for TVP or SV models. Default is \code{NULL}, so that the posterior draws of the last time period
 #' are used.
+#' @param impact the impact matrix of a \code{"custom"} impulse response, either a single
+#' \eqn{K \times K} matrix that identifies every posterior draw the same way, or a list of
+#' such matrices with one entry per draw. Ignored for every other value of \code{type}.
 #' @param ... further arguments passed to or from other methods.
 #' 
 #' @details The function produces different types of impulse responses for the VAR model
@@ -42,6 +45,12 @@
 #' \eqn{A_0^{-1} \Sigma A_0^{-1\prime}}, which only \code{"sir"} and \code{"sgir"} form. The other
 #' types are therefore not available for a structural model, and the two structural types not for
 #' any other.
+#' 
+#' Custom impulse responses \eqn{\Theta^c_i} are calculated as \eqn{\Theta^c_i = \Phi_i P}, where
+#' \eqn{P} is the matrix supplied in argument \code{impact}. This is the route by which an
+#' identification that the package does not derive itself reaches the recursion; \code{shock}
+#' rescales the result but nothing normalises the columns of \eqn{P}, so an impact matrix that
+#' means to deliver unit shocks has to arrive that way.
 #' 
 #' (Structural) Generalised impulse responses for variable \eqn{j}, i.e. \eqn{\Theta^g_ji} are calculated as
 #' \eqn{\Theta^g_{ji} = \sigma_{jj}^{-1/2} \Phi_i A_0^{-1} \Sigma e_j}, where \eqn{\sigma_{jj}} is the variance
@@ -86,10 +95,15 @@
 #' @export
 #' @method irf bvarmodel
 irf.bvarmodel <- function(x, impulse = NULL, response = NULL, n_ahead = 5, ci = .95, shock = 1,
-                          type = "feir", cumulative = FALSE, keep_draws = FALSE, period = NULL, ...) {
+                          type = "feir", cumulative = FALSE, keep_draws = FALSE, period = NULL,
+                          impact = NULL, ...) {
   
-  if (!type %in% c("feir", "oir", "gir", "sir", "sgir")) {
+  if (!type %in% c("feir", "oir", "gir", "sir", "sgir", "custom")) {
     stop("Argument 'type' not known.")
+  }
+
+  if (type == "custom" && is.null(impact)) {
+    stop("Impulse responses of type \"custom\" need an impact matrix in argument 'impact'.")
   }
   
   if (x[["model"]][["p"]] == 0 & !x[["model"]][["structural"]]) {
@@ -120,6 +134,15 @@ irf.bvarmodel <- function(x, impulse = NULL, response = NULL, n_ahead = 5, ci = 
   if (!(is.numeric(shock) | shock %in% c("sd", "nsd"))) {
     stop("Invalid specification of argument 'shock'.")
   }
+
+  # The standard deviation based sizes read a scale off Sigma, which is a
+  # statement about the reduced form errors and not about the shocks a custom
+  # impact matrix defines. Whatever scale those shocks have is already in the
+  # columns of that matrix, so there is nothing here left to infer.
+  if (type == "custom" && !is.numeric(shock)) {
+    stop("Argument 'shock' must be numeric for an impulse response of type \"custom\": ",
+         "the size of a shock is carried by the impact matrix in argument 'impact'.")
+  }
   
   if (type %in% c("oir", "gir", "sgir") | shock %in% c("sd", "nsd")) {
     need_Sigma <- TRUE
@@ -137,7 +160,7 @@ irf.bvarmodel <- function(x, impulse = NULL, response = NULL, n_ahead = 5, ci = 
   # which slice of a row belongs to `period`, nor about folding a structural
   # model's contemporaneous block into the coefficients the recursion uses.
   A <- .collect_draws(x, period = period, need_A0 = need_A0,
-                      need_Sigma = need_Sigma)
+                      need_Sigma = need_Sigma, impact = impact)
 
   # Size of the shock, one value per draw. A numeric shock is the same for every
   # draw; the standard deviation based sizes are read off that draw's Sigma.

@@ -376,6 +376,33 @@
   proceeding without seasonal terms. They now sit inside the branch, as they
   already did in `create_bvarmodel()`.
 
+* **Fixed: the Minnesota prior computed a least squares estimate it did not
+  need, and failed on short samples because of it.** `minnesota_prior()`
+  obtained the residual covariance of the full VAR form before choosing between
+  `sigma = "AR"` and `sigma = "VAR"`, though only the latter ever reads it. That
+  estimate needs more observations than the model has regressors per equation;
+  the default does not, since it regresses each variable on its own lags and the
+  deterministic terms alone, which is a far smaller system. A model with more
+  regressors per equation than training observations therefore stopped at a
+  singular matrix from `solve()` under the default, for a quantity that was then
+  discarded -- five variables at four lags is twenty-one coefficients, which a
+  twenty-five quarter sample cannot carry once the lags are taken off, while
+  each of the univariate regressions on that same sample has five regressors
+  against twenty observations and is perfectly well conditioned. The estimate is
+  now obtained only where `sigma = "VAR"` asks for it. Priors are unchanged
+  wherever the old code ran, on both paths and for VAR and VEC models alike.
+
+    Both paths now also check that the sample can support the regression they
+    are about to run, and name the two counts. The VAR path needed that for more
+    than the message: `tt - nrow(x)` is the denominator of the covariance, so a
+    sample exactly as wide as the regressor set divided by zero and a narrower
+    one by a negative number, which returned an infinite or sign-flipped prior
+    variance wherever the inverse happened to succeed rather than failing at
+    all. `ssvs_prior()` gained the same check under `semiautomatic`, where the
+    least squares standard errors are genuinely used and the requirement
+    therefore stands; the fixed `tau` values remain available on a sample that
+    cannot meet it.
+
 * **Fixed: `ssvs_prior()` did not work on a `bvecmodel` at all.** The function
   read `object$data$y`, `$w`, `$x` and `$z`, the layout that preceded the move of
   the estimation sample under `object$data$train`, so every one of them was

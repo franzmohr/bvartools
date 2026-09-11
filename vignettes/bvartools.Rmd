@@ -8,13 +8,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
   
-```{r setup, include = FALSE}
-knitr::opts_chunk$set(
-collapse = TRUE,
-comment = "#>",
-fig.path = "figures/bvartools-"
-)
-```
+
 
 ## Introduction
 
@@ -67,7 +61,8 @@ This introduction to `bvartools` provides the code to set up and estimate a basi
 
 For both illustrations the data set E1 from Lütkepohl (2006) is used. It contains data on West German fixed investment, disposable income and consumption expenditures in billions of DM from 1960Q1 to 1982Q4. Like in the textbook only the first 73 observations of the log-differenced series are used.
 
-```{r data, fig.align='center', message=FALSE, fig.height=5, fig.width=4.5}
+
+``` r
 library(bvartools)
 
 # Load data
@@ -81,11 +76,17 @@ e1 <- window(e1, end = c(1978, 4))
 plot(e1)
 ```
 
+<div class="figure" style="text-align: center">
+<img src="figures/bvartools-data-1.png" alt="plot of chunk data"  />
+<p class="caption">plot of chunk data</p>
+</div>
+
 ### Setting up a model
 
 The `create_bvarmodel` function produces an object, which contains information on the specification of the VAR model that should be estimated. The following code specifies a VAR(2) model with an intercept term. The number of iterations and burn-in draws is already specified at this stage.
 
-```{r}
+
+``` r
 model <- create_bvarmodel(e1, p = 2, deterministic = "const",
                           iterations = 5000, burnin = 1000)
 ```
@@ -96,7 +97,8 @@ Note that the function is also capable of generating more than one model. For ex
 
 Function `add_priors` produces priors for the specified model(s) in object `model` and augments the object accordingly.
 
-```{r}
+
+``` r
 model <- add_priors(model,
                     coef = list(v_i = 0, v_i_det = 0),
                     sigma = list(df = 1, scale = .0001))
@@ -108,7 +110,8 @@ If researchers want to fine-tune individual prior specifications, this can be do
 
 Function `add_initial_values` adds initial values of posterior coefficients to `model_with_prior`. The default behaviour of the function is to obtain an LS estimate of the coefficients.
 
-```{r}
+
+``` r
 model <- add_initial_values(model, method = "ols")
 ```
 
@@ -116,7 +119,8 @@ model <- add_initial_values(model, method = "ols")
 
 `bvartools` comes with built-in posterior simulation functions from the [BayesTS](github.com/franzmohr/BayesTS) library. By using function `add_posterior_coefficients` the model input is forwarded to a posterior function and the output is added to the original object:
 
-```{r, message=FALSE, warning=FALSE}
+
+``` r
 model <- add_posterior_coefficients(model)
 ```
 
@@ -128,27 +132,119 @@ If researchers prefer to use their own posterior algorithms, this can be done by
 
 Posterior draws can be visually inspected by using the `plot` function. By default, it produces a series of histograms of all estimated coefficients.
 
-```{r, message=FALSE, warning=FALSE, fig.align='center', fig.height=5, fig.width=10}
+
+``` r
 plot(model)
 ```
 
+<div class="figure" style="text-align: center">
+<img src="figures/bvartools-unnamed-chunk-5-1.png" alt="plot of chunk unnamed-chunk-5"  />
+<p class="caption">plot of chunk unnamed-chunk-5</p>
+</div>
+
 Alternatively, the trace plot of the post-burnin draws can be draws by adding the argument `type = "trace"`:
 
-```{r, message=FALSE, warning=FALSE, fig.align='center', fig.height=5, fig.width=10}
+
+``` r
 plot(model, type = "trace")
 ```
+
+<div class="figure" style="text-align: center">
+<img src="figures/bvartools-unnamed-chunk-6-1.png" alt="plot of chunk unnamed-chunk-6"  />
+<p class="caption">plot of chunk unnamed-chunk-6</p>
+</div>
 
 ### Summary statistics
 
 Summary statistics can be obtained in the usual way using the `summary` method.
 
-```{r}
+
+``` r
 summary(model)
+#> 
+#> Bayesian VAR model with p = 2 
+#> 
+#> Endogenous variables: invest, income, cons
+#> 
+#> Variable: invest 
+#> 
+#>                 Mean        SD    Naive SD Time-series SD       2.5%        50%
+#> invest.l1 -0.3207879 0.1275376 0.001803654    0.001803654 -0.5653329 -0.3200097
+#> income.l1  0.1466697 0.5575240 0.007884580    0.007884580 -0.9213567  0.1339279
+#> cons.l1    0.9575871 0.6776994 0.009584116    0.009843550 -0.3717739  0.9429306
+#> invest.l2 -0.1603661 0.1269983 0.001796028    0.001724616 -0.4111780 -0.1609597
+#> income.l2  0.1156014 0.5502063 0.007781092    0.007781092 -0.9712658  0.1160853
+#> cons.l2    0.9304385 0.6778640 0.009586445    0.009586445 -0.3993888  0.9329577
+#> const     -1.6575483 1.7598797 0.024888457    0.024888457 -5.1614018 -1.6657271
+#>                 97.5%  
+#> invest.l1 -0.06182667 *
+#> income.l1  1.24131733  
+#> cons.l1    2.31000296  
+#> invest.l2  0.09151193  
+#> income.l2  1.19381876  
+#> cons.l2    2.24821348  
+#> const      1.79719476  
+#> 
+#> Variable: income 
+#> 
+#>                  Mean         SD     Naive SD Time-series SD        2.5%
+#> invest.l1  0.04399007 0.03293394 0.0004657562   0.0004657562 -0.02313772
+#> income.l1 -0.15459236 0.14086593 0.0019921451   0.0019921451 -0.42587369
+#> cons.l1    0.28876023 0.17203680 0.0024329677   0.0024329677 -0.04760686
+#> invest.l2  0.05023555 0.03340373 0.0004724000   0.0004724000 -0.01561042
+#> income.l2  0.02030163 0.14025851 0.0019835548   0.0019835548 -0.25096273
+#> cons.l2   -0.01124409 0.17482971 0.0024724655   0.0024724655 -0.35927256
+#> const      1.57970465 0.45043080 0.0063700535   0.0063700535  0.68725432
+#>                   50%     97.5%  
+#> invest.l1  0.04418813 0.1097132  
+#> income.l1 -0.15689705 0.1272605  
+#> cons.l1    0.28679476 0.6248260  
+#> invest.l2  0.05017646 0.1164950  
+#> income.l2  0.02107906 0.2944393  
+#> cons.l2   -0.01034635 0.3269383  
+#> const      1.58310647 2.4491724 *
+#> 
+#> Variable: cons 
+#> 
+#>                  Mean         SD     Naive SD Time-series SD          2.5%
+#> invest.l1 -0.00228647 0.02651117 0.0003749246   0.0003749246 -0.0537018422
+#> income.l1  0.22262025 0.11390790 0.0016109010   0.0016109010 -0.0004727884
+#> cons.l1   -0.26196075 0.13933626 0.0019705123   0.0019705123 -0.5438831370
+#> invest.l2  0.03370583 0.02569629 0.0003634004   0.0003634004 -0.0179882708
+#> income.l2  0.35236482 0.11129766 0.0015739866   0.0015739866  0.1358561053
+#> cons.l2   -0.01880930 0.13793927 0.0019507559   0.0019649836 -0.2942812548
+#> const      1.29228529 0.36141198 0.0051111372   0.0051111372  0.5797058523
+#>                    50%       97.5%  
+#> invest.l1 -0.002320809 0.051120394  
+#> income.l1  0.224809947 0.444583439  
+#> cons.l1   -0.260202627 0.005916102  
+#> invest.l2  0.034299870 0.083567347  
+#> income.l2  0.353515114 0.569736437 *
+#> cons.l2   -0.018574024 0.253039760  
+#> const      1.294836827 2.023875593 *
+#> 
+#> Variance-covariance matrix:
+#> 
+#>                     Mean        SD    Naive SD Time-series SD       2.5%
+#> invest_invest 22.2224926 4.0326382 0.057030117    0.061851857 15.6520720
+#> invest_income  0.7591471 0.7313015 0.010342165    0.011469089 -0.6404554
+#> invest_cons    1.3072440 0.6135175 0.008676447    0.009685174  0.2098998
+#> income_income  1.4505426 0.2604103 0.003682758    0.004069801  1.0320860
+#> income_cons    0.6445433 0.1693257 0.002394626    0.002693538  0.3636834
+#> cons_cons      0.9317947 0.1684815 0.002382688    0.002712761  0.6578444
+#>                      50%     97.5%  
+#> invest_invest 21.7529651 31.286960 *
+#> invest_income  0.7309012  2.245427  
+#> invest_cons    1.2657346  2.624571 *
+#> income_income  1.4203063  2.040913 *
+#> income_cons    0.6265057  1.029064 *
+#> cons_cons      0.9111912  1.312477 *
 ```
 
 As expected for an algrotihm with uninformative priors the posterior means are fairly close to the results of the frequentist estimator, which can be obtaind in the following way:
 
-```{r}
+
+``` r
 # Obtain data for LS estimator
 k <- model[["model"]][["k"]]
 y <- t(model[["data"]][["train"]][["y"]])
@@ -159,13 +255,18 @@ A_freq <- tcrossprod(y, x) %*% solve(tcrossprod(x))
 
 # Round estimates and print
 round(A_freq, 3)
+#>        invest.01 income.01 cons.01 invest.02 income.02 cons.02  const
+#> invest    -0.320     0.146   0.961    -0.161     0.115   0.934 -1.672
+#> income     0.044    -0.153   0.289     0.050     0.019  -0.010  1.577
+#> cons      -0.002     0.225  -0.264     0.034     0.355  -0.022  1.293
 ```
 
 ### Thin results
 
 The MCMC series in object `model` can be thinned using
 
-```{r}
+
+``` r
 model <- thin(model, thin = 10)
 ```
 
@@ -177,18 +278,26 @@ model <- thin(model, thin = 10)
 
 Forecasts are obtained in two steps. First, function `add_forecast_input` generates the data of the forecast periods, where deterministic terms can be provided in the argument `deterministic` and unmodelled variables in the argument `exogen`. If they are not provided, the function tries to obtain them from the model and gives a message, if it does not succeed. Second, function `add_posterior_forecasts` then simulates the forecasts.
 
-```{r}
+
+``` r
 model <- add_forecast_input(model, n_ahead = 10)
 model <- add_posterior_forecasts(model)
 ```
 
 Forecasts with credible bands can be extracted from the model using the `predict` function. The `n_ahead` argument can be used to set the given forecast horizon. However, the number of available forecast periods is limited to specification used in `add_forecast_input`.
 
-```{r forecasts, fig.width=5.5, fig.height=5.5}
+
+``` r
 bvar_pred <- predict(model, n_ahead = 10)
 
 plot(bvar_pred, n_pre = 20)
 ```
+
+![plot of chunk forecasts](figures/bvartools-forecasts-1.png)
+
+![plot of chunk forecasts](figures/bvartools-forecasts-2.png)
+
+![plot of chunk forecasts](figures/bvartools-forecasts-3.png)
 
 ### Impulse response analysis
 
@@ -196,27 +305,36 @@ plot(bvar_pred, n_pre = 20)
 
 #### Forecast error impulse response
 
-```{r feir, fig.width=5.5, fig.height=4.5}
+
+``` r
 FEIR <- irf(model, impulse = "income", response = "cons", n_ahead = 8)
 
 plot(FEIR, main = "Forecast Error Impulse Response", xlab = "Period", ylab = "Response")
 ```
 
+![plot of chunk feir](figures/bvartools-feir-1.png)
+
 #### Orthogonalised impulse response
 
-```{r oir, fig.width=5.5, fig.height=4.5}
+
+``` r
 OIR <- irf(model, impulse = "income", response = "cons", n_ahead = 8, type = "oir")
 
 plot(OIR, main = "Orthogonalised Impulse Response", xlab = "Period", ylab = "Response")
 ```
 
+![plot of chunk oir](figures/bvartools-oir-1.png)
+
 #### Generalised impulse response
 
-```{r gir, fig.width=5.5, fig.height=4.5}
+
+``` r
 GIR <- irf(model, impulse = "income", response = "cons", n_ahead = 8, type = "gir")
 
 plot(GIR, main = "Generalised Impulse Response", xlab = "Period", ylab = "Response")
 ```
+
+![plot of chunk gir](figures/bvartools-gir-1.png)
 
 ### Variance decomposition
 
@@ -224,21 +342,27 @@ plot(GIR, main = "Generalised Impulse Response", xlab = "Period", ylab = "Respon
 
 #### Forecast error variance decomposition 
 
-```{r fevd-oir, fig.width=5.5, fig.height=4.5}
+
+``` r
 bvar_fevd_oir <- fevd(model, response = "cons")
 
 plot(bvar_fevd_oir, main = "OIR-based FEVD of consumption")
 ```
 
+![plot of chunk fevd-oir](figures/bvartools-fevd-oir-1.png)
+
 #### Generalised forecast error variance decomposition 
 
 It is also possible to calculate FEVDs, which are based on generalised impulse responses (GIR). Note that these do not automatically add up to unity. However, this could be changed by adding `normalise_gir = TRUE` to the function's arguments.
 
-```{r fevd-gir, fig.width=5.5, fig.height=4.5}
+
+``` r
 bvar_fevd_gir <- fevd(model, response = "cons", type = "gir")
 
 plot(bvar_fevd_gir, main = "GIR-based FEVD of consumption")
 ```
+
+![plot of chunk fevd-gir](figures/bvartools-fevd-gir-1.png)
 
 ## Using `bvartools` with user-written algorithms
 
@@ -256,7 +380,8 @@ These steps are exactly the same as described above. Thus, the following Gibbs s
 
 ### A Gibbs sampler algorithm
 
-```{r flat prior}
+
+``` r
 # Reset random number generator for reproducibility
 set.seed(1234567)
 
@@ -309,7 +434,8 @@ for (draw in 1:draws) {
 
 The `bvar` function can be used to collect relevant output of the Gibbs sampler into a standardized object of class `bvarmodel`, which can be used by functions such as `predict` to obtain forecasts or `irf` for impulse respons analysis.
 
-```{r bvar-object}
+
+``` r
 y <- model[["data"]][["train"]][["y"]]
 
 bvar_est_two <- bvar(y = y,
@@ -321,8 +447,87 @@ bvar_est_two <- bvar(y = y,
 
 Since the output of function `draw_posterior` is an object of class `bvarmodel` as well, the calculation of summary statistics, forecasts, impulse responses and forecast error variance decompositions is performed as described above.
 
-```{r}
+
+``` r
 summary(bvar_est_two)
+#> 
+#> Bayesian VAR model with p = 2 
+#> 
+#> Endogenous variables: invest, income, cons
+#> 
+#> Variable: invest 
+#> 
+#>                 Mean        SD    Naive SD Time-series SD       2.5%        50%
+#> invest.l1 -0.3209994 0.1280102 0.001280102    0.001286291 -0.5734283 -0.3216256
+#> income.l1  0.1471972 0.5653707 0.005653707    0.005653707 -0.9601798  0.1439023
+#> cons.l1    0.9662216 0.6767544 0.006767544    0.006777551 -0.3452887  0.9560136
+#> invest.l2 -0.1600464 0.1263206 0.001263206    0.001304661 -0.4048865 -0.1611636
+#> income.l2  0.1035875 0.5518755 0.005518755    0.005439039 -0.9653135  0.1010048
+#> cons.l2    0.9347698 0.6893889 0.006893889    0.006893889 -0.4164533  0.9283409
+#> const     -1.6636708 1.7556026 0.017556026    0.017556026 -5.1131347 -1.6427596
+#>                 97.5%  
+#> invest.l1 -0.06831104 *
+#> income.l1  1.26083425  
+#> cons.l1    2.32033944  
+#> invest.l2  0.08747471  
+#> income.l2  1.19676048  
+#> cons.l2    2.28239234  
+#> const      1.81571899  
+#> 
+#> Variable: income 
+#> 
+#>                   Mean         SD     Naive SD Time-series SD        2.5%
+#> invest.l1  0.043538817 0.03282873 0.0003282873   0.0003339793 -0.02134167
+#> income.l1 -0.152587178 0.14272417 0.0014272417   0.0014354001 -0.43483749
+#> cons.l1    0.287002517 0.17214572 0.0017214572   0.0017583324 -0.05263822
+#> invest.l2  0.049836048 0.03214857 0.0003214857   0.0003214857 -0.01314576
+#> income.l2  0.019208561 0.13846407 0.0013846407   0.0013846407 -0.25073551
+#> cons.l2   -0.008993818 0.17079324 0.0017079324   0.0017079324 -0.34237291
+#> const      1.577324249 0.44978283 0.0044978283   0.0044978283  0.69836815
+#>                    50%     97.5%  
+#> invest.l1  0.043639581 0.1077596  
+#> income.l1 -0.152102393 0.1277937  
+#> cons.l1    0.284571823 0.6300760  
+#> invest.l2  0.049738086 0.1135096  
+#> income.l2  0.020273010 0.2888129  
+#> cons.l2   -0.009633005 0.3335256  
+#> const      1.573285781 2.4624095 *
+#> 
+#> Variable: cons 
+#> 
+#>                   Mean         SD     Naive SD Time-series SD        2.5%
+#> invest.l1 -0.002622984 0.02648002 0.0002648002   0.0002648002 -0.05469872
+#> income.l1  0.223177576 0.11668272 0.0011668272   0.0011668272 -0.00384140
+#> cons.l1   -0.263005581 0.13888117 0.0013888117   0.0013888117 -0.53917857
+#> invest.l2  0.033789248 0.02612399 0.0002612399   0.0002612399 -0.01770897
+#> income.l2  0.354398279 0.11138451 0.0011138451   0.0011302181  0.13155910
+#> cons.l2   -0.020350735 0.13877699 0.0013877699   0.0013661012 -0.29450792
+#> const      1.292295624 0.35785838 0.0035785838   0.0035785838  0.59071911
+#>                    50%       97.5%  
+#> invest.l1 -0.002433263 0.049704315  
+#> income.l1  0.222296885 0.449267333  
+#> cons.l1   -0.262529739 0.007515141  
+#> invest.l2  0.033990454 0.085768693  
+#> income.l2  0.356159445 0.571057742 *
+#> cons.l2   -0.019763112 0.254939286  
+#> const      1.290012200 2.006568642 *
+#> 
+#> Variance-covariance matrix:
+#> 
+#>                     Mean        SD    Naive SD Time-series SD       2.5%
+#> invest_invest 22.3072220 4.0178380 0.040178380    0.044990338 15.8398654
+#> invest_income  0.7560915 0.7312545 0.007312545    0.008046444 -0.6330327
+#> invest_cons    1.2955574 0.6021675 0.006021675    0.006781077  0.2156928
+#> income_income  1.4378139 0.2610475 0.002610475    0.002853997  1.0191372
+#> income_cons    0.6442296 0.1690491 0.001690491    0.001873490  0.3596336
+#> cons_cons      0.9347527 0.1680653 0.001680653    0.001871957  0.6610009
+#>                      50%     97.5%  
+#> invest_invest 21.7999153 31.326979 *
+#> invest_income  0.7285783  2.294064  
+#> invest_cons    1.2701401  2.576358 *
+#> income_income  1.4056673  2.037694 *
+#> income_cons    0.6279908  1.032157 *
+#> cons_cons      0.9140748  1.311783 *
 ```
 
 ## References

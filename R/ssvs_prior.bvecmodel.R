@@ -78,6 +78,16 @@ ssvs_prior.bvecmodel <- function(object, tau = c(0.05, 10), semiautomatic = NULL
 
       if (!is.null(semiautomatic)) {
         
+        # As in the VAR method: the least squares standard errors this scales
+        # by need more observations than there are regressors per equation.
+        if (tt <= nrow(x)) {
+          stop("Argument 'semiautomatic' scales the prior by least squares ",
+               "standard errors, but the training sample has ", tt,
+               " observations for ", nrow(x), " regressors per equation. ",
+               "Omit 'semiautomatic' to use the fixed values in 'tau', reduce ",
+               "the lag order, or provide a longer training sample.")
+        }
+
         ols <- tcrossprod(y, x) %*% solve(tcrossprod(x))
         u <- y - ols %*% x
         sigma_ols <- tcrossprod(u) / (tt - nrow(x)) # OLS error covariance matrix

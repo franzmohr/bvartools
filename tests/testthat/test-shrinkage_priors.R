@@ -81,6 +81,57 @@ test_that("minnesota_prior rejects non-positive shrinkage parameters", {
   expect_error(minnesota_prior(fx_var_model(), kappa3 = 0), "must be positive")
 })
 
+# A short training sample can have fewer observations than the VAR form has
+# regressors per equation. The default sigma = "AR" never needs that estimate --
+# it regresses each variable on its own lags alone -- so it has to keep working
+# there. Only sigma = "VAR" is entitled to complain, and it should say why.
+short_var_model <- function(end = c(1962, 4), p = 4) {
+  create_bvarmodel(stats::window(var_data(), end = end), p = p,
+                   deterministic = "const", iterations = 10, burnin = 5)
+}
+
+test_that("minnesota_prior works when the VAR form has too few observations", {
+  model <- short_var_model()
+  spec <- model[["model"]]
+  n_coeffs <- spec[["k"]] * (spec[["k"]] * spec[["p"]] + spec[["n"]])
+  prior <- minnesota_prior(model, kappa1 = 0.5, kappa2 = 0.1)
+
+  expect_identical(dim(prior[["mu"]]), c(n_coeffs, 1L))
+  expect_length(diag(prior[["v_inv"]]), n_coeffs)
+  expect_true(all(is.finite(diag(prior[["v_inv"]]))))
+  expect_true(all(diag(prior[["v_inv"]]) > 0))
+})
+
+test_that("minnesota_prior says why sigma = 'VAR' needs a longer sample", {
+  expect_error(minnesota_prior(short_var_model(), sigma = "VAR"),
+               "regressors per equation")
+})
+
+test_that("minnesota_prior says why its own AR regressions need a longer sample", {
+  expect_error(minnesota_prior(short_var_model(end = c(1962, 1))),
+               "such regressors")
+})
+
+test_that("minnesota_prior still returns a VAR error covariance when it can", {
+  k <- fx_var_model()[["model"]][["k"]]
+  prior <- minnesota_prior(fx_var_model(), kappa1 = 0.5, kappa2 = 0.1,
+                           sigma = "VAR")
+
+  expect_identical(dim(prior[["sigma_inv"]]), c(k, k))
+  expect_true(all(is.finite(prior[["sigma_inv"]])))
+})
+
+test_that("the same sample rules hold for VEC models", {
+  short_vec <- create_bvecmodel(stats::window(vec_data(), end = c(1976, 2)),
+                                p = 6, r = 1, const = "unrestricted",
+                                iterations = 10, burnin = 5)
+
+  expect_type(minnesota_prior(short_vec, kappa1 = 0.5, kappa2 = 0.1), "list")
+  expect_error(minnesota_prior(short_vec, kappa1 = 0.5, kappa2 = 0.1,
+                               sigma = "VAR"),
+               "regressors per equation")
+})
+
 test_that("minnesota_prior works for VEC models", {
   prior <- minnesota_prior(fx_vec_model(), kappa1 = 0.5, kappa2 = 0.1)
 
@@ -130,6 +181,21 @@ test_that("the semiautomatic SSVS prior scales with coefficient uncertainty", {
   expect_gt(length(unique(as.numeric(prior[["tau0"]]))), 1)
   expect_equal(as.numeric(prior[["tau1"]]) / as.numeric(prior[["tau0"]]),
                rep(100, nrow(prior[["tau0"]])))
+})
+
+test_that("the semiautomatic SSVS prior says when the sample is too short", {
+  # Unlike the Minnesota prior, this least squares estimate is genuinely
+  # needed, so a short sample is refused rather than worked around. The fixed
+  # 'tau' values remain available.
+  expect_error(ssvs_prior(short_var_model(), semiautomatic = c(0.1, 10)),
+               "regressors per equation")
+  expect_type(ssvs_prior(short_var_model(), tau = c(0.05, 10)), "list")
+
+  short_vec <- create_bvecmodel(stats::window(vec_data(), end = c(1976, 2)),
+                                p = 6, r = 1, const = "unrestricted",
+                                iterations = 10, burnin = 5)
+  expect_error(ssvs_prior(short_vec, semiautomatic = c(0.1, 10)),
+               "regressors per equation")
 })
 
 test_that("ssvs_prior is refused for model types it cannot handle", {

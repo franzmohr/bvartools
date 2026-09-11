@@ -7,15 +7,10 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r, include = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>",
-  fig.path = "figures/horse-races-"
-)
-```
 
-```{r setup, message=FALSE}
+
+
+``` r
 library(bvartools)
 ```
 
@@ -24,7 +19,8 @@ library(bvartools)
 
 ## Workflow
 
-```{r}
+
+``` r
 data("us_macrodata")
 
 #us_macrodata <- diff(us_macrodata)
@@ -35,7 +31,8 @@ expanding_window_start <- 2006
 
 ### Producing candidate models
 
-```{r}
+
+``` r
 # Shared specifications
 iterations <- 2000
 burnin <- 1000
@@ -44,7 +41,8 @@ burnin <- 1000
 
 First, create a series of traditional VAR models:
 
-```{r}
+
+``` r
 var_default <- create_bvarmodel(us_macrodata,
                                 p = 1:4,
                                 deterministic = "const",
@@ -62,7 +60,8 @@ var_default <- add_initial_values(var_default)
 
 Second, create a series of VAR models with stochastic search variable selection (SSVS):
 
-```{r}
+
+``` r
 var_ssvs <- create_bvarmodel(us_macrodata,
                             p = 4,
                             varsel = "ssvs",
@@ -82,7 +81,8 @@ var_ssvs <- add_initial_values(var_ssvs)
 
 Thrird, create a series of VAR models with Bayesian variable selection à la Korobilis (2013):
 
-```{r}
+
+``` r
 var_bvs <- create_bvarmodel(us_macrodata,
                             p = 4,
                             varsel = "bvs",
@@ -102,7 +102,8 @@ var_bvs <- add_initial_values(var_bvs)
 
 Use `combine_models` to make one object:
 
-```{r}
+
+``` r
 models <- combine_models(var_default,
                          var_ssvs,
                          var_bvs)
@@ -117,7 +118,8 @@ models <- combine_models(var_default,
 
 ### Draw posteriors
 
-```{r}
+
+``` r
 models <- add_posterior_coefficients(models)
 ```
 
@@ -126,14 +128,16 @@ models <- add_posterior_coefficients(models)
 
 Forecasts are obtained in two steps. First, function `add_forecast_input` generates the data of the forecast periods, where deterministic terms can be provided in the argument `deterministic` and unmodelled variables in the argument `exogen`. If they are not provided, the function tries to obtain them from the model and gives a message, if it does not succeed. Second, function `add_posterior_forecasts` then simulates the forecasts.
 
-```{r}
+
+``` r
 models <- add_forecast_input(models, n_ahead = 4)
 models <- add_posterior_forecasts(models)
 ```
 
 Calculate forecast errors on which out-of-sample selection criteria will be based:
 
-```{r}
+
+``` r
 models <- add_forecast_errors(models, test_sample = us_macrodata)
 ```
 
@@ -142,45 +146,148 @@ models <- add_forecast_errors(models, test_sample = us_macrodata)
 
 Use function `add_posterior_loglik` to add log-likelihoods, on which in-sample selection criteria will be based:
 
-```{r}
+
+``` r
 models <- add_posterior_loglik(models)
 ```
 
 Calculate in-sample and out-of-sample selection criteria:
 
-```{r}
+
+``` r
 sc <- selection_criteria(models)
 ```
 
 Compare the selection criteria. For out-of-sample criteria, the first model is used as a reference for comparison:
 
-```{r}
+
+``` r
 print(sc, relative = 1)
+#> 
+#> ------------------------------------------
+#> In-sample
+#> ------------------------------------------
+#> 
+#> Log-likelihood
+#> 
+#>            Mean Median Quantile (2.5%) Quantile (97.5%)
+#>  Model 1 -364.0 -363.7          -371.1           -358.9
+#>  Model 2 -301.2 -300.9          -310.0           -294.6
+#>  Model 3 -275.0 -274.7          -285.3           -266.7
+#>  Model 4 -276.7 -276.2          -287.8           -267.4
+#>  Model 5 -289.0 -288.9          -299.9           -279.3
+#>  Model 6 -284.7 -284.3          -293.3           -277.5
+#> 
+#> 
+#> Akaike Information Criterion (AIC)
+#> 
+#>           Mean Median Quantile (2.5%) Quantile (97.5%)
+#>  Model 1 735.9  735.3           725.8            750.1
+#>  Model 2 616.4  615.7           603.1            634.0
+#>  Model 3 570.0  569.3           553.4            590.5
+#>  Model 4 579.4  578.5           560.7            601.7
+#>  Model 5 604.0  603.8           584.6            625.9
+#>  Model 6 595.3  594.7           581.0            612.6
+#> 
+#> 
+#> Bayesian Information Criterion (BIC)
+#> 
+#>           Mean Median Quantile (2.5%) Quantile (97.5%)
+#>  Model 1 748.9  748.3           738.8            763.1
+#>  Model 2 639.2  638.5           625.9            656.8
+#>  Model 3 602.5  601.8           585.9            623.1
+#>  Model 4 621.6  620.8           603.0            643.9
+#>  Model 5 646.3  646.1           626.9            668.2
+#>  Model 6 637.6  637.0           623.3            654.9
+#> 
+#> 
+#> Hannan-Quinn Criterion (HQ)
+#> 
+#>           Mean Median Quantile (2.5%) Quantile (97.5%)
+#>  Model 1 741.2  740.6           731.1            755.4
+#>  Model 2 625.7  625.0           612.3            643.2
+#>  Model 3 583.2  582.5           566.6            603.7
+#>  Model 4 596.5  595.6           577.8            618.8
+#>  Model 5 621.1  620.9           601.7            643.0
+#>  Model 6 612.5  611.8           598.1            629.7
+#> 
+#> 
+#> ------------------------------------------
+#> Out-of-sample
+#> ------------------------------------------
+#> 
+#> Mean absolute forecast errors (MAFE)
+#> 
+#>  Variable h Model 1 Model 2 Model 3 Model 4 Model 5 Model 6
+#>        Dp 1       1  0.8338  0.8753  0.8903  0.8947  0.9009
+#>         u 1       1  1.1574  1.2215  1.2382  1.0420  1.0309
+#>         r 1       1  1.2123  1.1261  1.0717  1.0924  1.0684
+#>        Dp 2       1  0.8763  0.8485  0.8505  0.8415  0.8490
+#>         u 2       1  1.2512  1.2838  1.3079  1.1415  1.1581
+#>         r 2       1  1.1069  1.0441  1.0431  1.0273  1.0096
+#>        Dp 3       1  0.9090  0.9012  0.9315  0.8643  0.8906
+#>         u 3       1  1.3165  1.3200  1.3390  1.2081  1.2306
+#>         r 3       1  1.1109  1.0147  1.0053  1.0100  0.9944
+#>        Dp 4       1  0.9489  0.9436  0.9718  0.9116  0.9356
+#>         u 4       1  1.3535  1.3966  1.3961  1.2589  1.2761
+#>         r 4       1  1.1118  1.0344  1.0478  1.0261  1.0244
+#> 
+#> 
+#> Root mean squared forecast errors (RMSFE)
+#> 
+#>  Variable h Model 1 Model 2 Model 3 Model 4 Model 5 Model 6
+#>        Dp 1       1  0.8306  0.8903  0.9067  0.9127  0.9069
+#>         u 1       1  1.1068  1.1577  1.1717  1.0136  1.0042
+#>         r 1       1  1.1764  1.0984  1.0496  1.0773  1.0500
+#>        Dp 2       1  0.8794  0.8485  0.8497  0.8314  0.8403
+#>         u 2       1  1.2319  1.2588  1.2797  1.1393  1.1493
+#>         r 2       1  1.1067  1.0448  1.0443  1.0295  1.0124
+#>        Dp 3       1  0.9075  0.9215  0.9485  0.8784  0.9190
+#>         u 3       1  1.3097  1.3161  1.3337  1.2139  1.2309
+#>         r 3       1  1.1158  1.0193  1.0082  1.0173  0.9987
+#>        Dp 4       1  0.9484  0.9662  0.9876  0.9263  0.9379
+#>         u 4       1  1.3475  1.3883  1.3849  1.2610  1.2765
+#>         r 4       1  1.1187  1.0451  1.0500  1.0324  1.0322
 ```
 
 
 #### In-sample plots
 
-```{r, fig.width=5.5, fig.height=4.5}
+
+``` r
 plot(sc, criterion = "BIC")
 ```
 
-```{r, fig.width=5.5, fig.height=4.5}
+![plot of chunk unnamed-chunk-14](figures/horse-races-unnamed-chunk-14-1.png)
+
+
+``` r
 plot(sc, criterion = "AIC")
 ```
 
+![plot of chunk unnamed-chunk-15](figures/horse-races-unnamed-chunk-15-1.png)
+
 #### Out-of-sample plots
 
-```{r, fig.width=5.5, fig.height=4.5}
+
+``` r
 plot(sc, criterion = "FE")
 ```
-```{r, fig.width=5.5, fig.height=4.5}
+
+![plot of chunk unnamed-chunk-16](figures/horse-races-unnamed-chunk-16-1.png)
+
+``` r
 plot(sc, criterion = "AFE")
 ```
 
-```{r, fig.width=5.5, fig.height=4.5}
+![plot of chunk unnamed-chunk-17](figures/horse-races-unnamed-chunk-17-1.png)
+
+
+``` r
 plot_forecast_errors_by_period(models, criterion = "FE")
 ```
+
+![plot of chunk unnamed-chunk-18](figures/horse-races-unnamed-chunk-18-1.png)
 
 
 ## Adding forecasts from other sources
@@ -199,7 +306,8 @@ forecasted variables, which have to be obtained from a statistical office. Any o
 source can be used in the same way, as long as the forecasts are provided in long
 format with one point forecast per row.
 
-```{r, eval = FALSE}
+
+``` r
 # Forecasts of Austrian institutions for Austria
 fcst <- read.csv("https://github.com/franzmohr/macroprojections/raw/master/data/forecasts.csv")
 fcst <- fcst[fcst[["ctry"]] == "122" &
@@ -227,7 +335,8 @@ They are specified in the arguments `period`, `origin`, `variable` and `value`,
 where `origin` contains the date, at which a forecast was published. Argument `by`
 produces one object per forecaster:
 
-```{r, eval = FALSE}
+
+``` r
 external <- create_external_forecast(fcst, model,
                                      period = "year",
                                      origin = "pubdate",
@@ -248,7 +357,8 @@ forecaster enters the comparison twice.
 From here on the external forecasts follow the workflow of the models. The functions,
 which add priors, initial values or posterior draws, are without effect for them:
 
-```{r, eval = FALSE}
+
+``` r
 models <- combine_models(model, external)
 
 models <- add_forecast_errors(models, test_sample = actual)

@@ -45,7 +45,7 @@ Rcpp::List dfmalg(Rcpp::List object) {
     prior_phi_mu = Rcpp::as<arma::mat>(priors_phi["mu"]);
     prior_phi_Vi = Rcpp::as<arma::mat>(priors_phi["v_i"]);
   }
-  // Simga_v
+  // Sigma_v
   Rcpp::List priors_sigma_v = priors["sigma_v"];
   arma::vec prior_sigma_v_shape = priors_sigma_v["shape"];
   arma::vec prior_sigma_v_rate = priors_sigma_v["rate"];

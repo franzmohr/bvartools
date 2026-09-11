@@ -32,7 +32,7 @@ and measurement equation
 \deqn{y_t = Z_{t} a_t + u_t}
 with \eqn{v_t \sim N(0, \Sigma_{v})} and \eqn{u_t \sim N(0, \Sigma_{u,t})}
 the function produces a draw of the constant diagonal error variances matrix of the
-state equation \eqn{\Simga_v}.
+state equation \eqn{\Sigma_v}.
 }
 \examples{
 k <- 10 # Number of artificial coefficients

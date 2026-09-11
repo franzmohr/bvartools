@@ -531,7 +531,7 @@ post_coint_kls_sur <- function(y, beta, w, sigma_i, v_i, p_tau_i, g_i, x = NULL,
 #' \deqn{y_t = Z_{t} a_t + u_t}
 #' with \eqn{u_t \sim N(0, \Sigma_{u})}
 #' the function produces a draw of the constant diagonal error variance matrix
-#' \eqn{\Simga_u}.
+#' \eqn{\Sigma_u}.
 #' 
 #' @references
 #' Chan, J., Koop, G., Poirier, D. J., & Tobias J. L. (2019). \emph{Bayesian econometric methods}
@@ -578,7 +578,7 @@ post_gamma_measurement_variance <- function(u, shape_prior, rate_prior, inverse)
 #' \deqn{y_t = Z_{t} a_t + u_t}
 #' with \eqn{v_t \sim N(0, \Sigma_{v})} and \eqn{u_t \sim N(0, \Sigma_{u,t})}
 #' the function produces a draw of the constant diagonal error variances matrix of the
-#' state equation \eqn{\Simga_v}.
+#' state equation \eqn{\Sigma_v}.
 #' 
 #' @references
 #' Chan, J., Koop, G., Poirier, D. J., & Tobias J. L. (2019). \emph{Bayesian econometric methods}

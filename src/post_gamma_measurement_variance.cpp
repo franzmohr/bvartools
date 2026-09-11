@@ -16,7 +16,7 @@
 //' \deqn{y_t = Z_{t} a_t + u_t}
 //' with \eqn{u_t \sim N(0, \Sigma_{u})}
 //' the function produces a draw of the constant diagonal error variance matrix
-//' \eqn{\Simga_u}.
+//' \eqn{\Sigma_u}.
 //' 
 //' @references
 //' Chan, J., Koop, G., Poirier, D. J., & Tobias J. L. (2019). \emph{Bayesian econometric methods}

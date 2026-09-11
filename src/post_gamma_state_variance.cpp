@@ -19,7 +19,7 @@
 //' \deqn{y_t = Z_{t} a_t + u_t}
 //' with \eqn{v_t \sim N(0, \Sigma_{v})} and \eqn{u_t \sim N(0, \Sigma_{u,t})}
 //' the function produces a draw of the constant diagonal error variances matrix of the
-//' state equation \eqn{\Simga_v}.
+//' state equation \eqn{\Sigma_v}.
 //' 
 //' @references
 //' Chan, J., Koop, G., Poirier, D. J., & Tobias J. L. (2019). \emph{Bayesian econometric methods}

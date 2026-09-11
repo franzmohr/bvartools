@@ -8,13 +8,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
   
-```{r setup, include = FALSE}
-knitr::opts_chunk$set(
-collapse = TRUE,
-comment = "#>",
-fig.path = "figures/minnesota-prior-"
-)
-```
+
 
 ## Introduction
 
@@ -33,7 +27,8 @@ where $\sigma_{i}$ is the residual standard deviation of variable $i$ of an unre
 
 This vignette illustrates how to use the `bvartools` package to work with the Minnesota prior by reproducing the results of exercise 20.2 in Chan et al. (2020), which uses the quarterly time series for the US CPI inflation rate, unemployment rate, and Fed Funds rate from 1959Q2 to 2007Q4.
 
-```{r data, fig.align='center', message=FALSE, fig.height=5, fig.width=4.5}
+
+``` r
 library(bvartools)
 
 # Load data
@@ -43,13 +38,19 @@ data("us_macrodata")
 plot(us_macrodata)
 ```
 
+<div class="figure" style="text-align: center">
+<img src="figures/minnesota-prior-data-1.png" alt="plot of chunk data"  />
+<p class="caption">plot of chunk data</p>
+</div>
+
 ## Workflow for VAR models
 
 ### Create a model
 
 The `create_bvarmodel` function produces an object, which contains information on the specification of the VAR model that should be estimated. The following code specifies a VAR(1) model with an intercept term. The number of iterations and burn-in draws is already specified at this stage.
 
-```{r}
+
+``` r
 model <- create_bvarmodel(us_macrodata, p = 1, deterministic = "const",
                           iterations = 5000, burnin = 1000)
 ```
@@ -60,7 +61,8 @@ model <- create_bvarmodel(us_macrodata, p = 1, deterministic = "const",
 
 Minnesota priors can be obtained with function `minnesota_prior`.
 
-```{r}
+
+``` r
 minn <- minnesota_prior(
   model,
   kappa1 = 0.5,
@@ -75,14 +77,24 @@ minn <- minnesota_prior(
 
 To check the output of the function, access element `mu`, i.e. the prior coefficient means of matrix $A$:
 
-```{r}
+
+``` r
 matrix(minn[["mu"]], 3)
+#>      [,1] [,2] [,3] [,4]
+#> [1,]    0    0    0    0
+#> [2,]    0    0    0    0
+#> [3,]    0    0    0    0
 ```
 
 Also check the corresponding prior coefficient variances:
 
-```{r}
+
+``` r
 matrix(1 / diag(minn[["v_inv"]]), 3)
+#>           [,1]     [,2]       [,3]     [,4]
+#> [1,] 0.5000000 0.455034 0.04993539 18.42749
+#> [2,] 0.1373524 0.500000 0.02743498 10.12424
+#> [3,] 1.2516173 2.278114 0.50000000 92.25667
 ```
 
 
@@ -90,7 +102,8 @@ matrix(1 / diag(minn[["v_inv"]]), 3)
 
 Function `add_priors` produces priors for the specified model(s) in object `model` and augments the object accordingly.
 
-```{r}
+
+``` r
 model <- add_priors(model,
                     coef = list(minnesota = list(kappa1 = 0.5, kappa2 = 0.5, kappa3 = NULL, kappa4 = 200)),
                     sigma = list(df = 1, scale = .0001))
@@ -100,14 +113,16 @@ model <- add_priors(model,
 
 Function `add_initial_values` adds initial values of posterior coefficients. The default behaviour of the function is to obtain an LS estimate of the coefficients.
 
-```{r}
+
+``` r
 model <- add_initial_values(model, method = "ols")
 ```
 
 ### Obtaining posterior draws
 
 
-```{r, message=FALSE, warning=FALSE}
+
+``` r
 # Reset random number generator for reproducibility
 set.seed(1234567)
 
@@ -149,7 +164,8 @@ for (draw in 1:draws) {
 
 Collect the results in a new `bvarmodel` object using `bvar`.
 
-```{r}
+
+``` r
 result <- bvar(y = model[["data"]][["train"]][["y"]],
                x = model[["data"]][["train"]][["x"]],
                A = draws_a[1:9,],
@@ -159,8 +175,62 @@ result <- bvar(y = model[["data"]][["train"]][["y"]],
 
 Look at the summary statistics, which are practically the same as in example 20.3 in Chan et al. (2020).
 
-```{r}
+
+``` r
 summary(result)
+#> 
+#> Bayesian VAR model with p = 1 
+#> 
+#> Endogenous variables: Dp, u, r
+#> 
+#> Variable: Dp 
+#> 
+#>              Mean         SD     Naive SD Time-series SD        2.5%
+#> Dp.l1  0.70052323 0.05830359 0.0005830359   0.0005830359  0.58474396
+#> u.l1  -0.02834767 0.02253303 0.0002253303   0.0002253303 -0.07242061
+#> r.l1   0.03872390 0.01372295 0.0001372295   0.0001372295  0.01152278
+#> const  0.24130631 0.13149565 0.0013149565   0.0013345137 -0.01756822
+#>               50%      97.5%  
+#> Dp.l1  0.70121691 0.81394601 *
+#> u.l1  -0.02872595 0.01588846  
+#> r.l1   0.03869722 0.06558172 *
+#> const  0.24208198 0.50084070  
+#> 
+#> Variable: u 
+#> 
+#>             Mean         SD     Naive SD Time-series SD         2.5%        50%
+#> Dp.l1 0.08779184 0.04261885 0.0004261885   4.261885e-04  0.003171550 0.08795105
+#> u.l1  0.95344411 0.01684402 0.0001684402   1.684402e-04  0.920615872 0.95344052
+#> r.l1  0.02249685 0.01009816 0.0001009816   9.809376e-05  0.002773699 0.02256340
+#> const 0.04564581 0.09796144 0.0009796144   9.796144e-04 -0.145197197 0.04584607
+#>            97.5%  
+#> Dp.l1 0.17168358 *
+#> u.l1  0.98659460 *
+#> r.l1  0.04220645 *
+#> const 0.23552307  
+#> 
+#> Variable: r 
+#> 
+#>              Mean         SD     Naive SD Time-series SD        2.5%        50%
+#> Dp.l1  0.21368607 0.12694163 0.0012694163   0.0012694163 -0.03521600  0.2150704
+#> u.l1  -0.05073181 0.05091509 0.0005091509   0.0004982974 -0.15109826 -0.0511488
+#> r.l1   0.92632376 0.03058879 0.0003058879   0.0003011107  0.86705444  0.9262521
+#> const  0.53204930 0.29599748 0.0029599748   0.0028683305 -0.05292146  0.5336643
+#>            97.5%  
+#> Dp.l1 0.46262497  
+#> u.l1  0.04735833  
+#> r.l1  0.98690579 *
+#> const 1.10581747  
+#> 
+#> Variance-covariance matrix:
+#> 
+#>            Mean SD Naive SD Time-series SD      2.5%       50%     97.5%  
+#> Dp_Dp 0.1842749  0        0              0 0.1842749 0.1842749 0.1842749 *
+#> Dp_u  0.0000000  0        0              0 0.0000000 0.0000000 0.0000000  
+#> Dp_r  0.0000000  0        0              0 0.0000000 0.0000000 0.0000000  
+#> u_u   0.1012424  0        0              0 0.1012424 0.1012424 0.1012424 *
+#> u_r   0.0000000  0        0              0 0.0000000 0.0000000 0.0000000  
+#> r_r   0.9225667  0        0              0 0.9225667 0.9225667 0.9225667 *
 ```
 
 

@@ -86,9 +86,11 @@ add_posterior_coefficients.bvecmodel <- function(object, posterior_function = NU
         
         algorithm <- object[["model"]][["algorithm"]]
         
-        if (algorithm %in% c("VecNormalGamma", "VecNormalWishart", "VecNormalStochvol",
-                             "VecTvpGamma", "VecTvpWishart", "VecTvpStochvol")) {
+        if (algorithm %in% c("VecKlgs2010", "VecNormalGamma", "VecNormalWishart",
+                             "VecNormalStochvol", "VecTvpGamma", "VecTvpWishart",
+                             "VecTvpStochvol")) {
           object <- switch(algorithm,
+                           VecKlgs2010 = .VecKlgs2010Coefficients(object),
                            VecNormalGamma = .VecNormalGammaCoefficients(object),
                            VecNormalStochvol = .VecNormalStochvolCoefficients(object),
                            VecNormalWishart = .VecNormalWishartCoefficients(object),

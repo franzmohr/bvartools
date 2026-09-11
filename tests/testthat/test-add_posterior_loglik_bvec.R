@@ -6,13 +6,13 @@
 # over error and coefficient processes impossible.
 
 vec_fitted <- function(tvp = FALSE, error = "wishart", iterations = 30,
-                       burnin = 15) {
+                       burnin = 15, algorithm = NULL) {
 
   data("us_macrodata", envir = environment())
 
   object <- create_bvecmodel(data = us_macrodata, p = 2,
                              const = "unrestricted", r = 1,
-                             tvp = tvp, error = error,
+                             tvp = tvp, error = error, algorithm = algorithm,
                              iterations = iterations, burnin = burnin)
 
   coef_prior <- list(v_i = 1, v_i_det = 1 / 10)
@@ -42,13 +42,18 @@ test_that("every error correction algorithm has a log-likelihood", {
     list(tvp = FALSE, error = "gamma",     algorithm = "VecNormalGamma"),
     list(tvp = TRUE,  error = "wishart",   algorithm = "VecTvpWishart"),
     list(tvp = TRUE,  error = "sv",        algorithm = "VecTvpStochvol"),
-    list(tvp = TRUE,  error = "gamma",     algorithm = "VecTvpGamma")
+    list(tvp = TRUE,  error = "gamma",     algorithm = "VecTvpGamma"),
+    # The cointegration space algorithm of Koop, Leon-Gonzalez and Strachan
+    # (2010) is the one algorithm asked for by name rather than implied by the
+    # coefficient and error processes, so it needs the `request` field.
+    list(request = "KLGS2010", error = "wishart", algorithm = "VecKlgs2010")
   )
 
   for (specification in specifications) {
 
-    object <- vec_fitted(tvp = specification[["tvp"]],
-                         error = specification[["error"]])
+    object <- vec_fitted(tvp = isTRUE(specification[["tvp"]]),
+                         error = specification[["error"]],
+                         algorithm = specification[["request"]])
 
     expect_equal(object[["model"]][["algorithm"]],
                  specification[["algorithm"]])

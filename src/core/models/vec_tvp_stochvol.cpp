@@ -302,8 +302,18 @@ VecTvpStochvolDraws VecTvpStochvolSampler::draw_coefficients(const VecTvpStochvo
 
                 fill_z_beta(z_b, a, w_t, k, rank);
 
-                beta = kalman_durbin_koopman_2002(ystar, z_b, u_sigma, beta_sigma, beta_B, beta0,
-                                                  beta_sigma)
+                // rho * beta0, not beta0. The smoother's sixth argument is the
+                // prior mean of the state the *first* observation loads on, and
+                // it does not put the transition through it -- so what belongs
+                // there is beta_1's mean under beta_1 = rho beta_0 + eta, which
+                // is the state before the sample carried forward one period.
+                // Passing beta_0 itself would be the random walk's answer, and
+                // is only right at rho = 1; below it the smoother and the
+                // beta_0 draw a few lines down would be fitting different
+                // models, one centring beta_1 over beta_0 and the other over
+                // rho beta_0.
+                beta = kalman_durbin_koopman_2002(ystar, z_b, u_sigma, beta_sigma, beta_B,
+                                                  rho * beta0, beta_sigma)
                            .cols(0, tt - 1);
 
                 // Draw beta0

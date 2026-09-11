@@ -1,5 +1,19 @@
 # bvartools (development version)
 
+* **A time varying cointegration space was centred on the wrong state in the
+  first period.** The simulation smoother is handed the prior mean of the state
+  the first observation loads on, and it does not put the transition through
+  it; `VecTvpWishart`, `VecTvpGamma` and `VecTvpStochvol` were passing
+  `beta_0` there unchanged, which is the random walk's answer and is right
+  only at `rho = 1`. Below one the smoother was centring `beta_1`
+  over `beta_0` while the draw of `beta_0` was centring it over
+  `rho beta_0`. **Draws of those three algorithms change** wherever
+  `rho` is below one, which is every setting the package suggests; the
+  move is about a tenth of a percent at `rho = 0.99` and smaller at the
+  0.999 the examples use. No other algorithm is affected. Fixed in the vendored
+  BayesTS core, which verified that every other model's draws are unchanged
+  digit for digit.
+
 * **Sign restrictions.** `add_sign_restrictions()` identifies the shocks of a
   VAR by the signs of the impulse responses they produce, and `irf()`, `fevd()`
   and `spillover()` use that identification under `type = "sign"`. The

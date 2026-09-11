@@ -237,7 +237,7 @@ write_to_hdf5.bvecmodel <- function(object, filename, group = "", ...) {
     }
 
     ## Draws kept on their own ----
-    for (i in c("loglik", "forecast", "forecast_error")) {
+    for (i in c("loglik", "forecast", "forecast_errors")) {
       if (i %in% names(object[["posterior"]])) {
         draws <- object[["posterior"]][[i]]
         .hdf5_write(group_posterior, i, draws, .hdf5_draws_attrs(draws))

@@ -526,3 +526,54 @@ test_that("draws kept outside a group are still read", {
                unclass(object[["posterior"]][["loglik"]]),
                ignore_attr = TRUE)
 })
+
+# A fitted VAR carrying forecasts and the errors they made against the periods
+# held back from the estimation sample. Local to this file.
+forecast_errors_fitted_h5 <- function() {
+  cached_fixture("forecast_errors_hdf5", {
+    data <- var_data()
+    train <- stats::window(data, end = c(1977, 4))
+    test <- stats::window(data, start = c(1978, 1))
+
+    object <- create_bvarmodel(train, p = 1, deterministic = "const",
+                               iterations = fx_iterations, burnin = fx_burnin)
+    object <- add_priors(object, coef = list(v_i = 1),
+                         sigma = list(df = 3, scale = 1))
+    set.seed(987654)
+    object <- add_posterior_coefficients(add_initial_values(object))
+    object <- add_forecast_input(object, n_ahead = 4)
+    object <- add_posterior_forecasts(object)
+    add_forecast_errors(object, test_sample = test)
+  })
+}
+
+test_that("forecast errors survive the round trip", {
+  object <- forecast_errors_fitted_h5()
+  # The name the rest of the package uses. The writers looked for the singular
+  # of it, which nothing produces, so the errors were dropped on the way out
+  # and the loss was visible only on reading the file back.
+  expect_true("forecast_errors" %in% names(object[["posterior"]]))
+
+  path <- temp_h5_file()
+  write_to_hdf5(object, filename = path)
+  restored <- read_model_from_hdf5(path)
+
+  expect_true("forecast_errors" %in% names(restored[["posterior"]]))
+  expect_equal(unclass(restored[["posterior"]][["forecast_errors"]]),
+               unclass(object[["posterior"]][["forecast_errors"]]),
+               ignore_attr = TRUE)
+  # The forecasts they were computed from come back as well.
+  expect_equal(unclass(restored[["posterior"]][["forecast"]]),
+               unclass(object[["posterior"]][["forecast"]]),
+               ignore_attr = TRUE)
+})
+
+test_that("a restored model still reports its forecast errors", {
+  path <- temp_h5_file()
+  write_to_hdf5(forecast_errors_fitted_h5(), filename = path)
+  restored <- read_model_from_hdf5(path)
+
+  # Which is what they are stored for.
+  expect_equal(get_forecast_errors(restored),
+               get_forecast_errors(forecast_errors_fitted_h5()))
+})

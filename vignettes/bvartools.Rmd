@@ -23,7 +23,7 @@ The package `bvartools` implements functions for Bayesian inference of linear ti
   * Researchers can also choose to use they own algorithms.
 - *Evaluation*
   * Traditional summary statistics for individual coefficients
-  * In-sample performance measures (LL, AIC, BIC, HQ)
+  * In-sample performance measures (LL, AIC, BIC, HQ, WAIC, LOOIC)
   * Out-of-sample performance (MAFE, RMSFE)
 - *Application*
   * Forecasts
@@ -140,6 +140,12 @@ plot(model)
 <div class="figure" style="text-align: center">
 <img src="figures/bvartools-unnamed-chunk-5-1.png" alt="plot of chunk unnamed-chunk-5"  />
 <p class="caption">plot of chunk unnamed-chunk-5</p>
+</div><div class="figure" style="text-align: center">
+<img src="figures/bvartools-unnamed-chunk-5-2.png" alt="plot of chunk unnamed-chunk-5"  />
+<p class="caption">plot of chunk unnamed-chunk-5</p>
+</div><div class="figure" style="text-align: center">
+<img src="figures/bvartools-unnamed-chunk-5-3.png" alt="plot of chunk unnamed-chunk-5"  />
+<p class="caption">plot of chunk unnamed-chunk-5</p>
 </div>
 
 Alternatively, the trace plot of the post-burnin draws can be draws by adding the argument `type = "trace"`:
@@ -151,6 +157,12 @@ plot(model, type = "trace")
 
 <div class="figure" style="text-align: center">
 <img src="figures/bvartools-unnamed-chunk-6-1.png" alt="plot of chunk unnamed-chunk-6"  />
+<p class="caption">plot of chunk unnamed-chunk-6</p>
+</div><div class="figure" style="text-align: center">
+<img src="figures/bvartools-unnamed-chunk-6-2.png" alt="plot of chunk unnamed-chunk-6"  />
+<p class="caption">plot of chunk unnamed-chunk-6</p>
+</div><div class="figure" style="text-align: center">
+<img src="figures/bvartools-unnamed-chunk-6-3.png" alt="plot of chunk unnamed-chunk-6"  />
 <p class="caption">plot of chunk unnamed-chunk-6</p>
 </div>
 
@@ -169,76 +181,76 @@ summary(model)
 #> Variable: invest 
 #> 
 #>                 Mean        SD    Naive SD Time-series SD       2.5%        50%
-#> invest.l1 -0.3207879 0.1275376 0.001803654    0.001803654 -0.5653329 -0.3200097
-#> income.l1  0.1466697 0.5575240 0.007884580    0.007884580 -0.9213567  0.1339279
-#> cons.l1    0.9575871 0.6776994 0.009584116    0.009843550 -0.3717739  0.9429306
-#> invest.l2 -0.1603661 0.1269983 0.001796028    0.001724616 -0.4111780 -0.1609597
-#> income.l2  0.1156014 0.5502063 0.007781092    0.007781092 -0.9712658  0.1160853
-#> cons.l2    0.9304385 0.6778640 0.009586445    0.009586445 -0.3993888  0.9329577
-#> const     -1.6575483 1.7598797 0.024888457    0.024888457 -5.1614018 -1.6657271
+#> invest.l1 -0.3176638 0.1264314 0.001788010    0.001788010 -0.5625857 -0.3172985
+#> income.l1  0.1485968 0.5658257 0.008001984    0.008046275 -0.9846626  0.1627844
+#> cons.l1    0.9640524 0.6756543 0.009555195    0.009555195 -0.4082962  0.9687384
+#> invest.l2 -0.1600478 0.1252962 0.001771956    0.001771956 -0.4008769 -0.1597934
+#> income.l2  0.1148167 0.5451537 0.007709637    0.007709637 -0.9386536  0.1103539
+#> cons.l2    0.9424856 0.6709273 0.009488345    0.009488345 -0.3655568  0.9389485
+#> const     -1.7097287 1.7642066 0.024949649    0.024949649 -5.1666185 -1.7006067
 #>                 97.5%  
-#> invest.l1 -0.06182667 *
-#> income.l1  1.24131733  
-#> cons.l1    2.31000296  
-#> invest.l2  0.09151193  
-#> income.l2  1.19381876  
-#> cons.l2    2.24821348  
-#> const      1.79719476  
+#> invest.l1 -0.06512363 *
+#> income.l1  1.27466072  
+#> cons.l1    2.25156511  
+#> invest.l2  0.08418013  
+#> income.l2  1.18615926  
+#> cons.l2    2.26149496  
+#> const      1.76177069  
 #> 
 #> Variable: income 
 #> 
 #>                  Mean         SD     Naive SD Time-series SD        2.5%
-#> invest.l1  0.04399007 0.03293394 0.0004657562   0.0004657562 -0.02313772
-#> income.l1 -0.15459236 0.14086593 0.0019921451   0.0019921451 -0.42587369
-#> cons.l1    0.28876023 0.17203680 0.0024329677   0.0024329677 -0.04760686
-#> invest.l2  0.05023555 0.03340373 0.0004724000   0.0004724000 -0.01561042
-#> income.l2  0.02030163 0.14025851 0.0019835548   0.0019835548 -0.25096273
-#> cons.l2   -0.01124409 0.17482971 0.0024724655   0.0024724655 -0.35927256
-#> const      1.57970465 0.45043080 0.0063700535   0.0063700535  0.68725432
+#> invest.l1  0.04431364 0.03334647 0.0004715903   0.0004715903 -0.01998373
+#> income.l1 -0.15278987 0.14296744 0.0020218650   0.0020218650 -0.43221286
+#> cons.l1    0.28698397 0.17006376 0.0024050647   0.0024050647 -0.04539914
+#> invest.l2  0.05060276 0.03259644 0.0004609832   0.0004779923 -0.01321269
+#> income.l2  0.02187077 0.13968417 0.0019754325   0.0019754325 -0.25552054
+#> cons.l2   -0.01662941 0.17303684 0.0024471105   0.0023062270 -0.35126234
+#> const      1.58452645 0.44551149 0.0063004839   0.0064486856  0.70776174
 #>                   50%     97.5%  
-#> invest.l1  0.04418813 0.1097132  
-#> income.l1 -0.15689705 0.1272605  
-#> cons.l1    0.28679476 0.6248260  
-#> invest.l2  0.05017646 0.1164950  
-#> income.l2  0.02107906 0.2944393  
-#> cons.l2   -0.01034635 0.3269383  
-#> const      1.58310647 2.4491724 *
+#> invest.l1  0.04403269 0.1116388  
+#> income.l1 -0.15369277 0.1299174  
+#> cons.l1    0.28675226 0.6098797  
+#> invest.l2  0.05018654 0.1144229  
+#> income.l2  0.02483612 0.2908569  
+#> cons.l2   -0.01695750 0.3309391  
+#> const      1.58001102 2.4506725 *
 #> 
 #> Variable: cons 
 #> 
-#>                  Mean         SD     Naive SD Time-series SD          2.5%
-#> invest.l1 -0.00228647 0.02651117 0.0003749246   0.0003749246 -0.0537018422
-#> income.l1  0.22262025 0.11390790 0.0016109010   0.0016109010 -0.0004727884
-#> cons.l1   -0.26196075 0.13933626 0.0019705123   0.0019705123 -0.5438831370
-#> invest.l2  0.03370583 0.02569629 0.0003634004   0.0003634004 -0.0179882708
-#> income.l2  0.35236482 0.11129766 0.0015739866   0.0015739866  0.1358561053
-#> cons.l2   -0.01880930 0.13793927 0.0019507559   0.0019649836 -0.2942812548
-#> const      1.29228529 0.36141198 0.0051111372   0.0051111372  0.5797058523
-#>                    50%       97.5%  
-#> invest.l1 -0.002320809 0.051120394  
-#> income.l1  0.224809947 0.444583439  
-#> cons.l1   -0.260202627 0.005916102  
-#> invest.l2  0.034299870 0.083567347  
-#> income.l2  0.353515114 0.569736437 *
-#> cons.l2   -0.018574024 0.253039760  
-#> const      1.294836827 2.023875593 *
+#>                   Mean         SD     Naive SD Time-series SD         2.5%
+#> invest.l1 -0.001912457 0.02663874 0.0003767287   0.0003767287 -0.053425368
+#> income.l1  0.225023600 0.11435036 0.0016171582   0.0016171582 -0.001476671
+#> cons.l1   -0.264390446 0.13709557 0.0019388242   0.0018772379 -0.529201570
+#> invest.l2  0.033868708 0.02603682 0.0003682163   0.0003797974 -0.017776166
+#> income.l2  0.355903461 0.11007286 0.0015566653   0.0015566653  0.138180192
+#> cons.l2   -0.026797046 0.13874053 0.0019620874   0.0019163063 -0.305505140
+#> const      1.297583557 0.35774740 0.0050593123   0.0050593123  0.579210864
+#>                   50%       97.5%  
+#> invest.l1 -0.00243101 0.050104058  
+#> income.l1  0.22360339 0.448296548  
+#> cons.l1   -0.26779088 0.003986299  
+#> invest.l2  0.03409113 0.085350368  
+#> income.l2  0.35526084 0.572251768 *
+#> cons.l2   -0.02651101 0.248743850  
+#> const      1.30325919 1.987655721 *
 #> 
 #> Variance-covariance matrix:
 #> 
 #>                     Mean        SD    Naive SD Time-series SD       2.5%
-#> invest_invest 22.2224926 4.0326382 0.057030117    0.061851857 15.6520720
-#> invest_income  0.7591471 0.7313015 0.010342165    0.011469089 -0.6404554
-#> invest_cons    1.3072440 0.6135175 0.008676447    0.009685174  0.2098998
-#> income_income  1.4505426 0.2604103 0.003682758    0.004069801  1.0320860
-#> income_cons    0.6445433 0.1693257 0.002394626    0.002693538  0.3636834
-#> cons_cons      0.9317947 0.1684815 0.002382688    0.002712761  0.6578444
+#> invest_invest 22.3221594 4.1088202 0.058107493    0.069056843 15.7189942
+#> invest_income  0.7443825 0.7308212 0.010335372    0.011591898 -0.6029887
+#> invest_cons    1.2795592 0.6029931 0.008527610    0.009369176  0.1977631
+#> income_income  1.4374210 0.2656800 0.003757283    0.004179242  1.0070534
+#> income_cons    0.6441621 0.1719402 0.002431601    0.002665474  0.3563998
+#> cons_cons      0.9326772 0.1707161 0.002414290    0.002706776  0.6563013
 #>                      50%     97.5%  
-#> invest_invest 21.7529651 31.286960 *
-#> invest_income  0.7309012  2.245427  
-#> invest_cons    1.2657346  2.624571 *
-#> income_income  1.4203063  2.040913 *
-#> income_cons    0.6265057  1.029064 *
-#> cons_cons      0.9111912  1.312477 *
+#> invest_invest 21.8640190 31.910877 *
+#> invest_income  0.7187280  2.285501  
+#> invest_cons    1.2431243  2.605514 *
+#> income_income  1.4052098  2.050536 *
+#> income_cons    0.6241278  1.033163 *
+#> cons_cons      0.9151523  1.328400 *
 ```
 
 As expected for an algrotihm with uninformative priors the posterior means are fairly close to the results of the frequentist estimator, which can be obtaind in the following way:

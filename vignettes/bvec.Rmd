@@ -221,6 +221,15 @@ plot(bvec_est)
 <div class="figure" style="text-align: center">
 <img src="figures/bvec-unnamed-chunk-6-1.png" alt="plot of chunk unnamed-chunk-6"  />
 <p class="caption">plot of chunk unnamed-chunk-6</p>
+</div><div class="figure" style="text-align: center">
+<img src="figures/bvec-unnamed-chunk-6-2.png" alt="plot of chunk unnamed-chunk-6"  />
+<p class="caption">plot of chunk unnamed-chunk-6</p>
+</div><div class="figure" style="text-align: center">
+<img src="figures/bvec-unnamed-chunk-6-3.png" alt="plot of chunk unnamed-chunk-6"  />
+<p class="caption">plot of chunk unnamed-chunk-6</p>
+</div><div class="figure" style="text-align: center">
+<img src="figures/bvec-unnamed-chunk-6-4.png" alt="plot of chunk unnamed-chunk-6"  />
+<p class="caption">plot of chunk unnamed-chunk-6</p>
 </div>
 
 Obtain summaries of posterior draws

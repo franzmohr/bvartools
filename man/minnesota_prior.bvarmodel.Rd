@@ -86,7 +86,7 @@ prior <- minnesota_prior(object)
 
 }
 \references{
-Chan, J., Koop, G., Poirier, D. J., & Tobias, J. L. (2020). \emph{Bayesian Econometric Methods}
+Chan, J., Koop, G., Poirier, D. J., & Tobias, J. L. (2019). \emph{Bayesian Econometric Methods}
 (2nd ed.). Cambridge: University Press.
 
 Lütkepohl, H. (2006). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.

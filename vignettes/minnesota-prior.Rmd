@@ -25,7 +25,7 @@ $$ \frac{\kappa_{1} \kappa_{3}}{(l+1)^2} \frac{\sigma_{i}^2}{\sigma_{j}^2} \text
 $$ \kappa_{1} \kappa_{4} \sigma_{i}^2 \textrm{ for deterministic terms,} $$
 where $\sigma_{i}$ is the residual standard deviation of variable $i$ of an unrestricted LS estimate. For exogenous variables $\sigma_{i}$ is the sample standard deviation. If the model does not contain exogenous variables, argument `kappa3` will be ignored.
 
-This vignette illustrates how to use the `bvartools` package to work with the Minnesota prior by reproducing the results of exercise 20.2 in Chan et al. (2020), which uses the quarterly time series for the US CPI inflation rate, unemployment rate, and Fed Funds rate from 1959Q2 to 2007Q4.
+This vignette illustrates how to use the `bvartools` package to work with the Minnesota prior by reproducing the results of exercise 20.2 in Chan et al. (2019), which uses the quarterly time series for the US CPI inflation rate, unemployment rate, and Fed Funds rate from 1959Q2 to 2007Q4.
 
 
 ``` r
@@ -173,7 +173,7 @@ result <- bvar(y = model[["data"]][["train"]][["y"]],
                Sigma = draws_sigma)
 ```
 
-Look at the summary statistics, which are practically the same as in example 20.3 in Chan et al. (2020).
+Look at the summary statistics, which are practically the same as in example 20.3 in Chan et al. (2019).
 
 
 ``` r
@@ -237,4 +237,4 @@ summary(result)
 
 ## References
 
-Chan, J., Koop, G., Poirier, D. J., & Tobias, J. L. (2020). *Bayesian Econometric Methods* (2nd ed.). Cambridge: University Press.
+Chan, J., Koop, G., Poirier, D. J., & Tobias, J. L. (2019). *Bayesian Econometric Methods* (2nd ed.). Cambridge: University Press.

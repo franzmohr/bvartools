@@ -199,7 +199,7 @@ Arias, J. E., Rubio-Ramírez, J. F., & Waggoner, D. F. (2018). Inference based o
 
 Canova, F., & De Nicolò, G. (2002). Monetary disturbances matter for business fluctuations in the G-7. *Journal of Monetary Economics, 49*(6), 1131--1159. https://doi.org/10.1016/S0304-3932(02)00145-9
 
-Chan, J., Koop, G., Poirier, D. J., & Tobias, J. L. (2020). *Bayesian econometric methods* (2nd ed.). Cambridge: Cambridge University Press.
+Chan, J., Koop, G., Poirier, D. J., & Tobias, J. L. (2019). *Bayesian econometric methods* (2nd ed.). Cambridge: Cambridge University Press.
 
 Faust, J. (1998). The robustness of identified VAR conclusions about money. *Carnegie-Rochester Conference Series on Public Policy, 49*, 207--244. https://doi.org/10.1016/S0167-2231(99)00009-3
 

@@ -40,7 +40,7 @@ workflow into multiple steps:
   - Researchers can also choose to use their own algorithms.
 - *Evaluation*
   - Traditional summary statistics for individual coefficients
-  - In-sample performance measures (LL, AIC, BIC, HQ, WAIC)
+  - In-sample performance measures (LL, AIC, BIC, HQ, WAIC, LOOIC)
   - Out-of-sample performance (MAFE, RMSFE)
 - *Application*
   - Forecasts

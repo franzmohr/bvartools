@@ -171,45 +171,69 @@ print(sc, relative = 1)
 #> Log-likelihood
 #> 
 #>            Mean Median Quantile (2.5%) Quantile (97.5%)
-#>  Model 1 -364.0 -363.7          -371.1           -358.9
-#>  Model 2 -301.2 -300.9          -310.0           -294.6
-#>  Model 3 -275.0 -274.7          -285.3           -266.7
-#>  Model 4 -276.7 -276.2          -287.8           -267.4
-#>  Model 5 -289.0 -288.9          -299.9           -279.3
-#>  Model 6 -284.7 -284.3          -293.3           -277.5
+#>  Model 1 -363.9 -363.6          -371.0           -358.8
+#>  Model 2 -301.3 -301.0          -309.5           -294.6
+#>  Model 3 -275.0 -274.7          -284.9           -267.0
+#>  Model 4 -276.6 -276.3          -288.0           -267.4
+#>  Model 5 -289.1 -289.0          -299.0           -279.3
+#>  Model 6 -282.4 -282.2          -292.5           -273.6
 #> 
 #> 
 #> Akaike Information Criterion (AIC)
 #> 
 #>           Mean Median Quantile (2.5%) Quantile (97.5%)
-#>  Model 1 735.9  735.3           725.8            750.1
-#>  Model 2 616.4  615.7           603.1            634.0
-#>  Model 3 570.0  569.3           553.4            590.5
-#>  Model 4 579.4  578.5           560.7            601.7
-#>  Model 5 604.0  603.8           584.6            625.9
-#>  Model 6 595.3  594.7           581.0            612.6
+#>  Model 1 732.4  732.4                                 
+#>  Model 2 612.2  612.2                                 
+#>  Model 3 562.1  562.1                                 
+#>  Model 4 574.9  574.9                                 
+#>  Model 5 617.9  617.9                                 
+#>  Model 6 602.4  602.4                                 
 #> 
 #> 
 #> Bayesian Information Criterion (BIC)
 #> 
 #>           Mean Median Quantile (2.5%) Quantile (97.5%)
-#>  Model 1 748.9  748.3           738.8            763.1
-#>  Model 2 639.2  638.5           625.9            656.8
-#>  Model 3 602.5  601.8           585.9            623.1
-#>  Model 4 621.6  620.8           603.0            643.9
-#>  Model 5 646.3  646.1           626.9            668.2
-#>  Model 6 637.6  637.0           623.3            654.9
+#>  Model 1 790.9  790.9                                 
+#>  Model 2 700.0  700.0                                 
+#>  Model 3 679.2  679.2                                 
+#>  Model 4 721.2  721.2                                 
+#>  Model 5 764.3  764.3                                 
+#>  Model 6 748.7  748.7                                 
 #> 
 #> 
 #> Hannan-Quinn Criterion (HQ)
 #> 
 #>           Mean Median Quantile (2.5%) Quantile (97.5%)
-#>  Model 1 741.2  740.6           731.1            755.4
-#>  Model 2 625.7  625.0           612.3            643.2
-#>  Model 3 583.2  582.5           566.6            603.7
-#>  Model 4 596.5  595.6           577.8            618.8
-#>  Model 5 621.1  620.9           601.7            643.0
-#>  Model 6 612.5  611.8           598.1            629.7
+#>  Model 1 756.1  756.1                                 
+#>  Model 2 647.8  647.8                                 
+#>  Model 3 609.6  609.6                                 
+#>  Model 4 634.1  634.1                                 
+#>  Model 5 677.2  677.2                                 
+#>  Model 6 661.6  661.6                                 
+#> 
+#> 
+#> Widely Applicable Information Criterion (WAIC)
+#> 
+#>           Mean Median Quantile (2.5%) Quantile (97.5%)
+#>  Model 1 762.1  762.1           614.2            910.1
+#>  Model 2 651.7  651.7           506.0            797.3
+#>  Model 3 618.9  618.9           472.3            765.4
+#>  Model 4 633.0  633.0           485.4            780.6
+#>  Model 5 636.3  636.3           495.1            777.4
+#>  Model 6 624.4  624.4           479.0            769.8
+#> 
+#> 
+#> Leave-One-Out Information Criterion (LOOIC)
+#> 
+#>           Mean Median Quantile (2.5%) Quantile (97.5%)
+#>  Model 1 761.6  761.6           614.5            908.7
+#>  Model 2 650.7  650.7           507.6            793.9
+#>  Model 3 619.4  619.4           474.8            764.0
+#>  Model 4 633.5  633.5           487.4            779.6
+#>  Model 5 644.0  644.0           498.1            789.9
+#>  Model 6 625.9  625.9           479.9            771.8
+#> 
+#> Influential periods, whose importance sampling is unreliable, in models 1 (1), 2 (2), 3 (5), 4 (5), 5 (3), 6 (4), counted as a Pareto k above 0.7.
 #> 
 #> 
 #> ------------------------------------------
@@ -219,35 +243,35 @@ print(sc, relative = 1)
 #> Mean absolute forecast errors (MAFE)
 #> 
 #>  Variable h Model 1 Model 2 Model 3 Model 4 Model 5 Model 6
-#>        Dp 1       1  0.8338  0.8753  0.8903  0.8947  0.9009
-#>         u 1       1  1.1574  1.2215  1.2382  1.0420  1.0309
-#>         r 1       1  1.2123  1.1261  1.0717  1.0924  1.0684
-#>        Dp 2       1  0.8763  0.8485  0.8505  0.8415  0.8490
-#>         u 2       1  1.2512  1.2838  1.3079  1.1415  1.1581
-#>         r 2       1  1.1069  1.0441  1.0431  1.0273  1.0096
-#>        Dp 3       1  0.9090  0.9012  0.9315  0.8643  0.8906
-#>         u 3       1  1.3165  1.3200  1.3390  1.2081  1.2306
-#>         r 3       1  1.1109  1.0147  1.0053  1.0100  0.9944
-#>        Dp 4       1  0.9489  0.9436  0.9718  0.9116  0.9356
-#>         u 4       1  1.3535  1.3966  1.3961  1.2589  1.2761
-#>         r 4       1  1.1118  1.0344  1.0478  1.0261  1.0244
+#>        Dp 1       1  0.8357  0.8789  0.8873  0.8983  0.8867
+#>         u 1       1  1.1451  1.2044  1.2068  1.0263  1.0317
+#>         r 1       1  1.1943  1.0987  1.0504  1.0802  1.0615
+#>        Dp 2       1  0.8851  0.8423  0.8594  0.8436  0.8827
+#>         u 2       1  1.2628  1.2902  1.3011  1.1474  1.1772
+#>         r 2       1  1.1022  1.0465  1.0297  1.0075  1.0063
+#>        Dp 3       1  0.9125  0.9122  0.9337  0.8490  0.8866
+#>         u 3       1  1.3307  1.3502  1.3529  1.2247  1.2748
+#>         r 3       1  1.1072  1.0182  1.0048  1.0037  1.0015
+#>        Dp 4       1  0.9436  0.9558  0.9676  0.9094  0.9142
+#>         u 4       1  1.3568  1.4127  1.4219  1.2704  1.3340
+#>         r 4       1  1.0954  1.0400  1.0388  1.0129  1.0402
 #> 
 #> 
 #> Root mean squared forecast errors (RMSFE)
 #> 
 #>  Variable h Model 1 Model 2 Model 3 Model 4 Model 5 Model 6
-#>        Dp 1       1  0.8306  0.8903  0.9067  0.9127  0.9069
-#>         u 1       1  1.1068  1.1577  1.1717  1.0136  1.0042
-#>         r 1       1  1.1764  1.0984  1.0496  1.0773  1.0500
-#>        Dp 2       1  0.8794  0.8485  0.8497  0.8314  0.8403
-#>         u 2       1  1.2319  1.2588  1.2797  1.1393  1.1493
-#>         r 2       1  1.1067  1.0448  1.0443  1.0295  1.0124
-#>        Dp 3       1  0.9075  0.9215  0.9485  0.8784  0.9190
-#>         u 3       1  1.3097  1.3161  1.3337  1.2139  1.2309
-#>         r 3       1  1.1158  1.0193  1.0082  1.0173  0.9987
-#>        Dp 4       1  0.9484  0.9662  0.9876  0.9263  0.9379
-#>         u 4       1  1.3475  1.3883  1.3849  1.2610  1.2765
-#>         r 4       1  1.1187  1.0451  1.0500  1.0324  1.0322
+#>        Dp 1       1  0.8412  0.9027  0.9108  0.9176  0.9041
+#>         u 1       1  1.0970  1.1439  1.1490  1.0008  1.0050
+#>         r 1       1  1.1657  1.0805  1.0376  1.0640  1.0450
+#>        Dp 2       1  0.8841  0.8391  0.8556  0.8314  0.8845
+#>         u 2       1  1.2385  1.2607  1.2742  1.1367  1.1627
+#>         r 2       1  1.1030  1.0488  1.0301  1.0119  1.0088
+#>        Dp 3       1  0.9115  0.9341  0.9513  0.8728  0.8965
+#>         u 3       1  1.3191  1.3309  1.3428  1.2243  1.2722
+#>         r 3       1  1.1026  1.0161  0.9986  1.0014  1.0032
+#>        Dp 4       1  0.9433  0.9734  0.9791  0.9230  0.9246
+#>         u 4       1  1.3506  1.3991  1.4098  1.2756  1.3322
+#>         r 4       1  1.0904  1.0357  1.0321  1.0102  1.0391
 ```
 
 
@@ -267,6 +291,20 @@ plot(sc, criterion = "AIC")
 
 ![plot of chunk unnamed-chunk-15](figures/horse-races-unnamed-chunk-15-1.png)
 
+AIC and BIC penalise a model by the number of parameters it nominally has, which
+is the same number for all three models here: variable selection does not remove
+a coefficient from the model, it shrinks it towards zero, and how much of the
+nominal freedom that leaves is decided by the data rather than by the count. WAIC
+penalises by the flexibility the fit actually used and is the criterion to
+compare such models with.
+
+
+``` r
+plot(sc, criterion = "WAIC")
+```
+
+![plot of chunk unnamed-chunk-16](figures/horse-races-unnamed-chunk-16-1.png)
+
 #### Out-of-sample plots
 
 
@@ -274,20 +312,20 @@ plot(sc, criterion = "AIC")
 plot(sc, criterion = "FE")
 ```
 
-![plot of chunk unnamed-chunk-16](figures/horse-races-unnamed-chunk-16-1.png)
+![plot of chunk unnamed-chunk-17](figures/horse-races-unnamed-chunk-17-1.png)
 
 ``` r
 plot(sc, criterion = "AFE")
 ```
 
-![plot of chunk unnamed-chunk-17](figures/horse-races-unnamed-chunk-17-1.png)
+![plot of chunk unnamed-chunk-18](figures/horse-races-unnamed-chunk-18-1.png)
 
 
 ``` r
 plot_forecast_errors_by_period(models, criterion = "FE")
 ```
 
-![plot of chunk unnamed-chunk-18](figures/horse-races-unnamed-chunk-18-1.png)
+![plot of chunk unnamed-chunk-19](figures/horse-races-unnamed-chunk-19-1.png)
 
 
 ## Adding forecasts from other sources

@@ -77,14 +77,26 @@ Posterior draws can be obtained using function `add_posterior_coefficients`.
 
 
 
-If function `selection_criteria` is applied to an object of class `posteriorlist`, it produces an object of class `selcritlist`. Its elements are of class `selcrit` and contain the log-likelihood, the number of estimated parameters and a table of selection criteria. The information criteria are calculated based on the posterior draws of the respective model and calculated in the following way:
+If function `selection_criteria` is applied to an object of class `modellist`, it produces an object of class `selcritlist`. Its elements are of class `selcrit` and contain the log-likelihood and the selection criteria of the respective model, which are calculated from its posterior draws in the following way:
 
-* *Log-likelihood*: $LL = \frac{1}{R} \sum_{i = 1}^{R} \left( \sum_{t = 1}^{T} -\frac{K}{2} \ln 2\pi - \frac{1}{2} \ln |\Sigma_t^{(i)}| -\frac{1}{2} (u_t^{{(i)}\prime} (\Sigma_t^{(i)})^{-1} u_t^{(i)} \right)$ for each draw $i$ and $u_t = y_t - \mu_t$;
-* *Akaika information criterion*: $AIC = 2 (Kp + M (s + 1) + N) - 2 LL$;
-* *Bayesian information criterion*: $BIC =  ln(T) (Kp + M (s + 1) + N) - 2 LL$;
-* *Hannan-Quinn information criterion*: $HQ = 2 ln(ln(T)) (Kp + M (s + 1) + N) - 2 LL$.
+* *Log-likelihood*: $LL^{(i)} = \sum_{t = 1}^{T} \left( -\frac{K}{2} \ln 2\pi - \frac{1}{2} \ln |\Sigma_t^{(i)}| - \frac{1}{2} u_t^{{(i)}\prime} (\Sigma_t^{(i)})^{-1} u_t^{(i)} \right)$ for each draw $i$ and $u_t = y_t - \mu_t$, which is summarised by the mean, the median and the credible band of its draws;
+* *Akaike information criterion*: $AIC = D + 2 \kappa$;
+* *Bayesian information criterion*: $BIC = D + \ln(T) \kappa$;
+* *Hannan-Quinn information criterion*: $HQ = D + 2 \ln(\ln(T)) \kappa$;
+* *Widely applicable information criterion*: $WAIC = -2 \sum_{t = 1}^{T} \left( \ln \left( \frac{1}{R} \sum_{i = 1}^{R} \exp(ll_t^{(i)}) \right) - \mathrm{Var}_i \left[ ll_t^{(i)} \right] \right)$, where $ll_t^{(i)}$ is the log-likelihood of period $t$ in draw $i$;
+* *Leave-one-out information criterion*: $LOOIC = -2 \sum_{t = 1}^{T} \ln \left( \frac{\sum_{i = 1}^{R} w_t^{(i)} \exp(ll_t^{(i)})}{\sum_{i = 1}^{R} w_t^{(i)}} \right)$, where the weights $w_t^{(i)}$ reweight the posterior towards the one that has not seen period $t$.
 
-$K$ is the number of endogenous variables and $p$ the lag order of the model. If exogenous variables were used $M$ is the number of stochastic exogenous regressors and $s$ is the lag order for those variables. $N$ is the number of deterministic terms.
+The number of estimated parameters is
+
+$$\kappa = K \left(K p + M (s + 1) + N \right) + \frac{K (K + 1)}{2},$$
+
+where $K$ is the number of endogenous variables and $p$ the lag order of the model. If exogenous variables were used $M$ is the number of stochastic exogenous regressors and $s$ is the lag order for those variables. $N$ is the number of deterministic terms. The first term of $\kappa$ counts the coefficients of all $K$ equations and the second the free elements of the covariance matrix of the error term.
+
+$D$ is the deviance of the model at its point estimate. AIC, BIC and HQ correct the deviance of a fitted model for the optimism of having fitted it, so it is the deviance at the point estimate that their penalties belong to. The mean of the deviance over the posterior is the larger quantity, by about the effective number of parameters, and adding a penalty to it would charge the complexity of the model a second time. $D$ is therefore obtained from the draws as their mean deviance less $\sum_{t = 1}^{T} \mathrm{Var}_i [ll_t^{(i)}]$, the effective number of parameters that WAIC also penalises with. Since AIC, BIC and HQ are functions of the data and the estimator rather than parameters with a posterior, they are reported without a credible band; the bands of WAIC and LOOIC are normal intervals built from their standard errors.
+
+Textbook presentations state these criteria in a form that is divided by $T$ and that drops every term which does not depend on the lag order. The AIC in Lütkepohl (2006), for example, is $\ln |\tilde{\Sigma}_u| + \frac{2 p K^2}{T}$. Evaluated at the maximum likelihood estimates the above formula reduces to $T$ times that expression plus terms that are constant in $p$, so the two rank a set of lag orders in the same way, although their values are on different scales. Both require that all models are estimated on the same sample. `create_bvarmodel` ensures this for a vector of lag orders by trimming the data by the maximum lag. If models from separate calls are combined, function `align_model_obs` restricts them to the observations they have in common.
+
+Which criterion to reach for depends on the models that are compared. A count of parameters describes a model with constant coefficients and a weak prior, which is the case AIC, BIC and HQ are derived for and the one of this vignette. It does not describe a model whose coefficients or variances follow a state equation, where the prior on the state variances decides how much of the nominal freedom is used, and it does not describe a shrinkage prior, which buys back degrees of freedom that $\kappa$ does not see. WAIC and LOOIC penalise by the flexibility the fit actually used and remain defined in those cases.
 
 
 ``` r
@@ -114,34 +126,56 @@ selcrit
 #> Akaike Information Criterion (AIC)
 #> 
 #>           Mean Median Quantile (2.5%) Quantile (97.5%)
-#>  Model 1 843.2  842.5           836.9            853.3
-#>  Model 2 835.0  834.4           824.9            849.0
-#>  Model 3 825.8  825.2           813.0            842.3
-#>  Model 4 837.3  836.5           821.9            856.4
-#>  Model 5 839.6  838.8           821.3            862.0
+#>  Model 1 846.4  846.4                                 
+#>  Model 2 841.1  841.1                                 
+#>  Model 3 836.6  836.6                                 
+#>  Model 4 853.2  853.2                                 
+#>  Model 5 859.0  859.0                                 
 #> 
 #> 
 #> Bayesian Information Criterion (BIC)
 #> 
 #>           Mean Median Quantile (2.5%) Quantile (97.5%)
-#>  Model 1 845.5  844.8           839.2            855.6
-#>  Model 2 844.1  843.4           833.9            858.1
-#>  Model 3 841.7  841.0           828.9            858.1
-#>  Model 4 859.9  859.1           844.6            879.1
-#>  Model 5 869.0  868.3           850.8            891.4
+#>  Model 1 866.8  866.8                                 
+#>  Model 2 881.9  881.9                                 
+#>  Model 3 897.6  897.6                                 
+#>  Model 4 934.6  934.6                                 
+#>  Model 5 960.9  960.9                                 
 #> 
 #> 
 #> Hannan-Quinn Criterion (HQ)
 #> 
 #>           Mean Median Quantile (2.5%) Quantile (97.5%)
-#>  Model 1 844.1  843.4           837.8            854.2
-#>  Model 2 838.6  838.0           828.5            852.6
-#>  Model 3 832.1  831.5           819.3            848.6
-#>  Model 4 846.3  845.5           830.9            865.4
-#>  Model 5 851.3  850.5           833.0            873.7
+#>  Model 1 854.5  854.5                                 
+#>  Model 2 857.3  857.3                                 
+#>  Model 3 860.8  860.8                                 
+#>  Model 4 885.6  885.6                                 
+#>  Model 5 899.5  899.5                                 
+#> 
+#> 
+#> Widely Applicable Information Criterion (WAIC)
+#> 
+#>           Mean Median Quantile (2.5%) Quantile (97.5%)
+#>  Model 1 855.2  855.2           786.1            924.3
+#>  Model 2 851.6  851.6           787.1            916.0
+#>  Model 3 845.4  845.4           784.1            906.8
+#>  Model 4 859.4  859.4           799.6            919.1
+#>  Model 5 867.0  867.0           799.7            934.3
+#> 
+#> 
+#> Leave-One-Out Information Criterion (LOOIC)
+#> 
+#>           Mean Median Quantile (2.5%) Quantile (97.5%)
+#>  Model 1 855.6  855.6           786.1            925.1
+#>  Model 2 853.4  853.4           787.5            919.2
+#>  Model 3 847.7  847.7           785.3            910.1
+#>  Model 4 862.3  862.3           801.8            922.8
+#>  Model 5 873.5  873.5           803.5            943.5
+#> 
+#> Influential periods, whose importance sampling is unreliable, in models 1 (1), 2 (2), 3 (3), 4 (2), 5 (7), counted as a Pareto k above 0.7.
 ```
 
-Method `plot.selcritlist` plots the distribution for the above selection criteria for each posterior draw.
+Method `plot.selcritlist` plots the criteria of the models against each other. The log-likelihood is drawn with the credible band of its draws, WAIC and LOOIC with an interval built from their standard errors, and the criteria that count parameters as single values.
 
 
 ``` r
@@ -152,19 +186,26 @@ plot(selcrit, criterion = "AIC")
 
 
 ``` r
+plot(selcrit, criterion = "LOOIC")
+```
+
+![plot of chunk unnamed-chunk-11](figures/model-comparison-unnamed-chunk-11-1.png)
+
+
+``` r
 pos <- choose_best_model(selcrit, criterion = "AIC")
 pos
 #> [1] 3
 ```
 
-Since all information criteria have the lowest value for the model with $p = 2$, the third element of `models` is used for further analysis.
+AIC, WAIC and LOOIC have their lowest value for the model with $p = 2$, which is the order that the corresponding criteria of Lütkepohl (2006) select on this data as well. BIC and HQ prefer the model without lags, as their textbook counterparts do: with 71 observations $\ln(T)$ and $2 \ln(\ln(T))$ are larger than the 2 of the AIC, and nine additional coefficients per lag are more than the gain in fit pays for. The third element of `models` is used for further analysis.
 
 
 ``` r
 plot(irf(models[[pos]], impulse = "income", response = "cons", n_ahead = 10))
 ```
 
-![plot of chunk unnamed-chunk-12](figures/model-comparison-unnamed-chunk-12-1.png)
+![plot of chunk unnamed-chunk-13](figures/model-comparison-unnamed-chunk-13-1.png)
 
 ## Literature
 

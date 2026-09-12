@@ -31,12 +31,13 @@ print.selcritlist <- function(x, digits = max(3L, getOption("digits") - 3L), rel
                          paste0("Quantile (", ci[2], ")"))
     template[, 1] <- paste0("Model ", 1:n_models)
 
-    criteria <- c("LL", "AIC", "BIC", "HQ", "WAIC")
+    criteria <- c("LL", "AIC", "BIC", "HQ", "WAIC", "LOOIC")
     headers <- c("Log-likelihood",
                  "Akaike Information Criterion (AIC)",
                  "Bayesian Information Criterion (BIC)",
                  "Hannan-Quinn Criterion (HQ)",
-                 "Widely Applicable Information Criterion (WAIC)")
+                 "Widely Applicable Information Criterion (WAIC)",
+                 "Leave-One-Out Information Criterion (LOOIC)")
 
     # A criterion no model carries is left out entirely. WAIC needs more than
     # one draw to estimate the variance it penalises with, so it can be absent.
@@ -57,7 +58,11 @@ print.selcritlist <- function(x, digits = max(3L, getOption("digits") - 3L), rel
           temp[i, 2:5] <- as.matrix(x[[i]][[criteria[j]]])[1, ]
         }
       }
-      print(temp, digits = digits, row.names = FALSE, ...)
+      .print_criteria_table(temp, digits = digits, ...)
+
+      if (criteria[j] == "LOOIC") {
+        .print_loo_diagnostics_list(x)
+      }
 
     }
 

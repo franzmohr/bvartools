@@ -169,6 +169,17 @@ plot(sc, criterion = "BIC")
 plot(sc, criterion = "AIC")
 ```
 
+AIC and BIC penalise a model by the number of parameters it nominally has, which
+is the same number for all three models here: variable selection does not remove
+a coefficient from the model, it shrinks it towards zero, and how much of the
+nominal freedom that leaves is decided by the data rather than by the count. WAIC
+penalises by the flexibility the fit actually used and is the criterion to
+compare such models with.
+
+```{r, fig.width=5.5, fig.height=4.5}
+plot(sc, criterion = "WAIC")
+```
+
 #### Out-of-sample plots
 
 ```{r, fig.width=5.5, fig.height=4.5}

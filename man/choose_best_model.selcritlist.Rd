@@ -4,14 +4,15 @@
 \alias{choose_best_model.selcritlist}
 \title{Choose Best Model}
 \usage{
-\method{choose_best_model}{selcritlist}(object, criterion = "BIC", ...)
+\method{choose_best_model}{selcritlist}(object, criterion = "WAIC", ...)
 }
 \arguments{
 \item{object}{object of class 'selcritlist', usually, a result of a call
 to \code{\link{selection_criteria}}.}
 
-\item{criterion}{the selection criterion that should be plotted. Available choices
-are \code{"LL"}, \code{"AIC"}, \code{"BIC"} (default), \code{"HQ"}.}
+\item{criterion}{the selection criterion that should be used. Available choices
+are \code{"LL"}, \code{"AIC"}, \code{"BIC"}, \code{"HQ"},
+\code{"WAIC"} (default) and \code{"LOOIC"}.}
 
 \item{...}{further arguments passed to or from other methods.}
 }
@@ -26,6 +27,17 @@ Chooses the best model according the selection criteria in an object of class
 \details{
 If argument \code{criterion} is "LL", the model with the maximum value is chosen,
 otherwise, the model with the minimum value.
+
+Which criterion to use depends on the models that are compared. See
+\code{\link{selection_criteria}}, whose details set out what each of them
+penalises and when a count of parameters ceases to describe a model. The
+default is \code{"WAIC"}, because it is the criterion that stays defined
+across the models this package estimates: it penalises by the flexibility
+the fit used rather than by a count of parameters, which describes neither a
+model whose coefficients or variances follow a state equation nor one whose
+prior shrinks them. \code{"AIC"}, \code{"BIC"} and \code{"HQ"} remain the
+criteria for the lag order of a model with constant coefficients and a weak
+prior, which is the case they are derived for.
 }
 \examples{
 # Load data
@@ -57,10 +69,10 @@ sel <- selection_criteria(model)
 # View results
 sel
 
+# Choose best model according to WAIC, the default
+choose_best_model(sel)
+
 # Choose best model according to AIC
 choose_best_model(sel, criterion = "AIC")
-
-# Choose best model according to BIC
-choose_best_model(sel, criterion = "BIC")
 
 }

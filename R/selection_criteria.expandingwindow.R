@@ -85,7 +85,7 @@ selection_criteria.expandingwindow <- function(object, ci = 0.95, ...){
   
   # In-sample
   in_sample <- selection_criteria(object[[length(object)]], ci = ci)
-  for (i in c("LL", "AIC", "BIC", "HQ")) {
+  for (i in c("LL", "AIC", "BIC", "HQ", "WAIC", "LOOIC")) {
     result[[i]] <- in_sample[[i]]
   }
   

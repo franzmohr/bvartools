@@ -29,6 +29,11 @@ draw_error_bars <- function(pos, values, cap, labels = NULL, col = "black", lwd 
   # in the same order as the positions
   bounds <- unlist(values[, c("qlower", "median", "qupper")], use.names = FALSE)
 
+  # A criterion that is a point estimate has no band to draw and no upper end
+  # to hang its label on, so the label goes next to the value itself
+  lab_pos <- values[, "qupper"]
+  lab_pos[is.na(lab_pos)] <- values[is.na(lab_pos), "mean"]
+
   if (horizontal) {
     # Credible band
     graphics::segments(values[, "qlower"], pos, values[, "qupper"], pos,
@@ -39,7 +44,7 @@ draw_error_bars <- function(pos, values, cap, labels = NULL, col = "black", lwd 
     graphics::points(values[, "mean"], pos, pch = pch, cex = cex, col = col)
 
     if (!is.null(labels)) {
-      graphics::text(values[, "qupper"], pos, labels = labels, pos = 4, offset = .3,
+      graphics::text(lab_pos, pos, labels = labels, pos = 4, offset = .3,
                      cex = cex_lab, col = col)
     }
   } else {
@@ -52,7 +57,7 @@ draw_error_bars <- function(pos, values, cap, labels = NULL, col = "black", lwd 
     graphics::points(pos, values[, "mean"], pch = pch, cex = cex, col = col)
 
     if (!is.null(labels)) {
-      graphics::text(pos, values[, "qupper"], labels = labels, pos = 3, offset = .3,
+      graphics::text(pos, lab_pos, labels = labels, pos = 3, offset = .3,
                      cex = cex_lab, col = col)
     }
   }

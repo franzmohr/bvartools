@@ -5,13 +5,25 @@
 #' 
 #' @param object object of class 'selcritlist', usually, a result of a call
 #' to \code{\link{selection_criteria}}.
-#' @param criterion the selection criterion that should be plotted. Available choices
-#' are \code{"LL"}, \code{"AIC"}, \code{"BIC"} (default), \code{"HQ"}.
+#' @param criterion the selection criterion that should be used. Available choices
+#' are \code{"LL"}, \code{"AIC"}, \code{"BIC"}, \code{"HQ"},
+#' \code{"WAIC"} (default) and \code{"LOOIC"}.
 #' @param ... further arguments passed to or from other methods.
 #' 
 #' @details
 #' If argument \code{criterion} is "LL", the model with the maximum value is chosen,
 #' otherwise, the model with the minimum value.
+#'
+#' Which criterion to use depends on the models that are compared. See
+#' \code{\link{selection_criteria}}, whose details set out what each of them
+#' penalises and when a count of parameters ceases to describe a model. The
+#' default is \code{"WAIC"}, because it is the criterion that stays defined
+#' across the models this package estimates: it penalises by the flexibility
+#' the fit used rather than by a count of parameters, which describes neither a
+#' model whose coefficients or variances follow a state equation nor one whose
+#' prior shrinks them. \code{"AIC"}, \code{"BIC"} and \code{"HQ"} remain the
+#' criteria for the lag order of a model with constant coefficients and a weak
+#' prior, which is the case they are derived for.
 #' 
 #' @returns An integer giving the position of the best model in the list provided
 #' in argument \code{object}.
@@ -46,15 +58,15 @@
 #' # View results
 #' sel
 #' 
+#' # Choose best model according to WAIC, the default
+#' choose_best_model(sel)
+#' 
 #' # Choose best model according to AIC
 #' choose_best_model(sel, criterion = "AIC")
 #' 
-#' # Choose best model according to BIC
-#' choose_best_model(sel, criterion = "BIC")
-#' 
 #' @export
 #' @method choose_best_model selcritlist
-choose_best_model.selcritlist <- function(object, criterion = "BIC", ...) {
+choose_best_model.selcritlist <- function(object, criterion = "WAIC", ...) {
   
   # Models, which do not contain the criterion, cannot be chosen, but their
   # positions in 'object' are maintained

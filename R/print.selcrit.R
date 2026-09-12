@@ -17,7 +17,7 @@ print.selcrit <- function(x, digits = max(3L, getOption("digits") - 3L), ...){
     
     # Only the criteria the object actually carries. WAIC needs more than one
     # draw to estimate the variance it penalises with, so it can be absent.
-    criterion <- c("LL", "AIC", "HQ", "BIC", "WAIC")
+    criterion <- c("LL", "AIC", "HQ", "BIC", "WAIC", "LOOIC")
     criterion <- criterion[!vapply(x[criterion], is.null, logical(1))]
 
     result <- as.data.frame(matrix(NA, length(criterion), 5))
@@ -30,7 +30,9 @@ print.selcrit <- function(x, digits = max(3L, getOption("digits") - 3L), ...){
       result[i, 2:5] <- x[[criterion[i]]][, c("mean", "median", "qlower", "qupper")]
     }
     
-    print(result, digits = digits, row.names = FALSE, ...)
+    .print_criteria_table(result, digits = digits, ...)
+
+    .print_loo_diagnostics(x[["LOOIC"]])
     
   }
   
@@ -52,3 +54,20 @@ print.selcrit <- function(x, digits = max(3L, getOption("digits") - 3L), ...){
   }
   
 } 
+# Criteria that are point estimates have no credible band, and 'NA' in that
+# column reads as a value that could not be computed rather than as one that
+# does not exist. The columns are formatted first so that the blanks do not
+# cost the remaining numbers their alignment.
+.print_criteria_table <- function(x, digits, ...) {
+
+  out <- x
+  for (j in seq_along(out)) {
+    if (is.numeric(out[[j]])) {
+      column <- format(out[[j]], digits = digits)
+      column[is.na(out[[j]])] <- ""
+      out[[j]] <- format(column, justify = "right")
+    }
+  }
+
+  print(out, row.names = FALSE, ...)
+}

@@ -93,35 +93,22 @@ selection_criteria.bvarmodel <- function(object, ci = 0.95, ...){
                      "qupper" = stats::quantile(loglik, probs = ci_high))
     row.names(ll) <- NULL
     result[["LL"]] <- ll
-    
+
+    # Information criteria
+    #
+    # The criteria are evaluated at the point estimate of the model rather than
+    # averaged over the posterior, which would charge the complexity of the
+    # model a second time. See .plugin_deviance().
+    deviance <- .plugin_deviance(object[["posterior"]][["loglik"]])
+
     # AIC
-    aic <- 2 * nparams - 2 * loglik
-    aic <- data.frame("mean" = mean(aic),
-                      "median" = stats::median(aic),
-                      "qlower" = stats::quantile(aic, probs = ci_low),
-                      "qupper" = stats::quantile(aic, probs = ci_high))
-    row.names(aic) <- NULL
-    result[["AIC"]] <- aic
-    
-    
+    result[["AIC"]] <- .point_criterion(deviance + 2 * nparams)
+
     # BIC
-    bic <- nparams * log(tt) - 2 * loglik
-    bic <- data.frame("mean" = mean(bic),
-                      "median" = stats::median(bic),
-                      "qlower" = stats::quantile(bic, probs = ci_low),
-                      "qupper" = stats::quantile(bic, probs = ci_high))
-    row.names(bic) <- NULL
-    result[["BIC"]] <- bic
-    
-    
+    result[["BIC"]] <- .point_criterion(deviance + log(tt) * nparams)
+
     # HQ
-    hq <- 2 * nparams * log(log(tt)) - 2 * loglik
-    hq <- data.frame("mean" = mean(hq),
-                     "median" = stats::median(hq),
-                     "qlower" = stats::quantile(hq, probs = ci_low),
-                     "qupper" = stats::quantile(hq, probs = ci_high))
-    row.names(hq) <- NULL
-    result[["HQ"]] <- hq
+    result[["HQ"]] <- .point_criterion(deviance + 2 * log(log(tt)) * nparams)
 
     # WAIC
     #
@@ -132,6 +119,18 @@ selection_criteria.bvarmodel <- function(object, ci = 0.95, ...){
     if (!is.null(waic)) {
       row.names(waic) <- NULL
       result[["WAIC"]] <- waic
+    }
+
+    # LOOIC
+    #
+    # Estimates the same out-of-sample deviance as WAIC, by reweighting the
+    # posterior towards the one that has not seen a period rather than by a
+    # correction term, and reports how far that reweighting can be trusted.
+    # See .psis_loo().
+    looic <- .loo_data_frame(object[["posterior"]][["loglik"]], ci_low, ci_high)
+    if (!is.null(looic)) {
+      row.names(looic) <- NULL
+      result[["LOOIC"]] <- looic
     }
 
   }

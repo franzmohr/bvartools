@@ -5,15 +5,21 @@
 #' @param x an object of class 'selcritlist', usually, a result of a call
 #' to \code{\link{selection_criteria}}.
 #' @param criterion the selection criterion that should be plotted. Available choices
-#' are the in-sample criteria \code{"LL"}, \code{"AIC"}, \code{"BIC"} (default),
-#' \code{"HQ"} and the out-of-sample statistics \code{"FE"}, \code{"AFE"} and
-#' \code{"RSFE"}.
+#' are the in-sample criteria \code{"LL"}, \code{"AIC"}, \code{"BIC"},
+#' \code{"HQ"}, \code{"WAIC"} (default), \code{"LOOIC"} and the out-of-sample
+#' statistics \code{"FE"}, \code{"AFE"} and \code{"RSFE"}.
 #' @param ... further graphical parameters.
 #'
 #' @details For in-sample criteria each model is represented by a horizontal error
-#' bar, which covers the credible band of the criterion and which is marked by the
-#' median and the mean of its posterior draws. The criterion is measured on the
-#' x-axis and the models are arranged along the y-axis, beginning with the first
+#' bar, which is marked by the value of the criterion. The log-likelihood has a
+#' posterior distribution, so its bar covers the credible band and is marked by the
+#' median as well as the mean of its draws. \code{"WAIC"} and \code{"LOOIC"} are
+#' point estimates whose bars cover a normal interval built from their standard
+#' error. \code{"AIC"}, \code{"BIC"} and \code{"HQ"} are point estimates without a
+#' standard error, so they are drawn as a single point. The default is
+#' \code{"WAIC"}, for the reasons given in \code{\link{selection_criteria}}.
+#' The criterion is measured on
+#' the x-axis and the models are arranged along the y-axis, beginning with the first
 #' model of \code{x} at the top. This keeps the plot readable, if \code{x} contains
 #' many models. The position of a model in \code{x} is added at the upper end of its
 #' error bar.
@@ -40,9 +46,9 @@
 #' \code{x}.
 #'
 #' @export
-plot.selcritlist <- function(x, criterion = "BIC", ...) {
+plot.selcritlist <- function(x, criterion = "WAIC", ...) {
 
-  in_sample <- c("LL", "AIC", "BIC", "HQ")
+  in_sample <- c("LL", "AIC", "BIC", "HQ", "WAIC", "LOOIC")
   out_of_sample <- c("FE", "AFE", "RSFE")
 
   avail_statistics <- unique(unlist(lapply(x, function(y) {names(y)})))

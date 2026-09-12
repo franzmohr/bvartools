@@ -1,0 +1,31 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it using the metadata from this file."
+type: software
+title: "bvartools: Bayesian Inference of Vector Autoregressive and Error Correction Models"
+abstract: >-
+  An R package that assists in the set-up of algorithms for Bayesian inference
+  of vector autoregressive (VAR) and error correction (VEC) models. It provides
+  functions for posterior simulation, forecasting, impulse response analysis and
+  forecast error variance decomposition, largely based on the introductory texts
+  of Chan, Koop, Poirier and Tobias (2019), Koop and Korobilis (2010) and
+  Lütkepohl (2006).
+authors:
+  - family-names: Mohr
+    given-names: "Franz X."
+    email: franz.x.mohr@outlook.com
+    orcid: "https://orcid.org/0009-0003-8890-7781"
+version: 0.3.0
+date-released: "2026-09-11"
+license: GPL-2.0-or-later
+repository-code: "https://github.com/franzmohr/bvartools"
+repository: "https://CRAN.R-project.org/package=bvartools"
+url: "https://github.com/franzmohr/bvartools"
+keywords:
+  - Bayesian inference
+  - vector autoregression
+  - vector error correction
+  - econometrics
+  - time series
+  - Markov chain Monte Carlo
+  - Gibbs sampling
+  - R

@@ -354,14 +354,6 @@ covar_vector_to_matrix <- function(psi, k, tt) {
     .Call(`_bvartools_covar_vector_to_matrix`, psi, k, tt)
 }
 
-.draw_forecast <- function(k, p, a0_i, use_a, a, sigma, pred) {
-    .Call(`_bvartools_draw_forecast`, k, p, a0_i, use_a, a, sigma, pred)
-}
-
-.generate_forecasts <- function(k, p, h, use_a, z, draws_a, draws_u_sigma_inv) {
-    .Call(`_bvartools_generate_forecasts`, k, p, h, use_a, z, draws_a, draws_u_sigma_inv)
-}
-
 #' Posterior Data Preparation
 #' 
 #' Generates a lower triangular block matrix with ones on the main diagonal,
@@ -494,10 +486,6 @@ generate_lower_block_diagonal <- function(a, k, tt) {
 #' @export
 kalman_durbin_koopman_2002 <- function(y, z, sigma_u, sigma_v, B, a_init, P_init) {
     .Call(`_bvartools_kalman_durbin_koopman_2002_export`, y, z, sigma_u, sigma_v, B, a_init, P_init)
-}
-
-.log_likelihood_normal <- function(k, u, sigma_inv) {
-    .Call(`_bvartools_log_likelihood_normal`, k, u, sigma_inv)
 }
 
 #' Calculates the log-likelihood of a multivariate normal distribution.

@@ -635,40 +635,6 @@ RcppExport SEXP _bvartools_covar_vector_to_matrix(SEXP psiSEXP, SEXP kSEXP, SEXP
     UNPROTECT(1);
     return rcpp_result_gen;
 }
-// draw_forecast
-arma::mat draw_forecast(int& k, int& p, arma::mat& a0_i, bool& use_a, arma::mat& a, arma::mat& sigma, arma::mat pred);
-RcppExport SEXP _bvartools_draw_forecast(SEXP kSEXP, SEXP pSEXP, SEXP a0_iSEXP, SEXP use_aSEXP, SEXP aSEXP, SEXP sigmaSEXP, SEXP predSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< int& >::type k(kSEXP);
-    Rcpp::traits::input_parameter< int& >::type p(pSEXP);
-    Rcpp::traits::input_parameter< arma::mat& >::type a0_i(a0_iSEXP);
-    Rcpp::traits::input_parameter< bool& >::type use_a(use_aSEXP);
-    Rcpp::traits::input_parameter< arma::mat& >::type a(aSEXP);
-    Rcpp::traits::input_parameter< arma::mat& >::type sigma(sigmaSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type pred(predSEXP);
-    rcpp_result_gen = Rcpp::wrap(draw_forecast(k, p, a0_i, use_a, a, sigma, pred));
-    return rcpp_result_gen;
-END_RCPP
-}
-// generate_forecasts
-arma::mat generate_forecasts(int k, int p, int h, bool use_a, arma::mat z, arma::mat draws_a, arma::mat draws_u_sigma_inv);
-RcppExport SEXP _bvartools_generate_forecasts(SEXP kSEXP, SEXP pSEXP, SEXP hSEXP, SEXP use_aSEXP, SEXP zSEXP, SEXP draws_aSEXP, SEXP draws_u_sigma_invSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< int >::type k(kSEXP);
-    Rcpp::traits::input_parameter< int >::type p(pSEXP);
-    Rcpp::traits::input_parameter< int >::type h(hSEXP);
-    Rcpp::traits::input_parameter< bool >::type use_a(use_aSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type z(zSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type draws_a(draws_aSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type draws_u_sigma_inv(draws_u_sigma_invSEXP);
-    rcpp_result_gen = Rcpp::wrap(generate_forecasts(k, p, h, use_a, z, draws_a, draws_u_sigma_inv));
-    return rcpp_result_gen;
-END_RCPP
-}
 // generate_lower_block_diagonal
 arma::sp_mat generate_lower_block_diagonal(arma::mat& a, int& k, int& tt);
 static SEXP _bvartools_generate_lower_block_diagonal_try(SEXP aSEXP, SEXP kSEXP, SEXP ttSEXP) {
@@ -734,19 +700,6 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::vec >::type a_init(a_initSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type P_init(P_initSEXP);
     rcpp_result_gen = Rcpp::wrap(kalman_durbin_koopman_2002_export(y, z, sigma_u, sigma_v, B, a_init, P_init));
-    return rcpp_result_gen;
-END_RCPP
-}
-// log_likelihood_normal
-arma::mat log_likelihood_normal(const int k, const arma::mat u, const arma::mat sigma_inv);
-RcppExport SEXP _bvartools_log_likelihood_normal(SEXP kSEXP, SEXP uSEXP, SEXP sigma_invSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const int >::type k(kSEXP);
-    Rcpp::traits::input_parameter< const arma::mat >::type u(uSEXP);
-    Rcpp::traits::input_parameter< const arma::mat >::type sigma_inv(sigma_invSEXP);
-    rcpp_result_gen = Rcpp::wrap(log_likelihood_normal(k, u, sigma_inv));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -1100,12 +1053,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"_bvartools_coint_prepare_sur_data", (DL_FUNC) &_bvartools_coint_prepare_sur_data, 6},
     {"_bvartools_covar_prepare_data", (DL_FUNC) &_bvartools_covar_prepare_data, 5},
     {"_bvartools_covar_vector_to_matrix", (DL_FUNC) &_bvartools_covar_vector_to_matrix, 3},
-    {"_bvartools_draw_forecast", (DL_FUNC) &_bvartools_draw_forecast, 7},
-    {"_bvartools_generate_forecasts", (DL_FUNC) &_bvartools_generate_forecasts, 7},
     {"_bvartools_generate_lower_block_diagonal", (DL_FUNC) &_bvartools_generate_lower_block_diagonal, 3},
     {"_bvartools_ir", (DL_FUNC) &_bvartools_ir, 5},
     {"_bvartools_kalman_durbin_koopman_2002_export", (DL_FUNC) &_bvartools_kalman_durbin_koopman_2002_export, 7},
-    {"_bvartools_log_likelihood_normal", (DL_FUNC) &_bvartools_log_likelihood_normal, 3},
     {"_bvartools_loglik_normal", (DL_FUNC) &_bvartools_loglik_normal, 2},
     {"_bvartools_post_bvs", (DL_FUNC) &_bvartools_post_bvs, 9},
     {"_bvartools_post_coint_kls", (DL_FUNC) &_bvartools_post_coint_kls, 10},

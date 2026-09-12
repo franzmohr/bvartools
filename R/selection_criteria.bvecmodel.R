@@ -58,11 +58,29 @@ selection_criteria.bvecmodel <- function(object, ci = 0.95, ...){
   structural <- object[["model"]][["structrual"]]
   tt <- nrow(object[["data"]][["train"]][["y"]])
   varnames <- dimnames(object[["data"]][["original"]][["endogen"]])[[2]]
+  # Free parameters of the model.
+  #
+  # Pi = alpha beta' is a k x k_ect matrix of rank 'rank'. A matrix of that
+  # shape and rank has rank * (k + k_ect - rank) free elements rather than
+  # k * k_ect of them, because alpha and beta are identified only up to an
+  # r x r rotation, and it is this term -- and only this term -- that grows
+  # with the rank. The remaining coefficients are one per equation and column
+  # of x. The error term contributes k(k + 1)/2, whether it is an unrestricted
+  # covariance matrix or, in a structural model, a diagonal one of k elements
+  # beside the k(k - 1)/2 free elements of A0, which come to the same number.
+  n_x <- 0L
   if (!is.null(object[["data"]][["train"]][["x"]])) {
-    nparams <- rank + ncol(object[["data"]][["train"]][["x"]])
-  } else {
-    nparams <- rank
+    n_x <- ncol(object[["data"]][["train"]][["x"]])
   }
+  k_ect <- 0L
+  if (!is.null(object[["data"]][["train"]][["w"]])) {
+    k_ect <- ncol(object[["data"]][["train"]][["w"]])
+  }
+  if (rank > 0 && k_ect == 0) {
+    stop("The free parameters of the cointegration term cannot be counted ",
+         "without the error correction term in 'data$train$w'.")
+  }
+  nparams <- rank * (k + k_ect - rank) + k * n_x + k * (k + 1) / 2
   h <- object[["model"]][["h"]]
   max_n_columns <- k * h
   
@@ -118,9 +136,20 @@ selection_criteria.bvecmodel <- function(object, ci = 0.95, ...){
                      "qupper" = stats::quantile(hq, probs = ci_high))
     row.names(hq) <- NULL
     result[["HQ"]] <- hq
-    
+
+    # WAIC
+    #
+    # Penalises by the flexibility the fit actually used rather than by a count
+    # of parameters, which is what makes constant, time varying and stochastic
+    # volatility specifications comparable with each other. See .waic().
+    waic <- .waic_data_frame(object[["posterior"]][["loglik"]], ci_low, ci_high)
+    if (!is.null(waic)) {
+      row.names(waic) <- NULL
+      result[["WAIC"]] <- waic
+    }
+
   }
-  
+
   
   
   if (use_fe) {

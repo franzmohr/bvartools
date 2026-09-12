@@ -31,11 +31,20 @@ print.selcritlist <- function(x, digits = max(3L, getOption("digits") - 3L), rel
                          paste0("Quantile (", ci[2], ")"))
     template[, 1] <- paste0("Model ", 1:n_models)
 
-    criteria <- c("LL", "AIC", "BIC", "HQ")
+    criteria <- c("LL", "AIC", "BIC", "HQ", "WAIC")
     headers <- c("Log-likelihood",
                  "Akaike Information Criterion (AIC)",
                  "Bayesian Information Criterion (BIC)",
-                 "Hannan-Quinn Criterion (HQ)")
+                 "Hannan-Quinn Criterion (HQ)",
+                 "Widely Applicable Information Criterion (WAIC)")
+
+    # A criterion no model carries is left out entirely. WAIC needs more than
+    # one draw to estimate the variance it penalises with, so it can be absent.
+    present <- vapply(criteria, function(criterion) {
+      any(vapply(x, function(y) {!is.null(y[[criterion]])}, logical(1)))
+    }, logical(1))
+    headers <- headers[present]
+    criteria <- criteria[present]
 
     for (j in 1:length(criteria)) {
 

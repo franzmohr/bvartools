@@ -15,13 +15,16 @@ print.selcrit <- function(x, digits = max(3L, getOption("digits") - 3L), ...){
     cat("In-sample")
     cat("\n------------------------------------------\n\n")
     
-    result <- as.data.frame(matrix(NA, 4, 5))
+    # Only the criteria the object actually carries. WAIC needs more than one
+    # draw to estimate the variance it penalises with, so it can be absent.
+    criterion <- c("LL", "AIC", "HQ", "BIC", "WAIC")
+    criterion <- criterion[!vapply(x[criterion], is.null, logical(1))]
+
+    result <- as.data.frame(matrix(NA, length(criterion), 5))
     names(result) <- c("Criterion", "Mean", "Median",
                        paste0("Quantile (", ci[1], ")"),
                        paste0("Quantile (", ci[2], ")"))
-    
-    
-    criterion <- c("LL", "AIC", "HQ", "BIC")
+
     for (i in 1:length(criterion)) {
       result[i, 1] <- criterion[i]
       result[i, 2:5] <- x[[criterion[i]]][, c("mean", "median", "qlower", "qupper")]

@@ -60,7 +60,13 @@ selection_criteria.bvarmodel <- function(object, ci = 0.95, ...){
   structural <- object[["model"]][["structrual"]]
   tt <- nrow(object[["data"]][["train"]][["y"]])
   varnames <- dimnames(object[["data"]][["original"]][["endogen"]])[[2]]
-  nparams <- k * p + m * (s + 1) + n
+  # Free parameters of the model. 'k * p + m * (s + 1) + n' is the number of
+  # regressors of one equation, and there are k equations, so the coefficients
+  # come to k times that. The error term contributes k(k + 1)/2, whether it is
+  # an unrestricted covariance matrix or, in a structural model, a diagonal one
+  # of k elements beside the k(k - 1)/2 free elements of A0, which come to the
+  # same number.
+  nparams <- k * (k * p + m * (s + 1) + n) + k * (k + 1) / 2
   h <- object[["model"]][["h"]]
   max_n_columns <- k * h
   
@@ -116,9 +122,20 @@ selection_criteria.bvarmodel <- function(object, ci = 0.95, ...){
                      "qupper" = stats::quantile(hq, probs = ci_high))
     row.names(hq) <- NULL
     result[["HQ"]] <- hq
-    
+
+    # WAIC
+    #
+    # Penalises by the flexibility the fit actually used rather than by a count
+    # of parameters, which is what makes constant, time varying and stochastic
+    # volatility specifications comparable with each other. See .waic().
+    waic <- .waic_data_frame(object[["posterior"]][["loglik"]], ci_low, ci_high)
+    if (!is.null(waic)) {
+      row.names(waic) <- NULL
+      result[["WAIC"]] <- waic
+    }
+
   }
-  
+
   
   
   if (use_fe) {

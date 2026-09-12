@@ -1,9 +1,9 @@
-test_that("selection_criteria summarises the four in-sample criteria", {
+test_that("selection_criteria summarises the in-sample criteria", {
   criteria <- selection_criteria(fx_var_fitted())
 
   expect_s3_class(criteria, "selcrit")
-  expect_named(criteria, c("model", "LL", "AIC", "BIC", "HQ"))
-  for (name in c("LL", "AIC", "BIC", "HQ")) {
+  expect_named(criteria, c("model", "LL", "AIC", "BIC", "HQ", "WAIC"))
+  for (name in c("LL", "AIC", "BIC", "HQ", "WAIC")) {
     expect_named(criteria[[name]], c("mean", "median", "qlower", "qupper"))
     expect_identical(nrow(criteria[[name]]), 1L)
   }
@@ -29,10 +29,12 @@ test_that("the information criteria follow their definitions", {
   criteria <- selection_criteria(model)
 
   nobs <- nrow(model[["data"]][["train"]][["y"]])
-  # The penalty counts the regressors of one equation, not the k * (kp + n)
-  # coefficients of the whole system.
-  n_coeffs <- spec[["k"]] * spec[["p"]] +
-    spec[["m"]] * (spec[["s"]] + 1) + spec[["n"]]
+  # The log-likelihood is the one of the whole system, so the penalty counts
+  # the free parameters of the whole system: the regressors of one equation
+  # times the k equations, and the k(k + 1)/2 of the error covariance.
+  n_coeffs <- spec[["k"]] * (spec[["k"]] * spec[["p"]] +
+    spec[["m"]] * (spec[["s"]] + 1) + spec[["n"]]) +
+    spec[["k"]] * (spec[["k"]] + 1) / 2
   loglik <- criteria[["LL"]][["mean"]]
 
   expect_equal(criteria[["AIC"]][["mean"]], -2 * loglik + 2 * n_coeffs)
@@ -86,4 +88,71 @@ test_that("get_model_specifications describes the underlying model", {
   expect_identical(spec[["type"]], "VAR")
   expect_identical(spec[["k"]], 3L)
   expect_identical(spec[["p"]], 1L)
+})
+
+test_that("the penalty of an error correction model grows with the rank", {
+  # Pi = alpha beta' is a k x k_ect matrix of rank r and has r(k + k_ect - r)
+  # free elements, so the penalty has to grow by k + k_ect - 2r + 1 from one
+  # rank to the next. Counting the rank itself, as the method used to, grows it
+  # by one, which the gain in fit from an extra cointegration vector exceeds
+  # almost always -- the criterion then prefers full rank whatever the data say.
+  data("us_macrodata", envir = environment())
+
+  penalties <- vapply(0:2, function(r) {
+    object <- create_bvecmodel(data = us_macrodata, p = 2,
+                               const = "unrestricted", r = r,
+                               iterations = 20, burnin = 10)
+    object <- add_priors(object, coef = list(v_i = 1, v_i_det = 1 / 10),
+                         coint = list(v_i = 0, p_tau_i = 1),
+                         sigma = list(df = 3, scale = 1))
+    object <- add_initial_values(object)
+    object <- add_posterior_loglik(add_posterior_coefficients(object))
+
+    criteria <- selection_criteria(object)
+    k <- object[["model"]][["k"]]
+    k_ect <- ncol(object[["data"]][["train"]][["w"]])
+    n_x <- ncol(object[["data"]][["train"]][["x"]])
+
+    # Recovered from the criterion rather than read off the model, so that this
+    # checks what the penalty actually was.
+    nobs <- nrow(object[["data"]][["train"]][["y"]])
+    nparams <- (criteria[["BIC"]][["mean"]] +
+                  2 * criteria[["LL"]][["mean"]]) / log(nobs)
+
+    expect_equal(nparams, r * (k + k_ect - r) + k * n_x + k * (k + 1) / 2)
+    nparams
+  }, numeric(1))
+
+  expect_true(all(diff(penalties) > 1))
+})
+
+test_that("WAIC penalises by the flexibility a fit used", {
+  model <- fx_var_fitted()
+  criteria <- selection_criteria(model)
+  loglik <- model[["posterior"]][["loglik"]]
+
+  # Watanabe's definition, on the deviance scale.
+  lppd <- sum(log(colMeans(exp(loglik))))
+  p_waic <- sum(apply(loglik, 2, stats::var))
+
+  expect_equal(criteria[["WAIC"]][["mean"]], -2 * (lppd - p_waic))
+  expect_equal(criteria[["WAIC"]][["median"]], criteria[["WAIC"]][["mean"]])
+
+  # The quantile columns are a normal interval around the estimate rather than
+  # posterior quantiles, so they are symmetric.
+  expect_equal(criteria[["WAIC"]][["mean"]] - criteria[["WAIC"]][["qlower"]],
+               criteria[["WAIC"]][["qupper"]] - criteria[["WAIC"]][["mean"]])
+})
+
+test_that("a single draw leaves WAIC out rather than reporting nonsense", {
+  model <- fx_var_fitted()
+  model[["posterior"]][["loglik"]] <-
+    model[["posterior"]][["loglik"]][1, , drop = FALSE]
+
+  criteria <- selection_criteria(model)
+
+  # The variance across draws is what WAIC penalises with, and one draw has
+  # none, so the criterion is absent instead of zero.
+  expect_null(criteria[["WAIC"]])
+  expect_false("WAIC" %in% names(criteria))
 })

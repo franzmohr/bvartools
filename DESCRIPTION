@@ -161,6 +161,7 @@ Collate:
     'vec_to_var.R'
     'vec_to_var.bvecmodel.R'
     'vec_to_var.modellist.R'
+    'waic.R'
     'window.bvarmodel.R'
     'window.bvecmodel.R'
     'window.modellist.R'

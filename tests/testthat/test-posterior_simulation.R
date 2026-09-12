@@ -123,21 +123,37 @@ test_that("stochastic volatility specifications produce draws", {
                    c(10L, as.integer(k * k * tt)))
 })
 
-test_that("a failing sampler is reported instead of aborting", {
+test_that("a failing sampler stops rather than returning an unestimated model", {
   model <- fx_var_initial()
   # Corrupt the initial values so the sampler cannot run.
   model[["initial"]][["u_sigma_inv"]] <- matrix(NA_real_, 2, 2)
 
-  # try() reports the sampler error on stderr, which is not part of the contract.
-  utils::capture.output(
-    failed <- add_posterior_coefficients(model),
-    type = "message"
-  )
+  # The sampler's own message, which names what was wrong with the input. This
+  # used to be caught and printed, and the unestimated model returned with an
+  # 'error' element bolted on -- a flag nothing in this package or in bgvars
+  # read, so what actually reached the caller was an object of the right class,
+  # carrying the specification and the data of a fitted model and no posterior.
+  expect_error(add_posterior_coefficients(model), "initial error precision")
+})
 
-  expect_true(isTRUE(failed[["error"]]))
-  expect_null(failed[["posterior"]])
-  # The object keeps its class so downstream code can filter on the flag.
-  expect_s3_class(failed, "bvarmodel")
+test_that("a failing member stops a batch rather than leaving a hole in it", {
+  # add_posterior_coefficients() on a list is an lapply over the method above,
+  # so this is the same contract seen from the batch methods: a specification
+  # that cannot be estimated ends the run instead of coming back without a
+  # posterior and being carried into whatever reads the results.
+  models <- list(fx_var_initial(), fx_var_initial())
+  models[[2]][["initial"]][["u_sigma_inv"]] <- matrix(NA_real_, 2, 2)
+  class(models) <- list("modellist", "list")
+
+  expect_error(add_posterior_coefficients(models), "initial error precision")
+})
+
+test_that("a supplied posterior function is not shielded from its own errors", {
+  expect_error(
+    add_posterior_coefficients(fx_var_initial(),
+                               posterior_function = function(x) stop("sampler broke")),
+    "sampler broke"
+  )
 })
 
 test_that("time varying parameters are drawn for every period", {

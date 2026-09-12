@@ -25,7 +25,14 @@
 #' triangular elements are freely estimated. Since posterior draws are obtained based on the SUR form of
 #' the VEC model, the structural coefficients are drawn jointly with the other coefficients.
 #' 
-#' @return An object of class 'bvecmodel'.
+#' A sampler that cannot run raises its error rather than returning something.
+#' The message names what about the input it could not work with. Applied to a
+#' list of models -- a 'modellist', an 'expandingwindow' or, in \pkg{bgvars}, a
+#' 'gvecmodel' -- that ends the run on the first specification that fails,
+#' rather than leaving that one without a posterior and carrying it into
+#' whatever reads the results.
+#'
+#' @return An object of class 'bvecmodel', with its posterior draws added.
 #' 
 #' @references
 #' 
@@ -72,64 +79,54 @@ add_posterior_coefficients.bvecmodel <- function(object, posterior_function = NU
   
   class_of_object <- class(object)
   
-  # Copy in case the simulation fails
-  model <- object
-  if ("posteriors" %in% names(model)) {
-    model[["posteriors"]] <- NULL
-  }
-  
+  # A failing simulation raises its error rather than being turned into an
+  # object that looks estimated. See the note in
+  # add_posterior_coefficients.bvarmodel(), which this mirrors: the 'error'
+  # marker this used to return in place of a posterior was read by nothing, so
+  # the failure surfaced later and somewhere else.
   if (is.null(posterior_function)) {
-    object <- try(
-      {
-        # Check if the input is suitable for the posterior simulation functions
-        .check_bvecpost_input(object)
-        
-        algorithm <- object[["model"]][["algorithm"]]
-        
-        if (algorithm %in% c("VecKlgs2010", "VecNormalGamma", "VecNormalWishart",
-                             "VecNormalStochvol", "VecTvpGamma", "VecTvpWishart",
-                             "VecTvpStochvol")) {
-          object <- switch(algorithm,
-                           VecKlgs2010 = .VecKlgs2010Coefficients(object),
-                           VecNormalGamma = .VecNormalGammaCoefficients(object),
-                           VecNormalStochvol = .VecNormalStochvolCoefficients(object),
-                           VecNormalWishart = .VecNormalWishartCoefficients(object),
-                           VecTvpGamma = .VecTvpGammaCoefficients(object),
-                           VecTvpStochvol = .VecTvpStochvolCoefficients(object),
-                           VecTvpWishart = .VecTvpWishartCoefficients(object))
-        } else {
-          stop("Algorithm '", algorithm, "' not supported.")
-        }
-        
-        for (i in c("a", "beta", "psi", "u_sigma_inv", "u_omega_inv")) {
-          if (!is.null(object[["posterior"]][[i]][["coeffs"]])) {
-            object[["posterior"]][[i]][["coeffs"]] <- coda::as.mcmc(object[["posterior"]][[i]][["coeffs"]])
-          }
-          # Only the cointegration block has one of these, and only when the
-          # prior made rho a parameter rather than a hyperparameter. NULL
-          # everywhere else, which is the same as not having it.
-          if (!is.null(object[["posterior"]][[i]][["rho"]])) {
-            object[["posterior"]][[i]][["rho"]] <- coda::as.mcmc(object[["posterior"]][[i]][["rho"]])
-          }
-          if (!is.null(object[["posterior"]][[i]][["lambda"]])) {
-            object[["posterior"]][[i]][["lambda"]] <- coda::as.mcmc(object[["posterior"]][[i]][["lambda"]])
-          }
-          if (!is.null(object[["posterior"]][[i]][["sigma"]])) {
-            object[["posterior"]][[i]][["sigma"]] <- coda::as.mcmc(object[["posterior"]][[i]][["sigma"]])
-          }
-        }
-        
-        object
+
+    # Check if the input is suitable for the posterior simulation functions
+    .check_bvecpost_input(object)
+
+    algorithm <- object[["model"]][["algorithm"]]
+
+    if (algorithm %in% c("VecKlgs2010", "VecNormalGamma", "VecNormalWishart",
+                         "VecNormalStochvol", "VecTvpGamma", "VecTvpWishart",
+                         "VecTvpStochvol")) {
+      object <- switch(algorithm,
+                       VecKlgs2010 = .VecKlgs2010Coefficients(object),
+                       VecNormalGamma = .VecNormalGammaCoefficients(object),
+                       VecNormalStochvol = .VecNormalStochvolCoefficients(object),
+                       VecNormalWishart = .VecNormalWishartCoefficients(object),
+                       VecTvpGamma = .VecTvpGammaCoefficients(object),
+                       VecTvpStochvol = .VecTvpStochvolCoefficients(object),
+                       VecTvpWishart = .VecTvpWishartCoefficients(object))
+    } else {
+      stop("Algorithm '", algorithm, "' not supported.")
+    }
+
+    for (i in c("a", "beta", "psi", "u_sigma_inv", "u_omega_inv")) {
+      if (!is.null(object[["posterior"]][[i]][["coeffs"]])) {
+        object[["posterior"]][[i]][["coeffs"]] <- coda::as.mcmc(object[["posterior"]][[i]][["coeffs"]])
       }
-    )
+      # Only the cointegration block has one of these, and only when the
+      # prior made rho a parameter rather than a hyperparameter. NULL
+      # everywhere else, which is the same as not having it.
+      if (!is.null(object[["posterior"]][[i]][["rho"]])) {
+        object[["posterior"]][[i]][["rho"]] <- coda::as.mcmc(object[["posterior"]][[i]][["rho"]])
+      }
+      if (!is.null(object[["posterior"]][[i]][["lambda"]])) {
+        object[["posterior"]][[i]][["lambda"]] <- coda::as.mcmc(object[["posterior"]][[i]][["lambda"]])
+      }
+      if (!is.null(object[["posterior"]][[i]][["sigma"]])) {
+        object[["posterior"]][[i]][["sigma"]] <- coda::as.mcmc(object[["posterior"]][[i]][["sigma"]])
+      }
+    }
+
   } else {
     # Apply own function
-    object <- try(posterior_function(object))
-  }
-  
-  # Produce something if estimation fails
-  if (inherits(object, "try-error")) {
-    object <- c(model, list(error = TRUE))
+    object <- posterior_function(object)
   }
   
   class(object) <- class_of_object

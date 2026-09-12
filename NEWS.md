@@ -1,5 +1,25 @@
 # bvartools (development version)
 
+* **A sampler that cannot run now stops.** `add_posterior_coefficients()` used
+  to catch the error, print it, and return the *unestimated* model with an
+  `error` element added -- an object of the right class, carrying the
+  specification and the data of a fitted model and no posterior draws. Nothing
+  in this package or in bgvars ever read that flag, so the failure surfaced
+  somewhere else entirely: as a missing element several steps later, or as a
+  model ranked against its siblings on a log likelihood it did not have. The
+  sampler's own message, which says what about the input it could not work
+  with, now reaches the caller.
+
+  This changes what a batch does. `add_posterior_coefficients()` on a
+  `modellist`, an `expandingwindow` or a bgvars `gvarmodel` is an `lapply` over
+  the single-model method, so one unusable specification ends the run instead of
+  leaving a hole in the results. If you were relying on a batch completing past
+  a model that cannot be estimated, wrap the call in `try()` yourself -- the
+  difference being that you then know it happened.
+
+  A user-supplied `posterior_function` is no longer shielded from its own errors
+  either.
+
 * **The out-of-sample regressors of a forecast are no longer in SUR form.**
   `add_forecast_input()` stores them as `object$data$forecast$x`, one row per
   forecast period and one column per regressor, where

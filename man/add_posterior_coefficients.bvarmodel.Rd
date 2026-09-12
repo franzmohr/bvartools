@@ -17,7 +17,7 @@ If \code{NULL} (default), internalal functions are used.}
 \item{...}{further arguments passed to or from other methods.}
 }
 \value{
-An object of class 'bvarmodel'.
+An object of class 'bvarmodel', with its posterior draws added.
 }
 \description{
 Forwards model input to posterior simulation functions for vector autoregressive models.
@@ -25,6 +25,13 @@ Forwards model input to posterior simulation functions for vector autoregressive
 \details{
 Unless \code{posterior_function} is specified, the function forwards
 the model input to the package's own posterior functions.
+
+A sampler that cannot run raises its error rather than returning something.
+The message names what about the input it could not work with. Applied to a
+list of models -- a 'modellist', an 'expandingwindow' or, in \pkg{bgvars}, a
+'gvarmodel' -- that ends the run on the first specification that fails,
+rather than leaving that one without a posterior and carrying it into
+whatever reads the results.
 }
 \examples{
 

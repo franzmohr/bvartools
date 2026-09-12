@@ -12,7 +12,14 @@
 #' @details Unless \code{posterior_function} is specified, the function forwards
 #' the model input to the package's own posterior functions.
 #' 
-#' @return An object of class 'bvarmodel'.
+#' A sampler that cannot run raises its error rather than returning something.
+#' The message names what about the input it could not work with. Applied to a
+#' list of models -- a 'modellist', an 'expandingwindow' or, in \pkg{bgvars}, a
+#' 'gvarmodel' -- that ends the run on the first specification that fails,
+#' rather than leaving that one without a posterior and carrying it into
+#' whatever reads the results.
+#' 
+#' @return An object of class 'bvarmodel', with its posterior draws added.
 #' 
 #' @examples
 #' 
@@ -42,58 +49,58 @@ add_posterior_coefficients.bvarmodel <- function(object, posterior_function = NU
   # This  allows to employ the method with other compatible classes
   class_of_object <- class(object)
   
-  # Copy in case the simulation fails
-  model <- object
-  if ("posteriors" %in% names(model)) {
-    model[["posteriors"]] <- NULL
-  }
-  
+  # A failing simulation raises its error rather than being turned into an
+  # object that looks estimated. What this used to do was catch it, print it and
+  # return the unestimated model with an 'error' element bolted on -- a marker
+  # nothing in this package or in bgvars ever read. The model that came back had
+  # the class, the specification and the data of a fitted one and no posterior,
+  # so the failure surfaced somewhere else entirely: as a missing element in a
+  # later step, or as a model silently ranked against its siblings on a log
+  # likelihood it did not have.
+  #
+  # It costs the batch methods something. add_posterior_coefficients() on a
+  # 'modellist', an 'expandingwindow' or a 'gvarmodel' is an lapply over this,
+  # so one unusable specification now stops the run instead of leaving a hole in
+  # the results. Stopping on it is the lesser harm: a long batch that ends in an
+  # error says which model was wrong and why, and one that quietly drops a model
+  # does not.
   if (is.null(posterior_function)) {
-    object <- try(
-      {
-        # Check if the input is suitable for the posterior simulation functions
-        .check_bvarpost_input(object)
-        
-        algorithm <- object[["model"]][["algorithm"]]
-        
-        if (algorithm %in% c("VarNormalAld", "VarNormalGamma", "VarNormalStochvol", "VarNormalWishart",
-                             "VarTvpAld", "VarTvpGamma", "VarTvpStochvol", "VarTvpWishart")) {
-          object <- switch(algorithm,
-                           VarNormalAld = .VarNormalAldCoefficients(object),
-                           VarNormalGamma = .VarNormalGammaCoefficients(object),
-                           VarNormalStochvol = .VarNormalStochvolCoefficients(object),
-                           VarNormalWishart = .VarNormalWishartCoefficients(object),
-                           VarTvpAld = .VarTvpAldCoefficients(object),
-                           VarTvpGamma = .VarTvpGammaCoefficients(object),
-                           VarTvpStochvol = .VarTvpStochvolCoefficients(object),
-                           VarTvpWishart = .VarTvpWishartCoefficients(object))
-        } else {
-          stop("Algorithm '", algorithm, "' not supported.")
-        }
-        
-        for (i in c("a", "psi", "u_sigma_inv", "u_omega_inv", "u_scale")) {
-          if (!is.null(object[["posterior"]][[i]][["coeffs"]])) {
-            object[["posterior"]][[i]][["coeffs"]] <- coda::as.mcmc(object[["posterior"]][[i]][["coeffs"]])
-          }
-          if (!is.null(object[["posterior"]][[i]][["lambda"]])) {
-            object[["posterior"]][[i]][["lambda"]] <- coda::as.mcmc(object[["posterior"]][[i]][["lambda"]])
-          }
-          if (!is.null(object[["posterior"]][[i]][["sigma"]])) {
-            object[["posterior"]][[i]][["sigma"]] <- coda::as.mcmc(object[["posterior"]][[i]][["sigma"]])
-          }
-        }
-        
-        object
+
+    # Check if the input is suitable for the posterior simulation functions
+    .check_bvarpost_input(object)
+
+    algorithm <- object[["model"]][["algorithm"]]
+
+    if (algorithm %in% c("VarNormalAld", "VarNormalGamma", "VarNormalStochvol", "VarNormalWishart",
+                         "VarTvpAld", "VarTvpGamma", "VarTvpStochvol", "VarTvpWishart")) {
+      object <- switch(algorithm,
+                       VarNormalAld = .VarNormalAldCoefficients(object),
+                       VarNormalGamma = .VarNormalGammaCoefficients(object),
+                       VarNormalStochvol = .VarNormalStochvolCoefficients(object),
+                       VarNormalWishart = .VarNormalWishartCoefficients(object),
+                       VarTvpAld = .VarTvpAldCoefficients(object),
+                       VarTvpGamma = .VarTvpGammaCoefficients(object),
+                       VarTvpStochvol = .VarTvpStochvolCoefficients(object),
+                       VarTvpWishart = .VarTvpWishartCoefficients(object))
+    } else {
+      stop("Algorithm '", algorithm, "' not supported.")
+    }
+
+    for (i in c("a", "psi", "u_sigma_inv", "u_omega_inv", "u_scale")) {
+      if (!is.null(object[["posterior"]][[i]][["coeffs"]])) {
+        object[["posterior"]][[i]][["coeffs"]] <- coda::as.mcmc(object[["posterior"]][[i]][["coeffs"]])
       }
-    )
+      if (!is.null(object[["posterior"]][[i]][["lambda"]])) {
+        object[["posterior"]][[i]][["lambda"]] <- coda::as.mcmc(object[["posterior"]][[i]][["lambda"]])
+      }
+      if (!is.null(object[["posterior"]][[i]][["sigma"]])) {
+        object[["posterior"]][[i]][["sigma"]] <- coda::as.mcmc(object[["posterior"]][[i]][["sigma"]])
+      }
+    }
+
   } else {
     # Apply own function
-    object <- try(posterior_function(object))
-  }
-  
-  # Produce something if estimation fails
-  if (inherits(object, "try-error")) {
-    object <- c(model, list(error = TRUE))
+    object <- posterior_function(object)
   }
   
   class(object) <- class_of_object

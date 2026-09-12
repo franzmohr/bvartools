@@ -17,7 +17,7 @@ If \code{NULL} (default), internal functions are used.}
 \item{...}{further arguments passed to or from other methods.}
 }
 \value{
-An object of class 'bvecmodel'.
+An object of class 'bvecmodel', with its posterior draws added.
 }
 \description{
 Forwards model input to posterior simulation functions for vector error correction models.
@@ -38,6 +38,13 @@ contemporary endogenous variables, which corresponds to the so-called (A-model).
 specifications are supported, where the structural matrix contains ones on its diagonal and all lower
 triangular elements are freely estimated. Since posterior draws are obtained based on the SUR form of
 the VEC model, the structural coefficients are drawn jointly with the other coefficients.
+
+A sampler that cannot run raises its error rather than returning something.
+The message names what about the input it could not work with. Applied to a
+list of models -- a 'modellist', an 'expandingwindow' or, in \pkg{bgvars}, a
+'gvecmodel' -- that ends the run on the first specification that fails,
+rather than leaving that one without a posterior and carrying it into
+whatever reads the results.
 }
 \examples{
 

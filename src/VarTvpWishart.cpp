@@ -84,12 +84,21 @@ bayests::VarTvpWishartDraws read_draws_for_forecast(const Rcpp::List &object,
 
   const Rcpp::List posterior = object["posterior"];
 
-  // Counted off the forecast regressors, which is what the coefficients drawn
-  // per period have to line up with. They are the compact layout, one column
-  // per regressor, so the coefficient count is k times their width.
-  const arma::uword nparams =
-      input.forecast.x.n_cols * static_cast<arma::uword>(input.spec.k);
-  if (nparams > 0 && has(posterior, "a")) {
+  // Counted off the model's dimensions, which is the width the stored path was
+  // cut into and the one the sampler slices back out: nparams_per_period()
+  // carries the contemporaneous block, and forecast() splits that off `a`
+  // itself.
+  //
+  // Counting it off the forecast regressors instead -- k times their width --
+  // leaves out exactly that block. The two agree for every model that can get
+  // here, because a structural model is not identified alongside a Wishart
+  // precision and validate() refuses one, so the block is always empty. They
+  // would stop agreeing the moment that ceased to be true, and the failure
+  // would be a forecast built on `a` sliced in the wrong place rather than an
+  // error. Every other time-varying model here, and all three of the vendored
+  // core's own readers, count it this way.
+  const arma::uword nparams = static_cast<arma::uword>(input.spec.nparams_per_period());
+  if (input.forecast.x.n_cols > 0 && has(posterior, "a")) {
     read_draws_last_period_if_present(Rcpp::List(posterior["a"]), "coeffs",
                                       input.train.periods(input.spec.k), nparams, draws.a);
   }

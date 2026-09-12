@@ -31,21 +31,27 @@ workflow into multiple steps:
     expanding window estimation.
   - Set prior hyperparameters either manually or based on established
     approaches such as the Minnesota prior.
-  - Set initial values based on maximum likelihood estiamtes or drawing
+  - Set initial values based on maximum likelihood estimates or drawing
     from a prior.
 - *Posterior simulation*
   - Perform posterior simulation of coefficients, forecasts and
-    likelihoods using algortihms from the
+    likelihoods using algorithms from the
     [BayesTS](github.com/franzmohr/BayesTS) library.
-  - Researchers can also choose to use they own algorthms.
+  - Researchers can also choose to use their own algorithms.
 - *Evaluation*
   - Traditional summary statistics for individual coefficients
-  - In-sample performance measures (LL, AIC, BIC, HQ)
+  - In-sample performance measures (LL, AIC, BIC, HQ, WAIC)
   - Out-of-sample performance (MAFE, RMSFE)
 - *Application*
   - Forecasts
-  - Impulse response functions
+  - Impulse response functions, including sign-restricted and
+    caller-supplied identifications
   - Forecast error variance decomposition
+  - Connectedness and spillover measures à la Diebold and Yilmaz (2012)
+- *Storage*
+  - Write an estimated model to HDF5 and read it back, one model per
+    file or several addressed by group, so a long simulation need not be
+    repeated to be analysed again.
 
 In each step researchers are provided with the opportunity to fine-tune
 a model according to their specific requirements or to use the default
@@ -57,12 +63,14 @@ For Bayesian inference of *VAR models* the package covers
 
 - Standard BVAR models with independent normal-Wishart priors
 - BVAR models employing stochastic search variable selection à la
-  Gerorge, Sun and Ni (2008)
+  George, Sun and Ni (2008)
 - BVAR models employing Bayesian variable selection à la Korobilis
   (2013)
 - Structural BVAR models, where the structural coefficients are
-  estimated from contemporary endogenous variables (A-model)
-- Stochastic volatility (SV) of the errors à la Kim, Shephard and Chip
+  estimated from contemporaneous endogenous variables (A-model)
+- Sign restrictions, which identify the shocks by the signs of the
+  impulse responses they produce à la Uhlig (2005)
+- Stochastic volatility (SV) of the errors à la Kim, Shephard and Chib
   (1998)
 - Time varying parameter models (TVP-VAR)
 - Bayesian quantile VARs, which estimate a conditional quantile instead
@@ -75,20 +83,21 @@ space – in the following variants
 
 - The BVEC model as presented in Koop, León-González and Strachan (2010)
 - The KLS model employing stochastic search variable selection à la
-  Gerorge, Sun and Ni (2008)
-- The KLS modol employing Bayesian variable selection à la Korobilis
+  George, Sun and Ni (2008)
+- The KLS model employing Bayesian variable selection à la Korobilis
   (2013)
 - Structural BVEC models, where the structural coefficients are
   estimated from contemporaneous endogenous variables (A-model).
   However, no further restrictions are made regarding the cointegration
   term.
-- Stochastic volatility (SV) of the errors à la Kim, Shephard and Chip
+- Stochastic volatility (SV) of the errors à la Kim, Shephard and Chib
   (1998)
 - Time varying parameter models (TVP-VEC) à la Koop, León-González and
   Strachan (2011)[^1]
 
-For Bayesian inference of *dynamic factor models* the package implements
-the althorithm used in the textbook of Chan, Koop, Poirer and Tobias
+*Dynamic factor models* are no longer part of this package. They moved
+to [dfmtools](https://github.com/franzmohr/dfmtools), which implements
+the algorithm used in the textbook of Chan, Koop, Poirier and Tobias
 (2019).
 
 Similar packages worth checking out are
@@ -385,7 +394,7 @@ coefficients.
 plot(bvar_est)
 ```
 
-<img src="man/figures/README-unnamed-chunk-6-1.png" alt="" style="display: block; margin: auto;" />
+<img src="man/figures/README-unnamed-chunk-6-1.png" alt="" style="display: block; margin: auto;" /><img src="man/figures/README-unnamed-chunk-6-2.png" alt="" style="display: block; margin: auto;" /><img src="man/figures/README-unnamed-chunk-6-3.png" alt="" style="display: block; margin: auto;" />
 
 Alternatively, the trace plot of the post-burnin draws can be draws by
 adding the argument `type = "trace"`:
@@ -394,7 +403,7 @@ adding the argument `type = "trace"`:
 plot(bvar_est, type = "trace")
 ```
 
-<img src="man/figures/README-unnamed-chunk-7-1.png" alt="" style="display: block; margin: auto;" />
+<img src="man/figures/README-unnamed-chunk-7-1.png" alt="" style="display: block; margin: auto;" /><img src="man/figures/README-unnamed-chunk-7-2.png" alt="" style="display: block; margin: auto;" /><img src="man/figures/README-unnamed-chunk-7-3.png" alt="" style="display: block; margin: auto;" />
 
 ### Summary statistics
 
@@ -568,6 +577,11 @@ plot(bvar_fevd, main = "FEVD of consumption")
 
 ## References
 
+Diebold, F. X., & Yilmaz, K. (2012). Better to give than to receive:
+Predictive directional measurement of volatility spillovers.
+*International Journal of Forecasting, 28*(1), 57-66.
+<https://doi.org/10.1016/j.ijforecast.2011.02.006>
+
 Eddelbuettel, D., & Sanderson C. (2014). RcppArmadillo: Accelerating R
 with high-performance C++ linear algebra. *Computational Statistics and
 Data Analysis, 71*, 1054-1063.
@@ -605,7 +619,15 @@ Sanderson, C., & Curtin, R. (2016). Armadillo: a template-based C++
 library for linear algebra. *Journal of Open Source Software, 1*(2), 26.
 <https://doi.org/10.21105/joss.00026>
 
-[^1]: In contrast to Koop et al. (2011) version 0.2.1 assumes a fixed
-    value for the autocorrelation coefficient of the time varying
-    cointegration space. A step for drawing this coefficient will be
-    introduced in a future release.
+Uhlig, H. (2005). What are the effects of monetary policy on output?
+Results from an agnostic identification procedure. *Journal of Monetary
+Economics, 52*(2), 381-419.
+<https://doi.org/10.1016/j.jmoneco.2004.05.007>
+
+[^1]: The autocorrelation coefficient of the time varying cointegration
+    space is drawn along with the other parameters once `add_priors` is
+    given the bounds `coint$rho_min` and `coint$rho_max` of a uniform
+    prior on it. Name neither and it is held fixed at `coint$rho`, which
+    is what versions up to 0.2.1 always did. The draw is an exact Gibbs
+    block rather than the Metropolis-within-Gibbs step of Koop et
+    al. (2011); `?add_priors` explains where the two models differ.

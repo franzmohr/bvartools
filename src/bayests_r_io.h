@@ -67,6 +67,49 @@ inline void read_vec_if_present(const Rcpp::List &list, const char *name, arma::
   }
 }
 
+/// The out-of-sample regressors, in the compact layout ForecastData::x is
+/// written in: one row per horizon, one column per regressor.
+///
+/// Takes `x` when the list has it. An object built by an older version of this
+/// package carries `z` instead -- the same regressors kroneckered up with I_k,
+/// at k times the rows and k times the columns -- and is compacted back on the
+/// way in, so a fitted model saved to disk before the layout changed still
+/// forecasts. `k` is what decides which of the two a `z` is, so it comes from
+/// the model specification rather than from the matrix's own shape.
+///
+/// Leaves `out` alone when the list has neither, which is what a model with no
+/// forecast requested looks like; require_forecast_regressors() in the core is
+/// what turns that into an error for a model that needed them.
+inline void read_forecast_regressors(const Rcpp::List &list, const int k, arma::mat &out)
+{
+  if (has(list, "x")) {
+    out = Rcpp::as<arma::mat>(list["x"]);
+    return;
+  }
+  if (!has(list, "z")) {
+    return;
+  }
+
+  const arma::mat sur = Rcpp::as<arma::mat>(list["z"]);
+  if (k <= 0) {
+    Rcpp::stop("data$forecast$z is the SUR layout and can only be read against a positive k");
+  }
+  const arma::uword width = static_cast<arma::uword>(k);
+  if (sur.n_rows % width != 0 || sur.n_cols % width != 0) {
+    Rcpp::stop("data$forecast$z is the SUR layout, so both of its dimensions have to be "
+               "multiples of k");
+  }
+
+  // z is kron(x, I_k), so the block at row i and column j is x(i, j) * I_k and
+  // x(i, j) is the one element of it that every block has in the same place.
+  out.set_size(sur.n_rows / width, sur.n_cols / width);
+  for (arma::uword i = 0; i < out.n_rows; i++) {
+    for (arma::uword j = 0; j < out.n_cols; j++) {
+      out(i, j) = sur(i * width, j * width);
+    }
+  }
+}
+
 /// Draws as the core keeps them, from the row-per-draw matrix R keeps.
 inline void read_draws_if_present(const Rcpp::List &list, const char *name, arma::mat &out)
 {

@@ -54,7 +54,7 @@ public:
     /// VecNormalWishartSampler::forecast() gives: a VEC and its level VAR are
     /// the same model, and only one of them has a recursion worth writing twice.
     ///
-    /// `input.forecast.z` is consequently expected in that level layout -- p + 1
+    /// `input.forecast.x` is consequently expected in that level layout -- p + 1
     /// lags of the endogenous variables, s + 2 blocks of the unmodelled ones,
     /// then the unrestricted deterministic terms and the ones restricted to the
     /// cointegration space -- and not in the differenced layout `input.train.z`

@@ -42,7 +42,7 @@ public:
     /// period alone, one column per draw; the precision does not move, so it is
     /// passed whole. The draws are then rewritten in the level VAR
     /// parameterisation and simulated by VarNormalWishartSampler, so
-    /// `input.forecast.z` is expected in that level layout and not in the
+    /// `input.forecast.x` is expected in that level layout and not in the
     /// differenced one `input.train.z` uses.
     ForecastDraws forecast(const VecTvpWishartInput &input,
                            const VecTvpWishartDraws &draws,

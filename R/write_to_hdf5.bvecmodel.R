@@ -165,7 +165,13 @@ write_to_hdf5.bvecmodel <- function(object, filename, group = "", ...) {
   }
 
   ## Forecast input ----
-  if (!is.null(object[["data"]][["forecast"]][["z"]])) {
+  # Written under whichever name the object carries, so an object read back
+  # from an older export and written out again is not silently relabelled: `x`
+  # is the compact layout, `z` the SUR one that predates it.
+  if (!is.null(object[["data"]][["forecast"]][["x"]])) {
+    group_data_forecast <- .hdf5_group(handles, group_data, "forecast")
+    .hdf5_write(group_data_forecast, "x", object[["data"]][["forecast"]][["x"]])
+  } else if (!is.null(object[["data"]][["forecast"]][["z"]])) {
     group_data_forecast <- .hdf5_group(handles, group_data, "forecast")
     .hdf5_write(group_data_forecast, "z", object[["data"]][["forecast"]][["z"]])
   }

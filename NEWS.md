@@ -1,5 +1,35 @@
 # bvartools (development version)
 
+* **The out-of-sample regressors of a forecast are no longer in SUR form.**
+  `add_forecast_input()` stores them as `object$data$forecast$x`, one row per
+  forecast period and one column per regressor, where
+  `object$data$forecast$z` used to hold the same numbers kroneckered up with an
+  identity of order `k` -- `k` times the rows and `k` times the columns.
+  `prepare_forecast_input()` returns the matrix under the name `x` for the same
+  reason. HDF5 exports write `/data/forecast/x`.
+
+  A forecast applies one `k` by `n` coefficient matrix to one regressor column
+  per period, so the wide form held nothing the compact one does not, at `k^2`
+  the memory and `k` times the multiplications -- all of the extra ones against
+  a structural zero. For the three-variable models in the examples that is
+  nothing anyone would notice. It is `k` that decides how much it is worth: a
+  174-variable global VAR forecast twelve periods ahead was allocating half a
+  gigabyte of regressors, 99.4% of them zeros, and now allocates 17 KB.
+
+  **Draws are unchanged.** A seeded forecast is bit-identical before and after
+  for a plain, a structural and a time varying VAR. The vendored core's own
+  fixture comparison, which runs larger models under a different BLAS, moves 52
+  of 88 fixtures in `/posterior/forecast` and nowhere else, by at most a
+  relative 9.4e-16 -- four ulps of reassociated summation.
+
+  **A model fitted with an earlier version still forecasts.** An object or an
+  exported file carrying the old `z` is compacted on the way into the sampler,
+  exactly -- the kron is subscripted, not averaged -- and a `z` whose
+  dimensions are not multiples of `k` is refused rather than turned into
+  plausible regressors. Code that reads `object$data$forecast$z` itself has to
+  be updated; code that goes through `add_forecast_input()` and
+  `add_posterior_forecasts()` does not.
+
 * **The autocorrelation of a time varying cointegration space can be
   estimated.** `add_priors()` takes `coint$rho_min` and `coint$rho_max`, the
   support of a uniform prior on the `rho` of

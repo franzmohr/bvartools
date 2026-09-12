@@ -69,14 +69,14 @@ public:
     /// simulated by VarNormalWishartSampler, since a VEC and its level VAR are
     /// the same model and only one of them has a recursion worth writing twice.
     ///
-    /// `input.forecast.z` is consequently expected in that level layout -- p + 1
+    /// `input.forecast.x` is consequently expected in that level layout -- p + 1
     /// lags of the endogenous variables, s + 2 blocks of the unmodelled ones,
     /// then the unrestricted deterministic terms and the ones restricted to the
     /// cointegration space -- and not in the compact differenced layout
     /// `input.train.x` uses. The level history cannot be recovered from
     /// differenced regressors, so it has to be supplied rather than derived.
     ///
-    /// Requires `input.forecast.z` and, when the model has coefficients,
+    /// Requires `input.forecast.x` and, when the model has coefficients,
     /// `draws.a`. Throws std::invalid_argument if either is missing, if spec.h
     /// is zero, or if the regressors do not match the converted coefficients.
     ForecastDraws forecast(const VecKlgs2010Input &input, const VecKlgs2010Draws &draws,

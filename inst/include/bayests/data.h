@@ -61,10 +61,20 @@ struct TrainData
 /// The regressors the forecast is produced from.
 struct ForecastData
 {
-    /// (h * k) rows by nparams columns. Lagged endogenous blocks are
-    /// overwritten as the path is simulated, so only the deterministic and
-    /// exogenous columns have to be filled in by the caller.
-    arma::mat z;
+    /// h rows by VarSpec::n_x() columns, one period per row -- the compact
+    /// layout TrainData::x is written in, not the SUR one TrainData::z uses.
+    /// Lagged endogenous blocks are overwritten as the path is simulated, so
+    /// only the deterministic and exogenous columns have to be filled in by the
+    /// caller.
+    ///
+    /// A forecast is one k x n_x() coefficient matrix against one regressor
+    /// column per period, so the SUR spelling of it -- kron(x, I_k), at k times
+    /// the rows and k times the columns -- carries no information this does not
+    /// and costs k^2 the memory. It matters most where k is large: a 174
+    /// variable global VAR over twelve periods is 17 KB here against half a
+    /// gigabyte there, and every multiplication the wide form adds is against a
+    /// structural zero.
+    arma::mat x;
 };
 
 } // namespace bayests

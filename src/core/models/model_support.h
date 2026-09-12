@@ -21,7 +21,7 @@ namespace bayests::core
 /// Rejects a forecast that was given no regressors by a model whose dimensions
 /// say it has coefficients to apply to them.
 ///
-/// `/data/forecast/z` is read with read_mat_if_present(), so a file that omits it
+/// `/data/forecast/x` is read with read_mat_if_present(), so a file that omits it
 /// leaves this empty rather than failing. Empty then reads as "this model has no
 /// regressors": use_a comes out false, the signal term drops out of the
 /// recursion, and every horizon is drawn from the error distribution alone. That
@@ -31,9 +31,9 @@ namespace bayests::core
 ///
 /// Counted from the spec rather than from the posterior, so the message can say
 /// what was expected even when the draws are missing as well.
-inline void require_forecast_regressors(const VarSpec &spec, const arma::mat &z)
+inline void require_forecast_regressors(const VarSpec &spec, const arma::mat &x)
 {
-    if (spec.nparams_per_period() > 0 && z.n_elem == 0)
+    if (spec.nparams_per_period() > 0 && x.n_elem == 0)
     {
         throw std::invalid_argument(
             "the model has " + std::to_string(spec.nparams_per_period()) +
@@ -172,20 +172,25 @@ inline arma::mat structural_inverse(const arma::mat &a0, const arma::uword draw,
 /// is therefore the forecast made for horizon i - j, and the blocks past lag i
 /// are still actual observations, which the caller supplied and this leaves alone.
 ///
-/// Writing the path in chronological order instead -- one kron over
+/// Writing the path in chronological order instead -- one write over
 /// fcst[0 .. i*k-1], which is what every forecast here used to do -- reverses the
 /// lags, putting A_1 on the oldest forecast rather than the newest. Only p <= 1
 /// is insensitive to it, a single block having no order to get wrong, which is
 /// why this survived: it needs p >= 2 and h >= 3 before the two spellings differ.
-inline void update_forecast_lags(arma::mat &z, const arma::mat &fcst, const arma::uword draw,
-                                 const int i, const int k, const int p, const arma::mat &diag_k)
+///
+/// `x` is the compact layout, one period per row, so a lag block is k adjacent
+/// entries of row i and the write is a copy. The SUR spelling this replaced put
+/// the same k numbers through a kron with I_k and spread them over a k by k^2
+/// submatrix, k^2 - k of whose entries were the zeros off that identity's
+/// diagonal.
+inline void update_forecast_lags(arma::mat &x, const arma::mat &fcst, const arma::uword draw,
+                                 const int i, const int k, const int p)
 {
     const int filled = i < p ? i : p;
     for (int j = 1; j <= filled; j++)
     {
-        z.submat(i * k, (j - 1) * k * k, (i + 1) * k - 1, j * k * k - 1) =
-            arma::kron(arma::trans(fcst.submat((i - j) * k, draw, (i - j + 1) * k - 1, draw)),
-                       diag_k);
+        x.submat(i, (j - 1) * k, i, j * k - 1) =
+            arma::trans(fcst.submat((i - j) * k, draw, (i - j + 1) * k - 1, draw));
     }
 }
 

@@ -30,7 +30,7 @@ bayests::VarTvpStochvolInput read_input(const Rcpp::List &object) {
     }
     if (has(data, "forecast")) {
       const Rcpp::List forecast = data["forecast"];
-      read_mat_if_present(forecast, "z", input.forecast.z);
+      read_forecast_regressors(forecast, input.spec.k, input.forecast.x);
     }
   }
 
@@ -115,7 +115,7 @@ bayests::VarTvpStochvolDraws read_draws_for_forecast(const Rcpp::List &object,
   const arma::uword tt = input.train.periods(input.spec.k);
   const arma::uword k = static_cast<arma::uword>(input.spec.k);
 
-  if (input.forecast.z.n_cols > 0 && has(posterior, "a")) {
+  if (input.forecast.x.n_cols > 0 && has(posterior, "a")) {
     read_draws_last_period_if_present(Rcpp::List(posterior["a"]), "coeffs", tt,
                                       static_cast<arma::uword>(input.spec.nparams_per_period()),
                                       draws.a);

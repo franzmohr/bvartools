@@ -39,7 +39,7 @@ add_forecast_input.bvarmodel <- function(object, n_ahead = 10, deterministic = N
   
   fcst_input <- prepare_forecast_input(object, n_ahead = n_ahead, deterministic = deterministic, exogen = exogen, ...)
   object[["model"]][["h"]] <- fcst_input[["h"]]
-  object[["data"]][["forecast"]] <- list("z" = fcst_input[["z"]])
+  object[["data"]][["forecast"]] <- list("x" = fcst_input[["x"]])
   
   return(object)
 }

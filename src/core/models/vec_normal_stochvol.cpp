@@ -417,7 +417,7 @@ ForecastDraws VecNormalStochvolSampler::forecast(const VecNormalStochvolInput &i
     // sliced to the last in-sample period. From there this is the constant VEC's
     // forecast exactly -- see VecNormalWishartSampler::forecast() for why the
     // level VAR does the simulating and what that demands of
-    // `input.forecast.z`.
+    // `input.forecast.x`.
     VarNormalWishartInput var_input;
     var_input.spec = vec_to_var_spec(input.spec);
     var_input.forecast = input.forecast;

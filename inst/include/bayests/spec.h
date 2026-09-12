@@ -119,13 +119,23 @@ struct VarSpec
     /// Contemporaneous coefficients carried at the end of `a`.
     int n_structural() const { return structural ? k * (k - 1) / 2 : 0; }
 
+    /// Regressors a VAR has per equation: p lags of the endogenous variables,
+    /// x_t together with s lags of it, and the n deterministic terms.
+    ///
+    /// One column each, which is the compact per-period layout TrainData::x and
+    /// ForecastData::x are written in and the width a k x n coefficient matrix
+    /// has. The SUR layout spreads every one of them over k columns, so
+    /// n_non_structural() is k times this. Paired with n_x_vec(), which counts
+    /// the same thing for a VEC.
+    int n_x() const { return k * p + m * (s + 1) + n; }
+
     /// Coefficients of a VAR that are not contemporaneous terms. Declared from
     /// the model's dimensions rather than counted off `z`, because a forecast
     /// runs from the posterior alone and has no `z` to count.
     ///
     /// A VAR regresses on p lags of the endogenous variables and on x_t together
     /// with s lags of it. A VEC does not -- see n_non_structural_vec().
-    int n_non_structural() const { return k * (k * p + m * (s + 1) + n); }
+    int n_non_structural() const { return k * n_x(); }
 
     /// Whether the model carries a cointegration relation to draw. Zero rank
     /// leaves `beta` out of the posterior rather than storing an empty one.

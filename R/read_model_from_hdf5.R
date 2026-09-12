@@ -104,6 +104,11 @@ read_model_from_hdf5 <- function(filename, group = "") {
     
     if ("forecast" %in% names(h5_root[["data"]])) {
       result[["data"]][["forecast"]] <- list()
+      # `x` is the compact layout, `z` the SUR one written before it. Both are
+      # read under their own name; the C++ side takes either.
+      if ("x" %in% names(h5_root[["data"]][["forecast"]])) {
+        result[["data"]][["forecast"]][["x"]] <- as.matrix(hdf5r::readDataSet(h5_root[["data"]][["forecast"]][["x"]]))
+      }
       if ("z" %in% names(h5_root[["data"]][["forecast"]])) {
         result[["data"]][["forecast"]][["z"]] <- as.matrix(hdf5r::readDataSet(h5_root[["data"]][["forecast"]][["z"]]))
       }

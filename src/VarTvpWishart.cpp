@@ -30,7 +30,7 @@ bayests::VarTvpWishartInput read_input(const Rcpp::List &object) {
     }
     if (has(data, "forecast")) {
       const Rcpp::List forecast = data["forecast"];
-      read_mat_if_present(forecast, "z", input.forecast.z);
+      read_forecast_regressors(forecast, input.spec.k, input.forecast.x);
     }
   }
 
@@ -85,8 +85,10 @@ bayests::VarTvpWishartDraws read_draws_for_forecast(const Rcpp::List &object,
   const Rcpp::List posterior = object["posterior"];
 
   // Counted off the forecast regressors, which is what the coefficients drawn
-  // per period have to line up with.
-  const arma::uword nparams = input.forecast.z.n_cols;
+  // per period have to line up with. They are the compact layout, one column
+  // per regressor, so the coefficient count is k times their width.
+  const arma::uword nparams =
+      input.forecast.x.n_cols * static_cast<arma::uword>(input.spec.k);
   if (nparams > 0 && has(posterior, "a")) {
     read_draws_last_period_if_present(Rcpp::List(posterior["a"]), "coeffs",
                                       input.train.periods(input.spec.k), nparams, draws.a);

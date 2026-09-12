@@ -30,7 +30,7 @@ public:
 
     /// Simulates one forecast path per posterior draw.
     ///
-    /// Requires `input.forecast.z` and, when the model has coefficients,
+    /// Requires `input.forecast.x` and, when the model has coefficients,
     /// `draws.a`. Throws std::invalid_argument if either is missing or if
     /// spec.h is zero.
     ForecastDraws forecast(const VarNormalWishartInput &input,

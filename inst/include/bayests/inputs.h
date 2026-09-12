@@ -29,7 +29,7 @@ struct VarNormalWishartInput
 {
     VarSpec spec;
     TrainData train;
-    ForecastData forecast; ///< `z` empty when no forecast was requested.
+    ForecastData forecast; ///< `x` empty when no forecast was requested.
 
     NormalPrior a_prior;          ///< Unused when there are no regressors.
     WishartPrior u_sigma_prior;
@@ -64,7 +64,7 @@ struct VarNormalGammaInput
 {
     VarSpec spec;
     TrainData train;
-    ForecastData forecast; ///< `z` empty when no forecast was requested.
+    ForecastData forecast; ///< `x` empty when no forecast was requested.
 
     NormalPrior a_prior;         ///< Unused when there are no regressors.
     VarSelPrior a_varsel_prior;  ///< Unused when spec.varsel is none.
@@ -870,7 +870,7 @@ struct VecNormalWishartInput
 {
     VarSpec spec;
     TrainData train;
-    ForecastData forecast; ///< `z` empty when no forecast was requested.
+    ForecastData forecast; ///< `x` empty when no forecast was requested.
 
     NormalPrior a_prior;          ///< Unused when there are no regressors.
     VarSelPrior varsel_prior;     ///< Unused when spec.varsel is none.
@@ -906,14 +906,14 @@ struct VecKlgs2010Initial
 ///
 /// `train.x` is read and `train.z` is not: this is the non-SUR reading of the
 /// same model, so the regressors arrive one column per regressor rather than
-/// kroneckered up with I_k. `forecast.z` is unaffected and stays in the level
-/// VAR layout every VEC forecast expects, since the forecast is the level VAR's
-/// either way.
+/// kroneckered up with I_k. `forecast.x` is compact for every model and so says
+/// nothing about this one either way; what it does carry is the level VAR
+/// layout every VEC forecast expects, since the forecast is the level VAR's.
 struct VecKlgs2010Input
 {
     VarSpec spec;
     TrainData train;
-    ForecastData forecast; ///< `z` empty when no forecast was requested.
+    ForecastData forecast; ///< `x` empty when no forecast was requested.
 
     NormalPrior a_prior;                ///< Unused when there are no regressors.
     ConstantCointSpacePrior beta_prior; ///< Unused when the rank is zero.

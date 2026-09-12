@@ -363,26 +363,26 @@ ForecastDraws VarNormalStochvolSampler::forecast(const VarNormalStochvolInput &i
         throw std::invalid_argument("posterior draws of u_sigma_inv are missing");
     }
 
-    arma::mat z = input.forecast.z;
+    arma::mat x = input.forecast.x;
 
-    require_forecast_regressors(input.spec, z);
+    require_forecast_regressors(input.spec, x);
 
     // The coefficient draws are only consulted when there are regressors to
     // apply them to or a contemporaneous matrix to split off; without either,
     // the path is the error process alone.
-    const bool have_z = z.n_elem > 0;
-    if ((have_z || structural) && !coefficients.has_a())
+    const bool have_x = x.n_elem > 0;
+    if ((have_x || structural) && !coefficients.has_a())
     {
         throw std::invalid_argument("forecasting from these regressors needs posterior draws of "
                                     "a, which are missing");
     }
 
-    // Counted off the posterior, not off z. The structural coefficients are the
-    // last n_structural rows of a and have no column in z, so z.n_cols is short
-    // by exactly that many: splitting on it cuts a in the wrong place, takes the
-    // contemporaneous block from the lag coefficients, and leaves a column count
-    // that no longer matches z.
-    const int nparams = (have_z || structural) ? static_cast<int>(coefficients.a.n_rows) : 0;
+    // Counted off the posterior, not off x. The structural coefficients are the
+    // last n_structural rows of a and have no column in x, so k * x.n_cols is
+    // short by exactly that many: splitting on it cuts a in the wrong place,
+    // takes the contemporaneous block from the lag coefficients, and leaves a
+    // width that no longer matches x.
+    const int nparams = (have_x || structural) ? static_cast<int>(coefficients.a.n_rows) : 0;
     const bool use_a = nparams > 0 && nparams > n_structural;
 
     arma::mat a = coefficients.a;
@@ -391,11 +391,13 @@ ForecastDraws VarNormalStochvolSampler::forecast(const VarNormalStochvolInput &i
     // The invariant the split has to preserve. Checked here so a future mismatch
     // names both sides instead of surfacing as an Armadillo dimension error from
     // inside the draw loop.
-    if (use_a && z.n_cols != a.n_rows)
+    if (use_a && x.n_cols * static_cast<arma::uword>(k) != a.n_rows)
     {
         throw std::invalid_argument(
-            "forecast regressors and coefficient draws disagree: z has " +
-            std::to_string(z.n_cols) + " columns, a has " + std::to_string(a.n_rows) +
+            "forecast regressors and coefficient draws disagree: x has " +
+            std::to_string(x.n_cols) + " columns, which over k = " + std::to_string(k) +
+            " equations is " + std::to_string(x.n_cols * static_cast<arma::uword>(k)) +
+            " coefficients, and a has " + std::to_string(a.n_rows) +
             " rows after the structural split");
     }
 
@@ -413,21 +415,26 @@ ForecastDraws VarNormalStochvolSampler::forecast(const VarNormalStochvolInput &i
         reporter.check_interrupt();
         reporter.progress(static_cast<long long>(draw) + 1, static_cast<long long>(draws));
 
-        // Once per draw: nothing in it depends on the horizon.
+        // Once per draw: nothing in either depends on the horizon.
         const arma::mat a0_inv =
             structural ? structural_inverse(a0, draw, diag_k) : arma::mat();
+        // The draw's coefficients as the k x n_x matrix they are. The SUR
+        // spelling this replaced had them as a vector and paid for the
+        // reshape implicitly, once per horizon, by widening z instead.
+        const arma::mat a_draw =
+            use_a ? arma::reshape(a.col(draw), k, x.n_cols) : arma::mat();
 
         for (int i = 0; i < h; i++)
         {
             if (use_a)
             {
-                // Update z
+                // Update the lagged-endogenous columns
                 if (i > 0 && p_larger_than_0)
                 {
-                    update_forecast_lags(z, fcst, draw, i, k, p, diag_k);
+                    update_forecast_lags(x, fcst, draw, i, k, p);
                 }
                 // Update forecast
-                fcst.submat(i * k, draw, (i + 1) * k - 1, draw) = z.rows(i * k, (i + 1) * k - 1) * a.col(draw);
+                fcst.submat(i * k, draw, (i + 1) * k - 1, draw) = a_draw * arma::trans(x.row(i));
             }
 
             // Add error

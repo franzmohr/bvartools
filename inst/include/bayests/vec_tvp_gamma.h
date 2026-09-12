@@ -45,7 +45,7 @@ public:
     /// period alone, one column per draw, and so is `draws.u_sigma_inv` when the
     /// model has a covariance block to make it move. The draws are then
     /// rewritten in the level VAR parameterisation and simulated by
-    /// VarNormalWishartSampler, so `input.forecast.z` is expected in that level
+    /// VarNormalWishartSampler, so `input.forecast.x` is expected in that level
     /// layout and not in the differenced one `input.train.z` uses.
     ForecastDraws forecast(const VecTvpGammaInput &input,
                            const VecTvpGammaDraws &draws,

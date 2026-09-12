@@ -3,21 +3,41 @@ test_that("add_forecast_input prepares the regressors of the forecast periods", 
   spec <- model[["model"]]
 
   expect_equal(spec[["h"]], 5)
-  expect_false(is.null(model[["data"]][["forecast"]][["z"]]))
-  # The forecast regressors are in SUR form: one row block per period.
-  expect_identical(nrow(model[["data"]][["forecast"]][["z"]]),
-                   as.integer(5 * spec[["k"]]))
-  expect_identical(ncol(model[["data"]][["forecast"]][["z"]]),
+  expect_false(is.null(model[["data"]][["forecast"]][["x"]]))
+  # The forecast regressors are compact: one row per period, one column per
+  # regressor, so k times narrower and k times shorter than the training SUR
+  # matrix beside them.
+  expect_identical(nrow(model[["data"]][["forecast"]][["x"]]), 5L)
+  expect_identical(ncol(model[["data"]][["forecast"]][["x"]]) * spec[["k"]],
                    ncol(model[["data"]][["train"]][["z"]]))
 })
 
 test_that("prepare_forecast_input returns the horizon and its regressors", {
   input <- prepare_forecast_input(fx_var_fitted(), n_ahead = 3)
 
-  expect_named(input, c("h", "z"))
+  expect_named(input, c("h", "x"))
   expect_identical(input[["h"]], 3L)
-  expect_identical(nrow(input[["z"]]),
-                   as.integer(3 * fx_var_fitted()[["model"]][["k"]]))
+  expect_identical(nrow(input[["x"]]), 3L)
+})
+
+test_that("a forecast input in the old SUR layout is still accepted", {
+  # What an object fitted before the compact layout carries. The C++ side
+  # compacts it on the way in, so the draws have to match what the compact
+  # spelling of the same regressors produces.
+  model <- add_forecast_input(fx_var_fitted(), n_ahead = 4)
+  k <- model[["model"]][["k"]]
+
+  legacy <- model
+  legacy[["data"]][["forecast"]] <- list("z" = kronecker(model[["data"]][["forecast"]][["x"]],
+                                                        diag(1, k)))
+
+  set.seed(7357)
+  compact <- add_posterior_forecasts(model)
+  set.seed(7357)
+  old <- add_posterior_forecasts(legacy)
+
+  expect_equal(unname(as.matrix(old[["posterior"]][["forecast"]])),
+               unname(as.matrix(compact[["posterior"]][["forecast"]])))
 })
 
 test_that("forecast draws are stored for every period and variable", {

@@ -43,7 +43,7 @@ bayests::VecKlgs2010Input read_input(const Rcpp::List &object) {
       // Still the SUR layout, and still in levels: the forecast is the level
       // VAR's for every VEC, and it is VarNormalWishartSampler that reads this.
       const Rcpp::List forecast = data["forecast"];
-      read_mat_if_present(forecast, "z", input.forecast.z);
+      read_forecast_regressors(forecast, input.spec.k, input.forecast.x);
     }
   }
 
@@ -214,7 +214,7 @@ max(abs(klgs$posterior$a$coeffs - sur$posterior$a$coeffs))
 
 ## .VecKlgs2010Forecasts() is not reachable from a 'bvecmodel' on its own: the
 ## R side forecasts a VEC by converting it with vec_to_var() first, so the
-## forecast regressors this entry point wants -- data$forecast$z, in levels --
+## forecast regressors this entry point wants -- data$forecast$x, in levels --
 ## are assembled there rather than here.
 
 */

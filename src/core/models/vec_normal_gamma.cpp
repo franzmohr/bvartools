@@ -383,7 +383,7 @@ ForecastDraws VecNormalGammaSampler::forecast(const VecNormalGammaInput &input,
 {
     // A VEC and its level VAR are the same model in two parameterisations, so
     // the forecast is the VAR's -- see VecNormalWishartSampler::forecast() for
-    // why that is worth doing and what it demands of `input.forecast.z`.
+    // why that is worth doing and what it demands of `input.forecast.x`.
     VarNormalWishartInput var_input;
     var_input.spec = vec_to_var_spec(input.spec);
     var_input.forecast = input.forecast;

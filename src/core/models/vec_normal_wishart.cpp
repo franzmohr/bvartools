@@ -313,7 +313,7 @@ namespace bayests
         // drive it anyway -- their leading columns are loadings on the
         // cointegration space, not lags of the series a path is built from.
         //
-        // `input.forecast.z` is therefore expected in the level VAR's layout,
+        // `input.forecast.x` is therefore expected in the level VAR's layout,
         // the one vec_to_var_spec() describes: p + 1 lags of the endogenous
         // variables, one further block of unmodelled ones, and the deterministic
         // terms restricted to the cointegration space last. That is a real demand

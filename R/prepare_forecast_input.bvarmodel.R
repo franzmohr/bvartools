@@ -12,7 +12,11 @@
 #' See 'Details'.
 #' @param ... additional arguments.
 #' 
-#' @return A list.
+#' @return A list with elements \code{h}, the forecast horizon, and \code{x},
+#' the out-of-sample regressors: \code{h} rows, one per period, by one column
+#' per regressor. That is the compact layout, the same one a coefficient matrix
+#' is \code{k} by; the SUR layout this used to return spread every regressor
+#' over \code{k} columns and was \code{k^2} the size for no extra content.
 #' 
 #' @examples
 #' 
@@ -120,10 +124,8 @@ prepare_forecast_input.bvarmodel <- function(object, n_ahead = 10, deterministic
   
   pred_start <- stats::time(stats::ts(rep(NA, 2), start = y_end, frequency = y_freq))[-1]
   
-  z <- NULL
+  x <- NULL
   if (n_tot > 0) {
-    z <- matrix(NA, k * n_ahead, n_tot)
-    
     x <- stats::ts(matrix(NA, n_ahead, n_tot), start = pred_start, frequency = y_freq)
     x_time <- stats::time(x)
     
@@ -149,11 +151,14 @@ prepare_forecast_input.bvarmodel <- function(object, n_ahead = 10, deterministic
       x[, k * p + m * (s + 1) + 1:n] <- deterministic
     }
     
-    z <- kronecker(x, diag(1, k))
+    # Handed over as a plain matrix: the time series attributes describe the
+    # periods the rows stand for and nothing downstream reads them, while the
+    # sampler indexes rows by horizon.
+    x <- matrix(as.numeric(x), n_ahead, n_tot)
   }
   
   result <- list("h" = as.integer(n_ahead),
-                 "z" = z)
+                 "x" = x)
   
   return(result)
 }

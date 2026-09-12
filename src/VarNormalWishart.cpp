@@ -33,7 +33,7 @@ bayests::VarNormalWishartInput read_input(const Rcpp::List &object) {
     }
     if (has(data, "forecast")) {
       const Rcpp::List forecast = data["forecast"];
-      read_mat_if_present(forecast, "z", input.forecast.z);
+      read_forecast_regressors(forecast, input.spec.k, input.forecast.x);
     }
   }
 

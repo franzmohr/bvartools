@@ -448,11 +448,11 @@ ForecastDraws VarTvpGammaSampler::forecast(const VarTvpGammaInput &input,
         throw std::invalid_argument("posterior draws of u_sigma_inv are missing");
     }
 
-    arma::mat z = input.forecast.z;
+    arma::mat x = input.forecast.x;
 
-    require_forecast_regressors(input.spec, z);
+    require_forecast_regressors(input.spec, x);
 
-    // Counted off the model's dimensions rather than off `z`: the coefficients
+    // Counted off the model's dimensions rather than off `x`: the coefficients
     // move with time, so what the forecast starts from is the last in-sample
     // period of the posterior, and that has to be sliced out by size before
     // there is anything to count.
@@ -466,6 +466,21 @@ ForecastDraws VarTvpGammaSampler::forecast(const VarTvpGammaInput &input,
 
     arma::mat a = coefficients.a;
     const arma::mat a0 = split_structural_coefficients(input.spec, a, nparams);
+
+    // arma::reshape() zero-pads or truncates rather than throwing, so a width
+    // that does not divide into k rows would produce a plausible path from the
+    // wrong coefficients. The SUR product this replaced failed on the same
+    // mismatch; the check keeps that, and the other four samplers already
+    // carried it.
+    if (use_a && x.n_cols * static_cast<arma::uword>(k) != a.n_rows)
+    {
+        throw std::invalid_argument(
+            "forecast regressors and coefficient draws disagree: x has " +
+            std::to_string(x.n_cols) + " columns, which over k = " + std::to_string(k) +
+            " equations is " + std::to_string(x.n_cols * static_cast<arma::uword>(k)) +
+            " coefficients, and a has " + std::to_string(a.n_rows) +
+            " rows after the structural split");
+    }
 
     const arma::uword draws = coefficients.iterations();
     const bool p_larger_than_0 = p > 0;
@@ -481,21 +496,26 @@ ForecastDraws VarTvpGammaSampler::forecast(const VarTvpGammaInput &input,
         reporter.check_interrupt();
         reporter.progress(static_cast<long long>(draw) + 1, static_cast<long long>(draws));
 
-        // Once per draw: nothing in it depends on the horizon.
+        // Once per draw: nothing in either depends on the horizon.
         const arma::mat a0_inv =
             structural ? structural_inverse(a0, draw, diag_k) : arma::mat();
+        // The draw's coefficients as the k x n_x matrix they are. The SUR
+        // spelling this replaced had them as a vector and paid for the
+        // reshape implicitly, once per horizon, by widening z instead.
+        const arma::mat a_draw =
+            use_a ? arma::reshape(a.col(draw), k, x.n_cols) : arma::mat();
 
         for (int i = 0; i < h; i++)
         {
             if (use_a)
             {
-                // Update z
+                // Update the lagged-endogenous columns
                 if (i > 0 && p_larger_than_0)
                 {
-                    update_forecast_lags(z, fcst, draw, i, k, p, diag_k);
+                    update_forecast_lags(x, fcst, draw, i, k, p);
                 }
                 // Update forecast
-                fcst.submat(i * k, draw, (i + 1) * k - 1, draw) = z.rows(i * k, (i + 1) * k - 1) * a.col(draw);
+                fcst.submat(i * k, draw, (i + 1) * k - 1, draw) = a_draw * arma::trans(x.row(i));
             }
 
             // Add error

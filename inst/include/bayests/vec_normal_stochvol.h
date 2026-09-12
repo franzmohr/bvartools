@@ -44,7 +44,7 @@ public:
     /// The coefficients are constant, so only the precision has a period to be
     /// held at: `draws.u_sigma_inv` is expected to carry the last in-sample one
     /// alone. The draws are then rewritten in the level VAR parameterisation and
-    /// simulated by VarNormalWishartSampler, so `input.forecast.z` is expected in
+    /// simulated by VarNormalWishartSampler, so `input.forecast.x` is expected in
     /// that level layout and not in the differenced one `input.train.z` uses.
     ForecastDraws forecast(const VecNormalStochvolInput &input,
                            const VecNormalStochvolDraws &draws,

@@ -53,7 +53,11 @@ add_posterior_forecasts.bvarmodel <- function(object, ...){
   }
   
   
-  if (is.null(object[["data"]][["forecast"]][["z"]]) & !is.null(object[["data"]][["train"]][["z"]]) & !object[["model"]][["structural"]]) {
+  # Either spelling of the out-of-sample regressors will do: `x` is the compact
+  # layout this package writes, `z` the SUR one an object fitted by an earlier
+  # version carries, which the C++ side compacts on the way in.
+  if (is.null(object[["data"]][["forecast"]][["x"]]) & is.null(object[["data"]][["forecast"]][["z"]]) &
+      !is.null(object[["data"]][["train"]][["z"]]) & !object[["model"]][["structural"]]) {
     stop("Model specification does not contain input data. Consider using function add_forecast_input().")
   }
   

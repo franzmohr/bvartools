@@ -43,7 +43,7 @@ public:
     /// simulated by VarNormalWishartSampler, for the reason
     /// VecNormalWishartSampler::forecast() gives: a VEC and its level VAR are
     /// the same model, and only one of them has a recursion worth writing twice.
-    /// `input.forecast.z` is consequently expected in that level layout, not in
+    /// `input.forecast.x` is consequently expected in that level layout, not in
     /// the differenced one `input.train.z` uses.
     ForecastDraws forecast(const VecNormalGammaInput &input,
                            const VecNormalGammaDraws &draws,

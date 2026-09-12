@@ -31,7 +31,7 @@ public:
 
     /// Simulates one forecast path per posterior draw.
     ///
-    /// Uses `draws.a` only when `input.forecast.z` is present or the model is
+    /// Uses `draws.a` only when `input.forecast.x` is present or the model is
     /// structural; without either, the path is the error process alone. In a
     /// structural model the last k(k-1)/2 coefficients are read as the
     /// contemporaneous matrix and applied to each period's draw.

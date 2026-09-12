@@ -288,7 +288,7 @@ ForecastDraws VecKlgs2010Sampler::forecast(const VecKlgs2010Input &input,
     // drive it anyway -- their leading columns are loadings on the
     // cointegration space, not lags of the series a path is built from.
     //
-    // `input.forecast.z` is therefore expected in the level VAR's layout, the
+    // `input.forecast.x` is therefore expected in the level VAR's layout, the
     // one vec_to_var_spec() describes, and stays a SUR matrix even though this
     // model's training regressors are compact: what reads it is
     // VarNormalWishartSampler, which is written against `z` and is shared with

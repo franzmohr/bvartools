@@ -157,6 +157,47 @@ test_that("a failed write does not leave the file open", {
   expect_s3_class(read_model_from_hdf5(path), "bvarmodel")
 })
 
+# What is still open in the file at `path`, counted through a second handle on
+# it, which is not counted itself. HDF5 keeps a file open for as long as
+# anything in it is, even once the handle of the file is closed, and on Windows
+# the file is then locked against every other process -- BayesTS among them.
+# Counting straight after the write is what makes this independent of when the
+# garbage collector runs: it would release what was left open, but later.
+open_in_h5_file <- function(path) {
+  h5 <- hdf5r::H5File$new(path, mode = "r")
+  on.exit(h5$close(), add = TRUE)
+  h5$get_obj_count() - 1
+}
+
+test_that("a VAR write leaves nothing open in its file", {
+  path <- temp_h5_file()
+  write_to_hdf5(fx_var_fitted(), filename = path)
+
+  expect_equal(open_in_h5_file(path), 0)
+})
+
+test_that("a VEC write leaves nothing open in its file", {
+  path <- temp_h5_file()
+  write_to_hdf5(fx_vec_fitted(), filename = path)
+
+  expect_equal(open_in_h5_file(path), 0)
+})
+
+test_that("a write of sign restrictions leaves nothing open in its file", {
+  # The settings of the restrictions are attributes of a group of their own.
+  path <- temp_h5_file()
+  write_to_hdf5(fx_var_sign(), filename = path)
+
+  expect_equal(open_in_h5_file(path), 0)
+})
+
+test_that("a write into a group leaves nothing open in its file", {
+  path <- temp_h5_file()
+  write_to_hdf5(fx_vec_fitted(), filename = path, group = "/models/vec")
+
+  expect_equal(open_in_h5_file(path), 0)
+})
+
 test_that("a successful write returns the path invisibly", {
   path <- temp_h5_file()
 

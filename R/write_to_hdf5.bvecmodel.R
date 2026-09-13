@@ -131,11 +131,11 @@ write_to_hdf5.bvecmodel <- function(object, filename, group = "", ...) {
   attrs_model <- hdf5r::h5attr_names(group_model)
   for (i in names(object[["model"]])) {
     if (!i %in% attrs_model) {
-      hdf5r::h5attr(group_model, i) <- object[["model"]][[i]]
+      .hdf5_write_attr(group_model, i, object[["model"]][[i]])
       attrs_model <- c(attrs_model, i)
     }
   }
-  hdf5r::h5attr(group_model, "rclass") <- class(object)
+  .hdf5_write_attr(group_model, "rclass", class(object))
 
   # Data ----
   group_data <- .hdf5_group(handles, output, "data")

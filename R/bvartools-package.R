@@ -35,11 +35,11 @@
 #'   FRED-MD and FRED-QD beforehand.
 #'   \item \code{\link{add_priors}} adds prior hyperparameters. Its arguments
 #'   \code{coef} and \code{sigma} are named lists without defaults, and neither
-#'   may be empty: \code{coef} needs \code{v_i}, \code{minnesota} or
-#'   \code{ssvs}, and \code{sigma} the elements of the chosen \code{error},
-#'   which are \code{df} and \code{scale} for \code{"wishart"} and \code{shape}
-#'   and \code{rate} for \code{"gamma"} and \code{"ald"}. Structural models
-#'   cannot use the Wishart prior.
+#'   may be empty: \code{coef} needs \code{v_i} or \code{minnesota}, and
+#'   \code{sigma} the elements of the chosen \code{error}, which are \code{df}
+#'   and \code{scale} for \code{"wishart"} and \code{shape} and \code{rate} for
+#'   \code{"gamma"} and \code{"ald"}. Structural models cannot use the Wishart
+#'   prior.
 #'   \item \code{\link{add_initial_values}} adds starting values, by default
 #'   from a least squares estimate.
 #'   \item \code{\link{add_posterior_coefficients}} runs the sampler.

@@ -1,5 +1,32 @@
 # bvartools (development version)
 
+* **`generate_artificial_var()` simulates time varying, stochastic volatility
+  and structural models.** With `tvp = TRUE` the coefficients and the free
+  elements of Psi follow random walks, with `sv = TRUE` the log-volatilities
+  do, and with `structural = TRUE` the series come from a lower triangular A0
+  with uncorrelated structural errors. These are the state equations and the
+  structural form that `create_bvarmodel()` estimates. Time varying parameters
+  are returned as `K x M x T` arrays, whose `as.vector()` is in the order of the
+  posterior draws, together with the variances of their state equations.
+  Coefficients that are zero stay zero, and with `stable = TRUE`, the default,
+  the process is stable in every period. The function also gains a linear
+  trend, a lag order of zero and `stable = FALSE` for integrated or explosive
+  series. **Breaking changes:** argument `const` is replaced by
+  `deterministic`, which takes the values of `create_bvarmodel()`, and
+  `a_range` is renamed to `range_a`. `range_const` now has its documented
+  default `c(-0.5, 0.5)` instead of stopping when it is not given. The default
+  `presample` is 100 instead of 0, so the series no longer depend on their
+  starting values, and coefficients are no longer rounded to two digits.
+  **Results change** for a given seed.
+
+* **New function `generate_artificial_vec()`** simulates cointegrated series
+  from a VEC model with rank `r`, restricted or unrestricted constants and
+  trends, and the same options `structural`, `tvp` and `sv`. Its coefficients
+  are drawn so that the VAR representation has exactly `k - r` unit roots, in
+  every period for time varying models. Besides `alpha`, `beta` and `gamma` it
+  returns `pi`, which estimates can be compared with whatever normalisation of
+  `beta` they use.
+
 * **Structural impulse responses and variance decompositions read A0 correctly
   for models with four or more endogenous variables.** The free elements of
   A0 are stored column by column, which is also the order of the

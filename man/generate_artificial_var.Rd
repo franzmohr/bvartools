@@ -8,13 +8,21 @@ generate_artificial_var(
   nobs = 100,
   k = 3,
   p = 2,
-  const = FALSE,
-  a_range = c(-0.5, 0.5),
+  deterministic = "none",
+  structural = FALSE,
+  tvp = FALSE,
+  sv = FALSE,
+  range_a = c(-0.5, 0.5),
   a_zeros = 0.5,
-  range_const = NULL,
+  range_a0 = c(-0.5, 0.5),
+  range_const = c(-0.5, 0.5),
+  range_trend = c(-0.01, 0.01),
   range_variance = c(1, 1),
   range_psi = c(0, 0),
-  presample = 0
+  range_variance_state = c(1e-04, 1e-04),
+  range_variance_sv = c(0.01, 0.01),
+  stable = TRUE,
+  presample = 100
 )
 }
 \arguments{
@@ -22,50 +30,170 @@ generate_artificial_var(
 
 \item{k}{number of endogenous variables. Defaults to 3.}
 
-\item{p}{number of lags of the VAR model. Defaults to 2.}
+\item{p}{number of lags of the VAR model. Can be zero. Defaults to 2.}
 
-\item{const}{logical specifying if the model should include an intercept term.
-Defaults to \code{FALSE}.}
+\item{deterministic}{a character specifying which deterministic terms the
+model contains: \code{"none"} (default), \code{"const"} for an intercept,
+\code{"trend"} for a linear trend, and \code{"both"} for an intercept with a
+linear trend. The terms are the same as in \code{\link{create_bvarmodel}}.}
 
-\item{a_range}{numeric vector with two elements containing the minimum and
-maximum value of the coefficients. Defaults to \code{c(-0.5, 0.5)}.}
+\item{structural}{logical specifying whether a structural VAR model with a lower
+triangular matrix \eqn{A_0} of contemporaneous coefficients is generated.
+Defaults to \code{FALSE}. See 'Details'.}
 
-\item{a_zeros}{numeric between 0 and 1 indicating the share of parameters,
-which should be set to zero. Default is \code{0.5}.
-maximum value of the coefficients. Defaults to \code{c(-0.5, 0.5)}.}
+\item{tvp}{logical specifying whether the coefficients, \eqn{A_0} and the
+elements of \eqn{\Psi} follow random walks. Defaults to \code{FALSE}. See 'Details'.}
+
+\item{sv}{logical specifying whether the error variances follow a stochastic
+volatility process. Defaults to \code{FALSE}. See 'Details'.}
+
+\item{range_a}{numeric vector with two elements containing the minimum and
+maximum value of the coefficients of lagged endogenous variables. Defaults
+to \code{c(-0.5, 0.5)}.}
+
+\item{a_zeros}{numeric between 0 and 1 indicating the share of coefficients
+of lagged endogenous variables, which should be set to zero. Default is \code{0.5}.}
+
+\item{range_a0}{numeric vector with two elements containing the minimum and
+maximum value of the free elements of \eqn{A_0}. Only used if
+\code{structural = TRUE}. Defaults to \code{c(-0.5, 0.5)}.}
 
 \item{range_const}{numeric vector with two elements containing the minimum and
-maximum value of the coefficients of intercept terms. Defaults to \code{c(-0.5, 0.5)}.}
+maximum value of the intercept terms. Defaults to \code{c(-0.5, 0.5)}.}
+
+\item{range_trend}{numeric vector with two elements containing the minimum and
+maximum value of the coefficients of the linear trend. Defaults to \code{c(-0.01, 0.01)}.}
 
 \item{range_variance}{numeric vector with two elements containing the minimum and
-maximum value of the error variances. Defaults to \code{c(1, 1)}.}
+maximum value of the error variances. For \code{sv = TRUE} these are the
+variances in the first period. Defaults to \code{c(1, 1)}.}
 
 \item{range_psi}{numeric vector with two elements containing the minimum and
-maximum value of the error covariances. Defaults to \code{c(0, 0)}.}
+maximum value of the free elements of \eqn{\Psi}. Defaults to \code{c(0, 0)},
+which gives uncorrelated errors. Must be \code{c(0, 0)} for structural models.}
 
-\item{presample}{numeric specifying the number of presample values used to
-initialize the time series. Defaults to zero.}
+\item{range_variance_state}{numeric vector with two elements containing the minimum and
+maximum value of the variances of the state equations of the coefficients, of
+\eqn{A_0} and of \eqn{\Psi}. Only used if \code{tvp = TRUE}. Defaults to
+\code{c(0.0001, 0.0001)}.}
+
+\item{range_variance_sv}{numeric vector with two elements containing the minimum and
+maximum value of the variances of the state equations of the log-volatilities.
+Only used if \code{sv = TRUE}. Defaults to \code{c(0.01, 0.01)}.}
+
+\item{stable}{logical specifying whether the coefficients of lagged endogenous
+variables are restricted to a stable VAR process. Defaults to \code{TRUE}.
+See 'Details'.}
+
+\item{presample}{numeric specifying the number of observations, which are
+generated before the first returned observation and then discarded, so that
+the series do not depend on their initial values. Defaults to 100.}
 }
 \value{
-A list containing the artificial time series and a list with the
-true parameters.
+A list with the elements
+\describe{
+  \item{\code{data}}{a \eqn{T \times K} time-series object of the artificial
+  series, named \code{var1}, \code{var2} etc.}
+  \item{\code{params}}{a list of the true parameters with the elements
+  \describe{
+    \item{\code{a_coef}}{the \eqn{K \times M} coefficient matrix
+    \eqn{(A_1, \dots, A_p, C)}, with the columns in the order of the regressors of
+    \code{\link{create_bvarmodel}}, or \code{NULL} if the model has no regressors.
+    For \code{tvp = TRUE} a \eqn{K \times M \times T} array.}
+    \item{\code{a0_coef}}{for \code{structural = TRUE}, the \eqn{K \times K} matrix
+    \eqn{A_0}, or for \code{tvp = TRUE} a \eqn{K \times K \times T} array.}
+    \item{\code{psi_coef}}{the \eqn{K \times K} matrix \eqn{\Psi}, or for
+    \code{tvp = TRUE} a \eqn{K \times K \times T} array. \code{NULL} if \eqn{K = 1}
+    or \code{structural = TRUE}.}
+    \item{\code{u_omega}}{the \eqn{K \times K} diagonal matrix of error variances
+    \eqn{\Omega}, or for \code{sv = TRUE} a \eqn{K \times K \times T} array.}
+    \item{\code{u_sigma}}{the \eqn{K \times K} covariance matrix \eqn{\Sigma} of
+    \eqn{u_t}, or for \code{tvp = TRUE} or \code{sv = TRUE} a
+    \eqn{K \times K \times T} array.}
+    \item{\code{a_state_variance}}{for \code{tvp = TRUE}, the \eqn{K \times M} matrix
+    of the variances of the state equations of the coefficients.}
+    \item{\code{a0_state_variance}}{for \code{tvp = TRUE} and \code{structural = TRUE},
+    the \eqn{K \times K} matrix of the variances of the state equations of \eqn{A_0}.}
+    \item{\code{psi_state_variance}}{for \code{tvp = TRUE}, \eqn{K > 1} and
+    \code{structural = FALSE}, the \eqn{K \times K} matrix of the variances of the
+    state equations of \eqn{\Psi}.}
+    \item{\code{u_state_variance}}{for \code{sv = TRUE}, the \eqn{K} variances of
+    the state equations of the log-volatilities.}
+  }}
+}
+For time varying parameters, \code{as.vector()} of an array gives the parameters
+period by period, which is the order of the columns of the posterior draws of TVP
+models.
 }
 \description{
-Generates an artificial data set for algorithm testing.
+Generates an artificial data set from a vector autoregressive model with
+constant or time varying parameters and constant or stochastic volatility,
+for testing the algorithms of the package.
 }
 \details{
 The function produces artificial observations for a vector
 autoregressive (VAR) model:
-\deqn{y_t = c + \sum_{i=1}^{p} A_i y_{t - i} + u_t,}
+\deqn{A_{0t} y_t = \sum_{i=1}^{p} A_{it} y_{t - i} + C_t d_t + u_t,}
 where
 \eqn{y_t} is a K-dimensional vector of endogenous variables,
-\eqn{A_i} is a \eqn{K \times K} coefficient matrix of endogenous variables,
-\eqn{c} is a \eqn{K \times 1} vector of intercept terms.
-\eqn{p} is the lag order of endogenous variables.
+\eqn{A_{0t}} is a \eqn{K \times K} matrix of contemporaneous coefficients,
+\eqn{A_{it}} is a \eqn{K \times K} coefficient matrix of endogenous variables,
+\eqn{d_t} is a vector of deterministic terms and \eqn{C_t} its coefficient
+matrix. \eqn{p} is the lag order of endogenous variables.
 
-As in Primiceri (2005) \eqn{u_t} is an error term with \eqn{u_t \sim N(0, \Psi \Omega_u \Psi^{\prime})},
-where \eqn{\Psi} is a lower triangular matrix with ones on the main diagonal
-and \eqn{\Omega} is a diagonal matrix with error variances.
+As in Primiceri (2005) \eqn{u_t} is an error term with
+\eqn{u_t \sim N(0, \Sigma_t)} and \eqn{\Psi_t \Sigma_t \Psi_t^{\prime} = \Omega_t},
+where \eqn{\Psi_t} is a lower triangular matrix with ones on the main diagonal
+and \eqn{\Omega_t} is a diagonal matrix with error variances
+\eqn{\omega_{1t}, \dots, \omega_{Kt}}.
+
+Unless \code{structural = TRUE}, \eqn{A_{0t}} is an identity matrix. Otherwise it
+is a lower triangular matrix with ones on its main diagonal, whose free elements
+are drawn from \code{range_a0}, and the errors of the structural equations are
+uncorrelated, so that \eqn{\Psi_t} is an identity matrix and
+\eqn{\Sigma_t = \Omega_t}. This is the model that \code{\link{create_bvarmodel}}
+produces with \code{structural = TRUE}. The coefficients \eqn{A_{it}} and \eqn{C_t}
+are those of the structural equations, and the reduced form of the model has the
+coefficients \eqn{A_{0t}^{-1} A_{it}} and the error covariance matrix
+\eqn{A_{0t}^{-1} \Omega_t A_{0t}^{-1 \prime}}.
+
+The linear trend takes the value 1 in period \eqn{p + 1} of the returned series,
+which is the first period that \code{\link{create_bvarmodel}} uses for estimation
+with lag order \eqn{p}. The true coefficients of the trend are therefore those
+that model estimates with the same lag order refer to.
+
+If \code{tvp = FALSE} and \code{sv = FALSE}, all parameters are constant over time.
+If \code{tvp = TRUE}, the coefficients \eqn{a_t = vec(A_{1t}, \dots, A_{pt}, C_t)},
+the free elements of \eqn{A_{0t}} and the free elements \eqn{\psi_t} of
+\eqn{\Psi_t} follow random walks
+\deqn{a_t = a_{t-1} + v_t, \quad v_t \sim N(0, Q_a), \qquad
+\psi_t = \psi_{t-1} + w_t, \quad w_t \sim N(0, Q_\psi),}
+with diagonal \eqn{Q_a} and \eqn{Q_\psi}, whose elements are drawn from
+\code{range_variance_state}, and likewise for \eqn{A_{0t}}. Coefficients that are
+zero in the first period, such as those set to zero by \code{a_zeros}, have a state
+variance of zero and stay zero. With the default \code{range_psi = c(0, 0)} the
+errors therefore remain uncorrelated.
+If \code{sv = TRUE}, the log-volatilities follow random walks
+\deqn{\ln \omega_{it} = \ln \omega_{i,t-1} + \eta_{it}, \quad \eta_{it} \sim N(0, \sigma^2_i),}
+with \eqn{\sigma^2_i} drawn from \code{range_variance_sv}. These are the state
+equations of the models that \code{\link{create_bvarmodel}} produces with
+\code{tvp = TRUE} and \code{error = "sv"} or \code{"sv+covar"}.
+
+The parameters of the first period are drawn from the ranges above. During the
+presample they are held at these values, so that the returned paths start at
+them and the presample only removes the influence of the initial values of the
+series.
+
+If \code{stable = TRUE}, the coefficients of lagged endogenous variables are
+drawn until the companion matrix of the reduced form of the process has no
+eigenvalue on or outside the unit circle. For \code{tvp = TRUE} this holds in
+every period: an innovation of the coefficients, which would make the process
+unstable, is drawn again, and if no stable innovation is found in 100 attempts,
+the coefficients keep the values of the previous period. This restricts the
+random walks to the stable region as in Cogley and Sargent (2005). Set
+\code{stable = FALSE} to generate integrated or explosive series, usually together
+with \code{presample = 0}. Cointegrated series are generated by
+\code{\link{generate_artificial_vec}}.
 }
 \examples{
 
@@ -76,15 +204,34 @@ set.seed(1)
 dt <- generate_artificial_var(nobs = 200, k = 3)
 
 # Time series with all intercept terms equal to 5
-dt <- generate_artificial_var(nobs = 200, k = 3,
-                              const = TRUE, range_const = c(5, 5))
+dt <- generate_artificial_var(nobs = 200, k = 3, deterministic = "const",
+                              range_const = c(5, 5))
 
+# Time varying parameters and stochastic volatility with correlated errors
+dt <- generate_artificial_var(nobs = 200, k = 2, p = 1, deterministic = "const",
+                              tvp = TRUE, sv = TRUE, range_psi = c(-0.5, 0.5))
+
+# Path of the error variance of the first variable
+plot(dt[["params"]][["u_omega"]][1, 1, ], type = "l")
+
+# Structural model
+dt <- generate_artificial_var(nobs = 200, k = 3, p = 1, structural = TRUE)
+dt[["params"]][["a0_coef"]]
 
 }
 \references{
+Cogley, T., & Sargent, T. J. (2005). Drifts and volatilities: Monetary policies
+and outcomes in the post WWII US. \emph{Review of Economic Dynamics, 8}(2), 262--302.
+\doi{10.1016/j.red.2004.10.009}
+
 Lütkepohl, H. (2006). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
 
 Primiceri, G. E. (2005). Time varying structural vector autoregressions and
 monetary policy. \emph{The Review of Economic Studies, 72}(3), 821--852.
 \doi{10.1111/j.1467-937X.2005.00353.x}
 }
+\seealso{
+Other artificial data:
+\code{\link[=generate_artificial_vec]{generate_artificial_vec()}}
+}
+\concept{artificial data}

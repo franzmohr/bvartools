@@ -21,6 +21,7 @@ reference:
   - transform_variables
   - starts_with("window.")
   - generate_artificial_var
+  - generate_artificial_vec
 
 - title: Priors and initial values
   contents:

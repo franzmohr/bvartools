@@ -243,7 +243,6 @@ Sanderson, C., & Curtin, R. (2016). Armadillo: a template-based C++ library for 
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://franzmohr.github.io/bvartools/}
   \item \url{https://github.com/franzmohr/bvartools}
   \item Report bugs at \url{https://github.com/franzmohr/bvartools/issues}
 }

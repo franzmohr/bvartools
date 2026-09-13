@@ -19,6 +19,13 @@ agent_doc_blocks <- function(path) {
   })
 }
 
+# Examples that read the help pages through tools::Rd_db() need the help
+# database of an installed package. Under pkgload::load_all() (devtools::test())
+# find.package() returns the source directory, which has none, so those blocks
+# are skipped there and run under R CMD check.
+has_installed_help <- file.exists(
+  file.path(find.package("bvartools"), "help", "bvartools.rdb"))
+
 skill_dir <- system.file("agents", "skills", "bvartools", package = "bvartools")
 skill_files <- list.files(skill_dir, pattern = "[.]md$", recursive = TRUE, full.names = TRUE)
 
@@ -35,7 +42,12 @@ for (path in skill_files) {
 
   test_that(paste("the R examples in", basename(path), "run"), {
     env <- new.env(parent = globalenv())
+    skipped <- integer(0)
     for (i in seq_along(blocks)) {
+      if (!has_installed_help && any(grepl("Rd_db(", blocks[[i]], fixed = TRUE))) {
+        skipped <- c(skipped, i)
+        next
+      }
       failure <- tryCatch({
         suppressWarnings(eval(parse(text = blocks[[i]]), envir = env))
         NULL
@@ -43,6 +55,10 @@ for (path in skill_files) {
       expect(is.null(failure),
              sprintf("%s: R example %d of %d failed: %s",
                      basename(path), i, length(blocks), failure))
+    }
+    if (length(skipped) > 0) {
+      skip(sprintf("%s: R example(s) %s need the installed help database",
+                   basename(path), paste(skipped, collapse = ", ")))
     }
   })
 }

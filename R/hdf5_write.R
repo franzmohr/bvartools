@@ -79,6 +79,31 @@
   return(invisible(NULL))
 }
 
+# Writes the selection scheme of the covariance block where BayesTS reads it.
+#
+# The scheme of the coefficients is the attribute 'varsel' of /model. That of
+# the covariance block of a time varying model is the attribute 'varsel' of
+# /model/priors/psi, and the samplers look for it nowhere else. It used to be
+# written only as the dataset /priors/psi/varsel, beside the inclusion priors,
+# which the samplers never read: they took the scheme to be "none", ignored the
+# inclusion priors and the starting values of the indicators, and ran without
+# the selection over the covariances the model asked for. The dataset is still
+# written with the rest of the prior, because that is what the reader rebuilds
+# 'priors' from.
+.hdf5_write_psi_varsel <- function(handles, group_model, prior_psi) {
+
+  varsel <- prior_psi[["varsel"]]
+  if (is.null(varsel)) {
+    return(invisible(NULL))
+  }
+
+  group_priors <- .hdf5_group(handles, group_model, "priors")
+  group_psi <- .hdf5_group(handles, group_priors, "psi")
+  .hdf5_write_attr(group_psi, "varsel", varsel)
+
+  return(invisible(NULL))
+}
+
 # Writes `value` into `group` under `name`, with `attrs` attached to it.
 #
 # The dataset is created once and its attributes are written on the handle that

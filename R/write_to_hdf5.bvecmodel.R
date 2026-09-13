@@ -193,6 +193,7 @@ write_to_hdf5.bvecmodel <- function(object, filename, group = "", ...) {
         }
       }
     }
+    .hdf5_write_psi_varsel(handles, group_model, object[["priors"]][["psi"]])
 
     ## u_sigma_inv ----
     # Which hyperparameters there are is decided by the error specification.

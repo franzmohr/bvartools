@@ -97,6 +97,20 @@
 #' variance is shrunk by \eqn{1 - \rho^2}, leaving the product on the scale
 #' \code{coef$v_i} asks for.
 #'
+#' Be careful with \code{\link{scale_error_correction}} in a model whose
+#' coefficients vary over time. With a scaled error correction term, the
+#' coefficient paths can absorb the residuals of an equation almost entirely: its
+#' residual variance -- or, under stochastic volatility, its volatility path -- is
+#' then reported far below that of a least squares fit of the same regressors and
+#' nearly constant over the sample. Whether a chain ends up in that state can
+#' depend on the seed, so a single run that looks fine does not rule it out, and a
+#' tighter \code{coint$rho} makes it rarer without preventing it. It is safer to
+#' leave the series unscaled, to choose a small \code{coef$rate}, and to compare
+#' the residual variances with those of a least squares fit in chains with
+#' different seeds. The vignette on time varying parameters and stochastic
+#' volatility in error correction models,
+#' \code{vignette("tvp-sv-vec", package = "bvartools")}, shows an example.
+#'
 #' When \eqn{\rho} is drawn, those last two are computed from \code{coint$rho}
 #' once and do not follow the draw: the state before the sample keeps the normal
 #' prior built here, and the loadings keep the shrinkage of

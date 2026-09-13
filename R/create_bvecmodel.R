@@ -35,7 +35,12 @@
 #' @param burnin an integer of MCMC draws used to initialize the sampler
 #' (defaults to 5000). These draws do not enter the computation of posterior
 #' moments, forecasts etc.
-#' 
+#' @param thin an integer thinning interval of the sampler (defaults to 1). After
+#' the burn-in the sampler keeps the last of every \code{thin} draws, so it runs
+#' \code{burnin + iterations * thin} draws and still keeps \code{iterations}. Unlike
+#' \code{\link[=thin.bvecmodel]{thin}}, which thins draws already made, the draws
+#' that are not kept are never held in memory.
+#'
 #' @details The function produces the variable matrices of vector error correction (VEC)
 #' models, which can also include exogenous variables:
 #' \deqn{\Delta y_t = \Pi w_t + \sum_{i=1}^{p-1} \Gamma_{i} \Delta y_{t - i} + 
@@ -137,7 +142,7 @@ create_bvecmodel <- function(data, p = 2, exogen = NULL, s = 2, r = NULL,
                              const = NULL, trend = NULL, seasonal = NULL,
                              structural = FALSE, error = "wishart", tvp = FALSE,
                              varsel = "none", algorithm = NULL,
-                             iterations = 20000, burnin = 2000) {
+                             iterations = 20000, burnin = 2000, thin = 1) {
   
   # Input checks ----
   if (!"ts" %in% class(data)) {
@@ -472,7 +477,9 @@ create_bvecmodel <- function(data, p = 2, exogen = NULL, s = 2, r = NULL,
   
   model[["iterations"]] <- as.integer(iterations)
   model[["burnin"]] <- as.integer(burnin)
-  
+  # Carried only when it thins; see create_bvarmodel().
+  model[["thin"]] <- .check_sampler_thin(thin)
+
   ect <- stats::ts(as.matrix(ect), class = c("mts", "ts", "matrix"))
   stats::tsp(ect) <- ts_info
   dimnames(ect)[[2]] <- ect_names

@@ -14,7 +14,7 @@ added:
 | --- | --- | --- |
 | `data$original` | `create_*model()` | The time-series objects as given: `endogen`, `exogen`, `deterministic` |
 | `data$train` | `create_*model()` | The estimation sample: `y`, `x`, and `z` in SUR form; for a VEC also `w`, the lagged levels in the cointegration term |
-| `model` | `create_*model()` | The specification: `k`, `p`, `m`, `s`, `n`, `endogen`, `error`, `varsel`, `tvp`, `structural`, `iterations`, `burnin`, `algorithm`; for a VEC also `rank`, `k_beta` |
+| `model` | `create_*model()` | The specification: `k`, `p`, `m`, `s`, `n`, `endogen`, `error`, `varsel`, `tvp`, `structural`, `iterations`, `burnin`, `algorithm`; `thin` only if above 1; for a VEC also `rank`, `k_beta` |
 | `priors` | `add_priors()` | See `priors.md` |
 | `initial` | `add_initial_values()` | Starting values of the sampler |
 | `posterior` | `add_posterior_coefficients()` and the later `add_posterior_*()` | The draws |
@@ -28,7 +28,10 @@ step maps over both.
 
 Each block of the posterior is a list whose `coeffs` is a `coda::mcmc` matrix with
 **one row per kept draw and one column per parameter**. Burn-in draws are already
-gone, so there are `iterations` rows.
+gone, so there are `iterations` rows. That holds under `create_*model(thin = t)`
+as well: the sampler then runs `burnin + iterations * t` draws, keeps the last of
+every `t`, and labels them `t`, `2t`, ... in `coda::mcpar()`. `thin()` thins draws
+that were already kept.
 
 With `K` endogenous variables, `T` training periods and `M` coefficients,
 `M = K * (K*p + m*(s + 1) + n)`, plus `K(K-1)/2` for a structural model:

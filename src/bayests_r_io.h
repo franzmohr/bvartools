@@ -161,6 +161,9 @@ inline bayests::VarSpec read_spec(const Rcpp::List &model, const char *covar_err
   spec.k = Rcpp::as<int>(model["k"]);
   spec.iterations = Rcpp::as<int>(model["iterations"]);
   spec.burnin = Rcpp::as<int>(model["burnin"]);
+  // Absent unless create_*model() was asked to thin, and 1 then, which keeps
+  // every draw after the burn-in.
+  spec.thin = optional_int(model, "thin", 1);
   spec.p = optional_int(model, "p", 0);
   spec.m = optional_int(model, "m", 0);
   spec.s = optional_int(model, "s", 0);

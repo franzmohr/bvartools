@@ -281,6 +281,7 @@ vec_to_var.bvecmodel <- function(object, ...) {
   model[["tvp"]] <- specs[["tvp"]]
   model[["iterations"]] <- specs[["iterations"]]
   model[["burnin"]] <- specs[["burnin"]]
+  model[["thin"]] <- specs[["thin"]]
 
   result <- list("model" = model,
                  "data" = list("original" = .drop_null(list("endogen" = object[["data"]][["original"]][["endogen"]],

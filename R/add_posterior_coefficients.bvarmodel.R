@@ -107,13 +107,13 @@ add_posterior_coefficients.bvarmodel <- function(object, posterior_function = NU
 
     for (i in c("a", "psi", "u_sigma_inv", "u_omega_inv", "u_scale")) {
       if (!is.null(object[["posterior"]][[i]][["coeffs"]])) {
-        object[["posterior"]][[i]][["coeffs"]] <- coda::as.mcmc(object[["posterior"]][[i]][["coeffs"]])
+        object[["posterior"]][[i]][["coeffs"]] <- .mcmc_draws(object[["model"]], object[["posterior"]][[i]][["coeffs"]])
       }
       if (!is.null(object[["posterior"]][[i]][["lambda"]])) {
-        object[["posterior"]][[i]][["lambda"]] <- coda::as.mcmc(object[["posterior"]][[i]][["lambda"]])
+        object[["posterior"]][[i]][["lambda"]] <- .mcmc_draws(object[["model"]], object[["posterior"]][[i]][["lambda"]])
       }
       if (!is.null(object[["posterior"]][[i]][["sigma"]])) {
-        object[["posterior"]][[i]][["sigma"]] <- coda::as.mcmc(object[["posterior"]][[i]][["sigma"]])
+        object[["posterior"]][[i]][["sigma"]] <- .mcmc_draws(object[["model"]], object[["posterior"]][[i]][["sigma"]])
       }
     }
 

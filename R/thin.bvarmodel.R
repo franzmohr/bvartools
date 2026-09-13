@@ -55,10 +55,12 @@ thin.bvarmodel <- function(x, thin = 10, ...) {
 # the posterior was thinned, so that row i no longer belonged to the same draw
 # across blocks. Anything with as many rows as there are draws is a block of
 # draws, since the samplers store one row per draw and nothing else.
+#
+# The labels are counted from the ones the draws already carry. A sampler that
+# kept one draw in `before` labels them `before`, `2 before`, ..., and keeping
+# every `thin`-th of those keeps one draw in `before * thin` of the chain. Starting
+# the labels afresh at one would say the draws came from the start of the chain.
 .thin_draws <- function(posterior, pos_thin, draws, thin) {
-
-  start <- pos_thin[1]
-  end <- pos_thin[length(pos_thin)]
 
   for (i in names(posterior)) {
     element <- posterior[[i]]
@@ -68,12 +70,48 @@ thin.bvarmodel <- function(x, thin = 10, ...) {
     if (is.list(element) && !inherits(element, "mcmc")) {
       posterior[[i]] <- .thin_draws(element, pos_thin, draws, thin)
     } else if (NROW(element) == draws) {
+      mcpar <- attr(element, "mcpar")
+      if (is.null(mcpar)) {
+        mcpar <- c(1, draws, 1)
+      }
       posterior[[i]] <- coda::mcmc(.draws_matrix(element)[pos_thin, , drop = FALSE],
-                                   start = start, end = end, thin = thin)
+                                   start = mcpar[1] + (pos_thin[1] - 1) * mcpar[3],
+                                   end = mcpar[1] + (pos_thin[length(pos_thin)] - 1) * mcpar[3],
+                                   thin = thin * mcpar[3])
     }
   }
 
   return(posterior)
+}
+
+
+# The thinning interval a model's sampler keeps one draw in, validated. NULL for
+# one, which is how a model that keeps every draw says so.
+.check_sampler_thin <- function(thin) {
+  if (!is.numeric(thin) || length(thin) != 1 || is.na(thin) ||
+      thin < 1 || thin != round(thin)) {
+    stop("Argument 'thin' must be a single positive integer.")
+  }
+  if (thin == 1) {
+    return(NULL)
+  }
+  return(as.integer(thin))
+}
+
+
+# The sampler's draws of one block as an mcmc object whose labels say which draws
+# were kept. BayesTS keeps the last of every `thin` draws after the burn-in, so the
+# kept ones are iterations thin, 2 thin, ... after the burn-in -- the labels
+# bayests writes into a model file. Without thinning this is exactly what
+# coda::as.mcmc() returns, so an unthinned model is unchanged down to the type of
+# its labels.
+.mcmc_draws <- function(model, draws) {
+  thin <- model[["thin"]]
+  if (is.null(thin) || thin == 1) {
+    return(coda::as.mcmc(draws))
+  }
+  thin <- as.numeric(thin)
+  return(coda::mcmc(draws, start = thin, end = NROW(draws) * thin, thin = thin))
 }
 
 

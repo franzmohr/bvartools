@@ -17,7 +17,8 @@ create_bvarmodel(
   tvp = FALSE,
   varsel = "none",
   iterations = 20000,
-  burnin = 2000
+  burnin = 2000,
+  thin = 1
 )
 }
 \arguments{
@@ -60,6 +61,12 @@ to 20000).}
 \item{burnin}{an integer of MCMC draws used to initialize the sampler
 (defaults to 2000). These draws do not enter the computation of posterior
 moments, forecasts etc.}
+
+\item{thin}{an integer thinning interval of the sampler (defaults to 1). After
+the burn-in the sampler keeps the last of every \code{thin} draws, so it runs
+\code{burnin + iterations * thin} draws and still keeps \code{iterations}. Unlike
+\code{\link[=thin.bvarmodel]{thin}}, which thins draws already made, the draws
+that are not kept are never held in memory.}
 }
 \value{
 An object of class 'bvarmodel' or, if a vector is given in \code{p}, \code{s}
@@ -78,7 +85,8 @@ specification. A 'bvarmodel' is a list with the elements
   variables, lags, exogenous variables, their lags and deterministic terms,
   \code{endogen}, the names of the endogenous variables, and \code{deterministic},
   \code{structural}, \code{error}, \code{varsel}, \code{tvp}, \code{iterations},
-  \code{burnin} and, for \code{error = "ald"}, \code{quantile} as specified.}
+  \code{burnin}, \code{thin} if it is above 1, and, for \code{error = "ald"},
+  \code{quantile} as specified.}
 }
 The later steps of the workflow add the elements \code{priors}, \code{initial} and
 \code{posterior}.

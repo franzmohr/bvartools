@@ -114,19 +114,19 @@ add_posterior_coefficients.bvecmodel <- function(object, posterior_function = NU
 
     for (i in c("a", "beta", "psi", "u_sigma_inv", "u_omega_inv")) {
       if (!is.null(object[["posterior"]][[i]][["coeffs"]])) {
-        object[["posterior"]][[i]][["coeffs"]] <- coda::as.mcmc(object[["posterior"]][[i]][["coeffs"]])
+        object[["posterior"]][[i]][["coeffs"]] <- .mcmc_draws(object[["model"]], object[["posterior"]][[i]][["coeffs"]])
       }
       # Only the cointegration block has one of these, and only when the
       # prior made rho a parameter rather than a hyperparameter. NULL
       # everywhere else, which is the same as not having it.
       if (!is.null(object[["posterior"]][[i]][["rho"]])) {
-        object[["posterior"]][[i]][["rho"]] <- coda::as.mcmc(object[["posterior"]][[i]][["rho"]])
+        object[["posterior"]][[i]][["rho"]] <- .mcmc_draws(object[["model"]], object[["posterior"]][[i]][["rho"]])
       }
       if (!is.null(object[["posterior"]][[i]][["lambda"]])) {
-        object[["posterior"]][[i]][["lambda"]] <- coda::as.mcmc(object[["posterior"]][[i]][["lambda"]])
+        object[["posterior"]][[i]][["lambda"]] <- .mcmc_draws(object[["model"]], object[["posterior"]][[i]][["lambda"]])
       }
       if (!is.null(object[["posterior"]][[i]][["sigma"]])) {
-        object[["posterior"]][[i]][["sigma"]] <- coda::as.mcmc(object[["posterior"]][[i]][["sigma"]])
+        object[["posterior"]][[i]][["sigma"]] <- .mcmc_draws(object[["model"]], object[["posterior"]][[i]][["sigma"]])
       }
     }
 

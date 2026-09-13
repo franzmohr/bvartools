@@ -29,7 +29,12 @@
 #' @param burnin an integer of MCMC draws used to initialize the sampler
 #' (defaults to 2000). These draws do not enter the computation of posterior
 #' moments, forecasts etc.
-#' 
+#' @param thin an integer thinning interval of the sampler (defaults to 1). After
+#' the burn-in the sampler keeps the last of every \code{thin} draws, so it runs
+#' \code{burnin + iterations * thin} draws and still keeps \code{iterations}. Unlike
+#' \code{\link[=thin.bvarmodel]{thin}}, which thins draws already made, the draws
+#' that are not kept are never held in memory.
+#'
 #' @details The function produces the data matrices for vector autoregressive (VAR)
 #' models, which can also include unmodelled, non-deterministic variables:
 #' \deqn{A_0 y_t = \sum_{i=1}^{p} A_i y_{t - i} +
@@ -119,7 +124,8 @@
 #'   variables, lags, exogenous variables, their lags and deterministic terms,
 #'   \code{endogen}, the names of the endogenous variables, and \code{deterministic},
 #'   \code{structural}, \code{error}, \code{varsel}, \code{tvp}, \code{iterations},
-#'   \code{burnin} and, for \code{error = "ald"}, \code{quantile} as specified.}
+#'   \code{burnin}, \code{thin} if it is above 1, and, for \code{error = "ald"},
+#'   \code{quantile} as specified.}
 #' }
 #' The later steps of the workflow add the elements \code{priors}, \code{initial} and
 #' \code{posterior}.
@@ -165,7 +171,8 @@ create_bvarmodel <- function(data, p = 2,
                              tvp = FALSE,
                              varsel = "none",
                              iterations = 20000,
-                             burnin = 2000) {
+                             burnin = 2000,
+                             thin = 1) {
   
   # Input checks ----
   if (!"ts" %in% class(data)) {
@@ -428,9 +435,12 @@ create_bvarmodel <- function(data, p = 2,
     stop("Argument 'tvp' must be of class 'logical'.")
   }
   
-  # Iterations and burnin ----
+  # Iterations, burnin and thinning ----
   model[["iterations"]] <- as.integer(iterations)
   model[["burnin"]] <- as.integer(burnin)
+  # Carried only when it thins, as `quantile` is carried only by the models that
+  # read it: a model without it keeps every draw.
+  model[["thin"]] <- .check_sampler_thin(thin)
   
   # Data that is equal across models ----
   

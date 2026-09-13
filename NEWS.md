@@ -1,5 +1,28 @@
 # bvartools (development version)
 
+* **The samplers thin: `create_bvarmodel()` and `create_bvecmodel()` take
+  `thin`.** A model with `thin = t` runs its chain for `burnin + iterations * t`
+  draws and keeps the last of every `t` after the burn-in. So `iterations` is
+  still the number of draws kept, and the posterior and every file written from
+  it are still sized by it. `thin()` still thins draws after they are made; the
+  argument is what lets a slowly mixing chain run long without holding every
+  draw in memory. A chain thinned this way is exactly every `t`-th draw of the
+  unthinned chain from the same seed, and a test asserts that for a VAR and a
+  VEC.
+
+    The `mcpar` of the draws says which ones were kept: iterations `t`, `2t`,
+    ... after the burn-in, which is also what `bayests` writes into a model file.
+    The log likelihood and the forecasts take it from the coefficients as
+    before. `thin()` on a thinned model now counts from those labels instead of
+    restarting at one, so that thinning a `t`-thinned chain by 2 labels its
+    draws `2t`, `4t`, .... `model$thin` is carried only when it is above 1, the
+    way `quantile` is carried only by the quantile models, so a model created
+    without it is unchanged, and `vec_to_var()` passes it on.
+
+    **Draws are unchanged** for every model that does not thin: the sampler
+    reads a `thin` of 1, and the draws come back as the same `mcmc` objects as
+    before.
+
 * **Vendored BayesTS core refreshed: the samplers can thin.** **Draws are
   unchanged**, verified here rather than taken on trust. Sixteen specifications
   -- all fifteen VAR and VEC algorithms the package reaches, plus

@@ -19,7 +19,8 @@ create_bvecmodel(
   varsel = "none",
   algorithm = NULL,
   iterations = 20000,
-  burnin = 2000
+  burnin = 2000,
+  thin = 1
 )
 }
 \arguments{
@@ -70,6 +71,12 @@ to 50000).}
 \item{burnin}{an integer of MCMC draws used to initialize the sampler
 (defaults to 5000). These draws do not enter the computation of posterior
 moments, forecasts etc.}
+
+\item{thin}{an integer thinning interval of the sampler (defaults to 1). After
+the burn-in the sampler keeps the last of every \code{thin} draws, so it runs
+\code{burnin + iterations * thin} draws and still keeps \code{iterations}. Unlike
+\code{\link[=thin.bvecmodel]{thin}}, which thins draws already made, the draws
+that are not kept are never held in memory.}
 }
 \value{
 An object of class 'bvecmodel' or, if a vector is given in \code{p}, \code{s}

@@ -147,3 +147,71 @@ test_that("the thinning interval is a positive integer within the draws", {
   expect_error(thin(model, thin = c(2, 3)), "single positive integer")
   expect_identical(nrow(thin(model, thin = fx_iterations)[["posterior"]][["a"]][["coeffs"]]), 1L)
 })
+
+# A model whose sampler keeps one draw in `thin`, built from a fitted fixture's
+# starting point so that its chain and the unthinned one start from the same place.
+with_sampler_thin <- function(model, thin) {
+  model[["model"]][["iterations"]] <- as.integer(fx_iterations / thin)
+  model[["model"]][["thin"]] <- as.integer(thin)
+  model
+}
+
+test_that("create_*model() takes the thinning interval of the sampler", {
+  expect_null(fx_var_model()[["model"]][["thin"]])
+  expect_null(create_bvarmodel(var_data(), p = 1, iterations = 10, burnin = 5,
+                               thin = 1)[["model"]][["thin"]])
+  expect_identical(create_bvarmodel(var_data(), p = 1, iterations = 10, burnin = 5,
+                                    thin = 4)[["model"]][["thin"]], 4L)
+  expect_identical(create_bvecmodel(vec_data(), p = 1, r = 1, const = "unrestricted",
+                                    iterations = 10, burnin = 5, thin = 2)[["model"]][["thin"]], 2L)
+  expect_error(create_bvarmodel(var_data(), p = 1, thin = 0), "single positive integer")
+  expect_error(create_bvecmodel(vec_data(), p = 1, r = 1, thin = 2.5), "single positive integer")
+})
+
+test_that("a thinned chain is every thin-th draw of the unthinned one", {
+  keep <- seq(3, fx_iterations, 3)
+
+  for (base in list(fx_var_initial(), fx_vec_initial())) {
+    set.seed(20260913)
+    full <- add_posterior_coefficients(base)
+    set.seed(20260913)
+    thinned <- add_posterior_coefficients(with_sampler_thin(base, 3))
+
+    before <- draw_blocks(full[["posterior"]])
+    after <- draw_blocks(thinned[["posterior"]])
+    expect_named(after, names(before))
+    for (name in names(before)) {
+      # Exactly: which draws are kept is the only thing thinning may change.
+      expect_identical(c(as.matrix(after[[name]])),
+                       c(as.matrix(before[[name]])[keep, , drop = FALSE]), label = name)
+      expect_equal(attr(after[[name]], "mcpar"), c(3, fx_iterations, 3), label = name)
+    }
+  }
+
+  expect_identical(vec_to_var(add_posterior_coefficients(
+    with_sampler_thin(fx_vec_initial(), 3)))[["model"]][["thin"]], 3L)
+})
+
+test_that("the log likelihood and the forecasts of a thinned chain carry its labels", {
+  set.seed(7)
+  model <- add_posterior_coefficients(with_sampler_thin(fx_var_initial(), 3))
+  model <- add_posterior_loglik(model)
+  model <- add_posterior_forecasts(add_forecast_input(model, n_ahead = 2))
+
+  for (block in c("a", "loglik", "forecast")) {
+    draws <- if (block == "a") model[["posterior"]][["a"]][["coeffs"]] else model[["posterior"]][[block]]
+    expect_equal(attr(draws, "mcpar"), c(3, fx_iterations, 3), label = block)
+  }
+})
+
+test_that("thin() on a thinned chain counts from the chain's own labels", {
+  set.seed(8)
+  model <- add_posterior_coefficients(with_sampler_thin(fx_var_initial(), 3))
+  thinned <- thin(model, thin = 2)
+  draws <- thinned[["posterior"]][["a"]][["coeffs"]]
+
+  expect_identical(nrow(draws), 5L)
+  expect_equal(attr(draws, "mcpar"), c(6, fx_iterations, 6))
+  expect_identical(c(as.matrix(draws)),
+                   c(as.matrix(model[["posterior"]][["a"]][["coeffs"]])[seq(2, 10, 2), ]))
+})

@@ -282,6 +282,28 @@ inline bayests::VarSelPrior read_varsel_prior(const Rcpp::List &group, bayests::
   return prior;
 }
 
+// A copy of `object` whose posterior holds `value` under `name`, replacing an
+// element of that name rather than adding a second one beside it.
+//
+// An Rcpp::List argument wraps the caller's R object, not a copy of it, so
+// writing into it changes the object the caller still holds. Only the two lists
+// that change are duplicated, and shallowly: the draws already in the posterior
+// are shared with the caller's object, not copied.
+inline Rcpp::List with_posterior_element(const Rcpp::List &object, const char *name,
+                                         const Rcpp::RObject &value)
+{
+  Rcpp::List result(Rf_shallow_duplicate(object));
+  const Rcpp::List current = object["posterior"];
+  Rcpp::List posterior(Rf_shallow_duplicate(current));
+  if (posterior.containsElementNamed(name)) {
+    posterior[name] = value;
+  } else {
+    posterior.push_back(value, name);
+  }
+  result["posterior"] = posterior;
+  return result;
+}
+
 } // namespace bayests_r
 
 #endif // BVARTOOLS_BAYESTS_R_IO_H

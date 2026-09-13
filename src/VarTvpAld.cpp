@@ -149,11 +149,7 @@ Rcpp::List VarTvpAldLogLik(Rcpp::List object) {
 
   const arma::mat loglik = bayests::VarTvpAldSampler().log_likelihood(input, draws);
 
-  Rcpp::List posterior = object["posterior"];
-  posterior.push_back(loglik, "loglik");
-  object["posterior"] = posterior;
-
-  return object;
+  return with_posterior_element(object, "loglik", Rcpp::wrap(loglik));
 }
 
 /*** R

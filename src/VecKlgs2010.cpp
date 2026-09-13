@@ -160,11 +160,7 @@ Rcpp::List VecKlgs2010Forecasts(Rcpp::List object) {
   const bayests::ForecastDraws forecast =
     bayests::VecKlgs2010Sampler().forecast(input, draws, reporter);
 
-  Rcpp::List posterior = object["posterior"];
-  posterior.push_back(draws_to_r(forecast.values), "forecast");
-  object["posterior"] = posterior;
-
-  return object;
+  return with_posterior_element(object, "forecast", Rcpp::wrap(draws_to_r(forecast.values)));
 }
 
 // [[Rcpp::export(.VecKlgs2010LogLik)]]
@@ -177,11 +173,7 @@ Rcpp::List VecKlgs2010LogLik(Rcpp::List object) {
   // WAIC and PSIS-LOO expect; no transpose at this boundary.
   const arma::mat loglik = bayests::VecKlgs2010Sampler().log_likelihood(input, draws);
 
-  Rcpp::List posterior = object["posterior"];
-  posterior.push_back(loglik, "loglik");
-  object["posterior"] = posterior;
-
-  return object;
+  return with_posterior_element(object, "loglik", Rcpp::wrap(loglik));
 }
 
 /*** R

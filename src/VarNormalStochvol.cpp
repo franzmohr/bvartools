@@ -196,11 +196,7 @@ Rcpp::List VarNormalStochvolForecasts(Rcpp::List object) {
   const bayests::ForecastDraws forecast =
     bayests::VarNormalStochvolSampler().forecast(input, draws, reporter);
 
-  Rcpp::List posterior = object["posterior"];
-  posterior.push_back(draws_to_r(forecast.values), "forecast");
-  object["posterior"] = posterior;
-
-  return object;
+  return with_posterior_element(object, "forecast", Rcpp::wrap(draws_to_r(forecast.values)));
 }
 
 // [[Rcpp::export(.VarNormalStochvolLogLik)]]
@@ -211,11 +207,7 @@ Rcpp::List VarNormalStochvolLogLik(Rcpp::List object) {
 
   const arma::mat loglik = bayests::VarNormalStochvolSampler().log_likelihood(input, draws);
 
-  Rcpp::List posterior = object["posterior"];
-  posterior.push_back(loglik, "loglik");
-  object["posterior"] = posterior;
-
-  return object;
+  return with_posterior_element(object, "loglik", Rcpp::wrap(loglik));
 }
 
 /*** R

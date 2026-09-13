@@ -1,5 +1,24 @@
 # bvartools (development version)
 
+* **`add_posterior_forecasts()` and `add_posterior_loglik()` no longer change
+  the object they are given, and a second forecast replaces the first.** The
+  C++ functions behind them take the model as an `Rcpp::List`, which wraps the R
+  object the caller holds rather than a copy of it, and they wrote their result
+  into that list. After `add_posterior_loglik(object)` without an assignment,
+  `object` had gained a `loglik` all the same. The result was also appended
+  rather than set by name. Forecasting an object that already carried a
+  forecast -- under a new seed, or after its coefficients were edited in R --
+  therefore left two `forecast` elements, and `object$posterior$forecast`
+  silently returned the first of them. The log likelihood behaved the same way.
+
+    All thirteen VAR and VEC bindings that forecast and all fifteen that compute
+    a log likelihood now return through `with_posterior_element()` in
+    `src/bayests_r_io.h`. It copies the model and its posterior list before it
+    sets the element by name. The copy is shallow, so the draws already stored
+    are shared with the caller's object rather than duplicated. How the draws
+    are computed is unchanged. The `*Coefficients` bindings already built a new
+    list and needed no change.
+
 * **A VEC model with constant coefficients and stochastic volatility can be
   forecast.** `vec_to_var()` stopped on such a model with "posterior draws of
   u_sigma_inv must have 9 rows, got 1584": the coefficients are constant, so it

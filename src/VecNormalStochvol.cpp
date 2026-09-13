@@ -225,11 +225,7 @@ Rcpp::List VecNormalStochvolForecasts(Rcpp::List object) {
   const bayests::ForecastDraws forecast =
     bayests::VecNormalStochvolSampler().forecast(input, draws, reporter);
 
-  Rcpp::List posterior = object["posterior"];
-  posterior.push_back(draws_to_r(forecast.values), "forecast");
-  object["posterior"] = posterior;
-
-  return object;
+  return with_posterior_element(object, "forecast", Rcpp::wrap(draws_to_r(forecast.values)));
 }
 
 // [[Rcpp::export(.VecNormalStochvolLogLik)]]
@@ -242,11 +238,7 @@ Rcpp::List VecNormalStochvolLogLik(Rcpp::List object) {
   // and PSIS-LOO expect; no transpose at this boundary.
   const arma::mat loglik = bayests::VecNormalStochvolSampler().log_likelihood(input, draws);
 
-  Rcpp::List posterior = object["posterior"];
-  posterior.push_back(loglik, "loglik");
-  object["posterior"] = posterior;
-
-  return object;
+  return with_posterior_element(object, "loglik", Rcpp::wrap(loglik));
 }
 
 /*** R

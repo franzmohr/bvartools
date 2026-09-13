@@ -146,11 +146,7 @@ Rcpp::List VarNormalWishartForecasts(Rcpp::List object) {
   const bayests::ForecastDraws forecast =
     bayests::VarNormalWishartSampler().forecast(input, draws, reporter);
 
-  Rcpp::List posterior = object["posterior"];
-  posterior.push_back(draws_to_r(forecast.values), "forecast");
-  object["posterior"] = posterior;
-
-  return object;
+  return with_posterior_element(object, "forecast", Rcpp::wrap(draws_to_r(forecast.values)));
 }
 
 // [[Rcpp::export(.VarNormalWishartLogLik)]]
@@ -163,11 +159,7 @@ Rcpp::List VarNormalWishartLogLik(Rcpp::List object) {
   // WAIC and PSIS-LOO expect; no transpose at this boundary.
   const arma::mat loglik = bayests::VarNormalWishartSampler().log_likelihood(input, draws);
 
-  Rcpp::List posterior = object["posterior"];
-  posterior.push_back(loglik, "loglik");
-  object["posterior"] = posterior;
-
-  return object;
+  return with_posterior_element(object, "loglik", Rcpp::wrap(loglik));
 }
 
 /*** R

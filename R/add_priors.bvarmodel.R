@@ -259,7 +259,8 @@ add_priors.bvarmodel <- function(object,
         use_bvs_error <- TRUE 
       }
     }
-    if (coef[["v_i"]] == 0 | (coef[["v_i_det"]] == 0 & !varsel[["exclude_det"]])) {
+    # A Minnesota prior is informative and needs no v_i
+    if (!minnesota && (coef[["v_i"]] == 0 | (coef[["v_i_det"]] == 0 & !varsel[["exclude_det"]]))) {
       warning("Using BVS with an uninformative prior is not recommended.")
     }
   }

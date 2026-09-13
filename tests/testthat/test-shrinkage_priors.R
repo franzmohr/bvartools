@@ -326,3 +326,29 @@ test_that("a BVS prior of a VEC model takes v_i_det from v_i when it is not give
     "uninformative prior"
   )
 })
+
+test_that("BVS can be combined with a Minnesota prior without v_i", {
+  minnesota <- list(kappa1 = 0.5, kappa2 = 0.1, kappa4 = 5)
+  varsel <- list(inprior = 0.5)
+
+  var_model <- create_bvarmodel(var_data(), p = 1, deterministic = "const",
+                                varsel = "bvs", iterations = 10, burnin = 5)
+  expect_no_warning(
+    var_model <- add_priors(var_model, coef = list(minnesota = minnesota),
+                            sigma = list(df = 1, scale = 0.0001),
+                            varsel = varsel)
+  )
+  expect_true(all(c("v_inv", "inprior", "include") %in%
+                    names(var_model[["priors"]][["a"]])))
+
+  vec_model <- create_bvecmodel(vec_data(), p = 2, r = 1, const = "unrestricted",
+                                varsel = "bvs", iterations = 10, burnin = 5)
+  expect_no_warning(
+    vec_model <- add_priors(vec_model, coef = list(minnesota = minnesota),
+                            coint = list(v_i = 0, p_tau_i = 1),
+                            sigma = list(df = "k", scale = 1),
+                            varsel = varsel)
+  )
+  expect_true(all(c("v_inv", "inprior", "include") %in%
+                    names(vec_model[["priors"]][["a"]])))
+})

@@ -164,11 +164,10 @@ plot.bvarmodel <- function(x, ci = 0.95, type = "hist", show_zero_y = TRUE,
     pos_zero <- which(upper.tri(struct_matrix))
     pos_one <- struct_matrix[-c(pos_values, pos_zero)]
 
-    # Position of the free elements of A0 among the coefficients
-    temp <- matrix(NA, k , k)
-    temp[upper.tri(temp)] <- 1:n_struct
-    temp <- t(temp)
-    pos_a <- n_nonstruct + temp[lower.tri(temp)]
+    # Position of the free elements of A0 among the coefficients. They are
+    # stored column by column, the order of pos_values; reading them row by row,
+    # as this did, swapped elements from four variables on.
+    pos_a <- n_nonstruct + seq_len(n_struct)
 
     blocks[["A0"]] <- list(title = "Contemporaneous endogenous variables",
                            labels = y_names,

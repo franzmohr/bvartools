@@ -127,7 +127,25 @@ summary.bvecmodel <- function(object, ci = .95, period = NULL, ...){
     }
     
     temp <- summary(object[["posterior"]][["a"]][["coeffs"]][, pos], quantiles = c(ci_low, .5, ci_high))
-    
+
+    # Behind the loadings, 'a' holds one coefficient per equation and column of
+    # 'x' and then, for a structural model, the free elements of A0, stored
+    # column by column. A0 is reported as the whole K x K matrix, with its unit
+    # diagonal and zeros above it, in columns named after the endogenous
+    # variables. This branch used to stop with "update structural", so no
+    # structural VEC model could be summarised, and the code below it counted
+    # the regressors of a VAR model and read A0 row by row.
+    n_x <- ifelse(is.null(object[["data"]][["train"]][["x"]]), 0, NCOL(object[["data"]][["train"]][["x"]]))
+    n_non_structural <- k * n_x
+    if (structural) {
+      struct_matrix <- matrix(1:(k * k), k)
+      pos_values <- which(lower.tri(struct_matrix)) + n_non_structural
+      pos_zero <- which(upper.tri(struct_matrix)) + n_non_structural
+      pos_one <- which(diag(k) == 1) + n_non_structural
+      pos_a <- n_non_structural + seq_len(k * (k - 1) / 2)
+      dim_names[[2]] <- c(dim_names[[2]], y_names)
+    }
+
     if ("numeric" %in% class(temp[["statistics"]])) {
       means <- cbind(means, matrix(temp[["statistics"]]["Mean"], k))
       sds <- cbind(sds, matrix(temp[["statistics"]]["SD"], k))
@@ -135,29 +153,14 @@ summary.bvecmodel <- function(object, ci = .95, period = NULL, ...){
       ts_sd <- cbind(ts_sd, matrix(temp[["statistics"]]["Time-series SE"], k))
       q_low <- cbind(q_low, matrix(temp[["quantiles"]][1], k))
       median <- cbind(median, matrix(temp[["quantiles"]][2], k))
-      q_high <- cbind(q_high, matrix(temp[["quantiles"]][3], k)) 
+      q_high <- cbind(q_high, matrix(temp[["quantiles"]][3], k))
     } else {
-      
+
       if (structural) {
-        
-        stop("update structural")
-        n_non_structural <- k * (k * p + m * (s + 1) + n)
-        struct_matrix <- matrix(1:(k * k), k)
-        pos_values <- which(lower.tri(struct_matrix))
-        pos_zero <- which(upper.tri(struct_matrix))
-        pos_one <- struct_matrix[-c(pos_values, pos_zero)] + n_non_structural
-        pos_values <- pos_values + n_non_structural
-        pos_zero <- pos_zero + n_non_structural
-        
-        pos_a <- matrix(NA, k , k)
-        n_structural <- k * (k - 1) / 2
-        pos_a[upper.tri(pos_a)] <- 1:n_structural
-        pos_a <- t(pos_a)
-        pos_a <- pos_a[lower.tri(pos_a)] + n_non_structural
-        
+
         res_statistics <- matrix(NA_real_, n_non_structural + k * k, ncol(temp[["statistics"]]))
         dimnames(res_statistics) <- list(NULL, dimnames(temp[["statistics"]])[[2]])
-        res_statistics[1:n_non_structural,] <- temp[["statistics"]][1:n_non_structural,]
+        res_statistics[seq_len(n_non_structural), ] <- temp[["statistics"]][seq_len(n_non_structural), ]
         res_statistics[pos_one, 1] <- 1
         res_statistics[pos_one, -1] <- 0
         res_statistics[pos_zero, ] <- 0
@@ -166,7 +169,7 @@ summary.bvecmodel <- function(object, ci = .95, period = NULL, ...){
         
         res_quantiles <- matrix(NA_real_, n_non_structural + k * k, ncol(temp[["quantiles"]]))
         dimnames(res_quantiles) <- list(NULL, dimnames(temp[["quantiles"]])[[2]])
-        res_quantiles[1:n_non_structural,] <- temp[["quantiles"]][1:n_non_structural,]
+        res_quantiles[seq_len(n_non_structural), ] <- temp[["quantiles"]][seq_len(n_non_structural), ]
         res_quantiles[pos_one, ] <- 1
         res_quantiles[pos_zero, ] <- 0
         res_quantiles[pos_values, ] <- temp[["quantiles"]][pos_a,]
@@ -185,22 +188,28 @@ summary.bvecmodel <- function(object, ci = .95, period = NULL, ...){
     
     if (use_incl) {
       incl <- colMeans(object[["posterior"]][["a"]][["lambda"]])
+
+      # The loadings are never subject to variable selection, so the
+      # cointegration term is always in the model. Their draws sit at the front
+      # of 'a' and are replaced below by one inclusion probability per column of
+      # Pi, since Pi is reported over the columns of w rather than over the r
+      # columns of alpha. They are taken off first, because the positions of the
+      # structural elements count from the regressors of 'x'.
+      if (r > 0) {
+        incl <- incl[-(1:n_alpha)]
+      }
+
       if (structural) {
         res <- rep(NA, n_non_structural + k * k)
-        res[1:n_non_structural] <- incl[1:n_non_structural]
+        res[seq_len(n_non_structural)] <- incl[seq_len(n_non_structural)]
         res[pos_one] <- 1
         res[pos_zero] <- 0
         res[pos_values] <- incl[pos_a]
         incl <- res
       }
-      
-      # The loadings are never subject to variable selection, so the
-      # cointegration term is always in the model. Their draws sit at the front
-      # of 'a' and are replaced here by one inclusion probability per column of
-      # Pi, since Pi is reported over the columns of w rather than over the r
-      # columns of alpha.
+
       if (r > 0) {
-        incl <- c(rep(1, k * k_ect), incl[-(1:n_alpha)])
+        incl <- c(rep(1, k * k_ect), incl)
       }
       
       incl <- matrix(incl, k) 

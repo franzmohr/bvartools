@@ -146,8 +146,11 @@
       pos_a <- n_a - n_struct + 1:n_struct
     }
 
-    pos_a0 <- t(matrix(1:kk, k, k))
-    pos_a0 <- pos_a0[upper.tri(pos_a0)]
+    # The free elements are stored column by column -- (2,1), (3,1), ..., (k,1),
+    # (3,2), ... -- which is the order of the contemporaneous regressors in z and
+    # of which(lower.tri()). They used to be read row by row, which gives the
+    # same matrix for up to three variables and swaps elements from four on.
+    pos_a0 <- which(lower.tri(diag(k)))
   }
 
   store <- nrow(x[["posterior"]][["u_sigma_inv"]][["coeffs"]])

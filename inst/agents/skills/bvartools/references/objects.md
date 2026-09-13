@@ -109,7 +109,12 @@ of every coefficient, which is usually what a report needs.
 
 ## Structural models
 
-The contemporaneous coefficients are the last `K(K-1)/2` columns of `a`:
+The contemporaneous coefficients are the last `K(K-1)/2` columns of `a`, the
+free elements of the unit lower triangular `A0` stored **column by column** --
+`(2,1), (3,1), ..., (K,1), (3,2), ...` -- which is the order of
+`which(lower.tri(diag(K)))`. With three variables a row by row reading gives the
+same matrix; from four on it does not. `A0 <- diag(K); A0[lower.tri(A0)] <- draw`
+fills it correctly:
 
 ```r
 structural <- create_bvarmodel(e1, p = 1, deterministic = "const",

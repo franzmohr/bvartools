@@ -97,7 +97,8 @@ If \code{NULL} (default), it is reconstructed from arguments \code{y} and \code{
 \item{exogen}{the original time-series object of unmodelled variables in levels.
 If \code{NULL} (default), it is reconstructed from arguments \code{w_x} and \code{x_x}.}
 
-\item{z}{a \eqn{TK \times K (r + (p-1)K + sM + N)} data matrix, usually, a result of a
+\item{z}{a \eqn{TK \times K (r + (p-1)K + sM + N)} data matrix, with \eqn{K(K - 1)/2} further
+columns for the contemporaneous endogenous variables of a structural model, usually, a result of a
 call to \code{\link{create_bvecmodel}}. If \code{NULL} (default), it is generated
 from the provided data.}
 

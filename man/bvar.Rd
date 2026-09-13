@@ -35,7 +35,8 @@ usually, a result of a call to \code{\link{create_bvarmodel}}.}
 \item{x}{a time-series object of \eqn{(pK + (1+s)M + N)} regressor variables, usually, a result of a
 call to \code{\link{create_bvarmodel}}.}
 
-\item{z}{a \eqn{TK \times K (pK + (1+s)M + N + K)} data matrix, usually, a result of a
+\item{z}{a \eqn{TK \times K (pK + (1+s)M + N)} data matrix, with \eqn{K(K - 1)/2} further columns
+for the contemporaneous endogenous variables of a structural model, usually, a result of a
 call to \code{\link{create_bvarmodel}}. If \code{NULL} (default), it is
 generated from argument \code{x}.}
 

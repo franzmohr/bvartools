@@ -125,7 +125,7 @@ contemporaneous observations of endogenous variables, which correspond to
 the coefficients in the lower triangular of \eqn{A_0}.
 
 If \code{tvp} is \code{TRUE}, the respective coefficients
-of the above model are assumed to be time varying. If \code{sv} is \code{TRUE},
+of the above model are assumed to be time varying. If \code{error} is \code{"sv"} or \code{"sv+covar"},
 the error covariance matrix is assumed to be time varying.
 
 Argument \code{error} specifies the structure of the covariance matrix of

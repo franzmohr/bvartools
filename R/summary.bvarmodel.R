@@ -93,15 +93,15 @@ summary.bvarmodel <- function(object, ci = .95, period = NULL, ...){
         pos_values <- pos_values + n_non_structural
         pos_zero <- pos_zero + n_non_structural
         
-        pos_a <- matrix(NA, k , k)
+        # The free elements of A0 are stored column by column, which is the
+        # order of which(lower.tri()) and so of pos_values. They used to be read
+        # row by row, the same order for up to three variables only.
         n_structural <- k * (k - 1) / 2
-        pos_a[upper.tri(pos_a)] <- 1:n_structural
-        pos_a <- t(pos_a)
-        pos_a <- pos_a[lower.tri(pos_a)] + n_non_structural
+        pos_a <- n_non_structural + seq_len(n_structural)
         
         res_statistics <- matrix(NA_real_, n_non_structural + k * k, ncol(temp[["statistics"]]))
         dimnames(res_statistics) <- list(NULL, dimnames(temp[["statistics"]])[[2]])
-        res_statistics[1:n_non_structural,] <- temp[["statistics"]][1:n_non_structural,]
+        res_statistics[seq_len(n_non_structural), ] <- temp[["statistics"]][seq_len(n_non_structural), ]
         res_statistics[pos_one, 1] <- 1
         res_statistics[pos_one, -1] <- 0
         res_statistics[pos_zero, ] <- 0
@@ -110,7 +110,7 @@ summary.bvarmodel <- function(object, ci = .95, period = NULL, ...){
         
         res_quantiles <- matrix(NA_real_, n_non_structural + k * k, ncol(temp[["quantiles"]]))
         dimnames(res_quantiles) <- list(NULL, dimnames(temp[["quantiles"]])[[2]])
-        res_quantiles[1:n_non_structural,] <- temp[["quantiles"]][1:n_non_structural,]
+        res_quantiles[seq_len(n_non_structural), ] <- temp[["quantiles"]][seq_len(n_non_structural), ]
         res_quantiles[pos_one, ] <- 1
         res_quantiles[pos_zero, ] <- 0
         res_quantiles[pos_values, ] <- temp[["quantiles"]][pos_a,]
@@ -131,7 +131,7 @@ summary.bvarmodel <- function(object, ci = .95, period = NULL, ...){
       incl <- colMeans(object[["posterior"]][["a"]][["lambda"]])
       if (structural) {
         res <- rep(NA, n_non_structural + k * k)
-        res[1:n_non_structural] <- incl[1:n_non_structural]
+        res[seq_len(n_non_structural)] <- incl[seq_len(n_non_structural)]
         res[pos_one] <- 1
         res[pos_zero] <- 0
         res[pos_values] <- incl[pos_a]

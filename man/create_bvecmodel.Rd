@@ -51,7 +51,8 @@ will be automatically detected and depends on the frequency of the time-series o
 in \code{data}.}
 
 \item{structural}{logical indicating whether data should be prepared for the estimation of a
-structural VAR model.}
+structural VEC model, whose lower triangular matrix \eqn{A_0} multiplies the differences of the
+endogenous variables.}
 
 \item{error}{character specifying the model that should be used for the estimation
 of the covariance matrix of the error term. Default is \code{"wishart"}. See 'Details'.}

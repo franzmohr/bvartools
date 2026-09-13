@@ -1,5 +1,28 @@
 # bvartools (development version)
 
+* **Structural impulse responses and variance decompositions read A0 correctly
+  for models with four or more endogenous variables.** The free elements of
+  A0 are stored column by column, which is also the order of the
+  contemporaneous regressors, but the function that prepares the draws for
+  `irf()` and `fevd()` read them row by row. For up to three variables the two
+  orders coincide. From four on, elements were swapped: with `us_macrodata` and
+  the change in its interest rate, the six-quarter decomposition of that change
+  came to 24, 21, 55 and 0 percent instead of 12, 22, 66 and 0 percent, and a
+  structural generalised response had the wrong sign. Affected are types
+  `"sir"` and `"sgir"`, for time varying models as well and for structural VEC
+  models through `vec_to_var()`. **Results change** for structural models with
+  four or more endogenous variables.
+
+* **`summary()` and `plot()` show each element of A0 in its own cell.** They
+  had the same row by row reading, so with four or more variables A0 and the
+  inclusion probabilities of its elements were reported in each other's cells.
+
+* **Structural VEC models can be summarised.** `summary()` stopped with
+  "update structural" for every structural VEC model, a placeholder left in the
+  code. Its structural branch now counts the regressors of the VEC model, names
+  the columns of A0 after the endogenous variables, and removes the loadings
+  from the inclusion probabilities before it places those of A0.
+
 * **`fevd(type = "gir")` divides each shock by its own variance, as in Pesaran
   and Shin (1998).** The generalised decomposition divided every share by the
   standard deviation of the *response* instead, which is the decomposition of

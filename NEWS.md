@@ -118,7 +118,7 @@
   counterparts and global commodity prices from 1979Q2 to 2023Q3. It was
   produced from data set `gvar2023` of bgvars, and illustrates models with
   weakly exogenous variables. The data set is a list of two time series:
-  `endogen` holds the six domestic variables and `exogen` the six foreign and
+  `domestic` holds the six domestic variables and `foreign` the six foreign and
   three global ones, so they can be passed directly to arguments `data` and
   `exogen` of `create_bvarmodel()` and `create_bvecmodel()`.
 

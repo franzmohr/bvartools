@@ -105,7 +105,7 @@
 #' @format A named list with two elements, which are quarterly time-series objects
 #' from 1979Q2 to 2023Q3 with 178 rows each:
 #' \describe{
-#'   \item{\code{endogen}}{a time-series object with 6 columns, the domestic
+#'   \item{\code{domestic}}{a time-series object with 6 columns, the domestic
 #'   (endogenous) variables:
 #'     \describe{
 #'       \item{\code{y}}{log real GDP.}
@@ -120,7 +120,7 @@
 #'         is the annual long-term rate in percent.}
 #'     }
 #'   }
-#'   \item{\code{exogen}}{a time-series object with 9 columns, the foreign and
+#'   \item{\code{foreign}}{a time-series object with 9 columns, the foreign and
 #'   global (weakly exogenous) variables:
 #'     \describe{
 #'       \item{\code{y.s}, \code{Dp.s}, \code{eq.s}, \code{ep.s}, \code{r.s}, \code{lr.s}}{foreign
@@ -134,16 +134,14 @@
 #' 
 #' @details The foreign variables are trade weighted averages of the series of the other
 #' countries of the database for which the respective variable is available.
-#' The weights are the shares of the countries in Austria's trade over the current and
-#' the two preceding years. Trade data are available from 1980 to 2016, so the weights of the years
-#' 1979 to 1982 are those of 1980 to 1982 and the weights from 2016 onwards are those of
-#' 2014 to 2016.
+#' The weights are constant over the whole sample and equal the shares of the countries in
+#' Austria's trade summed over the years 2014 to 2016.
 #'
 #' In a sub-model of a global VAR the domestic variables are endogenous, and the foreign
 #' and global variables are weakly exogenous. The two elements of the list can therefore be
 #' passed to arguments \code{data} and \code{exogen} of \code{\link{create_bvarmodel}} or
 #' \code{\link{create_bvecmodel}}, e.g.
-#' \code{create_bvarmodel(data = at_macrodata$endogen, exogen = at_macrodata$exogen, s = 1)}.
+#' \code{create_bvarmodel(data = at_macrodata$domestic, exogen = at_macrodata$foreign)}.
 #' 
 #' @references
 #' 

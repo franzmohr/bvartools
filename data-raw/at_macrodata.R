@@ -11,11 +11,11 @@ object <- bgvars::create_gvarmodel(submodel_data = submodel_data,
                                    global_data = global_data)
 
 # The foreign (star) variables of Austria are trade weighted averages of the
-# series of the other 32 countries. Weights are rolling sums of trade flows
-# over the last three years, as in the GVAR literature.
+# series of the other 32 countries. Weights are constant over the sample and
+# based on trade flows summed over 2014 to 2016.
 object <- bgvars::add_weight_matrices(object = object,
                                       submodel_data = submodel_data,
-                                      period = 3)
+                                      period = 2014:2016)
 
 submodel <- bgvars::create_varxsubmodel(object, submodel = "AT",
                                         p_endogen = 1, p_exogen = 1,
@@ -32,7 +32,7 @@ dimnames(exogen) <- list(NULL, c(dimnames(foreign)[[2]],
 plot(endogen)
 plot(exogen)
 
-at_macrodata <- list("endogen" = endogen,
-                     "exogen" = exogen)
+at_macrodata <- list("domestic" = endogen,
+                     "foreign" = exogen)
 
 usethis::use_data(at_macrodata, overwrite = TRUE)

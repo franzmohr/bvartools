@@ -23,7 +23,7 @@ fx_burnin <- 5L
 # The domestic series of the at_macrodata data set, which the fixtures are
 # built on.
 at_domestic <- function() {
-  bvartools::at_macrodata[["endogen"]]
+  bvartools::at_macrodata[["domestic"]]
 }
 
 # Austrian output growth, inflation and the change in the short-term interest

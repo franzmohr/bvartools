@@ -1,5 +1,19 @@
 # bvartools (development version)
 
+* **The prior on the cointegration space is built by an exported function,
+  `cointspace_prior()`.** `add_priors()` for VEC models checks `coint` and builds
+  `priors$beta` through it, and a package with VEC models of its own layout can
+  call it too -- bgvars does for the sub-models of a global VEC model, whose error
+  correction term also holds the weakly exogenous and global variables. They then
+  get the same checks and the same prior, the one centred on the maximum likelihood
+  estimate included, instead of a copy that could drift from it. Its dimensions come
+  from the error correction term `data$train$w` rather than from `model$m`, which a
+  model of another layout counts differently. For a sub-model with lagged foreign
+  variables that gave a numeric `p_tau_i` a matrix of the wrong size. For the models
+  of `create_bvecmodel()` the two agree, and the priors are unchanged bit for bit.
+  The documentation of `coint` moved to `?cointspace_prior` and is shown in
+  `?add_priors.bvecmodel` as a section of its own.
+
 * **`add_posterior_forecasts()` and `add_posterior_loglik()` no longer change
   the object they are given, and a second forecast replaces the first.** The
   C++ functions behind them take the model as an `Rcpp::List`, which wraps the R

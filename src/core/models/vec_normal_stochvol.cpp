@@ -345,10 +345,10 @@ VecNormalStochvolDraws VecNormalStochvolSampler::draw_coefficients(
 
         // Block 4: Draw the log-volatility ----
         //
-        // The factored routine rather than var_normal_stochvol.cpp's inline
-        // copy of the same mixture: it is the one .bvecalg calls, it is what
-        // test/unit_stochvol.cpp covers, and it draws the path with a banded
-        // Cholesky instead of factorising a dense tt x tt precision.
+        // The factored routine every stochastic volatility sampler here uses:
+        // it is the one .bvecalg calls, it is what test/unit_stochvol.cpp
+        // covers, and it draws the path with a banded Cholesky instead of
+        // factorising a dense tt x tt precision.
         h = stochvol_ocsn_2007(arma::trans(u), h, h_sigma, h_init, h_y_offset);
 
         // Draw h_sigma

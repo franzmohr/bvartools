@@ -357,10 +357,11 @@ inline void draw_random_walk_state(arma::vec &sigma, arma::vec &init, const arma
 /// `post_shape` is the prior shape plus tt/2, which does not change over the
 /// chain and is formed once by the caller.
 ///
-/// Factored out because a fifth model wanted it. The four that predate it carry
-/// a copy each, and `stochvol_mixture.h` says at length what came of the last
-/// pair of copies in this library; they are left alone here only because
-/// rewriting a sampler's draw sequence and rewriting this are separate changes.
+/// Called by `VarNormalStochvol` and the two stochastic volatility DFMs.
+/// `VarTvpStochvol`, `VecNormalStochvol` and `VecTvpStochvol` still carry a copy
+/// each, and `stochvol_mixture.h` says at length what came of the last pair of
+/// copies in this library; they are left alone here only because rewriting a
+/// sampler's draw sequence and rewriting this are separate changes.
 inline void draw_stochvol_state(arma::vec &h_sigma, arma::vec &h_init, const arma::mat &h,
                                 const arma::vec &post_shape, const arma::vec &prior_rate,
                                 const NormalPrior &h_init_prior)

@@ -68,9 +68,9 @@ Argument \code{coef} can contain the following elements:
   where \eqn{\sigma_{i}} is the residual standard deviation of variable \eqn{i} of an unrestricted
   LS estimate. For exogenous variables \eqn{\sigma_{i}} is the sample standard deviation.
   If the model does not contain exogenous variables, \code{kappa3} will be ignored.}
-  \item{\code{max_var}}{a positive numeric intended as an upper bound on the prior variances
-  of the Minnesota prior. It is accepted, but \code{add_priors} does not currently apply it;
-  \code{\link{minnesota_prior}} does when it is called directly.}
+  \item{\code{max_var}}{a positive numeric specifying the maximum prior variance of the
+  coefficients of non-deterministic variables in the Minnesota prior. Larger prior variances
+  are set to this value. Only used if \code{minnesota} is given.}
   \item{\code{shape}}{a numeric specifying the prior shape parameter of the error variances of the
   state equation. Required for models with time varying parameters and not used otherwise.}
   \item{\code{rate}}{a numeric specifying the prior rate parameter of the error variances of the

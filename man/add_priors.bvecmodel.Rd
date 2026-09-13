@@ -71,9 +71,9 @@ Argument \code{coef} can contain the following elements:
   The function only provides priors for the non-cointegration part of the model. However,
   the residual standard errors \eqn{\sigma_i} are based on an unrestricted LS regression of the
   endogenous variables on the error correction term and the non-cointegration regressors.}
-  \item{\code{max_var}}{a positive numeric intended as an upper bound on the prior variances
-  of the Minnesota prior. It is accepted, but \code{add_priors} does not currently apply it;
-  \code{\link{minnesota_prior}} does when it is called directly.}
+  \item{\code{max_var}}{a positive numeric specifying the maximum prior variance of the
+  coefficients of non-deterministic variables in the Minnesota prior. Larger prior variances
+  are set to this value. Only used if \code{minnesota} is given.}
   \item{\code{shape}}{a numeric specifying the prior shape parameter of the error variances of the
   state equation. Required for models with time varying parameters and not used otherwise.}
   \item{\code{rate}}{a numeric specifying the prior rate parameter of the error variances of the

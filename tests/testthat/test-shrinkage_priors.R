@@ -151,6 +151,47 @@ test_that("add_priors can build the coefficient prior from Minnesota", {
   expect_equal(model[["priors"]][["a"]][["v_inv"]], direct[["v_inv"]])
 })
 
+test_that("add_priors caps the Minnesota prior variances of a VAR at max_var", {
+  minnesota <- list(kappa1 = 0.5, kappa2 = 0.1, kappa4 = 5)
+  sigma <- list(df = 1, scale = 0.0001)
+  uncapped <- add_priors(fx_var_model(), coef = list(minnesota = minnesota),
+                         sigma = sigma)
+  # The smallest prior variance, so that every larger one is cut back.
+  max_var <- min(1 / diag(uncapped[["priors"]][["a"]][["v_inv"]]))
+
+  capped <- add_priors(fx_var_model(),
+                       coef = list(minnesota = minnesota, max_var = max_var),
+                       sigma = sigma)
+  direct <- minnesota_prior(fx_var_model(), kappa1 = 0.5, kappa2 = 0.1,
+                            kappa4 = 5, max_var = max_var)
+
+  expect_equal(capped[["priors"]][["a"]][["v_inv"]], direct[["v_inv"]])
+  expect_false(isTRUE(all.equal(capped[["priors"]][["a"]][["v_inv"]],
+                                uncapped[["priors"]][["a"]][["v_inv"]])))
+})
+
+test_that("add_priors caps the Minnesota prior variances of a VEC model at max_var", {
+  # With p = 1 a VEC model has no short-run lags for the cap to apply to.
+  model <- create_bvecmodel(vec_data(), p = 2, r = 1, const = "unrestricted",
+                            iterations = fx_iterations, burnin = fx_burnin)
+  minnesota <- list(kappa1 = 0.5, kappa2 = 0.1, kappa4 = 5)
+  coint <- list(v_i = 0, p_tau_i = 1)
+  sigma <- list(df = "k", scale = 1)
+  uncapped <- add_priors(model, coef = list(minnesota = minnesota),
+                         coint = coint, sigma = sigma)
+  max_var <- min(1 / diag(uncapped[["priors"]][["a"]][["v_inv"]]))
+
+  capped <- add_priors(model,
+                       coef = list(minnesota = minnesota, max_var = max_var),
+                       coint = coint, sigma = sigma)
+  direct <- minnesota_prior(model, kappa1 = 0.5, kappa2 = 0.1, kappa4 = 5,
+                            max_var = max_var)
+
+  expect_equal(capped[["priors"]][["a"]][["v_inv"]], direct[["v_i"]])
+  expect_false(isTRUE(all.equal(capped[["priors"]][["a"]][["v_inv"]],
+                                uncapped[["priors"]][["a"]][["v_inv"]])))
+})
+
 test_that("add_priors requires the mandatory Minnesota parameters", {
   expect_error(
     add_priors(fx_var_model(),

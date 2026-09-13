@@ -175,3 +175,28 @@ test_that("covariances that were never estimated carry no significance mark", {
   # keep their mark.
   expect_true(marked("invest_invest"))
 })
+
+test_that("drawn values of rho are summarised and printed", {
+  model <- fx_at_vec_tvp()
+  summarised <- summary(model)
+  rho <- as.numeric(model[["posterior"]][["beta"]][["rho"]])
+
+  expect_equal(summarised[["rho"]][["means"]], mean(rho))
+  expect_equal(summarised[["rho"]][["sd"]], stats::sd(rho))
+  expect_equal(summarised[["rho"]][["median"]], stats::median(rho))
+  expect_output(print(summarised), "Autocorrelation of the cointegration state equation")
+
+  # The specification says how rho enters before any draw is looked at.
+  expect_output(print(model), "drawn from a uniform prior on \\(0.9, 0.999\\), starting at 0.99")
+})
+
+test_that("a period is a single period of the sample", {
+  model <- fx_at_vec_tvp()
+  tt <- nrow(model[["data"]][["train"]][["y"]])
+
+  expect_error(summary(model, period = 1.5), paste0("single integer between 1 and ", tt))
+  expect_error(summary(model, period = c(1, 2)), "single integer")
+  expect_error(summary(model, period = NA), "single integer")
+  expect_error(summary(model, period = tt + 1), "single integer")
+  expect_identical(summary(model, period = 2)[["model"]][["period"]], 2L)
+})

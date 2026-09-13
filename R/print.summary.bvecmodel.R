@@ -150,6 +150,18 @@ print.summary.bvecmodel <- function(x, digits = max(3L, getOption("digits") - 3L
     print(temp, ...)
   }
   
+  # Autocorrelation of the cointegration state equation, where it was drawn
+  if (!is.null(x[["rho"]])) {
+    temp <- data.frame(x[["rho"]][["means"]], x[["rho"]][["sd"]], x[["rho"]][["naivesd"]],
+                       x[["rho"]][["tssd"]], x[["rho"]][["q_lower"]], x[["rho"]][["median"]],
+                       x[["rho"]][["q_upper"]])
+    names(temp) <- c("Mean", "SD", "Naive SD", "Time-series SD",
+                     x[["model"]][["ci"]][1], "50%", x[["model"]][["ci"]][2])
+    row.names(temp) <- "rho"
+    cat("\nAutocorrelation of the cointegration state equation:\n\n")
+    print(temp, ...)
+  }
+
   cat("\n")
   invisible(x)
 }

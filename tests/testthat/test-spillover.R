@@ -266,7 +266,7 @@ test_that("period selects a block of a time varying model", {
   expect_equal(spillover(object, n_ahead = 5, period = tt)$total,
                spillover(object, n_ahead = 5)$total)
   expect_silent(spillover(object, n_ahead = 5, period = 1))
-  expect_error(spillover(object, n_ahead = 5, period = tt + 1), "Implausible")
+  expect_error(spillover(object, n_ahead = 5, period = tt + 1), "single integer")
 
   # Different periods give different coefficients and so different measures.
   expect_false(identical(spillover(object, n_ahead = 5, period = 2)$total,

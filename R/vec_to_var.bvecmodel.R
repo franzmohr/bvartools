@@ -283,9 +283,9 @@ vec_to_var.bvecmodel <- function(object, ...) {
   model[["burnin"]] <- specs[["burnin"]]
 
   result <- list("model" = model,
-                 "data" = list("original" = list("endogen" = object[["data"]][["original"]][["endogen"]],
+                 "data" = list("original" = .drop_null(list("endogen" = object[["data"]][["original"]][["endogen"]],
                                                  "exogen" = object[["data"]][["original"]][["exogen"]],
-                                                 "deterministic" = det_data),
+                                                 "deterministic" = det_data)),
                                "train" = list("y" = y,
                                               "x" = x,
                                               "z" = z)))

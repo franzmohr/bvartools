@@ -197,11 +197,11 @@ write_to_hdf5.bvecmodel <- function(object, filename, group = "", ...) {
     ## u_sigma_inv ----
     # Which hyperparameters there are is decided by the error specification.
     u_sigma_priors <- switch(object[["model"]][["error"]],
-                             "wishart" = c("df", "scale"),
+                             "wishart" = c("type", "df", "scale"),
                              "gamma" = ,
-                             "gamma+covar" = c("shape", "rate"),
+                             "gamma+covar" = c("type", "shape", "rate"),
                              "sv" = ,
-                             "sv+covar" = c("mu", "v_inv", "shape", "rate", "sigma", "offset"),
+                             "sv+covar" = c("type", "mu", "v_inv", "shape", "rate", "sigma", "offset"),
                              stop("Error specification not implemented"))
     # Created only once there is something to put in it, for the same reason the
     # priors group is. Single-bracket indexing is what makes the subset safe when

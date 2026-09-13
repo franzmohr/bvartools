@@ -553,9 +553,9 @@ create_bvecmodel <- function(data, p = 2, exogen = NULL, s = 2, r = NULL,
         dimnames(z) <- NULL
         
         result_i <- list("model" = model_i,
-                         "data" = list("original" = list("endogen" = data,
+                         "data" = list("original" = .drop_null(list("endogen" = data,
                                                          "exogen" = exogen,
-                                                         "deterministic" = det_data),
+                                                         "deterministic" = det_data)),
                                        "train" = list("y" = y,
                                                       "w" = ect,
                                                       "x" = x_i,

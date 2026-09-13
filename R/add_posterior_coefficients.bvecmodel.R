@@ -130,6 +130,11 @@ add_posterior_coefficients.bvecmodel <- function(object, posterior_function = NU
       }
     }
 
+    # The C++ side names every block a model can have and leaves the ones this
+    # model does not have as NULL. Such an element cannot be written to a file,
+    # so a round trip lost it; it is dropped here, which reads the same.
+    object[["posterior"]] <- .drop_null(object[["posterior"]])
+
   } else {
     # Apply own function
     object <- posterior_function(object)

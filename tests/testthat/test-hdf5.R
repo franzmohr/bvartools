@@ -577,3 +577,39 @@ test_that("a restored model still reports its forecast errors", {
   expect_equal(get_forecast_errors(restored),
                get_forecast_errors(forecast_errors_fitted_h5()))
 })
+
+test_that("a round trip returns the elements that were written, as they were", {
+  # The members of an HDF5 group are listed in the order of their names, not of
+  # their creation, so a list is compared element by element under its names.
+  by_name <- function(x) {
+    if (is.list(x) && !inherits(x, c("mcmc", "ts", "data.frame")) && !is.null(names(x))) {
+      cls <- class(x)
+      x <- lapply(x[order(names(x))], by_name)
+      class(x) <- cls
+    }
+    x
+  }
+
+  # Scalar and character priors, the classes of the series, the class of the
+  # model and elements holding NULL all used to come back different.
+  for (model in list(fx_at_vec_tvp(), fx_at_var())) {
+    path <- temp_h5_file()
+    write_to_hdf5(model, filename = path)
+    expect_equal(by_name(read_model_from_hdf5(path)), by_name(model))
+  }
+})
+
+test_that("a file without shape marks is read as it always was", {
+  path <- temp_h5_file()
+  write_to_hdf5(fx_at_vec_tvp(), filename = path)
+
+  # A file written by BayesTS or from Python carries no marks, and its values
+  # come back as matrices.
+  h5 <- hdf5r::h5file(path, mode = "r+")
+  dataset <- h5[["priors/beta/rho"]]
+  dataset$attr_delete("rshape")
+  dataset$close()
+  h5$close_all()
+
+  expect_true(is.matrix(read_model_from_hdf5(path)[["priors"]][["beta"]][["rho"]]))
+})

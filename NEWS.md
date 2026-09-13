@@ -1,5 +1,31 @@
 # bvartools (development version)
 
+* **Smaller fixes from an audit of the package against the TVP-SV VEC
+  vignette.**
+
+  - `summary()` accepted a `period` of 1.5 and silently used period 1, and
+    stopped with the message of an `if()` on a vector of periods. `period` must
+    now be a single integer within the sample, and the same check applies to the
+    draws behind `irf()` and `fevd()`. `thin()` stopped with "wrong sign in 'by'
+    argument" for an interval longer than the chain; the interval must now be a
+    positive integer no larger than the number of draws.
+  - `irf()`, `fevd()`, `spillover()`, `add_posterior_forecasts()` and `predict()`
+    on a `bvecmodel` stopped with "no applicable method". Like
+    `add_forecast_input()`, they now say to use `vec_to_var()` first.
+  - The draws of `rho`, where a time varying VEC model puts a prior on it, are
+    summarised by `summary()`, and `print()` says whether `rho` is fixed or
+    drawn, and from which prior.
+  - A round trip through `write_to_hdf5()` and `read_model_from_hdf5()` now
+    returns every element that was written, with its values, shape and class;
+    only the order of the elements within a group follows the file, which lists
+    them by name. Scalar and character priors came back
+    as 1 x 1 matrices, `priors$u_sigma$type` was not written, the class of a
+    series changed in whether it listed "array", `model$rclass` was added, and
+    list elements holding `NULL` were dropped. Values without dimensions are
+    marked in the file so that they are read back as vectors; files written
+    elsewhere carry no mark and are read as before. The `NULL` placeholders are
+    no longer created in the first place.
+
 * **Time varying VEC models and expanding windows of VEC models can be
   analysed through their VAR representation.** `vec_to_var()` used to refuse
   the posterior draws of a model with time varying parameters. It now applies

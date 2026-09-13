@@ -319,6 +319,44 @@
 }
 
 
+# The period a summary or the draws of a period are asked for, as an integer. It
+# has to be one period of the sample. It used to be compared with the bounds of
+# the sample only, so that a period of 1.5 was accepted and silently cut down to
+# 1, and a vector of periods stopped with the message of an if() rather than one
+# of this package.
+.check_period <- function(period, tt) {
+  if (!is.numeric(period) || length(period) != 1 || is.na(period) ||
+      period != round(period) || period < 1 || period > tt) {
+    stop("Argument 'period' must be a single integer between 1 and ", tt, ".")
+  }
+  return(as.integer(period))
+}
+
+
+# A list without its elements that hold NULL. Such an element is an artefact of
+# building a list with an optional part left empty, reads the same as an absent
+# one, and cannot be written to a file, so a model that carried one did not come
+# back from write_to_hdf5() the way it went in.
+.drop_null <- function(x) {
+  return(x[!vapply(x, is.null, logical(1))])
+}
+
+
+# The thinning interval, which has to be a positive integer that leaves at least
+# one draw. A larger one used to stop inside seq() with "wrong sign in 'by'
+# argument", and a fractional one was used as it was.
+.check_thin <- function(thin, draws) {
+  if (!is.numeric(thin) || length(thin) != 1 || is.na(thin) ||
+      thin < 1 || thin != round(thin)) {
+    stop("Argument 'thin' must be a single positive integer.")
+  }
+  if (thin > draws) {
+    stop("Argument 'thin' is ", thin, ", but there are only ", draws, " draws to thin.")
+  }
+  return(invisible(NULL))
+}
+
+
 # Name of the posterior simulation algorithm of a VEC model with the given
 # specification of the error term, as determined by create_bvecmodel()
 .vec_algorithm <- function(error, tvp) {

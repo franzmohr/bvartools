@@ -276,3 +276,54 @@ temp_model_dir <- function() {
   dir.create(path)
   path
 }
+
+# --- at_macrodata fixtures ----------------------------------------------------
+
+# Austrian output, inflation and short-term interest rate in levels, from the
+# domestic series of the at_macrodata data set that new tests are written
+# against. The data set is either one matrix of all series or a list of its
+# domestic ('endogen') and foreign ('exogen') series; both are taken.
+at_data <- function() {
+  data <- bvartools::at_macrodata
+  if (is.list(data) && !stats::is.ts(data)) {
+    data <- data[["endogen"]]
+  }
+  data[, c("y", "Dp", "r")]
+}
+
+# A VEC model with time varying parameters and stochastic volatility on
+# at_data(), with rho drawn and the cointegration space centred on the ML
+# estimate, and its log-likelihood: a posterior with every kind of block and a
+# prior with every kind of element, scalars and characters among them.
+fx_at_vec_tvp <- function() {
+  cached_fixture("at_vec_tvp", {
+    model <- create_bvecmodel(at_data(), p = 2, r = 1, const = "unrestricted", tvp = TRUE,
+                              error = "sv", iterations = fx_iterations, burnin = fx_burnin)
+    # The ML prior may be floored by rho, which is not what these tests are about.
+    model <- suppressWarnings(
+      add_priors(model, coef = list(v_i = 1, v_i_det = 0.1, shape = 3, rate = 1e-4),
+                 coint = list(rho = 0.99, rho_min = 0.9, rho_max = 0.999,
+                              p_tau_i = "ml", weight = 0.1),
+                 sigma = tvp_sigma_prior("sv")))
+    model <- add_initial_values(model)
+    set.seed(179)
+    model <- add_posterior_coefficients(model)
+    add_posterior_loglik(model)
+  })
+}
+
+# A VAR model with constant coefficients and a gamma error term with covariance
+# block on at_data(), and its log-likelihood.
+fx_at_var <- function() {
+  cached_fixture("at_var", {
+    model <- create_bvarmodel(at_data(), p = 2, deterministic = "const",
+                              error = "gamma+covar", iterations = fx_iterations,
+                              burnin = fx_burnin)
+    model <- add_priors(model, coef = list(v_i = 1, v_i_det = 0.1),
+                        sigma = list(shape = 3, rate = 0.01))
+    model <- add_initial_values(model)
+    set.seed(180)
+    model <- add_posterior_coefficients(model)
+    add_posterior_loglik(model)
+  })
+}

@@ -136,3 +136,14 @@ test_that("window cuts the posterior paths to the periods it keeps", {
                  summary(full, period = min(keep))[["sigma"]][["means"]])
   }
 })
+
+test_that("the thinning interval is a positive integer within the draws", {
+  model <- fx_at_vec_tvp()
+
+  expect_error(thin(model, thin = fx_iterations + 1),
+               paste0("only ", fx_iterations, " draws"))
+  expect_error(thin(model, thin = 0), "single positive integer")
+  expect_error(thin(model, thin = 2.5), "single positive integer")
+  expect_error(thin(model, thin = c(2, 3)), "single positive integer")
+  expect_identical(nrow(thin(model, thin = fx_iterations)[["posterior"]][["a"]][["coeffs"]]), 1L)
+})

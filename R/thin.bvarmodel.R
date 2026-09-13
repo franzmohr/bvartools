@@ -38,6 +38,7 @@
 thin.bvarmodel <- function(x, thin = 10, ...) {
 
   draws <- nrow(x[["posterior"]][["u_sigma_inv"]][["coeffs"]])
+  .check_thin(thin, draws)
   pos_thin <- seq(from = thin, to = draws, by = thin)
   x[["posterior"]] <- .thin_draws(x[["posterior"]], pos_thin, draws, thin)
 

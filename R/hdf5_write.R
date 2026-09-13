@@ -87,6 +87,15 @@
 
   dataset <- group$create_dataset(name, value)
 
+  # HDF5 hands every dataset back as an array, so a scalar hyperparameter, the
+  # type of a prior or a vector of shapes came back as a matrix, and a round
+  # trip did not return what was written. A value that had no dimensions is
+  # therefore marked as such, and .hdf5_read_value() drops the dimensions again.
+  # A file written elsewhere carries no mark and is read as it always was.
+  if (is.null(dim(value))) {
+    hdf5r::h5attr(dataset, "rshape") <- "vector"
+  }
+
   for (i in names(attrs)) {
     hdf5r::h5attr(dataset, i) <- attrs[[i]]
   }
@@ -103,9 +112,12 @@
 # the only way back to the scale of the data. Without them an exported model
 # that was scaled could never be interpreted again, so they travel with it. The
 # names are not stored: they are the variable names, which are written anyway.
+# The class is, because a series built by this package and one supplied by the
+# user differ in whether it lists "array", and the reader cannot tell them apart.
 .hdf5_series_attrs <- function(x) {
 
-  result <- list("variables" = dimnames(x)[[2]], "tsp" = stats::tsp(x))
+  result <- list("variables" = dimnames(x)[[2]], "tsp" = stats::tsp(x),
+                 "rclass" = class(x))
 
   if (!is.null(attr(x, "scale"))) {
     result[["scale"]] <- unname(attr(x, "scale"))
@@ -118,4 +130,30 @@
 .hdf5_draws_attrs <- function(x) {
   mcpar <- coda::mcpar(x)
   list("start" = mcpar[1], "end" = mcpar[2], "thin" = mcpar[3])
+}
+
+# A dataset of the priors or the starting values as R held it. A value that the
+# writer marked as having had no dimensions comes back as a vector; anything
+# else, and anything from a file written elsewhere, as a matrix.
+.hdf5_read_value <- function(dataset) {
+
+  value <- hdf5r::readDataSet(dataset)
+
+  if ("rshape" %in% hdf5r::h5attr_names(dataset) &&
+      identical(hdf5r::h5attr(dataset, "rshape"), "vector")) {
+    return(as.vector(value))
+  }
+
+  return(as.matrix(value))
+}
+
+# The class a series had when it was written, where the file says so. Otherwise
+# the series keeps the class the reader gave it.
+.hdf5_restore_class <- function(series, dataset) {
+
+  if ("rclass" %in% hdf5r::h5attr_names(dataset)) {
+    class(series) <- hdf5r::h5attr(dataset, "rclass")
+  }
+
+  return(series)
 }

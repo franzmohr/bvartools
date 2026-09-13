@@ -41,9 +41,7 @@ summary.bvecmodel <- function(object, ci = .95, period = NULL, ...){
     if (is.null(period)) {
       period <- tt
     } else {
-      if (period > tt | period < 1) {
-        stop("Implausible specification of argument 'period'.")
-      }
+      period <- .check_period(period, tt)
     }
   }
   
@@ -305,6 +303,26 @@ summary.bvecmodel <- function(object, ci = .95, period = NULL, ...){
     }
   }
   
+  # Draws of rho, the autocorrelation of the cointegration state equation, where
+  # the prior made it a parameter. They were drawn with the rest of the posterior
+  # and summarised nowhere.
+  if (!is.null(object[["posterior"]][["beta"]][["rho"]])) {
+    temp <- summary(object[["posterior"]][["beta"]][["rho"]], quantiles = c(ci_low, .5, ci_high))
+    statistics <- temp[["statistics"]]
+    quantiles <- temp[["quantiles"]]
+    if (is.matrix(statistics)) {
+      statistics <- statistics[1, ]
+      quantiles <- quantiles[1, ]
+    }
+    result[["rho"]] <- list(means = unname(statistics["Mean"]),
+                            median = unname(quantiles[2]),
+                            sd = unname(statistics["SD"]),
+                            naivesd = unname(statistics["Naive SE"]),
+                            tssd = unname(statistics["Time-series SE"]),
+                            q_lower = unname(quantiles[1]),
+                            q_upper = unname(quantiles[3]))
+  }
+
   result[["model"]][["ci"]] <- paste(c(ci_low, ci_high) * 100, "%", sep = "")
   result[["model"]][["period"]] <- period
   

@@ -68,9 +68,11 @@ read_model_from_hdf5 <- function(filename, group = "") {
       result[["data"]][["original"]] <- list()
       for (i in c("endogen", "exogen", "deterministic")) {
         if (i %in% names(h5_root[["data"]][["original"]])) {
-          result[["data"]][["original"]][[i]] <- stats::ts(as.matrix(hdf5r::readDataSet(h5_root[["data"]][["original"]][[i]])), class = c("mts", "ts", "matrix"))
-          dimnames(result[["data"]][["original"]][[i]]) <- list(NULL, hdf5r::h5attr(h5_root[["data"]][["original"]][[i]], "variables"))
-          stats::tsp(result[["data"]][["original"]][[i]]) <- hdf5r::h5attr(h5_root[["data"]][["original"]][[i]], "tsp")
+          dataset <- h5_root[["data"]][["original"]][[i]]
+          result[["data"]][["original"]][[i]] <- stats::ts(as.matrix(hdf5r::readDataSet(dataset)), class = c("mts", "ts", "matrix"))
+          dimnames(result[["data"]][["original"]][[i]]) <- list(NULL, hdf5r::h5attr(dataset, "variables"))
+          stats::tsp(result[["data"]][["original"]][[i]]) <- hdf5r::h5attr(dataset, "tsp")
+          result[["data"]][["original"]][[i]] <- .hdf5_restore_class(result[["data"]][["original"]][[i]], dataset)
         }
       }
     }
@@ -84,6 +86,7 @@ read_model_from_hdf5 <- function(filename, group = "") {
           result[["data"]][["train"]][[i]] <- stats::ts(as.matrix(hdf5r::readDataSet(dataset)))
           dimnames(result[["data"]][["train"]][[i]]) <- list(NULL, variables)
           stats::tsp(result[["data"]][["train"]][[i]]) <- hdf5r::h5attr(dataset, "tsp")
+          result[["data"]][["train"]][[i]] <- .hdf5_restore_class(result[["data"]][["train"]][[i]], dataset)
 
           # A model that was exported while its error correction term was
           # scaled carries the factors it was divided by. They are named after
@@ -123,7 +126,7 @@ read_model_from_hdf5 <- function(filename, group = "") {
     for (i in names(h5_root[["priors"]])) {
       result[["priors"]][[i]] <- list()
       for (j in names(h5_root[["priors"]][[i]])) {
-        result[["priors"]][[i]][[j]] <- as.matrix(hdf5r::readDataSet(h5_root[["priors"]][[i]][[j]]))
+        result[["priors"]][[i]][[j]] <- .hdf5_read_value(h5_root[["priors"]][[i]][[j]])
       }
     }
   }
@@ -134,7 +137,7 @@ read_model_from_hdf5 <- function(filename, group = "") {
     result[["initial"]] <- list()
     
     for (i in names(h5_root[["initial"]])) {
-      result[["initial"]][[i]] <- as.matrix(hdf5r::readDataSet(h5_root[["initial"]][[i]]))
+      result[["initial"]][[i]] <- .hdf5_read_value(h5_root[["initial"]][[i]])
     }
   }
   
@@ -188,6 +191,8 @@ read_model_from_hdf5 <- function(filename, group = "") {
     } 
   }
   
+  # Read to decide the class, and not an element of the specification.
+  result[["model"]][["rclass"]] <- NULL
   class(result) <- result_class
   
   return(result)

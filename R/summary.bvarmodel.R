@@ -40,9 +40,7 @@ summary.bvarmodel <- function(object, ci = .95, period = NULL, ...){
     if (is.null(period)) {
       period <- tt
     } else {
-      if (period > tt | period < 1) {
-        stop("Implausible specification of argument 'period'.")
-      }
+      period <- .check_period(period, tt)
     }
   }
   

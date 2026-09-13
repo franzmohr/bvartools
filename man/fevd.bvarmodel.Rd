@@ -142,9 +142,12 @@ Pesaran, H. H., & Shin, Y. (1998). Generalized impulse response analysis in line
 \seealso{
 Other post-estimation analysis:
 \code{\link[=add_sign_restrictions.bvarmodel]{add_sign_restrictions.bvarmodel()}},
+\code{\link[=fevd.bvecmodel]{fevd.bvecmodel()}},
 \code{\link[=irf.bvarmodel]{irf.bvarmodel()}},
+\code{\link[=irf.bvecmodel]{irf.bvecmodel()}},
 \code{\link[=predict.bvarmodel]{predict.bvarmodel()}},
 \code{\link[=spillover.bvarmodel]{spillover.bvarmodel()}},
+\code{\link[=spillover.bvecmodel]{spillover.bvecmodel()}},
 \code{\link[=vec_to_var.bvecmodel]{vec_to_var.bvecmodel()}}
 }
 \concept{post-estimation analysis}

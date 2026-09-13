@@ -32,7 +32,9 @@ pred <- predict(model, n_ahead = 8)
 
 `iterations = 500` keeps examples quick. A real analysis needs thousands of
 draws: the defaults are 20000 kept after 2000 burn-in for a VAR, and 50000 after
-5000 for a VEC.
+5000 for a VEC. `create_*model(thin = t)` runs the chain `t` times as long and
+keeps the last of every `t` draws, so a slowly mixing chain can run long while
+the posterior still holds `iterations` draws; see `references/objects.md`.
 
 ## The rules that prevent wrong results
 

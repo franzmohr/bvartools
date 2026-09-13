@@ -34,7 +34,8 @@ context at all times.
 8. **`gen_var()` and `gen_vec()` are gone.** Tutorials that use them, or
    `$data$Y` and `$data$SUR`, predate the current API.
 9. **Keep `set.seed()`**: it reaches the C++ samplers, so a seeded run
-   reproduces.
+   reproduces. If two seeds give different summaries, the chain is too short:
+   create the model with `thin` to run it longer without storing more draws.
 10. **Read the method's help page**, e.g. `?add_priors.bvarmodel` against
     `?add_priors.bvecmodel`, rather than guessing a list element.
 

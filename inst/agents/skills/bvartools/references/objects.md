@@ -165,6 +165,34 @@ thinned <- thin(model, thin = 2)
 stopifnot(nrow(thinned$posterior$a$coeffs) == 100)
 ```
 
+That thins draws already made, all of which were held in memory first. To thin
+in the sampler instead, give `thin` when the model is created. The chain then
+runs `burnin + iterations * thin` draws and keeps the last of every `thin`, so
+the posterior still has `iterations` rows and the draws that are not kept are
+never stored. `coda::mcpar()` counts the draws the chain actually ran, and a
+`thin()` on top counts from there:
+
+```r
+long <- create_bvarmodel(e1, p = 2, deterministic = "const",
+                         iterations = 100, burnin = 100, thin = 5)
+long <- add_priors(long,
+                   coef = list(v_i = 0, v_i_det = 0),
+                   sigma = list(df = "k", scale = 1))
+long <- add_initial_values(long)
+long <- add_posterior_coefficients(long)
+
+stopifnot(long$model$thin == 5,
+          nrow(long$posterior$a$coeffs) == 100,
+          all(coda::mcpar(long$posterior$a$coeffs) == c(5, 500, 5)),
+          all(coda::mcpar(thin(long, thin = 2)$posterior$a$coeffs) == c(10, 500, 10)))
+```
+
+Reach for it when a posterior summary moves with the seed. That means the chain
+is too short for how slowly it mixes, and thinning lets it run longer without the
+object growing. A chain thinned this way is exactly every `thin`-th draw of the
+unthinned chain from the same seed, so if memory allows, keeping every draw is
+never worse.
+
 ## VEC models
 
 A VEC's `posterior` holds `a` (the loadings and the short-run coefficients),

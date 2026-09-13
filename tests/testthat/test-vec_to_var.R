@@ -122,6 +122,66 @@ test_that("a converted time varying VEC model forecasts and responds", {
                    as.integer(2 * var[["model"]][["k"]]))
 })
 
+test_that("a VEC model with stochastic volatility forecasts from its last period", {
+  model <- create_bvecmodel(vec_data(), p = 2, r = 1, const = "unrestricted",
+                            error = "sv", iterations = fx_iterations, burnin = fx_burnin)
+  model <- add_priors(model, coef = list(v_i = 1, v_i_det = 0.1),
+                      coint = list(v_i = 0, p_tau_i = 1),
+                      sigma = tvp_sigma_prior("sv"))
+  model <- add_initial_values(model)
+  set.seed(204)
+  vec <- add_posterior_coefficients(model)
+
+  # The coefficients are constant, the error precision is a path. The
+  # transformation used to be handed the whole path and refused it.
+  var <- vec_to_var(vec)
+  k <- vec[["model"]][["k"]]
+  r <- vec[["model"]][["rank"]]
+  kk <- k * k
+  tt <- nrow(vec[["data"]][["train"]][["y"]])
+
+  expect_identical(var[["model"]][["algorithm"]], "VarNormalStochvol")
+  expect_equal(var[["posterior"]][["u_sigma_inv"]][["coeffs"]],
+               vec[["posterior"]][["u_sigma_inv"]][["coeffs"]])
+  expect_identical(ncol(var[["posterior"]][["u_sigma_inv"]][["coeffs"]]), as.integer(kk * tt))
+
+  # With p = 2, A_1 = I + Pi + Gamma_1 and A_2 = -Gamma_1.
+  draw <- 1L
+  a_vec <- vec[["posterior"]][["a"]][["coeffs"]][draw, ]
+  alpha <- matrix(a_vec[seq_len(k * r)], k)
+  gamma <- matrix(a_vec[k * r + seq_len(kk)], k)
+  beta <- matrix(vec[["posterior"]][["beta"]][["coeffs"]][draw, ], vec[["model"]][["k_beta"]])
+  a_var <- var[["posterior"]][["a"]][["coeffs"]][draw, ]
+  expect_equal(matrix(a_var[seq_len(kk)], k),
+               diag(1, k) + alpha %*% t(beta[seq_len(k), , drop = FALSE]) + gamma)
+  expect_equal(matrix(a_var[kk + seq_len(kk)], k), -gamma)
+
+  var <- add_forecast_input(var, n_ahead = 2)
+
+  # The forecast draws its errors under the precision of the last in-sample
+  # period: a path that holds that period throughout gives the same forecast,
+  # one that holds the first period does not. The variants are built before
+  # any forecast is, so that each starts from a posterior without one.
+  hold_period <- function(object, period) {
+    path <- as.matrix(object[["posterior"]][["u_sigma_inv"]][["coeffs"]])
+    held <- path[, rep((period - 1) * kk + seq_len(kk), tt), drop = FALSE]
+    object[["posterior"]][["u_sigma_inv"]][["coeffs"]] <- coda::mcmc(held)
+    object
+  }
+  held_last <- hold_period(var, tt)
+  held_first <- hold_period(var, 1L)
+  simulate <- function(object) {
+    set.seed(1)
+    unclass(add_posterior_forecasts(object)[["posterior"]][["forecast"]])
+  }
+
+  forecast <- simulate(var)
+  expect_identical(dim(forecast), c(as.integer(fx_iterations), as.integer(2 * k)))
+  expect_true(all(is.finite(forecast)))
+  expect_equal(simulate(held_last), forecast, ignore_attr = TRUE)
+  expect_false(isTRUE(all.equal(simulate(held_first), forecast, check.attributes = FALSE)))
+})
+
 test_that("an expanding window of VEC models can be evaluated out of sample", {
   full <- vec_data()
   train <- stats::window(full, end = c(1994, 4))

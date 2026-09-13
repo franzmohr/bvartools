@@ -21,8 +21,8 @@
 specified, the function will try to identify the deterministic terms
 automatically. If this is not successful, an error message we be returned.}
 
-\item{exogen}{a time-series object with unmodelled, non-deterministic data.
-See 'Details'.}
+\item{exogen}{a time-series object with the unmodelled, non-deterministic variables of the
+model. Required if the model has such variables. See 'Details'.}
 
 \item{...}{additional arguments.}
 }
@@ -36,6 +36,17 @@ over \code{k} columns and was \code{k^2} the size for no extra content.
 \description{
 Generates data matrices serving as input for forecasting simulation for objects
 of class 'bvarmodel'.
+}
+\details{
+The regressors of a forecast period contain the values of the unmodelled,
+non-deterministic variables in that period and in the \code{s} periods before it. Argument
+\code{exogen} therefore has to cover the last \code{s} periods of the estimation sample as well
+as the \code{n_ahead} forecast periods, at the frequency of the model. A series that starts with
+the first forecast period, or ends before the last one, is refused with a message that names the
+periods it has to cover.
+
+If \code{deterministic} is not given, the deterministic terms are continued from the estimation
+sample, which works for a constant, a linear trend and seasonal dummies.
 }
 \examples{
 

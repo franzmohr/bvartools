@@ -69,7 +69,7 @@ needs. The other types are therefore not available for a structural model, and t
 types not for any other.
 
 If the FEVD is based on the orthogonalised impulse resonse (OIR), the FEVD will be calculated as
-\deqn{\omega^{OIR}_{jk, h} = \frac{\sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i P e_k )^2}{\sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i \Sigma \Phi_i^{\prime} e_j )},}
+\deqn{\omega^{OIR}_{jk, h} = \frac{\sum_{i = 0}^{h} (e_j^{\prime} \Phi_i P e_k )^2}{\sum_{i = 0}^{h} (e_j^{\prime} \Phi_i \Sigma \Phi_i^{\prime} e_j )},}
 where \eqn{\Phi_i} is the forecast error impulse response for the \eqn{i}th period,
 \eqn{P} is the lower triangular Choleski decomposition of the variance-covariance
 matrix \eqn{\Sigma}, \eqn{e_j} is a selection vector for the response variable and
@@ -90,19 +90,30 @@ enforced: a decomposition that does not sum to one is the honest report of an im
 that does not factorise \eqn{\Sigma}.
 
 If \code{type = "sir"}, the structural FEVD will be
-calculated as \deqn{\omega^{SIR}_{jk, h} = \frac{\sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i A_0^{-1} P e_k )^2}{\sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i A_0^{-1} \Sigma A_0^{-1\prime} \Phi_i^{\prime} e_j )},}
+calculated as \deqn{\omega^{SIR}_{jk, h} = \frac{\sum_{i = 0}^{h} (e_j^{\prime} \Phi_i A_0^{-1} P e_k )^2}{\sum_{i = 0}^{h} (e_j^{\prime} \Phi_i A_0^{-1} \Sigma A_0^{-1\prime} \Phi_i^{\prime} e_j )},}
 where \eqn{P} is the lower triangular Choleski decomposition of \eqn{\Sigma}. Since \eqn{\Sigma}
 is the covariance matrix of the structural errors, the decomposition weighs each structural
 shock by its own variance.
 
-If \code{type = "gir"}, the generalised FEVD will be
-calculated as \deqn{\omega^{GIR}_{jk, h} = \frac{\sigma^{-1}_{jj} \sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i \Sigma e_k )^2}{\sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i \Sigma \Phi_i^{\prime} e_j )},}
-where \eqn{\sigma_{jj}} is the diagonal element of the \eqn{j}th variable of the variance covariance matrix.
+If \code{type = "gir"}, the generalised FEVD of Pesaran and Shin (1998) will be
+calculated as \deqn{\omega^{GIR}_{jk, h} = \frac{\sigma^{-1}_{kk} \sum_{i = 0}^{h} (e_j^{\prime} \Phi_i \Sigma e_k )^2}{\sum_{i = 0}^{h} (e_j^{\prime} \Phi_i \Sigma \Phi_i^{\prime} e_j )},}
+where \eqn{\sigma_{kk}} is the variance of the error of the \emph{impulse} variable \eqn{k}, the
+diagonal element of \eqn{\Sigma} that belongs to the shock. This is the decomposition that
+\code{\link{spillover}} is built on.
 
 If \code{type = "sgir"}, the structural generalised FEVD will be
-calculated as \deqn{\omega^{SGIR}_{jk, h} = \frac{\sigma^{-1}_{jj} \sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i A_0^{-1} \Sigma e_k )^2}{\sum_{i = 0}^{h-1} (e_j^{\prime} \Phi_i A_0^{-1} \Sigma A_0^{-1\prime} \Phi_i^{\prime} e_j )}}.
+calculated as \deqn{\omega^{SGIR}_{jk, h} = \frac{\sigma^{-1}_{kk} \sum_{i = 0}^{h} (e_j^{\prime} \Phi_i A_0^{-1} \Sigma e_k )^2}{\sum_{i = 0}^{h} (e_j^{\prime} \Phi_i A_0^{-1} \Sigma A_0^{-1\prime} \Phi_i^{\prime} e_j )},}
+where \eqn{\Sigma} is the covariance matrix of the structural errors and \eqn{\sigma_{kk}} the
+variance of the structural shock \eqn{k}.
 
-Since GIR-based FEVDs do not add up to unity, they can be normalised by setting \code{normalise_gir = TRUE}.
+Since GIR-based FEVDs do not add up to unity, they can be normalised by setting \code{normalise_gir = TRUE},
+which divides each row by its sum after the decomposition has been averaged over the posterior
+draws. \code{\link{spillover}} normalises each draw before averaging, so its shares differ from
+these by the difference between a ratio of means and a mean of ratios.
+
+The row of period \eqn{h} sums the impulse responses of periods 0 to \eqn{h}, so it is the
+decomposition of the \eqn{h + 1} step forecast error variance. Period 0 is the decomposition
+on impact.
 }
 \examples{
 

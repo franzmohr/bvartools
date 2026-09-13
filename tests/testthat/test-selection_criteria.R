@@ -36,12 +36,19 @@ test_that("the information criteria follow their definitions", {
     spec[["m"]] * (spec[["s"]] + 1) + spec[["n"]]) +
     spec[["k"]] * (spec[["k"]] + 1) / 2
 
-  # The penalties are added to the deviance at the point estimate. The mean of
-  # the deviance over the posterior is the larger quantity, by about the
-  # effective number of parameters, so using it would charge the complexity of
-  # the model once through the penalty and again through the averaging.
+  # The penalties are added to the deviance at the point estimate, the posterior
+  # mean of the coefficients and of the error precision, computed here without
+  # the package. The mean of the deviance over the posterior is the larger
+  # quantity, by about the effective number of parameters, so using it would
+  # charge the complexity of the model once through the penalty and again
+  # through the averaging.
   loglik <- model[["posterior"]][["loglik"]]
-  deviance <- -2 * sum(colMeans(loglik)) - sum(apply(loglik, 2, stats::var))
+  k <- spec[["k"]]
+  y <- model[["data"]][["train"]][["y"]]
+  x <- model[["data"]][["train"]][["x"]]
+  a_mean <- matrix(colMeans(model[["posterior"]][["a"]][["coeffs"]]), k)
+  precision <- matrix(colMeans(model[["posterior"]][["u_sigma_inv"]][["coeffs"]]), k)
+  deviance <- -2 * mvn_loglik(y - x %*% t(a_mean), precision)
 
   expect_equal(criteria[["AIC"]][["mean"]], deviance + 2 * n_coeffs)
   expect_equal(criteria[["BIC"]][["mean"]], deviance + log(nobs) * n_coeffs)
@@ -161,6 +168,36 @@ test_that("the penalty of an error correction model grows with the rank", {
   }, numeric(1))
 
   expect_true(all(diff(penalties) > 1))
+})
+
+test_that("the deviance of an error correction model is taken at the rank r mean of Pi", {
+  model <- fx_vec_fitted()
+  spec <- model[["model"]]
+  k <- spec[["k"]]
+  r <- spec[["rank"]]
+  criteria <- selection_criteria(model)
+
+  y <- model[["data"]][["train"]][["y"]]
+  w <- model[["data"]][["train"]][["w"]]
+  x <- model[["data"]][["train"]][["x"]]
+  a <- as.matrix(model[["posterior"]][["a"]][["coeffs"]])
+  beta <- as.matrix(model[["posterior"]][["beta"]][["coeffs"]])
+  k_beta <- ncol(w)
+
+  # alpha and beta are identified only up to a rotation, so the point is the
+  # posterior mean of Pi = alpha beta', reduced to rank r.
+  pi_mean <- Reduce(`+`, lapply(seq_len(nrow(a)), function(i) {
+    matrix(a[i, seq_len(k * r)], k, r) %*% t(matrix(beta[i, ], k_beta, r))
+  })) / nrow(a)
+  s <- svd(pi_mean)
+  keep <- seq_len(r)
+  pi_r <- s$u[, keep, drop = FALSE] %*% diag(s$d[keep], r) %*% t(s$v[, keep, drop = FALSE])
+  gamma <- matrix(colMeans(a)[-seq_len(k * r)], k)
+  precision <- matrix(colMeans(model[["posterior"]][["u_sigma_inv"]][["coeffs"]]), k)
+  deviance <- -2 * mvn_loglik(y - w %*% t(pi_r) - x %*% t(gamma), precision)
+
+  nparams <- r * (k + k_beta - r) + k * ncol(x) + k * (k + 1) / 2
+  expect_equal(criteria[["AIC"]][["mean"]], deviance + 2 * nparams)
 })
 
 test_that("WAIC penalises by the flexibility a fit used", {

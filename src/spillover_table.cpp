@@ -76,7 +76,10 @@ arma::mat spillover_table(Rcpp::List A, int h, std::string type) {
   arma::mat mse_step = phi * sigma_mse * arma::trans(phi);
   arma::vec mse = mse_step.diag();
 
-  for (int i = 1; i <= h; i++) {
+  // The h step forecast error of Diebold and Yilmaz (2012) is made of the
+  // impulse responses of periods 0 to h - 1, so the recursion stops one period
+  // short of h. It used to run to h, which decomposed the h + 1 step error.
+  for (int i = 1; i < h; i++) {
     phi.zeros();
     for (int j = 1; j <= i; j++) {
       phi += phi_store.rows((i - j) * k, (i - j + 1) * k - 1) *

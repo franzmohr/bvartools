@@ -1,5 +1,66 @@
 # bvartools (development version)
 
+* **`fevd(type = "gir")` divides each shock by its own variance, as in Pesaran
+  and Shin (1998).** The generalised decomposition divided every share by the
+  standard deviation of the *response* instead, which is the decomposition of
+  no shock at all. Normalising did not repair it, because the scaling that was
+  missing differs from shock to shock. In a VAR of output growth, inflation and
+  the short-term interest rate from `at_macrodata`, the eight-quarter shares of
+  inflation came to 46, 53 and 1 percent with `normalise_gir = TRUE`, where
+  Pesaran and Shin give 9, 77 and 14 percent. `type = "sgir"` had the same
+  scaling and is corrected with it. The documentation, which gave a third
+  version dividing by the variance of the response, now states the formula the
+  code uses. The shares agree with `spillover()`, which already used the
+  correct scaling. **Results change** for every generalised decomposition.
+
+* **Orthogonalised and generalised impulse responses are responses to shocks of
+  one standard deviation.** With the default `shock = 1`, `irf(type = "oir")`
+  scaled the Choleski factor to a unit diagonal and `type = "gir"` divided by
+  the variance of the impulse variable, so both returned responses to a unit
+  shock. The documentation gave the one standard deviation versions,
+  `Phi_i P` and `sigma_jj^(-1/2) Phi_i Sigma e_j`, which is also what
+  `vars::irf()` returns. The code now follows the documentation, and
+  `shock` counts standard deviations for `"oir"`, `"gir"` and `"sgir"`, so
+  `shock = "sd"` and `"nsd"` are the same as `1` and `-1` there. `"feir"` and
+  `"sir"` still count units of the error. Orthogonalised responses are now on
+  the scale of sign restricted ones, whose impact matrix is a rotation of the
+  unscaled Choleski factor. **Results change** for `"oir"`, `"gir"` and
+  `"sgir"` responses with a numeric `shock`.
+
+* **AIC, BIC and HQ start from the deviance at the posterior mean.** The
+  deviance at the point estimate was recovered from the draws as their mean
+  deviance less the sum of the pointwise variances of the log-likelihood, the
+  penalty of WAIC. That sum is not the effective number of parameters. For VARs
+  of lag orders 0 to 4 with a flat prior on `at_macrodata`, which have 9 to 45
+  parameters, it came to 11 to 58, so AIC fell 2 to 11 below its maximum
+  likelihood value, by more the larger the model, and AIC ranked the lag orders
+  3 and 4 the wrong way round. The log-likelihood of the model is now evaluated
+  once at the posterior mean of its parameters. For a VEC model the point is
+  the matrix of the rank of the model closest to the posterior mean of
+  `Pi = alpha beta'`, because `alpha` and `beta` are identified only up to a
+  rotation. The note about periods with a highly variable pointwise
+  log-likelihood now refers to WAIC alone. **Results change** for AIC, BIC and
+  HQ of every model.
+
+* **`spillover()` decomposes the `n_ahead` step forecast error variance.** Its
+  documentation and Diebold and Yilmaz (2012) sum the impulse responses of
+  periods 0 to `n_ahead - 1`. The code summed them up to `n_ahead`, so the
+  default of 10 decomposed the 11 step error. The table now corresponds to
+  period `n_ahead - 1` of `fevd()`, which counts its periods from impact, and
+  the documentation of `fevd()` states that its period `h` sums the
+  responses of periods 0 to `h`. **Results change** for every spillover
+  measure.
+
+* **Forecast input for a model with exogenous variables says which periods
+  `exogen` has to cover.** The regressors of a forecast period include the lags
+  of the exogenous variables, so `exogen` has to reach back `s` periods into
+  the estimation sample. Nothing documented this -- the argument pointed to a
+  'Details' section that did not exist -- and a series starting with the first
+  forecast period failed with R's "number of items to replace is not a multiple
+  of replacement length". `add_forecast_input()` now refuses such a series with
+  a message naming the periods it has to cover, and `?prepare_forecast_input`
+  explains why.
+
 * **Time varying models repeat their posterior draws from a seed set after
   `add_initial_values()`.** For every model with `tvp = TRUE`,
   `add_initial_values()` drew the initial precisions of the state equations,

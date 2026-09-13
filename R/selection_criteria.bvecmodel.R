@@ -58,7 +58,6 @@ selection_criteria.bvecmodel <- function(object, ci = 0.95, ...){
   # Model information
   k <- object[["model"]][["k"]]
   rank <- object[["model"]][["rank"]]
-  structural <- object[["model"]][["structrual"]]
   tt <- nrow(object[["data"]][["train"]][["y"]])
   varnames <- dimnames(object[["data"]][["original"]][["endogen"]])[[2]]
   # Free parameters of the model.
@@ -116,7 +115,7 @@ selection_criteria.bvecmodel <- function(object, ci = 0.95, ...){
     # The criteria are evaluated at the point estimate of the model rather than
     # averaged over the posterior, which would charge the complexity of the
     # model a second time. See .plugin_deviance().
-    deviance <- .plugin_deviance(object[["posterior"]][["loglik"]])
+    deviance <- .plugin_deviance(object)
 
     # AIC
     result[["AIC"]] <- .point_criterion(deviance + 2 * nparams)

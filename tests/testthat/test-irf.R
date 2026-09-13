@@ -163,11 +163,11 @@ test_that("an orthogonalised response at horizon zero is the Choleski factor", {
   sigma_draws <- model[["posterior"]][["u_sigma_inv"]][["coeffs"]]
 
   # The impact matrix of an orthogonalised response is the lower Choleski
-  # factor with its columns scaled to unit shocks, so the response of r to
-  # Dp on impact is L[3, 2] / L[2, 2] of that draw.
+  # factor, whose columns are the responses to shocks of one standard
+  # deviation, so the response of r to Dp on impact is L[3, 2] of that draw.
   by_draw <- vapply(seq_len(nrow(sigma_draws)), function(i) {
     l <- t(chol(solve(matrix(sigma_draws[i, ], k))))
-    l[3, 2] / l[2, 2]
+    l[3, 2]
   }, numeric(1))
 
   oir <- irf(model, impulse = "Dp", response = "r", n_ahead = 0,
@@ -175,6 +175,47 @@ test_that("an orthogonalised response at horizon zero is the Choleski factor", {
 
   expect_identical(nrow(oir), 1L)
   expect_equal(as.numeric(oir[1, "50%"]), stats::median(by_draw))
+})
+
+test_that("orthogonalised and generalised responses are to one standard deviation shocks", {
+  model <- fx_var_fitted()
+  draws <- bvartools:::.collect_draws(model)
+
+  # The documented Phi_i P and sigma_jj^{-1/2} Phi_i Sigma e_j on impact, where
+  # Phi_0 is the identity. The default shock used to be a unit shock instead:
+  # the Choleski factor scaled to a unit diagonal, and Sigma e_j / sigma_jj.
+  oir <- irf(model, impulse = "Dp", response = "r", n_ahead = 0, type = "oir",
+             keep_draws = TRUE)
+  gir <- irf(model, impulse = "Dp", response = "r", n_ahead = 0, type = "gir",
+             keep_draws = TRUE)
+  expect_equal(as.numeric(oir),
+               vapply(draws, function(d) t(chol(d[["Sigma"]]))[3, 2], numeric(1)))
+  expect_equal(as.numeric(gir),
+               vapply(draws, function(d) d[["Sigma"]][3, 2] / sqrt(d[["Sigma"]][2, 2]),
+                      numeric(1)))
+
+  # "sd" is the default size, "nsd" its negative, and a number counts standard
+  # deviations.
+  for (type in c("oir", "gir")) {
+    one_sd <- unclass(irf(model, impulse = "Dp", response = "r", n_ahead = 3,
+                          type = type, keep_draws = TRUE))
+    expect_equal(unclass(irf(model, impulse = "Dp", response = "r", n_ahead = 3,
+                             type = type, shock = "sd", keep_draws = TRUE)), one_sd)
+    expect_equal(unclass(irf(model, impulse = "Dp", response = "r", n_ahead = 3,
+                             type = type, shock = "nsd", keep_draws = TRUE)), -one_sd)
+    expect_equal(unclass(irf(model, impulse = "Dp", response = "r", n_ahead = 3,
+                             type = type, shock = 2, keep_draws = TRUE)), 2 * one_sd)
+  }
+})
+
+test_that("a structural generalised response is to a one standard deviation shock", {
+  A0 <- diag(3)
+  A0[lower.tri(A0)] <- c(0.4, -0.7, 1.3)
+  Sigma <- diag(c(1, 9, 0.25))
+  draw <- list(A = matrix(0, 3, 3), Sigma = Sigma, A0 = A0, shock = 1)
+
+  impact <- bvartools:::.ir(draw, h = 0, type = "sgir", impulse = 2, response = 3)
+  expect_equal(as.numeric(impact), (solve(A0) %*% Sigma[, 2])[3] / sqrt(Sigma[2, 2]))
 })
 
 test_that("a cumulative response at horizon zero keeps one column of draws", {

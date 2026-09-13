@@ -4,8 +4,11 @@
 #' object of class 'bvarmodel'.
 #'
 #' @param object an object of class 'bvarmodel'.
-#' @param n_ahead number of steps ahead. Defaults to 10, the horizon of Diebold
-#' and Yilmaz (2012).
+#' @param n_ahead the forecast horizon \eqn{H} of the decomposed forecast error
+#' variance, which is made of the impulse responses of periods 0 to \eqn{H - 1}.
+#' Defaults to 10, the horizon of Diebold and Yilmaz (2012). The table therefore
+#' corresponds to the rows of period \eqn{H - 1} of \code{\link{fevd}}, which counts
+#' its periods from the impact period.
 #' @param type type of the impulse responses the decomposition is based on.
 #' Possible choices are generalised \code{gir} (default), orthogonalised
 #' \code{oir}, sign restricted \code{sign} and \code{custom}. All four decompose

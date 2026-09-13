@@ -60,10 +60,14 @@ fitted it, it is the deviance at the point estimate that their penalties
 belong to. The mean of the deviance over the posterior is the larger
 quantity, by about the effective number of parameters, so adding a penalty
 to it would charge the complexity of the model a second time and tilt every
-comparison towards the smaller model. \eqn{D} is therefore recovered from
-the draws as their mean deviance less
-\eqn{\sum_{t = 1}^{T} \mathrm{Var}_i [ll_t^{(i)}]}, the effective number of
-parameters that WAIC also penalises with. Evaluated at the maximum
+comparison towards the smaller model. \eqn{D} is therefore the deviance at
+the posterior mean of the parameters, obtained by evaluating the
+log-likelihood of the model once at that point. For a VEC model the point is
+the matrix of the rank of the model closest to the posterior mean of
+\eqn{\Pi = \alpha \beta^{\prime}}, since \eqn{\alpha} and \eqn{\beta} are
+identified only up to a rotation and their own means say nothing. Under a
+flat prior \eqn{D} is close to the deviance at the maximum likelihood
+estimates. Evaluated at the maximum
 likelihood estimates AIC reduces to \eqn{T} times the expression in
 Luetkepohl (2006) plus terms that do not depend on the lag order, so both
 order a set of lag orders in the same way.

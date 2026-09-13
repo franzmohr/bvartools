@@ -8,10 +8,20 @@
 #' @param deterministic a time-series object with deterministic data. If not
 #' specified, the function will try to identify the deterministic terms
 #' automatically. If this is not successful, an error message we be returned.
-#' @param exogen a time-series object with unmodelled, non-deterministic data.
-#' See 'Details'.
+#' @param exogen a time-series object with the unmodelled, non-deterministic variables of the
+#' model. Required if the model has such variables. See 'Details'.
 #' @param ... additional arguments.
-#' 
+#'
+#' @details The regressors of a forecast period contain the values of the unmodelled,
+#' non-deterministic variables in that period and in the \code{s} periods before it. Argument
+#' \code{exogen} therefore has to cover the last \code{s} periods of the estimation sample as well
+#' as the \code{n_ahead} forecast periods, at the frequency of the model. A series that starts with
+#' the first forecast period, or ends before the last one, is refused with a message that names the
+#' periods it has to cover.
+#'
+#' If \code{deterministic} is not given, the deterministic terms are continued from the estimation
+#' sample, which works for a constant, a linear trend and seasonal dummies.
+#'
 #' @return A list with elements \code{h}, the forecast horizon, and \code{x},
 #' the out-of-sample regressors: \code{h} rows, one per period, by one column
 #' per regressor. That is the compact layout, the same one a coefficient matrix
@@ -141,6 +151,25 @@ prepare_forecast_input.bvarmodel <- function(object, n_ahead = 10, deterministic
     
     if (m > 0) {
       tsp_x <- stats::tsp(exogen)
+
+      # The regressors of a forecast period are the exogenous values of that
+      # period and the s before it, so the series has to reach back s periods
+      # into the estimation sample and forward to the last forecast period.
+      # stats::window() only warns about a start it cannot honour, and the
+      # shorter matrix it returns then failed to fit into 'x' with R's "number
+      # of items to replace", which said nothing about what was missing.
+      need_start <- x_time[1] - s / y_freq
+      need_end <- x_time[length(x_time)]
+      tol <- 0.1 / y_freq
+      if (abs(tsp_x[3] - y_freq) > 1e-8 || tsp_x[1] > need_start + tol || tsp_x[2] < need_end - tol) {
+        stop("Argument 'exogen' must cover the periods from ", .ts_period_label(need_start, y_freq),
+             " to ", .ts_period_label(need_end, y_freq), " at the frequency of the model (", y_freq,
+             "): the ", s, " period(s) before the first forecast period, whose values enter its lagged ",
+             "regressors, and the ", n_ahead, " forecast period(s). It covers ",
+             .ts_period_label(tsp_x[1], tsp_x[3]), " to ", .ts_period_label(tsp_x[2], tsp_x[3]),
+             " at frequency ", tsp_x[3], ".", call. = FALSE)
+      }
+
       temp_x <- stats::ts(stats::embed(exogen, s + 1), end = tsp_x[2], frequency = tsp_x[3])
       temp_x <- stats::window(temp_x, start = x_time[1], end = x_time[length(x_time)])
       x[, k * p + 1:(m * (s + 1))] <- temp_x
@@ -161,4 +190,15 @@ prepare_forecast_input.bvarmodel <- function(object, n_ahead = 10, deterministic
                  "x" = x)
   
   return(result)
+}
+
+# Label of a period of a time series in the form in which it is passed to
+# stats::window() or stats::ts(), e.g. c(2019, 4), which is how an error message
+# asks for the periods a series has to cover.
+.ts_period_label <- function(time, frequency) {
+  year <- floor(time + 1e-6)
+  if (frequency == 1) {
+    return(as.character(year))
+  }
+  paste0("c(", year, ", ", round((time - year) * frequency) + 1, ")")
 }

@@ -155,9 +155,9 @@ plot(chol_ir, main = "Recursive")
 round(chol_ir[1:4, ], 3)
 #>        2.5%   50% 97.5%
 #> [1,]  0.000 0.000 0.000
-#> [2,] -0.291 0.209 0.713
-#> [3,] -0.292 0.205 0.716
-#> [4,] -0.265 0.240 0.743
+#> [2,] -0.037 0.026 0.090
+#> [3,] -0.036 0.026 0.091
+#> [4,] -0.033 0.030 0.094
 ```
 
 The recursive responses show a mild form of the *price puzzle* of Sims (1992): the median response of inflation to a contractionary shock is positive at every horizon, which is the opposite of what a policy tightening is supposed to do, although its credible interval includes zero in the first quarters. They also begin at exactly zero, because ordering the policy rate last assumes that inflation cannot react within the quarter.

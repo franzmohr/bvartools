@@ -87,11 +87,10 @@
 
 # A note under the table of criteria when the variance of the pointwise
 # log-likelihood is too large in some periods for the correction built from it
-# to be relied on. That variance is WAIC's penalty, and it is also what
-# .plugin_deviance() recovers the deviance at the point estimate with, which AIC,
-# BIC and HQ start from -- so all four are affected alike. A time varying or
-# stochastic volatility model sampled briefly can report them far below its fit,
-# down to negative values, with nothing in the numbers themselves to say so.
+# to be relied on. That variance is WAIC's penalty, so a time varying or
+# stochastic volatility model sampled briefly can report a WAIC far below its
+# fit with nothing in the number itself to say so. AIC, BIC and HQ start from
+# the deviance at the posterior mean instead and are not affected.
 .print_waic_diagnostics <- function(waic) {
 
   if (is.null(waic)) {
@@ -103,11 +102,11 @@
     return(invisible(NULL))
   }
 
-  cat("\nWAIC, AIC, BIC and HQ: ", n_high_var,
+  cat("\nWAIC: ", n_high_var,
       ifelse(n_high_var == 1, " period has", " periods have"),
       " a pointwise log-likelihood variance above ",
       format(attr(waic, "var_threshold")),
-      ", so the correction they rest on is unreliable there.\n", sep = "")
+      ", so the correction it rests on is unreliable there.\n", sep = "")
 
   invisible(NULL)
 }
@@ -129,7 +128,7 @@
   threshold <- attr(x[[affected[1]]][["WAIC"]], "var_threshold")
 
   cat("\nPeriods with a pointwise log-likelihood variance above ", format(threshold),
-      ", which makes the correction of WAIC, AIC, BIC and HQ unreliable, in model",
+      ", which makes the correction of WAIC unreliable, in model",
       ifelse(length(affected) == 1, " ", "s "),
       paste0(affected, " (", n_high_var[affected], ")", collapse = ", "), ".\n", sep = "")
 

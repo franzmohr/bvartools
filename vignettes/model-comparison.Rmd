@@ -95,7 +95,7 @@ $$\kappa = K \left(K p + M (s + 1) + N \right) + \frac{K (K + 1)}{2},$$
 
 where $K$ is the number of endogenous variables and $p$ the lag order of the model. If exogenous variables were used $M$ is the number of stochastic exogenous regressors and $s$ is the lag order for those variables. $N$ is the number of deterministic terms. The first term of $\kappa$ counts the coefficients of all $K$ equations and the second the free elements of the covariance matrix of the error term.
 
-$D$ is the deviance of the model at its point estimate. AIC, BIC and HQ correct the deviance of a fitted model for the optimism of having fitted it, so it is the deviance at the point estimate that their penalties belong to. The mean of the deviance over the posterior is the larger quantity, by about the effective number of parameters, and adding a penalty to it would charge the complexity of the model a second time. $D$ is therefore obtained from the draws as their mean deviance less $\sum_{t = 1}^{T} \mathrm{Var}_i [ll_t^{(i)}]$, the effective number of parameters that WAIC also penalises with. Since AIC, BIC and HQ are functions of the data and the estimator rather than parameters with a posterior, they are reported without a credible band; the bands of WAIC and LOOIC are normal intervals built from their standard errors.
+$D$ is the deviance of the model at its point estimate. AIC, BIC and HQ correct the deviance of a fitted model for the optimism of having fitted it, so it is the deviance at the point estimate that their penalties belong to. The mean of the deviance over the posterior is the larger quantity, by about the effective number of parameters, and adding a penalty to it would charge the complexity of the model a second time. $D$ is therefore the deviance at the posterior mean of the parameters, obtained by evaluating the log-likelihood of the model once at that point. Since AIC, BIC and HQ are functions of the data and the estimator rather than parameters with a posterior, they are reported without a credible band; the bands of WAIC and LOOIC are normal intervals built from their standard errors.
 
 Textbook presentations state these criteria in a form that is divided by $T$ and that drops every term which does not depend on the lag order. The AIC in Lütkepohl (2006), for example, is $\ln |\tilde{\Sigma}_u| + \frac{2 p K^2}{T}$. Evaluated at the maximum likelihood estimates the above formula reduces to $T$ times that expression plus terms that are constant in $p$, so the two rank a set of lag orders in the same way, although their values are on different scales. Both require that all models are estimated on the same sample. `create_bvarmodel` ensures this for a vector of lag orders by trimming the data by the maximum lag. If models from separate calls are combined, function `align_model_obs` restricts them to the observations they have in common.
 
@@ -129,31 +129,31 @@ selcrit
 #> Akaike Information Criterion (AIC)
 #> 
 #>           Mean Median Quantile (2.5%) Quantile (97.5%)
-#>  Model 1 923.5  923.5                                 
-#>  Model 2 278.0  278.0                                 
-#>  Model 3 261.2  261.2                                 
-#>  Model 4 262.8  262.8                                 
-#>  Model 5 262.2  262.2                                 
+#>  Model 1 926.0  926.0                                 
+#>  Model 2 284.3  284.3                                 
+#>  Model 3 269.8  269.8                                 
+#>  Model 4 273.5  273.5                                 
+#>  Model 5 275.8  275.8                                 
 #> 
 #> 
 #> Bayesian Information Criterion (BIC)
 #> 
 #>           Mean Median Quantile (2.5%) Quantile (97.5%)
-#>  Model 1 951.0  951.0                                 
-#>  Model 2 333.1  333.1                                 
-#>  Model 3 343.9  343.9                                 
-#>  Model 4 373.0  373.0                                 
-#>  Model 5 400.1  400.1                                 
+#>  Model 1 953.5  953.5                                 
+#>  Model 2 339.4  339.4                                 
+#>  Model 3 352.5  352.5                                 
+#>  Model 4 383.8  383.8                                 
+#>  Model 5 413.6  413.6                                 
 #> 
 #> 
 #> Hannan-Quinn Criterion (HQ)
 #> 
 #>           Mean Median Quantile (2.5%) Quantile (97.5%)
-#>  Model 1 934.7  934.7                                 
-#>  Model 2 300.4  300.4                                 
-#>  Model 3 294.8  294.8                                 
-#>  Model 4 307.5  307.5                                 
-#>  Model 5 318.2  318.2                                 
+#>  Model 1 937.2  937.2                                 
+#>  Model 2 306.7  306.7                                 
+#>  Model 3 303.3  303.3                                 
+#>  Model 4 318.3  318.3                                 
+#>  Model 5 331.7  331.7                                 
 #> 
 #> 
 #> Widely Applicable Information Criterion (WAIC)
@@ -165,7 +165,7 @@ selcrit
 #>  Model 4 290.4  290.4           184.9            395.9
 #>  Model 5 298.5  298.5           189.1            408.0
 #> 
-#> Periods with a pointwise log-likelihood variance above 0.4, which makes the correction of WAIC, AIC, BIC and HQ unreliable, in models 1 (7), 2 (14), 3 (22), 4 (32), 5 (35).
+#> Periods with a pointwise log-likelihood variance above 0.4, which makes the correction of WAIC unreliable, in models 1 (7), 2 (14), 3 (22), 4 (32), 5 (35).
 #> 
 #> 
 #> Leave-One-Out Information Criterion (LOOIC)

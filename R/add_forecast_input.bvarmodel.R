@@ -8,8 +8,11 @@
 #' @param deterministic a time-series object with deterministic data. If not
 #' specified, the function will try to identify the deterministic terms
 #' automatically. If this is not successful, an error message we be returned.
-#' @param exogen a time-series object with unmodelled, non-deterministic data.
-#' See 'Details'.
+#' @param exogen a time-series object with the unmodelled, non-deterministic variables of the
+#' model. Required if the model has such variables. It has to cover the \code{s} periods before
+#' the first forecast period, which are the last \code{s} periods of the estimation sample, as
+#' well as the \code{n_ahead} forecast periods, because the regressors of a forecast period
+#' include the lags of these variables. See \code{\link{prepare_forecast_input}}.
 #' @param ... arguments passed forward to method.
 #'
 #' @return The object in \code{object} with \code{model$h} set to \code{n_ahead} and

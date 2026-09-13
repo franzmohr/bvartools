@@ -24,7 +24,7 @@ library(bvartools)
 
 ## Workflow
 
-The models compete on the growth rate of Austrian real GDP (`dy`), inflation (`Dp`) and the short-term interest rate (`r`) from data set `at_macrodata`, all in percent per quarter and up to 2019Q4, which leaves out the quarters in which the pandemic moved output growth by ten percent. Each model is estimated over an expanding window, whose first estimation sample ends in 2018Q1.
+The models compete on the growth rate of Austrian real GDP (`dy`), inflation (`Dp`) and the short-term interest rate (`r`) from data set `at_macrodata`, all in percent per quarter and up to 2019Q4, which leaves out the quarters in which the pandemic moved output growth by ten percent. Each model is estimated over an expanding window, whose first estimation sample ends in 2017Q4.
 
 ```{r}
 data("at_macrodata")

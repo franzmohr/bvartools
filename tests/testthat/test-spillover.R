@@ -89,9 +89,10 @@ test_that("a two variable system matches the index computed by hand", {
   table <- bvartools:::.spillover_table(one_draw(A, Sigma)[[1]], h = h,
                                         type = "gir")
 
-  # The Pesaran and Shin decomposition, written out independently of the worker.
+  # The Pesaran and Shin decomposition of the h step forecast error, written out
+  # independently of the worker: the responses of periods 0 to h - 1.
   phi <- list(diag(k))
-  for (i in 1:h) {
+  for (i in seq_len(h - 1)) {
     phi[[i + 1]] <- phi[[i]] %*% A
   }
   num <- matrix(0, k, k)
@@ -110,33 +111,28 @@ test_that("a two variable system matches the index computed by hand", {
   expect_equal(100 * (sum(table) - sum(diag(table))) / k, expected_total)
 })
 
-test_that("the scaling is Pesaran-Shin and not the one .vardecomp uses", {
-  # With unit variances the impulse scaling is one, so the new worker and the
-  # row-normalised .vardecomp must agree exactly.
+test_that("a row of the table is the normalised generalised decomposition one period earlier", {
+  # .vardecomp and .spillover_table apply the same Pesaran and Shin scaling, by
+  # the variance of the shock, so a row of the table is the normalised row of
+  # the decomposition of the same forecast error. The h step error sums the
+  # responses of periods 0 to h - 1, which is period h - 1 of .vardecomp, since
+  # that counts its periods from impact. Unequal variances make a scaling by
+  # anything else show.
   k <- 3
   set.seed(4)
   A <- matrix(stats::rnorm(k * k, sd = 0.2), k)
   corr <- diag(k)
   corr[1, 2] <- corr[2, 1] <- 0.4
   corr[1, 3] <- corr[3, 1] <- 0.2
-
-  table <- bvartools:::.spillover_table(one_draw(A, corr)[[1]], h = 6,
-                                        type = "gir")
-  for (j in 1:k) {
-    vd <- bvartools:::.vardecomp(list(A = A, Sigma = corr), h = 6,
-                                 type = "gir", response = j)
-    row <- vd[nrow(vd), ]
-    expect_equal(as.numeric(table[j, ]), as.numeric(row / sum(row)))
-  }
-
-  # With unequal variances they must differ, by exactly the impulse variance.
   Sigma <- diag(sqrt(c(1, 9, 0.25))) %*% corr %*% diag(sqrt(c(1, 9, 0.25)))
-  table <- bvartools:::.spillover_table(one_draw(A, Sigma)[[1]], h = 6,
+  h <- 6
+
+  table <- bvartools:::.spillover_table(one_draw(A, Sigma)[[1]], h = h,
                                         type = "gir")
   for (j in 1:k) {
-    vd <- bvartools:::.vardecomp(list(A = A, Sigma = Sigma), h = 6,
+    vd <- bvartools:::.vardecomp(list(A = A, Sigma = Sigma), h = h - 1,
                                  type = "gir", response = j)
-    row <- vd[nrow(vd), ] / diag(Sigma)
+    row <- vd[h, ]
     expect_equal(as.numeric(table[j, ]), as.numeric(row / sum(row)))
   }
 })

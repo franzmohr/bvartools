@@ -66,7 +66,6 @@ selection_criteria.bvarmodel <- function(object, ci = 0.95, ...){
   m <- object[["model"]][["m"]]
   s <- object[["model"]][["s"]]
   n <- object[["model"]][["n"]]
-  structural <- object[["model"]][["structrual"]]
   tt <- nrow(object[["data"]][["train"]][["y"]])
   varnames <- dimnames(object[["data"]][["original"]][["endogen"]])[[2]]
   # Free parameters of the model. 'k * p + m * (s + 1) + n' is the number of
@@ -108,7 +107,7 @@ selection_criteria.bvarmodel <- function(object, ci = 0.95, ...){
     # The criteria are evaluated at the point estimate of the model rather than
     # averaged over the posterior, which would charge the complexity of the
     # model a second time. See .plugin_deviance().
-    deviance <- .plugin_deviance(object[["posterior"]][["loglik"]])
+    deviance <- .plugin_deviance(object)
 
     # AIC
     result[["AIC"]] <- .point_criterion(deviance + 2 * nparams)

@@ -38,21 +38,25 @@ arma::vec ir(Rcpp::List A, int h, std::string type, int impulse, int response) {
   if (type == fe) {
     P = P * Rcpp::as<double>(A["shock"]);
   }
+  // The orthogonalised and generalised types count a shock in standard
+  // deviations: a column of the Choleski factor, and Sigma e_j over the
+  // standard deviation of the impulse variable, are the responses to a shock of
+  // one standard deviation. That is Phi_i P and sigma_jj^{-1/2} Phi_i Sigma e_j
+  // as the documentation states them, and the convention of vars::irf.
   if (type == oir) {
-    P = arma::trans(arma::chol(Rcpp::as<arma::mat>(A["Sigma"])));
-    P = P * arma::diagmat(1 / arma::vectorise(P.diag())) * Rcpp::as<double>(A["shock"]);
+    P = arma::trans(arma::chol(Rcpp::as<arma::mat>(A["Sigma"]))) * Rcpp::as<double>(A["shock"]);
   }
   if (type == sir) {
     P = arma::solve(Rcpp::as<arma::mat>(A["A0"]), arma::eye<arma::mat>(k, k)) * Rcpp::as<double>(A["shock"]);
   }
   if (type == gir) {
     Sigma = Rcpp::as<arma::mat>(A["Sigma"]);
-    P = Sigma / arma::as_scalar(Sigma(impulse - 1, impulse - 1)) * Rcpp::as<double>(A["shock"]);
+    P = Sigma / std::sqrt(arma::as_scalar(Sigma(impulse - 1, impulse - 1))) * Rcpp::as<double>(A["shock"]);
   }
   if (type == sgir) {
     Sigma = Rcpp::as<arma::mat>(A["Sigma"]);
     P = arma::solve(Rcpp::as<arma::mat>(A["A0"]), arma::eye<arma::mat>(k, k));
-    P = P * Sigma / arma::as_scalar(Sigma(impulse - 1, impulse - 1)) * Rcpp::as<double>(A["shock"]);
+    P = P * Sigma / std::sqrt(arma::as_scalar(Sigma(impulse - 1, impulse - 1))) * Rcpp::as<double>(A["shock"]);
   }
   if (type == custom) {
     // The caller has already decided what a shock of size one is, so `shock`

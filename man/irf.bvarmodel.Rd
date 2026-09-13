@@ -32,7 +32,12 @@ alone.}
 \item{ci}{a numeric between 0 and 1 specifying the probability mass covered by the
 credible intervals. Defaults to 0.95.}
 
-\item{shock}{size of the shock.}
+\item{shock}{size of the shock. For \code{"oir"}, \code{"gir"} and \code{"sgir"} it is counted
+in standard deviations of the shock, so the default of 1 is a shock of one standard deviation.
+For \code{"feir"} and \code{"sir"} it is counted in units of the reduced form or structural error
+of the impulse variable, and for \code{"sign"} and \code{"custom"} it rescales the columns of the
+impact matrix. \code{"sd"} and \code{"nsd"} are a positive and a negative shock of one standard
+deviation and are not available for \code{"sign"} and \code{"custom"}.}
 
 \item{type}{type of the impulse response. Possible choices are forecast error \code{"feir"}
 (default), orthogonalised \code{"oir"}, structural \code{"sir"}, generalised \code{"gir"},
@@ -76,7 +81,8 @@ Forecast error impulse responses \eqn{\Phi_i} are obtained by recursions
 with \eqn{\Phi_0 = I_K}.
 
 Orthogonalised impulse responses \eqn{\Theta^o_i} are calculated as \eqn{\Theta^o_i = \Phi_i P},
-where P is the lower triangular Choleski decomposition of \eqn{\Sigma}.
+where P is the lower triangular Choleski decomposition of \eqn{\Sigma}, so that they are the
+responses to orthogonalised shocks of one standard deviation.
 
 Structural impulse responses \eqn{\Theta^s_i} are calculated as \eqn{\Theta^s_i = \Phi_i A_0^{-1}}.
 
@@ -100,11 +106,12 @@ identification that the package does not derive itself reaches the recursion; \c
 rescales the result but nothing normalises the columns of \eqn{P}, so an impact matrix that
 means to deliver unit shocks has to arrive that way.
 
-(Structural) Generalised impulse responses for variable \eqn{j}, i.e. \eqn{\Theta^g_ji} are calculated as
-\eqn{\Theta^g_{ji} = \sigma_{jj}^{-1/2} \Phi_i A_0^{-1} \Sigma e_j}, where \eqn{\sigma_{jj}} is the variance
-of the \eqn{j^{th}} diagonal element of \eqn{\Sigma} and \eqn{e_i} is a selection vector containing
-one in its \eqn{j^{th}} element and zero otherwise. If the \code{"bvarmodel"} object does not contain draws
-of \eqn{A_0}, it is assumed to be an identity matrix.
+(Structural) Generalised impulse responses to a shock to variable \eqn{j} are calculated as
+\eqn{\Theta^g_{i} = \sigma_{jj}^{-1/2} \Phi_i A_0^{-1} \Sigma e_j}, where \eqn{\sigma_{jj}} is the
+\eqn{j}th diagonal element of \eqn{\Sigma}, the variance of the error of the impulse variable, and
+\eqn{e_j} is a selection vector containing one in its \eqn{j}th element and zero otherwise. They are
+therefore the responses to a shock of one standard deviation (Pesaran and Shin, 1998). If the
+\code{"bvarmodel"} object does not contain draws of \eqn{A_0}, it is assumed to be an identity matrix.
 }
 \examples{
 

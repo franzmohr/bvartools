@@ -70,8 +70,10 @@ draws <- irf(model, impulse = "r", response = "Dp", n_ahead = 8,
 stopifnot(all(dim(draws) == c(300, 9)))     # draws by periods 0 to 8
 ```
 
-`ci` sets the band (default `0.95`), `shock` its size and `cumulative = TRUE`
-accumulates the responses.
+`ci` sets the band (default `0.95`) and `cumulative = TRUE` accumulates the
+responses. `shock` sets the size of the shock: for `"oir"`, `"gir"` and `"sgir"`
+in standard deviations, so the default of 1 is a one-standard-deviation shock,
+and for `"feir"` and `"sir"` in units of the error of the impulse variable.
 
 ## Variance decompositions
 
@@ -113,7 +115,9 @@ so check `model$model$sign_restrictions` before relying on the bands.
 ## Spillovers
 
 `spillover()` computes the connectedness measures of Diebold and Yilmaz (2012)
-from generalised variance decompositions by default:
+from generalised variance decompositions by default. `n_ahead = H` decomposes the
+H-step forecast error variance, the responses of periods 0 to H - 1, so the table
+corresponds to period H - 1 of `fevd()`:
 
 ```r
 sp <- spillover(model, n_ahead = 8)

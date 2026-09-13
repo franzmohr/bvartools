@@ -22,13 +22,11 @@ test_that("a custom impact matrix reproduces the forecast error response", {
 test_that("a custom impact matrix reproduces the orthogonalised response", {
   model <- fx_var_fitted()
 
-  # Under "oir" the recursion normalises the Choleski factor to a unit shock.
-  # The custom path normalises nothing, so the same responses need it done
-  # here -- which is the asymmetry worth pinning down.
-  impact <- lapply(bvartools:::.collect_draws(model), function(draw) {
-    p <- t(chol(draw[["Sigma"]]))
-    p %*% diag(1 / diag(p))
-  })
+  # Under "oir" the impact matrix is the Choleski factor itself, whose columns
+  # are shocks of one standard deviation, so the unmodified factor reproduces
+  # it -- as it reproduces the orthogonalised decomposition below.
+  impact <- lapply(bvartools:::.collect_draws(model),
+                   function(draw) t(chol(draw[["Sigma"]])))
 
   expect_equal(
     irf(model, impulse = "Dp", response = "r", n_ahead = 5,

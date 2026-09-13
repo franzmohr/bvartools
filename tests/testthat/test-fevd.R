@@ -52,6 +52,48 @@ test_that("an unnormalised generalised decomposition need not add up to one", {
                                 rep(1, nrow(decomposition)))))
 })
 
+test_that("the generalised decomposition divides each shock by its own variance", {
+  # Pesaran and Shin (1998), written out independently of the worker, with error
+  # variances far apart so that a scaling by anything else shows. It used to be
+  # divided by the standard deviation of the response.
+  k <- 3
+  set.seed(5)
+  A <- matrix(stats::rnorm(k * k, sd = 0.3), k)
+  corr <- diag(k)
+  corr[1, 2] <- corr[2, 1] <- 0.5
+  corr[2, 3] <- corr[3, 2] <- -0.3
+  Sigma <- diag(sqrt(c(1, 9, 0.25))) %*% corr %*% diag(sqrt(c(1, 9, 0.25)))
+  A0 <- diag(k)
+  A0[lower.tri(A0)] <- c(0.4, -0.7, 1.3)
+  h <- 5
+
+  manual <- function(P, sigma_mse, response) {
+    phi <- diag(k)
+    num <- numeric(k)
+    mse <- 0
+    out <- matrix(NA_real_, h + 1, k)
+    for (i in 0:h) {
+      if (i > 0) {
+        phi <- phi %*% A
+      }
+      num <- num + (phi %*% P)[response, ]^2
+      mse <- mse + (phi %*% sigma_mse %*% t(phi))[response, response]
+      out[i + 1, ] <- num / mse / diag(Sigma)
+    }
+    out
+  }
+
+  a0i <- solve(A0)
+  for (j in seq_len(k)) {
+    expect_equal(bvartools:::.vardecomp(list(A = A, Sigma = Sigma), h = h,
+                                        type = "gir", response = j),
+                 manual(Sigma, Sigma, j))
+    expect_equal(bvartools:::.vardecomp(list(A = A, Sigma = Sigma, A0 = A0), h = h,
+                                        type = "sgir", response = j),
+                 manual(a0i %*% Sigma, a0i %*% Sigma %*% t(a0i), j))
+  }
+})
+
 test_that("a structural model rejects the reduced-form types", {
   for (type in c("oir", "gir")) {
     expect_error(fevd(fx_svar_fitted(), response = "r", n_ahead = 3,

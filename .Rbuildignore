@@ -13,3 +13,5 @@ Rplots\.pdf$
 ^CITATION\.cff$
 ^\.zenodo\.json$
 ^LICENSE$
+^[.]claude-plugin$
+^inst/agents/[.]claude-plugin$

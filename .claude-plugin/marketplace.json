@@ -1,0 +1,17 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "bvartools",
+  "description": "Documentation for coding agents writing R code with bvartools.",
+  "owner": {
+    "name": "Franz X. Mohr"
+  },
+  "plugins": [
+    {
+      "name": "bvartools",
+      "description": "Write correct bvartools code: Bayesian VAR and VEC models in R, from create_bvarmodel and add_priors to forecasts, impulse responses and model comparison.",
+      "source": "./inst/agents",
+      "category": "development",
+      "homepage": "https://github.com/franzmohr/bvartools/tree/main/inst/agents"
+    }
+  ]
+}

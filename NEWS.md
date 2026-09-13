@@ -1,5 +1,22 @@
 # bvartools (development version)
 
+* **Documentation for coding assistants, in `inst/agents/`.** An assistant
+  working from tutorials writes bvartools code that runs and means something
+  else, or that calls functions which no longer exist. `inst/agents/` has an
+  `AGENTS.md`, and a skill covering:
+  - the workflow and the rules that prevent that: assigning each step back,
+    priors given as precisions, `sigma` elements that are silently ignored when
+    misspelt, draws in rows, and `vec_to_var()` before forecasting a VEC;
+  - the combinations the samplers refuse, and why;
+  - complete examples of a VAR, a VEC, a TVP-SV model, a quantile VAR, lag
+    order comparison and an HDF5 round trip.
+
+  The installed package carries it at `system.file("agents", package =
+  "bvartools")`, matching its version, and the repository is a Claude Code
+  plugin marketplace. `tests/testthat/test-agent-docs.R` runs every R example
+  in it, and the examples assert the shapes their text states. No function
+  changes, so draws are unchanged.
+
 * **New data set `at_macrodata`.** It contains the Austrian sub-model of a
   global VAR model of the 33 countries in the GVAR database of Mohaddes and
   Raissi (2024): quarterly domestic series, their trade weighted foreign

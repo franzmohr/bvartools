@@ -138,6 +138,42 @@ With \code{v_i = "ml"} the shrinkage is chosen so that the prior mean of
 \eqn{tr(\alpha^{\prime} \Sigma^{-1} \alpha)} is 100 times its maximum
 likelihood estimate. It can be combined with a numeric \code{p_tau_i}.
 
+For a model with time varying cointegration parameters, \code{p_tau_i = "ml"}
+centres the marginal prior of the cointegration space on Johansen's estimate
+as well, using the informative marginal prior of Koop et al. (2011, working
+paper version). The state equation becomes
+\eqn{\beta_t = \rho (I_r \otimes P_\tau) \beta_{t-1} + \eta_t} with
+\eqn{P_\tau = H H^{\prime} + H_\perp T H_\perp^{\prime}}: the part of
+\eqn{\beta_t} along \eqn{sp(H)} keeps \eqn{\rho}, the part off it decays
+faster, and the mode of the marginal distribution of \eqn{sp(\beta_t)} is
+\eqn{sp(H)} in every period. \eqn{T} is chosen so that the prior spread of the
+tilt of \eqn{\beta_t} away from \eqn{sp(H)} in a period, approximately
+\eqn{T^* = (1 - \rho^2)(I - \rho^2 T^2)^{-1}}, is the sampling variance of
+Johansen's estimator with its precision multiplied by \code{weight}. The
+state before the sample is given the stationary distribution the transition
+implies. The transition is stored in \code{object$priors$beta$p_tau}.
+
+\eqn{\rho} limits how informative this prior can be: even \eqn{T = 0} leaves
+the tilt a spread of \eqn{1 - \rho^2} per period, and a \code{weight} asking
+for more is floored there with a warning.
+
+A larger \code{weight} does not always give a tighter posterior. It narrows
+the prior spread of the tilt in each period by lowering \eqn{T}, but \eqn{T}
+is also how much of the tilt carries over from one period to the next. As
+\eqn{T} approaches zero the tilt of each period becomes independent of the
+last, the data of neighbouring periods stop informing it, and the posterior
+spread of \eqn{sp(\beta_t)} can widen again. On data set E6 with
+\eqn{\rho = 0.999}, for example, \code{weight = 1}, which gives
+\eqn{T \approx 0.44}, produced a tighter posterior than \code{weight = 100},
+which reaches \eqn{T = 0}. The useful range of \code{weight} is the one that
+keeps \eqn{T} clearly above zero, and a \eqn{\rho} closer to one widens it.
+
+A \code{weight} so small that
+\eqn{T} would be the identity in every direction leaves the noninformative
+prior unchanged. Both \eqn{P_\tau} and the prior on the state before the
+sample are computed at \code{coint$rho}, and do not follow the draw if
+\eqn{\rho} is drawn. \code{coint$v_i} has no counterpart for these models.
+
 For a model with time varying cointegration parameters the state equation is
 \eqn{\beta_t = \rho \beta_{t-1} + \eta_t} with \eqn{\eta_t \sim N(0, I)}, and
 the prior on the state before the sample is that equation's own stationary

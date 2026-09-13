@@ -240,3 +240,77 @@ test_that("a tight ML prior keeps the draws of beta in the estimated space", {
   expect_lt(max(tilt(model)), 1e-3)
   expect_lt(stats::median(tilt(model)), stats::median(tilt(fx_vec_fitted())))
 })
+
+# --- time varying cointegration space centred on the ML estimate -------------
+
+tvp_coint_model <- function() {
+  cached_fixture("tvp_coint_model", create_bvecmodel(
+    vec_data(), p = 2, r = 1, tvp = TRUE, const = "unrestricted",
+    iterations = 10, burnin = 5))
+}
+
+tvp_ml_priors <- function(coint) {
+  add_priors(tvp_coint_model(),
+             coef = list(v_i = 1, v_i_det = 0.1, shape = 3, rate = 1e-4),
+             coint = coint, sigma = list(df = "k", scale = 1))
+}
+
+test_that("a time varying cointegration space can be centred on the ML estimate", {
+  rho <- 0.999
+  model <- tvp_ml_priors(list(rho = rho, p_tau_i = "ml", weight = 0.1))
+  p_tau <- model[["priors"]][["beta"]][["p_tau"]]
+  v_inv <- model[["priors"]][["beta"]][["v_inv"]]
+  space <- ml_space(tvp_coint_model())
+  h <- space[["h"]]
+  h_perp <- space[["h_perp"]]
+
+  expect_equal(p_tau, t(p_tau))
+  eigenvalues <- eigen(p_tau, symmetric = TRUE)$values
+  expect_true(all(eigenvalues >= -1e-10 & eigenvalues <= 1 + 1e-10))
+  # Along the estimated space the transition is rho alone ...
+  expect_equal(p_tau %*% h, h)
+  # ... and off it strictly less.
+  expect_lt(max(eigen(crossprod(h_perp, p_tau %*% h_perp), symmetric = TRUE)$values), 1)
+
+  # The state before the sample has the stationary distribution the transition
+  # implies: precision (1 - rho^2) H H' + H_perp (I - rho^2 T^2) H_perp'.
+  tt <- crossprod(h_perp, p_tau %*% h_perp)
+  expect_equal(v_inv, (1 - rho^2) * tcrossprod(h) +
+                 h_perp %*% (diag(nrow(tt)) - rho^2 * tt %*% tt) %*% t(h_perp))
+  expect_equal(c(model[["priors"]][["beta"]][["mu"]]), rep(0, nrow(v_inv)))
+})
+
+test_that("the weight of the time varying ML prior tightens it, down to rho's floor", {
+  rho <- 0.999
+  space <- ml_space(tvp_coint_model())
+  off_space <- function(object) {
+    max(eigen(crossprod(space[["h_perp"]],
+                        object[["priors"]][["beta"]][["p_tau"]] %*% space[["h_perp"]]),
+              symmetric = TRUE)$values)
+  }
+  weak <- tvp_ml_priors(list(rho = rho, p_tau_i = "ml", weight = 0.01))
+  strong <- tvp_ml_priors(list(rho = rho, p_tau_i = "ml", weight = 0.1))
+  expect_lt(off_space(strong), off_space(weak))
+
+  # Asking for more than rho allows stops at T = 0 and says so.
+  expect_warning(floor <- tvp_ml_priors(list(rho = rho, p_tau_i = "ml", weight = 1e6)),
+                 "coint[$]rho")
+  expect_equal(floor[["priors"]][["beta"]][["p_tau"]], tcrossprod(space[["h"]]))
+
+  # A weight so small that T is the identity everywhere is no prior on the
+  # direction at all, and leaves the one without p_tau_i in place.
+  none <- tvp_ml_priors(list(rho = rho, p_tau_i = "ml", weight = 1e-12))
+  plain <- tvp_ml_priors(list(rho = rho))
+  expect_null(none[["priors"]][["beta"]][["p_tau"]])
+  expect_identical(none[["priors"]][["beta"]], plain[["priors"]][["beta"]])
+})
+
+test_that("a time varying ML prior is checked", {
+  expect_warning(tvp_ml_priors(list(rho = 0.999, p_tau_i = 1)), "coint[$]p_tau_i")
+  expect_warning(tvp_ml_priors(list(rho = 0.999, weight = 2)), "coint[$]weight")
+  expect_error(tvp_ml_priors(list(rho = 0.999, p_tau_i = "ml", weight = -1)), "coint[$]weight")
+
+  # The transition has a direction, so scaling afterwards is refused too.
+  model <- tvp_ml_priors(list(rho = 0.999, p_tau_i = "ml", weight = 0.1))
+  expect_error(scale_error_correction(model), "before 'add_priors'")
+})

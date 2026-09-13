@@ -66,3 +66,26 @@ test_that("every time varying cointegration algorithm can draw rho", {
                  ncol(fixed[["posterior"]][["beta"]][["coeffs"]]))
   }
 })
+
+test_that("every time varying cointegration algorithm reads the ML transition", {
+  for (error in c("wishart", "gamma", "sv")) {
+
+    set.seed(456789)
+    plain <- vec_tvp_fitted(error, list(rho = 0.999))
+
+    # A weight that leaves the transition at the identity in every direction is
+    # no prior on the direction, and the chain is the one without it.
+    set.seed(456789)
+    negligible <- vec_tvp_fitted(error, list(rho = 0.999, p_tau_i = "ml", weight = 1e-12))
+    expect_identical(negligible[["posterior"]][["beta"]][["coeffs"]],
+                     plain[["posterior"]][["beta"]][["coeffs"]])
+
+    # One that does not reaches the sampler through priors$beta$p_tau.
+    set.seed(456789)
+    informative <- suppressWarnings(
+      vec_tvp_fitted(error, list(rho = 0.999, p_tau_i = "ml", weight = 0.1)))
+    expect_false(is.null(informative[["priors"]][["beta"]][["p_tau"]]))
+    expect_false(isTRUE(all.equal(informative[["posterior"]][["beta"]][["coeffs"]],
+                                  plain[["posterior"]][["beta"]][["coeffs"]])))
+  }
+})

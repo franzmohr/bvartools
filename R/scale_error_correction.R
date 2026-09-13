@@ -51,11 +51,13 @@ scale_error_correction.bvecmodel <- function(object, ...) {
   # direction, and that direction is stated in the units of 'w' it was built
   # against -- for coint$p_tau_i = "ml" the maximum likelihood estimate on the
   # series as they were. Scaling afterwards would leave it pointing somewhere
-  # else without any sign of it.
-  p_tau_inv <- object[["priors"]][["beta"]][["p_tau_inv"]]
-  if (!is.null(p_tau_inv) &&
-      !isTRUE(all.equal(p_tau_inv, diag(p_tau_inv[1, 1], nrow(p_tau_inv)),
-                        check.attributes = FALSE))) {
+  # else without any sign of it. That holds for the constant model's p_tau_inv
+  # and for the time varying model's transition p_tau alike.
+  has_direction <- function(m) {
+    !is.null(m) && !isTRUE(all.equal(m, diag(m[1, 1], nrow(m)), check.attributes = FALSE))
+  }
+  if (has_direction(object[["priors"]][["beta"]][["p_tau_inv"]]) ||
+      has_direction(object[["priors"]][["beta"]][["p_tau"]])) {
     stop("The model already has a cointegration space prior that depends on the ",
          "scale of the error correction term. Call 'scale_error_correction' ",
          "before 'add_priors'.")

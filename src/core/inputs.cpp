@@ -3,6 +3,7 @@
 
 #include "bayests/inputs.h"
 
+#include <algorithm>
 #include <stdexcept>
 #include <string>
 
@@ -772,6 +773,33 @@ void validate_tvp_coint_block(const VarSpec &spec, const TrainData &train,
     require_square(prior.initial_state.v_inv, n_beta, "prior precision of beta before the sample");
 
     validate_tvp_coint_rho(prior);
+
+    // P_tau is the transition with rho taken out, and it has to leave the state
+    // equation what Koop, Leon-Gonzalez and Strachan's is: a pull towards sp(H)
+    // that never pushes away from it and never flips a direction's sign from one
+    // period to the next. Symmetric with eigenvalues in [0, 1] is exactly that --
+    // one along H, below one off it, a tau per direction.
+    if (!prior.p_tau.is_empty())
+    {
+        require_square(prior.p_tau, static_cast<arma::uword>(spec.k_beta),
+                       "transition P_tau of the cointegration state equation");
+
+        const double scale = std::max(1.0, arma::abs(prior.p_tau).max());
+        if (!arma::approx_equal(prior.p_tau, arma::trans(prior.p_tau), "absdiff", 1e-10 * scale))
+        {
+            throw std::invalid_argument(
+                "the transition P_tau of the cointegration state equation must be symmetric");
+        }
+
+        const arma::vec eigval = arma::eig_sym(arma::symmatu(prior.p_tau));
+        if (eigval.min() < -1e-10 || eigval.max() > 1.0 + 1e-10)
+        {
+            throw std::invalid_argument(
+                "the eigenvalues of the transition P_tau of the cointegration state equation must "
+                "lie in [0, 1], got [" + std::to_string(eigval.min()) + ", " +
+                std::to_string(eigval.max()) + "]");
+        }
+    }
 }
 
 /// The two periods a random walk needs to be differenced against itself, and the

@@ -234,6 +234,10 @@ inline bayests::TvpCointSpacePrior read_coint_space_prior_tvp(const Rcpp::List &
     prior.rho_prior.max = Rcpp::as<double>(group["rho_max"]);
   }
 
+  // The transition of the state equation with rho taken out -- Koop et al.'s
+  // informative marginal prior. Absent is the identity.
+  read_mat_if_present(group, "p_tau", prior.p_tau);
+
   return prior;
 }
 

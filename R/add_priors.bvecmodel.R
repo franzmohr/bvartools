@@ -121,6 +121,42 @@
 #' \eqn{tr(\alpha^{\prime} \Sigma^{-1} \alpha)} is 100 times its maximum
 #' likelihood estimate. It can be combined with a numeric \code{p_tau_i}.
 #'
+#' For a model with time varying cointegration parameters, \code{p_tau_i = "ml"}
+#' centres the marginal prior of the cointegration space on Johansen's estimate
+#' as well, using the informative marginal prior of Koop et al. (2011, working
+#' paper version). The state equation becomes
+#' \eqn{\beta_t = \rho (I_r \otimes P_\tau) \beta_{t-1} + \eta_t} with
+#' \eqn{P_\tau = H H^{\prime} + H_\perp T H_\perp^{\prime}}: the part of
+#' \eqn{\beta_t} along \eqn{sp(H)} keeps \eqn{\rho}, the part off it decays
+#' faster, and the mode of the marginal distribution of \eqn{sp(\beta_t)} is
+#' \eqn{sp(H)} in every period. \eqn{T} is chosen so that the prior spread of the
+#' tilt of \eqn{\beta_t} away from \eqn{sp(H)} in a period, approximately
+#' \eqn{T^* = (1 - \rho^2)(I - \rho^2 T^2)^{-1}}, is the sampling variance of
+#' Johansen's estimator with its precision multiplied by \code{weight}. The
+#' state before the sample is given the stationary distribution the transition
+#' implies. The transition is stored in \code{object$priors$beta$p_tau}.
+#'
+#' \eqn{\rho} limits how informative this prior can be: even \eqn{T = 0} leaves
+#' the tilt a spread of \eqn{1 - \rho^2} per period, and a \code{weight} asking
+#' for more is floored there with a warning.
+#'
+#' A larger \code{weight} does not always give a tighter posterior. It narrows
+#' the prior spread of the tilt in each period by lowering \eqn{T}, but \eqn{T}
+#' is also how much of the tilt carries over from one period to the next. As
+#' \eqn{T} approaches zero the tilt of each period becomes independent of the
+#' last, the data of neighbouring periods stop informing it, and the posterior
+#' spread of \eqn{sp(\beta_t)} can widen again. On data set E6 with
+#' \eqn{\rho = 0.999}, for example, \code{weight = 1}, which gives
+#' \eqn{T \approx 0.44}, produced a tighter posterior than \code{weight = 100},
+#' which reaches \eqn{T = 0}. The useful range of \code{weight} is the one that
+#' keeps \eqn{T} clearly above zero, and a \eqn{\rho} closer to one widens it.
+#'
+#' A \code{weight} so small that
+#' \eqn{T} would be the identity in every direction leaves the noninformative
+#' prior unchanged. Both \eqn{P_\tau} and the prior on the state before the
+#' sample are computed at \code{coint$rho}, and do not follow the draw if
+#' \eqn{\rho} is drawn. \code{coint$v_i} has no counterpart for these models.
+#'
 #' For a model with time varying cointegration parameters the state equation is
 #' \eqn{\beta_t = \rho \beta_{t-1} + \eta_t} with \eqn{\eta_t \sim N(0, I)}, and
 #' the prior on the state before the sample is that equation's own stationary
@@ -314,6 +350,15 @@ add_priors.bvecmodel <- function(object,
              "when rho is drawn it is the value the chain starts at.")
       }
     }
+
+    # A time varying space has no matric-variate prior for a numeric p_tau_i to
+    # describe; the only thing p_tau_i can ask for here is the transition
+    # centred on the ML estimate.
+    coint_p_tau_ml <- identical(coint[["p_tau_i"]], "ml")
+    if (!is.null(coint[["p_tau_i"]]) && !coint_p_tau_ml) {
+      warning("Argument 'coint$p_tau_i' is only used with the value \"ml\" for VEC models ",
+              "with time varying cointegration parameters and is ignored.")
+    }
   } else {
     if (!"v_i" %in% names(coint)) {
       stop("Argument 'coint$v_i' must be specified for VEC models with constant cointegration parameters.")
@@ -338,14 +383,14 @@ add_priors.bvecmodel <- function(object,
            "with zero shrinkage the prior on the cointegration space is uniform ",
            "whatever 'coint$p_tau_i' is.")
     }
-    if ("weight" %in% names(coint)) {
-      if (!(is.numeric(coint[["weight"]]) && length(coint[["weight"]]) == 1 &&
-            isTRUE(coint[["weight"]] > 0))) {
-        stop("Argument 'coint$weight' must be a positive number.")
-      }
-      if (!coint_p_tau_ml) {
-        warning("Argument 'coint$weight' is only used with 'coint$p_tau_i = \"ml\"' and is ignored.")
-      }
+  }
+  if ("weight" %in% names(coint)) {
+    if (!(is.numeric(coint[["weight"]]) && length(coint[["weight"]]) == 1 &&
+          isTRUE(coint[["weight"]] > 0))) {
+      stop("Argument 'coint$weight' must be a positive number.")
+    }
+    if (!coint_p_tau_ml) {
+      warning("Argument 'coint$weight' is only used with 'coint$p_tau_i = \"ml\"' and is ignored.")
     }
   }
   
@@ -516,9 +561,10 @@ add_priors.bvecmodel <- function(object,
       # walk whose variance grows without bound, and beta, being identified only
       # up to scale, has nothing to pull it back.
       #
-      # The shrinkage and central location of the constant model's cointegration
-      # space, coint$v_i and coint$p_tau_i, have no counterpart here: the space is
-      # not drawn from a matric-variate prior but followed period by period.
+      # The shrinkage of the constant model's cointegration space, coint$v_i, has
+      # no counterpart here: the space is not drawn from a matric-variate prior
+      # but followed period by period. Its central location does, as the
+      # transition below when coint$p_tau_i = "ml".
       object[["priors"]][["beta"]] <- list("type" = "cointspace",
                                            "rho" = coint[["rho"]],
                                            "mu" = matrix(0, n_beta),
@@ -539,6 +585,84 @@ add_priors.bvecmodel <- function(object,
       if (has_rho_min) {
         object[["priors"]][["beta"]][["rho_min"]] <- coint[["rho_min"]]
         object[["priors"]][["beta"]][["rho_max"]] <- coint[["rho_max"]]
+      }
+
+      # The informative marginal prior of Koop et al. (2011, working paper
+      # version, eq. 12): the transition becomes rho (I_r kron P_tau) with
+      # P_tau = H H' + H_perp T H_perp', H an orthonormal basis of Johansen's
+      # estimate of the space. The part of beta along sp(H) keeps rho, the part
+      # off it decays at rho T, so the space at every t has its mode at sp(H).
+      #
+      # T is set from the spread the prior gives the tilt delta of beta_t away
+      # from sp(H). The transition is stationary with H_perp' beta_t having
+      # variance (I - rho^2 T^2)^-1 against 1 / (1 - rho^2) along H, so for a
+      # beta_t of typical length the tilt has spread
+      # T* = (1 - rho^2) (I - rho^2 T^2)^-1. That is matched to Johansen's
+      # sampling variance of the tilt, (H_perp' S11 H_perp)^-1 divided by the
+      # smallest eigenvalue of alpha_h' Omega^-1 alpha_h -- exact for rank one,
+      # the more cautious direction otherwise -- with its precision multiplied
+      # by 'weight'. Eigenvalue by eigenvalue, tau^2 = (1 - (1 - rho^2) / t*) / rho^2.
+      #
+      # t* is bounded on both sides. Above one tau would exceed one and the
+      # prior would push away from sp(H); it is capped there, which is the
+      # identity. Below 1 - rho^2 there is no tau: even T = 0 leaves the tilt
+      # that much room per period, so rho limits how informative the prior can
+      # be, and the request is floored at T = 0 with a warning.
+      #
+      # The floor is the tightest *prior*, not the tightest posterior. T is also
+      # the persistence of the tilt, so near zero each period's tilt is informed
+      # by that period's data alone and the posterior can widen again -- on e6 at
+      # rho = 0.999, T = 0.44 left a tighter posterior than T = 0. The roxygen
+      # details say so for the user.
+      #
+      # The state before the sample gets the stationary distribution the
+      # transition implies, N(0, I_r kron P_tau* / (1 - rho^2)) with
+      # P_tau* = H H' + H_perp T* H_perp'. Both are computed at coint$rho and, if
+      # rho is drawn, do not follow the draw -- as with v_inv above.
+      if (coint_p_tau_ml) {
+        k_beta <- n_ect / k
+        if (NROW(object[["data"]][["train"]][["y"]]) <=
+            NCOL(object[["data"]][["train"]][["x"]]) + k_beta) {
+          stop("Not enough observations for the maximum likelihood estimate that ",
+               "'coint$p_tau_i = \"ml\"' is based on.")
+        }
+
+        rho <- coint[["rho"]]
+        weight <- if (is.null(coint[["weight"]])) 1 else coint[["weight"]]
+
+        ml <- .coint_ml(object)
+        h <- ml[["beta"]] %*% solve(.mroot(crossprod(ml[["beta"]])))
+        h_perp <- qr.Q(qr(h), complete = TRUE)[, -(1:r), drop = FALSE]
+        alpha_h <- ml[["alpha"]] %*% t(crossprod(h, ml[["beta"]]))
+
+        info_alpha <- min(eigen(t(alpha_h) %*% solve(ml[["omega"]]) %*% alpha_h,
+                                symmetric = TRUE)$values)
+        target <- solve(t(h_perp) %*% tcrossprod(ml[["r1"]]) %*% h_perp) /
+          (weight * info_alpha)
+        target <- eigen((target + t(target)) / 2, symmetric = TRUE)
+
+        floor_t <- 1 - rho^2
+        if (any(target[["values"]] < floor_t)) {
+          warning("Argument 'coint$weight' asks for a tighter prior on the cointegration ",
+                  "space than 'coint$rho' = ", rho, " allows; the transition is set to ",
+                  "T = 0 in the directions concerned. A value of 'coint$rho' closer to one ",
+                  "leaves room for more.")
+        }
+        t_star <- pmin(pmax(target[["values"]], floor_t), 1)
+
+        # Capped at one in every direction is no prior on the direction at all,
+        # and the noninformative prior built above stays as it is.
+        if (any(t_star < 1)) {
+          tau <- pmin(sqrt(pmax(0, 1 - floor_t / t_star)) / rho, 1)
+          basis <- h_perp %*% target[["vectors"]]
+          p_tau <- tcrossprod(h) + basis %*% diag(tau, nrow = length(tau)) %*% t(basis)
+          p_tau_star_inv <- tcrossprod(h) +
+            basis %*% diag(1 / t_star, nrow = length(t_star)) %*% t(basis)
+
+          object[["priors"]][["beta"]][["p_tau"]] <- (p_tau + t(p_tau)) / 2
+          object[["priors"]][["beta"]][["v_inv"]] <-
+            kronecker(diag(1, r), floor_t * (p_tau_star_inv + t(p_tau_star_inv)) / 2)
+        }
       }
     } else {
 

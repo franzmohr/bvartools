@@ -96,15 +96,31 @@ inline arma::mat reparameterise_alpha(const arma::mat &alpha, const arma::mat &d
     return alpha * arma::solve(arma::sqrtmat_sympd(arma::trans(alpha) * alpha), diag_r);
 }
 
+/// The transition of the cointegration state equation with rho taken out,
+/// I_r kron P_tau: the same P_tau for each of the rank relations, which `beta`
+/// stacks as vec of a k_beta x rank matrix. An empty `p_tau` is the identity. See
+/// TvpCointSpacePrior::p_tau.
+inline arma::mat coint_state_transition(const arma::mat &p_tau, const int rank, const int k_beta)
+{
+    if (p_tau.is_empty())
+    {
+        const arma::uword n_beta = static_cast<arma::uword>(rank * k_beta);
+        return arma::eye<arma::mat>(n_beta, n_beta);
+    }
+    return arma::kron(arma::eye<arma::mat>(rank, rank), p_tau);
+}
+
 /// One draw of rho, the autoregression of the cointegration state equation
 ///
-///     beta_t = rho beta_{t-1} + eta_t,   eta_t ~ N(0, I),   t = 1, ..., T,
+///     beta_t = rho P beta_{t-1} + eta_t,   eta_t ~ N(0, I),   t = 1, ..., T,
 ///
-/// given the path `beta` (n_beta x tt, one period per column) and the state
-/// `beta0` of the period before it.
+/// given the path `beta` (n_beta x tt, one period per column), the state
+/// `beta0` of the period before it, and `transition`, the P = I_r kron P_tau of
+/// coint_state_transition().
 ///
-/// With the innovation variance fixed at the identity, the path contributes a
-/// normal likelihood in rho whose sufficient statistics are the two sums below,
+/// With the innovation variance fixed at the identity, rho is the coefficient of
+/// a regression of beta_t on P beta_{t-1}: the path contributes a normal
+/// likelihood in rho whose sufficient statistics are the two sums below,
 /// and the prior is uniform on an interval, so the conditional is that normal
 /// truncated to the interval -- a Gibbs block, not the Metropolis-within-Gibbs
 /// step Koop, Leon-Gonzalez and Strachan (2011) need.
@@ -121,19 +137,22 @@ inline arma::mat reparameterise_alpha(const arma::mat &alpha, const arma::mat &d
 /// beta_0 does enter through the t = 1 term of the likelihood, which is the
 /// whole reason it is an argument.
 inline double draw_coint_rho(const arma::mat &beta, const arma::vec &beta0,
-                             const CointRhoPrior &prior)
+                             const arma::mat &transition, const CointRhoPrior &prior)
 {
     const arma::uword tt = beta.n_cols;
 
-    // sum_t beta_{t-1}' beta_t and sum_t beta_{t-1}' beta_{t-1}, with the lagged
-    // path never formed: it is the path itself shifted by a column, plus beta_0
-    // in front.
-    double sum_cross = arma::dot(beta0, beta.col(0));
-    double sum_square = arma::dot(beta0, beta0);
+    // sum_t (P beta_{t-1})' beta_t and sum_t (P beta_{t-1})' (P beta_{t-1}). The
+    // lagged path is the path shifted by a column with beta_0 in front, and it is
+    // split the way it was before P existed, so that under P = I every sum is
+    // formed from the same numbers in the same order.
+    const arma::vec lagged0 = transition * beta0;
+    double sum_cross = arma::dot(lagged0, beta.col(0));
+    double sum_square = arma::dot(lagged0, lagged0);
     if (tt > 1)
     {
-        sum_cross += arma::accu(beta.cols(0, tt - 2) % beta.cols(1, tt - 1));
-        sum_square += arma::accu(arma::square(beta.cols(0, tt - 2)));
+        const arma::mat lagged = transition * beta.cols(0, tt - 2);
+        sum_cross += arma::accu(lagged % beta.cols(1, tt - 1));
+        sum_square += arma::accu(arma::square(lagged));
     }
 
     // A path that is identically zero says nothing about rho, and its posterior

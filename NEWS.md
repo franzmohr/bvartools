@@ -1,5 +1,36 @@
 # bvartools (development version)
 
+* **A time varying cointegration space can be centred on the maximum
+  likelihood estimate as well.** For VEC models with `tvp = TRUE`,
+  `add_priors(coint = list(rho = 0.999, p_tau_i = "ml", weight = 1))` uses the
+  informative marginal prior of Koop et al. (2011, working paper version,
+  eq. 12): the transition of the state equation becomes
+  `rho (I_r kron P_tau)` with `P_tau = H H' + H_perp T H_perp'`, `H` spanning
+  Johansen's estimate of the space, and the state before the sample gets the
+  stationary distribution that transition implies. `T` is set so that the
+  prior spread of how far beta tilts away from `sp(H)` in each period matches
+  the sampling distribution of the estimator, worth `weight` samples. The
+  transition is stored as `object$priors$beta$p_tau`.
+
+  `rho` bounds how informative this can be: even `T = 0` leaves a tilt of
+  about `sqrt(1 - rho^2)` per period, and `add_priors()` warns when the
+  requested weight asks for more.
+
+  A larger weight does not always tighten the posterior. It lowers `T`, and
+  `T` is also how much of the tilt persists from one period to the next; near
+  `T = 0` each period's tilt is informed by that period's data alone, and the
+  posterior can widen again. On `e6` with `rho = 0.999`, `weight = 1`
+  (`T` about 0.44) gave a tighter posterior than `weight = 100` (`T = 0`).
+  Weights that keep `T` clearly above zero are the useful range.
+
+  A weight so small that `T` is the identity
+  in every direction leaves the prior as it was, so such a model's draws are
+  those of the noninformative one.
+
+  This needs the updated BayesTS core vendored with it, whose three
+  time-varying VEC samplers read `p_tau`; for models without it their draws
+  are unchanged.
+
 * **The cointegration space prior can be centred on the maximum likelihood
   estimate.** For VEC models with constant cointegration vectors,
   `add_priors(coint = list(v_i = ..., p_tau_i = "ml", weight = 1))` centres the

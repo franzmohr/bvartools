@@ -50,7 +50,12 @@ struct CointRhoPrior
 
 /// Prior on a cointegration space that moves with time:
 ///
-///     beta_t = rho beta_{t-1} + eta_t,   eta_t ~ N(0, I).
+///     beta_t = rho (I_r kron P_tau) beta_{t-1} + eta_t,   eta_t ~ N(0, I).
+///
+/// With `p_tau` empty the transition is rho alone: the space at t is centred on
+/// the space at t - 1, and its marginal prior is uniform at every t -- Koop,
+/// Leon-Gonzalez and Strachan (2011, eq. 6). With `p_tau` set it is their
+/// informative marginal prior instead (working paper version, eq. 12).
 ///
 /// The innovation variance is the identity and is deliberately not a knob. Only
 /// the product alpha beta' is identified, so something has to fix beta's scale;
@@ -76,6 +81,26 @@ struct TvpCointSpacePrior
 
     /// Uniform prior on `rho`, and the switch that turns its draw on.
     CointRhoPrior rho_prior;
+
+    /// k_beta x k_beta: the transition of the state equation with rho taken out.
+    ///
+    /// Koop, Leon-Gonzalez and Strachan's informative marginal prior sets it to
+    /// P_tau = H H' + tau H_perp H_perp' with H semi-orthogonal and 0 <= tau <= 1.
+    /// The part of beta along sp(H) then keeps rho and the part off it decays at
+    /// rho tau, so the space at t is centred between the space at t - 1 and sp(H),
+    /// and the mode of its marginal distribution is sp(H) at every t. It enters as
+    /// the transition rather than the innovation variance, which is what leaves
+    /// beta's scale pinned as above. Any symmetric matrix with eigenvalues in
+    /// [0, 1] is accepted -- a tau per direction rather than one.
+    ///
+    /// Empty means the identity: the noninformative prior, and what every file
+    /// written before this field describes.
+    ///
+    /// Their prior on the state at the start of the sample is the stationary
+    /// distribution the transition implies, N(0, I_r kron P_tau* / (1 - rho^2))
+    /// with tau* = (1 - rho^2) / (1 - rho^2 tau^2). Here that is `initial_state`
+    /// below, which the file supplies -- for this prior as for the identity.
+    arma::mat p_tau;
 
     /// Normal on the state of the period before the sample.
     NormalPrior initial_state;

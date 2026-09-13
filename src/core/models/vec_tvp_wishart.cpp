@@ -21,6 +21,7 @@ namespace bayests
 using core::BvsBlock;
 using core::BvsScope;
 using core::bvs_sweep;
+using core::coint_state_transition;
 using core::draw_coint_rho;
 using core::draw_normal_precision;
 using core::fill_z_alpha;
@@ -117,7 +118,7 @@ VecTvpWishartDraws VecTvpWishartSampler::draw_coefficients(const VecTvpWishartIn
     arma::mat &z_a = a_bvs ? z_masked : z;
 
     // Cointegration block
-    arma::mat beta, beta_B, beta_sigma, z_b, ystar;
+    arma::mat beta, beta_B, beta_P, beta_PtP, beta_sigma, z_b, ystar;
     arma::vec beta0;
     arma::mat beta0_post_v;
 
@@ -136,13 +137,19 @@ VecTvpWishartDraws VecTvpWishartSampler::draw_coefficients(const VecTvpWishartIn
         // Fixed for the whole chain, unlike a_sigma: the unit state variance is
         // what pins beta's scale against alpha's. See TvpCointSpacePrior. Being
         // the identity, it is its own inverse, which is why the initial state
-        // draw below reads it directly on both sides.
+        // draw below needs no inverse of it.
         beta_sigma = arma::eye<arma::mat>(n_beta, n_beta);
-        beta_B = rho * arma::eye<arma::mat>(n_beta, n_beta);
 
-        // beta_1 = rho beta_0 + eta, so the prior precision picks up rho^2 and
-        // the right-hand side one rho.
-        beta0_post_v = input.beta_prior.initial_state.v_inv + rho * rho * beta_sigma;
+        // The transition is rho P, with P = I_r kron P_tau the identity unless
+        // the file centres the space's marginal prior on a given one. P is fixed
+        // for the chain and rho may not be, so beta_B is rebuilt from the two.
+        beta_P = coint_state_transition(input.beta_prior.p_tau, rank, k_beta);
+        beta_PtP = arma::trans(beta_P) * beta_P;
+        beta_B = rho * beta_P;
+
+        // beta_1 = rho P beta_0 + eta, so the prior precision picks up
+        // rho^2 P'P and the right-hand side rho P' beta_1.
+        beta0_post_v = input.beta_prior.initial_state.v_inv + rho * rho * beta_PtP;
 
         out.beta = arma::mat(n_beta * tt, iterations);
 
@@ -245,25 +252,25 @@ VecTvpWishartDraws VecTvpWishartSampler::draw_coefficients(const VecTvpWishartIn
 
                 fill_z_beta(z_b, a, w_t, k, rank);
 
-                // rho * beta0, not beta0. The smoother's sixth argument is the
+                // rho P beta0, not beta0. The smoother's sixth argument is the
                 // prior mean of the state the *first* observation loads on, and
                 // it does not put the transition through it -- so what belongs
-                // there is beta_1's mean under beta_1 = rho beta_0 + eta, which
+                // there is beta_1's mean under beta_1 = rho P beta_0 + eta, which
                 // is the state before the sample carried forward one period.
                 // Passing beta_0 itself would be the random walk's answer, and
-                // is only right at rho = 1; below it the smoother and the
+                // is only right at rho P = I; otherwise the smoother and the
                 // beta_0 draw a few lines down would be fitting different
                 // models, one centring beta_1 over beta_0 and the other over
-                // rho beta_0.
+                // rho P beta_0.
                 beta = kalman_durbin_koopman_2002(ystar, z_b, u_sigma, beta_sigma, beta_B,
-                                                  rho * beta0, beta_sigma)
+                                                  rho * beta_P * beta0, beta_sigma)
                            .cols(0, tt - 1);
 
                 // Draw beta0
                 beta0 = draw_normal_precision(
                     beta0_post_v, input.beta_prior.initial_state.v_inv *
                                           input.beta_prior.initial_state.mu +
-                                      rho * beta.col(0));
+                                      rho * arma::trans(beta_P) * beta.col(0));
 
                 // Draw rho
                 //
@@ -274,9 +281,9 @@ VecTvpWishartDraws VecTvpWishartSampler::draw_coefficients(const VecTvpWishartIn
                 // are rebuilt from it for the next draw.
                 if (rho_prior.draw)
                 {
-                    rho = draw_coint_rho(beta, beta0, rho_prior);
-                    beta_B.diag().fill(rho);
-                    beta0_post_v = input.beta_prior.initial_state.v_inv + rho * rho * beta_sigma;
+                    rho = draw_coint_rho(beta, beta0, beta_P, rho_prior);
+                    beta_B = rho * beta_P;
+                    beta0_post_v = input.beta_prior.initial_state.v_inv + rho * rho * beta_PtP;
                 }
 
                 // Carry the new cointegration space into the regressors, for the

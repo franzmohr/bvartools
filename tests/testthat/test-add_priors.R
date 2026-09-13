@@ -70,6 +70,21 @@ test_that("add_priors rejects unknown elements of sigma", {
   )
 })
 
+test_that("add_priors rejects unknown elements of coint", {
+  expect_error(
+    add_priors(fx_vec_model(), coef = list(v_i = 1, v_i_det = 1 / 10),
+               coint = list(v_i = 0, p_tau = 1),
+               sigma = list(df = "k", scale = 1)),
+    "Element 'p_tau' in argument 'coint' is not recognised"
+  )
+  expect_error(
+    add_priors(fx_vec_model(), coef = list(v_i = 1, v_i_det = 1 / 10),
+               coint = list(v_i = 0, p_tau_i = 1, rho_mn = 0.9),
+               sigma = list(df = "k", scale = 1)),
+    "Element 'rho_mn' in argument 'coint' is not recognised"
+  )
+})
+
 test_that("VEC priors cover beta, the short-run coefficients and sigma", {
   model <- fx_vec_priors()
   spec <- model[["model"]]

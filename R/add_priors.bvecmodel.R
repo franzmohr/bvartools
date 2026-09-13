@@ -21,10 +21,7 @@
 #' @details None of the arguments \code{coef}, \code{coint}, \code{sigma} and
 #' \code{varsel} provides default hyperparameters: every value that a model needs
 #' must be given in the list it belongs to. A missing required element raises an
-#' error, as does an element of \code{coef}, \code{sigma} or \code{varsel} that
-#' is not listed below. Elements of \code{coint} that are not listed below are
-#' ignored without a message, so a misspelt name there leaves the setting it was
-#' meant for unapplied.
+#' error, as does an element that is not listed below.
 #'
 #' Argument \code{coef} can contain the following elements:
 #' \describe{
@@ -343,6 +340,13 @@ add_priors.bvecmodel <- function(object,
   }
 
   ## cointegration ----
+  allowed_coint_arguments <- c("v_i", "p_tau_i", "weight", "rho", "rho_min", "rho_max")
+  for (i in names(coint)) {
+    if (!i %in% allowed_coint_arguments) {
+      stop(paste0("Element '", i, "' in argument 'coint' is not recognised."))
+    }
+  }
+
   if (object[["model"]][["tvp"]]) {
     if (!"rho" %in% names(coint)) {
       stop("Argument 'coint$rho' must be specified for VEC models with time varying cointegration parameters.")

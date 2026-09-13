@@ -352,3 +352,50 @@ test_that("BVS can be combined with a Minnesota prior without v_i", {
   expect_true(all(c("v_inv", "inprior", "include") %in%
                     names(vec_model[["priors"]][["a"]])))
 })
+
+test_that("varsel$exclude_det keeps deterministic terms out of the selection", {
+  model <- create_bvarmodel(var_data(), p = 1, deterministic = "const",
+                            varsel = "bvs", iterations = 10, burnin = 5)
+  spec <- model[["model"]]
+  priors <- function(exclude_det) {
+    add_priors(model, coef = list(v_i = 1, v_i_det = 1),
+               sigma = list(df = 1, scale = 0.0001),
+               varsel = list(inprior = 0.5, exclude_det = exclude_det))
+  }
+
+  n_lagged <- spec[["k"]] * spec[["k"]] * spec[["p"]]
+  n_det <- spec[["k"]] * spec[["n"]]
+  expect_length(priors(TRUE)[["priors"]][["a"]][["include"]], n_lagged)
+  expect_length(priors(FALSE)[["priors"]][["a"]][["include"]], n_lagged + n_det)
+})
+
+test_that("add_priors rejects unknown elements of varsel", {
+  var_ssvs <- create_bvarmodel(var_data(), p = 1, deterministic = "const",
+                               varsel = "ssvs", iterations = 10, burnin = 5)
+  expect_error(
+    add_priors(var_ssvs, coef = list(v_i = 1, v_i_det = 1),
+               sigma = list(df = 1, scale = 0.0001),
+               varsel = list(inprior = 0.5, tau = c(0.05, 10),
+                             exclude_deterministic = TRUE)),
+    "Element 'exclude_deterministic' in argument 'varsel' is not recognised"
+  )
+
+  var_bvs <- create_bvarmodel(var_data(), p = 1, deterministic = "const",
+                              varsel = "bvs", iterations = 10, burnin = 5)
+  expect_error(
+    add_priors(var_bvs, coef = list(v_i = 1, v_i_det = 1),
+               sigma = list(df = 1, scale = 0.0001),
+               varsel = list(inprior = 0.5, exclude_deterministic = TRUE)),
+    "Element 'exclude_deterministic' in argument 'varsel' is not recognised"
+  )
+
+  vec_bvs <- create_bvecmodel(vec_data(), p = 1, r = 1, const = "unrestricted",
+                              varsel = "bvs", iterations = 10, burnin = 5)
+  expect_error(
+    add_priors(vec_bvs, coef = list(v_i = 1, v_i_det = 1 / 10),
+               coint = list(v_i = 0, p_tau_i = 1),
+               sigma = list(df = "k", scale = 1),
+               varsel = list(inprior = 0.5, inprob = 0.5)),
+    "Element 'inprob' in argument 'varsel' is not recognised"
+  )
+})

@@ -1,14 +1,27 @@
 
+.add_priors_check_varsel_names <- function(varsel) {
+
+  allowed_varsel_arguments <- c("inprior", "covar", "exclude_det", "minnesota",
+                                "tau", "semiautomatic")
+  for (i in names(varsel)) {
+    if (!i %in% allowed_varsel_arguments) {
+      stop(paste0("Element '", i, "' in argument 'varsel' is not recognised."))
+    }
+  }
+}
+
 .add_priors_check_bvs <- function(object, bvs) {
-  
+
   use_bvs_error <- FALSE
-  
+
   if (object[["model"]][["varsel"]] == "bvs") {
-    
+
     if (is.null(bvs)) {
       stop("BVS was chosen as variable selection algorithm, but no prior specification was provided.")
     }
-    
+
+    .add_priors_check_varsel_names(bvs)
+
     if (is.null(bvs[["inprior"]])) {
       stop("Argument 'bvs$inprior' must be specified for BVS")
     }
@@ -159,7 +172,9 @@
 .add_priors_check_ssvs <- function(object, ssvs) {
   
   use_ssvs_error <- FALSE
-  
+
+  .add_priors_check_varsel_names(ssvs)
+
   if (is.null(ssvs[["inprior"]])) {
     stop("Argument 'varsel$inprior' must be specified for SSVS.")
   }

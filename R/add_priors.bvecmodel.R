@@ -21,8 +21,8 @@
 #' @details None of the arguments \code{coef}, \code{coint}, \code{sigma} and
 #' \code{varsel} provides default hyperparameters: every value that a model needs
 #' must be given in the list it belongs to. A missing required element raises an
-#' error, as does an element of \code{coef} that is not listed below. Elements of
-#' \code{coint}, \code{sigma} and \code{varsel} that are not listed below are
+#' error, as does an element of \code{coef} or \code{varsel} that is not listed
+#' below. Elements of \code{coint} and \code{sigma} that are not listed below are
 #' ignored without a message, so a misspelt name there leaves the setting it was
 #' meant for unapplied.
 #'

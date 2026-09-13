@@ -1,5 +1,18 @@
 # bvartools (development version)
 
+* **The documentation warns against scaling the error correction term of a VEC
+  model with time varying coefficients.** In the vignette on TVP-SV-VEC models,
+  full-length chains on a scaled error correction term let the coefficient paths
+  absorb the residuals of the short-term interest rate equation in one chain out
+  of four, depending on nothing but the seed: the volatility of that equation
+  collapsed to a nearly flat fraction of the one of a least squares fit. A tighter
+  `coint$rho` made that rarer without preventing it. On unscaled series with
+  `coef$rate = 0.000001`, eight chains with different seeds agreed. The section on
+  the prior on the cointegration space in `?cointspace_prior`, which
+  `?add_priors.bvecmodel` shows, now says so. It recommends unscaled series, a
+  small `coef$rate` and a comparison of the residual variances with those of a
+  least squares fit across seeds. The vignette estimates its models that way.
+
 * **The prior on the cointegration space is built by an exported function,
   `cointspace_prior()`.** `add_priors()` for VEC models checks `coint` and builds
   `priors$beta` through it, and a package with VEC models of its own layout can

@@ -1,5 +1,26 @@
 # bvartools (development version)
 
+* **Time varying VEC models and expanding windows of VEC models can be
+  analysed through their VAR representation.** `vec_to_var()` used to refuse
+  the posterior draws of a model with time varying parameters. It now applies
+  the transformation period by period and returns a VAR model with time
+  varying parameters, whose forecasts start from the last period and whose
+  impulse responses and variance decompositions are those of the period asked
+  for. The draws of the state variances of the VEC coefficients and of `rho`
+  are dropped. A new `vec_to_var()` method for expanding windows opens the
+  route to forecasts, forecast errors and out-of-sample selection criteria for
+  VEC models, which `add_forecast_input()` pointed to but no method provided.
+
+* **Unreliable WAIC, AIC, BIC and HQ are flagged.** All four rest on the
+  variance of the pointwise log-likelihood across draws -- WAIC as its penalty,
+  AIC, BIC and HQ through the deviance at the point estimate. Where that
+  variance exceeds 0.4 in a period the correction cannot be relied on (Vehtari,
+  Gelman and Gabry, 2017), and a time varying or stochastic volatility model
+  sampled briefly could report criteria far below its fit, even negative, with
+  nothing to say so. The number of such periods is now stored with WAIC as
+  attribute `n_high_var` and printed under the criteria, as the Pareto k
+  diagnostic of LOOIC already was.
+
 * **`add_priors()` rejects unknown elements in all of its arguments.** It
   already did for `coef`, but ignored a misspelt element of `sigma`, `varsel`
   and `coint` without a message, so the setting it was meant for was silently

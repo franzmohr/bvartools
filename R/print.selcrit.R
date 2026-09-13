@@ -32,6 +32,7 @@ print.selcrit <- function(x, digits = max(3L, getOption("digits") - 3L), ...){
     
     .print_criteria_table(result, digits = digits, ...)
 
+    .print_waic_diagnostics(x[["WAIC"]])
     .print_loo_diagnostics(x[["LOOIC"]])
     
   }

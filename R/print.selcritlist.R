@@ -60,6 +60,11 @@ print.selcritlist <- function(x, digits = max(3L, getOption("digits") - 3L), rel
       }
       .print_criteria_table(temp, digits = digits, ...)
 
+      # Under WAIC, since it is the last of the four criteria the note covers.
+      if (criteria[j] == "WAIC") {
+        .print_waic_diagnostics_list(x)
+      }
+
       if (criteria[j] == "LOOIC") {
         .print_loo_diagnostics_list(x)
       }

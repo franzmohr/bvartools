@@ -69,3 +69,79 @@ test_that("a modellist of VEC models is converted element by element", {
   expect_length(converted, 2)
   expect_true(all(vapply(converted, inherits, logical(1), "bvarmodel")))
 })
+
+test_that("a time varying VEC model is converted period by period", {
+  vec <- fx_vec_tvp_fitted("sv")
+  var <- vec_to_var(vec)
+  k <- vec[["model"]][["k"]]
+  r <- vec[["model"]][["rank"]]
+  tt <- nrow(vec[["data"]][["train"]][["y"]])
+  n_vec <- ncol(vec[["data"]][["train"]][["z"]])
+  n_var <- ncol(var[["data"]][["train"]][["z"]])
+  k_beta <- ncol(vec[["data"]][["train"]][["w"]])
+
+  expect_s3_class(var, "bvarmodel")
+  expect_true(var[["model"]][["tvp"]])
+  expect_identical(var[["model"]][["algorithm"]], "VarTvpStochvol")
+  expect_identical(dim(var[["posterior"]][["a"]][["coeffs"]]),
+                   c(nrow(vec[["posterior"]][["a"]][["coeffs"]]), as.integer(n_var * tt)))
+  # The drift of the VEC coefficients and the cointegration space have no
+  # counterpart in levels; the error term is shared.
+  expect_null(var[["posterior"]][["beta"]])
+  expect_null(var[["posterior"]][["a"]][["sigma"]])
+  expect_equal(var[["posterior"]][["u_sigma_inv"]][["coeffs"]],
+               vec[["posterior"]][["u_sigma_inv"]][["coeffs"]])
+
+  # With p = 2, A_1 = I + Pi_t + Gamma_1 and A_2 = -Gamma_1 in every period.
+  draw <- 1L
+  for (period in c(1L, tt)) {
+    a_vec <- vec[["posterior"]][["a"]][["coeffs"]][draw, (period - 1) * n_vec + seq_len(n_vec)]
+    alpha <- matrix(a_vec[seq_len(k * r)], k)
+    gamma <- matrix(a_vec[k * r + seq_len(k^2)], k)
+    beta <- matrix(vec[["posterior"]][["beta"]][["coeffs"]][draw, (period - 1) * k_beta * r +
+                                                              seq_len(k_beta * r)], k_beta)
+    a_var <- var[["posterior"]][["a"]][["coeffs"]][draw, (period - 1) * n_var + seq_len(n_var)]
+
+    expect_equal(matrix(a_var[seq_len(k^2)], k),
+                 diag(1, k) + alpha %*% t(beta[seq_len(k), , drop = FALSE]) + gamma)
+    expect_equal(matrix(a_var[k^2 + seq_len(k^2)], k), -gamma)
+  }
+})
+
+test_that("a converted time varying VEC model forecasts and responds", {
+  var <- vec_to_var(fx_vec_tvp_fitted("gamma"))
+
+  expect_no_error(summary(var, period = 1))
+  expect_s3_class(irf(var, impulse = "R", response = "Dp", n_ahead = 3), "bvarirf")
+  expect_s3_class(fevd(var, response = "Dp", n_ahead = 3, period = 1), "bvarfevd")
+  expect_plots(plot(var))
+
+  forecast <- add_posterior_forecasts(add_forecast_input(var, n_ahead = 2))
+  expect_identical(nrow(forecast[["posterior"]][["forecast"]]), as.integer(fx_iterations))
+  expect_identical(ncol(forecast[["posterior"]][["forecast"]]),
+                   as.integer(2 * var[["model"]][["k"]]))
+})
+
+test_that("an expanding window of VEC models can be evaluated out of sample", {
+  full <- vec_data()
+  train <- stats::window(full, end = c(1987, 4))
+  model <- create_bvecmodel(train, p = 2, r = 1, const = "unrestricted",
+                            iterations = 10, burnin = 5)
+  model <- add_priors(model, coef = list(v_i = 1, v_i_det = 1 / 10),
+                      coint = list(v_i = 0, p_tau_i = 1),
+                      sigma = list(df = "k", scale = 1))
+  windows <- use_expanding_window(model, start = c(1987, 2))
+  windows <- add_initial_values(windows)
+  set.seed(23)
+  windows <- add_posterior_coefficients(windows)
+
+  converted <- vec_to_var(windows)
+  expect_s3_class(converted, "expandingwindow")
+  expect_true(all(vapply(converted, inherits, logical(1), "bvarmodel")))
+
+  converted <- add_forecast_input(converted, n_ahead = 2)
+  converted <- add_posterior_forecasts(converted)
+  converted <- add_forecast_errors(converted, test_sample = full)
+  criteria <- selection_criteria(converted)
+  expect_true(all(c("FE", "AFE", "RSFE") %in% names(criteria)))
+})

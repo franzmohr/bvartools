@@ -70,6 +70,17 @@ to the results of variable selection algorithms: a coefficient of the VAR
 representation is the sum of multiple coefficients of the VEC model, so no
 single inclusion indicator describes it and the draws of those indicators are
 dropped.
+
+A model with time varying parameters is a sequence of VEC models, one per
+period, and so is its VAR representation: the transformation is applied to
+the draws of each period in turn, which yields a VAR model with time varying
+parameters whose coefficient draws are the paths of the coefficients in
+levels. Its forecasts start from the coefficients of the last period of the
+sample, and its impulse responses and variance decompositions are those of
+the period given in their argument \code{period}. The draws of the variances
+of the state equations of the VEC coefficients and of \eqn{\rho} are dropped,
+since they describe how the coefficients of the VEC model drift and have no
+counterpart among the coefficients in levels.
 }
 \examples{
 

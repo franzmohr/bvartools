@@ -258,3 +258,34 @@ test_that("a single draw leaves the cross validated criteria out", {
   expect_null(criteria[["LOOIC"]])
   expect_false(is.na(criteria[["AIC"]][["mean"]]))
 })
+
+test_that("a pointwise log-likelihood too variable for its correction is reported", {
+  model <- fx_var_fitted()
+  shape <- dim(as.matrix(model[["posterior"]][["loglik"]]))
+  set.seed(20260913)
+
+  # A variance far below the threshold in every period ...
+  calm <- matrix(stats::rnorm(prod(shape), mean = -2, sd = 0.1), shape[1])
+  model[["posterior"]][["loglik"]] <- calm
+  criteria <- selection_criteria(model)
+  expect_identical(attr(criteria[["WAIC"]], "n_high_var"), 0L)
+  expect_false(any(grepl("log-likelihood variance", utils::capture.output(print(criteria)))))
+
+  # ... and far above it in two periods.
+  wild <- calm
+  wild[, 1:2] <- stats::rnorm(2 * shape[1], mean = -2, sd = 3)
+  model[["posterior"]][["loglik"]] <- wild
+  criteria <- selection_criteria(model)
+  expect_identical(attr(criteria[["WAIC"]], "n_high_var"), 2L)
+  expect_output(print(criteria),
+                "2 periods have a pointwise log-likelihood variance above 0.4")
+
+  # A list of criteria names the model concerned.
+  models <- fx_var_modellist()
+  for (i in seq_along(models)) {
+    shape_i <- dim(as.matrix(models[[i]][["posterior"]][["loglik"]]))
+    models[[i]][["posterior"]][["loglik"]] <-
+      matrix(stats::rnorm(prod(shape_i), mean = -2, sd = if (i == 2) 3 else 0.1), shape_i[1])
+  }
+  expect_output(print(selection_criteria(models)), "in model 2 \\(")
+})

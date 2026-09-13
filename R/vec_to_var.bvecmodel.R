@@ -55,6 +55,17 @@
 #' single inclusion indicator describes it and the draws of those indicators are
 #' dropped.
 #'
+#' A model with time varying parameters is a sequence of VEC models, one per
+#' period, and so is its VAR representation: the transformation is applied to
+#' the draws of each period in turn, which yields a VAR model with time varying
+#' parameters whose coefficient draws are the paths of the coefficients in
+#' levels. Its forecasts start from the coefficients of the last period of the
+#' sample, and its impulse responses and variance decompositions are those of
+#' the period given in their argument \code{period}. The draws of the variances
+#' of the state equations of the VEC coefficients and of \eqn{\rho} are dropped,
+#' since they describe how the coefficients of the VEC model drift and have no
+#' counterpart among the coefficients in levels.
+#'
 #' @return An object of class \code{'bvarmodel'} with the elements \code{model} and
 #' \code{data} of the VAR in levels and, if \code{object} was estimated, element
 #' \code{posterior} with the transformed draws, including \code{loglik} if it was
@@ -290,17 +301,17 @@ vec_to_var.bvecmodel <- function(object, ...) {
 
   if (!is.null(object[["posterior"]])) {
 
-    if (isTRUE(specs[["tvp"]])) {
-      stop("Posterior draws of models with time varying parameters cannot be transformed.")
-    }
-
     posterior <- object[["posterior"]]
     mcpar <- attr(posterior[["u_sigma_inv"]][["coeffs"]], "mcpar")
 
     # The covariance of the error term is shared, not transformed, and so are
     # the log likelihood and any forecast: both are already those of the VAR
     # representation.
-    coeffs <- .VecToVarCoefficients(object)[["a"]][["coeffs"]]
+    if (isTRUE(specs[["tvp"]])) {
+      coeffs <- .vec_to_var_path(object)
+    } else {
+      coeffs <- .VecToVarCoefficients(object)[["a"]][["coeffs"]]
+    }
     if (is.null(mcpar)) {
       coeffs <- coda::as.mcmc(coeffs)
     } else {
@@ -316,6 +327,52 @@ vec_to_var.bvecmodel <- function(object, ...) {
   class(result) <- c("bvarmodel", "list")
 
   return(result)
+}
+
+# Coefficient draws of the VAR representation of a VEC model whose coefficients
+# move, laid out period after period as the draws of a time varying VAR model
+# are.
+#
+# A time varying VEC model is a VEC model per period, so the change of basis of
+# the constant case is applied to the draws of each period in turn: the loadings
+# and short-run coefficients of that period in 'a', its cointegration vectors in
+# 'beta', and its error precision if that is a path too, since the library
+# checks the precision against the size of one period. The model list is marked
+# as constant for the call, which is what the library transforms.
+.vec_to_var_path <- function(object) {
+
+  k <- object[["model"]][["k"]]
+  kk <- k * k
+  tt <- nrow(object[["data"]][["train"]][["y"]])
+  n_a <- ncol(object[["data"]][["train"]][["z"]])
+  rank <- object[["model"]][["rank"]]
+  n_beta <- if (isTRUE(rank > 0)) ncol(object[["data"]][["train"]][["w"]]) * rank else 0
+
+  a <- .draws_matrix(object[["posterior"]][["a"]][["coeffs"]])
+  beta <- if (n_beta > 0) .draws_matrix(object[["posterior"]][["beta"]][["coeffs"]]) else NULL
+  u_sigma_inv <- .draws_matrix(object[["posterior"]][["u_sigma_inv"]][["coeffs"]])
+  sigma_path <- .u_sigma_is_path(object, k, tt)
+
+  period_object <- object
+  period_object[["model"]][["tvp"]] <- FALSE
+
+  paths <- vector("list", tt)
+  for (t in seq_len(tt)) {
+    period_posterior <- list(
+      "a" = list("coeffs" = a[, (t - 1) * n_a + seq_len(n_a), drop = FALSE]),
+      "u_sigma_inv" = list("coeffs" = if (sigma_path) {
+        u_sigma_inv[, (t - 1) * kk + seq_len(kk), drop = FALSE]
+      } else {
+        u_sigma_inv
+      }))
+    if (n_beta > 0) {
+      period_posterior[["beta"]] <- list("coeffs" = beta[, (t - 1) * n_beta + seq_len(n_beta), drop = FALSE])
+    }
+    period_object[["posterior"]] <- period_posterior
+    paths[[t]] <- .draws_matrix(.VecToVarCoefficients(period_object)[["a"]][["coeffs"]])
+  }
+
+  return(do.call(cbind, paths))
 }
 
 # Zero-padded lag index, in the format used by create_bvarmodel()

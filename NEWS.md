@@ -1,5 +1,12 @@
 # bvartools (development version)
 
+* **`create_bvarmodel()` uses `s = 2` by default, as its documentation already
+  said and as `create_bvecmodel()` does.** The signature had `s = NULL`, so a
+  call with `exogen` but without `s` stopped with "attempt to set an attribute
+  on NULL" after a warning from `max()`. Such a call now includes the external
+  regressors with two lags. An `s` that is not a vector of non-negative integers
+  is refused with a message naming the argument.
+
 * **Smaller fixes from an audit of the package against the TVP-SV VEC
   vignette.**
 

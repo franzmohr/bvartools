@@ -110,3 +110,25 @@ test_that("invalid input is rejected", {
                                 seasonal = TRUE),
                "must be either 'const' or 'both'")
 })
+
+test_that("exogenous variables enter with two lags by default", {
+  data <- bvartools::at_macrodata
+  model <- create_bvarmodel(data = data[["endogen"]], exogen = data[["exogen"]],
+                            iterations = 10, burnin = 5)
+
+  expect_s3_class(model, "bvarmodel")
+  expect_identical(model[["model"]][["m"]], NCOL(data[["exogen"]]))
+  expect_identical(model[["model"]][["s"]], 2L)
+  x_names <- colnames(model[["data"]][["train"]][["x"]])
+  expect_true(all(paste0("poil.l", c("00", "01", "02")) %in% x_names))
+  expect_false("poil.l03" %in% x_names)
+})
+
+test_that("an invalid lag order of exogenous variables is rejected", {
+  data <- bvartools::at_macrodata
+  for (s in list(NULL, -1, 1.5, NA_real_)) {
+    expect_error(create_bvarmodel(data = data[["endogen"]], exogen = data[["exogen"]],
+                                  s = s, iterations = 10, burnin = 5),
+                 "Argument 's' must contain non-negative integers")
+  }
+})

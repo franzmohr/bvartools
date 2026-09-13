@@ -5,7 +5,8 @@
 #' @param data a time-series object of endogenous variables.
 #' @param p an integer vector of the lag order (default is \code{p = 2}).
 #' @param exogen an optional time-series object of external regressors.
-#' @param s an optional integer vector of the lag order of the external regressors (default is \code{s = 2}).
+#' @param s an integer vector of the lag order of the external regressors (default is \code{s = 2}).
+#' Ignored if \code{exogen} is \code{NULL}.
 #' @param deterministic a character specifying which deterministic terms should
 #' be included. Available values are \code{"none"}, \code{"const"} (default) for an intercept,
 #' \code{"trend"} for a linear trend, and \code{"both"} for an intercept with a linear trend.
@@ -155,7 +156,7 @@
 #' @family model set-up
 #' @export
 create_bvarmodel <- function(data, p = 2,
-                             exogen = NULL, s = NULL,
+                             exogen = NULL, s = 2,
                              deterministic = "const",
                              seasonal = FALSE,
                              structural = FALSE,
@@ -174,6 +175,9 @@ create_bvarmodel <- function(data, p = 2,
   if (!is.null(exogen)) {
     if (!"ts" %in% class(exogen)) {
       stop("Argument 'exogen' must be an object of class 'ts'.")
+    }
+    if (!is.numeric(s) || length(s) == 0 || anyNA(s) || any(s < 0 | s %% 1 != 0)) {
+      stop("Argument 's' must contain non-negative integers when 'exogen' is specified.")
     }
   }
   

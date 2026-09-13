@@ -8,7 +8,7 @@ create_bvarmodel(
   data,
   p = 2,
   exogen = NULL,
-  s = NULL,
+  s = 2,
   deterministic = "const",
   seasonal = FALSE,
   structural = FALSE,
@@ -27,7 +27,8 @@ create_bvarmodel(
 
 \item{exogen}{an optional time-series object of external regressors.}
 
-\item{s}{an optional integer vector of the lag order of the external regressors (default is \code{s = 2}).}
+\item{s}{an integer vector of the lag order of the external regressors (default is \code{s = 2}).
+Ignored if \code{exogen} is \code{NULL}.}
 
 \item{deterministic}{a character specifying which deterministic terms should
 be included. Available values are \code{"none"}, \code{"const"} (default) for an intercept,

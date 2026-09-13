@@ -75,7 +75,7 @@ var_ssvs <- use_expanding_window(var_ssvs, start = expanding_window_start)
 var_ssvs <- add_priors(var_ssvs,
                           coef = list(v_i = 1 / 10, v_i_det = 1 / 100),
                           sigma = list(df = 3, scale = 1),
-                          varsel = list(inprior = 0.5, tau = c(0.05, 10), exclude_deterministic = TRUE))
+                          varsel = list(inprior = 0.5, tau = c(0.05, 10), exclude_det = TRUE))
 
 var_ssvs <- add_initial_values(var_ssvs)
 ```
@@ -95,7 +95,7 @@ var_bvs <- use_expanding_window(var_bvs, start = expanding_window_start)
 var_bvs <- add_priors(var_bvs,
                           coef = list(v_i = 1 / 10, v_i_det = 1 / 100),
                           sigma = list(df = 3, scale = 1),
-                          varsel = list(inprior = 0.5, exclude_deterministic = TRUE))
+                          varsel = list(inprior = 0.5, exclude_det = TRUE))
 
 var_bvs <- add_initial_values(var_bvs)
 ```

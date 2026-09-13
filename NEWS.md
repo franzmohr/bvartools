@@ -1160,12 +1160,6 @@
 * Added `coint_kls2010_reparameterise_two` for more convenient data transformation.
 * Added `coint_prepare_sur_data` for more convenient input data preparation for cointegration simulation.
 * `plot.bvar` and `plot.bvec` allow to specify whether a horizontal line should be added or not.
-* Added convenience function `covar_vector_to_matrix`.
-* Added convenience function `sur_const_to_tvp`.
-* General updates in documentations including update of `Rcpp` dependency in DESCRIPTION file to version 1.0.12.
-* Added `post_gamma_state_variance` for posterior simulation of constant error variances of the state equation.
-* Added `post_gamma_measurement_variance` for posterior simulation of constant error variances of the measurement equation.
-* Renamed `.prep_covar_data` to `covar_prepare_data` and made it visible in R and also callable from C++.
 
 # bvartools 0.3.0
 

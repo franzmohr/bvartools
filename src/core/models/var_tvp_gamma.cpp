@@ -36,7 +36,6 @@ VarTvpGammaDraws VarTvpGammaSampler::draw_coefficients(const VarTvpGammaInput &i
     const int k = input.spec.k;
     const int kk = k * k;
     const int iterations = input.spec.iterations;
-    const int burnin = input.spec.burnin;
     const int draws = input.spec.draws();
 
     const arma::vec y = stacked_response(input.train);
@@ -370,9 +369,9 @@ VarTvpGammaDraws VarTvpGammaSampler::draw_coefficients(const VarTvpGammaInput &i
         refresh_u_sigma_inv_blocks();
 
         // Store draws
-        if (draw >= burnin)
+        if (input.spec.keeps(draw))
         {
-            const int draw_pos = draw - burnin;
+            const int draw_pos = input.spec.kept_index(draw);
 
             // a
             if (use_a)

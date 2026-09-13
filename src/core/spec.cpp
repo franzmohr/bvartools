@@ -3,7 +3,9 @@
 
 #include "bayests/spec.h"
 
+#include <limits>
 #include <stdexcept>
+#include <string>
 
 namespace bayests
 {
@@ -83,6 +85,18 @@ void VarSpec::validate() const
     if (burnin < 0)
     {
         throw std::invalid_argument("burnin cannot be negative");
+    }
+    if (thin < 1)
+    {
+        throw std::invalid_argument("thin must be at least 1, which keeps every draw");
+    }
+    // draws() is an int, and every sampler counts its loop in one.
+    if (iterations > (std::numeric_limits<int>::max() - burnin) / thin)
+    {
+        throw std::invalid_argument(
+            "burnin + iterations * thin = " + std::to_string(burnin) + " + " +
+            std::to_string(iterations) + " * " + std::to_string(thin) +
+            " is longer than a chain can be counted");
     }
 }
 

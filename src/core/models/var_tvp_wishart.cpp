@@ -33,7 +33,6 @@ VarTvpWishartDraws VarTvpWishartSampler::draw_coefficients(const VarTvpWishartIn
     const int k = input.spec.k;
     const int kk = k * k;
     const int iterations = input.spec.iterations;
-    const int burnin = input.spec.burnin;
     const int draws = input.spec.draws();
 
     const arma::vec y = stacked_response(input.train);
@@ -185,9 +184,9 @@ VarTvpWishartDraws VarTvpWishartSampler::draw_coefficients(const VarTvpWishartIn
         
 
         // Store draws
-        if (draw >= burnin)
+        if (input.spec.keeps(draw))
         {
-            const int draw_pos = draw - burnin;
+            const int draw_pos = input.spec.kept_index(draw);
 
             // a
             if (use_a)

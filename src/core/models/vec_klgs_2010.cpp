@@ -75,7 +75,6 @@ VecKlgs2010Draws VecKlgs2010Sampler::draw_coefficients(const VecKlgs2010Input &i
 
     const int k = input.spec.k;
     const int iterations = input.spec.iterations;
-    const int burnin = input.spec.burnin;
     const int draws = input.spec.draws();
 
     const int rank = input.spec.rank;
@@ -254,9 +253,9 @@ VecKlgs2010Draws VecKlgs2010Sampler::draw_coefficients(const VecKlgs2010Input &i
         u_sigma_inv = wishart(u, u_sigma_scale, post_u_sigma_df);
 
         // Store draws
-        if (draw >= burnin)
+        if (input.spec.keeps(draw))
         {
-            const int draw_pos = draw - burnin;
+            const int draw_pos = input.spec.kept_index(draw);
 
             if (use_a)
             {

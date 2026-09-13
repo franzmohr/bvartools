@@ -1,5 +1,26 @@
 # bvartools (development version)
 
+* **Vendored BayesTS core refreshed: the samplers can thin.** **Draws are
+  unchanged**, verified here rather than taken on trust. Sixteen specifications
+  -- all fifteen VAR and VEC algorithms the package reaches, plus
+  `VarNormalGamma` in both its structural and its covariance block form -- were
+  fitted from pinned seeds against the package built before and after the
+  refresh. The comparison covered the coefficients, the log likelihood and a
+  four-step forecast wherever the model has one. Every posterior block of every
+  one of them is bit-identical.
+
+    Upstream's `VarSpec` gained `thin`, with `keeps()` and `kept_index()`, and
+    all of its samplers now keep their draws through those two calls instead of
+    testing `draw >= burnin`. At `thin = 1` the two are exactly that test, which
+    is why nothing moved. Nothing in this package sets `thin` yet: `read_spec()`
+    in `src/bayests_r_io.h` does not read it, so every model still keeps every
+    draw after the burn-in, and `thin()` still thins after the fact. Passing a
+    thinning interval to the sampler, so that a long chain is never held in
+    memory whole, is a change for another time.
+
+    The vendored set is still the same 64 files, so `inst/COPYRIGHTS` is
+    unchanged.
+
 * **`write_to_hdf5()` releases the file of a model before it returns.** The
   specification of a model, its class and the properties of its datasets are
   stored as HDF5 attributes, and they were written with hdf5r's `h5attr<-`,

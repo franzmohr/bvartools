@@ -36,7 +36,6 @@ VarNormalGammaDraws VarNormalGammaSampler::draw_coefficients(const VarNormalGamm
 
     const int k = input.spec.k;
     const int iterations = input.spec.iterations;
-    const int burnin = input.spec.burnin;
     const int draws = input.spec.draws();
 
     const arma::vec y = stacked_response(input.train);
@@ -261,9 +260,9 @@ VarNormalGammaDraws VarNormalGammaSampler::draw_coefficients(const VarNormalGamm
         }
 
         // Store draws
-        if (draw >= burnin)
+        if (input.spec.keeps(draw))
         {
-            const int draw_pos = draw - burnin;
+            const int draw_pos = input.spec.kept_index(draw);
             if (use_a)
             {
                 out.a.col(draw_pos) = a;

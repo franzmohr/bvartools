@@ -32,7 +32,6 @@ namespace bayests
 
         const int k = input.spec.k;
         const int iterations = input.spec.iterations;
-        const int burnin = input.spec.burnin;
         const int draws = input.spec.draws();
 
         const arma::vec y = stacked_response(input.train);
@@ -275,9 +274,9 @@ namespace bayests
             u_sigma_inv = wishart(u, u_sigma_scale, post_u_sigma_df);
 
             // Store draws
-            if (draw >= burnin)
+            if (input.spec.keeps(draw))
             {
-                const int draw_pos = draw - burnin;
+                const int draw_pos = input.spec.kept_index(draw);
 
                 if (use_a)
                 {

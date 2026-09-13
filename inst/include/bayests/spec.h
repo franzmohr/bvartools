@@ -78,6 +78,13 @@ struct VarSpec
     int iterations = 0; ///< Draws kept.
     int burnin = 0;     ///< Draws discarded before the first kept one.
 
+    /// One draw kept for every `thin` run after the burn-in -- the last of each
+    /// block of `thin`, so the chain ends on a kept draw and none is run for
+    /// nothing. It is what lets a slowly mixing chain run long without the kept
+    /// draws, which every result is sized by, growing with it. 1 keeps every
+    /// draw, and is what every model was before the field existed.
+    int thin = 1;
+
     VarSelection varsel = VarSelection::none;
 
     /// Whether the error specification asks for a covariance block -- the
@@ -103,8 +110,18 @@ struct VarSpec
     /// without the sampler knowing.
     double quantile = 0.5;
 
-    /// Total length of the chain.
-    int draws() const { return iterations + burnin; }
+    /// Total length of the chain: the burn-in, then `thin` draws for every one
+    /// kept.
+    int draws() const { return burnin + iterations * thin; }
+
+    /// Whether the chain keeps its `draw`-th draw, counted from zero at the start
+    /// of the burn-in. At thin = 1 this is `draw >= burnin`, which is what every
+    /// sampler tested before thinning existed -- so a chain that does not thin
+    /// consumes the generator exactly as it did.
+    bool keeps(int draw) const { return draw >= burnin && (draw - burnin + 1) % thin == 0; }
+
+    /// The column a kept draw goes in: `draw - burnin` at thin = 1.
+    int kept_index(int draw) const { return (draw - burnin) / thin; }
 
     bool uses_varsel() const { return varsel != VarSelection::none; }
 

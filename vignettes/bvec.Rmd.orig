@@ -21,26 +21,26 @@ knitr::opts_chunk$set(
 This vignette provides the code to set up and estimate a Bayesian vector error correction (BVEC) model with the `bvartools` package. The presented Gibbs sampler is based on the approach of Koop et al. (2010), who propose a prior on the cointegration space. The estimated model has the following form
 
 $$\Delta y_t = \Pi y_{t - 1} + \sum_{l = 1}^{p - 1} \Gamma_l \Delta y_{t - l} + C d_t + u_t,$$
-where $\Pi = \alpha \beta^{\prime}$ with cointegration rank $r$, $u_t \sim N(0, \Sigma)$ and $d_t$ contains an intercept and seasonal dummies. For an introduction to vector error correction models see [https://www.r-econometrics.com/timeseries/vecintro/](https://www.r-econometrics.com/timeseries/vecintro/).
+where $\Pi = \alpha \beta^{\prime}$ with cointegration rank $r$, $u_t \sim N(0, \Sigma)$ and $d_t$ contains deterministic terms. For an introduction to vector error correction models see [https://www.r-econometrics.com/timeseries/vecintro/](https://www.r-econometrics.com/timeseries/vecintro/).
 
 ## Data
 
-To illustrate the workflow of the analysis, data set E6 from Lütkepohl (2006) is used, which contains data on German long-term interest rates and inflation from 1972Q2 to 1998Q4.
+To illustrate the workflow of the analysis, the Austrian long-term interest rate (`lr`) and inflation (`Dp`) are taken from data set `at_macrodata`, both in percent per quarter from 1979Q2 to 2019Q4. The series are seasonally adjusted, so that $d_t$ contains only an intercept.
 
 ```{r data, fig.align='center', fig.height=5, fig.width=4.5}
 library(bvartools)
 
-data("e6")
+data("at_macrodata")
 
-e6 <- e6 * 100
-plot(e6) # Plot the series
+data <- window(at_macrodata[["domestic"]][, c("lr", "Dp")], end = c(2019, 4)) * 100
+plot(data) # Plot the series
 ```
 
 The `create_bvecmodel` function produces an object of class `bvecmodel`, where the element `data$train` contains the data matrices `y`, `w` and `x` for the BVEC estimator, where `y` is the matrix of dependent variables, `w` is a matrix of potentially cointegrated regressors, and `x` is the matrix of non-cointegration regressors.
 
 ```{r}
-object <- create_bvecmodel(e6, p = 4, r = 1,
-                           const = "unrestricted", season = "unrestricted",
+object <- create_bvecmodel(data, p = 4, r = 1,
+                           const = "unrestricted",
                            iterations = 5000, burnin = 1000)
 ```
 
@@ -55,7 +55,7 @@ object <- scale_error_correction(object)
 
 ## Priors
 
-Function `add_priors` adds the necessary prior specifications to object `object`. For the current application we use non-informative priors to compare the with the result in Lütkepohl (2006):
+Function `add_priors` adds the necessary prior specifications to object `object`. For the current application non-informative priors are used:
 
 ```{r}
 object <- add_priors(object,
@@ -165,13 +165,13 @@ The `bvec` function can be used to collect output of the above Gibbs sampler in 
 
 ```{r bvec-object}
 # Number of non-deterministic coefficients
-k_nondet <- (k_x - 4) * k
+k_nondet <- (k_x - 1) * k
 
 # Generate bvecmodel object
 bvec_est <- bvec(y = object[["data"]][["train"]][["y"]],
                  w = object[["data"]][["train"]][["w"]],
                  x = object[["data"]][["train"]][["x"]][, 1:6],
-                 x_d = object[["data"]][["train"]][["x"]][, -(1:6)],
+                 x_d = object[["data"]][["train"]][["x"]][, -(1:6), drop = FALSE],
                  r = 1,
                  alpha = draws_alpha,
                  beta = draws_beta,
@@ -230,8 +230,8 @@ A natural centre for such a prior is the space spanned by Johansen's (1995) maxi
 Because the prior is built from Johansen's estimate on the series as they are stored in the model, it moves with the units of the error correction term, and scaling the series makes practically no difference to the posterior. The model below is therefore estimated without `scale_error_correction`, and consequently without `rescale_error_correction`. If the series are scaled, that has to happen before `add_priors`, which is enforced.
 
 ```{r ml-prior}
-object_ml <- create_bvecmodel(e6, p = 4, r = 1,
-                              const = "unrestricted", season = "unrestricted",
+object_ml <- create_bvecmodel(data, p = 4, r = 1,
+                              const = "unrestricted",
                               iterations = 5000, burnin = 1000)
 
 object_ml <- add_priors(object_ml,
@@ -302,7 +302,7 @@ plot(bvar_pred, n_pre = 20)
 ### Forecast error impulse response
 
 ```{r feir, fig.width=5.5, fig.height=4.5}
-FEIR <- irf(bvar_form, impulse = "R", response = "Dp", n_ahead = 20)
+FEIR <- irf(bvar_form, impulse = "lr", response = "Dp", n_ahead = 20)
 
 plot(FEIR, main = "Forecast Error Impulse Response", xlab = "Period", ylab = "Response")
 ```
@@ -321,7 +321,5 @@ plot(bvar_fevd_oir, main = "OIR-based FEVD of inflation")
 Johansen, S. (1995). *Likelihood-based inference in cointegrated vector autoregressive models*. Oxford: Oxford University Press.
 
 Koop, G., León-González, R., & Strachan R. W. (2010). Efficient posterior simulation for cointegrated models with priors on the cointegration space. *Econometric Reviews, 29*(2), 224-242. <https://doi.org/10.1080/07474930903382208>
-
-Lütkepohl, H. (2006). *New introduction to multiple time series analysis* (2nd ed.). Berlin: Springer.
 
 Pesaran, H. H., & Shin, Y. (1998). Generalized impulse response analysis in linear multivariate models, *Economics Letters, 58*, 17-29. <https://doi.org/10.1016/S0165-1765(97)00214-0>

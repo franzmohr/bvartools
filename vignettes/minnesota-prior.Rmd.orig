@@ -31,16 +31,19 @@ $$ \frac{\kappa_{1} \kappa_{3}}{(l+1)^2} \frac{\sigma_{i}^2}{\sigma_{j}^2} \text
 $$ \kappa_{1} \kappa_{4} \sigma_{i}^2 \textrm{ for deterministic terms,} $$
 where $\sigma_{i}$ is the residual standard deviation of variable $i$ of an unrestricted LS estimate. For exogenous variables $\sigma_{i}$ is the sample standard deviation. If the model does not contain exogenous variables, argument `kappa3` will be ignored.
 
-This vignette illustrates how to use the `bvartools` package to work with the Minnesota prior by reproducing the results of exercise 20.2 in Chan et al. (2019), which uses the quarterly time series for the US CPI inflation rate, unemployment rate, and Fed Funds rate from 1959Q2 to 2007Q4.
+This vignette illustrates how to use the `bvartools` package to work with the Minnesota prior along the lines of exercise 20.2 in Chan et al. (2019). It uses data set `at_macrodata`, which contains quarterly macroeconomic series of Austria, and takes from it the growth rate of real GDP (`dy`), inflation (`Dp`) and the short-term interest rate (`r`), all in percent per quarter and up to 2019Q4, which leaves out the quarters in which the pandemic moved output growth by ten percent.
 
 ```{r data, fig.align='center', message=FALSE, fig.height=5, fig.width=4.5}
 library(bvartools)
 
 # Load data
-data("us_macrodata")
+data("at_macrodata")
+at <- at_macrodata[["domestic"]]
+data <- ts.intersect(dy = diff(at[, "y"]), Dp = at[, "Dp"], r = at[, "r"]) * 100
+data <- window(data, end = c(2019, 4))
 
 # Plot the series
-plot(us_macrodata)
+plot(data)
 ```
 
 ## Workflow for VAR models
@@ -50,7 +53,7 @@ plot(us_macrodata)
 The `create_bvarmodel` function produces an object, which contains information on the specification of the VAR model that should be estimated. The following code specifies a VAR(1) model with an intercept term. The number of iterations and burn-in draws is already specified at this stage.
 
 ```{r}
-model <- create_bvarmodel(us_macrodata, p = 1, deterministic = "const",
+model <- create_bvarmodel(data, p = 1, deterministic = "const",
                           iterations = 5000, burnin = 1000)
 ```
 

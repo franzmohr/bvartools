@@ -24,12 +24,15 @@ library(bvartools)
 
 ## Workflow
 
+The models compete on the growth rate of Austrian real GDP (`dy`), inflation (`Dp`) and the short-term interest rate (`r`) from data set `at_macrodata`, all in percent per quarter and up to 2019Q4, which leaves out the quarters in which the pandemic moved output growth by ten percent. Each model is estimated over an expanding window, whose first estimation sample ends in 2018Q1.
+
 ```{r}
-data("us_macrodata")
+data("at_macrodata")
+at <- at_macrodata[["domestic"]]
+data <- ts.intersect(dy = diff(at[, "y"]), Dp = at[, "Dp"], r = at[, "r"]) * 100
+data <- window(data, end = c(2019, 4))
 
-#us_macrodata <- diff(us_macrodata)
-
-expanding_window_start <- 2006
+expanding_window_start <- 2018
 ```
 
 
@@ -45,7 +48,7 @@ burnin <- 1000
 First, create a series of traditional VAR models:
 
 ```{r}
-var_default <- create_bvarmodel(us_macrodata,
+var_default <- create_bvarmodel(data,
                                 p = 1:4,
                                 deterministic = "const",
                                 iterations = iterations,
@@ -63,7 +66,7 @@ var_default <- add_initial_values(var_default)
 Second, create a series of VAR models with stochastic search variable selection (SSVS):
 
 ```{r}
-var_ssvs <- create_bvarmodel(us_macrodata,
+var_ssvs <- create_bvarmodel(data,
                             p = 4,
                             varsel = "ssvs",
                             deterministic = "const",
@@ -83,7 +86,7 @@ var_ssvs <- add_initial_values(var_ssvs)
 Thrird, create a series of VAR models with Bayesian variable selection à la Korobilis (2013):
 
 ```{r}
-var_bvs <- create_bvarmodel(us_macrodata,
+var_bvs <- create_bvarmodel(data,
                             p = 4,
                             varsel = "bvs",
                             deterministic = "const",
@@ -134,7 +137,7 @@ models <- add_posterior_forecasts(models)
 Calculate forecast errors on which out-of-sample selection criteria will be based:
 
 ```{r}
-models <- add_forecast_errors(models, test_sample = us_macrodata)
+models <- add_forecast_errors(models, test_sample = data)
 ```
 
 

@@ -39,19 +39,23 @@ time varying one.
 
 ## Data
 
-Data set `uk_macrodata` contains a UK short-term interest rate, a long-term
-interest rate and inflation from 1957Q2 to 2009Q2. It is the data set of Koop,
-León-González and Strachan (2011), whose subject is exactly the question this
-model is for: whether the long-run relationship between the two rates and
-inflation is the same in 2009 as it was in 1957.
+Data set `at_macrodata` contains, among the domestic series of Austria, a
+short-term interest rate (`r`), a long-term interest rate (`lr`) and inflation
+(`Dp`). The model uses the three series in percent per quarter from 1979Q2 to
+2019Q4 and asks the question this model is for, and which Koop, León-González
+and Strachan (2011) ask of UK data: whether the long-run relationship between
+the two rates and inflation is the same at the end of the sample as it was at
+its beginning.
 
 
 ``` r
 library(bvartools)
 
-data("uk_macrodata")
+data("at_macrodata")
 
-plot(uk_macrodata, main = "UK interest and inflation rates")
+data <- window(at_macrodata[["domestic"]][, c("r", "lr", "Dp")], end = c(2019, 4)) * 100
+
+plot(data, main = "Austrian interest and inflation rates")
 ```
 
 <div class="figure" style="text-align: center">
@@ -63,7 +67,7 @@ plot(uk_macrodata, main = "UK interest and inflation rates")
 
 
 ``` r
-model <- create_bvecmodel(uk_macrodata, p = 2, r = 1, const = "unrestricted",
+model <- create_bvecmodel(data, p = 2, r = 1, const = "unrestricted",
                           tvp = TRUE, error = "sv+covar", varsel = "bvs",
                           iterations = 3000, burnin = 1000)
 
@@ -91,7 +95,7 @@ model <- scale_error_correction(model)
 ``` r
 model <- add_priors(model,
                     coef = list(v_i = 1, v_i_det = 1 / 10,
-                                shape = 3, rate = 0.0001, rate_det = 0.01),
+                                shape = 3, rate = 0.000001, rate_det = 0.01),
                     coint = list(rho = 0.999),
                     sigma = list(shape = 3, rate = 0.01,
                                  mu = 0, v_i = 0.01,
@@ -103,6 +107,15 @@ Arguments `coef` and `sigma` are the ones of the VAR vignette: prior precisions
 for the initial state of the coefficients, an inverse gamma prior for the
 variances of their state equation, and the prior of the stochastic volatility
 block.
+
+`coef$rate` is two orders of magnitude smaller than in the VAR vignette, which
+illustrates why the scale of the data decides whether a `rate` is small. With
+`rate = 0.0001` the coefficient paths absorb most of the residuals of the
+short-term interest rate equation: the residual standard deviation of that
+equation is then reported at about a tenth of the one of a least squares fit of
+the same regressors, and almost flat over forty years. That is the symptom the
+VAR vignette describes. With `rate = 0.000001` it is somewhat smaller than the
+least squares value, as it should be.
 
 Argument `coint` is where a VEC model differs. `rho` is the autocorrelation of
 the state equation of $\beta$ and must be smaller than one. The prior on the
@@ -120,14 +133,17 @@ out of it as well.
 
 ## Initial values and posterior draws
 
+Initial values of the state variances and volatilities are drawn from their
+priors, so the seed is set before them.
+
 
 ``` r
+set.seed(20260912)
 model <- add_initial_values(model)
 ```
 
 
 ``` r
-set.seed(20260912)
 model <- add_posterior_coefficients(model)
 ```
 
@@ -159,83 +175,83 @@ summary(model)
 #> 
 #> Variable selection algorithm: Bayesian variable selection (Korobilis, 2013)
 #> 
-#> Endogenous variables: rs, rl, Dp
+#> Endogenous variables: r, lr, Dp
 #> 
-#> Period: 208 
+#> Period: 161 
 #> 
-#> Variable: rs 
+#> Variable: r 
 #> 
-#>                   Mean          SD     Naive SD Time-series SD         2.5%
-#> l.rs     -0.0056808471 0.062189674 1.135423e-03    0.002016932 -0.149193704
-#> l.rl      0.0129001966 0.049051432 8.955525e-04    0.001561834 -0.077459925
-#> l.Dp     -0.0554964009 0.058191008 1.062418e-03    0.001787986 -0.169083629
-#> d.rs.l01  0.3839402008 0.088368361 1.613378e-03    0.010451337  0.216393160
-#> d.rl.l01  0.2101380306 0.098926167 1.806136e-03    0.015435870  0.001115703
-#> d.Dp.l01  0.0001664022 0.003213275 5.866611e-05    0.000197053  0.000000000
-#> const    -0.0661260966 0.156592125 2.858968e-03    0.004153030 -0.389929210
-#>                    50%      97.5% Incl. prob.  
-#> l.rs     -0.0007858802 0.11645669  1.00000000  
-#> l.rl      0.0060830389 0.13410759  1.00000000  
-#> l.Dp     -0.0554652064 0.06196134  1.00000000  
-#> d.rs.l01  0.3811712668 0.57655555  1.00000000 *
-#> d.rl.l01  0.2089949114 0.40444586  0.98833333 *
-#> d.Dp.l01  0.0000000000 0.00000000  0.01333333  
-#> const    -0.0684484756 0.23415503  1.00000000  
+#>                 Mean         SD     Naive SD Time-series SD        2.5%
+#> l.r      -0.15824090 0.33530740 0.0061218475    0.115194277 -1.20595822
+#> l.lr     -0.02501563 0.10638081 0.0019422389    0.007198889 -0.27456415
+#> l.Dp     -0.02411128 0.07619054 0.0013910426    0.006520416 -0.17350089
+#> d.r.l01   0.23865321 0.08804243 0.0016074275    0.039630307  0.00000000
+#> d.lr.l01  0.13902986 0.03816335 0.0006967643    0.010677954  0.00000000
+#> d.Dp.l01  0.01692732 0.01748220 0.0003191798    0.005116488 -0.01965455
+#> const    -0.00613510 0.05078819 0.0009272613    0.016833025 -0.15446504
+#>                   50%      97.5% Incl. prob. 
+#> l.r      -0.027276691 0.14352355   1.0000000 
+#> l.lr     -0.007480326 0.18512154   1.0000000 
+#> l.Dp     -0.024593509 0.13254258   1.0000000 
+#> d.r.l01   0.276498325 0.31410803   0.9013333 
+#> d.lr.l01  0.146454259 0.17632900   0.9400000 
+#> d.Dp.l01  0.020511053 0.04366985   0.8630000 
+#> const     0.006141228 0.05941729   1.0000000 
 #> 
-#> Variable: rl 
+#> Variable: lr 
 #> 
-#>                  Mean         SD     Naive SD Time-series SD        2.5%
-#> l.rs     -0.001654578 0.03040723 0.0005551576   0.0005742735 -0.06838873
-#> l.rl      0.002337671 0.02551661 0.0004658673   0.0004658673 -0.05007248
-#> l.Dp     -0.010116795 0.03860339 0.0007047982   0.0008439967 -0.08805091
-#> d.rs.l01  0.000000000 0.00000000 0.0000000000   0.0000000000  0.00000000
-#> d.rl.l01  0.235168702 0.08722297 0.0015924663   0.0073572916  0.06147726
-#> d.Dp.l01  0.000000000 0.00000000 0.0000000000   0.0000000000  0.00000000
-#> const     0.042104517 0.11657331 0.0021283278   0.0027432394 -0.18297229
-#>                    50%      97.5% Incl. prob.  
-#> l.rs     -0.0001978408 0.06125400   1.0000000  
-#> l.rl      0.0003206790 0.06470579   1.0000000  
-#> l.Dp     -0.0102870594 0.06688178   1.0000000  
-#> d.rs.l01  0.0000000000 0.00000000   0.0000000  
-#> d.rl.l01  0.2353986642 0.40901878   0.9996667 *
-#> d.Dp.l01  0.0000000000 0.00000000   0.0000000  
-#> const     0.0402141411 0.27017317   1.0000000  
+#>                  Mean         SD     Naive SD Time-series SD       2.5%
+#> l.r      -0.086478614 0.24481459 0.0044696824    0.040470878 -0.7826618
+#> l.lr     -0.044447790 0.11906211 0.0021737669    0.004977612 -0.3529005
+#> l.Dp     -0.011538647 0.09811277 0.0017912860    0.004865911 -0.2045575
+#> d.r.l01   0.041641423 0.02334696 0.0004262553    0.002128915  0.0000000
+#> d.lr.l01  0.060500947 0.12738915 0.0023257971    0.055296798  0.0000000
+#> d.Dp.l01 -0.002378023 0.01400088 0.0002556199    0.001809954 -0.0384215
+#> const    -0.025434395 0.05138178 0.0009380987    0.004962315 -0.1437602
+#>                  50%      97.5% Incl. prob. 
+#> l.r      -0.02022475 0.26790902   1.0000000 
+#> l.lr     -0.01604294 0.15757961   1.0000000 
+#> l.Dp     -0.01449906 0.19965702   1.0000000 
+#> d.r.l01   0.04663971 0.07735736   0.8116667 
+#> d.lr.l01  0.00000000 0.33872274   0.1843333 
+#> d.Dp.l01  0.00000000 0.02282545   0.6953333 
+#> const    -0.02197189 0.06653470   1.0000000 
 #> 
 #> Variable: Dp 
 #> 
-#>                 Mean         SD    Naive SD Time-series SD       2.5%
-#> l.rs      0.01268277 0.78137845 0.014265953     0.02676950 -1.5260847
-#> l.rl      0.25656553 0.59570158 0.010875973     0.03673423 -0.9470608
-#> l.Dp     -1.03146057 0.24626389 0.004496143     0.01395525 -1.5054247
-#> d.rs.l01  0.51470973 0.23053308 0.004208939     0.05919309  0.0000000
-#> d.rl.l01  0.30342818 0.16318322 0.002979304     0.01385988  0.0000000
-#> d.Dp.l01 -0.04603337 0.08506733 0.001553110     0.01181278 -0.2501757
-#> const     0.14855203 1.08984101 0.019897683     0.12350835 -2.0145997
-#>                  50%       97.5% Incl. prob.  
-#> l.rs      0.01519708  1.50974538   1.0000000  
-#> l.rl      0.25945135  1.48228376   1.0000000  
-#> l.Dp     -1.03704450 -0.52805115   1.0000000 *
-#> d.rs.l01  0.53397409  0.90835144   0.9673333  
-#> d.rl.l01  0.32185464  0.58644844   0.8703333  
-#> d.Dp.l01  0.00000000  0.08692737   0.5270000  
-#> const     0.16691209  2.36421949   1.0000000  
+#>                Mean         SD     Naive SD Time-series SD       2.5%
+#> l.r      -0.7538848 0.82577945 0.0150766010    0.067132303 -2.5753582
+#> l.lr     -0.1134768 0.69199807 0.0126340983    0.055700150 -1.5480266
+#> l.Dp     -0.6073197 0.35337502 0.0064517157    0.069106760 -1.3014053
+#> d.r.l01   0.2444574 0.04995462 0.0009120425    0.002341446  0.0000000
+#> d.lr.l01  0.1582061 0.09010927 0.0016451627    0.004424667  0.0000000
+#> d.Dp.l01 -0.1359043 0.08959662 0.0016358029    0.026226379 -0.2263845
+#> const     0.1511205 0.19963399 0.0036448012    0.028476523 -0.2534481
+#>                  50%        97.5% Incl. prob. 
+#> l.r      -0.66106554 0.6550249287   1.0000000 
+#> l.lr     -0.08531137 1.3217305922   1.0000000 
+#> l.Dp     -0.61384570 0.0001594936   1.0000000 
+#> d.r.l01   0.25051453 0.2870912986   0.9640000 
+#> d.lr.l01  0.18838985 0.2577458514   0.7706667 
+#> d.Dp.l01 -0.18485099 0.0000000000   0.7016667 
+#> const     0.15067447 0.5340131632   1.0000000 
 #> 
 #> Variance-covariance matrix:
 #> 
-#>            Mean        SD    Naive SD Time-series SD       2.5%       50%
-#> rs_rs 0.5784974 0.5331054 0.009733129    0.019270123 0.10228600 0.4277538
-#> rs_rl 0.2649650 0.2446480 0.004466642    0.008141074 0.04692442 0.1945760
-#> rs_Dp 0.3231276 0.3750633 0.006847687    0.025288644 0.02304387 0.2061813
-#> rl_rl 0.1874224 0.1268228 0.002315458    0.004706874 0.06267402 0.1547655
-#> rl_Dp 0.2705111 0.1995119 0.003642572    0.013989367 0.07932098 0.2191442
-#> Dp_Dp 7.8968862 3.8137320 0.069628902    0.318526089 3.29238343 7.1076768
-#>            97.5%  
-#> rs_rs  1.9757867 *
-#> rs_rl  0.9087190 *
-#> rs_Dp  1.2810209 *
-#> rl_rl  0.5255447 *
-#> rl_Dp  0.7959388 *
-#> Dp_Dp 17.6173100 *
+#>               Mean           SD     Naive SD Time-series SD         2.5%
+#> r_r   0.0007120057 0.0008888263 1.622767e-05   6.566246e-05 2.355150e-05
+#> r_lr  0.0001260198 0.0001579183 2.883180e-06   1.257141e-05 3.651871e-06
+#> r_Dp  0.0005063138 0.0006333243 1.156287e-05   4.708340e-05 1.692211e-05
+#> lr_lr 0.0029461906 0.0012632377 2.306346e-05   9.755626e-05 1.249075e-03
+#> lr_Dp 0.0017597305 0.0007366365 1.344908e-05   5.833176e-05 7.691714e-04
+#> Dp_Dp 0.0620061322 0.0330519551 6.034434e-04   3.488392e-03 2.712610e-02
+#>                50%        97.5%  
+#> r_r   4.763670e-04 0.0028429093 *
+#> r_lr  8.053258e-05 0.0005316264 *
+#> r_Dp  3.380478e-04 0.0020259333 *
+#> lr_lr 2.697760e-03 0.0058950833 *
+#> lr_Dp 1.624851e-03 0.0035194226 *
+#> Dp_Dp 5.543752e-02 0.1305142121 *
 ```
 
 
@@ -244,89 +260,89 @@ period_of <- function(object, year, quarter) {
   which(stats::time(object[["data"]][["train"]][["y"]]) == year + (quarter - 1) / 4)
 }
 
-summary(model, period = period_of(model, 1975, 1))
+summary(model, period = period_of(model, 1985, 1))
 #> 
 #> Bayesian TVP-SV-VEC model with p = 2 
 #> 
 #> Variable selection algorithm: Bayesian variable selection (Korobilis, 2013)
 #> 
-#> Endogenous variables: rs, rl, Dp
+#> Endogenous variables: r, lr, Dp
 #> 
-#> Period: 70 
+#> Period: 22 
 #> 
-#> Variable: rs 
+#> Variable: r 
 #> 
-#>                   Mean         SD     Naive SD Time-series SD        2.5%
-#> l.rs     -7.638915e-02 0.07633879 1.393749e-03   3.650868e-03 -0.25526929
-#> l.rl     -3.988077e-02 0.04708439 8.596393e-04   1.901788e-03 -0.15265884
-#> l.Dp      5.884487e-02 0.04650805 8.491169e-04   1.286108e-03 -0.02996285
-#> d.rs.l01  3.225160e-01 0.06557238 1.197182e-03   1.254613e-02  0.19024057
-#> d.rl.l01  1.903847e-01 0.09374852 1.711606e-03   2.333878e-02  0.00000000
-#> d.Dp.l01 -7.106947e-06 0.00238808 4.360017e-05   1.580683e-05  0.00000000
-#> const     8.264447e-03 0.16243599 2.965662e-03   3.939749e-03 -0.32062708
-#>                   50%      97.5% Incl. prob.  
-#> l.rs     -0.063376971 0.03471932  1.00000000  
-#> l.rl     -0.032386860 0.03233288  1.00000000  
-#> l.Dp      0.058791114 0.15234630  1.00000000  
-#> d.rs.l01  0.324168098 0.45257151  1.00000000 *
-#> d.rl.l01  0.189237653 0.38593337  0.98833333  
-#> d.Dp.l01  0.000000000 0.00000000  0.01333333  
-#> const     0.008677281 0.32248251  1.00000000  
+#>                  Mean         SD     Naive SD Time-series SD        2.5%
+#> l.r      -0.009849291 0.05503230 0.0010047477    0.002505008 -0.14417151
+#> l.lr     -0.002064732 0.08254124 0.0015069900    0.007138935 -0.17371825
+#> l.Dp      0.011466686 0.10421829 0.0019027569    0.007432555 -0.19162802
+#> d.r.l01   0.238805394 0.08769504 0.0016010851    0.039611183  0.00000000
+#> d.lr.l01  0.137922053 0.03681788 0.0006721995    0.010445196  0.00000000
+#> d.Dp.l01  0.017370776 0.01703736 0.0003110582    0.005498991 -0.01698191
+#> const    -0.002729785 0.05669802 0.0010351595    0.001848496 -0.10769161
+#>                   50%      97.5% Incl. prob. 
+#> l.r      -0.002451813 0.09053045   1.0000000 
+#> l.lr     -0.002362151 0.18880884   1.0000000 
+#> l.Dp      0.009710210 0.22282243   1.0000000 
+#> d.r.l01   0.280963845 0.30784788   0.9013333 
+#> d.lr.l01  0.145681550 0.16827863   0.9400000 
+#> d.Dp.l01  0.021621458 0.04069329   0.8630000 
+#> const    -0.004497975 0.11543321   1.0000000 
 #> 
-#> Variable: rl 
+#> Variable: lr 
 #> 
-#>                 Mean         SD     Naive SD Time-series SD        2.5%
-#> l.rs     -0.04733196 0.06114799 0.0011164045    0.002514043 -0.18271683
-#> l.rl     -0.02947889 0.03684362 0.0006726694    0.001354611 -0.11498544
-#> l.Dp      0.03857382 0.03919472 0.0007155944    0.001624104 -0.04280089
-#> d.rs.l01  0.00000000 0.00000000 0.0000000000    0.000000000  0.00000000
-#> d.rl.l01  0.25537734 0.07397910 0.0013506674    0.014149957  0.11656646
-#> d.Dp.l01  0.00000000 0.00000000 0.0000000000    0.000000000  0.00000000
-#> const     0.07316302 0.12319874 0.0022492910    0.003045008 -0.17313392
-#>                  50%      97.5% Incl. prob.  
-#> l.rs     -0.03922490 0.05754358   1.0000000  
-#> l.rl     -0.02173191 0.02433472   1.0000000  
-#> l.Dp      0.03928950 0.11503734   1.0000000  
-#> d.rs.l01  0.00000000 0.00000000   0.0000000  
-#> d.rl.l01  0.25218503 0.40174525   0.9996667 *
-#> d.Dp.l01  0.00000000 0.00000000   0.0000000  
-#> const     0.07537502 0.31461491   1.0000000  
+#>                  Mean         SD     Naive SD Time-series SD        2.5%
+#> l.r       0.002485664 0.03022482 0.0005518272   0.0008500782 -0.05643190
+#> l.lr     -0.008446985 0.04578254 0.0008358709   0.0011259585 -0.11323238
+#> l.Dp      0.013325091 0.06239962 0.0011392560   0.0016508758 -0.10720465
+#> d.r.l01   0.042477858 0.02257003 0.0004120704   0.0021712415  0.00000000
+#> d.lr.l01  0.060567014 0.12747412 0.0023273484   0.0573584424  0.00000000
+#> d.Dp.l01 -0.003451077 0.01260504 0.0002301355   0.0020428422 -0.03755841
+#> const    -0.006808540 0.03299863 0.0006024699   0.0011316426 -0.07237149
+#>                    50%      97.5% Incl. prob. 
+#> l.r       0.0001739105 0.07413744   1.0000000 
+#> l.lr     -0.0039498207 0.08516495   1.0000000 
+#> l.Dp      0.0121811308 0.13813180   1.0000000 
+#> d.r.l01   0.0482039643 0.07443344   0.8116667 
+#> d.lr.l01  0.0000000000 0.33579904   0.1843333 
+#> d.Dp.l01  0.0000000000 0.01477814   0.6953333 
+#> const    -0.0064174222 0.06010468   1.0000000 
 #> 
 #> Variable: Dp 
 #> 
-#>                 Mean         SD    Naive SD Time-series SD        2.5%
-#> l.rs      1.34806589 0.69501568 0.012689192     0.03701797  0.01246897
-#> l.rl      0.77269281 0.52925691 0.009662865     0.03387819 -0.23971869
-#> l.Dp     -1.08728716 0.19829003 0.003620264     0.01981385 -1.45461190
-#> d.rs.l01  0.49560173 0.21341245 0.003896360     0.07230922  0.00000000
-#> d.rl.l01  0.29819028 0.14693109 0.002682582     0.01396041  0.00000000
-#> d.Dp.l01 -0.03696871 0.06925556 0.001264428     0.01367326 -0.20467537
-#> const     0.12329159 0.91834472 0.016766604     0.19980531 -1.61477734
-#>                 50%       97.5% Incl. prob.  
-#> l.rs      1.3344656  2.75012544   1.0000000 *
-#> l.rl      0.7559258  1.82164015   1.0000000  
-#> l.Dp     -1.0946338 -0.67477047   1.0000000 *
-#> d.rs.l01  0.5112568  0.84348841   0.9673333  
-#> d.rl.l01  0.3150919  0.53012560   0.8703333  
-#> d.Dp.l01  0.0000000  0.06776777   0.5270000  
-#> const     0.1213863  2.14598325   1.0000000  
+#>                Mean         SD     Naive SD Time-series SD        2.5%
+#> l.r      -0.1301513 0.41417793 0.0075618199    0.052060026 -1.00096867
+#> l.lr      0.5517247 0.36818025 0.0067220209    0.039094439 -0.08897189
+#> l.Dp     -0.8803740 0.30733074 0.0056110659    0.055581244 -1.48760044
+#> d.r.l01   0.2443097 0.04928021 0.0008997295    0.002348756  0.00000000
+#> d.lr.l01  0.1582874 0.08986730 0.0016407450    0.004391064  0.00000000
+#> d.Dp.l01 -0.1359814 0.08943233 0.0016328035    0.022264437 -0.22540898
+#> const    -0.1157356 0.25896292 0.0047279944    0.044349445 -0.62817309
+#>                 50%      97.5% Incl. prob.  
+#> l.r      -0.1201720  0.6298990   1.0000000  
+#> l.lr      0.5208594  1.3265709   1.0000000  
+#> l.Dp     -0.8689741 -0.3112660   1.0000000 *
+#> d.r.l01   0.2499312  0.2839271   0.9640000  
+#> d.lr.l01  0.1865917  0.2542589   0.7706667  
+#> d.Dp.l01 -0.1859390  0.0000000   0.7016667  
+#> const    -0.1232448  0.4402592   1.0000000  
 #> 
 #> Variance-covariance matrix:
 #> 
-#>             Mean        SD    Naive SD Time-series SD        2.5%        50%
-#> rs_rs  1.3975763 0.8687460 0.015861060     0.03177203  0.34243457  1.1915990
-#> rs_rl  0.4994764 0.3265128 0.005961282     0.01183752  0.11403969  0.4248168
-#> rs_Dp  0.4983204 0.5516036 0.010070858     0.12000160 -0.04422343  0.3343416
-#> rl_rl  0.6656093 0.2277257 0.004157684     0.01227746  0.34683680  0.6253826
-#> rl_Dp  1.0807288 0.4169364 0.007612182     0.04135248  0.53004329  1.0034539
-#> Dp_Dp 12.8991694 8.4410405 0.154111610     1.76000075  4.74544099 10.7429992
-#>           97.5%  
-#> rs_rs  3.557630 *
-#> rs_rl  1.324711 *
-#> rs_Dp  1.950466  
-#> rl_rl  1.209664 *
-#> rl_Dp  2.086601 *
-#> Dp_Dp 36.708218 *
+#>              Mean           SD     Naive SD Time-series SD       2.5%
+#> r_r   0.027162301 0.0149833798 2.735578e-04   0.0006533014 0.00881588
+#> r_lr  0.004647942 0.0026778716 4.889102e-05   0.0001560627 0.00133575
+#> r_Dp  0.019279839 0.0106009265 1.935456e-04   0.0004614340 0.00621876
+#> lr_lr 0.003191942 0.0009768629 1.783499e-05   0.0001230228 0.00166475
+#> lr_Dp 0.004648630 0.0019136119 3.493761e-05   0.0001074240 0.00216843
+#> Dp_Dp 0.115703462 0.0509991205 9.311123e-04   0.0110778159 0.05313555
+#>               50%       97.5%  
+#> r_r   0.023689183 0.065352658 *
+#> r_lr  0.004064001 0.011017536 *
+#> r_Dp  0.016798491 0.046043545 *
+#> lr_lr 0.003073070 0.005391609 *
+#> lr_Dp 0.004285191 0.009299818 *
+#> Dp_Dp 0.105534584 0.247061181 *
 ```
 
 The inclusion probabilities of the $\Pi$ columns are one by construction, as
@@ -396,10 +412,10 @@ pi_path <- function(object, equation, variable, ci = 0.9) {
             frequency = stats::frequency(object[["data"]][["train"]][["y"]]))
 }
 
-path <- pi_path(model, equation = "rs", variable = "l.rs")
+path <- pi_path(model, equation = "r", variable = "l.r")
 
 stats::ts.plot(path, lty = c(2, 1, 2),
-               main = "Short rate: adjustment to its own level",
+               main = "Short-term rate: adjustment to its own level",
                ylab = "Element of Pi")
 abline(h = 0, lty = "dotted")
 ```
@@ -408,6 +424,10 @@ abline(h = 0, lty = "dotted")
 <img src="figures/tvp-sv-vec-pi-path-1.png" alt="plot of chunk pi-path"  />
 <p class="caption">plot of chunk pi-path</p>
 </div>
+
+The band of this element widens considerably after 2008, when the short-term
+rate stayed close to its lower bound and its level varied too little to say
+much about how the rate adjusts to it.
 
 Note what is *not* plotted here. The path of $\beta_t$ on its own is not a
 quantity to read: a cointegration vector is identified only up to
@@ -446,11 +466,14 @@ plot(volatility(model),
 <p class="caption">plot of chunk volatility</p>
 </div>
 
-For these data the volatility block does most of the work that a constant
-covariance matrix would have got wrong. The 1970s and early 1980s are an
-order of magnitude noisier than the rest of the sample, and a model that
-averaged over them would report credible bands for the 1990s that are far too
-wide.
+For these data the volatility block does most of its work in the equation of
+the short-term interest rate. Its residual standard deviation falls from about
+0.2 percentage points in the early 1980s to a tenth of that once the rate
+approached its lower bound, with a brief return during the financial crisis. A
+model that averaged over the sample would report credible bands for the 2010s
+that are far too wide. The volatilities of the other two equations move much
+less: the one of inflation falls by about a quarter until 2000, the one of the
+long-term rate by about a fifth, most of it in the mid-1980s.
 
 ## A prior centred on the maximum likelihood estimate
 
@@ -479,7 +502,7 @@ scaled before `add_priors`, as above.
 
 
 ``` r
-model_ml <- create_bvecmodel(uk_macrodata, p = 2, r = 1, const = "unrestricted",
+model_ml <- create_bvecmodel(data, p = 2, r = 1, const = "unrestricted",
                              tvp = TRUE, error = "sv+covar", varsel = "bvs",
                              iterations = 3000, burnin = 1000)
 
@@ -487,7 +510,7 @@ model_ml <- scale_error_correction(model_ml)
 
 model_ml <- add_priors(model_ml,
                        coef = list(v_i = 1, v_i_det = 1 / 10,
-                                   shape = 3, rate = 0.0001, rate_det = 0.01),
+                                   shape = 3, rate = 0.000001, rate_det = 0.01),
                        coint = list(rho = 0.999, p_tau_i = "ml", weight = 1),
                        sigma = list(shape = 3, rate = 0.01,
                                     mu = 0, v_i = 0.01,
@@ -511,13 +534,13 @@ $sp(H)$ itself, and one for each direction off it:
 
 ``` r
 round(eigen(model_ml[["priors"]][["beta"]][["p_tau"]], symmetric = TRUE)$values, 3)
-#> [1] 1.000 0.434 0.000
+#> [1] 1.000 0.796 0.000
 ```
 
 
 ``` r
-model_ml <- add_initial_values(model_ml)
 set.seed(20260913)
+model_ml <- add_initial_values(model_ml)
 model_ml <- add_posterior_coefficients(model_ml)
 model_ml <- rescale_error_correction(model_ml)
 ```
@@ -527,14 +550,14 @@ prior in grey:
 
 
 ``` r
-path_ml <- pi_path(model_ml, equation = "rs", variable = "l.rs")
+path_ml <- pi_path(model_ml, equation = "r", variable = "l.r")
 
 stats::ts.plot(path, path_ml, lty = c(2, 1, 2, 2, 1, 2),
                col = rep(c("grey60", "black"), each = 3),
-               main = "Short rate: adjustment to its own level",
+               main = "Short-term rate: adjustment to its own level",
                ylab = "Element of Pi")
 abline(h = 0, lty = "dotted")
-legend("topright", legend = c("Noninformative", "Centred on ML"),
+legend("bottomleft", legend = c("Noninformative", "Centred on ML"),
        col = c("grey60", "black"), lty = 1, bty = "n")
 ```
 
@@ -560,14 +583,15 @@ band_width <- function(object) {
 }
 
 round(band_width(model_ml) / band_width(model), 2)
-#>        rs   rl   Dp
-#> l.rs 0.46 0.59 0.21
-#> l.rl 1.09 1.21 0.48
-#> l.Dp 0.36 0.39 0.67
+#>         r   lr   Dp
+#> l.r  0.14 0.17 0.32
+#> l.lr 0.28 0.33 0.48
+#> l.Dp 0.69 0.76 0.64
 ```
 
 A ratio below one means that the prior centred on the maximum likelihood
-estimate narrows the band of that element. It need not do so for every element,
+estimate narrows the band of that element. Here it does so for every element,
+and most for those that involve the short-term rate. It need not do so in general,
 and that is a property of how the prior is built rather than a failure of it: a
 larger `weight` makes the prior tighter by lowering $T$, but $T$ is also how
 much of the position of the space carries over from one period to the next. In
@@ -611,20 +635,20 @@ all the application functions need.
 
 Impulse responses and forecast error variance decompositions are those of one
 period, which argument `period` selects, the last period being the default.
-The response of inflation to a shock to the short-term interest rate in 1975Q1:
+The response of inflation to a shock to the short-term interest rate in 1985Q1:
 
 
 ``` r
-feir <- irf(bvar_form, impulse = "rs", response = "Dp", n_ahead = 20,
-            period = period_of(model, 1975, 1))
+feir <- irf(bvar_form, impulse = "r", response = "Dp", n_ahead = 20,
+            period = period_of(model, 1985, 1))
 
-plot(feir, main = "Forecast error impulse response, 1975Q1",
+plot(feir, main = "Forecast error impulse response, 1985Q1",
      xlab = "Period", ylab = "Response")
 ```
 
 <div class="figure" style="text-align: center">
-<img src="figures/tvp-sv-vec-feir-1975-1.png" alt="plot of chunk feir-1975"  />
-<p class="caption">plot of chunk feir-1975</p>
+<img src="figures/tvp-sv-vec-feir-1985-1.png" alt="plot of chunk feir-1985"  />
+<p class="caption">plot of chunk feir-1985</p>
 </div>
 
 Forecasts start from the last period of the sample and hold the coefficients

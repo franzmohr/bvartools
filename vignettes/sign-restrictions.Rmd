@@ -20,15 +20,20 @@ The weakening has a price. A recursive identification picks out one model; a set
 
 ## The model
 
-The illustration uses `us_macrodata`, quarterly US CPI inflation (`Dp`), the unemployment rate (`u`) and the Fed Funds rate (`r`) from 1959Q2 to 2007Q4, and asks the question these series are usually asked: what does a contractionary monetary policy shock do?
+The illustration uses data set `at_macrodata`, from which it takes the growth rate of Austrian real GDP (`dy`), inflation (`Dp`) and the short-term interest rate (`r`), all in percent per quarter from 1979Q3 to 2019Q4, and asks the question these series are usually asked: what does a contractionary monetary policy shock do? The pandemic quarters are left out, because output growth moved by ten percent within a quarter in 2020.
+
+For Austria the short-term rate was set abroad for most of the sample: by the Bundesbank, to whose currency the schilling was pegged, and from 1999 by the European Central Bank. A shock to it is therefore a shock to the monetary conditions Austria faced rather than to a domestic policy decision, which does not change how the restrictions below are imposed.
 
 
 ``` r
 library(bvartools)
 
-data("us_macrodata")
+data("at_macrodata")
+at <- at_macrodata[["domestic"]]
+data <- ts.intersect(dy = diff(at[, "y"]), Dp = at[, "Dp"], r = at[, "r"]) * 100
+data <- window(data, end = c(2019, 4))
 
-plot(us_macrodata, main = "US macroeconomic data")
+plot(data, main = "Austrian macroeconomic data")
 ```
 
 <div class="figure" style="text-align: center">
@@ -40,7 +45,7 @@ The model is a VAR(4) with an intercept, estimated in the usual way. Nothing abo
 
 
 ``` r
-model <- create_bvarmodel(us_macrodata, p = 4, deterministic = "const",
+model <- create_bvarmodel(data, p = 4, deterministic = "const",
                           iterations = 10000, burnin = 5000)
 
 model <- add_priors(model,
@@ -57,14 +62,14 @@ model <- add_posterior_coefficients(model)
 
 The restrictions are a data frame with one row per restriction. Each row names the shock it speaks about, the variable whose response is restricted, the direction of that response, and the horizon it applies to, counted from zero for the impact period.
 
-A contractionary monetary policy shock is conventionally taken to raise the policy rate, lower inflation and raise unemployment. Here that pattern is imposed for the impact quarter and the two that follow.
+A contractionary monetary policy shock is conventionally taken to raise the policy rate, lower inflation and lower output growth. Here that pattern is imposed for the impact quarter and the two that follow.
 
 
 ``` r
 restrictions <- data.frame(
   impulse  = "r",
-  response = c("r", "Dp", "u"),
-  sign     = c(1, -1, 1),
+  response = c("r", "Dp", "dy"),
+  sign     = c(1, -1, -1),
   horizon  = rep(0:2, each = 3)
 )
 
@@ -72,13 +77,13 @@ restrictions
 #>   impulse response sign horizon
 #> 1       r        r    1       0
 #> 2       r       Dp   -1       0
-#> 3       r        u    1       0
+#> 3       r       dy   -1       0
 #> 4       r        r    1       1
 #> 5       r       Dp   -1       1
-#> 6       r        u    1       1
+#> 6       r       dy   -1       1
 #> 7       r        r    1       2
 #> 8       r       Dp   -1       2
-#> 9       r        u    1       2
+#> 9       r       dy   -1       2
 ```
 
 The shock is named after a variable -- `impulse = "r"` -- because a structural shock has no name of its own. The convention is the same one `irf` uses, and it means no more than that this is the shock the restrictions describe. Nothing forces it to be "the" monetary policy shock beyond the pattern that was asked for.
@@ -97,7 +102,7 @@ Some draws may not yield an admissible rotation within `max_tries` attempts, and
 ``` r
 summary(model)[["model"]][["sign_restrictions"]][c("accepted", "draws")]
 #> $accepted
-#> [1] 9433
+#> [1] 744
 #> 
 #> $draws
 #> [1] 10000
@@ -113,7 +118,7 @@ The identification is used by passing `type = "sign"` to `irf`. The draws that w
 ``` r
 par(mfrow = c(3, 1), mar = c(4, 4, 3, 1))
 
-for (i in c("r", "Dp", "u")) {
+for (i in c("r", "Dp", "dy")) {
   ir <- irf(model, impulse = "r", response = i, n_ahead = 16, type = "sign")
   plot(ir, main = paste("Response of", i))
 }
@@ -124,7 +129,7 @@ for (i in c("r", "Dp", "u")) {
 <p class="caption">plot of chunk irf-policy</p>
 </div>
 
-The first three quarters of each panel are the restrictions themselves and carry no information: the responses have the sign they have because that is what was imposed. What the restrictions do not determine is everything from the fourth quarter on, and there the inflation response stays negative well beyond the restricted window, while the rate returns to zero within a year.
+The first three quarters of each panel are the restrictions themselves and carry no information: the responses have the sign they have because that is what was imposed. What the restrictions do not determine is everything from the fourth quarter on. There the responses of inflation and output growth return to zero within about a year, while the median response of the interest rate stays positive over the whole horizon, with a band that includes zero after the first few quarters.
 
 ## Why not simply order the variables?
 
@@ -148,14 +153,14 @@ plot(chol_ir, main = "Recursive")
 
 ``` r
 round(chol_ir[1:4, ], 3)
-#>        2.5%    50% 97.5%
-#> [1,]  0.000  0.000 0.000
-#> [2,]  0.035  0.108 0.183
-#> [3,] -0.012  0.074 0.159
-#> [4,] -0.117 -0.026 0.066
+#>        2.5%   50% 97.5%
+#> [1,]  0.000 0.000 0.000
+#> [2,] -0.291 0.209 0.713
+#> [3,] -0.292 0.205 0.716
+#> [4,] -0.265 0.240 0.743
 ```
 
-The recursive responses show the *price puzzle* of Sims (1992): inflation rises for about two quarters after a contractionary shock, and the credible interval excludes zero, which is the opposite of what a policy tightening is supposed to do. They also begin at exactly zero, because ordering the policy rate last assumes that inflation cannot react within the quarter.
+The recursive responses show a mild form of the *price puzzle* of Sims (1992): the median response of inflation to a contractionary shock is positive at every horizon, which is the opposite of what a policy tightening is supposed to do, although its credible interval includes zero in the first quarters. They also begin at exactly zero, because ordering the policy rate last assumes that inflation cannot react within the quarter.
 
 Both features are assumptions rather than results. The recursive identification assumes a zero on impact and lets the sign go where it will; the sign restrictions assume the sign for three quarters and let the impact magnitude go where it will. Neither set of responses is evidence against the other, and the comparison is only useful as a reminder of how much of an impulse response comes from the identification rather than the data.
 

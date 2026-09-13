@@ -30,15 +30,17 @@ The workflow is the one of the introduction to `bvartools` -- set up a model, ad
 
 ### Data
 
-The data set E1 from Lütkepohl (2006) is used, as in the introductory vignette. It contains West German fixed investment, disposable income and consumption expenditures, and only the log-differenced series are used.
+Data set `at_macrodata` contains quarterly macroeconomic series of Austria. From its domestic series the growth rate of real GDP (`dy`), inflation (`Dp`) and the short-term interest rate (`r`) are used, all in percent per quarter and up to 2019Q4, which leaves out the quarters in which the pandemic moved output growth by ten percent.
 
 
 ``` r
 library(bvartools)
 
-data("e1")
-e1 <- diff(log(e1)) * 100
-e1 <- window(e1, end = c(1978, 4))
+data("at_macrodata")
+at <- at_macrodata[["domestic"]]
+
+data <- ts.intersect(dy = diff(at[, "y"]), Dp = at[, "Dp"], r = at[, "r"]) * 100
+data <- window(data, end = c(2019, 4))
 ```
 
 ### Setting up a model
@@ -47,7 +49,7 @@ A quantile VAR is a model with `error = "ald"`. Argument `quantile` says which q
 
 
 ``` r
-model <- create_bvarmodel(e1, p = 1, deterministic = "const",
+model <- create_bvarmodel(data, p = 1, deterministic = "const",
                           error = "ald", quantile = 0.25,
                           iterations = 2000, burnin = 500)
 
@@ -79,6 +81,7 @@ The initial value of each scale is the mean of the check function of the LS resi
 
 
 ``` r
+set.seed(1234567)
 model <- add_posterior_coefficients(model)
 ```
 
@@ -94,65 +97,65 @@ summary(model)
 #> 
 #> Bayesian Quantile-VAR model with p = 1 and q = 0.25 
 #> 
-#> Endogenous variables: invest, income, cons
+#> Endogenous variables: dy, Dp, r
 #> 
-#> Period: 74 
+#> Period: 161 
 #> 
-#> Variable: invest 
+#> Variable: dy 
 #> 
-#>                 Mean        SD    Naive SD Time-series SD       2.5%        50%
-#> invest.l1 -0.2460751 0.1319005 0.002949386    0.007108009 -0.4968715 -0.2480369
-#> income.l1 -0.1690439 0.3617392 0.008088734    0.017778675 -0.7692955 -0.2024451
-#> cons.l1    0.7433041 0.4482769 0.010023776    0.021122853 -0.2185893  0.7796086
-#> const     -1.3197872 0.6658060 0.014887874    0.023529073 -2.5870154 -1.3459829
-#>                97.5% 
-#> invest.l1 0.03533949 
-#> income.l1 0.60881720 
-#> cons.l1   1.49766665 
-#> const     0.06386640 
+#>              Mean         SD    Naive SD Time-series SD       2.5%         50%
+#> dy.l1 -0.04744709 0.07790708 0.001742055    0.004186926 -0.1929758 -0.04986365
+#> Dp.l1 -0.15576493 0.21353160 0.004774712    0.011495761 -0.5513377 -0.16417373
+#> r.l1  -0.05594171 0.10133788 0.002265984    0.005236643 -0.2571899 -0.05526559
+#> const  0.11792337 0.12301430 0.002750683    0.006553860 -0.1418124  0.12600987
+#>           97.5% 
+#> dy.l1 0.1164092 
+#> Dp.l1 0.2758096 
+#> r.l1  0.1432693 
+#> const 0.3379791 
 #> 
-#> Variable: income 
+#> Variable: Dp 
 #> 
-#>                 Mean         SD     Naive SD Time-series SD        2.5%
-#> invest.l1 0.03180593 0.02632319 0.0005886043    0.001179720 -0.01787690
-#> income.l1 0.01360482 0.10370213 0.0023188501    0.004540239 -0.19936871
-#> cons.l1   0.21044061 0.12548683 0.0028059708    0.005194645 -0.05074599
-#> const     0.90394969 0.25267270 0.0056499333    0.010880142  0.40593842
-#>                  50%      97.5%  
-#> invest.l1 0.03080346 0.08849238  
-#> income.l1 0.01502663 0.21216565  
-#> cons.l1   0.21424117 0.44659385  
-#> const     0.91015050 1.37750486 *
+#>             Mean         SD    Naive SD Time-series SD        2.5%        50%
+#> dy.l1 0.02751382 0.03092133 0.000691422    0.001780827 -0.03634035 0.02746809
+#> Dp.l1 0.38732714 0.08472472 0.001894502    0.004844677  0.21777757 0.38719751
+#> r.l1  0.14851096 0.04986411 0.001114995    0.003019085  0.05524029 0.14734500
+#> const 0.03136531 0.05257643 0.001175645    0.003307652 -0.08039638 0.03487079
+#>           97.5%  
+#> dy.l1 0.0905205  
+#> Dp.l1 0.5443276 *
+#> r.l1  0.2487659 *
+#> const 0.1227253  
 #> 
-#> Variable: cons 
+#> Variable: r 
 #> 
-#>                   Mean         SD     Naive SD Time-series SD        2.5%
-#> invest.l1 -0.006357517 0.02081456 0.0004654278   0.0008271075 -0.04597180
-#> income.l1  0.311374758 0.09675552 0.0021635192   0.0039716546  0.09168735
-#> cons.l1   -0.117020591 0.11383381 0.0025454014   0.0049346810 -0.34932917
-#> const      1.053924909 0.22334004 0.0049940350   0.0097280301  0.61604258
-#>                    50%      97.5%  
-#> invest.l1 -0.006468973 0.03348428  
-#> income.l1  0.320789673 0.48417027 *
-#> cons.l1   -0.115112263 0.10288384  
-#> const      1.056943734 1.49477861 *
+#>              Mean          SD     Naive SD Time-series SD         2.5%
+#> dy.l1  0.03236491 0.008058014 0.0001801827   0.0004246096  0.017369039
+#> Dp.l1  0.04654735 0.022426286 0.0005014670   0.0011789339  0.005385217
+#> r.l1   0.93902087 0.011260430 0.0002517909   0.0007311792  0.915584727
+#> const -0.06017322 0.010894919 0.0002436178   0.0005074223 -0.084147411
+#>               50%       97.5%  
+#> dy.l1  0.03219873  0.04858902 *
+#> Dp.l1  0.04631343  0.09138008 *
+#> r.l1   0.93951284  0.95967338 *
+#> const -0.05987786 -0.03959733 *
 #> 
 #> Variance-covariance matrix:
 #> 
-#>                    Mean         SD   Naive SD Time-series SD      2.5%
-#> invest_invest 19.618461 14.3555791 0.32100051     0.33947173 4.3621966
-#> invest_income  0.000000  0.0000000 0.00000000     0.00000000 0.0000000
-#> invest_cons    0.000000  0.0000000 0.00000000     0.00000000 0.0000000
-#> income_income  1.035910  0.9113256 0.02037786     0.02037786 0.1172292
-#> income_cons    0.000000  0.0000000 0.00000000     0.00000000 0.0000000
-#> cons_cons      1.053641  0.8169993 0.01826866     0.01826866 0.1935705
-#>                      50%     97.5%  
-#> invest_invest 15.5873196 59.883174 *
-#> invest_income  0.0000000  0.000000  
-#> invest_cons    0.0000000  0.000000  
-#> income_income  0.7408052  3.599038 *
-#> income_cons    0.0000000  0.000000  
-#> cons_cons      0.8037210  3.213045 *
+#>              Mean          SD    Naive SD Time-series SD         2.5%
+#> dy_dy 0.932973298 0.650182934 0.014538532    0.014538532 0.2048989793
+#> dy_Dp 0.000000000 0.000000000 0.000000000    0.000000000 0.0000000000
+#> dy_r  0.000000000 0.000000000 0.000000000    0.000000000 0.0000000000
+#> Dp_Dp 0.134029860 0.089782093 0.002007589    0.002084456 0.0305411190
+#> Dp_r  0.000000000 0.000000000 0.000000000    0.000000000 0.0000000000
+#> r_r   0.006833487 0.006858826 0.000153368    0.000153368 0.0005017107
+#>               50%      97.5%  
+#> dy_dy 0.762229238 2.74849200 *
+#> dy_Dp 0.000000000 0.00000000  
+#> dy_r  0.000000000 0.00000000  
+#> Dp_Dp 0.111892560 0.38289493 *
+#> Dp_r  0.000000000 0.00000000  
+#> r_r   0.004498559 0.02635823 *
 ```
 
 ### Does it estimate the quantile it was asked for?
@@ -163,13 +166,14 @@ This is worth checking, because a quantile model that has lost its skew term som
 ``` r
 share_below_zero <- function(object) {
   a <- colMeans(object[["posterior"]][["a"]][["coeffs"]])
-  y <- matrix(object[["data"]][["train"]][["y"]])
+  # y holds one row per period and z one block of rows per period
+  y <- matrix(t(object[["data"]][["train"]][["y"]]))
   z <- object[["data"]][["train"]][["z"]]
   mean(y - z %*% a < 0)
 }
 
 share_below_zero(model)
-#> [1] 0.2657658
+#> [1] 0.2463768
 ```
 
 ### The scale of the asymmetric Laplace
@@ -179,7 +183,7 @@ The draws of the scale are in `posterior$u_scale`, one column per equation. Thei
 
 ``` r
 round(colMeans(model[["posterior"]][["u_scale"]][["coeffs"]]), 3)
-#> [1] 1.302 0.347 0.315
+#> [1] 0.287 0.103 0.032
 ```
 
 ## A grid of quantiles
@@ -188,7 +192,7 @@ One model is one quantile. A vector in argument `quantile` therefore produces a 
 
 
 ``` r
-models <- create_bvarmodel(e1, p = 1, deterministic = "const",
+models <- create_bvarmodel(data, p = 1, deterministic = "const",
                            error = "ald", quantile = c(0.1, 0.5, 0.9),
                            iterations = 2000, burnin = 500)
 
@@ -196,6 +200,7 @@ models <- add_priors(models,
                      coef = list(v_i = 1),
                      sigma = list(shape = 3, rate = .01))
 models <- add_initial_values(models)
+set.seed(1234567)
 models <- add_posterior_coefficients(models)
 ```
 
@@ -206,19 +211,19 @@ Each model estimates its own quantile:
 data.frame(quantile = sapply(models, function(x) {x[["model"]][["quantile"]]}),
            share_below_zero = round(sapply(models, share_below_zero), 3))
 #>   quantile share_below_zero
-#> 1      0.1            0.153
-#> 2      0.5            0.450
-#> 3      0.9            0.833
+#> 1      0.1            0.095
+#> 2      0.5            0.499
+#> 3      0.9            0.907
 ```
 
-The shares sit near their quantiles rather than on them. With 73 observations one of them is worth 1.4 percentage points, and these are posterior means under an informative prior rather than the frequentist estimator, whose first order condition would pin the share exactly. What a model that had lost its quantile would show is different in kind: three shares near 0.5.
+The shares sit near their quantiles rather than on them. With 161 observations per equation one of them is worth 0.6 percentage points, and these are posterior means under an informative prior rather than the frequentist estimator, whose first order condition would pin the share exactly. What a model that had lost its quantile would show is different in kind: three shares near 0.5.
 
-Comparing one coefficient across the grid is what the exercise is usually for. The following extracts the posterior mean of the effect of lagged income on consumption at each quantile:
+Comparing one coefficient across the grid is what the exercise is usually for. The following extracts the posterior mean of the effect of the lagged short-term interest rate on output growth at each quantile:
 
 
 ``` r
 coefficient <- function(object) {
-  colMeans(object[["posterior"]][["a"]][["coeffs"]])[6]
+  colMeans(object[["posterior"]][["a"]][["coeffs"]])[7]
 }
 
 quantiles <- sapply(models, function(x) {x[["model"]][["quantile"]]})
@@ -226,7 +231,7 @@ estimates <- sapply(models, coefficient)
 
 plot(quantiles, estimates, type = "b", pch = 19,
      xlab = "Quantile", ylab = "Posterior mean",
-     main = "Effect of lagged income on consumption")
+     main = "Effect of the lagged interest rate on output growth")
 abline(h = 0, lty = "dashed")
 ```
 
@@ -243,7 +248,7 @@ Adding `tvp = TRUE` lets the coefficients follow a random walk, which separates 
 
 
 ``` r
-tvp_model <- create_bvarmodel(e1, p = 1, deterministic = "const",
+tvp_model <- create_bvarmodel(data, p = 1, deterministic = "const",
                               error = "ald", quantile = 0.25, tvp = TRUE,
                               iterations = 2000, burnin = 500)
 
@@ -251,6 +256,7 @@ tvp_model <- add_priors(tvp_model,
                         coef = list(v_i = 1, shape = 3, rate = .0001),
                         sigma = list(shape = 3, rate = .01))
 tvp_model <- add_initial_values(tvp_model)
+set.seed(1234567)
 tvp_model <- add_posterior_coefficients(tvp_model)
 
 tvp_model[["model"]][["algorithm"]]
@@ -283,7 +289,5 @@ Variable selection is available as `varsel = "bvs"`. SSVS is not implemented for
 Kozumi, H., & Kobayashi, G. (2011). Gibbs sampling methods for Bayesian quantile regression. *Journal of Statistical Computation and Simulation, 81*(11), 1565-1578. <https://doi.org/10.1080/00949655.2010.496117>
 
 Korobilis, D. (2013). VAR forecasting using Bayesian variable selection. *Journal of Applied Econometrics, 28*(2), 204-230. <https://doi.org/10.1002/jae.1271>
-
-Lütkepohl, H. (2006). *New introduction to multiple time series analysis* (2nd ed.). Berlin: Springer.
 
 Yang, Y., Wang, H. J., & He, X. (2016). Posterior inference in Bayesian quantile regression with asymmetric Laplace likelihood. *International Statistical Review, 84*(3), 327-344. <https://doi.org/10.1111/insr.12114>

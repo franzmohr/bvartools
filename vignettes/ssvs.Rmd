@@ -16,21 +16,22 @@ A general drawback of vector autoregressive (VAR) models is that the number of e
 
 Korobilis (2013) proposes a similar appraoch to variable selection, which can also be applied to timy varying parameter models. The approach is implemented in `bvartools` as function `bvs`, which can be easily added to a standard Gibbs sampling algorithm. It is also implemented in the posterior simulation algorithm of the package an can be specified analogously to the last section of this introduction, where the use of the built-in SSVS sampler is described.
 
-This vignette presents code for Bayesian inference of a vector autoregressive (BVAR) model using stochastic search variable selection. It uses [dataset E1](http://www.jmulti.de/download/datasets/e1.dat) from Lütkepohl (2006), which contains data on West German fixed investment, disposable income and consumption expenditures in billions of DM from 1960Q1 to 1982Q4. Following a related example in Lütkepohl (2006, Section 5.2.10) only the first 71 observations of a VAR(4) model are used. The `bvartools` package can be used to load the data and generate the data matrices for the model.
+This vignette presents code for Bayesian inference of a vector autoregressive (BVAR) model using stochastic search variable selection. It uses data set `at_macrodata`, which contains quarterly macroeconomic series of Austria. A VAR(4) model is estimated for the growth rate of real GDP (`dy`), inflation (`Dp`) and the short-term interest rate (`r`) up to 2019Q4, which leaves out the quarters in which the pandemic moved output growth by ten percent. The `bvartools` package can be used to load the data and generate the data matrices for the model.
 
 
 ``` r
 library(bvartools)
 
 # Load and transform data
-data("e1")
-e1 <- diff(log(e1))
+data("at_macrodata")
+at <- at_macrodata[["domestic"]]
+at <- ts.intersect(dy = diff(at[, "y"]), Dp = at[, "Dp"], r = at[, "r"])
 
 # Shorten time series
-e1 <- window(e1, end = c(1978, 4))
+at <- window(at, end = c(2019, 4))
 
 # Generate VAR
-data <- create_bvarmodel(e1, p = 4, deterministic = "const",
+data <- create_bvarmodel(at, p = 4, deterministic = "const",
                          varsel = "ssvs",
                          iterations = 10000, burnin = 5000)
 ```
@@ -120,7 +121,7 @@ for (draw in 1:draws) {
 }
 ```
 
-The output of a Gibbs sampler with SSVS can be further analysed in the usual way. With the `bvartools` package the posterior draws can be collected in a `bvarmodel` object and the `summary` method provides summary statistics. It is also possible to add information on the inclusion parameters to the `bvarmodel` object by providing a named list as an argument. The list must contain an element `coeffs`, which contains the MCMC draws of the coefficients, and element `lambda` contains the corresponding draw of the inclusion parameter.
+The output of a Gibbs sampler with SSVS can be further analysed in the usual way. With the `bvartools` package the posterior draws can be collected in a `bvarmodel` object and the `summary` method provides summary statistics. It is also possible to add information on the inclusion parameters to the `bvarmodel` object by providing a named list as an argument. The list must contain an element `coeffs`, which contains the MCMC draws of the coefficients, and element `lambda` contains the corresponding draw of the inclusion parameter. Argument `varsel` names the algorithm that produced the draws, since the draws themselves do not reveal it.
 
 
 ``` r
@@ -129,7 +130,8 @@ bvar_est <- bvar(y = data$data$train$y, x = data$data$train$x,
                           lambda = draws_lambda[1:36,]),
                  C = list(coeffs = draws_a[37:39, ],
                           lambda = draws_lambda[37:39,]),
-                 Sigma = draws_sigma)
+                 Sigma = draws_sigma,
+                 varsel = "ssvs")
 
 bvar_summary <- summary(bvar_est)
 
@@ -137,135 +139,135 @@ bvar_summary
 #> 
 #> Bayesian VAR model with p = 4 
 #> 
-#> Variable selection algorithm: Bayesian variable selection (Korobilis, 2013)
+#> Variable selection algorithm: Stochastic search variable selection (George et al., 2008)
 #> 
-#> Endogenous variables: invest, income, cons
+#> Endogenous variables: dy, Dp, r
 #> 
-#> Variable: invest 
+#> Variable: dy 
 #> 
-#>                   Mean         SD     Naive SD Time-series SD        2.5%
-#> invest.l1 -0.100986159 0.13742411 0.0013742411   0.0067556501 -0.41239450
-#> income.l1  0.042682902 0.19943921 0.0019943921   0.0041264425 -0.13046411
-#> cons.l1    0.092476634 0.31915230 0.0031915230   0.0121500267 -0.15773613
-#> invest.l2 -0.014248177 0.05458255 0.0005458255   0.0013462137 -0.19756381
-#> income.l2  0.006577502 0.14992115 0.0014992115   0.0016868558 -0.16959094
-#> cons.l2    0.023738948 0.18062508 0.0018062508   0.0029225039 -0.18247511
-#> invest.l3  0.035039385 0.08645229 0.0008645229   0.0030534463 -0.02680920
-#> income.l3 -0.005860130 0.14585850 0.0014585850   0.0020194525 -0.21942234
-#> cons.l3   -0.049003849 0.22711236 0.0022711236   0.0047491270 -0.77723465
-#> invest.l4  0.261911726 0.16115092 0.0016115092   0.0106788476 -0.01089868
-#> income.l4 -0.063442300 0.23147353 0.0023147353   0.0052902901 -0.85244380
-#> cons.l4   -0.024209833 0.19028614 0.0019028614   0.0034498646 -0.52387364
-#> const      0.013250519 0.01221973 0.0001221973   0.0002292537 -0.01251166
-#>                    50%      97.5% Incl. prob. 
-#> invest.l1 -0.015717862 0.02182565      0.4211 
-#> income.l1  0.010205070 0.71326763      0.1087 
-#> cons.l1    0.018955609 1.19355645      0.1278 
-#> invest.l2 -0.002650744 0.02941696      0.1248 
-#> income.l2  0.002813707 0.28322903      0.0748 
-#> cons.l2    0.008862068 0.45498030      0.0680 
-#> invest.l3  0.005647765 0.30487125      0.1950 
-#> income.l3 -0.003163268 0.15790703      0.0645 
-#> cons.l3   -0.013453202 0.16138589      0.0915 
-#> invest.l4  0.288621577 0.53858336      0.8119 
-#> income.l4 -0.014554829 0.12479525      0.1294 
-#> cons.l4   -0.007770704 0.16523694      0.0824 
-#> const      0.013196238 0.03796215      1.0000 
+#>               Mean          SD     Naive SD Time-series SD         2.5%
+#> dy.l1 -0.010382940 0.039080571 3.908057e-04   9.983890e-04 -0.146635503
+#> Dp.l1 -0.002480545 0.072097996 7.209800e-04   1.130829e-03 -0.133075441
+#> r.l1   0.021639591 0.103103292 1.031033e-03   1.606362e-03 -0.131008572
+#> dy.l2 -0.003670558 0.028231577 2.823158e-04   3.798765e-04 -0.081217025
+#> Dp.l2 -0.162479119 0.237695876 2.376959e-03   1.241706e-02 -0.733684307
+#> r.l2   0.024351976 0.128257883 1.282579e-03   1.590673e-03 -0.179150286
+#> dy.l3 -0.005261692 0.030361579 3.036158e-04   5.521756e-04 -0.098510156
+#> Dp.l3 -0.079307202 0.172835633 1.728356e-03   6.571351e-03 -0.591042266
+#> r.l3   0.029351289 0.121774411 1.217744e-03   1.404849e-03 -0.175080659
+#> dy.l4  0.004613985 0.029180009 2.918001e-04   4.980082e-04 -0.021676420
+#> Dp.l4  0.002745923 0.068664030 6.866403e-04   1.150854e-03 -0.088169751
+#> r.l4   0.006402587 0.083260412 8.326041e-04   9.889200e-04 -0.129874083
+#> const  0.005642191 0.001493286 1.493286e-05   3.823502e-05  0.002905573
+#>                 50%       97.5% Incl. prob.  
+#> dy.l1 -0.0018080946 0.017968999      0.1270  
+#> Dp.l1 -0.0011604722 0.097649786      0.0834  
+#> r.l1   0.0161153595 0.197642890      0.0418  
+#> dy.l2 -0.0008369665 0.025819932      0.0973  
+#> Dp.l2 -0.0261428625 0.041150860      0.3849  
+#> r.l2   0.0228896435 0.237073845      0.0297  
+#> dy.l3 -0.0012867590 0.021099450      0.0952  
+#> Dp.l3 -0.0128792388 0.046406629      0.2325  
+#> r.l3   0.0289937410 0.227820823      0.0272  
+#> dy.l4  0.0008465239 0.091432510      0.0974  
+#> Dp.l4  0.0006907493 0.141554117      0.0798  
+#> r.l4   0.0063108427 0.144073826      0.0291  
+#> const  0.0055804669 0.008715984      1.0000 *
 #> 
-#> Variable: income 
+#> Variable: Dp 
 #> 
-#>                    Mean          SD     Naive SD Time-series SD         2.5%
-#> invest.l1  1.000302e-02 0.022092185 2.209218e-04   0.0008646350 -0.006313980
-#> income.l1 -2.191629e-02 0.078706579 7.870658e-04   0.0041292000 -0.293044957
-#> cons.l1    1.247627e-01 0.187195431 1.871954e-03   0.0128514379 -0.034187711
-#> invest.l2  1.761825e-03 0.010906353 1.090635e-04   0.0002563008 -0.008301976
-#> income.l2  3.262304e-03 0.044237151 4.423715e-04   0.0009619065 -0.043491238
-#> cons.l2   -8.208839e-04 0.040009041 4.000904e-04   0.0005678557 -0.059479094
-#> invest.l3 -3.551712e-05 0.008768670 8.768670e-05   0.0001010823 -0.012647769
-#> income.l3  1.701222e-02 0.060078301 6.007830e-04   0.0017445990 -0.031970491
-#> cons.l3    7.073433e-03 0.050096850 5.009685e-04   0.0011611897 -0.044233310
-#> invest.l4  1.599335e-03 0.009983913 9.983913e-05   0.0001818583 -0.008219919
-#> income.l4 -1.159935e-02 0.046668245 4.666825e-04   0.0010420245 -0.169980203
-#> cons.l4    1.271028e-03 0.034259461 3.425946e-04   0.0004171838 -0.043668415
-#> const      1.755400e-02 0.003946580 3.946580e-05   0.0001675529  0.009025232
-#>                     50%      97.5% Incl. prob.  
-#> invest.l1  1.744184e-03 0.07579158      0.2143  
-#> income.l1 -3.094746e-03 0.03503278      0.1395  
-#> cons.l1    2.070874e-02 0.58433187      0.3705  
-#> invest.l2  4.182212e-04 0.03355669      0.0794  
-#> income.l2  1.365553e-03 0.09711064      0.0788  
-#> cons.l2   -2.262667e-04 0.05261400      0.0590  
-#> invest.l3  5.870506e-05 0.01167865      0.0736  
-#> income.l3  4.713707e-03 0.22945926      0.1041  
-#> cons.l3    2.153015e-03 0.12200714      0.0698  
-#> invest.l4  4.190348e-04 0.03116070      0.0876  
-#> income.l4 -3.234425e-03 0.03130169      0.0942  
-#> cons.l4    5.738935e-04 0.05133320      0.0571  
-#> const      1.817027e-02 0.02420357      1.0000 *
+#>               Mean           SD     Naive SD Time-series SD          2.5%
+#> dy.l1  0.010317599 0.0233089567 2.330896e-04   8.881621e-04 -0.0060357087
+#> Dp.l1  0.307179665 0.0912453082 9.124531e-04   4.029689e-03  0.1210520637
+#> r.l1   0.028033380 0.0641198736 6.411987e-04   1.682045e-03 -0.0382228207
+#> dy.l2  0.025594112 0.0344396215 3.443962e-04   1.639060e-03 -0.0051394903
+#> Dp.l2  0.184738800 0.1205946878 1.205947e-03   8.360990e-03 -0.0091520864
+#> r.l2   0.022900344 0.0568686913 5.686869e-04   1.051992e-03 -0.0599708826
+#> dy.l3 -0.001828031 0.0114083301 1.140833e-04   2.066538e-04 -0.0383733421
+#> Dp.l3  0.083785044 0.1053519002 1.053519e-03   6.510447e-03 -0.0139818891
+#> r.l3   0.018244023 0.0452134089 4.521341e-04   6.104724e-04 -0.0606517679
+#> dy.l4 -0.009216541 0.0216023097 2.160231e-04   8.025829e-04 -0.0763920982
+#> Dp.l4  0.003308467 0.0264095542 2.640955e-04   5.432544e-04 -0.0206218369
+#> r.l4   0.010509556 0.0347401611 3.474016e-04   4.971600e-04 -0.0409059600
+#> const  0.001572853 0.0006067732 6.067732e-06   1.733006e-05  0.0003504748
+#>                 50%       97.5% Incl. prob.  
+#> dy.l1  0.0013369973 0.079318443      0.2323  
+#> Dp.l1  0.3089691234 0.479050475      0.9890 *
+#> r.l1   0.0161396512 0.207629286      0.1066  
+#> dy.l2  0.0040903810 0.104310789      0.4307  
+#> Dp.l2  0.2050619994 0.385992275      0.7905  
+#> r.l2   0.0232239544 0.119104376      0.0521  
+#> dy.l3 -0.0003047085 0.008785287      0.1075  
+#> Dp.l3  0.0139235941 0.314253027      0.4669  
+#> r.l3   0.0185891879 0.098383380      0.0386  
+#> dy.l4 -0.0014055325 0.005810411      0.2097  
+#> Dp.l4  0.0009119338 0.074557481      0.0754  
+#> r.l4   0.0081117169 0.081194634      0.0545  
+#> const  0.0015781737 0.002754700      1.0000 *
 #> 
-#> Variable: cons 
+#> Variable: r 
 #> 
-#>                    Mean         SD     Naive SD Time-series SD         2.5%
-#> invest.l1 -0.0019266163 0.01001426 0.0001001426   0.0002523566 -0.035495165
-#> income.l1  0.1620969511 0.14143997 0.0014143997   0.0122215470 -0.015647352
-#> cons.l1   -0.2764279629 0.19774791 0.0019774791   0.0180704698 -0.597192424
-#> invest.l2  0.0059919284 0.01562988 0.0001562988   0.0005909786 -0.005737624
-#> income.l2  0.3019294367 0.10595985 0.0010595985   0.0055550233  0.005315183
-#> cons.l2    0.0088922878 0.05462031 0.0005462031   0.0022606960 -0.043219482
-#> invest.l3  0.0005547670 0.00736967 0.0000736967   0.0001232193 -0.007843287
-#> income.l3  0.0108020803 0.04368838 0.0004368838   0.0013251677 -0.026851631
-#> cons.l3    0.0205422620 0.06172727 0.0006172727   0.0021501851 -0.029285872
-#> invest.l4 -0.0042340603 0.01307736 0.0001307736   0.0005367193 -0.048808663
-#> income.l4  0.0212497761 0.05624517 0.0005624517   0.0017100808 -0.022764006
-#> cons.l4   -0.0002534639 0.03117457 0.0003117457   0.0003874638 -0.048734071
-#> const      0.0142597017 0.00361687 0.0000361687   0.0001126958  0.007209746
-#>                     50%       97.5% Incl. prob.  
-#> invest.l1 -0.0004061070 0.006740454      0.1047  
-#> income.l1  0.1818312006 0.417407526      0.6398  
-#> cons.l1   -0.3172985907 0.017025528      0.7383  
-#> invest.l2  0.0011036104 0.055674348      0.1816  
-#> income.l2  0.3131141638 0.479593769      0.9537 *
-#> cons.l2    0.0020861515 0.175021866      0.0950  
-#> invest.l3  0.0001286034 0.018610178      0.0815  
-#> income.l3  0.0028856784 0.151643839      0.0992  
-#> cons.l3    0.0054261776 0.226142897      0.1325  
-#> invest.l4 -0.0007996104 0.005317072      0.1384  
-#> income.l4  0.0051460267 0.205538753      0.1558  
-#> cons.l4    0.0001153474 0.043366956      0.0709  
-#> const      0.0142571492 0.021476683      1.0000 *
+#>                Mean           SD     Naive SD Time-series SD         2.5%
+#> dy.l1  0.0367449349 0.0105465493 1.054655e-04   5.714027e-04  0.013671660
+#> Dp.l1  0.0698198598 0.0353575165 3.535752e-04   2.364499e-03 -0.001461058
+#> r.l1   1.0642254325 0.0619079511 6.190795e-04   2.423455e-03  0.953935378
+#> dy.l2  0.0014137615 0.0051624909 5.162491e-05   1.861787e-04 -0.002230227
+#> Dp.l2 -0.0087570682 0.0210130316 2.101303e-04   9.418476e-04 -0.073944015
+#> r.l2  -0.0143039022 0.0551805243 5.518052e-04   2.353877e-03 -0.202600164
+#> dy.l3  0.0037120693 0.0079919875 7.991988e-05   3.373222e-04 -0.001905698
+#> Dp.l3 -0.0149248342 0.0266669466 2.666695e-04   1.561658e-03 -0.085398409
+#> r.l3   0.0040835439 0.0623422573 6.234226e-04   2.432784e-03 -0.134061922
+#> dy.l4  0.0026692184 0.0068462952 6.846295e-05   2.787113e-04 -0.001887428
+#> Dp.l4 -0.0329379110 0.0347871312 3.478713e-04   2.107736e-03 -0.102968318
+#> r.l4  -0.0832672001 0.0683360846 6.833608e-04   3.888502e-03 -0.229284322
+#> const -0.0001538565 0.0002152246 2.152246e-06   8.099813e-06 -0.000589653
+#>                 50%        97.5% Incl. prob.  
+#> dy.l1  0.0372128506 0.0556770971      0.9808 *
+#> Dp.l1  0.0742112273 0.1301580732      0.8845  
+#> r.l1   1.0665793400 1.1949353846      1.0000 *
+#> dy.l2  0.0001928680 0.0190459154      0.1430  
+#> Dp.l2 -0.0010348754 0.0052493473      0.2143  
+#> r.l2  -0.0023530216 0.0290875152      0.1347  
+#> dy.l3  0.0004688028 0.0273353305      0.2529  
+#> Dp.l3 -0.0018326674 0.0049911259      0.3125  
+#> r.l3  -0.0004697095 0.1958831705      0.1819  
+#> dy.l4  0.0003571728 0.0245788787      0.1953  
+#> Dp.l4 -0.0253847571 0.0038578745      0.5607  
+#> r.l4  -0.0907438916 0.0076375029      0.6858  
+#> const -0.0001502655 0.0002586117      1.0000  
 #> 
 #> Variance-covariance matrix:
 #> 
-#>                       Mean           SD     Naive SD Time-series SD
-#> invest_invest 2.197267e-03 4.104461e-04 4.104461e-06   7.803533e-06
-#> invest_income 4.684726e-05 7.427031e-05 7.427031e-07   1.001634e-06
-#> invest_cons   1.388661e-04 6.191519e-05 6.191519e-07   7.265089e-07
-#> income_income 1.512856e-04 2.716744e-05 2.716744e-07   2.856257e-07
-#> income_cons   6.645165e-05 1.764350e-05 1.764350e-07   2.315755e-07
-#> cons_cons     9.753186e-05 1.802757e-05 1.802757e-07   3.104524e-07
-#>                        2.5%          50%        97.5%  
-#> invest_invest  1.532153e-03 2.154468e-03 0.0031343579 *
-#> invest_income -9.906360e-05 4.495671e-05 0.0001997140  
-#> invest_cons    2.777026e-05 1.348563e-04 0.0002723529 *
-#> income_income  1.065701e-04 1.481722e-04 0.0002139593 *
-#> income_cons    3.619253e-05 6.485046e-05 0.0001056381 *
-#> cons_cons      6.814514e-05 9.558795e-05 0.0001382903 *
+#>               Mean           SD     Naive SD Time-series SD          2.5%
+#> dy_dy 8.696091e-05 1.025269e-05 1.025269e-07   1.059087e-07  6.891262e-05
+#> dy_Dp 1.887992e-06 2.661264e-06 2.661264e-08   3.402859e-08 -3.279417e-06
+#> dy_r  1.581009e-06 8.421181e-07 8.421181e-09   1.159583e-08 -3.095337e-08
+#> Dp_Dp 1.137837e-05 1.342237e-06 1.342237e-08   1.565508e-08  9.002294e-06
+#> Dp_r  7.961558e-07 3.092371e-07 3.092371e-09   3.798175e-09  2.079270e-07
+#> r_r   1.121322e-06 1.368559e-07 1.368559e-09   2.473234e-09  8.836204e-07
+#>                50%        97.5%  
+#> dy_dy 8.641878e-05 1.090026e-04 *
+#> dy_Dp 1.863131e-06 7.314373e-06  
+#> dy_r  1.559406e-06 3.304458e-06  
+#> Dp_Dp 1.127672e-05 1.435033e-05 *
+#> Dp_r  7.825380e-07 1.424338e-06 *
+#> r_r   1.110909e-06 1.419766e-06 *
 ```
 
 The inclusion probabilities of the constant terms are 100 percent, because they were excluded from SSVS.
 
-Using the results from above the researcher could proceed in the usual way and obtain forecasts and impulse responses based on the output of the Gibbs sampler. The advantage of this approach is that it does not only take into account parameter uncertainty, but also model uncertainty. This can be illustrated by the histogram of the posterior draws of the 6th coefficient, which describes the relationship between the first lag of income and the current value of consumption.
+Using the results from above the researcher could proceed in the usual way and obtain forecasts and impulse responses based on the output of the Gibbs sampler. The advantage of this approach is that it does not only take into account parameter uncertainty, but also model uncertainty. This can be illustrated by the histogram of the posterior draws of the 6th coefficient, which describes the relationship between the first lag of inflation and the current value of the interest rate.
 
 
 ``` r
-hist(draws_a[6,], main = "Consumption ~ First lag of income", xlab = "Value of posterior draw")
+hist(draws_a[6,], main = "Interest rate ~ First lag of inflation", xlab = "Value of posterior draw")
 ```
 
 ![plot of chunk unnamed-chunk-5](figures/ssvs-unnamed-chunk-5-1.png)
 
-A non-negligible mass of some 23 percent, i.e. 1 - 0.67, of the parameter draws is concentrated around zero. This is the result of SSVS, where posterior draws are close to zero if a constant is assessed to be irrelevant during an iteration of the Gibbs sampler and, therefore, $\tau_{0,6}^2$ is used as its prior variance. On the other hand, about 67 percent of the draws are dispersed around a positive value, where SSVS suggests to include the variable in the model and the larger value $\tau_{1,6}^2$ is used as prior variance. Model uncertainty is then described by the two peaks and parameter uncertainty by the dispersion of the posterior draws around them.
+A non-negligible mass of some 12 percent, i.e. 1 - 0.88, of the parameter draws is concentrated around zero. This is the result of SSVS, where posterior draws are close to zero if a coefficient is assessed to be irrelevant during an iteration of the Gibbs sampler and, therefore, $\tau_{0,6}^2$ is used as its prior variance. On the other hand, about 88 percent of the draws are dispersed around a positive value, where SSVS suggests to include the variable in the model and the larger value $\tau_{1,6}^2$ is used as prior variance. Model uncertainty is then described by the two peaks and parameter uncertainty by the dispersion of the posterior draws around them.
 
-However, if the researcher prefers not to work with a model, where the relevance of a variable can change from one step of the sampling algorithm to the next, a different approach would be to work only with a highly probable model. This can be done with a further simulation, where very tight priors are used for irrelevant variables and relatively uninformative priors for relevant parameters. In this example, coefficients with a posterior inclusion probability of above 40 percent are considered to be relevant.[^threshold] The prior variance is set to 0.00001 for irrelevant and to 9 for relevant variables. No additional SSVS step is required. Everything else remains unchanged.
+However, if the researcher prefers not to work with a model, where the relevance of a variable can change from one step of the sampling algorithm to the next, a different approach would be to work only with a highly probable model. This can be done with a further simulation, where very tight priors are used for irrelevant variables and relatively uninformative priors for relevant parameters. In this example, coefficients with a posterior inclusion probability of at least 50 percent are considered to be relevant. The prior variance is set to 0.00001 for irrelevant and to 9 for relevant variables. No additional SSVS step is required. Everything else remains unchanged.
 
 
 ``` r
@@ -273,7 +275,7 @@ However, if the researcher prefers not to work with a model, where the relevance
 lambda <- bvar_summary$a$lambda
 
 # Select variables that should be included
-include_var <- c(lambda >= .4)
+include_var <- c(lambda >= .5)
 
 # Update prior variances
 diag(a_v_i_prior)[!include_var] <- 1 / 0.00001 # Very tight prior close to zero
@@ -302,7 +304,7 @@ for (draw in 1:draws) {
 }
 ```
 
-The means of the posterior draws are similar to the OLS estimates in Lütkepohl (2006, Section 5.2.10):
+Summary statistics of the posterior draws of the restricted model:
 
 
 ``` r
@@ -316,117 +318,117 @@ summary(bvar_est)
 #> 
 #> Bayesian VAR model with p = 4 
 #> 
-#> Endogenous variables: invest, income, cons
+#> Endogenous variables: dy, Dp, r
 #> 
-#> Variable: invest 
+#> Variable: dy 
 #> 
-#>                    Mean          SD     Naive SD Time-series SD         2.5%
-#> invest.l1 -2.273250e-01 0.109866852 1.098669e-03   1.132053e-03 -0.442479169
-#> income.l1  2.939601e-06 0.003206228 3.206228e-05   3.206228e-05 -0.006285774
-#> cons.l1   -4.150709e-05 0.003140550 3.140550e-05   3.140550e-05 -0.006290600
-#> invest.l2 -1.482848e-04 0.003187547 3.187547e-05   3.187547e-05 -0.006378764
-#> income.l2  7.630494e-06 0.003114688 3.114688e-05   3.114688e-05 -0.006061766
-#> cons.l2    1.051121e-05 0.003180203 3.180203e-05   3.180203e-05 -0.006185276
-#> invest.l3  9.854118e-05 0.003181224 3.181224e-05   3.181224e-05 -0.006222637
-#> income.l3 -3.996099e-05 0.003155680 3.155680e-05   3.237552e-05 -0.006291131
-#> cons.l3    2.191501e-05 0.003146670 3.146670e-05   3.063204e-05 -0.006147741
-#> invest.l4  3.265487e-01 0.108321453 1.083215e-03   1.083215e-03  0.113552022
-#> income.l4 -1.682021e-05 0.003134190 3.134190e-05   3.134190e-05 -0.006243050
-#> cons.l4    4.776412e-05 0.003155623 3.155623e-05   3.078593e-05 -0.006085435
-#> const      1.519025e-02 0.006072390 6.072390e-05   6.072390e-05  0.003176068
-#>                     50%        97.5%  
-#> invest.l1 -2.279552e-01 -0.013898572 *
-#> income.l1 -2.741375e-06  0.006310379  
-#> cons.l1   -1.581618e-05  0.006061355  
-#> invest.l2 -1.638706e-04  0.006063516  
-#> income.l2  5.671895e-06  0.005992804  
-#> cons.l2    1.836724e-06  0.006261264  
-#> invest.l3  5.585263e-05  0.006298624  
-#> income.l3 -1.522106e-05  0.006131262  
-#> cons.l3    1.975290e-05  0.006158732  
-#> invest.l4  3.266566e-01  0.536211047 *
-#> income.l4  8.115318e-06  0.006152905  
-#> cons.l4    7.561829e-05  0.006283127  
-#> const      1.523293e-02  0.026973686 *
+#>                Mean           SD     Naive SD Time-series SD         2.5%
+#> dy.l1 -1.009989e-04 0.0031700436 3.170044e-05   3.170044e-05 -0.006502223
+#> Dp.l1 -5.870547e-05 0.0031826964 3.182696e-05   3.182696e-05 -0.006299832
+#> r.l1  -6.930529e-05 0.0031190205 3.119021e-05   3.119021e-05 -0.006299245
+#> dy.l2 -6.607670e-05 0.0031558775 3.155877e-05   3.155877e-05 -0.006338768
+#> Dp.l2 -1.270011e-04 0.0031062651 3.106265e-05   3.106265e-05 -0.006187387
+#> r.l2  -2.371115e-06 0.0031683847 3.168385e-05   3.168385e-05 -0.006173500
+#> dy.l3 -9.361001e-05 0.0031700477 3.170048e-05   3.170048e-05 -0.006342847
+#> Dp.l3 -1.302476e-04 0.0031595746 3.159575e-05   3.159575e-05 -0.006325639
+#> r.l3   4.043788e-05 0.0031328850 3.132885e-05   3.132885e-05 -0.006144232
+#> dy.l4  4.062519e-05 0.0031701172 3.170117e-05   3.170117e-05 -0.006168723
+#> Dp.l4  7.178489e-06 0.0031237599 3.123760e-05   3.123760e-05 -0.006107346
+#> r.l4   1.574259e-05 0.0031613209 3.161321e-05   3.137496e-05 -0.006246721
+#> const  4.858034e-03 0.0007580259 7.580259e-06   7.580259e-06  0.003397056
+#>                 50%       97.5%  
+#> dy.l1 -8.346008e-05 0.006055584  
+#> Dp.l1 -3.984483e-05 0.006200406  
+#> r.l1  -4.593079e-05 0.005985789  
+#> dy.l2 -1.022171e-04 0.006133512  
+#> Dp.l2 -1.335651e-04 0.005914694  
+#> r.l2  -1.066779e-05 0.006225661  
+#> dy.l3 -1.209623e-04 0.006119956  
+#> Dp.l3 -1.124122e-04 0.006170636  
+#> r.l3   4.325178e-05 0.006202239  
+#> dy.l4  2.284646e-05 0.006228360  
+#> Dp.l4  4.417825e-05 0.006145892  
+#> r.l4   4.158326e-05 0.006161283  
+#> const  4.855946e-03 0.006342327 *
 #> 
-#> Variable: income 
+#> Variable: Dp 
 #> 
-#>                    Mean          SD     Naive SD Time-series SD         2.5%
-#> invest.l1  6.885718e-04 0.003135318 3.135318e-05   3.192161e-05 -0.005464520
-#> income.l1  1.465559e-05 0.003137415 3.137415e-05   3.159233e-05 -0.006210079
-#> cons.l1    1.124725e-04 0.003146027 3.146027e-05   3.088348e-05 -0.005923771
-#> invest.l2  6.833085e-05 0.003095569 3.095569e-05   3.095569e-05 -0.006008642
-#> income.l2  5.678968e-05 0.003195166 3.195166e-05   3.402478e-05 -0.006141012
-#> cons.l2   -1.586064e-05 0.003160972 3.160972e-05   3.160972e-05 -0.006245895
-#> invest.l3  5.569240e-05 0.003141838 3.141838e-05   3.141838e-05 -0.006148327
-#> income.l3  1.736299e-04 0.003155350 3.155350e-05   3.155350e-05 -0.006076551
-#> cons.l3    2.836783e-05 0.003135561 3.135561e-05   3.135561e-05 -0.006256133
-#> invest.l4  2.913438e-04 0.003172298 3.172298e-05   3.118481e-05 -0.005952241
-#> income.l4 -4.552079e-05 0.003162165 3.162165e-05   3.162165e-05 -0.006329514
-#> cons.l4   -2.956657e-05 0.003162158 3.162158e-05   3.162158e-05 -0.006233365
-#> const      2.013616e-02 0.001478583 1.478583e-05   1.478583e-05  0.017238714
-#>                     50%       97.5%  
-#> invest.l1  6.906648e-04 0.006844956  
-#> income.l1  2.911103e-05 0.006054008  
-#> cons.l1    1.093350e-04 0.006296248  
-#> invest.l2  1.314539e-04 0.006066144  
-#> income.l2  5.507871e-05 0.006295829  
-#> cons.l2   -3.052778e-05 0.006190623  
-#> invest.l3  7.773226e-05 0.006201061  
-#> income.l3  1.598050e-04 0.006285151  
-#> cons.l3    3.822078e-05 0.006170100  
-#> invest.l4  3.034503e-04 0.006431171  
-#> income.l4 -1.337421e-05 0.006074911  
-#> cons.l4   -6.234878e-05 0.006139616  
-#> const      2.015491e-02 0.023036240 *
+#>                Mean           SD     Naive SD Time-series SD          2.5%
+#> dy.l1  0.0003686549 0.0031244039 3.124404e-05   3.124404e-05 -0.0057262654
+#> Dp.l1  0.3701423360 0.0768036236 7.680362e-04   7.898549e-04  0.2185440951
+#> r.l1   0.0005122644 0.0031484630 3.148463e-05   3.047244e-05 -0.0055597397
+#> dy.l2  0.0006109830 0.0031355752 3.135575e-05   3.135575e-05 -0.0055824128
+#> Dp.l2  0.3015228353 0.0760091212 7.600912e-04   7.877598e-04  0.1504479657
+#> r.l2   0.0005170634 0.0031899687 3.189969e-05   3.189969e-05 -0.0057424410
+#> dy.l3 -0.0002423301 0.0031331637 3.133164e-05   3.133164e-05 -0.0063572997
+#> Dp.l3  0.0003633662 0.0031497530 3.149753e-05   3.149753e-05 -0.0058035838
+#> r.l3   0.0004960386 0.0031686212 3.168621e-05   3.168621e-05 -0.0057789313
+#> dy.l4 -0.0005206567 0.0031687757 3.168776e-05   3.168776e-05 -0.0067338512
+#> Dp.l4  0.0001234848 0.0031641515 3.164152e-05   3.095492e-05 -0.0061268056
+#> r.l4   0.0004902933 0.0031498698 3.149870e-05   3.149870e-05 -0.0056310132
+#> const  0.0018653342 0.0005116437 5.116437e-06   5.212473e-06  0.0008483351
+#>                 50%       97.5%  
+#> dy.l1  0.0003483333 0.006405639  
+#> Dp.l1  0.3712270471 0.520167082 *
+#> r.l1   0.0005342572 0.006758837  
+#> dy.l2  0.0006541687 0.006665780  
+#> Dp.l2  0.3020475268 0.448662479 *
+#> r.l2   0.0004973178 0.006724803  
+#> dy.l3 -0.0002184460 0.005881223  
+#> Dp.l3  0.0003587139 0.006498735  
+#> r.l3   0.0005136014 0.006685360  
+#> dy.l4 -0.0005093920 0.005644658  
+#> Dp.l4  0.0001720030 0.006256518  
+#> r.l4   0.0004523707 0.006624322  
+#> const  0.0018663240 0.002864988 *
 #> 
-#> Variable: cons 
+#> Variable: r 
 #> 
-#>                    Mean          SD     Naive SD Time-series SD         2.5%
-#> invest.l1 -5.319692e-04 0.003132735 3.132735e-05   3.132735e-05 -0.006715879
-#> income.l1  2.618515e-01 0.085986920 8.598692e-04   8.922824e-04  0.094695396
-#> cons.l1   -4.362099e-01 0.102596535 1.025965e-03   1.083150e-03 -0.638762430
-#> invest.l2  6.546425e-04 0.003115811 3.115811e-05   3.115811e-05 -0.005524329
-#> income.l2  3.289366e-01 0.076705375 7.670537e-04   7.838637e-04  0.176874010
-#> cons.l2   -9.687256e-06 0.003174795 3.174795e-05   3.174795e-05 -0.006189131
-#> invest.l3  8.366990e-05 0.003139043 3.139043e-05   3.139043e-05 -0.006144825
-#> income.l3  1.188606e-04 0.003193713 3.193713e-05   3.193713e-05 -0.006140453
-#> cons.l3    1.699318e-04 0.003189190 3.189190e-05   3.281140e-05 -0.006004454
-#> invest.l4 -5.387358e-04 0.003125779 3.125779e-05   3.125779e-05 -0.006710663
-#> income.l4  1.547534e-04 0.003161953 3.161953e-05   3.161953e-05 -0.005998973
-#> cons.l4    4.349332e-05 0.003130564 3.130564e-05   3.130564e-05 -0.006197957
-#> const      1.610468e-02 0.002675432 2.675432e-05   2.781591e-05  0.010777112
-#>                     50%        97.5%  
-#> invest.l1 -5.384297e-04  0.005676892  
-#> income.l1  2.611897e-01  0.431810868 *
-#> cons.l1   -4.367847e-01 -0.233265773 *
-#> invest.l2  6.799824e-04  0.006694290  
-#> income.l2  3.295349e-01  0.479758669 *
-#> cons.l2    6.789453e-06  0.006225753  
-#> invest.l3  1.191159e-04  0.006270497  
-#> income.l3  1.280843e-04  0.006302043  
-#> cons.l3    1.320342e-04  0.006470469  
-#> invest.l4 -4.976531e-04  0.005556752  
-#> income.l4  1.375474e-04  0.006426342  
-#> cons.l4    8.350077e-05  0.006137422  
-#> const      1.613203e-02  0.021318563 *
+#>                Mean           SD     Naive SD Time-series SD          2.5%
+#> dy.l1  3.728543e-02 0.0087962786 8.796279e-05   8.796279e-05  0.0198667481
+#> Dp.l1  8.242009e-02 0.0241856320 2.418563e-04   2.545351e-04  0.0349572419
+#> r.l1   1.067651e+00 0.0325931911 3.259319e-04   3.259319e-04  1.0041517656
+#> dy.l2  3.968519e-04 0.0030054667 3.005467e-05   3.005467e-05 -0.0055448547
+#> Dp.l2 -4.749362e-04 0.0031137807 3.113781e-05   3.186210e-05 -0.0065405375
+#> r.l2  -2.323636e-05 0.0031697506 3.169751e-05   3.169751e-05 -0.0062437040
+#> dy.l3  1.150050e-03 0.0030133551 3.013355e-05   2.945691e-05 -0.0048257215
+#> Dp.l3 -6.574483e-04 0.0031740691 3.174069e-05   3.174069e-05 -0.0068922888
+#> r.l3   1.534203e-04 0.0031715053 3.171505e-05   3.110423e-05 -0.0060840189
+#> dy.l4  1.005795e-03 0.0029767873 2.976787e-05   2.976787e-05 -0.0048697087
+#> Dp.l4 -6.017150e-02 0.0233861522 2.338615e-04   2.338615e-04 -0.1063598704
+#> r.l4  -1.032143e-01 0.0311174203 3.111742e-04   3.111742e-04 -0.1646502966
+#> const -1.119443e-04 0.0001733741 1.733741e-06   1.733741e-06 -0.0004516849
+#>                 50%         97.5%  
+#> dy.l1  3.732982e-02  0.0544316678 *
+#> Dp.l1  8.238696e-02  0.1295685101 *
+#> r.l1   1.067995e+00  1.1308587629 *
+#> dy.l2  3.985418e-04  0.0062115472  
+#> Dp.l2 -4.475314e-04  0.0056026984  
+#> r.l2  -1.002894e-05  0.0061931390  
+#> dy.l3  1.184875e-03  0.0070924978  
+#> Dp.l3 -6.660539e-04  0.0055352927  
+#> r.l3   1.614318e-04  0.0063634056  
+#> dy.l4  1.039508e-03  0.0068378317  
+#> Dp.l4 -6.019857e-02 -0.0139661603 *
+#> r.l4  -1.031433e-01 -0.0420891807 *
+#> const -1.107730e-04  0.0002351004  
 #> 
 #> Variance-covariance matrix:
 #> 
-#>                       Mean           SD     Naive SD Time-series SD
-#> invest_invest 2.091225e-03 3.724365e-04 3.724365e-06   3.853520e-06
-#> invest_income 6.374042e-05 7.090043e-05 7.090043e-07   7.335501e-07
-#> invest_cons   1.382719e-04 5.888294e-05 5.888294e-07   6.103386e-07
-#> income_income 1.528346e-04 2.709835e-05 2.709835e-07   2.769523e-07
-#> income_cons   6.894591e-05 1.760261e-05 1.760261e-07   1.864213e-07
-#> cons_cons     9.636453e-05 1.757619e-05 1.757619e-07   1.902460e-07
-#>                        2.5%          50%        97.5%  
-#> invest_invest  1.487554e-03 2.051405e-03 0.0029372320 *
-#> invest_income -7.152458e-05 6.189665e-05 0.0002108996  
-#> invest_cons    3.341591e-05 1.342429e-04 0.0002658996 *
-#> income_income  1.081411e-04 1.496519e-04 0.0002141974 *
-#> income_cons    3.912025e-05 6.724469e-05 0.0001084635 *
-#> cons_cons      6.789442e-05 9.432253e-05 0.0001354057 *
+#>               Mean           SD     Naive SD Time-series SD          2.5%
+#> dy_dy 8.749056e-05 9.981720e-06 9.981720e-08   9.981720e-08  7.006938e-05
+#> dy_Dp 2.199075e-06 2.660792e-06 2.660792e-08   2.718221e-08 -3.006187e-06
+#> dy_r  1.726666e-06 8.081705e-07 8.081705e-09   8.227310e-09  1.986556e-07
+#> Dp_Dp 1.187022e-05 1.392409e-06 1.392409e-08   1.440010e-08  9.441827e-06
+#> Dp_r  8.068425e-07 3.099698e-07 3.099698e-09   3.338145e-09  2.351405e-07
+#> r_r   1.091573e-06 1.285398e-07 1.285398e-09   1.361919e-09  8.696763e-07
+#>                50%        97.5%  
+#> dy_dy 8.668643e-05 1.090859e-04 *
+#> dy_Dp 2.161304e-06 7.505836e-06  
+#> dy_r  1.699866e-06 3.416634e-06 *
+#> Dp_Dp 1.177161e-05 1.490971e-05 *
+#> Dp_r  7.975134e-07 1.453068e-06 *
+#> r_r   1.080144e-06 1.369359e-06 *
 ```
 
 Forecasts, impulse responses and variance decompositions can be obtained in the usual manner.
@@ -470,8 +472,4 @@ Koop, G., & Korobilis, D. (2010). Bayesian multivariate time series methods for 
 
 Korobilis, D. (2013). VAR forecasting using Bayesian variable selection. *Journal of Applied Econometrics, 28*(2), 204-230. <https://doi.org/10.1002/jae.1271>
 
-Lütkepohl, H. (2006). *New introduction to multiple time series analysis* (2nd ed.). Berlin: Springer.
-
 [^koop]: See Koop and Korobilis (2010) for an introduction to Bayesian VAR modelling and SSVS.
-
-[^threshold]: This threshold value is usually set to 50 percent. 40 percent is chosen, because it yields similar results as the restricted model in Lütkepohl (2006, Section 5.2.10).

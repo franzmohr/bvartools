@@ -25,17 +25,20 @@ $$ \frac{\kappa_{1} \kappa_{3}}{(l+1)^2} \frac{\sigma_{i}^2}{\sigma_{j}^2} \text
 $$ \kappa_{1} \kappa_{4} \sigma_{i}^2 \textrm{ for deterministic terms,} $$
 where $\sigma_{i}$ is the residual standard deviation of variable $i$ of an unrestricted LS estimate. For exogenous variables $\sigma_{i}$ is the sample standard deviation. If the model does not contain exogenous variables, argument `kappa3` will be ignored.
 
-This vignette illustrates how to use the `bvartools` package to work with the Minnesota prior by reproducing the results of exercise 20.2 in Chan et al. (2019), which uses the quarterly time series for the US CPI inflation rate, unemployment rate, and Fed Funds rate from 1959Q2 to 2007Q4.
+This vignette illustrates how to use the `bvartools` package to work with the Minnesota prior along the lines of exercise 20.2 in Chan et al. (2019). It uses data set `at_macrodata`, which contains quarterly macroeconomic series of Austria, and takes from it the growth rate of real GDP (`dy`), inflation (`Dp`) and the short-term interest rate (`r`), all in percent per quarter and up to 2019Q4, which leaves out the quarters in which the pandemic moved output growth by ten percent.
 
 
 ``` r
 library(bvartools)
 
 # Load data
-data("us_macrodata")
+data("at_macrodata")
+at <- at_macrodata[["domestic"]]
+data <- ts.intersect(dy = diff(at[, "y"]), Dp = at[, "Dp"], r = at[, "r"]) * 100
+data <- window(data, end = c(2019, 4))
 
 # Plot the series
-plot(us_macrodata)
+plot(data)
 ```
 
 <div class="figure" style="text-align: center">
@@ -51,7 +54,7 @@ The `create_bvarmodel` function produces an object, which contains information o
 
 
 ``` r
-model <- create_bvarmodel(us_macrodata, p = 1, deterministic = "const",
+model <- create_bvarmodel(data, p = 1, deterministic = "const",
                           iterations = 5000, burnin = 1000)
 ```
 
@@ -91,10 +94,10 @@ Also check the corresponding prior coefficient variances:
 
 ``` r
 matrix(1 / diag(minn[["v_inv"]]), 3)
-#>           [,1]     [,2]       [,3]     [,4]
-#> [1,] 0.5000000 0.455034 0.04993539 18.42749
-#> [2,] 0.1373524 0.500000 0.02743498 10.12424
-#> [3,] 1.2516173 2.278114 0.50000000 92.25667
+#>             [,1]       [,2]      [,3]      [,4]
+#> [1,] 0.500000000 1.69592115 13.527998 86.222971
+#> [2,] 0.036853129 0.50000000  1.994196 12.710345
+#> [3,] 0.004620048 0.03134095  0.500000  1.593417
 ```
 
 
@@ -181,56 +184,56 @@ summary(result)
 #> 
 #> Bayesian VAR model with p = 1 
 #> 
-#> Endogenous variables: Dp, u, r
+#> Endogenous variables: dy, Dp, r
+#> 
+#> Variable: dy 
+#> 
+#>              Mean         SD     Naive SD Time-series SD       2.5%         50%
+#> dy.l1 -0.05763831 0.07984344 0.0007984344   0.0007984344 -0.2173037 -0.05587954
+#> Dp.l1 -0.15101396 0.20068202 0.0020068202   0.0020398831 -0.5398237 -0.15327508
+#> r.l1   0.06146476 0.11474281 0.0011474281   0.0011474281 -0.1633870  0.06150310
+#> const  0.54960107 0.13535547 0.0013535547   0.0013535547  0.2792208  0.55161855
+#>            97.5%  
+#> dy.l1 0.09616976  
+#> Dp.l1 0.23934329  
+#> r.l1  0.28662474  
+#> const 0.81593282 *
 #> 
 #> Variable: Dp 
 #> 
-#>              Mean         SD     Naive SD Time-series SD        2.5%
-#> Dp.l1  0.70052323 0.05830359 0.0005830359   0.0005830359  0.58474396
-#> u.l1  -0.02834767 0.02253303 0.0002253303   0.0002253303 -0.07242061
-#> r.l1   0.03872390 0.01372295 0.0001372295   0.0001372295  0.01152278
-#> const  0.24130631 0.13149565 0.0013149565   0.0013345137 -0.01756822
-#>               50%      97.5%  
-#> Dp.l1  0.70121691 0.81394601 *
-#> u.l1  -0.02872595 0.01588846  
-#> r.l1   0.03869722 0.06558172 *
-#> const  0.24208198 0.50084070  
-#> 
-#> Variable: u 
-#> 
-#>             Mean         SD     Naive SD Time-series SD         2.5%        50%
-#> Dp.l1 0.08779184 0.04261885 0.0004261885   4.261885e-04  0.003171550 0.08795105
-#> u.l1  0.95344411 0.01684402 0.0001684402   1.684402e-04  0.920615872 0.95344052
-#> r.l1  0.02249685 0.01009816 0.0001009816   9.809376e-05  0.002773699 0.02256340
-#> const 0.04564581 0.09796144 0.0009796144   9.796144e-04 -0.145197197 0.04584607
+#>             Mean         SD     Naive SD Time-series SD        2.5%        50%
+#> dy.l1 0.03037819 0.03017892 0.0003017892   0.0003017892 -0.02910958 0.03055016
+#> Dp.l1 0.42147632 0.07751895 0.0007751895   0.0007751895  0.26652839 0.42161616
+#> r.l1  0.16525958 0.04406617 0.0004406617   0.0004406617  0.07918762 0.16562901
+#> const 0.18596442 0.05214480 0.0005214480   0.0005214480  0.08519452 0.18569175
 #>            97.5%  
-#> Dp.l1 0.17168358 *
-#> u.l1  0.98659460 *
-#> r.l1  0.04220645 *
-#> const 0.23552307  
+#> dy.l1 0.08953386  
+#> Dp.l1 0.57334607 *
+#> r.l1  0.25071585 *
+#> const 0.28754472 *
 #> 
 #> Variable: r 
 #> 
-#>              Mean         SD     Naive SD Time-series SD        2.5%        50%
-#> Dp.l1  0.21368607 0.12694163 0.0012694163   0.0012694163 -0.03521600  0.2150704
-#> u.l1  -0.05073181 0.05091509 0.0005091509   0.0004982974 -0.15109826 -0.0511488
-#> r.l1   0.92632376 0.03058879 0.0003058879   0.0003011107  0.86705444  0.9262521
-#> const  0.53204930 0.29599748 0.0029599748   0.0028683305 -0.05292146  0.5336643
-#>            97.5%  
-#> Dp.l1 0.46262497  
-#> u.l1  0.04735833  
-#> r.l1  0.98690579 *
-#> const 1.10581747  
+#>              Mean         SD     Naive SD Time-series SD        2.5%
+#> dy.l1  0.04608170 0.01051663 0.0001051663   0.0001051663  0.02569123
+#> Dp.l1  0.09862443 0.02720400 0.0002720400   0.0002720400  0.04505687
+#> r.l1   0.95823096 0.01569508 0.0001569508   0.0001569508  0.92789816
+#> const -0.05516448 0.01854943 0.0001854943   0.0001811623 -0.09164759
+#>               50%       97.5%  
+#> dy.l1  0.04612159  0.06666502 *
+#> Dp.l1  0.09860562  0.15172543 *
+#> r.l1   0.95796597  0.98870707 *
+#> const -0.05513727 -0.01848947 *
 #> 
 #> Variance-covariance matrix:
 #> 
-#>            Mean SD Naive SD Time-series SD      2.5%       50%     97.5%  
-#> Dp_Dp 0.1842749  0        0              0 0.1842749 0.1842749 0.1842749 *
-#> Dp_u  0.0000000  0        0              0 0.0000000 0.0000000 0.0000000  
-#> Dp_r  0.0000000  0        0              0 0.0000000 0.0000000 0.0000000  
-#> u_u   0.1012424  0        0              0 0.1012424 0.1012424 0.1012424 *
-#> u_r   0.0000000  0        0              0 0.0000000 0.0000000 0.0000000  
-#> r_r   0.9225667  0        0              0 0.9225667 0.9225667 0.9225667 *
+#>             Mean SD Naive SD Time-series SD       2.5%        50%      97.5%  
+#> dy_dy 0.86222971  0        0              0 0.86222971 0.86222971 0.86222971 *
+#> dy_Dp 0.00000000  0        0              0 0.00000000 0.00000000 0.00000000  
+#> dy_r  0.00000000  0        0              0 0.00000000 0.00000000 0.00000000  
+#> Dp_Dp 0.12710345  0        0              0 0.12710345 0.12710345 0.12710345 *
+#> Dp_r  0.00000000  0        0              0 0.00000000 0.00000000 0.00000000  
+#> r_r   0.01593417  0        0              0 0.01593417 0.01593417 0.01593417 *
 ```
 
 

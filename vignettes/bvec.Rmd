@@ -15,20 +15,20 @@ vignette: >
 This vignette provides the code to set up and estimate a Bayesian vector error correction (BVEC) model with the `bvartools` package. The presented Gibbs sampler is based on the approach of Koop et al. (2010), who propose a prior on the cointegration space. The estimated model has the following form
 
 $$\Delta y_t = \Pi y_{t - 1} + \sum_{l = 1}^{p - 1} \Gamma_l \Delta y_{t - l} + C d_t + u_t,$$
-where $\Pi = \alpha \beta^{\prime}$ with cointegration rank $r$, $u_t \sim N(0, \Sigma)$ and $d_t$ contains an intercept and seasonal dummies. For an introduction to vector error correction models see [https://www.r-econometrics.com/timeseries/vecintro/](https://www.r-econometrics.com/timeseries/vecintro/).
+where $\Pi = \alpha \beta^{\prime}$ with cointegration rank $r$, $u_t \sim N(0, \Sigma)$ and $d_t$ contains deterministic terms. For an introduction to vector error correction models see [https://www.r-econometrics.com/timeseries/vecintro/](https://www.r-econometrics.com/timeseries/vecintro/).
 
 ## Data
 
-To illustrate the workflow of the analysis, data set E6 from Lütkepohl (2006) is used, which contains data on German long-term interest rates and inflation from 1972Q2 to 1998Q4.
+To illustrate the workflow of the analysis, the Austrian long-term interest rate (`lr`) and inflation (`Dp`) are taken from data set `at_macrodata`, both in percent per quarter from 1979Q2 to 2019Q4. The series are seasonally adjusted, so that $d_t$ contains only an intercept.
 
 
 ``` r
 library(bvartools)
 
-data("e6")
+data("at_macrodata")
 
-e6 <- e6 * 100
-plot(e6) # Plot the series
+data <- window(at_macrodata[["domestic"]][, c("lr", "Dp")], end = c(2019, 4)) * 100
+plot(data) # Plot the series
 ```
 
 <div class="figure" style="text-align: center">
@@ -40,8 +40,8 @@ The `create_bvecmodel` function produces an object of class `bvecmodel`, where t
 
 
 ``` r
-object <- create_bvecmodel(e6, p = 4, r = 1,
-                           const = "unrestricted", season = "unrestricted",
+object <- create_bvecmodel(data, p = 4, r = 1,
+                           const = "unrestricted",
                            iterations = 5000, burnin = 1000)
 ```
 
@@ -57,7 +57,7 @@ object <- scale_error_correction(object)
 
 ## Priors
 
-Function `add_priors` adds the necessary prior specifications to object `object`. For the current application we use non-informative priors to compare the with the result in Lütkepohl (2006):
+Function `add_priors` adds the necessary prior specifications to object `object`. For the current application non-informative priors are used:
 
 
 ``` r
@@ -171,13 +171,13 @@ The `bvec` function can be used to collect output of the above Gibbs sampler in 
 
 ``` r
 # Number of non-deterministic coefficients
-k_nondet <- (k_x - 4) * k
+k_nondet <- (k_x - 1) * k
 
 # Generate bvecmodel object
 bvec_est <- bvec(y = object[["data"]][["train"]][["y"]],
                  w = object[["data"]][["train"]][["w"]],
                  x = object[["data"]][["train"]][["x"]][, 1:6],
-                 x_d = object[["data"]][["train"]][["x"]][, -(1:6)],
+                 x_d = object[["data"]][["train"]][["x"]][, -(1:6), drop = FALSE],
                  r = 1,
                  alpha = draws_alpha,
                  beta = draws_beta,
@@ -207,8 +207,8 @@ dimnames(beta) <- list(dimnames(w)[[1]], NULL) # Rename matrix dimensions
 
 beta # Print
 #>        [,1]
-#> l.R   1.000
-#> l.Dp -4.008
+#> l.lr  1.000
+#> l.Dp -3.727
 ```
 
 Posterior draws can be inspected with `plot`. Note that the coefficients of the error correction term are displayed as draws of `Pi`, i.e. as the product of `alpha` and `beta`, since the two matrices are only identified up to a rotation.
@@ -240,76 +240,64 @@ summary(bvec_est)
 #> 
 #> Bayesian VEC model with p = 4 
 #> 
-#> Endogenous variables: R, Dp
+#> Endogenous variables: lr, Dp
 #> 
-#> Variable: R 
+#> Variable: lr 
 #> 
-#>                 Mean         SD     Naive SD Time-series SD        2.5%
-#> l.R      -0.09452315 0.05670807 0.0008019732    0.002859439 -0.21259726
-#> l.Dp      0.36021793 0.19694663 0.0027852459    0.005723887 -0.04537673
-#> d.R.l01   0.26169399 0.10980190 0.0015528333    0.002243868  0.04004647
-#> d.Dp.l01 -0.17561638 0.16593313 0.0023466488    0.004579734 -0.49616115
-#> d.R.l02  -0.02307685 0.10911509 0.0015431205    0.001885303 -0.24038446
-#> d.Dp.l02 -0.20065343 0.13142227 0.0018585916    0.002990039 -0.45811227
-#> d.R.l03   0.21980151 0.10509336 0.0014862446    0.001669380  0.01080735
-#> d.Dp.l03 -0.09710498 0.08752183 0.0012377455    0.001403448 -0.26681920
-#> const     0.12527957 0.44060104 0.0062310396    0.018955087 -0.69095042
-#> season.1  0.15321939 0.51825567 0.0073292419    0.007329242 -0.87579272
-#> season.2  0.88558442 0.53590039 0.0075787759    0.007578776 -0.19769959
-#> season.3 -0.04311596 0.52026802 0.0073577009    0.007357701 -1.07072395
-#>                  50%       97.5%  
-#> l.R      -0.09196699 0.007591864  
-#> l.Dp      0.36067841 0.742616444  
-#> d.R.l01   0.26361240 0.480880499 *
-#> d.Dp.l01 -0.17491836 0.154489440  
-#> d.R.l02  -0.02118085 0.190656458  
-#> d.Dp.l02 -0.20318366 0.057281268  
-#> d.R.l03   0.22220814 0.423007891 *
-#> d.Dp.l03 -0.09697027 0.073150637  
-#> const     0.11101990 1.040540862  
-#> season.1  0.15991861 1.150368587  
-#> season.2  0.89137551 1.903349375  
-#> season.3 -0.03510442 0.977717806  
+#>                   Mean          SD     Naive SD Time-series SD        2.5%
+#> l.lr      0.0001800521 0.005999351 8.484363e-05   8.484363e-05 -0.01264254
+#> l.Dp     -0.0016945997 0.021039799 2.975477e-04   2.975477e-04 -0.04262135
+#> d.lr.l01  0.4577095133 0.083548723 1.181557e-03   1.181557e-03  0.29383604
+#> d.Dp.l01  0.0143507751 0.021921597 3.100182e-04   3.181241e-04 -0.02902253
+#> d.lr.l02 -0.2179769740 0.089961488 1.272248e-03   1.272248e-03 -0.39615212
+#> d.Dp.l02  0.0068815365 0.021500957 3.040694e-04   3.040694e-04 -0.03633953
+#> d.lr.l03  0.1535682100 0.083119227 1.175483e-03   1.175483e-03 -0.01022201
+#> d.Dp.l03 -0.0092384500 0.017432977 2.465395e-04   2.465395e-04 -0.04303250
+#> const    -0.0073744787 0.009034828 1.277718e-04   1.312298e-04 -0.02479927
+#>                    50%       97.5%  
+#> l.lr      0.0002057335  0.01226585  
+#> l.Dp     -0.0014732527  0.03921226  
+#> d.lr.l01  0.4578171187  0.62822821 *
+#> d.Dp.l01  0.0141410915  0.05799969  
+#> d.lr.l02 -0.2178411003 -0.04139785 *
+#> d.Dp.l02  0.0070121796  0.04850665  
+#> d.lr.l03  0.1528919289  0.31806734  
+#> d.Dp.l03 -0.0093654356  0.02407668  
+#> const    -0.0075252970  0.01090390  
 #> 
 #> Variable: Dp 
 #> 
-#>                  Mean         SD     Naive SD Time-series SD        2.5%
-#> l.R       0.142979337 0.04949543 0.0006999711    0.001812914  0.04498404
-#> l.Dp     -0.581986169 0.19663456 0.0027808327    0.006911449 -0.95623311
-#> d.R.l01   0.076779702 0.10368250 0.0014662919    0.001533154 -0.12020989
-#> d.Dp.l01 -0.370277505 0.16413237 0.0023211823    0.005229675 -0.69885052
-#> d.R.l02   0.002957355 0.10433212 0.0014754789    0.001533924 -0.20269411
-#> d.Dp.l02 -0.409926352 0.12829370 0.0018143469    0.003790089 -0.66047236
-#> d.R.l03   0.026865947 0.09935586 0.0014051040    0.001602613 -0.16589147
-#> d.Dp.l03 -0.357249984 0.08388958 0.0011863778    0.002051840 -0.52140452
-#> const     1.086190297 0.41064030 0.0058073308    0.017721962  0.28371597
-#> season.1 -3.415497670 0.48542726 0.0068649781    0.006864978 -4.37874358
-#> season.2 -1.784009365 0.50672387 0.0071661577    0.007166158 -2.75053676
-#> season.3 -1.630861768 0.49485291 0.0069982769    0.006998277 -2.58764425
-#>                   50%       97.5%  
-#> l.R       0.143040655  0.24341859 *
-#> l.Dp     -0.585148253 -0.18011272 *
-#> d.R.l01   0.074831943  0.28694811  
-#> d.Dp.l01 -0.370518069 -0.05678916 *
-#> d.R.l02   0.002997781  0.20880847  
-#> d.Dp.l02 -0.410392483 -0.15547899 *
-#> d.R.l03   0.026520173  0.22228803  
-#> d.Dp.l03 -0.358750432 -0.19161892 *
-#> const     1.081462699  1.89851015 *
-#> season.1 -3.420929548 -2.45234389 *
-#> season.2 -1.781801888 -0.78469583 *
-#> season.3 -1.628361312 -0.65512254 *
+#>                 Mean         SD     Naive SD Time-series SD         2.5%
+#> l.lr      0.11770442 0.05259828 0.0007438519    0.001366545  0.012291479
+#> l.Dp     -0.44172162 0.10241320 0.0014483414    0.001516644 -0.640479460
+#> d.lr.l01  0.43814434 0.38813310 0.0054890310    0.005822437 -0.338749763
+#> d.Dp.l01 -0.28802695 0.10459126 0.0014791438    0.001603386 -0.492007133
+#> d.lr.l02  0.14554735 0.41783980 0.0059091472    0.005909147 -0.669198804
+#> d.Dp.l02 -0.12040005 0.09935509 0.0014050931    0.001527643 -0.317069640
+#> d.lr.l03  0.49330887 0.38885684 0.0054992661    0.005625185 -0.298238792
+#> d.Dp.l03  0.01051368 0.08006451 0.0011322831    0.001190007 -0.146525986
+#> const     0.12819249 0.06039045 0.0008540499    0.001840523  0.009279599
+#>                  50%       97.5%  
+#> l.lr      0.11805435  0.22264308 *
+#> l.Dp     -0.44261427 -0.23831731 *
+#> d.lr.l01  0.44033614  1.17881775  
+#> d.Dp.l01 -0.28733072 -0.08395376 *
+#> d.lr.l02  0.14525534  0.97046299  
+#> d.Dp.l02 -0.11920729  0.07527149  
+#> d.lr.l03  0.50137013  1.23892786  
+#> d.Dp.l03  0.01016353  0.16916103  
+#> const     0.12930340  0.24599078 *
 #> 
 #> Variance-covariance matrix:
 #> 
-#>              Mean         SD     Naive SD Time-series SD        2.5%
-#> R_R    0.29625152 0.04613406 0.0006524342   0.0007215167  0.21879288
-#> R_Dp  -0.01938982 0.03014350 0.0004262935   0.0004793717 -0.07854665
-#> Dp_Dp  0.26575047 0.04021462 0.0005687206   0.0007022474  0.19756884
-#>               50%      97.5%  
-#> R_R    0.29187505 0.39799885 *
-#> R_Dp  -0.01924877 0.03813544  
-#> Dp_Dp  0.26223705 0.35594929 *
+#>              Mean           SD     Naive SD Time-series SD         2.5%
+#> lr_lr 0.005056863 0.0005786848 8.183839e-06   8.685985e-06 0.0040396908
+#> lr_Dp 0.004820433 0.0020169567 2.852408e-05   2.941573e-05 0.0009997567
+#> Dp_Dp 0.110748405 0.0131121372 1.854336e-04   1.923718e-04 0.0877985208
+#>               50%       97.5%  
+#> lr_lr 0.005015815 0.006304927 *
+#> lr_Dp 0.004786599 0.009032807 *
+#> Dp_Dp 0.109859966 0.138229363 *
 ```
 
 ### Default algorithm
@@ -332,8 +320,8 @@ Because the prior is built from Johansen's estimate on the series as they are st
 
 
 ``` r
-object_ml <- create_bvecmodel(e6, p = 4, r = 1,
-                              const = "unrestricted", season = "unrestricted",
+object_ml <- create_bvecmodel(data, p = 4, r = 1,
+                              const = "unrestricted",
                               iterations = 5000, burnin = 1000)
 
 object_ml <- add_priors(object_ml,
@@ -359,8 +347,8 @@ beta_ratio <- function(object) {
 round(rbind("Uniform prior" = beta_ratio(bvec_est),
             "ML prior, weight = 1" = beta_ratio(bvec_ml)), 3)
 #>                          5%    25%    50%    75%    95%
-#> Uniform prior        -6.454 -4.737 -4.008 -3.446 -2.698
-#> ML prior, weight = 1 -5.362 -4.422 -4.014 -3.633 -3.070
+#> Uniform prior        -8.926 -4.802 -3.727 -3.031 -2.333
+#> ML prior, weight = 1 -6.496 -4.418 -3.711 -3.222 -2.683
 ```
 
 Since the centre is estimated from the same sample that the model is estimated on, the data enter twice, and the posterior overstates the precision of the cointegration space. Smaller values of `weight` reduce this. The prior is most useful where the likelihood alone is weakly informative about the space, for example in short samples or in larger systems.
@@ -389,76 +377,64 @@ summary(bvar_form)
 #> 
 #> Bayesian VAR model with p = 4 
 #> 
-#> Endogenous variables: R, Dp
+#> Endogenous variables: lr, Dp
 #> 
-#> Variable: R 
+#> Variable: lr 
 #> 
-#>                 Mean         SD    Naive SD Time-series SD        2.5%
-#> R.l1      1.16535200 0.10635328 0.003363186    0.003363186  0.96040921
-#> Dp.l1     0.18703316 0.08816151 0.002787912    0.003037291  0.02568937
-#> R.l2     -0.28045625 0.16292889 0.005152264    0.005830606 -0.59601340
-#> Dp.l2    -0.02727234 0.08879364 0.002807902    0.002807902 -0.21755281
-#> R.l3      0.24218148 0.15651881 0.004949559    0.004949559 -0.06518237
-#> Dp.l3     0.09793482 0.08843064 0.002796422    0.002796422 -0.08247304
-#> R.l4     -0.22073591 0.10599604 0.003351889    0.003351889 -0.41578775
-#> Dp.l4     0.09871367 0.08660835 0.002738796    0.002738796 -0.07082975
-#> const     0.10175351 0.41575466 0.013147317    0.021906349 -0.66102819
-#> season.1  0.16972358 0.49494542 0.015651549    0.015651549 -0.80926491
-#> season.2  0.91460667 0.51465136 0.016274705    0.016274705 -0.17680539
-#> season.3 -0.01350075 0.49742703 0.015730024    0.015730024 -1.02852953
-#>                   50%        97.5%  
-#> R.l1      1.165209529  1.376522192 *
-#> Dp.l1     0.185440828  0.358769462 *
-#> R.l2     -0.280000898  0.036128457  
-#> Dp.l2    -0.022951967  0.137207153  
-#> R.l3      0.248029804  0.543799548  
-#> Dp.l3     0.098215830  0.269574279  
-#> R.l4     -0.224404446 -0.006545631 *
-#> Dp.l4     0.096657007  0.275705191  
-#> const     0.072182698  0.960045437  
-#> season.1  0.164373169  1.169010601  
-#> season.2  0.946769687  1.858976575  
-#> season.3  0.001850098  0.914500479  
+#>               Mean          SD     Naive SD Time-series SD        2.5%
+#> lr.l1  1.462621098 0.081092700 0.0025643763   0.0025643763  1.30438020
+#> Dp.l1  0.012824013 0.017868899 0.0005650642   0.0005650642 -0.02138521
+#> lr.l2 -0.678390691 0.140753547 0.0044510180   0.0044510180 -0.95970904
+#> Dp.l2 -0.007967771 0.018555985 0.0005867918   0.0005867918 -0.04642853
+#> lr.l3  0.367010693 0.142128382 0.0044944941   0.0046625901  0.09534312
+#> Dp.l3 -0.016040664 0.017283792 0.0005465615   0.0005465615 -0.05141039
+#> lr.l4 -0.150949811 0.085311117 0.0026977744   0.0026977744 -0.31297851
+#> Dp.l4  0.009307111 0.017762801 0.0005617091   0.0005617091 -0.02411658
+#> const -0.007041342 0.009314285 0.0002945436   0.0002945436 -0.02577164
+#>                50%       97.5%  
+#> lr.l1  1.463429698  1.61386886 *
+#> Dp.l1  0.012709996  0.04692572  
+#> lr.l2 -0.677770310 -0.41404545 *
+#> Dp.l2 -0.008305487  0.02791499  
+#> lr.l3  0.368059171  0.63862929 *
+#> Dp.l3 -0.015942613  0.01571222  
+#> lr.l4 -0.154432810  0.01799558  
+#> Dp.l4  0.009038086  0.04353424  
+#> const -0.007317340  0.01301053  
 #> 
 #> Variable: Dp 
 #> 
-#>                 Mean         SD    Naive SD Time-series SD       2.5%
-#> R.l1      0.21764881 0.10061217 0.003181636    0.003181636  0.0236903
-#> Dp.l1     0.04862158 0.08467136 0.002677543    0.003201182 -0.1129235
-#> R.l2     -0.07009270 0.15501954 0.004902148    0.004902148 -0.3691183
-#> Dp.l2    -0.03704200 0.08714828 0.002755870    0.003003290 -0.2126571
-#> R.l3      0.02004906 0.15418555 0.004875775    0.005111392 -0.2985578
-#> Dp.l3     0.05446494 0.08649928 0.002735347    0.002933581 -0.1144698
-#> R.l4     -0.02583801 0.10255139 0.003242960    0.003748381 -0.2271787
-#> Dp.l4     0.35819386 0.08225026 0.002600981    0.003312464  0.1916144
-#> const     1.09509444 0.40168571 0.012702417    0.017833599  0.2739916
-#> season.1 -3.42211697 0.47297618 0.014956820    0.017028794 -4.3981150
-#> season.2 -1.79112114 0.48690803 0.015397384    0.015397384 -2.7505368
-#> season.3 -1.63345044 0.48038545 0.015191122    0.015636452 -2.5411048
-#>                  50%      97.5%  
-#> R.l1      0.21887320  0.4203582 *
-#> Dp.l1     0.04810570  0.2177169  
-#> R.l2     -0.06950397  0.2385823  
-#> Dp.l2    -0.03916367  0.1356531  
-#> R.l3      0.01992348  0.3309874  
-#> Dp.l3     0.05502949  0.2306447  
-#> R.l4     -0.03000496  0.1797410  
-#> Dp.l4     0.36086034  0.5195213 *
-#> const     1.09583119  1.8785809 *
-#> season.1 -3.41325445 -2.5098953 *
-#> season.2 -1.79820852 -0.8641108 *
-#> season.3 -1.61402339 -0.6788912 *
+#>               Mean         SD    Naive SD Time-series SD         2.5%
+#> lr.l1  0.552751992 0.38867576 0.012291007    0.012291007 -0.234460923
+#> Dp.l1  0.270425251 0.08431089 0.002666144    0.002666144  0.106913297
+#> lr.l2 -0.267988521 0.67504056 0.021346657    0.022371145 -1.517834275
+#> Dp.l2  0.166149722 0.08290389 0.002621651    0.002621651  0.011885633
+#> lr.l3  0.314638606 0.67035519 0.021198493    0.023983176 -1.041165764
+#> Dp.l3  0.130163940 0.08504044 0.002689215    0.002689215 -0.044378337
+#> lr.l4 -0.481727848 0.38438068 0.012155184    0.012155184 -1.192064711
+#> Dp.l4 -0.006276769 0.07977544 0.002522721    0.002522721 -0.165171559
+#> const  0.126522711 0.06073572 0.001920632    0.002296292  0.004997734
+#>                50%     97.5%  
+#> lr.l1  0.563250962 1.2854366  
+#> Dp.l1  0.271993038 0.4441822 *
+#> lr.l2 -0.256463629 1.0691787  
+#> Dp.l2  0.163865857 0.3264441 *
+#> lr.l3  0.316981526 1.5395619  
+#> Dp.l3  0.131280713 0.2918491  
+#> lr.l4 -0.481927505 0.2814969  
+#> Dp.l4 -0.005411678 0.1426607  
+#> const  0.128550964 0.2381864 *
 #> 
 #> Variance-covariance matrix:
 #> 
-#>              Mean         SD     Naive SD Time-series SD        2.5%
-#> R_R    0.29505798 0.04518565 0.0014288958   0.0014288958  0.21792777
-#> R_Dp  -0.01984879 0.03038295 0.0009607931   0.0009954063 -0.08061825
-#> Dp_Dp  0.26679642 0.04318741 0.0013657059   0.0014611085  0.19673759
-#>               50%      97.5%  
-#> R_R    0.29052182 0.39580673 *
-#> R_Dp  -0.01987815 0.03740623  
-#> Dp_Dp  0.26432931 0.36126131 *
+#>              Mean           SD     Naive SD Time-series SD        2.5%
+#> lr_lr 0.005087326 0.0005837053 1.845838e-05   2.097157e-05 0.004068290
+#> lr_Dp 0.004862924 0.0019449666 6.150524e-05   6.150524e-05 0.001248388
+#> Dp_Dp 0.110527824 0.0128804199 4.073146e-04   4.073146e-04 0.087241136
+#>               50%       97.5%  
+#> lr_lr 0.005052703 0.006348303 *
+#> lr_Dp 0.004822071 0.008816841 *
+#> Dp_Dp 0.109882969 0.138865529 *
 ```
 
 ### Forecasts
@@ -492,7 +468,7 @@ plot(bvar_pred, n_pre = 20)
 
 
 ``` r
-FEIR <- irf(bvar_form, impulse = "R", response = "Dp", n_ahead = 20)
+FEIR <- irf(bvar_form, impulse = "lr", response = "Dp", n_ahead = 20)
 
 plot(FEIR, main = "Forecast Error Impulse Response", xlab = "Period", ylab = "Response")
 ```
@@ -516,7 +492,5 @@ plot(bvar_fevd_oir, main = "OIR-based FEVD of inflation")
 Johansen, S. (1995). *Likelihood-based inference in cointegrated vector autoregressive models*. Oxford: Oxford University Press.
 
 Koop, G., León-González, R., & Strachan R. W. (2010). Efficient posterior simulation for cointegrated models with priors on the cointegration space. *Econometric Reviews, 29*(2), 224-242. <https://doi.org/10.1080/07474930903382208>
-
-Lütkepohl, H. (2006). *New introduction to multiple time series analysis* (2nd ed.). Berlin: Springer.
 
 Pesaran, H. H., & Shin, Y. (1998). Generalized impulse response analysis in linear multivariate models, *Economics Letters, 58*, 17-29. <https://doi.org/10.1016/S0165-1765(97)00214-0>

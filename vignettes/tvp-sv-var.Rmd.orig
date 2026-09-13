@@ -61,18 +61,27 @@ discussed below.
 
 ## Data
 
-Data set `us_macrodata` contains quarterly US CPI inflation, the unemployment
-rate and the Fed Funds rate from 1959Q2 to 2007Q4. Half a century of US
-macroeconomic data is the standard motivation for these models: it contains the
-Great Inflation, the Volcker disinflation and the Great Moderation, and no
-constant parameter model describes all three.
+Data set `at_macrodata` contains quarterly macroeconomic series of Austria. The
+model of this vignette uses the growth rate of real GDP (`dy`), inflation
+(`Dp`) and the short-term interest rate (`r`), all in percent per quarter, from
+1979Q3 to 2019Q4. Four decades of Austrian data are a sample that no constant
+parameter model describes well: they contain the disinflation of the early
+1980s, the years in which the schilling was pegged to the Deutsche Mark and the
+short-term rate followed the Bundesbank, the start of the monetary union in
+1999, the financial crisis, and a decade of interest rates close to or below
+zero. The pandemic quarters are left out. Output growth moved by ten percent
+within a quarter in 2020, which is a break of a different kind than the gradual
+drift these models are built for.
 
 ```{r data, message=FALSE, fig.align='center', fig.height=4.5, fig.width=5.5}
 library(bvartools)
 
-data("us_macrodata")
+data("at_macrodata")
+at <- at_macrodata[["domestic"]]
+data <- ts.intersect(dy = diff(at[, "y"]), Dp = at[, "Dp"], r = at[, "r"]) * 100
+data <- window(data, end = c(2019, 4))
 
-plot(us_macrodata, main = "US macroeconomic data")
+plot(data, main = "Austrian macroeconomic data")
 ```
 
 ## Model set-up
@@ -83,7 +92,7 @@ posterior sampler follows from the two, which can be checked on the resulting
 object.
 
 ```{r}
-model <- create_bvarmodel(us_macrodata, p = 2, deterministic = "const",
+model <- create_bvarmodel(data, p = 2, deterministic = "const",
                           tvp = TRUE, error = "sv+covar", varsel = "bvs",
                           iterations = 3000, burnin = 1000)
 
@@ -168,13 +177,12 @@ that happens to be near zero from producing an infinite log-volatility.
 stochastic volatility model one actually gets. With `shape = 3` the prior mean
 of $\sigma_i^2$ is `rate / 2`, and since the log-volatility is a random walk,
 its standard deviation over a sample of $T$ periods is about
-$\sqrt{T \sigma_i^2}$. At `rate = 0.0001` that is a tenth of a log point over
-this sample, so the fitted volatilities of the inflation and unemployment
-equations move by a few percent and the specification is a constant variance
-model in all but name. At `rate = 0.01`, used here, they move by a factor of
-about two, which is what the Great Moderation looks like in these series. An
-equation whose data demand more than the prior allows will move anyway -- the
-Fed Funds rate does so under either value -- so the effect of a tight prior is
+$\sqrt{T \sigma_i^2}$. At `rate = 0.0001` that is about a tenth of a log point
+over this sample, so the prior allows the volatilities to move by a few percent
+and the specification is a constant variance model in all but name. At
+`rate = 0.01`, used here, it allows them to move by a factor of about two. An
+equation whose data demand more than the prior allows will move anyway, so the
+effect of a tight prior is
 selective rather than uniform, which is exactly what makes it easy to miss.
 
 Argument `varsel` specifies Bayesian variable selection after Korobilis (2013).
@@ -192,7 +200,11 @@ specifying `varsel$covar`.
 
 ## Initial values and posterior draws
 
+Initial values of the state variances and volatilities are drawn from their
+priors, so the seed is set before them.
+
 ```{r}
+set.seed(1234567)
 model <- add_initial_values(model)
 ```
 
@@ -227,7 +239,7 @@ period_of <- function(object, year, quarter) {
   which(stats::time(object[["data"]][["train"]][["y"]]) == year + (quarter - 1) / 4)
 }
 
-summary(model, period = period_of(model, 1975, 1))
+summary(model, period = period_of(model, 1985, 1))
 ```
 
 Comparing the two tables compares two models: the same specification, fitted to
@@ -283,10 +295,14 @@ coefficient_path <- function(object, equation, regressor, ci = 0.9) {
 path <- coefficient_path(model, equation = "Dp", regressor = "r.01")
 
 stats::ts.plot(path, lty = c(2, 1, 2),
-               main = "Inflation ~ first lag of the Fed Funds rate",
+               main = "Inflation ~ first lag of the short-term rate",
                ylab = "Coefficient")
 abline(h = 0, lty = "dotted")
 ```
+
+This path is practically flat. With `coef$rate = 0.0001` the prior is that the
+coefficients are constant, and for this coefficient the data do not argue
+otherwise.
 
 ### Volatility paths
 
@@ -316,11 +332,13 @@ plot(volatility(model),
      main = "Posterior mean of the residual standard deviations")
 ```
 
-This is the part of the model that is hardest to do without. The volatility of
-the Fed Funds rate residual peaks around 1980, when the operating procedure of
-the Federal Reserve targeted reserves rather than the rate, and falls back
-afterwards. A constant covariance matrix would spread that episode over the
-whole sample.
+This is the part of the model that is hardest to do without. The volatilities of
+the inflation and interest rate residuals are highest at the start of the sample
+and fall to about a half and a tenth of that level, respectively, the latter
+almost vanishing once the short-term rate approached its lower bound. The
+volatility of output growth has no such trend: it is highest during the
+financial crisis in 2009 and lowest in the years after it. A constant covariance
+matrix would spread each of these episodes over the whole sample.
 
 ### Impulse responses for a period
 
@@ -330,18 +348,24 @@ response implied by the coefficients and the covariance matrix of one period.
 
 ```{r irf, fig.align='center', fig.height=4, fig.width=5.5}
 early <- irf(model, impulse = "r", response = "Dp", n_ahead = 20,
-             period = period_of(model, 1975, 1))
+             period = period_of(model, 1985, 1))
 late <- irf(model, impulse = "r", response = "Dp", n_ahead = 20,
-            period = period_of(model, 2000, 1))
+            period = period_of(model, 2010, 1))
 
-plot(early, main = "Response of inflation to the Fed Funds rate, 1975Q1")
-plot(late, main = "Response of inflation to the Fed Funds rate, 2000Q1")
+plot(early, main = "Response of inflation to the short-term rate, 1985Q1")
+plot(late, main = "Response of inflation to the short-term rate, 2010Q1")
 ```
 
-Since the shock is scaled by the covariance matrix of the period, the two
-responses differ both because the transmission changed and because the size of a
-one standard deviation shock changed. Reading them beside the volatility figure
-above separates the two.
+In both periods inflation rises after an unexpected increase of the short-term
+rate, and the response dies out slightly faster in 2010. By default `irf`
+computes forecast error impulse responses, whose shock is one unit of the
+forecast error of the impulse variable, so the two responses differ only
+because the coefficients of the two periods differ. How large a typical shock
+was in each period is what the volatility figure above shows, and with
+`type = "oir"` it would enter the responses as well. A forecast error impulse
+response is not identified, so its positive sign is no statement about the
+effect of a monetary tightening. The vignette on sign restrictions takes up that
+question.
 
 ### Forecasts
 
@@ -353,7 +377,7 @@ horizon rather than extrapolated along their random walks.
 model <- add_forecast_input(model, n_ahead = 8)
 model <- add_posterior_forecasts(model)
 
-plot(predict(model))
+plot(predict(model, n_ahead = 8))
 ```
 
 That is a deliberate choice rather than a limitation of the sampler. A random

@@ -14,7 +14,7 @@ vignette: >
 
 ## Data
 
-For this illustrations the data set E1 from Lütkepohl (2006) is used. It contains data on West German fixed investment, disposable income and consumption expenditures in billions of DM from 1960Q1 to 1982Q4. Like in the textbook only the log-differenced series up to 1978Q4 are used.
+For this illustration data set `at_macrodata` is used, which contains quarterly macroeconomic series of Austria. From its element `domestic`, which holds the domestic series, the growth rate of real GDP (`dy`), inflation (`Dp`) and the short-term interest rate (`r`) are taken, all in percent per quarter. The sample ends in 2019Q4, because output growth moved by ten percent within a quarter in 2020, which would dominate models with a constant error variance.
 
 
 ``` r
@@ -22,11 +22,14 @@ library(bvartools)
 
 set.seed(123456) # Set seed for reproducibility
 
-data("e1") # Load data
-data <- diff(log(e1)) * 100 # Obtain log-differences
+data("at_macrodata") # Load data
+at <- at_macrodata[["domestic"]]
 
-# Use date up to 1978Q4
-data <- window(data, end = c(1978, 4))
+# Output growth, inflation and the short-term interest rate in percent
+data <- ts.intersect(dy = diff(at[, "y"]), Dp = at[, "Dp"], r = at[, "r"]) * 100
+
+# Use data up to 2019Q4
+data <- window(data, end = c(2019, 4))
 
 # Plot
 plot(data)
@@ -116,63 +119,65 @@ selcrit
 #> Log-likelihood
 #> 
 #>            Mean Median Quantile (2.5%) Quantile (97.5%)
-#>  Model 1 -420.6 -420.3          -425.7           -417.4
-#>  Model 2 -413.5 -413.2          -420.5           -408.4
-#>  Model 3 -405.9 -405.6          -414.1           -399.5
-#>  Model 4 -408.6 -408.2          -418.2           -401.0
-#>  Model 5 -406.8 -406.4          -418.0           -397.7
+#>  Model 1 -458.4 -458.1          -463.5           -455.3
+#>  Model 2 -133.1 -132.8          -140.0           -128.1
+#>  Model 3 -121.4 -121.1          -129.4           -115.1
+#>  Model 4 -118.9 -118.5          -128.3           -111.6
+#>  Model 5 -115.7 -115.3          -126.4           -107.0
 #> 
 #> 
 #> Akaike Information Criterion (AIC)
 #> 
 #>           Mean Median Quantile (2.5%) Quantile (97.5%)
-#>  Model 1 846.4  846.4                                 
-#>  Model 2 841.1  841.1                                 
-#>  Model 3 836.6  836.6                                 
-#>  Model 4 853.2  853.2                                 
-#>  Model 5 859.0  859.0                                 
+#>  Model 1 923.5  923.5                                 
+#>  Model 2 278.0  278.0                                 
+#>  Model 3 261.2  261.2                                 
+#>  Model 4 262.8  262.8                                 
+#>  Model 5 262.2  262.2                                 
 #> 
 #> 
 #> Bayesian Information Criterion (BIC)
 #> 
 #>           Mean Median Quantile (2.5%) Quantile (97.5%)
-#>  Model 1 866.8  866.8                                 
-#>  Model 2 881.9  881.9                                 
-#>  Model 3 897.6  897.6                                 
-#>  Model 4 934.6  934.6                                 
-#>  Model 5 960.9  960.9                                 
+#>  Model 1 951.0  951.0                                 
+#>  Model 2 333.1  333.1                                 
+#>  Model 3 343.9  343.9                                 
+#>  Model 4 373.0  373.0                                 
+#>  Model 5 400.1  400.1                                 
 #> 
 #> 
 #> Hannan-Quinn Criterion (HQ)
 #> 
 #>           Mean Median Quantile (2.5%) Quantile (97.5%)
-#>  Model 1 854.5  854.5                                 
-#>  Model 2 857.3  857.3                                 
-#>  Model 3 860.8  860.8                                 
-#>  Model 4 885.6  885.6                                 
-#>  Model 5 899.5  899.5                                 
+#>  Model 1 934.7  934.7                                 
+#>  Model 2 300.4  300.4                                 
+#>  Model 3 294.8  294.8                                 
+#>  Model 4 307.5  307.5                                 
+#>  Model 5 318.2  318.2                                 
 #> 
 #> 
 #> Widely Applicable Information Criterion (WAIC)
 #> 
 #>           Mean Median Quantile (2.5%) Quantile (97.5%)
-#>  Model 1 855.2  855.2           786.1            924.3
-#>  Model 2 851.6  851.6           787.1            916.0
-#>  Model 3 845.4  845.4           784.1            906.8
-#>  Model 4 859.4  859.4           799.6            919.1
-#>  Model 5 867.0  867.0           799.7            934.3
+#>  Model 1 928.9  928.9           842.0           1015.7
+#>  Model 2 292.2  292.2           193.3            391.1
+#>  Model 3 281.9  281.9           182.9            380.9
+#>  Model 4 290.4  290.4           184.9            395.9
+#>  Model 5 298.5  298.5           189.1            408.0
+#> 
+#> Periods with a pointwise log-likelihood variance above 0.4, which makes the correction of WAIC, AIC, BIC and HQ unreliable, in models 1 (7), 2 (14), 3 (22), 4 (32), 5 (35).
 #> 
 #> 
 #> Leave-One-Out Information Criterion (LOOIC)
 #> 
 #>           Mean Median Quantile (2.5%) Quantile (97.5%)
-#>  Model 1 855.6  855.6           786.1            925.1
-#>  Model 2 853.4  853.4           787.5            919.2
-#>  Model 3 847.7  847.7           785.3            910.1
-#>  Model 4 862.3  862.3           801.8            922.8
-#>  Model 5 873.5  873.5           803.5            943.5
+#>  Model 1 928.9  928.9           842.0           1015.8
+#>  Model 2 292.5  292.5           193.5            391.5
+#>  Model 3 282.9  282.9           183.7            382.1
+#>  Model 4 292.0  292.0           186.0            398.1
+#>  Model 5 301.0  301.0           191.0            411.1
 #> 
-#> Influential periods, whose importance sampling is unreliable, in models 1 (1), 2 (2), 3 (3), 4 (2), 5 (7), counted as a Pareto k above 0.7.
+#> Influential periods, whose importance sampling is unreliable, in models 3 (1), 4 (1), 5 (2), counted as a Pareto k above 0.7.
 ```
 
 Method `plot.selcritlist` plots the criteria of the models against each other. The log-likelihood is drawn with the credible band of its draws, WAIC and LOOIC with an interval built from their standard errors, and the criteria that count parameters as single values.
@@ -198,11 +203,11 @@ pos
 #> [1] 3
 ```
 
-AIC, WAIC and LOOIC have their lowest value for the model with $p = 2$, which is the order that the corresponding criteria of Lütkepohl (2006) select on this data as well. BIC and HQ prefer the model without lags, as their textbook counterparts do: with 71 observations $\ln(T)$ and $2 \ln(\ln(T))$ are larger than the 2 of the AIC, and nine additional coefficients per lag are more than the gain in fit pays for. The third element of `models` is used for further analysis.
+AIC, HQ, WAIC and LOOIC have their lowest value for the model with $p = 2$. BIC prefers the model with one lag: with 158 observations $\ln(T)$ is about 5, which is more than twice the 2 of the AIC, and nine additional coefficients for a second lag are more than the gain in fit pays for at that price. The model without lags comes last by a wide margin under every criterion, since the short-term interest rate is highly persistent. The intervals of WAIC and LOOIC overlap for all models with lags, however, so the data do not rank them decisively. The table also points out periods whose log-likelihood varies strongly across the draws, and that number increases with the lag order. The third element of `models` is used for further analysis.
 
 
 ``` r
-plot(irf(models[[pos]], impulse = "income", response = "cons", n_ahead = 10))
+plot(irf(models[[pos]], impulse = "r", response = "dy", n_ahead = 10))
 ```
 
 ![plot of chunk unnamed-chunk-13](figures/model-comparison-unnamed-chunk-13-1.png)

@@ -1,5 +1,20 @@
 # bvartools (development version)
 
+* **Time varying models repeat their posterior draws from a seed set after
+  `add_initial_values()`.** For every model with `tvp = TRUE`,
+  `add_initial_values()` drew the initial precisions of the state equations,
+  `a_sigma_inv` and `psi_sigma_inv`, from their gamma priors under every
+  `method`. Under the default `"ols"` or `"maxlik"`, that was its only use of
+  the random number generator. A `set.seed()` placed between it and
+  `add_posterior_coefficients()` fixed the sampler but not where the chain
+  started, so two R sessions running the same script gave different draws.
+  This looked like undefined behaviour in the samplers, most visibly for
+  `VarTvpAld` and `VarTvpGamma` with `varsel = "bvs"`, but the samplers
+  themselves repeat exactly given the same inputs. The precisions now start
+  at the prior mean, `shape / rate`, and are drawn only under
+  `method = "prior"`. **Initial values and draws change** for every time
+  varying model estimated with `method = "ols"` or `"maxlik"`.
+
 * **Vendored BayesTS core refreshed again: the covariance block of the time
   varying gamma models, BVS in the quantile VAR, and validation of prior
   values.** Upstream fixed what four further audits found. The same thirty-six
@@ -44,11 +59,11 @@
 
     Every other specification is bit-identical, forecasts included, with two
     exceptions this refresh did not cause. A time varying quantile VAR with BVS
-    does not repeat its draws from the same seed in a fresh session, in the
-    build before the refresh as much as after it. A time varying VAR with a gamma
-    error term and BVS repeats within each build but differs between them,
-    although nothing on its path through the samplers changed; the two are being
-    looked into together. The vendored set is still the same 65 files.
+    did not repeat its draws from the same seed in a fresh session, and a time
+    varying VAR with a gamma error term and BVS differed between the two builds.
+    Neither was the samplers: `add_initial_values()` drew the starting state
+    precisions without a seed, which the entry above fixes.
+    The vendored set is still the same 65 files.
 
 * **Vendored BayesTS core refreshed: BVS, SSVS and the log likelihood of the
   time varying models are fixed.** Upstream found three errors in an audit, and

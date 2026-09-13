@@ -44,9 +44,10 @@ In case \code{method = "prior"}, all initial draws in the model are random
 draws from the respective prior distributions.
 
 In case of a model with time varying parameters (TVP), the initial states are
-obtained using the approach specified in argument \code{method}. However, the
-initial draws of the error variances of the state equations are always drawn
-from their prior distributions. The autocorrelation coefficient \code{rho} of
+obtained using the approach specified in argument \code{method}. The precisions
+of the state equations start at the means of their gamma priors in case
+\code{method = "maxlik"} and are drawn from those priors in case
+\code{method = "prior"}. The autocorrelation coefficient \code{rho} of
 the state equation of \eqn{\beta} is taken from the prior specification,
 whether it is held there or drawn from the prior on it that
 \code{coint$rho_min} and \code{coint$rho_max} set up.

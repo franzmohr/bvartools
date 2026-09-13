@@ -66,6 +66,36 @@ test_that("an unknown method and missing priors are rejected", {
                "can be 'maxlik' or 'prior'")
 })
 
+test_that("a time varying model with BVS repeats its draws from the same seed", {
+  # The seed is set after add_initial_values(), and not before, on purpose: the
+  # state precisions of a TVP model used to be drawn there with no seed, so the
+  # chain started somewhere else in every R session.
+  for (error in c("ald", "gamma")) {
+    model <- create_bvarmodel(var_data(), p = 1, deterministic = "const", tvp = TRUE,
+                              error = error, varsel = "bvs",
+                              iterations = fx_iterations, burnin = fx_burnin)
+    model <- suppressWarnings(
+      add_priors(model, coef = list(v_i = 1, v_i_det = 0.1, shape = 3, rate = 1e-4),
+                 sigma = list(shape = 3, rate = 0.01),
+                 varsel = list(inprior = 0.5, covar = FALSE)))
+
+    set.seed(1)
+    first <- add_initial_values(model)
+    set.seed(2)
+    again <- add_initial_values(model)
+    expect_identical(first[["initial"]], again[["initial"]])
+    expect_equal(diag(first[["initial"]][["a_sigma_inv"]]),
+                 as.numeric(model[["priors"]][["a"]][["shape"]] /
+                              model[["priors"]][["a"]][["rate"]]))
+
+    set.seed(1000)
+    first <- add_posterior_coefficients(first)
+    set.seed(1000)
+    again <- add_posterior_coefficients(again)
+    expect_identical(first[["posterior"]], again[["posterior"]], label = error)
+  }
+})
+
 test_that("initial values are added to every model of a modellist", {
   models <- create_bvarmodel(var_data(), p = 1:2, deterministic = "const",
                              iterations = 10, burnin = 5)

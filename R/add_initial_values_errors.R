@@ -115,27 +115,41 @@
 }
 
 # Generates the initial values of the state equation in case of TVP models
-.add_initial_values_state_errors <- function(object) {
-  
-  if (object[["model"]][["tvp"]] & !is.null(object[["data"]][["train"]][["z"]])) {
-    object[["initial"]][["a_sigma_inv"]] <- diag(0, ncol(object[["data"]][["train"]][["z"]]))
-    for (i in 1:ncol(object[["data"]][["train"]][["z"]])) {
-      object[["initial"]][["a_sigma_inv"]][i, i] <-  stats::rgamma(1,
-                                                                   shape = object[["priors"]][["a"]][["shape"]][i] / 2,
-                                                                   rate = object[["priors"]][["a"]][["rate"]][i] / 2)
+#
+# The state precisions start at the mean of their gamma priors unless the
+# initial values are to be drawn from the prior. They used to be drawn under
+# every method, and that draw was the only use of the RNG in the "ols" and
+# "maxlik" paths: a seed set between add_initial_values() and
+# add_posterior_coefficients() -- the natural place for it -- then fixed the
+# sampler but not the point its chain started from, and a TVP model did not
+# repeat its draws across R sessions.
+.add_initial_values_state_errors <- function(object, method) {
+
+  # The prior of each precision is Gamma(shape / 2, rate / 2), whose mean is
+  # shape / rate.
+  state_precision <- function(prior) {
+    shape <- as.numeric(prior[["shape"]])
+    rate <- as.numeric(prior[["rate"]])
+    n <- length(shape)
+    result <- diag(0, n)
+    for (i in 1:n) {
+      if (method == "prior") {
+        result[i, i] <- stats::rgamma(1, shape = shape[i] / 2, rate = rate[i] / 2)
+      } else {
+        result[i, i] <- shape[i] / rate[i]
+      }
     }
+    result
   }
-  
+
+  if (object[["model"]][["tvp"]] & !is.null(object[["data"]][["train"]][["z"]])) {
+    object[["initial"]][["a_sigma_inv"]] <- state_precision(object[["priors"]][["a"]])
+  }
+
   use_covar <- object[["model"]][["error"]] %in% c("gamma+covar", "sv+covar")
   if (object[["model"]][["tvp"]] & use_covar & object[["model"]][["k"]] > 1) {
-    n_psi <- length(object[["priors"]][["psi"]][["shape"]])
-    object[["initial"]][["psi_sigma_inv"]] <- diag(0, n_psi)
-    for (i in 1:n_psi) {
-      object[["initial"]][["psi_sigma_inv"]][i, i] <- stats::rgamma(1,
-                                                                    shape = object[["priors"]][["psi"]][["shape"]][i] / 2,
-                                                                    rate = object[["priors"]][["psi"]][["rate"]][i] / 2)
-    }
+    object[["initial"]][["psi_sigma_inv"]] <- state_precision(object[["priors"]][["psi"]])
   }
-  
+
   return(object)
 }

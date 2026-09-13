@@ -25,10 +25,12 @@
 #' with \eqn{u} as the residuals of the LS regression.
 #' 
 #' In case of a model with time varying parameters (TVP), the initial states are
-#' obtained using the approach specified in argument \code{method}. However, the
-#' initial draws of the error variances of the state equations are always drawn
-#' from their prior distributions.
-#' 
+#' obtained using the approach specified in argument \code{method}. The precisions
+#' of the state equations start at the means of their gamma priors in case
+#' \code{method = "ols"} and are drawn from those priors in case
+#' \code{method = "prior"}. So \code{method = "ols"} uses no random numbers, and a
+#' seed set after \code{add_initial_values} fixes the posterior draws.
+#'
 #' @return The object in \code{object} with the element \code{initial} added, a list of
 #' starting values with
 #' \describe{
@@ -185,7 +187,7 @@ add_initial_values.bvarmodel <- function(object, method = "ols", ...){
   }
   
   # Variances of state equations ----
-  object <- .add_initial_values_state_errors(object)
+  object <- .add_initial_values_state_errors(object, method = method)
   
   # Initial values for errors
   object <- .add_initial_values_measurement_errors(object = object,

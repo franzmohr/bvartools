@@ -5,11 +5,15 @@
   else, or that calls functions which no longer exist. `inst/agents/` has an
   `AGENTS.md`, and a skill covering:
   - the workflow and the rules that prevent that: assigning each step back,
-    priors given as precisions, `sigma` elements that are silently ignored when
-    misspelt, draws in rows, and `vec_to_var()` before forecasting a VEC;
+    priors given as precisions with no defaults, draws in rows, and
+    `vec_to_var()` before forecasting a VEC;
   - the combinations the samplers refuse, and why;
   - complete examples of a VAR, a VEC, a TVP-SV model, a quantile VAR, lag
-    order comparison and an HDF5 round trip.
+    order comparison and an HDF5 round trip;
+  - references on what `add_priors()` needs for each model type, the layout of
+    model objects and their draws, forecasts, impulse responses, sign
+    restrictions and spillovers, and in-sample and out-of-sample model
+    comparison.
 
   The installed package carries it at `system.file("agents", package =
   "bvartools")`, matching its version, and the repository is a Claude Code

@@ -3,8 +3,11 @@
 Guidance for coding agents writing R code with
 [bvartools](https://github.com/franzmohr/bvartools), which estimates Bayesian VAR
 and VEC models. The full skill is `skills/bvartools/SKILL.md`, with tested
-examples in `skills/bvartools/references/recipes.md`. This file is the part
-worth keeping in context at all times.
+references in `skills/bvartools/references/`: `recipes.md` for complete
+examples, `priors.md` for what `add_priors()` needs, `objects.md` for the layout
+of models and draws, `analysis.md` for forecasts and impulse responses, and
+`comparison.md` for model selection. This file is the part worth keeping in
+context at all times.
 
 1. **Assign every step back**: `model <- add_priors(model, ...)`. Each function
    returns the model with something added.
@@ -13,10 +16,12 @@ worth keeping in context at all times.
    Forecasting adds `add_forecast_input()` and `add_posterior_forecasts()`, then
    `predict()`. Model comparison adds `add_posterior_loglik()`, then
    `selection_criteria()`.
-3. **`add_priors()` has no defaults.** `coef` and `sigma` are required, and
-   prior variances are precisions. A wrong name in `coef` is an error, but a
-   wrong name in `sigma`, `coint` or `varsel` is silently ignored. Check
-   `model$priors` afterwards.
+3. **`add_priors()` has no defaults.** `coef` and `sigma` are required, `coint`
+   for a VEC, and prior variances are precisions. Which `sigma` elements are
+   needed depends on `error`: `df` and `scale` for the default Wishart prior,
+   `shape` and `rate` for gamma, six elements for stochastic volatility. A
+   missing or misspelt element stops with an error. Check `model$priors`
+   afterwards.
 4. **Posterior draws are rows**: `model$posterior$<block>$coeffs` is a
    `coda::mcmc` matrix, draws × parameters. A posterior mean is `colMeans()`.
 5. **A VEC is analysed in levels**: `vec_to_var()` before `add_forecast_input()`,

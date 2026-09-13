@@ -39,10 +39,11 @@ draws: the defaults are 20000 kept after 2000 burn-in for a VAR, and 50000 after
 **1. Assign every step back.** `add_priors(model, ...)` on its own line computes
 the priors and discards them. Always write `model <- add_priors(model, ...)`.
 
-**2. `add_priors()` has no defaults, and only `coef` checks its names.** `coef`
-and `sigma` must be given. An element of `coef` that is not recognised is an
-error. But an unrecognised element of `sigma`, `coint` or `varsel` is ignored
-without a message, so a misspelt name leaves its setting unapplied. Which `sigma`
+**2. `add_priors()` has no defaults.** `coef` and `sigma` must always be given,
+`coint` for a VEC, and `varsel` exactly when the model was created with
+`varsel = "ssvs"` or `"bvs"`. Nothing is filled in: a missing required element
+stops with a message naming it, and so does an element that is not recognised in
+any of the four lists. `coef` needs `v_i` or a `minnesota` list. Which `sigma`
 elements are required depends on `error` in `create_bvarmodel()`:
 
 | `error` | `sigma` must contain |
@@ -140,9 +141,16 @@ version is at `system.file("agents", package = "bvartools")`.
 
 ## Reference files
 
+Read the one the task needs. Every R example in them runs in the package's test
+suite, so the shapes they assert are what the installed version produces.
+
 | File | Contents |
 | --- | --- |
-| `references/recipes.md` | Complete, tested examples: a VAR, a VEC through `vec_to_var()`, a TVP-SV model, lag order comparison, a quantile VAR, and an HDF5 round trip |
+| `references/recipes.md` | Complete examples: a VAR, a VEC through `vec_to_var()`, a TVP-SV model, lag order comparison, a quantile VAR, and an HDF5 round trip |
+| `references/priors.md` | Every element of `coef`, `sigma`, `coint` and `varsel`, what each model type requires, the Minnesota prior, and what `add_priors()` refuses |
+| `references/objects.md` | The layout of a model object, the columns of every block of draws by model type, reading coefficients and covariances, forecast stacking |
+| `references/analysis.md` | Forecasts with exogenous variables, the `irf()` and `fevd()` identification types, sign restrictions, spillovers |
+| `references/comparison.md` | Information criteria and which to use, `choose_best_model()`, common samples, out-of-sample comparison with expanding windows |
 
 ## HDF5 and the BayesTS command line
 

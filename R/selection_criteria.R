@@ -86,6 +86,15 @@
 #' Zhang, J., & Stephens, M. A. (2009). A new and efficient estimation method for the generalized
 #' Pareto distribution. \emph{Technometrics, 51}(3), 316--325. \doi{10.1198/tech.2009.08017}
 #'
+#' @return The value returned by the method for the class of \code{object},
+#' as described on the pages of the methods.
+#'
+#' @seealso Methods: \code{\link{selection_criteria.bvarmodel}},
+#' \code{\link{selection_criteria.bvecmodel}},
+#' \code{\link{selection_criteria.expandingwindow}},
+#' \code{\link{selection_criteria.externalforecast}},
+#' \code{\link{selection_criteria.modellist}}.
+#'
 #' @export
 selection_criteria <- function (object, ...) {
  UseMethod("selection_criteria")

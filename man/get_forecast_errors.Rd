@@ -2,9 +2,7 @@
 % Please edit documentation in R/get_forecast_errors.R
 \name{get_forecast_errors}
 \alias{get_forecast_errors}
-\title{Get Forecast Errors
- 
-A generic function used to obtain the forecast errors from a model.}
+\title{Get Forecast Errors}
 \usage{
 get_forecast_errors(object, ...)
 }
@@ -13,8 +11,10 @@ get_forecast_errors(object, ...)
 
 \item{...}{arguments passed forward to method.}
 }
+\value{
+The value returned by the method for the class of \code{object},
+as described on the pages of the methods.
+}
 \description{
-Get Forecast Errors
- 
 A generic function used to obtain the forecast errors from a model.
 }

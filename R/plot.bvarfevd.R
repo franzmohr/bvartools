@@ -40,7 +40,6 @@
 #' plot(vd)
 #' 
 #' @export
-#' @rdname fevd
 plot.bvarfevd <- function(x, max_groups = NULL, ...) {
   # Only save and restore 'mar'. Restoring all parameters would also reset
   # 'mfg' and thus overwrite the current panel of a user-defined layout.

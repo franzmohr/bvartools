@@ -11,10 +11,19 @@ inclusion_prior(object, ...)
 
 \item{...}{arguments passed forward to method.}
 }
+\value{
+The value returned by the method for the class of \code{object},
+as described on the pages of the methods.
+}
 \description{
 A generic function used to generate prior inclusion probabilities as
 required for stochastic search variable selection (SSVS) à la George et
 al. (2008) and Bayesian variable selection (BVS) à la Korobilis (2013).
 The function invokes particular methods which depend on the class of the
 first argument.
+}
+\seealso{
+Methods: \code{\link{inclusion_prior.bvarmodel}},
+\code{\link{inclusion_prior.bvecmodel}},
+\code{\link{inclusion_prior.externalforecast}}.
 }

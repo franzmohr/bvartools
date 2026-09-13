@@ -7,6 +7,13 @@
 #' \code{\link{create_bvecmodel}}.
 #' @param ... arguments passed forward to method.
 #' 
+#' @return The value returned by the method for the class of \code{object},
+#' as described on the pages of the methods.
+#'
+#' @seealso Methods: \code{\link{use_expanding_window.bvarmodel}},
+#' \code{\link{use_expanding_window.bvecmodel}},
+#' \code{\link{use_expanding_window.modellist}}.
+#'
 #' @export
 use_expanding_window <- function(object, ...) {
   UseMethod("use_expanding_window")

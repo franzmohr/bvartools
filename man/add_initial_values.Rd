@@ -11,7 +11,18 @@ add_initial_values(object, ...)
 
 \item{...}{arguments passed forward to method.}
 }
+\value{
+The value returned by the method for the class of \code{object},
+as described on the pages of the methods.
+}
 \description{
 A generic function used to generate initial values of an MCMC chain. The
 function invokes particular methods which depend on the class of the first argument.
+}
+\seealso{
+Methods: \code{\link{add_initial_values.bvarmodel}},
+\code{\link{add_initial_values.bvecmodel}},
+\code{\link{add_initial_values.expandingwindow}},
+\code{\link{add_initial_values.externalforecast}},
+\code{\link{add_initial_values.modellist}}.
 }

@@ -27,6 +27,9 @@
 #' # Obtain SSVS prior
 #' prior <- ssvs_prior(object, semiautomatic = c(.1, 10))
 #' 
+#' @seealso Methods: \code{\link{ssvs_prior.bvarmodel}},
+#' \code{\link{ssvs_prior.bvecmodel}}, \code{\link{ssvs_prior.externalforecast}}.
+#'
 #' @export
 ssvs_prior <- function(object, ...) {
   UseMethod("ssvs_prior")

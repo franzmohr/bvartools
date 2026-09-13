@@ -11,6 +11,17 @@ add_posterior_coefficients(object, ...)
 
 \item{...}{arguments passed forward to method.}
 }
+\value{
+The value returned by the method for the class of \code{object},
+as described on the pages of the methods.
+}
 \description{
 Generic function used for posterior simulation of model coefficients.
+}
+\seealso{
+Methods: \code{\link{add_posterior_coefficients.bvarmodel}},
+\code{\link{add_posterior_coefficients.bvecmodel}},
+\code{\link{add_posterior_coefficients.expandingwindow}},
+\code{\link{add_posterior_coefficients.externalforecast}},
+\code{\link{add_posterior_coefficients.modellist}}.
 }

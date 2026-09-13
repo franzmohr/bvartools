@@ -13,6 +13,15 @@ Usually, the output of a call to  \code{\link{create_bvarmodel}} or
 
 \item{...}{arguments passed forward to method.}
 }
+\value{
+The value returned by the method for the class of \code{object},
+as described on the pages of the methods.
+}
 \description{
 Creates objects for expanding window posterior simulation.
+}
+\seealso{
+Methods: \code{\link{use_expanding_window.bvarmodel}},
+\code{\link{use_expanding_window.bvecmodel}},
+\code{\link{use_expanding_window.modellist}}.
 }

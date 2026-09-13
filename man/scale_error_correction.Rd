@@ -11,6 +11,13 @@ scale_error_correction(object, ...)
 
 \item{...}{arguments passed forward to method.}
 }
+\value{
+The value returned by the method for the class of \code{object},
+as described on the pages of the methods.
+}
 \description{
 Scales the series in the error correction series.
+}
+\seealso{
+Methods: \code{\link{scale_error_correction.bvecmodel}}.
 }

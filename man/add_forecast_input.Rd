@@ -11,7 +11,18 @@ add_forecast_input(object, ...)
 
 \item{...}{arguments passed forward to method.}
 }
+\value{
+The value returned by the method for the class of \code{object},
+as described on the pages of the methods.
+}
 \description{
 Generic function used to generate and add data matrices for forecast simulation
 to a model object.
+}
+\seealso{
+Methods: \code{\link{add_forecast_input.bvarmodel}},
+\code{\link{add_forecast_input.bvecmodel}},
+\code{\link{add_forecast_input.expandingwindow}},
+\code{\link{add_forecast_input.externalforecast}},
+\code{\link{add_forecast_input.modellist}}.
 }

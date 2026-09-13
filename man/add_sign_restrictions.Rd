@@ -11,7 +11,16 @@ add_sign_restrictions(object, ...)
 
 \item{...}{arguments passed forward to method.}
 }
+\value{
+The value returned by the method for the class of \code{object},
+as described on the pages of the methods.
+}
 \description{
 A generic function used to identify the shocks of a model by the signs of
 the impulse responses they produce.
+}
+\seealso{
+Methods: \code{\link{add_sign_restrictions.bvarmodel}},
+\code{\link{add_sign_restrictions.expandingwindow}},
+\code{\link{add_sign_restrictions.modellist}}.
 }

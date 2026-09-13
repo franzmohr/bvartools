@@ -2,10 +2,7 @@
 % Please edit documentation in R/add_priors.R
 \name{add_priors}
 \alias{add_priors}
-\title{Add Priors to Bayesian Models
- 
-A generic function used to generate prior vectors and matrices. The
-function invokes particular methods which depend on the class of the first argument.}
+\title{Add Priors to Bayesian Models}
 \usage{
 add_priors(object, ...)
 }
@@ -14,9 +11,16 @@ add_priors(object, ...)
 
 \item{...}{arguments passed forward to method.}
 }
+\value{
+The value returned by the method for the class of \code{object},
+as described on the pages of the methods.
+}
 \description{
-Add Priors to Bayesian Models
- 
 A generic function used to generate prior vectors and matrices. The
 function invokes particular methods which depend on the class of the first argument.
+}
+\seealso{
+Methods: \code{\link{add_priors.bvarmodel}},
+\code{\link{add_priors.bvecmodel}}, \code{\link{add_priors.expandingwindow}},
+\code{\link{add_priors.externalforecast}}, \code{\link{add_priors.modellist}}.
 }

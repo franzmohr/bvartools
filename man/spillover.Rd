@@ -11,7 +11,15 @@ spillover(object, ...)
 
 \item{...}{arguments passed forward to method.}
 }
+\value{
+The value returned by the method for the class of \code{object},
+as described on the pages of the methods.
+}
 \description{
 A generic function used to calculate the connectedness measures of Diebold
 and Yilmaz (2012) from the posterior draws of a model.
+}
+\seealso{
+Methods: \code{\link{spillover.bvarmodel}},
+\code{\link{spillover.expandingwindow}}, \code{\link{spillover.modellist}}.
 }

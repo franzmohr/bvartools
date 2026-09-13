@@ -2,11 +2,7 @@
 % Please edit documentation in R/align_model_obs.R
 \name{align_model_obs}
 \alias{align_model_obs}
-\title{Align Observations Across Models
- 
-Generic function used to restrict each model in a list to the set of
-observations common to all models, ensuring that comparisons are computed
-on the same underlying sample.}
+\title{Align Observations Across Models}
 \usage{
 align_model_obs(object, ...)
 }
@@ -15,10 +11,15 @@ align_model_obs(object, ...)
 
 \item{...}{arguments passed forward to method.}
 }
+\value{
+The value returned by the method for the class of \code{object},
+as described on the pages of the methods.
+}
 \description{
-Align Observations Across Models
- 
 Generic function used to restrict each model in a list to the set of
 observations common to all models, ensuring that comparisons are computed
 on the same underlying sample.
+}
+\seealso{
+Methods: \code{\link{align_model_obs.modellist}}.
 }

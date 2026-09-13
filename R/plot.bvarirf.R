@@ -35,7 +35,6 @@
 #' plot(ir)
 #' 
 #' @export
-#' @rdname irf
 plot.bvarirf <- function(x, ...) {
   if (ncol(x) != 3) {
     stop("Cannot handle output of function 'irf' when keep_draws = TRUE.")

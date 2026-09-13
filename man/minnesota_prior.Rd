@@ -11,10 +11,21 @@ minnesota_prior(object, ...)
 
 \item{...}{arguments passed forward to method.}
 }
+\value{
+The value returned by the method for the class of \code{object},
+as described on the pages of the methods.
+}
 \description{
 Calculates the Minnesota prior for a model.
- 
+}
+\details{
 A generic function used to generate data matrices based on the
 Minnesota prior. The function invokes particular methods which depend on the
 class of the first argument.
+}
+\seealso{
+Methods: \code{\link{minnesota_prior.bvarmodel}},
+\code{\link{minnesota_prior.bvecmodel}},
+\code{\link{minnesota_prior.externalforecast}},
+\code{\link{minnesota_prior.modellist}}.
 }

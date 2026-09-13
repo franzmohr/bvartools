@@ -2,9 +2,7 @@
 % Please edit documentation in R/add_forecast_errors.R
 \name{add_forecast_errors}
 \alias{add_forecast_errors}
-\title{Add Forecast Errors
- 
-Generic function used to calculate forecast errors and add them to a model object.}
+\title{Add Forecast Errors}
 \usage{
 add_forecast_errors(object, test_sample, ...)
 }
@@ -15,8 +13,15 @@ add_forecast_errors(object, test_sample, ...)
 
 \item{...}{arguments passed forward to method.}
 }
+\value{
+The value returned by the method for the class of \code{object},
+as described on the pages of the methods.
+}
 \description{
-Add Forecast Errors
- 
 Generic function used to calculate forecast errors and add them to a model object.
+}
+\seealso{
+Methods: \code{\link{add_forecast_errors.bvarmodel}},
+\code{\link{add_forecast_errors.expandingwindow}},
+\code{\link{add_forecast_errors.modellist}}.
 }

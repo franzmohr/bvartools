@@ -11,7 +11,14 @@ choose_best_model(object, ...)
 
 \item{...}{arguments passed forward to method.}
 }
+\value{
+The value returned by the method for the class of \code{object},
+as described on the pages of the methods.
+}
 \description{
 A generic function that applies model selection criteria to find the best
 model.
+}
+\seealso{
+Methods: \code{\link{choose_best_model.selcritlist}}.
 }

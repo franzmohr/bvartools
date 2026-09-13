@@ -2,11 +2,7 @@
 % Please edit documentation in R/vec_to_var.R
 \name{vec_to_var}
 \alias{vec_to_var}
-\title{Transform a VEC Model to a VAR in Levels
- 
-A generic function used to transform a vector error correction model into
-its VAR form. The function invokes particular methods which depend on
-the class of the first argument.}
+\title{Transform a VEC Model to a VAR in Levels}
 \usage{
 vec_to_var(object, ...)
 }
@@ -15,10 +11,16 @@ vec_to_var(object, ...)
 
 \item{...}{arguments passed forward to method.}
 }
+\value{
+The value returned by the method for the class of \code{object},
+as described on the pages of the methods.
+}
 \description{
-Transform a VEC Model to a VAR in Levels
- 
 A generic function used to transform a vector error correction model into
 its VAR form. The function invokes particular methods which depend on
 the class of the first argument.
+}
+\seealso{
+Methods: \code{\link{vec_to_var.bvecmodel}},
+\code{\link{vec_to_var.modellist}}.
 }

@@ -9,6 +9,13 @@
 #' @param object an object of a class, for which a method should be called.
 #' @param ... arguments passed forward to method.
 #' 
+#' @return The value returned by the method for the class of \code{object},
+#' as described on the pages of the methods.
+#'
+#' @seealso Methods: \code{\link{inclusion_prior.bvarmodel}},
+#' \code{\link{inclusion_prior.bvecmodel}},
+#' \code{\link{inclusion_prior.externalforecast}}.
+#'
 #' @export
 inclusion_prior <- function(object, ...) {
   UseMethod("inclusion_prior")

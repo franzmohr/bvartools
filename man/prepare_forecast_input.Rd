@@ -11,7 +11,15 @@ prepare_forecast_input(object, ...)
 
 \item{...}{arguments passed forward to method.}
 }
+\value{
+The value returned by the method for the class of \code{object},
+as described on the pages of the methods.
+}
 \description{
 Generic function that generates data matrices serving as data input for downstream
 forecasting functions.
+}
+\seealso{
+Methods: \code{\link{prepare_forecast_input.bvarmodel}},
+\code{\link{prepare_forecast_input.bvecmodel}}.
 }

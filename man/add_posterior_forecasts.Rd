@@ -11,6 +11,16 @@ add_posterior_forecasts(object, ...)
 
 \item{...}{arguments passed forward to method.}
 }
+\value{
+The value returned by the method for the class of \code{object},
+as described on the pages of the methods.
+}
 \description{
 Generic function that calculates and adds forecasts.
+}
+\seealso{
+Methods: \code{\link{add_posterior_forecasts.bvarmodel}},
+\code{\link{add_posterior_forecasts.expandingwindow}},
+\code{\link{add_posterior_forecasts.externalforecast}},
+\code{\link{add_posterior_forecasts.modellist}}.
 }

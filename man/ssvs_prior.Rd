@@ -37,3 +37,7 @@ George, E. I., Sun, D., & Ni, S. (2008). Bayesian stochastic search for VAR mode
 restrictions. \emph{Journal of Econometrics, 142}(1), 553--580.
 \doi{10.1016/j.jeconom.2007.08.017}
 }
+\seealso{
+Methods: \code{\link{ssvs_prior.bvarmodel}},
+\code{\link{ssvs_prior.bvecmodel}}, \code{\link{ssvs_prior.externalforecast}}.
+}

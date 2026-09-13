@@ -85,6 +85,37 @@ test_that("add_priors rejects unknown elements of coint", {
   )
 })
 
+test_that("add_priors rejects elements of coef the model does not use", {
+  vec_coint <- list(v_i = 0, p_tau_i = 1)
+  vec_sigma <- list(df = "k", scale = 1)
+
+  # coint_var belongs to the Minnesota prior of a VAR model only.
+  expect_error(
+    add_priors(fx_vec_model(), coef = list(v_i = 1, coint_var = TRUE),
+               coint = vec_coint, sigma = vec_sigma),
+    "Element 'coint_var' in argument 'coef' is not recognised"
+  )
+  expect_no_error(
+    add_priors(fx_var_model(), coef = list(v_i = 0, coint_var = TRUE),
+               sigma = list(df = 1, scale = 0.0001))
+  )
+
+  expect_error(
+    add_priors(fx_var_model(),
+               coef = list(minnesota = list(kappa1 = 0.5, kappa2 = 0.1,
+                                            kappa4 = 5, kapa3 = 1)),
+               sigma = list(df = 1, scale = 0.0001)),
+    "Element 'kapa3' in argument 'coef\\$minnesota' is not recognised"
+  )
+
+  expect_error(
+    add_priors(fx_var_model(), coef = list(v_i_det = 1),
+               sigma = list(df = 1, scale = 0.0001)),
+    "If 'coef$v_i' is not specified, 'coef$minnesota' must be specified.",
+    fixed = TRUE
+  )
+})
+
 test_that("VEC priors cover beta, the short-run coefficients and sigma", {
   model <- fx_vec_priors()
   spec <- model[["model"]]

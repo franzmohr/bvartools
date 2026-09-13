@@ -36,8 +36,12 @@
 
 .add_priors_check_coef <- function(object, coef) {
   
-  allowed_coef_arguments <- c("v_i", "v_i_det", "coint_var", "const", "minnesota",
+  allowed_coef_arguments <- c("v_i", "v_i_det", "const", "minnesota",
                               "max_var", "shape", "rate", "rate_det")
+  # Only the Minnesota prior of a VAR model can centre the first own lag on one.
+  if (inherits(object, "bvarmodel")) {
+    allowed_coef_arguments <- c(allowed_coef_arguments, "coint_var")
+  }
   for (i in names(coef)) {
     if (!i %in% allowed_coef_arguments) {
       stop(paste0("Element '", i, "' in argument 'coef' is not recognised."))
@@ -53,8 +57,8 @@
       coef[["v_i_det"]] <- coef[["v_i"]]
     }
   } else {
-    if (!any(c("minnesota", "ssvs") %in% names(coef))) {
-      stop("If 'coef$v_i' is not specified, at least 'coef$minnesota' or 'coef$ssvs' must be specified.")
+    if (!"minnesota" %in% names(coef)) {
+      stop("If 'coef$v_i' is not specified, 'coef$minnesota' must be specified.")
     }
   }
   
@@ -84,6 +88,11 @@
     }
     if (is.null(names(coef[["minnesota"]]))) {
       stop("Argument coef$minnesota must be a named list.")
+    }
+    for (i in names(coef[["minnesota"]])) {
+      if (!i %in% c("kappa1", "kappa2", "kappa3", "kappa4")) {
+        stop(paste0("Element '", i, "' in argument 'coef$minnesota' is not recognised."))
+      }
     }
     if (!all(c("kappa1", "kappa2", "kappa4") %in% names(coef[["minnesota"]]))) {
       stop("Argument coeff$minnesota must contain at least the elements 'kappa1', 'kappa2' and 'kappa4'.")

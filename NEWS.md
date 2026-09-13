@@ -1,5 +1,13 @@
 # bvartools (development version)
 
+* **The package has a DOI, 10.5281/zenodo.22736604.** The GitHub release of
+  0.3.0 is archived on Zenodo, and this concept DOI identifies the package as a
+  whole: <https://doi.org/10.5281/zenodo.22736604> resolves to whichever version
+  was archived last, so it stays valid from one release to the next.
+  `citation("bvartools")` prints and exports it, `CITATION.cff` carries it for
+  the "Cite this repository" box on GitHub, the README shows it as a badge,
+  and every vignette ends with a short section on citing the package.
+
 * **The documentation warns against scaling the error correction term of a VEC
   model with time varying coefficients.** In the vignette on TVP-SV-VEC models,
   full-length chains on a scaled error correction term let the coefficient paths

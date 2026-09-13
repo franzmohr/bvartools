@@ -251,6 +251,112 @@ order of magnitude noisier than the rest of the sample, and a model that
 averaged over them would report credible bands for the 1990s that are far too
 wide.
 
+## A prior centred on the maximum likelihood estimate
+
+The prior used above says nothing about where the cointegration space lies:
+under $\beta_t = \rho \beta_{t-1} + \eta_t$ the marginal prior of
+$sp(\beta_t)$ is uniform in every period. The working paper version of Koop,
+León-González and Strachan (2011) shows how to centre it on a given space
+$sp(H)$ instead, by putting $P_\tau = H H^{\prime} + H_\perp T H_\perp^{\prime}$
+into the transition of the state equation,
+
+$$\beta_t = \rho (I_r \otimes P_\tau) \beta_{t-1} + \eta_t, \qquad \eta_t \sim N(0, I).$$
+
+The part of $\beta_t$ along $sp(H)$ keeps the autocorrelation $\rho$ and the
+part off it decays faster, so the mode of the marginal distribution of
+$sp(\beta_t)$ is $sp(H)$ in every period, while the space of one period is still
+centred near the space of the period before.
+
+With `coint = list(rho = 0.999, p_tau_i = "ml", weight = 1)`, `add_priors`
+takes $H$ from Johansen's (1995) maximum likelihood estimate of the space and
+chooses $T$ so that the prior spread of $sp(\beta_t)$ around it in each period
+matches the sampling variance of that estimate, with `weight` counting how many
+samples' worth of information the prior adds. The state before the sample gets
+the stationary distribution of the new state equation. The estimate is computed
+from the error correction term as it is stored in the model, so the series are
+scaled before `add_priors`, as above.
+
+```{r ml-prior}
+model_ml <- create_bvecmodel(uk_macrodata, p = 2, r = 1, const = "unrestricted",
+                             tvp = TRUE, error = "sv+covar", varsel = "bvs",
+                             iterations = 3000, burnin = 1000)
+
+model_ml <- scale_error_correction(model_ml)
+
+model_ml <- add_priors(model_ml,
+                       coef = list(v_i = 1, v_i_det = 1 / 10,
+                                   shape = 3, rate = 0.0001, rate_det = 0.01),
+                       coint = list(rho = 0.999, p_tau_i = "ml", weight = 1),
+                       sigma = list(shape = 3, rate = 0.01,
+                                    mu = 0, v_i = 0.01,
+                                    state_variance = 0.05, offset = 1e-8),
+                       varsel = list(inprior = 0.5, exclude_det = TRUE))
+```
+
+The warning is part of the result. How informative this prior can be is bounded
+by $\rho$: even $T = 0$ leaves the space $1 - \rho^2$ of room to move in each
+period. On these data one direction of the cointegration space is estimated so
+precisely that matching its sampling variance would take less than that, so
+`add_priors` sets $T$ to zero in that direction and says so. The eigenvalues of
+the transition that was stored show the outcome -- one for the direction of
+$sp(H)$ itself, and one for each direction off it:
+
+```{r}
+round(eigen(model_ml[["priors"]][["beta"]][["p_tau"]], symmetric = TRUE)$values, 3)
+```
+
+```{r, message=FALSE, warning=FALSE}
+model_ml <- add_initial_values(model_ml)
+model_ml <- add_posterior_coefficients(model_ml)
+model_ml <- rescale_error_correction(model_ml)
+```
+
+The same element of $\Pi_t$ as above, with the bands under the noninformative
+prior in grey:
+
+```{r ml-prior-path, fig.align='center', fig.height=4, fig.width=5.5}
+path_ml <- pi_path(model_ml, equation = "rs", variable = "l.rs")
+
+stats::ts.plot(path, path_ml, lty = c(2, 1, 2, 2, 1, 2),
+               col = rep(c("grey60", "black"), each = 3),
+               main = "Short rate: adjustment to its own level",
+               ylab = "Element of Pi")
+abline(h = 0, lty = "dotted")
+legend("topright", legend = c("Noninformative", "Centred on ML"),
+       col = c("grey60", "black"), lty = 1, bty = "n")
+```
+
+Averaged over the sample, the width of the 90% bands of every element of
+$\Pi_t$ under the prior centred on the maximum likelihood estimate, relative to
+the noninformative one -- rows are the variables in the error correction term,
+columns the equations:
+
+```{r ml-prior-width}
+band_width <- function(object) {
+  sapply(object[["model"]][["endogen"]], function(equation) {
+    sapply(dimnames(object[["data"]][["train"]][["w"]])[[2]], function(variable) {
+      bands <- pi_path(object, equation = equation, variable = variable)
+      mean(bands[, 3] - bands[, 1])
+    })
+  })
+}
+
+round(band_width(model_ml) / band_width(model), 2)
+```
+
+Three things to keep in mind when reading this. First, the centre is estimated
+from the same sample the model is estimated on, so the data enter twice and the
+bands overstate how precisely the space is known. Second, a larger `weight` does
+not always give narrower bands: it lowers $T$, and $T$ is also how much of the
+position of the space carries over from one period to the next, so near zero each
+period is informed by its own data alone -- see `?add_priors.bvecmodel`. Third,
+and most important for these data, $H$ is the estimate of a *constant* space.
+Centring every period on it pulls the path towards the average of the sample,
+which works against the question the model is estimated to answer, whether the
+long-run relationship moved. A prior like this is best suited to a model whose
+cointegration space is expected to move around a stable centre, rather than to
+drift away from one.
+
 ## What a time varying VEC model does not do
 
 `vec_to_var` refuses to transform the posterior draws of a time varying model:
@@ -273,6 +379,8 @@ which is worth doing in any case, since the constant coefficient model with
 stochastic volatility is the model a TVP-SV specification has to beat.
 
 ## References
+
+Johansen, S. (1995). *Likelihood-based inference in cointegrated vector autoregressive models*. Oxford: Oxford University Press.
 
 Koop, G., León-González, R., & Strachan R. W. (2011). Bayesian inference in a time varying cointegration model. *Journal of Econometrics, 165*(2), 210-220. <https://doi.org/10.1016/j.jeconom.2011.07.007>
 

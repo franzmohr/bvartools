@@ -306,3 +306,23 @@ test_that("Bayesian variable selection only needs inclusion probabilities", {
   expect_true(all(c("inprior", "include") %in% names(prior)))
   expect_false("tau0" %in% names(prior))
 })
+
+test_that("a BVS prior of a VEC model takes v_i_det from v_i when it is not given", {
+  model <- create_bvecmodel(vec_data(), p = 2, r = 1, const = "unrestricted",
+                            varsel = "bvs", iterations = 10, burnin = 5)
+  coint <- list(v_i = 0, p_tau_i = 1)
+  sigma <- list(df = "k", scale = 1)
+  varsel <- list(inprior = 0.5)
+
+  implicit <- add_priors(model, coef = list(v_i = 1), coint = coint,
+                         sigma = sigma, varsel = varsel)
+  explicit <- add_priors(model, coef = list(v_i = 1, v_i_det = 1), coint = coint,
+                         sigma = sigma, varsel = varsel)
+  expect_equal(implicit[["priors"]], explicit[["priors"]])
+
+  expect_warning(
+    add_priors(model, coef = list(v_i = 0), coint = coint,
+               sigma = sigma, varsel = varsel),
+    "uninformative prior"
+  )
+})

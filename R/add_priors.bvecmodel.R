@@ -324,8 +324,12 @@ add_priors.bvecmodel <- function(object,
   ## coefficients ----
   if (!is.null(coef)) {
     .add_priors_check_coef(object, coef)
+
+    if (is.null(coef[["v_i_det"]])) {
+      coef[["v_i_det"]] <- coef[["v_i"]]
+    }
   }
-  
+
   ## cointegration ----
   if (object[["model"]][["tvp"]]) {
     if (!"rho" %in% names(coint)) {

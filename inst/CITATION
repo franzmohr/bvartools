@@ -9,10 +9,11 @@ bibentry(bibtype = "Manual",
          year = year,
          note = note,
          url = "https://CRAN.R-project.org/package=bvartools",
+         doi = "10.5281/zenodo.22736604",
          textVersion = paste0("Franz X. Mohr (",
                 year,
                 "). bvartools: Bayesian Inference of Vector Autoregressive and Error Correction Models. ",
-                note, "."))
+                note, ". doi:10.5281/zenodo.22736604"))
 
 bibentry(header = "To cite the algortihm of Koop et al. (2010) use:",
          bibtype = "article",

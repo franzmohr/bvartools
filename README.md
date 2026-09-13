@@ -12,6 +12,7 @@ downloads](https://cranlogs.r-pkg.org/badges/grand-total/bvartools)](https://cra
 coverage](https://codecov.io/gh/franzmohr/bvartools/graph/badge.svg)](https://app.codecov.io/gh/franzmohr/bvartools)
 [![License: GPL (\>=
 2)](https://img.shields.io/badge/license-GPL%20%28%3E%3D%202%29-blue.svg)](https://www.gnu.org/licenses/gpl-2.0)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22736604.svg)](https://doi.org/10.5281/zenodo.22736604)
 
 [![GitHub
 Sponsors](https://img.shields.io/badge/Sponsor-%E2%9D%A4-ea4aaa?logo=github-sponsors&logoColor=white)](https://github.com/sponsors/franzmohr)

@@ -278,6 +278,10 @@ credible bands are degenerate and in-sample criteria are not available for them,
 which the printed comparison and the plots indicate by an empty entry.
 
 
+## Citing bvartools
+
+If you use `bvartools` in published work, please cite it. `citation("bvartools")` prints the reference, and the package has the DOI [10.5281/zenodo.22736604](https://doi.org/10.5281/zenodo.22736604), which always resolves to the latest archived version.
+
 ## References
 
 Korobilis, D. (2013). VAR forecasting using Bayesian variable selection. *Journal of Applied Econometrics, 28*(2), 204-230. <https://doi.org/10.1002/jae.1271>

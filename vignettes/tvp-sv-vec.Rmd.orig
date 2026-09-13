@@ -361,7 +361,7 @@ round(band_width(model_ml) / band_width(model), 2)
 A ratio below one means that the prior centred on the maximum likelihood
 estimate narrows the band of that element. Here it does so for all elements but
 one, most for the adjustment to the lagged long-term rate, while the band of the
-adjustment of inflation to its own level is about as wide as under the
+adjustment of inflation to its own level is about a tenth wider than under the
 noninformative prior. It need not narrow every band,
 and that is a property of how the prior is built rather than a failure of it: a
 larger `weight` makes the prior tighter by lowering $T$, but $T$ is also how
@@ -431,6 +431,10 @@ The constant coefficient model with stochastic volatility, estimated with
 can be compared out of sample by estimating both over an expanding window with
 `use_expanding_window` and converting the models of its windows with
 `vec_to_var` before they are forecast.
+
+## Citing bvartools
+
+If you use `bvartools` in published work, please cite it. `citation("bvartools")` prints the reference, and the package has the DOI [10.5281/zenodo.22736604](https://doi.org/10.5281/zenodo.22736604), which always resolves to the latest archived version.
 
 ## References
 

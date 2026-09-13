@@ -292,10 +292,10 @@ coefficient_path <- function(object, equation, regressor, ci = 0.9) {
             frequency = stats::frequency(object[["data"]][["train"]][["y"]]))
 }
 
-path <- coefficient_path(model, equation = "Dp", regressor = "r.01")
+path <- coefficient_path(model, equation = "r", regressor = "r.01")
 
 stats::ts.plot(path, lty = c(2, 1, 2),
-               main = "Inflation ~ first lag of the short-term rate",
+               main = "Short-term rate ~ its own first lag",
                ylab = "Coefficient")
 abline(h = 0, lty = "dotted")
 ```

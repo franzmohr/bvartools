@@ -200,6 +200,10 @@ The reason is not a missing algorithm. The $h$ step ahead quantile is not the qu
 
 Variable selection is available as `varsel = "bvs"`. SSVS is not implemented for these models and is refused when the specification is made.
 
+## Citing bvartools
+
+If you use `bvartools` in published work, please cite it. `citation("bvartools")` prints the reference, and the package has the DOI [10.5281/zenodo.22736604](https://doi.org/10.5281/zenodo.22736604), which always resolves to the latest archived version.
+
 ## References
 
 Kozumi, H., & Kobayashi, G. (2011). Gibbs sampling methods for Bayesian quantile regression. *Journal of Statistical Computation and Simulation, 81*(11), 1565-1578. <https://doi.org/10.1080/00949655.2010.496117>

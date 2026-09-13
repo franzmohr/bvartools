@@ -1,52 +1,220 @@
 #' @keywords internal
-"_PACKAGE"
-
-## usethis namespace: start
-
+#'
+#' @section Model objects:
+#' Every step of an analysis takes a model object and returns it with something
+#' added, so the result of each call must be assigned back:
+#' \code{model <- add_priors(model)}. A model object is a list of class
+#' 'bvarmodel' or 'bvecmodel' with the elements
+#' \describe{
+#'   \item{\code{data}}{the data matrices, with the estimation sample in
+#'   \code{data$train} (\code{y}, \code{x} and \code{z} in SUR form).}
+#'   \item{\code{model}}{the specification: variables, lag orders, deterministic
+#'   terms, error and variable selection types, iterations and burn-in draws.}
+#'   \item{\code{priors}}{the prior hyperparameters, added by \code{\link{add_priors}}.}
+#'   \item{\code{initial}}{the starting values of the sampler, added by
+#'   \code{\link{add_initial_values}}.}
+#'   \item{\code{posterior}}{the draws added by \code{\link{add_posterior_coefficients}}
+#'   and the later \code{add_posterior_*} functions.}
+#' }
+#' Posterior draws are stored with one row per parameter and one column per
+#' draw, which is also the orientation \code{\link{bvar}} and \code{\link{bvec}}
+#' expect.
+#'
+#' Passing a vector to an argument such as \code{p} or \code{r} creates one model
+#' per specification in a list of class 'modellist', and
+#' \code{\link{use_expanding_window}} creates a list of class 'expandingwindow'.
+#' The functions of the workflow accept these lists as well and apply to each
+#' model in turn.
+#'
+#' @section Workflow of a VAR model:
+#' \enumerate{
+#'   \item \code{\link{create_bvarmodel}} builds the data matrices from a
+#'   time-series object. Lag order, deterministic terms, exogenous variables and
+#'   the number of iterations and burn-in draws are set here.
+#'   \code{\link{transform_variables}} applies the transformation codes of
+#'   FRED-MD and FRED-QD beforehand.
+#'   \item \code{\link{add_priors}} adds prior hyperparameters. Its arguments
+#'   \code{coef} and \code{sigma} are named lists without defaults, and neither
+#'   may be empty: \code{coef} needs \code{v_i}, \code{minnesota} or
+#'   \code{ssvs}, and \code{sigma} the elements of the chosen \code{error},
+#'   which are \code{df} and \code{scale} for \code{"wishart"} and \code{shape}
+#'   and \code{rate} for \code{"gamma"} and \code{"ald"}. Structural models
+#'   cannot use the Wishart prior.
+#'   \item \code{\link{add_initial_values}} adds starting values, by default
+#'   from a least squares estimate.
+#'   \item \code{\link{add_posterior_coefficients}} runs the sampler.
+#'   \code{\link[=plot.bvarmodel]{plot}}, \code{\link[=summary.bvarmodel]{summary}}
+#'   and \code{\link[=thin.bvarmodel]{thin}} inspect and thin the draws.
+#'   \item \code{\link{add_forecast_input}} followed by
+#'   \code{\link{add_posterior_forecasts}} simulates forecasts, which
+#'   \code{\link[=predict.bvarmodel]{predict}} summarises. \code{\link{irf}},
+#'   \code{\link{fevd}} and \code{\link{spillover}} compute impulse responses,
+#'   variance decompositions and connectedness measures.
+#' }
+#'
+#' @section Choosing a model:
+#' The type of model is fixed in \code{\link{create_bvarmodel}} and
+#' \code{\link{create_bvecmodel}}, and the priors that fit it in
+#' \code{\link{add_priors}}:
+#' \itemize{
+#'   \item \code{error} sets the error covariance: \code{"wishart"} (default),
+#'   \code{"gamma"} for a diagonal covariance, \code{"sv"} for stochastic
+#'   volatility and, for VAR models, \code{"ald"} for a quantile VAR whose
+#'   quantiles are given in \code{quantile}. Quantile VARs estimate no error
+#'   covariances and produce no forecasts.
+#'   \item \code{tvp = TRUE} makes the coefficients time varying.
+#'   \item \code{structural = TRUE} estimates the contemporaneous coefficients
+#'   (A-model).
+#'   \item \code{varsel} selects variables by \code{"ssvs"} (George et al., 2008)
+#'   or \code{"bvs"} (Korobilis, 2013).
+#'   \item A Minnesota prior is requested with \code{coef = list(minnesota = ...)}
+#'   in \code{\link{add_priors}}.
+#' }
+#' \code{\link{minnesota_prior}}, \code{\link{ssvs_prior}} and
+#' \code{\link{inclusion_prior}} return the same prior components on their own,
+#' for use in a sampler written by the user.
+#'
+#' @section Error correction models:
+#' \code{\link{create_bvecmodel}} additionally takes the cointegration rank
+#' \code{r} and whether constant, trend and seasonal terms are
+#' \code{"restricted"} to the cointegration space or \code{"unrestricted"}.
+#' Priors on the cointegration space go into the \code{coint} argument of
+#' \code{\link{add_priors}}. Forecasts, impulse responses, variance
+#' decompositions, spillovers and sign restrictions are computed for a
+#' 'bvarmodel', so an estimated VEC model is first converted to its VAR
+#' representation in levels with \code{\link{vec_to_var}}.
+#'
+#' @section Identification:
+#' \code{\link{irf}} and \code{\link{fevd}} provide forecast error,
+#' orthogonalised and generalised impulse responses through their \code{type}
+#' argument. \code{\link{add_sign_restrictions}} identifies the shocks of an
+#' estimated model by the signs of their impulse responses instead.
+#'
+#' @section Model comparison and forecast evaluation:
+#' \itemize{
+#'   \item In sample: \code{\link{add_posterior_loglik}}, then
+#'   \code{\link{selection_criteria}} (LL, AIC, BIC, HQ, WAIC, LOOIC), then
+#'   \code{\link{choose_best_model}}.
+#'   \item Out of sample: \code{\link{use_expanding_window}} before the priors
+#'   are added, the usual estimation and forecasting steps, then
+#'   \code{\link{add_forecast_errors}} with the test sample and
+#'   \code{\link{selection_criteria}} for MAFE and RMSFE.
+#'   \code{\link{plot_forecast_errors_by_period}} plots the errors over time.
+#'   \item \code{\link{combine_models}} and \code{\link{align_model_obs}} put
+#'   differently specified models on a common sample, and
+#'   \code{\link{create_external_forecast}} brings forecasts produced elsewhere
+#'   into the same comparison.
+#' }
+#'
+#' @section User-written samplers:
+#' \code{\link{add_posterior_coefficients}} accepts a
+#' \code{posterior_function} that replaces the built-in sampler. For a sampler
+#' written from scratch the package exports its building blocks, among them
+#' \code{\link{post_normal}}, \code{\link{post_normal_sur}}, \code{\link{post_bvs}},
+#' \code{\link{ssvs}}, \code{\link{post_coint_kls}}, \code{\link{stochvol_ksc_1998}}
+#' and \code{\link{kalman_durbin_koopman_2002}}. \code{\link{bvar}} and
+#' \code{\link{bvec}} collect the resulting draws in a model object, to which
+#' the rest of the workflow applies.
+#'
+#' @section Storage:
+#' \code{\link{write_to_hdf5}} and \code{\link{read_model_from_hdf5}} save and
+#' restore a model with its draws, one per file or several side by side in
+#' groups listed by \code{\link{list_models_in_hdf5}}. The files follow the
+#' format of the BayesTS command line, so a model can also be estimated there
+#' and read back. \code{\link{read_models_from_folder}} and
+#' \code{\link{read_expanding_window_model_from_folder}} read a whole folder.
+#'
+#' @section Common mistakes:
+#' \itemize{
+#'   \item Calling a step without assigning its result, which discards what it added.
+#'   \item Calling \code{\link{add_posterior_forecasts}} without
+#'   \code{\link{add_forecast_input}}. The \code{n_ahead} given there is also
+#'   the longest horizon \code{predict} returns; a longer one is shortened to it.
+#'   \item Calling \code{\link{selection_criteria}} for in-sample criteria
+#'   without \code{\link{add_posterior_loglik}}.
+#'   \item Calling \code{predict}, \code{irf} or \code{fevd} on a 'bvecmodel'
+#'   instead of the result of \code{\link{vec_to_var}}.
+#'   \item Passing draws to \code{\link{bvar}} or \code{\link{bvec}} with one row
+#'   per draw instead of one column per draw.
+#' }
+#'
+#' @section Vignettes and data:
+#' Worked examples are in the vignettes, listed by
+#' \code{browseVignettes("bvartools")}: \code{"bvartools"} (introduction),
+#' \code{"minnesota-prior"}, \code{"ssvs"}, \code{"tvp-sv-var"},
+#' \code{"quantile-var"}, \code{"sign-restrictions"}, \code{"bvec"},
+#' \code{"tvp-sv-vec"}, \code{"model-comparison"} and \code{"horse-races"}.
+#' They use the data sets \code{\link{e1}}, \code{\link{e6}},
+#' \code{\link{us_macrodata}} and \code{\link{uk_macrodata}}.
+#'
+#' @examples
+#' data("e1")
+#' e1 <- diff(log(e1)) * 100
+#'
+#' # Set up, estimate and inspect a VAR(2) model
+#' model <- create_bvarmodel(e1, p = 2, deterministic = "const",
+#'                           iterations = 50, burnin = 10)
+#' # Number of iterations and burnin should be much higher.
+#' model <- add_priors(model,
+#'                     coef = list(v_i = 0, v_i_det = 0),
+#'                     sigma = list(df = 1, scale = .0001))
+#' model <- add_initial_values(model)
+#' model <- add_posterior_coefficients(model)
+#' summary(model)
+#'
+#' # Forecasts and impulse responses
+#' model <- add_forecast_input(model, n_ahead = 8)
+#' model <- add_posterior_forecasts(model)
+#' pred <- predict(model, n_ahead = 8)
+#' oir <- irf(model, impulse = "income", response = "cons", n_ahead = 8, type = "oir")
+#'
 #' @references
-#' 
+#'
 #' Chan, J., Koop, G., Poirier, D. J., & Tobias, J. L. (2019). \emph{Bayesian Econometric Methods}
 #' (2nd ed.). Cambridge: University Press.
-#' 
+#'
 #' Durbin, J., & Koopman, S. J. (2002). A simple and efficient simulation smoother for
 #' state space time series analysis. \emph{Biometrika, 89}(3), 603--615.
-#' 
+#'
 #' Eddelbuettel, D., & Sanderson C. (2014). RcppArmadillo: Accelerating R with high-performance
 #' C++ linear algebra. \emph{Computational Statistics and Data Analysis, 71}, 1054--1063.
 #' \doi{10.1016/j.csda.2013.02.005}
-#' 
+#'
 #' George, E. I., Sun, D., & Ni, S. (2008). Bayesian stochastic search for VAR model
 #' restrictions. \emph{Journal of Econometrics, 142}(1), 553--580.
 #' \doi{10.1016/j.jeconom.2007.08.017}
-#' 
+#'
 #' Koop, G, & Korobilis, D. (2010), Bayesian multivariate time series Methods for empirical
 #' macroeconomics, \emph{Foundations and Trends in Econometrics, 3}(4), 267--358.
 #' \doi{10.1561/0800000013}
-#' 
+#'
 #' Koop, G., León-González, R., & Strachan R. W. (2010). Efficient posterior
 #' simulation for cointegrated models with priors on the cointegration space.
 #' \emph{Econometric Reviews, 29}(2), 224--242.
 #' \doi{10.1080/07474930903382208}
-#' 
+#'
 #' Koop, G., León-González, R., & Strachan R. W. (2011). Bayesian inference in
 #' a time varying cointegration model. \emph{Journal of Econometrics, 165}(2), 210--220.
 #' \doi{10.1016/j.jeconom.2011.07.007}
-#' 
+#'
 #' Korobilis, D. (2013). VAR forecasting using Bayesian variable selection.
 #' \emph{Journal of Applied Econometrics, 28}(2), 204--230.
 #' \doi{10.1002/jae.1271}
-#' 
+#'
 #' Lütkepohl, H. (2006). \emph{New introduction to multiple time series analysis}
 #' (2nd ed.). Berlin: Springer.
-#' 
+#'
 #' Primiceri, G. E. (2005). Time varying structural vector autoregressions and
 #' monetary policy. \emph{The Review of Economic Studies, 72}(3), 821--852.
 #' \doi{10.1111/j.1467-937X.2005.00353.x}
-#' 
+#'
 #' Sanderson, C., & Curtin, R. (2016). Armadillo: a template-based C++ library for linear algebra.
 #' \emph{Journal of Open Source Software, 1}(2), 26. \doi{10.21105/joss.00026}
-#' 
-#' 
+#'
+"_PACKAGE"
+
+## usethis namespace: start
+
 #' @useDynLib bvartools, .registration = TRUE
 #' @importFrom coda thin
 #' @importFrom Matrix Matrix

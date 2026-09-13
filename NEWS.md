@@ -1,5 +1,12 @@
 # bvartools (development version)
 
+* **New data set `at_macrodata`.** It contains the Austrian sub-model of a
+  global VAR model of the 33 countries in the GVAR database of Mohaddes and
+  Raissi (2024): quarterly domestic series, their trade weighted foreign
+  counterparts and global commodity prices from 1979Q2 to 2023Q3. It was
+  produced from data set `gvar2023` of bgvars, and illustrates models with
+  weakly exogenous variables.
+
 * **A time varying cointegration space can be centred on the maximum
   likelihood estimate as well.** For VEC models with `tvp = TRUE`,
   `add_priors(coint = list(rho = 0.999, p_tau_i = "ml", weight = 1))` uses the

@@ -1,5 +1,14 @@
 # bvartools (development version)
 
+* **`add_priors()` rejects unknown elements in all of its arguments.** It
+  already did for `coef`, but ignored a misspelt element of `sigma`, `varsel`
+  and `coint` without a message, so the setting it was meant for was silently
+  left out. The horse-races vignette, for instance, passed
+  `varsel$exclude_deterministic = TRUE`, which left the constants subject to
+  variable selection; the element is `exclude_det`. The check now also covers
+  the elements of `coef$minnesota`, and rejects `coef$coint_var` for VEC models,
+  which do not use it.
+
 * **Documentation for coding assistants, in `inst/agents/`.** An assistant
   working from tutorials writes bvartools code that runs and means something
   else, or that calls functions which no longer exist. `inst/agents/` has an

@@ -121,6 +121,7 @@ model <- add_initial_values(model)
 ```
 
 ```{r, message=FALSE, warning=FALSE}
+set.seed(20260912)
 model <- add_posterior_coefficients(model)
 ```
 
@@ -307,6 +308,7 @@ round(eigen(model_ml[["priors"]][["beta"]][["p_tau"]], symmetric = TRUE)$values,
 
 ```{r, message=FALSE, warning=FALSE}
 model_ml <- add_initial_values(model_ml)
+set.seed(20260913)
 model_ml <- add_posterior_coefficients(model_ml)
 model_ml <- rescale_error_correction(model_ml)
 ```
@@ -344,39 +346,76 @@ band_width <- function(object) {
 round(band_width(model_ml) / band_width(model), 2)
 ```
 
-Three things to keep in mind when reading this. First, the centre is estimated
-from the same sample the model is estimated on, so the data enter twice and the
-bands overstate how precisely the space is known. Second, a larger `weight` does
-not always give narrower bands: it lowers $T$, and $T$ is also how much of the
-position of the space carries over from one period to the next, so near zero each
-period is informed by its own data alone -- see `?add_priors.bvecmodel`. Third,
-and most important for these data, $H$ is the estimate of a *constant* space.
+A ratio below one means that the prior centred on the maximum likelihood
+estimate narrows the band of that element. It need not do so for every element,
+and that is a property of how the prior is built rather than a failure of it: a
+larger `weight` makes the prior tighter by lowering $T$, but $T$ is also how
+much of the position of the space carries over from one period to the next. In
+a direction where $T$ is zero, as in one direction here, the position does not
+carry over at all, each period is informed by its own data alone, and the
+posterior in that direction can be wider than under the noninformative prior --
+see `?add_priors.bvecmodel`. How this plays out for the elements of $\Pi_t$
+depends on how the directions of the space line up with the variables.
+
+Two further things to keep in mind. First, the centre is estimated from the
+same sample the model is estimated on, so the data enter twice, and where the
+bands do narrow they overstate how precisely the space is known. Second, and
+most important for these data, $H$ is the estimate of a *constant* space.
 Centring every period on it pulls the path towards the average of the sample,
 which works against the question the model is estimated to answer, whether the
 long-run relationship moved. A prior like this is best suited to a model whose
 cointegration space is expected to move around a stable centre, rather than to
 drift away from one.
 
-## What a time varying VEC model does not do
+## Impulse responses and forecasts
 
-`vec_to_var` refuses to transform the posterior draws of a time varying model:
+Impulse responses, variance decompositions and forecasts of a VEC model are
+obtained from its VAR representation in levels, which `vec_to_var` computes
+draw by draw. A time varying model is a VEC model per period, so the
+transformation is applied period by period, and the result is a VAR model with
+time varying parameters:
 
-```{r, error=TRUE}
-vec_to_var(model)
+```{r vec2var}
+bvar_form <- vec_to_var(model)
+
+bvar_form[["model"]][["algorithm"]]
 ```
 
-The transformation writes the VEC coefficients of one draw as the coefficients
-of the corresponding level VAR, and impulse responses and forecast error
-variance decompositions are computed from that VAR form. A time varying model
-has one such VAR per period and per draw, so what would come back is not a
-`bvarmodel` of the kind the rest of the package works with. Analysis of a
-TVP-SV-VEC model therefore stays with the paths above and with the period-wise
-summaries.
+The draws of the variances of the state equations of the VEC coefficients and
+of $\rho$ are not carried over: they describe how the coefficients of the VEC
+model drift and have no counterpart among the coefficients in levels. The
+paths of the coefficients and the draws of the error term are, and they are
+all the application functions need.
 
-A constant coefficient model transforms as usual, so the practical route to
-impulse responses is to estimate the same specification with `tvp = FALSE` --
-which is worth doing in any case, since the constant coefficient model with
-stochastic volatility is the model a TVP-SV specification has to beat.
+Impulse responses and forecast error variance decompositions are those of one
+period, which argument `period` selects, the last period being the default.
+The response of inflation to a shock to the short-term interest rate in 1975Q1:
+
+```{r feir-1975, fig.align='center', fig.height=4, fig.width=5.5}
+feir <- irf(bvar_form, impulse = "rs", response = "Dp", n_ahead = 20,
+            period = period_of(model, 1975, 1))
+
+plot(feir, main = "Forecast error impulse response, 1975Q1",
+     xlab = "Period", ylab = "Response")
+```
+
+Forecasts start from the last period of the sample and hold the coefficients
+at their values in that period over the forecast horizon. Their bands
+therefore reflect the uncertainty about where the coefficients are at the end
+of the sample, but not that the coefficients may keep drifting afterwards.
+
+```{r forecasts, fig.align='center', fig.width=5.5, fig.height=5.5}
+bvar_form <- add_forecast_input(bvar_form, n_ahead = 8)
+bvar_form <- add_posterior_forecasts(bvar_form)
+
+plot(predict(bvar_form, n_ahead = 8), n_pre = 20)
+```
+
+The constant coefficient model with stochastic volatility, estimated with
+`tvp = FALSE`, remains the model a TVP-SV specification has to beat. The two
+can be compared out of sample by estimating both over an expanding window with
+`use_expanding_window` and converting the models of its windows with
+`vec_to_var` before they are forecast.
 
 ## References
 

@@ -68,6 +68,7 @@ Collate:
     'check_bvecpost_input.R'
     'choose_best_model.R'
     'choose_best_model.selcritlist.R'
+    'cointspace_prior.R'
     'collect_draws.R'
     'combine_models.R'
     'create_bvarmodel.R'

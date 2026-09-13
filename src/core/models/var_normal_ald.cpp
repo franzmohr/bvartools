@@ -130,8 +130,14 @@ VarNormalAldDraws VarNormalAldSampler::draw_coefficients(const VarNormalAldInput
                 // an inclusion against y - z*theta rather than
                 // y - theta*w - z*theta would select for the median whatever
                 // quantile was asked for, and at q = 0.5 nothing would show.
+                //
+                // Against the unmasked regressors, as every other sampler scores
+                // them: the sweep hands over candidates already masked. Masking
+                // them a second time, with the indicators the sweep is still
+                // updating, zeroed the "on" candidate of any coefficient that
+                // was out, so its way back in was decided by the prior alone.
                 bvs_sweep(*a_bvs, a, BvsScope::element, [&](const arma::vec &theta) {
-                    const arma::vec res = y_adjusted - z_bvs * a_bvs->lambda_diag * theta;
+                    const arma::vec res = y_adjusted - z_bvs * theta;
                     return -arma::as_scalar(arma::trans(res) * u_sigma_inv_diag * res) / 2;
                 });
                 z = z_bvs * a_bvs->lambda_diag;

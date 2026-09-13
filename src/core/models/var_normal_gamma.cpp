@@ -320,6 +320,7 @@ ForecastDraws VarNormalGammaSampler::forecast(const VarNormalGammaInput &input,
     arma::mat x = input.forecast.x;
 
     require_forecast_regressors(input.spec, x);
+    core::require_forecast_horizons(x, h);
 
     // The coefficient draws are only consulted when there are regressors to
     // apply them to or a contemporaneous matrix to split off; without either,
@@ -375,6 +376,11 @@ ForecastDraws VarNormalGammaSampler::forecast(const VarNormalGammaInput &input,
         const arma::mat a_draw =
             use_a ? arma::reshape(a.col(draw), k, x.n_cols) : arma::mat();
 
+        // The error covariance factorised once per draw rather than once per
+        // horizon: the precision is the same at every horizon, and the
+        // factorisation draws nothing, so where it sits does not move a draw.
+        arma::eig_sym(eigval, eigvec, arma::solve(arma::reshape(coefficients.u_sigma_inv.col(draw), k, k), diag_k));
+
         for (int i = 0; i < h; i++)
         {
             if (use_a)
@@ -389,7 +395,6 @@ ForecastDraws VarNormalGammaSampler::forecast(const VarNormalGammaInput &input,
             }
 
             // Add error
-            arma::eig_sym(eigval, eigvec, arma::solve(arma::reshape(coefficients.u_sigma_inv.col(draw), k, k), diag_k));
             fcst.submat(i * k, draw, (i + 1) * k - 1, draw) = fcst.submat(i * k, draw, (i + 1) * k - 1, draw) + eigvec * arma::diagmat(arma::sqrt(eigval)) * arma::trans(eigvec) * arma::randn(k);
 
             if (structural)

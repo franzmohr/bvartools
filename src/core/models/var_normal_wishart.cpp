@@ -196,6 +196,7 @@ ForecastDraws VarNormalWishartSampler::forecast(const VarNormalWishartInput &inp
     arma::mat x = input.forecast.x;
 
     require_forecast_regressors(input.spec, x);
+    core::require_forecast_horizons(x, h);
 
     // The coefficient draws are only consulted when there are regressors to
     // apply them to or a contemporaneous matrix to split off; without either,
@@ -229,11 +230,6 @@ ForecastDraws VarNormalWishartSampler::forecast(const VarNormalWishartInput &inp
             " coefficients, and a has " + std::to_string(a.n_rows) +
             " rows after the structural split");
     }
-    if (use_a && static_cast<int>(x.n_rows) != h)
-    {
-        throw std::invalid_argument("forecast regressors must have " + std::to_string(h) +
-                                    " rows, one per horizon, got " + std::to_string(x.n_rows));
-    }
 
     const arma::uword draws = coefficients.iterations();
     const bool p_larger_than_0 = p > 0;
@@ -258,6 +254,11 @@ ForecastDraws VarNormalWishartSampler::forecast(const VarNormalWishartInput &inp
         const arma::mat a_draw =
             use_a ? arma::reshape(a.col(draw), k, x.n_cols) : arma::mat();
 
+        // The error covariance factorised once per draw rather than once per
+        // horizon: the precision is the same at every horizon, and the
+        // factorisation draws nothing, so where it sits does not move a draw.
+        arma::eig_sym(eigval, eigvec, arma::solve(arma::reshape(coefficients.u_sigma_inv.col(draw), k, k), diag_k));
+
         for (int i = 0; i < h; i++)
         {
             if (use_a)
@@ -272,7 +273,6 @@ ForecastDraws VarNormalWishartSampler::forecast(const VarNormalWishartInput &inp
             }
 
             // Add error
-            arma::eig_sym(eigval, eigvec, arma::solve(arma::reshape(coefficients.u_sigma_inv.col(draw), k, k), diag_k));
             fcst.submat(i * k, draw, (i + 1) * k - 1, draw) = fcst.submat(i * k, draw, (i + 1) * k - 1, draw) + eigvec * arma::diagmat(arma::sqrt(eigval)) * arma::trans(eigvec) * arma::randn(k);
 
             // A_0 y_t = A_1 y_{t-1} + ... + u_t, so the inverse applies to the

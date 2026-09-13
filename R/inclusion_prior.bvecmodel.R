@@ -121,8 +121,12 @@ inclusion_prior.bvecmodel <- function(object,
     include <- 1:ncol(z)
     
     # alpha coefficients ----
+    # The loadings are never selected, so their prior inclusion probability is
+    # never read. It is 1, which says what happens to them -- they are always in
+    # the model -- rather than NA: the sampler refuses a probability that is not
+    # a number, whether or not 'include' reaches it.
     if (r > 0) {
-      inprior[1:n_alpha] <- NA
+      inprior[1:n_alpha] <- 1
       exclude <- append(exclude, 1:n_alpha)
     }
     

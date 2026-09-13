@@ -4,6 +4,7 @@
 #include "bayests/var_normal_stochvol.h"
 
 #include "core/algorithms/bvs.h"
+#include "core/algorithms/stochvol_ocsn_2007.h"
 #include "core/models/model_support.h"
 
 #include <cmath>
@@ -18,6 +19,7 @@ using core::BvsBlock;
 using core::BvsScope;
 using core::bvs_sweep;
 using core::draw_normal_precision;
+using core::draw_stochvol_state;
 using core::fill_strict_lower_triangle;
 using core::fill_strict_lower_triangle_by_column;
 using core::split_structural_coefficients;
@@ -25,22 +27,6 @@ using core::stacked_response;
 using core::structural_inverse;
 using core::require_forecast_regressors;
 using core::update_forecast_lags;
-
-namespace
-{
-
-// The ten-component normal mixture of Omori, Chib, Shephard and Nakajima
-// (2007) that approximates the log chi-squared distribution of log(u^2). It is
-// what turns the non-linear measurement equation of a stochastic volatility
-// model into a conditionally linear one the Kalman machinery can handle.
-const arma::rowvec::fixed<10> kMixtureWeight = {0.00609, 0.04775, 0.13057, 0.20674, 0.22715,
-                                                0.18842, 0.12047, 0.05591, 0.01575, 0.00115};
-const arma::rowvec::fixed<10> kMixtureMean = {1.92677, 1.34744, 0.73504, 0.02266, -0.85173,
-                                              -1.97278, -3.46788, -5.55246, -8.68384, -14.65000};
-const arma::rowvec::fixed<10> kMixtureVariance = {0.11265, 0.17788, 0.26768, 0.40611, 0.62699,
-                                                  0.98583, 1.57469, 2.54498, 4.16591, 7.33342};
-
-} // namespace
 
 VarNormalStochvolDraws VarNormalStochvolSampler::draw_coefficients(
     const VarNormalStochvolInput &input, Reporter &reporter) const
@@ -128,36 +114,14 @@ VarNormalStochvolDraws VarNormalStochvolSampler::draw_coefficients(
 
     // Error term
     arma::mat u = arma::reshape(y, k, tt);
-    arma::mat h_y;
     const arma::vec &h_y_offset = input.u_sigma_prior.offset;
-
-    // The second difference operator of the random walk the log-volatility
-    // follows, as a precision: hh = D'D with D the first difference.
-    arma::sp_mat hh = arma::eye<arma::sp_mat>(tt, tt);
-    hh.diag(-1) = -arma::ones<arma::vec>(tt - 1);
-    hh = hh.t() * hh;
-
-    const arma::mat p_i_matrix = arma::repmat(kMixtureWeight, tt, 1);
-    const arma::mat mu_matrix = arma::repmat(kMixtureMean, tt, 1);
-    const arma::mat sigma_matrix = arma::repmat(arma::sqrt(kMixtureVariance), tt, 1);
-    const arma::vec vec_tt = arma::ones<arma::vec>(tt);
-
-    arma::mat h_q, sigh_hh, h_post_v;
-    arma::sp_mat sigs = arma::eye<arma::sp_mat>(tt, tt);
-    arma::umat s;
 
     arma::vec h_sigma = input.initial.h_sigma;
     arma::mat h = input.initial.h;
     arma::vec h_init = input.initial.h_init;
-    arma::mat h_lag = arma::zeros<arma::mat>(tt, k);
 
     const arma::vec h_sigma_post_shape = input.u_sigma_prior.state.sigma.shape + tt * 0.5;
     const arma::vec &h_sigma_prior_rate = input.u_sigma_prior.state.sigma.rate;
-    arma::vec h_sigma_post_scale;
-
-    const arma::vec &h0_prior_mu = input.u_sigma_prior.state.initial_state.mu;
-    const arma::mat &h0_prior_v_inv = input.u_sigma_prior.state.initial_state.v_inv;
-    arma::mat h0_post_v, h0_sigma_inv;
 
     arma::sp_mat u_omega_inv_diag = arma::eye<arma::sp_mat>(k * tt, k * tt);
     u_omega_inv_diag.diag() = 1 / arma::exp(arma::vectorise(arma::trans(h)));
@@ -260,41 +224,19 @@ VarNormalStochvolDraws VarNormalStochvolSampler::draw_coefficients(
             u = Psi * u;
         }
 
-        // Update the log-volatility, one variable at a time
-        h_y = arma::trans(u);
-        for (int i = 0; i < k; i++)
-        {
-            // Prepare series
-            h_y.col(i) = arma::log(arma::pow(h_y.col(i), 2) + h_y_offset(i));
-
-            // Sample s
-            h_q = p_i_matrix % arma::normpdf(arma::repmat(h_y.col(i), 1, 10), arma::repmat(h.col(i), 1, 10) + mu_matrix, sigma_matrix);
-            h_q = h_q / arma::repmat(arma::sum(h_q, 1), 1, 10);
-            s = 10 - arma::sum(arma::repmat(arma::randu<arma::vec>(tt), 1, 10) < arma::cumsum(h_q, 1), 1);
-
-            // Sample log-volatility
-            sigh_hh = hh / h_sigma(i);
-            sigs.diag() = 1 / kMixtureVariance.elem(s);
-            h_post_v = sigh_hh + sigs;
-            h.col(i) = draw_normal_precision(h_post_v,
-                                             sigh_hh * vec_tt * h_init(i) + sigs * (h_y.col(i) - kMixtureMean.elem(s)));
-        }
-
-        // Draw sigma_h
-        h_lag.row(0) = h_init.t();
-        h_lag.rows(1, tt - 1) = h.rows(0, tt - 2);
-        h_lag = h - h_lag;
-        h_sigma_post_scale = 1 / (h_sigma_prior_rate + arma::trans(arma::sum(arma::pow(h_lag, 2))) * 0.5);
-        for (int i = 0; i < k; i++)
-        {
-            h_sigma(i) = 1 / arma::randg<double>(arma::distr_param(h_sigma_post_shape(i), h_sigma_post_scale(i)));
-        }
-
-        // Draw h_init
-        h0_sigma_inv = arma::diagmat(1 / h_sigma);
-        h0_post_v = h0_prior_v_inv + h0_sigma_inv;
-        h_init = draw_normal_precision(h0_post_v,
-                                       h0_prior_v_inv * h0_prior_mu + h0_sigma_inv * h.row(0).t());
+        // Update the log-volatility ----
+        //
+        // The factored routine the other stochastic volatility samplers use.
+        // This model carried its own copy of the ten-component mixture, and
+        // the copy had both faults stochvol_mixture.h describes: component
+        // probabilities formed as densities, which underflow to a row of NaNs
+        // for an observation far out in the tails, and an indicator index left
+        // unclamped, so that row indexed one past the end of the table. It also
+        // factorised a dense tt x tt precision per variable per draw, where the
+        // routine takes a banded Cholesky.
+        h = stochvol_ocsn_2007(arma::trans(u), h, h_sigma, h_init, h_y_offset);
+        draw_stochvol_state(h_sigma, h_init, h, h_sigma_post_shape, h_sigma_prior_rate,
+                            input.u_sigma_prior.state.initial_state);
 
         u_omega_inv_diag.diag() = 1 / arma::exp(arma::vectorise(arma::trans(h)));
 
@@ -370,6 +312,7 @@ ForecastDraws VarNormalStochvolSampler::forecast(const VarNormalStochvolInput &i
     arma::mat x = input.forecast.x;
 
     require_forecast_regressors(input.spec, x);
+    core::require_forecast_horizons(x, h);
 
     // The coefficient draws are only consulted when there are regressors to
     // apply them to or a contemporaneous matrix to split off; without either,
@@ -428,6 +371,11 @@ ForecastDraws VarNormalStochvolSampler::forecast(const VarNormalStochvolInput &i
         const arma::mat a_draw =
             use_a ? arma::reshape(a.col(draw), k, x.n_cols) : arma::mat();
 
+        // The error covariance factorised once per draw rather than once per
+        // horizon: the precision is the same at every horizon, and the
+        // factorisation draws nothing, so where it sits does not move a draw.
+        arma::eig_sym(eigval, eigvec, arma::solve(arma::reshape(coefficients.u_sigma_inv.col(draw), k, k), diag_k));
+
         for (int i = 0; i < h; i++)
         {
             if (use_a)
@@ -442,7 +390,6 @@ ForecastDraws VarNormalStochvolSampler::forecast(const VarNormalStochvolInput &i
             }
 
             // Add error
-            arma::eig_sym(eigval, eigvec, arma::solve(arma::reshape(coefficients.u_sigma_inv.col(draw), k, k), diag_k));
             fcst.submat(i * k, draw, (i + 1) * k - 1, draw) = fcst.submat(i * k, draw, (i + 1) * k - 1, draw) + eigvec * arma::diagmat(arma::sqrt(eigval)) * arma::trans(eigvec) * arma::randn(k);
 
             if (structural)

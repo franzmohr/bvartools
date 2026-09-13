@@ -3,7 +3,9 @@
 
 #include "bayests/inputs.h"
 
+#include <cstdint>
 #include <cstdio>
+#include <cstring>
 #include <stdexcept>
 #include <string>
 
@@ -101,6 +103,81 @@ void require_shape(const arma::mat &m, arma::uword rows, arma::uword cols, const
     }
 }
 
+/// True if the value is a finite number, read off the exponent bits.
+///
+/// Not std::isfinite(), for the reason stochvol_mixture.h sets out: a host that
+/// compiles these sources with -ffast-math is licensed to fold it to true, and
+/// the checks below exist to catch exactly the NaN it would fold away.
+bool is_finite(const double value)
+{
+    static_assert(sizeof(double) == sizeof(std::uint64_t), "expected IEEE-754 binary64");
+
+    std::uint64_t bits;
+    std::memcpy(&bits, &value, sizeof(bits));
+    return (bits & 0x7ff0000000000000ULL) != 0x7ff0000000000000ULL;
+}
+
+/// Refuses an element that is not finite, or not above `floor` -- strictly
+/// above it where `strict`. The one test behind every value check below, so the
+/// messages say the same thing the same way.
+///
+/// Shapes were all these files were ever checked for, and a value no prior can
+/// have ran regardless: a negative gamma rate went through `bayests check` and a
+/// chain with exit code 0 and plausible numbers, since the posterior rate stays
+/// positive while the data outweigh it.
+void require_above(const arma::vec &v, const double floor, const bool strict,
+                   const std::string &what)
+{
+    for (arma::uword i = 0; i < v.n_elem; i++)
+    {
+        const double x = v[i];
+        if (!is_finite(x) || (strict ? !(x > floor) : !(x >= floor)))
+        {
+            throw std::invalid_argument(what + " must be finite and " +
+                                        (strict ? "greater than " : "at least ") + number(floor) +
+                                        ", but element " + std::to_string(i + 1) + " is " +
+                                        number(x));
+        }
+    }
+}
+
+/// Refuses a probability outside [0, 1]. A selection block takes log(p) and
+/// log(1 - p) of it, and outside that interval one of them is a NaN -- which the
+/// indicator draw reads as exclusion, so an inclusion probability of 1.5 ran a
+/// whole chain with every coefficient it covered held at zero.
+void require_probabilities(const arma::vec &v, const std::string &what)
+{
+    require_above(v, 0.0, false, what);
+    for (arma::uword i = 0; i < v.n_elem; i++)
+    {
+        if (v[i] > 1.0)
+        {
+            throw std::invalid_argument(what + " must lie in [0, 1], but element " +
+                                        std::to_string(i + 1) + " is " + number(v[i]));
+        }
+    }
+}
+
+/// Refuses a matrix with anything off its diagonal. For a starting value the
+/// sampler redraws only the diagonal of, where an off-diagonal element would
+/// otherwise stay in the chain from the first draw to the last.
+void require_diagonal(const arma::mat &m, const std::string &what)
+{
+    for (arma::uword j = 0; j < m.n_cols; j++)
+    {
+        for (arma::uword i = 0; i < m.n_rows; i++)
+        {
+            if (i != j && m(i, j) != 0.0)
+            {
+                throw std::invalid_argument(
+                    what + " must be diagonal, since only its diagonal is ever redrawn, but "
+                    "element (" + std::to_string(i + 1) + ", " + std::to_string(j + 1) + ") is " +
+                    number(m(i, j)));
+            }
+        }
+    }
+}
+
 } // namespace
 
 namespace bayests
@@ -139,6 +216,15 @@ void require_stacked_regressors(const TrainData &train, arma::uword tt, arma::uw
     }
 }
 
+/// The values of a gamma prior. Zero is allowed for either: an improper prior
+/// that the sample makes proper. A negative or non-finite one is not a gamma
+/// prior at all.
+void require_gamma_values(const GammaPrior &prior, const std::string &what)
+{
+    require_above(prior.shape, 0.0, false, "gamma prior shape of " + what);
+    require_above(prior.rate, 0.0, false, "gamma prior rate of " + what);
+}
+
 /// The checks a selection block needs whichever coefficient vector it applies
 /// to. `n` is the length of that vector, and the labels name it so the message
 /// says whether it was the coefficients or the covariance block that was wrong.
@@ -149,6 +235,7 @@ void validate_varsel(const VarSelPrior &prior, const arma::vec &initial_lambda,
 
     require_length(prior.inprior, n, (what + " prior inclusion probabilities").c_str());
     require_length(initial_lambda, n, (what + " initial inclusion indicators").c_str());
+    require_probabilities(prior.inprior, what + " prior inclusion probabilities");
 
     if (prior.include.n_elem == 0)
     {
@@ -165,6 +252,8 @@ void validate_varsel(const VarSelPrior &prior, const arma::vec &initial_lambda,
     {
         require_length(prior.ssvs.tau0, n, (what + " SSVS tau0").c_str());
         require_length(prior.ssvs.tau1, n, (what + " SSVS tau1").c_str());
+        require_above(prior.ssvs.tau0, 0.0, true, what + " SSVS tau0");
+        require_above(prior.ssvs.tau1, 0.0, true, what + " SSVS tau1");
     }
 }
 
@@ -176,6 +265,7 @@ void validate_normal_block(const NormalPrior &prior, const arma::vec &initial,
     const std::string what(block);
     require_length(prior.mu, n, ("prior mean of " + what).c_str());
     require_square(prior.v_inv, n, ("prior precision of " + what).c_str());
+    require_symmetric(prior.v_inv, ("prior precision of " + what).c_str());
     require_length(initial, n, ("initial value of " + what).c_str());
 }
 
@@ -196,13 +286,17 @@ void validate_tvp_block(const RandomWalkPrior &prior, const arma::mat &path,
 
     require_shape(path, n, tt, ("initial " + thing + " path").c_str());
     require_square(sigma_inv, n, ("initial precision of the " + thing + " innovations").c_str());
+    require_diagonal(sigma_inv, "initial precision of the " + thing + " innovations");
     require_length(init, n, ("initial value of " + vec + " before the sample").c_str());
 
     require_length(prior.sigma.shape, n, ("prior shape of the " + thing + " innovations").c_str());
     require_length(prior.sigma.rate, n, ("prior rate of the " + thing + " innovations").c_str());
+    require_gamma_values(prior.sigma, "the " + thing + " innovations");
     require_length(prior.initial_state.mu, n, ("prior mean of " + vec + " before the sample").c_str());
     require_square(prior.initial_state.v_inv, n,
                    ("prior precision of " + vec + " before the sample").c_str());
+    require_symmetric(prior.initial_state.v_inv,
+                      ("prior precision of " + vec + " before the sample").c_str());
 }
 
 /// A structural model's contemporaneous coefficients are identified only
@@ -379,6 +473,7 @@ void validate_ald_errors(const GammaPrior &u_scale_prior, const arma::mat &w,
 {
     require_length(u_scale_prior.shape, k, "prior shape of the asymmetric Laplace scale");
     require_length(u_scale_prior.rate, k, "prior rate of the asymmetric Laplace scale");
+    require_gamma_values(u_scale_prior, "the asymmetric Laplace scale");
 
     require_shape(w, tt, k, "initial latent scales");
     require_length(u_scale, k, "initial scale of the asymmetric Laplace");
@@ -469,6 +564,7 @@ void VarNormalWishartInput::validate() const
         throw std::invalid_argument("Wishart prior degrees of freedom must be positive");
     }
     require_square(u_sigma_prior.scale, k, "Wishart prior scale");
+    require_symmetric(u_sigma_prior.scale, "Wishart prior scale");
     require_square(initial.u_sigma_inv, k, "initial error precision");
 }
 
@@ -504,7 +600,9 @@ void VarNormalGammaInput::validate() const
 
     require_length(u_sigma_prior.shape, k, "gamma prior shape of the error precision");
     require_length(u_sigma_prior.rate, k, "gamma prior rate of the error precision");
+    require_gamma_values(u_sigma_prior, "the error precision");
     require_square(initial.u_sigma_inv, k, "initial error precision");
+    require_diagonal(initial.u_sigma_inv, "initial error precision");
 }
 
 void VarNormalStochvolInput::validate() const
@@ -550,9 +648,15 @@ void VarNormalStochvolInput::validate() const
     require_square(u_sigma_prior.state.initial_state.v_inv, k,
                    "prior precision of the initial log-volatility");
 
+    require_above(u_sigma_prior.offset, 0.0, true, "log-volatility offset");
+    require_gamma_values(u_sigma_prior.state.sigma, "the log-volatility variance");
+    require_symmetric(u_sigma_prior.state.initial_state.v_inv,
+                      "prior precision of the initial log-volatility");
+
     require_shape(initial.h, tt, k, "initial log-volatility");
     require_length(initial.h_init, k, "initial value of the log-volatility before the sample");
     require_length(initial.h_sigma, k, "initial variance of the log-volatility innovations");
+    require_above(initial.h_sigma, 0.0, true, "initial variance of the log-volatility innovations");
 
     // The random walk differences h against its own lag, so a single period
     // leaves nothing to difference.
@@ -666,7 +770,9 @@ void VarTvpGammaInput::validate() const
 
     require_length(u_sigma_prior.shape, k, "gamma prior shape of the error precision");
     require_length(u_sigma_prior.rate, k, "gamma prior rate of the error precision");
+    require_gamma_values(u_sigma_prior, "the error precision");
     require_square(initial.u_omega_inv, k, "initial error precision");
+    require_diagonal(initial.u_omega_inv, "initial error precision");
 }
 
 void VarTvpWishartInput::validate() const
@@ -710,6 +816,7 @@ void VarTvpWishartInput::validate() const
         throw std::invalid_argument("Wishart prior degrees of freedom must be positive");
     }
     require_square(u_sigma_prior.scale, k, "Wishart prior scale");
+    require_symmetric(u_sigma_prior.scale, "Wishart prior scale");
     require_square(initial.u_sigma_inv, k, "initial error precision");
 }
 
@@ -765,7 +872,14 @@ void VarTvpStochvolInput::validate() const
     require_length(u_sigma_prior.state.initial_state.mu, k, "prior mean of the log-volatility before the sample");
     require_square(u_sigma_prior.state.initial_state.v_inv, k, "prior precision of the log-volatility before the sample");
 
+    require_above(u_sigma_prior.offset, 0.0, true,
+                  "offset of the log-volatility measurement equation");
+    require_gamma_values(u_sigma_prior.state.sigma, "the log-volatility innovations");
+    require_symmetric(u_sigma_prior.state.initial_state.v_inv,
+                      "prior precision of the log-volatility before the sample");
+
     require_length(initial.h_sigma, k, "initial variance of the log-volatility innovations");
+    require_above(initial.h_sigma, 0.0, true, "initial variance of the log-volatility innovations");
     require_length(initial.h_init, k, "initial log-volatility before the sample");
     require_shape(initial.h, tt, k, "initial log-volatility path");
 }
@@ -899,7 +1013,13 @@ void validate_stochvol_block(const StochvolPrior &prior, const arma::vec &h_sigm
     require_square(prior.state.initial_state.v_inv, k,
                    "prior precision of the log-volatility before the sample");
 
+    require_above(prior.offset, 0.0, true, "offset of the log-volatility measurement equation");
+    require_gamma_values(prior.state.sigma, "the log-volatility innovations");
+    require_symmetric(prior.state.initial_state.v_inv,
+                      "prior precision of the log-volatility before the sample");
+
     require_length(h_sigma, k, "initial variance of the log-volatility innovations");
+    require_above(h_sigma, 0.0, true, "initial variance of the log-volatility innovations");
     require_length(h_init, k, "initial log-volatility before the sample");
     require_shape(h, tt, k, "initial log-volatility path");
 }
@@ -913,6 +1033,7 @@ void validate_wishart_block(const WishartPrior &prior, const arma::mat &initial,
         throw std::invalid_argument("Wishart prior degrees of freedom must be positive");
     }
     require_square(prior.scale, k, "Wishart prior scale");
+    require_symmetric(prior.scale, "Wishart prior scale");
     require_square(initial, k, "initial error precision");
 }
 
@@ -1025,6 +1146,9 @@ void validate_dfm_gamma_errors(const GammaPrior &u_prior, const arma::vec &initi
     require_length(v_prior.rate, n, "gamma prior rate of the factor innovation precision");
     require_length(initial_v, n, "initial factor innovation precision");
 
+    require_gamma_values(u_prior, "the idiosyncratic precision");
+    require_gamma_values(v_prior, "the factor innovation precision");
+
     if (initial_u.min() <= 0.0)
     {
         throw std::invalid_argument("every element of the initial idiosyncratic precision must be "
@@ -1058,6 +1182,11 @@ void validate_dfm_stochvol_block(const StochvolPrior &prior, const arma::mat &h,
                    ("prior mean of the initial " + of_block + " log-volatility").c_str());
     require_square(prior.state.initial_state.v_inv, width,
                    ("prior precision of the initial " + of_block + " log-volatility").c_str());
+
+    require_above(prior.offset, 0.0, true, "log-volatility offset of the " + of_errors);
+    require_gamma_values(prior.state.sigma, "the " + of_block + " log-volatility variance");
+    require_symmetric(prior.state.initial_state.v_inv,
+                      ("prior precision of the initial " + of_block + " log-volatility").c_str());
 
     require_shape(h, tt, width, ("initial " + of_block + " log-volatility").c_str());
     require_length(h_init, width,
@@ -1230,6 +1359,7 @@ void FavarNormalWishartInput::validate() const
 
     require_length(u_sigma_prior.shape, k, "gamma prior shape of the idiosyncratic precision");
     require_length(u_sigma_prior.rate, k, "gamma prior rate of the idiosyncratic precision");
+    require_gamma_values(u_sigma_prior, "the idiosyncratic precision");
     require_length(initial.u_sigma_inv, k, "initial idiosyncratic precision");
     if (initial.u_sigma_inv.min() <= 0.0)
     {
@@ -1243,6 +1373,7 @@ void FavarNormalWishartInput::validate() const
     // written against a DFM gets wrong.
     require_square(v_sigma_prior.scale, n_state,
                    "Wishart prior scale of the state innovation precision");
+    require_symmetric(v_sigma_prior.scale, "Wishart prior scale of the state innovation precision");
     require_square(initial.v_sigma_inv, n_state, "initial state innovation precision");
 
     if (static_cast<arma::uword>(v_sigma_prior.df) < n_state)
@@ -1331,7 +1462,9 @@ void VecNormalGammaInput::validate() const
 
     require_length(u_sigma_prior.shape, k, "gamma prior shape of the error precision");
     require_length(u_sigma_prior.rate, k, "gamma prior rate of the error precision");
+    require_gamma_values(u_sigma_prior, "the error precision");
     require_square(initial.u_sigma_inv, k, "initial error precision");
+    require_diagonal(initial.u_sigma_inv, "initial error precision");
 }
 
 void VecNormalStochvolInput::validate() const
@@ -1449,7 +1582,9 @@ void VecTvpGammaInput::validate() const
 
     require_length(u_sigma_prior.shape, k, "gamma prior shape of the error precision");
     require_length(u_sigma_prior.rate, k, "gamma prior rate of the error precision");
+    require_gamma_values(u_sigma_prior, "the error precision");
     require_square(initial.u_omega_inv, k, "initial error precision");
+    require_diagonal(initial.u_omega_inv, "initial error precision");
 }
 
 void VecTvpStochvolInput::validate() const

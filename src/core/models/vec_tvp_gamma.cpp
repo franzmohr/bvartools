@@ -221,11 +221,6 @@ VecTvpGammaDraws VecTvpGammaSampler::draw_coefficients(const VecTvpGammaInput &i
     arma::mat u = ymat;
     arma::mat u_omega_inv = input.initial.u_omega_inv;
 
-    // Inverted once, before the chain starts, and reused for every psi draw
-    // thereafter -- the same choice VarTvpGamma makes and for the same reason:
-    // refreshing it would move the posterior.
-    const arma::mat u_omega = arma::solve(u_omega_inv, diag_k);
-
     // The error precision, one k x k block per period, stacked row-wise. See
     // var_tvp_gamma.cpp for why this is not the (k tt) square block diagonal:
     // every reader of it is per-period already, and with a covariance block the
@@ -390,7 +385,14 @@ VecTvpGammaDraws VecTvpGammaSampler::draw_coefficients(const VecTvpGammaInput &i
                 psi_z = psi_z * psi_bvs->lambda_diag;
             }
 
-            arma::mat psi_sigma_u = u_omega.submat(1, 1, k - 1, k - 1);
+            // The measurement variance of the psi block is this draw's: the
+            // trailing k - 1 elements of the diagonal Omega. It used to be the
+            // inverse of the chain's starting precision, taken once before the
+            // loop, so every psi path was drawn as if the error variances had
+            // never been redrawn -- while the selection step below scored the
+            // same path against the current ones.
+            const arma::mat psi_sigma_u =
+                arma::diagmat(1.0 / arma::vec(u_omega_inv.diag()).tail(k - 1));
             psi = kalman_durbin_koopman_2002(psi_y, psi_z, psi_sigma_u, psi_sigma, psi_B, psi0,
                                              psi_sigma)
                       .cols(0, tt - 1);

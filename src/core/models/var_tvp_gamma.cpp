@@ -160,11 +160,6 @@ VarTvpGammaDraws VarTvpGammaSampler::draw_coefficients(const VarTvpGammaInput &i
     arma::mat u = arma::reshape(y, k, tt);
     arma::mat u_omega_inv = input.initial.u_omega_inv;
 
-    // Inverted once, before the chain starts, and reused for every psi draw
-    // thereafter -- the precision is redrawn each iteration but this is not.
-    // Left alone here: refreshing it would move the posterior.
-    const arma::mat u_omega = arma::solve(u_omega_inv, diag_k);
-
     arma::mat u_sigma = arma::zeros<arma::mat>(k * tt, k);
 
     // The error precision, held as one k x k block per period rather than as the
@@ -293,7 +288,14 @@ VarTvpGammaDraws VarTvpGammaSampler::draw_coefficients(const VarTvpGammaInput &i
                 psi_z = psi_z * psi_bvs->lambda_diag;
             }
 
-            arma::mat psi_sigma_u = u_omega.submat(1, 1, k - 1, k - 1);
+            // The measurement variance of the psi block is this draw's: the
+            // trailing k - 1 elements of the diagonal Omega. It used to be the
+            // inverse of the chain's starting precision, taken once before the
+            // loop, so every psi path was drawn as if the error variances had
+            // never been redrawn -- while the selection step below scored the
+            // same path against the current ones.
+            const arma::mat psi_sigma_u =
+                arma::diagmat(1.0 / arma::vec(u_omega_inv.diag()).tail(k - 1));
             psi = kalman_durbin_koopman_2002(psi_y, psi_z,
                                              psi_sigma_u,
                                              psi_sigma, psi_B, psi0, psi_sigma)
@@ -451,6 +453,7 @@ ForecastDraws VarTvpGammaSampler::forecast(const VarTvpGammaInput &input,
     arma::mat x = input.forecast.x;
 
     require_forecast_regressors(input.spec, x);
+    core::require_forecast_horizons(x, h);
 
     // Counted off the model's dimensions rather than off `x`: the coefficients
     // move with time, so what the forecast starts from is the last in-sample
@@ -505,6 +508,11 @@ ForecastDraws VarTvpGammaSampler::forecast(const VarTvpGammaInput &input,
         const arma::mat a_draw =
             use_a ? arma::reshape(a.col(draw), k, x.n_cols) : arma::mat();
 
+        // The error covariance factorised once per draw rather than once per
+        // horizon: the precision is the same at every horizon, and the
+        // factorisation draws nothing, so where it sits does not move a draw.
+        arma::eig_sym(eigval, eigvec, arma::solve(arma::reshape(coefficients.u_sigma_inv.col(draw), k, k), diag_k));
+
         for (int i = 0; i < h; i++)
         {
             if (use_a)
@@ -519,7 +527,6 @@ ForecastDraws VarTvpGammaSampler::forecast(const VarTvpGammaInput &input,
             }
 
             // Add error
-            arma::eig_sym(eigval, eigvec, arma::solve(arma::reshape(coefficients.u_sigma_inv.col(draw), k, k), diag_k));
             fcst.submat(i * k, draw, (i + 1) * k - 1, draw) = fcst.submat(i * k, draw, (i + 1) * k - 1, draw) + eigvec * arma::diagmat(arma::sqrt(eigval)) * arma::trans(eigvec) * arma::randn(k);
 
             if (structural)

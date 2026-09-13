@@ -1,5 +1,55 @@
 # bvartools (development version)
 
+* **Vendored BayesTS core refreshed again: the covariance block of the time
+  varying gamma models, BVS in the quantile VAR, and validation of prior
+  values.** Upstream fixed what four further audits found. The same thirty-six
+  specifications as for the previous refresh, now including BVS on every time
+  varying and quantile model, were fitted from pinned seeds against the package
+  built before and after, and compared block by block.
+
+    **`VarTvpGamma` and `VecTvpGamma` draw the covariance block under the
+    current error variances.** They inverted the starting error precision once,
+    before the chain, and drew every path of the covariance block under that
+    inverse, although the precision was redrawn in every iteration. **Draws
+    change** for both models with `error = "gamma+covar"`, with and without
+    variable selection.
+
+    **BVS in `VarNormalAld` uses the data to bring an excluded coefficient back.**
+    Its likelihood masked each candidate a second time, with the indicators the
+    sweep was still updating, so a coefficient that was out came back on the
+    prior inclusion probability alone. **Draws change** for
+    `create_bvarmodel(error = "ald", varsel = "bvs")`.
+
+    **`VarNormalStochvol` no longer fails on an observation far in the tails.**
+    It carried its own copy of the mixture draw of the log volatilities, whose
+    component probabilities could all underflow to zero and whose index could run
+    off the end of the table. It now uses the shared draw that the other
+    stochastic volatility samplers use. The model is the same; here the draws
+    differ from before only by rounding (at most 2e-9 relative).
+
+    **The samplers refuse prior values no model can mean**: a negative or
+    non-finite gamma shape or rate, an inclusion probability outside [0, 1], an
+    asymmetric prior precision or Wishart scale, and a non-diagonal starting
+    precision where only the diagonal is redrawn. VAR forecasts also refuse
+    regressors without exactly one row per horizon, where five of them used to
+    read past the end.
+
+    **VEC models with BVS or SSVS can be estimated again.** The new check on
+    inclusion probabilities refused every one of them, because
+    `inclusion_prior()` set the prior inclusion probability of the loadings to
+    `NA`. The loadings are never selected, so the value was never read. It is now
+    1, which says what happens to them. A test now fits a VEC model with each of
+    the two selection methods, which no test did before. The draws of these
+    models are unchanged.
+
+    Every other specification is bit-identical, forecasts included, with two
+    exceptions this refresh did not cause. A time varying quantile VAR with BVS
+    does not repeat its draws from the same seed in a fresh session, in the
+    build before the refresh as much as after it. A time varying VAR with a gamma
+    error term and BVS repeats within each build but differs between them,
+    although nothing on its path through the samplers changed; the two are being
+    looked into together. The vendored set is still the same 65 files.
+
 * **Vendored BayesTS core refreshed: BVS, SSVS and the log likelihood of the
   time varying models are fixed.** Upstream found three errors in an audit, and
   all three reached the models of this package. Thirty specifications -- every

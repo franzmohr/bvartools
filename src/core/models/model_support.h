@@ -42,6 +42,26 @@ inline void require_forecast_regressors(const VarSpec &spec, const arma::mat &x)
     }
 }
 
+/// Rejects forecast regressors that do not have exactly one row per horizon.
+///
+/// Row i is read for horizon i and update_forecast_lags() writes the simulated
+/// lags into it, so a matrix short of `h` rows is read and written past its end
+/// -- an Armadillo exception in a checked build, and memory corruption in a
+/// host that defines ARMA_NO_DEBUG. A longer one would run, on rows nothing
+/// says the file meant to be ignored. `bayests check` refuses the same files.
+///
+/// An empty `x` passes: require_forecast_regressors() decides whether a model
+/// with no regressors may forecast without them.
+inline void require_forecast_horizons(const arma::mat &x, const int h)
+{
+    if (x.n_elem > 0 && static_cast<arma::uword>(h) != x.n_rows)
+    {
+        throw std::invalid_argument("forecast regressors must have " + std::to_string(h) +
+                                    " rows, one per horizon, got " +
+                                    std::to_string(x.n_rows));
+    }
+}
+
 /// The response the samplers actually work with: the observations stacked
 /// period by period, vec(y'). Storing `y` period-per-row and stacking here
 /// keeps the caller's matrix in the orientation everyone else writes it in.

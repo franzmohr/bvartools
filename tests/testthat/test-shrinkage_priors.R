@@ -327,6 +327,30 @@ test_that("a BVS prior of a VEC model takes v_i_det from v_i when it is not give
   )
 })
 
+test_that("a VEC model with variable selection has finite inclusion priors and samples", {
+  # The loadings are never selected. Their prior inclusion probability used to
+  # be NA, which the sampler refuses, so no VEC model with BVS or SSVS could be
+  # estimated.
+  varsel <- list(bvs = list(inprior = 0.5),
+                 ssvs = list(inprior = 0.5, semiautomatic = c(0.1, 10)))
+  for (method in names(varsel)) {
+    model <- create_bvecmodel(vec_data(), p = 2, r = 1, const = "unrestricted",
+                              varsel = method, iterations = 10, burnin = 5)
+    model <- suppressWarnings(
+      add_priors(model, coef = list(v_i = 1, v_i_det = 0.1),
+                 coint = list(v_i = 0, p_tau_i = 1),
+                 sigma = list(df = "k", scale = 1), varsel = varsel[[method]]))
+    inprior <- model[["priors"]][["a"]][["inprior"]]
+    expect_true(all(is.finite(inprior)), info = method)
+    expect_true(all(inprior >= 0 & inprior <= 1), info = method)
+
+    model <- add_initial_values(model)
+    set.seed(20260913)
+    expect_no_error(model <- add_posterior_coefficients(model))
+    expect_identical(n_draws(model), 10L)
+  }
+})
+
 test_that("BVS can be combined with a Minnesota prior without v_i", {
   minnesota <- list(kappa1 = 0.5, kappa2 = 0.1, kappa4 = 5)
   varsel <- list(inprior = 0.5)

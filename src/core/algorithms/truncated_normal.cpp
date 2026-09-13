@@ -81,7 +81,9 @@ double standard_truncated(const double a, const double b)
     {
         // The interval straddles the mode. Rejection from the untruncated
         // normal accepts with probability Phi(b) - Phi(a), which is at least
-        // 0.38 once the interval is a standard deviation wide; below that the
+        // Phi(1) - Phi(0) = 0.34 once the interval is a standard deviation wide
+        // -- the least of it at [0, 1], where the interval only just straddles
+        // the mode -- and below that the
         // uniform envelope is the better of the two, and never worse than
         // exp(-1/2).
         if (b - a > 1.0)

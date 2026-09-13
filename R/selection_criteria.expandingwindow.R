@@ -82,48 +82,63 @@ selection_criteria.expandingwindow <- function(object, ci = 0.95, ...){
   
   result <- NULL
   result[["model"]] <- object[[1]][["model"]]
-  
-  # In-sample
-  in_sample <- selection_criteria(object[[length(object)]], ci = ci)
-  for (i in c("LL", "AIC", "BIC", "HQ", "WAIC", "LOOIC")) {
-    result[[i]] <- in_sample[[i]]
+
+  # Each half only if its draws exist. An expanding window is estimated for its
+  # log-likelihood as often as for its forecasts, and the out-of-sample half
+  # used to be built unconditionally, from a NULL matrix of errors, which
+  # stopped the whole call on a window that had no forecasts. The in-sample
+  # half is that of the last window, the one estimated on the most data.
+  last_window <- object[[length(object)]]
+  use_ll <- !is.null(last_window[["posterior"]][["loglik"]])
+  use_fe <- !is.null(errors)
+  if (!use_ll & !use_fe) {
+    stop("Model object must contain at least either posterior draws of the log-likelihood or forecast errors.")
   }
-  
-  
-  # Out-ofsample
-  
-  # Forecast errors
-  result[["FE"]] <- as.data.frame(matrix(NA, ncol(errors), 6))
-  names(result[["FE"]]) <- c("variable", "h", "mean", "median", "qlower", "qupper")
-  result[["FE"]][, "variable"] <- rep(varnames, h)
-  result[["FE"]][, "h"] <- rep(1:h, each = k)
-  result[["FE"]][, "mean"] <- apply(errors, 2, mean, na.rm = TRUE)
-  result[["FE"]][, "median"] <- apply(errors, 2, stats::median, na.rm = TRUE)
-  result[["FE"]][, "qlower"] <- apply(errors, 2, stats::quantile, probs = ci_low, na.rm = TRUE)
-  result[["FE"]][, "qupper"] <- apply(errors, 2, stats::quantile, probs = ci_high, na.rm = TRUE)
-  
-  # Absolute errors
-  errors <- abs(errors)
-  result[["AFE"]] <- as.data.frame(matrix(NA, ncol(errors), 6))
-  names(result[["AFE"]]) <- c("variable", "h", "mean", "median", "qlower", "qupper")
-  result[["AFE"]][, "variable"] <- rep(varnames, h)
-  result[["AFE"]][, "h"] <- rep(1:h, each = k)
-  result[["AFE"]][, "mean"] <- apply(errors, 2, mean, na.rm = TRUE)
-  result[["AFE"]][, "median"] <- apply(errors, 2, stats::median, na.rm = TRUE)
-  result[["AFE"]][, "qlower"] <- apply(errors, 2, stats::quantile, probs = ci_low, na.rm = TRUE)
-  result[["AFE"]][, "qupper"] <- apply(errors, 2, stats::quantile, probs = ci_high, na.rm = TRUE)
-  
-  # Squared errors
-  errors <- errors^2
-  result[["RSFE"]] <- as.data.frame(matrix(NA, ncol(errors), 6))
-  names(result[["RSFE"]]) <- c("variable", "h", "mean", "median", "qlower", "qupper")
-  result[["RSFE"]][, "variable"] <- rep(varnames, h)
-  result[["RSFE"]][, "h"] <- rep(1:h, each = k)
-  result[["RSFE"]][, "mean"] <- sqrt(apply(errors, 2, mean, na.rm = TRUE))
-  result[["RSFE"]][, "median"] <- sqrt(apply(errors, 2, stats::median, na.rm = TRUE))
-  result[["RSFE"]][, "qlower"] <- sqrt(apply(errors, 2, stats::quantile, probs = ci_low, na.rm = TRUE))
-  result[["RSFE"]][, "qupper"] <- sqrt(apply(errors, 2, stats::quantile, probs = ci_high, na.rm = TRUE)) 
-  
+
+  # In-sample
+  if (use_ll) {
+    in_sample <- selection_criteria(last_window, ci = ci)
+    for (i in c("LL", "AIC", "BIC", "HQ", "WAIC", "LOOIC")) {
+      result[[i]] <- in_sample[[i]]
+    }
+  }
+
+  # Out-of-sample
+  if (use_fe) {
+
+    # Forecast errors
+    result[["FE"]] <- as.data.frame(matrix(NA, ncol(errors), 6))
+    names(result[["FE"]]) <- c("variable", "h", "mean", "median", "qlower", "qupper")
+    result[["FE"]][, "variable"] <- rep(varnames, h)
+    result[["FE"]][, "h"] <- rep(1:h, each = k)
+    result[["FE"]][, "mean"] <- apply(errors, 2, mean, na.rm = TRUE)
+    result[["FE"]][, "median"] <- apply(errors, 2, stats::median, na.rm = TRUE)
+    result[["FE"]][, "qlower"] <- apply(errors, 2, stats::quantile, probs = ci_low, na.rm = TRUE)
+    result[["FE"]][, "qupper"] <- apply(errors, 2, stats::quantile, probs = ci_high, na.rm = TRUE)
+
+    # Absolute errors
+    errors <- abs(errors)
+    result[["AFE"]] <- as.data.frame(matrix(NA, ncol(errors), 6))
+    names(result[["AFE"]]) <- c("variable", "h", "mean", "median", "qlower", "qupper")
+    result[["AFE"]][, "variable"] <- rep(varnames, h)
+    result[["AFE"]][, "h"] <- rep(1:h, each = k)
+    result[["AFE"]][, "mean"] <- apply(errors, 2, mean, na.rm = TRUE)
+    result[["AFE"]][, "median"] <- apply(errors, 2, stats::median, na.rm = TRUE)
+    result[["AFE"]][, "qlower"] <- apply(errors, 2, stats::quantile, probs = ci_low, na.rm = TRUE)
+    result[["AFE"]][, "qupper"] <- apply(errors, 2, stats::quantile, probs = ci_high, na.rm = TRUE)
+
+    # Squared errors
+    errors <- errors^2
+    result[["RSFE"]] <- as.data.frame(matrix(NA, ncol(errors), 6))
+    names(result[["RSFE"]]) <- c("variable", "h", "mean", "median", "qlower", "qupper")
+    result[["RSFE"]][, "variable"] <- rep(varnames, h)
+    result[["RSFE"]][, "h"] <- rep(1:h, each = k)
+    result[["RSFE"]][, "mean"] <- sqrt(apply(errors, 2, mean, na.rm = TRUE))
+    result[["RSFE"]][, "median"] <- sqrt(apply(errors, 2, stats::median, na.rm = TRUE))
+    result[["RSFE"]][, "qlower"] <- sqrt(apply(errors, 2, stats::quantile, probs = ci_low, na.rm = TRUE))
+    result[["RSFE"]][, "qupper"] <- sqrt(apply(errors, 2, stats::quantile, probs = ci_high, na.rm = TRUE))
+  }
+
   attr(result, "ci") <- c(paste0(ci_low * 100, "%"), paste0(ci_high * 100, "%"))
   # The classes of the models of the estimation windows are maintained, so that
   # methods, which use the model specifications, can be dispatched on them

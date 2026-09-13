@@ -300,6 +300,25 @@
 }
 
 
+# TRUE if the posterior draws of the error precision are a path -- one k x k
+# matrix per period, laid out period after period -- rather than one matrix
+# for the whole sample.
+#
+# Decided from what was stored, not from the specification. Which
+# specifications move with time is not a property of the error term alone:
+# stochastic volatility and the asymmetric Laplace do, and so does a
+# covariance block that follows a random walk, but the gamma variances of a
+# time varying model on their own do not. That was spelled four different ways
+# across summary(), plot() and the draws the impulse responses are built from,
+# and one of them read the constant precision of such a model as a path and
+# indexed past its end. The stored draws cannot disagree with themselves: a
+# path has k^2 columns per period, a constant precision k^2 in all.
+.u_sigma_is_path <- function(x, k, tt) {
+  draws <- x[["posterior"]][["u_sigma_inv"]][["coeffs"]]
+  return(!is.null(draws) && tt > 1 && NCOL(draws) == k * k * tt)
+}
+
+
 # Name of the posterior simulation algorithm of a VEC model with the given
 # specification of the error term, as determined by create_bvecmodel()
 .vec_algorithm <- function(error, tvp) {

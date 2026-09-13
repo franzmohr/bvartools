@@ -123,12 +123,12 @@
   p <- x[["model"]][["p"]]
   tt <- .train_periods(x, k)
   tvp <- x[["model"]][["tvp"]]
-  tvp_and_covar <- tvp & x[["model"]][["error"]] %in% c("gamma", "gamma+covar")
   if (tvp) {
     nparams <- ncol(x[["data"]][["train"]][["z"]])
   }
   sv <- .error_varies_by_period(x[["model"]][["error"]])
-  if (tvp || sv) {
+  sigma_path <- .u_sigma_is_path(x, k, tt)
+  if (tvp || sv || sigma_path) {
     if (is.null(period)) {
       period <- tt
     } else {
@@ -184,7 +184,7 @@
     }
 
     if (need_Sigma) {
-      if (sv | tvp_and_covar) {
+      if (sigma_path) {
         temp[["Sigma"]] <- solve(matrix(x[["posterior"]][["u_sigma_inv"]][["coeffs"]][i, (period - 1) * kk + 1:kk], k))
       } else {
         temp[["Sigma"]] <- solve(matrix(x[["posterior"]][["u_sigma_inv"]][["coeffs"]][i, ], k))

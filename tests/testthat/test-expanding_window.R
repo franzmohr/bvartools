@@ -85,3 +85,22 @@ test_that("the out-of-sample criteria summarise the forecast errors", {
   expect_true(all(criteria[["AFE"]][["mean"]] >= 0))
   expect_true(all(criteria[["AFE"]][["mean"]] >= abs(criteria[["FE"]][["mean"]])))
 })
+
+test_that("the in-sample criteria of an expanding window need no forecasts", {
+  windows <- fx_expanding_window()
+  criteria <- selection_criteria(windows)
+
+  expect_s3_class(criteria, "selcrit")
+  expect_false(any(c("FE", "AFE", "RSFE") %in% names(criteria)))
+  # They are the criteria of the last window, estimated on the most data.
+  expect_equal(criteria[["LL"]], selection_criteria(windows[[length(windows)]])[["LL"]])
+  expect_output(print(criteria), "In-sample")
+})
+
+test_that("an expanding window with neither log-likelihood nor forecast errors is refused", {
+  windows <- fx_expanding_window()
+  for (i in seq_along(windows)) {
+    windows[[i]][["posterior"]][["loglik"]] <- NULL
+  }
+  expect_error(selection_criteria(windows), "log-likelihood")
+})

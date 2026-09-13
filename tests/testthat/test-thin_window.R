@@ -76,3 +76,63 @@ test_that("window works for VEC models and model lists", {
     numeric(1)
   ) == 1965))
 })
+
+test_that("thin keeps every block of draws in step", {
+  keep <- seq(3, fx_iterations, 3)
+
+  for (model in list(fx_var_tvp_fitted("gamma"), fx_vec_tvp_fitted("sv"))) {
+    before <- draw_blocks(model[["posterior"]])
+    after <- draw_blocks(thin(model, thin = 3)[["posterior"]])
+
+    expect_named(after, names(before))
+    for (name in names(before)) {
+      expect_equal(unname(as.matrix(after[[name]])),
+                   unname(as.matrix(before[[name]])[keep, , drop = FALSE]), label = name)
+      expect_equal(attr(after[[name]], "mcpar"), c(3, max(keep), 3), label = name)
+    }
+  }
+
+  # The blocks a list of names used to miss are among the ones checked.
+  expect_true(all(c("a$sigma", "beta$rho") %in%
+                    names(draw_blocks(fx_vec_tvp_fitted("sv")[["posterior"]]))))
+})
+
+test_that("window cuts the posterior paths to the periods it keeps", {
+  specs <- list(list(model = fx_var_tvp_fitted("sv"), start = c(1965, 1), end = c(1975, 4)),
+                list(model = fx_vec_tvp_fitted("sv"), start = c(1980, 1), end = c(1990, 4)))
+
+  for (spec in specs) {
+    full <- spec[["model"]]
+    cut <- stats::window(full, start = spec[["start"]], end = spec[["end"]])
+    k <- full[["model"]][["k"]]
+    keep <- which(stats::time(full[["data"]][["train"]][["y"]]) %in%
+                    stats::time(cut[["data"]][["train"]][["y"]]))
+    columns <- function(width) rep((keep - 1) * width, each = width) + seq_len(width)
+
+    widths <- c("a$coeffs" = ncol(full[["data"]][["train"]][["z"]]),
+                "u_sigma_inv$coeffs" = k^2, "u_omega_inv$coeffs" = k, "loglik" = 1)
+    if (!is.null(full[["posterior"]][["beta"]])) {
+      widths[["beta$coeffs"]] <- ncol(full[["data"]][["train"]][["w"]]) * full[["model"]][["rank"]]
+    }
+
+    before <- draw_blocks(full[["posterior"]])
+    after <- draw_blocks(cut[["posterior"]])
+    for (name in names(widths)) {
+      expect_equal(unname(as.matrix(after[[name]])),
+                   unname(as.matrix(before[[name]])[, columns(widths[[name]]), drop = FALSE]),
+                   label = name)
+      expect_equal(attr(after[[name]], "mcpar"), attr(before[[name]], "mcpar"), label = name)
+    }
+
+    # Draws that do not vary by period are left as they are.
+    for (name in setdiff(names(before), names(widths))) {
+      expect_identical(after[[name]], before[[name]], label = name)
+    }
+
+    # A period of the window is the period of the original sample it came from.
+    expect_equal(summary(cut)[["a"]][["means"]],
+                 summary(full, period = max(keep))[["a"]][["means"]])
+    expect_equal(summary(cut, period = 1)[["sigma"]][["means"]],
+                 summary(full, period = min(keep))[["sigma"]][["means"]])
+  }
+})

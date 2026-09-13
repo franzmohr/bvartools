@@ -207,6 +207,65 @@ fx_expanding_forecast <- function() {
   })
 }
 
+# --- time varying fixtures ----------------------------------------------------
+
+# The prior of a stochastic volatility or gamma error term of a time varying
+# model.
+tvp_sigma_prior <- function(error) {
+  switch(error,
+         sv = list(shape = 3, rate = 0.01, mu = 0, v_i = 0.01,
+                   state_variance = 0.05, offset = 1e-8),
+         list(shape = 3, rate = 0.01))
+}
+
+# A VAR with time varying parameters, by error specification. Under "sv" the
+# posterior holds one error precision per period, under "gamma" a single one --
+# the pair that summary(), plot() and the draws of the impulse responses have
+# to tell apart.
+fx_var_tvp_fitted <- function(error) {
+  cached_fixture(paste0("var_tvp_", error), {
+    model <- create_bvarmodel(var_data(), p = 1, deterministic = "const", tvp = TRUE,
+                              error = error, iterations = fx_iterations, burnin = fx_burnin)
+    model <- add_priors(model, coef = list(v_i = 1, v_i_det = 0.1, shape = 3, rate = 1e-4),
+                        sigma = tvp_sigma_prior(error))
+    model <- add_initial_values(model)
+    set.seed(314271)
+    model <- add_posterior_coefficients(model)
+    add_posterior_loglik(model)
+  })
+}
+
+# The same for a VEC model, with rho drawn, so that the posterior also holds a
+# block of draws that is neither a path over the periods nor a coefficient.
+fx_vec_tvp_fitted <- function(error) {
+  cached_fixture(paste0("vec_tvp_", error), {
+    model <- create_bvecmodel(vec_data(), p = 2, r = 1, const = "unrestricted", tvp = TRUE,
+                              error = error, iterations = fx_iterations, burnin = fx_burnin)
+    model <- add_priors(model, coef = list(v_i = 1, v_i_det = 0.1, shape = 3, rate = 1e-4),
+                        coint = list(rho = 0.99, rho_min = 0.9, rho_max = 0.999),
+                        sigma = tvp_sigma_prior(error))
+    model <- add_initial_values(model)
+    set.seed(271828)
+    model <- add_posterior_coefficients(model)
+    add_posterior_loglik(model)
+  })
+}
+
+# Every block of draws of a posterior, flattened to "block$element" names.
+draw_blocks <- function(posterior, prefix = NULL) {
+  blocks <- list()
+  for (name in names(posterior)) {
+    element <- posterior[[name]]
+    label <- paste(c(prefix, name), collapse = "$")
+    if (is.list(element) && !inherits(element, "mcmc")) {
+      blocks <- c(blocks, draw_blocks(element, label))
+    } else if (!is.null(element)) {
+      blocks[[label]] <- element
+    }
+  }
+  blocks
+}
+
 # Temporary paths inside the session temp directory, which R removes on exit.
 temp_h5_file <- function() {
   tempfile(fileext = ".h5")

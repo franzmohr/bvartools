@@ -21,6 +21,34 @@
   in it, and the examples assert the shapes their text states. No function
   changes, so draws are unchanged.
 
+* **Fixes to reading the posterior draws of models whose draws vary by
+  period.**
+
+  - `summary()` with `period` reported the error covariance of the *last*
+    period for every period, while the coefficients did follow `period`. It
+    now reports the covariance of the period asked for.
+  - `summary()` and `fevd()` stopped with "subscript out of bounds" on a model
+    with time varying parameters and a gamma error term without covariance
+    block, because they read its single error precision as one per period. That
+    also broke `summary()` on model lists and expanding windows of such models.
+    Whether the precision is a path is now read off the stored draws, by
+    `summary()`, `plot()` and the draws behind `irf()` and `fevd()` alike,
+    where it used to be decided from the specification four different ways.
+  - `thin()` left the draws of the state variances of a time varying model
+    (`a$sigma`, `psi$sigma`) and of `rho` (`beta$rho`) unthinned while thinning
+    the rest, so that rows no longer belonged to the same draw across blocks.
+    It now thins every block of draws.
+  - `window()` cut the data and left every posterior path at the length of the
+    original sample, so that, for instance, the summary of the last period of a
+    window was that of a period of the original sample. The paths -- coefficients
+    and cointegration vectors of time varying models, error precisions and
+    log-volatilities that vary by period, and the pointwise log-likelihood -- are
+    now cut to the periods of the window.
+  - `selection_criteria()` on an expanding window stopped with "non-numeric
+    matrix extent" unless the windows had forecast errors. The in-sample and
+    out-of-sample criteria are now each computed when their draws exist, and an
+    error is raised only if neither does.
+
 * **New data set `at_macrodata`.** It contains the Austrian sub-model of a
   global VAR model of the 33 countries in the GVAR database of Mohaddes and
   Raissi (2024): quarterly domestic series, their trade weighted foreign

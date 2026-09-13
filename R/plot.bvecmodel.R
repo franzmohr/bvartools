@@ -81,7 +81,6 @@ plot.bvecmodel <- function(x, ci = 0.95, type = "hist", show_zero_y = TRUE,
   k_beta <- k + m + x[["model"]][["n_restricted"]]
   tvp <- x[["model"]][["tvp"]]
   sv <- x[["model"]][["error"]] %in% c("sv", "sv+covar")
-  tvp_and_covar <- tvp & x[["model"]][["error"]] == "gamma+covar"
   structural <- x[["model"]][["structural"]]
   if (structural) {
     n_struct <- k * (k - 1) / 2
@@ -217,8 +216,10 @@ plot.bvecmodel <- function(x, ci = 0.95, type = "hist", show_zero_y = TRUE,
 
   # Covariance matrix of the error term ----
 
-  # Obtain inverse and calculate bands
-  if (sv | tvp_and_covar) {
+  # Obtain inverse and calculate bands. Whether the precision is a path is read
+  # off the draws; see .u_sigma_is_path().
+  sigma_path <- .u_sigma_is_path(x, k, tt)
+  if (sigma_path) {
 
     if (k == 1) {
       temp <- matrix(1 / x[["posterior"]][["u_sigma_inv"]][["coeffs"]], ncol = tt)
@@ -240,7 +241,7 @@ plot.bvecmodel <- function(x, ci = 0.95, type = "hist", show_zero_y = TRUE,
   blocks[["Sigma"]] <- list(title = "Covariance matrix of the error term",
                             labels = y_names,
                             panel = function(i) {
-                              if (sv | tvp_and_covar) {
+                              if (sigma_path) {
                                 stats::plot.ts(u_sigma[kk * 0:(tt - 1) + i, ], plot.type = "single")
                               } else {
                                 if (all(u_sigma[, i] == u_sigma[1, i])) {

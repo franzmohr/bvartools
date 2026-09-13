@@ -35,8 +35,8 @@ summary.bvarmodel <- function(object, ci = .95, period = NULL, ...){
   structural <- object[["model"]][["structural"]]
   sv <- .error_varies_by_period(object[["model"]][["error"]])
   tvp <- object[["model"]][["tvp"]]
-  tvp_and_covar <- tvp & object[["model"]][["error"]] %in% c("gamma", "gamma+covar")
-  if (sv | tvp) {
+  sigma_path <- .u_sigma_is_path(object, k, tt)
+  if (sv | tvp | sigma_path) {
     if (is.null(period)) {
       period <- tt
     } else {
@@ -174,8 +174,10 @@ summary.bvarmodel <- function(object, ci = .95, period = NULL, ...){
   # Error coefficients
   if (!is.null(object[["posterior"]][["u_sigma_inv"]][["coeffs"]])) {
     
-    if (sv | tvp_and_covar) {
-      temp <- object[["posterior"]][["u_sigma_inv"]][["coeffs"]][, (tt - 1) * k * k + 1:(k * k)]
+    # The period the summary is of, not the last one: the coefficients above
+    # already follow 'period', and the covariance used to be the one exception.
+    if (sigma_path) {
+      temp <- object[["posterior"]][["u_sigma_inv"]][["coeffs"]][, (period - 1) * k * k + 1:(k * k)]
     } else {
       temp <- object[["posterior"]][["u_sigma_inv"]][["coeffs"]]
     }

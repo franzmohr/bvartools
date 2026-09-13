@@ -9,6 +9,17 @@ test_that("fevd returns shares for every variable and horizon", {
   expect_equal(stats::start(decomposition)[1], 0)
 })
 
+test_that("a time varying model with one covariance matrix can be decomposed", {
+  model <- fx_var_tvp_fitted("gamma")
+  response <- model[["model"]][["endogen"]][1]
+
+  # Its single error precision used to be read as one per period.
+  for (period in list(NULL, 1L)) {
+    decomposition <- fevd(model, response = response, n_ahead = 2, period = period)
+    expect_equal(as.numeric(rowSums(decomposition)), rep(1, nrow(decomposition)))
+  }
+})
+
 test_that("the decomposition is a set of shares that add up", {
   decomposition <- fevd(fx_var_fitted(), response = "cons", n_ahead = 5)
 

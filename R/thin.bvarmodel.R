@@ -36,32 +36,55 @@
 #' @export
 #' @method thin bvarmodel
 thin.bvarmodel <- function(x, thin = 10, ...) {
-  
+
   draws <- nrow(x[["posterior"]][["u_sigma_inv"]][["coeffs"]])
   pos_thin <- seq(from = thin, to = draws, by = thin)
+  x[["posterior"]] <- .thin_draws(x[["posterior"]], pos_thin, draws, thin)
+
+  return(x)
+}
+
+
+# Thins every element of a posterior that holds one row per draw, however
+# deeply it is nested and whatever it is called.
+#
+# The methods used to name the elements to thin, and the names fell behind the
+# samplers: the state variances of a time varying model, a$sigma and
+# psi$sigma, and the draws of rho, beta$rho, kept every draw while the rest of
+# the posterior was thinned, so that row i no longer belonged to the same draw
+# across blocks. Anything with as many rows as there are draws is a block of
+# draws, since the samplers store one row per draw and nothing else.
+.thin_draws <- function(posterior, pos_thin, draws, thin) {
+
   start <- pos_thin[1]
   end <- pos_thin[length(pos_thin)]
-  
-  # Posteriors with sub-lists
-  vars <- c("a", "psi", "u_sigma_inv", "u_omega_inv", "q")
-  subvars <- c("coeffs", "lambda")
-  for (i in vars) {
-    if (!is.null(x[["posterior"]][[i]])){
-      for (j in subvars) {
-        if (!is.null(x[["posterior"]][[i]][[j]])) {
-          x[["posterior"]][[i]][[j]] <- coda::mcmc(as.matrix(x[["posterior"]][[i]][[j]][pos_thin,]), start = start, end = end, thin = thin)
-        }
-      } 
+
+  for (i in names(posterior)) {
+    element <- posterior[[i]]
+    if (is.null(element)) {
+      next
     }
-  }
-  
-  # Posteriors w/o sub-lists
-  vars <- c("loglik", "forecast", "forecast_errors")
-  for (i in vars) {
-    if (!is.null(x[["posterior"]][[i]])){
-      x[["posterior"]][[i]] <- coda::mcmc(as.matrix(x[["posterior"]][[i]][pos_thin,]), start = start, end = end, thin = thin)
+    if (is.list(element) && !inherits(element, "mcmc")) {
+      posterior[[i]] <- .thin_draws(element, pos_thin, draws, thin)
+    } else if (NROW(element) == draws) {
+      posterior[[i]] <- coda::mcmc(.draws_matrix(element)[pos_thin, , drop = FALSE],
+                                   start = start, end = end, thin = thin)
     }
   }
 
-  return(x)
+  return(posterior)
+}
+
+
+# The draws of an mcmc object as a plain matrix, one row per draw, and with the
+# dimnames it had. as.matrix() would do the first but add an empty dimnames list
+# to draws that had none, so that thinning by one or cutting a window to the
+# whole sample no longer returned what it was given.
+.draws_matrix <- function(draws) {
+  attr(draws, "mcpar") <- NULL
+  class(draws) <- NULL
+  if (is.null(dim(draws))) {
+    draws <- matrix(draws, ncol = 1)
+  }
+  return(draws)
 }

@@ -90,6 +90,40 @@ test_that("the summary reports the covariance, not the precision", {
                t(summarised[["sigma"]][["means"]]))
 })
 
+test_that("the summary of a period reports the covariance of that period", {
+  for (model in list(fx_var_tvp_fitted("sv"), fx_vec_tvp_fitted("sv"))) {
+    k <- model[["model"]][["k"]]
+    kk <- k^2
+    tt <- nrow(model[["data"]][["train"]][["y"]])
+    precision <- as.matrix(model[["posterior"]][["u_sigma_inv"]][["coeffs"]])
+    covariance_means <- function(period) {
+      rowMeans(vapply(seq_len(nrow(precision)),
+                      function(i) c(solve(matrix(precision[i, (period - 1) * kk + 1:kk], k))),
+                      numeric(kk)))
+    }
+
+    expect_equal(as.numeric(summary(model, period = 1)[["sigma"]][["means"]]),
+                 covariance_means(1))
+    expect_equal(as.numeric(summary(model)[["sigma"]][["means"]]),
+                 covariance_means(tt))
+  }
+})
+
+test_that("a time varying model with one covariance matrix can be summarised and plotted", {
+  for (model in list(fx_var_tvp_fitted("gamma"), fx_vec_tvp_fitted("gamma"))) {
+    k <- model[["model"]][["k"]]
+    precision <- as.matrix(model[["posterior"]][["u_sigma_inv"]][["coeffs"]])
+    expect_equal(ncol(precision), k^2)
+
+    covariances <- vapply(seq_len(nrow(precision)),
+                          function(i) c(solve(matrix(precision[i, ], k))),
+                          numeric(k^2))
+    expect_equal(as.numeric(summary(model, period = 1)[["sigma"]][["means"]]),
+                 rowMeans(covariances))
+    expect_plots(plot(model))
+  }
+})
+
 test_that("summary of a VEC model reports the cointegration term", {
   summarised <- summary(fx_vec_fitted())
 

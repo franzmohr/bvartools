@@ -1,5 +1,5 @@
 test_that("irf returns a time series of credible bands", {
-  response <- irf(fx_var_fitted(), impulse = "income", response = "cons",
+  response <- irf(fx_var_fitted(), impulse = "Dp", response = "r",
                   n_ahead = 6)
 
   expect_s3_class(response, "bvarirf")
@@ -11,7 +11,7 @@ test_that("irf returns a time series of credible bands", {
 })
 
 test_that("the credible band is ordered", {
-  response <- irf(fx_var_fitted(), impulse = "income", response = "cons",
+  response <- irf(fx_var_fitted(), impulse = "Dp", response = "r",
                   n_ahead = 6)
 
   expect_true(all(response[, "2.5%"] <= response[, "50%"]))
@@ -19,9 +19,9 @@ test_that("the credible band is ordered", {
 })
 
 test_that("a forecast error impulse response has no cross-variable impact", {
-  cross <- irf(fx_var_fitted(), impulse = "income", response = "cons",
+  cross <- irf(fx_var_fitted(), impulse = "Dp", response = "r",
                n_ahead = 4)
-  own <- irf(fx_var_fitted(), impulse = "cons", response = "cons", n_ahead = 4)
+  own <- irf(fx_var_fitted(), impulse = "r", response = "r", n_ahead = 4)
 
   # Without orthogonalisation the impact matrix is the identity, so a shock to
   # one variable does not move another on impact, and moves itself by one.
@@ -35,7 +35,7 @@ test_that("the median impulse response matches the recursion by hand", {
   n_ahead <- 4
   draws <- model[["posterior"]][["a"]][["coeffs"]]
 
-  # Reproduce the forecast error impulse response of cons to income for every
+  # Reproduce the forecast error impulse response of r to Dp for every
   # draw and compare the median.
   by_draw <- vapply(seq_len(nrow(draws)), function(i) {
     a <- matrix(draws[i, seq_len(k * k)], k)
@@ -50,13 +50,13 @@ test_that("the median impulse response matches the recursion by hand", {
   }, numeric(n_ahead + 1))
 
   expected <- apply(by_draw, 1, stats::median)
-  response <- irf(model, impulse = "income", response = "cons",
+  response <- irf(model, impulse = "Dp", response = "r",
                   n_ahead = n_ahead)
   expect_equal(as.numeric(response[, "50%"]), expected)
 })
 
 test_that("an orthogonalised response has a non-zero impact", {
-  oir <- irf(fx_var_fitted(), impulse = "income", response = "cons",
+  oir <- irf(fx_var_fitted(), impulse = "Dp", response = "r",
              n_ahead = 4, type = "oir")
 
   expect_s3_class(oir, "bvarirf")
@@ -67,7 +67,7 @@ test_that("an orthogonalised response has a non-zero impact", {
 
 test_that("the reduced form impulse response types are all available", {
   for (type in c("feir", "oir", "gir")) {
-    response <- irf(fx_var_fitted(), impulse = "income", response = "cons",
+    response <- irf(fx_var_fitted(), impulse = "Dp", response = "r",
                     n_ahead = 3, type = type)
     expect_s3_class(response, "bvarirf")
     expect_true(all(is.finite(response)))
@@ -75,9 +75,9 @@ test_that("the reduced form impulse response types are all available", {
 })
 
 test_that("the credible interval width is controlled by ci", {
-  narrow <- irf(fx_var_fitted(), impulse = "income", response = "cons",
+  narrow <- irf(fx_var_fitted(), impulse = "Dp", response = "r",
                 n_ahead = 4, ci = 0.5)
-  wide <- irf(fx_var_fitted(), impulse = "income", response = "cons",
+  wide <- irf(fx_var_fitted(), impulse = "Dp", response = "r",
               n_ahead = 4, ci = 0.95)
 
   expect_identical(colnames(narrow), c("25%", "50%", "75%"))
@@ -90,7 +90,7 @@ test_that("the credible interval width is controlled by ci", {
 
 test_that("structural impulse responses need a structural model", {
   for (type in c("sir", "sgir")) {
-    expect_error(irf(fx_var_fitted(), impulse = "income", response = "cons",
+    expect_error(irf(fx_var_fitted(), impulse = "Dp", response = "r",
                      n_ahead = 3, type = type),
                  "structural model")
   }
@@ -98,7 +98,7 @@ test_that("structural impulse responses need a structural model", {
 
 test_that("a structural model rejects the reduced-form types", {
   for (type in c("feir", "oir", "gir")) {
-    expect_error(irf(fx_svar_fitted(), impulse = "income", response = "cons",
+    expect_error(irf(fx_svar_fitted(), impulse = "Dp", response = "r",
                      n_ahead = 3, type = type),
                  "not defined for a structural model")
   }
@@ -106,7 +106,7 @@ test_that("a structural model rejects the reduced-form types", {
 
 test_that("a structural model still produces structural responses", {
   for (type in c("sir", "sgir")) {
-    response <- irf(fx_svar_fitted(), impulse = "income", response = "cons",
+    response <- irf(fx_svar_fitted(), impulse = "Dp", response = "r",
                     n_ahead = 3, type = type)
 
     expect_s3_class(response, "bvarirf")
@@ -116,12 +116,12 @@ test_that("a structural model still produces structural responses", {
 })
 
 test_that("unknown variable names are rejected", {
-  expect_error(irf(fx_var_fitted(), impulse = "nonexistent", response = "cons"))
-  expect_error(irf(fx_var_fitted(), impulse = "income", response = "nope"))
+  expect_error(irf(fx_var_fitted(), impulse = "nonexistent", response = "r"))
+  expect_error(irf(fx_var_fitted(), impulse = "Dp", response = "nope"))
 })
 
 test_that("a converted VEC model can be used for impulse responses", {
-  response <- irf(vec_to_var(fx_vec_fitted()), impulse = "R", response = "Dp",
+  response <- irf(vec_to_var(fx_vec_fitted()), impulse = "lr", response = "Dp",
                   n_ahead = 4)
 
   expect_s3_class(response, "bvarirf")
@@ -132,8 +132,8 @@ test_that("a converted VEC model can be used for impulse responses", {
 test_that("an impulse response at horizon zero is the impact period alone", {
   model <- fx_var_fitted()
 
-  cross <- irf(model, impulse = "income", response = "cons", n_ahead = 0)
-  own <- irf(model, impulse = "cons", response = "cons", n_ahead = 0)
+  cross <- irf(model, impulse = "Dp", response = "r", n_ahead = 0)
+  own <- irf(model, impulse = "r", response = "r", n_ahead = 0)
 
   expect_s3_class(cross, "bvarirf")
   expect_s3_class(cross, "ts")
@@ -149,9 +149,9 @@ test_that("an impulse response at horizon zero is the impact period alone", {
 test_that("the horizon zero response is the impact row of a longer horizon", {
   model <- fx_var_fitted()
 
-  impact <- irf(model, impulse = "income", response = "cons", n_ahead = 0,
+  impact <- irf(model, impulse = "Dp", response = "r", n_ahead = 0,
                 type = "oir")
-  longer <- irf(model, impulse = "income", response = "cons", n_ahead = 4,
+  longer <- irf(model, impulse = "Dp", response = "r", n_ahead = 4,
                 type = "oir")
 
   expect_equal(as.numeric(impact[1, ]), as.numeric(longer[1, ]))
@@ -163,14 +163,14 @@ test_that("an orthogonalised response at horizon zero is the Choleski factor", {
   sigma_draws <- model[["posterior"]][["u_sigma_inv"]][["coeffs"]]
 
   # The impact matrix of an orthogonalised response is the lower Choleski
-  # factor with its columns scaled to unit shocks, so the response of cons to
-  # income on impact is L[3, 2] / L[2, 2] of that draw.
+  # factor with its columns scaled to unit shocks, so the response of r to
+  # Dp on impact is L[3, 2] / L[2, 2] of that draw.
   by_draw <- vapply(seq_len(nrow(sigma_draws)), function(i) {
     l <- t(chol(solve(matrix(sigma_draws[i, ], k))))
     l[3, 2] / l[2, 2]
   }, numeric(1))
 
-  oir <- irf(model, impulse = "income", response = "cons", n_ahead = 0,
+  oir <- irf(model, impulse = "Dp", response = "r", n_ahead = 0,
              type = "oir")
 
   expect_identical(nrow(oir), 1L)
@@ -181,7 +181,7 @@ test_that("a cumulative response at horizon zero keeps one column of draws", {
   model <- fx_var_fitted()
   store <- nrow(model[["posterior"]][["u_sigma_inv"]][["coeffs"]])
 
-  draws <- irf(model, impulse = "cons", response = "cons", n_ahead = 0,
+  draws <- irf(model, impulse = "r", response = "r", n_ahead = 0,
                cumulative = TRUE, keep_draws = TRUE)
 
   # Nothing accumulates over a single period, so this is the impact response
@@ -191,7 +191,7 @@ test_that("a cumulative response at horizon zero keeps one column of draws", {
 })
 
 test_that("a negative horizon is rejected", {
-  expect_error(irf(fx_var_fitted(), impulse = "income", response = "cons",
+  expect_error(irf(fx_var_fitted(), impulse = "Dp", response = "r",
                    n_ahead = -1),
                "at least 0")
 })

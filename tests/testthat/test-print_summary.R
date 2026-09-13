@@ -23,7 +23,7 @@ test_that("regressor names fall back to the columns of the regressor matrix", {
 
   # The specification no longer names the deterministic terms, but the data do.
   expect_identical(.get_regressor_names_bvarmodel(object),
-                   c("invest.l1", "income.l1", "cons.l1", "const"))
+                   c("y.l1", "Dp.l1", "r.l1", "const"))
   expect_no_error(summary(object))
 })
 
@@ -35,7 +35,7 @@ test_that("regressor names fall back when nothing names the terms", {
   # A short vector of names would be silently misaligned with the coefficients
   # it labels, so the missing ones are generated instead.
   expect_identical(.get_regressor_names_bvarmodel(object),
-                   c("invest.l1", "income.l1", "cons.l1", "det.1"))
+                   c("y.l1", "Dp.l1", "r.l1", "det.1"))
   expect_no_error(summary(object))
 })
 
@@ -129,7 +129,7 @@ test_that("summary of a VEC model reports the cointegration term", {
 
   expect_s3_class(summarised, "summary.bvecmodel")
   expect_output(print(summarised), "Bayesian VEC model")
-  expect_output(print(summarised), "l.R")
+  expect_output(print(summarised), "l.lr")
 })
 
 test_that("the credible interval of the summary can be set", {
@@ -168,12 +168,12 @@ test_that("covariances that were never estimated carry no significance mark", {
     any(grepl(paste0("^", row, "[[:space:]].*\\*[[:space:]]*$"), block))
   }
 
-  expect_false(marked("invest_income"))
-  expect_false(marked("invest_cons"))
-  expect_false(marked("income_cons"))
+  expect_false(marked("y_Dp"))
+  expect_false(marked("y_r"))
+  expect_false(marked("Dp_r"))
   # A variance is positive by construction, so the ones that are estimated
   # keep their mark.
-  expect_true(marked("invest_invest"))
+  expect_true(marked("y_y"))
 })
 
 test_that("drawn values of rho are summarised and printed", {

@@ -6,7 +6,7 @@ test_that("a single lag order produces one bvarmodel", {
   expect_identical(model[["model"]][["type"]], "VAR")
   expect_identical(model[["model"]][["k"]], 3L)
   expect_identical(model[["model"]][["p"]], 1L)
-  expect_identical(model[["model"]][["endogen"]], c("invest", "income", "cons"))
+  expect_identical(model[["model"]][["endogen"]], c("y", "Dp", "r"))
   expect_identical(model[["model"]][["iterations"]], fx_iterations)
   expect_identical(model[["model"]][["burnin"]], fx_burnin)
 })
@@ -55,9 +55,9 @@ test_that("regressors are named after variable and lag", {
   model <- fx_var_model()
 
   expect_identical(colnames(model[["data"]][["train"]][["x"]]),
-                   c("invest.01", "income.01", "cons.01", "const"))
+                   c("y.01", "Dp.01", "r.01", "const"))
   expect_identical(colnames(model[["data"]][["train"]][["y"]]),
-                   c("invest", "income", "cons"))
+                   c("y", "Dp", "r"))
 })
 
 test_that("deterministic terms drive the number of deterministic regressors", {

@@ -20,14 +20,31 @@ cached_fixture <- function(name, expr) {
 fx_iterations <- 30L
 fx_burnin <- 5L
 
-# West German investment/income/consumption, log-differences in percent.
-var_data <- function() {
-  stats::window(diff(log(bvartools::e1)) * 100, end = c(1978, 4))
+# The domestic series of the at_macrodata data set, which the fixtures are
+# built on. The data set is either one matrix of all series or a list of its
+# domestic ('endogen') and foreign ('exogen') series; both are taken.
+at_domestic <- function() {
+  data <- bvartools::at_macrodata
+  if (is.list(data) && !stats::is.ts(data)) {
+    data <- data[["endogen"]]
+  }
+  data
 }
 
-# Danish interest rate and inflation, in percent.
+# Austrian output growth, inflation and the change in the short-term interest
+# rate, in percent: three stationary series for the VAR fixtures, over 75
+# quarters.
+var_data <- function() {
+  levels <- at_domestic()
+  data <- stats::ts.intersect(y = diff(levels[, "y"]), Dp = levels[, "Dp"],
+                              r = diff(levels[, "r"])) * 100
+  stats::window(data, end = c(1998, 1))
+}
+
+# Austrian long-term interest rate and inflation in levels, in percent, for the
+# VEC fixtures, over 107 quarters.
 vec_data <- function() {
-  bvartools::e6 * 100
+  stats::window(at_domestic()[, c("lr", "Dp")], end = c(2005, 4)) * 100
 }
 
 # --- VAR fixtures -----------------------------------------------------------
@@ -81,13 +98,13 @@ fx_svar_fitted <- function() {
 
 # --- sign restricted fixture ------------------------------------------------
 
-# The restrictions the fixture below imposes: a shock named after investment
-# that raises investment and consumption on impact. Loose enough that every
+# The restrictions the fixture below imposes: a shock named after output that
+# raises output and the change in the interest rate on impact. Loose enough that every
 # draw is identified, which keeps the fixture about the identification rather
 # than about the acceptance rate.
 fx_sign_restrictions <- function() {
-  data.frame(impulse = "invest",
-             response = c("invest", "cons"),
+  data.frame(impulse = "y",
+             response = c("y", "r"),
              sign = c(1, 1),
              horizon = 0)
 }
@@ -178,7 +195,7 @@ fx_expanding_window <- function() {
                               iterations = 10, burnin = 5)
     model <- add_priors(model, coef = list(v_i = 0, v_i_det = 0),
                         sigma = list(df = 1, scale = 0.0001))
-    windows <- use_expanding_window(model, start = c(1978, 1))
+    windows <- use_expanding_window(model, start = c(1997, 2))
     windows <- add_initial_values(windows)
     set.seed(864209)
     windows <- add_posterior_coefficients(windows)
@@ -191,13 +208,13 @@ fx_expanding_window <- function() {
 fx_expanding_forecast <- function() {
   cached_fixture("expanding_forecast", {
     full <- var_data()
-    train <- stats::window(full, end = c(1977, 4))
+    train <- stats::window(full, end = c(1997, 1))
 
     model <- create_bvarmodel(train, p = 1, deterministic = "const",
                               iterations = 10, burnin = 5)
     model <- add_priors(model, coef = list(v_i = 0, v_i_det = 0),
                         sigma = list(df = 1, scale = 0.0001))
-    windows <- use_expanding_window(model, start = c(1977, 1))
+    windows <- use_expanding_window(model, start = c(1996, 2))
     windows <- add_initial_values(windows)
     set.seed(112358)
     windows <- add_posterior_coefficients(windows)
@@ -284,11 +301,7 @@ temp_model_dir <- function() {
 # against. The data set is either one matrix of all series or a list of its
 # domestic ('endogen') and foreign ('exogen') series; both are taken.
 at_data <- function() {
-  data <- bvartools::at_macrodata
-  if (is.list(data) && !stats::is.ts(data)) {
-    data <- data[["endogen"]]
-  }
-  data[, c("y", "Dp", "r")]
+  at_domestic()[, c("y", "Dp", "r")]
 }
 
 # A VEC model with time varying parameters and stochastic volatility on

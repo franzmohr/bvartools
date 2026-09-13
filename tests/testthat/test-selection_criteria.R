@@ -133,10 +133,9 @@ test_that("the penalty of an error correction model grows with the rank", {
   # rank to the next. Counting the rank itself, as the method used to, grows it
   # by one, which the gain in fit from an extra cointegration vector exceeds
   # almost always -- the criterion then prefers full rank whatever the data say.
-  data("us_macrodata", envir = environment())
 
   penalties <- vapply(0:2, function(r) {
-    object <- create_bvecmodel(data = us_macrodata, p = 2,
+    object <- create_bvecmodel(data = at_data(), p = 2,
                                const = "unrestricted", r = r,
                                iterations = 20, burnin = 10)
     object <- add_priors(object, coef = list(v_i = 1, v_i_det = 1 / 10),

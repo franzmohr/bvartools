@@ -6,7 +6,7 @@ test_that("a bvecmodel records the cointegration specification", {
   expect_identical(model[["model"]][["type"]], "VEC")
   expect_identical(model[["model"]][["k"]], 2L)
   expect_identical(model[["model"]][["rank"]], 1L)
-  expect_identical(model[["model"]][["endogen"]], c("R", "Dp"))
+  expect_identical(model[["model"]][["endogen"]], c("lr", "Dp"))
 })
 
 test_that("differences and lagged levels are built from the data", {
@@ -16,8 +16,8 @@ test_that("differences and lagged levels are built from the data", {
   nobs <- nrow(endogen) - model[["model"]][["p"]]
 
   expect_equal(nrow(train[["y"]]), nobs)
-  expect_identical(colnames(train[["y"]]), c("d.R", "d.Dp"))
-  expect_identical(colnames(train[["w"]]), c("l.R", "l.Dp"))
+  expect_identical(colnames(train[["y"]]), c("d.lr", "d.Dp"))
+  expect_identical(colnames(train[["w"]]), c("l.lr", "l.Dp"))
 
   strip <- function(x) matrix(as.numeric(x), nrow = NROW(x))
   # y holds the first differences and w the levels lagged once.
@@ -52,7 +52,7 @@ test_that("lagged differences are added for p greater than one", {
 
   # p is the lag order of the model in levels, so p - 1 lagged differences enter.
   expect_identical(colnames(model[["data"]][["train"]][["x"]]),
-                   c("d.R.l01", "d.Dp.l01", "d.R.l02", "d.Dp.l02", "const"))
+                   c("d.lr.l01", "d.Dp.l01", "d.lr.l02", "d.Dp.l02", "const"))
 })
 
 test_that("several ranks produce a modellist", {

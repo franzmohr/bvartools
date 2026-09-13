@@ -85,7 +85,7 @@ test_that("minnesota_prior rejects non-positive shrinkage parameters", {
 # regressors per equation. The default sigma = "AR" never needs that estimate --
 # it regresses each variable on its own lags alone -- so it has to keep working
 # there. Only sigma = "VAR" is entitled to complain, and it should say why.
-short_var_model <- function(end = c(1962, 4), p = 4) {
+short_var_model <- function(end = c(1982, 1), p = 4) {
   create_bvarmodel(stats::window(var_data(), end = end), p = p,
                    deterministic = "const", iterations = 10, burnin = 5)
 }
@@ -108,7 +108,7 @@ test_that("minnesota_prior says why sigma = 'VAR' needs a longer sample", {
 })
 
 test_that("minnesota_prior says why its own AR regressions need a longer sample", {
-  expect_error(minnesota_prior(short_var_model(end = c(1962, 1))),
+  expect_error(minnesota_prior(short_var_model(end = c(1981, 2))),
                "such regressors")
 })
 
@@ -122,7 +122,7 @@ test_that("minnesota_prior still returns a VAR error covariance when it can", {
 })
 
 test_that("the same sample rules hold for VEC models", {
-  short_vec <- create_bvecmodel(stats::window(vec_data(), end = c(1976, 2)),
+  short_vec <- create_bvecmodel(stats::window(vec_data(), end = c(1983, 2)),
                                 p = 6, r = 1, const = "unrestricted",
                                 iterations = 10, burnin = 5)
 
@@ -232,7 +232,7 @@ test_that("the semiautomatic SSVS prior says when the sample is too short", {
                "regressors per equation")
   expect_type(ssvs_prior(short_var_model(), tau = c(0.05, 10)), "list")
 
-  short_vec <- create_bvecmodel(stats::window(vec_data(), end = c(1976, 2)),
+  short_vec <- create_bvecmodel(stats::window(vec_data(), end = c(1983, 2)),
                                 p = 6, r = 1, const = "unrestricted",
                                 iterations = 10, burnin = 5)
   expect_error(ssvs_prior(short_vec, semiautomatic = c(0.1, 10)),

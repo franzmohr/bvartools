@@ -27,7 +27,7 @@ test_that("bvar assembles a model object from posterior draws", {
   expect_identical(object[["model"]][["k"]], 3L)
   expect_identical(object[["model"]][["p"]], 1L)
   expect_identical(object[["model"]][["n"]], 1L)
-  expect_identical(object[["model"]][["endogen"]], c("invest", "income", "cons"))
+  expect_identical(object[["model"]][["endogen"]], c("y", "Dp", "r"))
   # The names of the deterministic terms travel with the specification, which is
   # where summary() and plot() look for the labels of their coefficients.
   expect_identical(object[["model"]][["deterministic"]], "const")
@@ -58,9 +58,9 @@ test_that("an object built by bvar is usable downstream", {
   object <- bvar(y = draws[["y"]], x = draws[["x"]], A = draws[["A"]],
                  C = draws[["C"]], Sigma = draws[["Sigma"]])
 
-  expect_s3_class(irf(object, impulse = "income", response = "cons",
+  expect_s3_class(irf(object, impulse = "Dp", response = "r",
                       n_ahead = 3), "bvarirf")
-  expect_s3_class(fevd(object, response = "cons", n_ahead = 3), "bvarfevd")
+  expect_s3_class(fevd(object, response = "r", n_ahead = 3), "bvarfevd")
   expect_no_error(summary(object))
 })
 

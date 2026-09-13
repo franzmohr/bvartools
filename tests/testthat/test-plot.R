@@ -12,9 +12,9 @@ test_that("VEC posterior draws can be plotted", {
 })
 
 test_that("impulse responses and decompositions can be plotted", {
-  response <- irf(fx_var_fitted(), impulse = "income", response = "cons",
+  response <- irf(fx_var_fitted(), impulse = "Dp", response = "r",
                   n_ahead = 5)
-  decomposition <- fevd(fx_var_fitted(), response = "cons", n_ahead = 5)
+  decomposition <- fevd(fx_var_fitted(), response = "r", n_ahead = 5)
 
   expect_plots(plot(response))
   expect_plots(plot(response, main = "Response", xlab = "Period"))
@@ -34,7 +34,7 @@ test_that("selection criteria can be plotted", {
 })
 
 test_that("a decomposition can be plotted with a limited number of groups", {
-  decomposition <- fevd(fx_var_fitted(), response = "cons", n_ahead = 5)
+  decomposition <- fevd(fx_var_fitted(), response = "r", n_ahead = 5)
 
   expect_plots(plot(decomposition, max_groups = 2))
   expect_plots(plot(decomposition, max_groups = ncol(decomposition)))
@@ -42,7 +42,7 @@ test_that("a decomposition can be plotted with a limited number of groups", {
 })
 
 test_that("the plotted groups are the largest contributions plus 'Other'", {
-  decomposition <- fevd(fx_var_fitted(), response = "cons", n_ahead = 5)
+  decomposition <- fevd(fx_var_fitted(), response = "r", n_ahead = 5)
   largest <- colnames(decomposition)[which.max(colSums(decomposition))]
 
   # The bars are drawn from the same matrix the legend is labelled with, so the
@@ -55,7 +55,7 @@ test_that("the plotted groups are the largest contributions plus 'Other'", {
 })
 
 test_that("an implausible number of groups is rejected by the plot method", {
-  decomposition <- fevd(fx_var_fitted(), response = "cons", n_ahead = 5)
+  decomposition <- fevd(fx_var_fitted(), response = "r", n_ahead = 5)
 
   expect_error(plot(decomposition, max_groups = 0), "positive integer")
   expect_error(plot(decomposition, max_groups = "two"), "positive integer")

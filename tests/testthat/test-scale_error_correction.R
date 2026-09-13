@@ -69,7 +69,7 @@ test_that("rescaling works with deterministic terms in the cointegration space",
   rescaled <- rescale_error_correction(fitted)
 
   expect_identical(dimnames(rescaled[["data"]][["train"]][["w"]])[[2]],
-                   c("l.R", "l.Dp", "const"))
+                   c("l.lr", "l.Dp", "const"))
   # The restricted constant is a column of ones again.
   expect_equal(as.numeric(rescaled[["data"]][["train"]][["w"]][, "const"]),
                rep(1, nrow(rescaled[["data"]][["train"]][["w"]])))

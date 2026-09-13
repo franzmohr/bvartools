@@ -8,9 +8,8 @@
 vec_fitted <- function(tvp = FALSE, error = "wishart", iterations = 30,
                        burnin = 15, algorithm = NULL) {
 
-  data("us_macrodata", envir = environment())
 
-  object <- create_bvecmodel(data = us_macrodata, p = 2,
+  object <- create_bvecmodel(data = at_data(), p = 2,
                              const = "unrestricted", r = 1,
                              tvp = tvp, error = error, algorithm = algorithm,
                              iterations = iterations, burnin = burnin)

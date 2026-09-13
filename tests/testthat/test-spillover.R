@@ -1,9 +1,7 @@
 # A small estimated VAR to run the measures on.
 make_bvar <- function(p = 2, iterations = 60, burnin = 10, seed = 1) {
   set.seed(seed)
-  data("e1", envir = environment())
-  y <- diff(log(get("e1", envir = environment()))) * 100
-  y <- stats::window(y, end = c(1978, 4))
+  y <- var_data()
 
   model <- create_bvarmodel(y, p = p, deterministic = "const",
                             iterations = iterations, burnin = burnin)
@@ -245,9 +243,7 @@ test_that("the sample length is read from the regressors, not from y's shape", {
 
 test_that("period selects a block of a time varying model", {
   set.seed(1)
-  data("e1", envir = environment())
-  y <- diff(log(get("e1", envir = environment()))) * 100
-  y <- stats::window(y, end = c(1978, 4))
+  y <- var_data()
 
   model <- create_bvarmodel(y, p = 1, deterministic = "const", tvp = TRUE,
                             iterations = 60, burnin = 10)

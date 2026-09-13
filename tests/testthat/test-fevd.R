@@ -1,5 +1,5 @@
 test_that("fevd returns shares for every variable and horizon", {
-  decomposition <- fevd(fx_var_fitted(), response = "cons", n_ahead = 5)
+  decomposition <- fevd(fx_var_fitted(), response = "r", n_ahead = 5)
   spec <- fx_var_fitted()[["model"]]
 
   expect_s3_class(decomposition, "bvarfevd")
@@ -21,7 +21,7 @@ test_that("a time varying model with one covariance matrix can be decomposed", {
 })
 
 test_that("the decomposition is a set of shares that add up", {
-  decomposition <- fevd(fx_var_fitted(), response = "cons", n_ahead = 5)
+  decomposition <- fevd(fx_var_fitted(), response = "r", n_ahead = 5)
 
   expect_true(all(decomposition >= 0))
   expect_true(all(decomposition <= 1))
@@ -29,14 +29,14 @@ test_that("the decomposition is a set of shares that add up", {
 })
 
 test_that("an orthogonalised decomposition starts from the Cholesky order", {
-  decomposition <- fevd(fx_var_fitted(), response = "invest", n_ahead = 3)
+  decomposition <- fevd(fx_var_fitted(), response = "y", n_ahead = 3)
 
-  # invest is ordered first, so on impact only its own shock explains it.
+  # y is ordered first, so on impact only its own shock explains it.
   expect_equal(as.numeric(decomposition[1, ]), c(1, 0, 0))
 })
 
 test_that("the generalised decomposition is also a set of shares", {
-  decomposition <- fevd(fx_var_fitted(), response = "cons", n_ahead = 4,
+  decomposition <- fevd(fx_var_fitted(), response = "r", n_ahead = 4,
                         type = "gir", normalise_gir = TRUE)
 
   expect_true(all(decomposition >= 0))
@@ -44,7 +44,7 @@ test_that("the generalised decomposition is also a set of shares", {
 })
 
 test_that("an unnormalised generalised decomposition need not add up to one", {
-  decomposition <- fevd(fx_var_fitted(), response = "cons", n_ahead = 4,
+  decomposition <- fevd(fx_var_fitted(), response = "r", n_ahead = 4,
                         type = "gir", normalise_gir = FALSE)
 
   expect_true(all(decomposition >= 0))
@@ -54,7 +54,7 @@ test_that("an unnormalised generalised decomposition need not add up to one", {
 
 test_that("a structural model rejects the reduced-form types", {
   for (type in c("oir", "gir")) {
-    expect_error(fevd(fx_svar_fitted(), response = "cons", n_ahead = 3,
+    expect_error(fevd(fx_svar_fitted(), response = "r", n_ahead = 3,
                       type = type),
                  "not defined for a structural model")
   }
@@ -88,7 +88,7 @@ test_that("the structural decomposition accounts for the structural variances", 
 })
 
 test_that("a structural decomposition of a fitted model adds up", {
-  decomposition <- fevd(fx_svar_fitted(), response = "cons", n_ahead = 4,
+  decomposition <- fevd(fx_svar_fitted(), response = "r", n_ahead = 4,
                         type = "sir")
 
   expect_s3_class(decomposition, "bvarfevd")
@@ -109,15 +109,15 @@ test_that("a converted VEC model can be decomposed", {
 })
 
 test_that("all variables are shown when no maximum is given", {
-  decomposition <- fevd(fx_var_fitted(), response = "cons", n_ahead = 3)
+  decomposition <- fevd(fx_var_fitted(), response = "r", n_ahead = 3)
   spec <- fx_var_fitted()[["model"]]
 
   expect_identical(colnames(decomposition), spec[["endogen"]])
 })
 
 test_that("max_groups keeps the largest contributions and pools the rest", {
-  full <- fevd(fx_var_fitted(), response = "cons", n_ahead = 5)
-  limited <- fevd(fx_var_fitted(), response = "cons", n_ahead = 5,
+  full <- fevd(fx_var_fitted(), response = "r", n_ahead = 5)
+  limited <- fevd(fx_var_fitted(), response = "r", n_ahead = 5,
                   max_groups = 2)
 
   expect_identical(ncol(limited), 2L)
@@ -132,7 +132,7 @@ test_that("max_groups keeps the largest contributions and pools the rest", {
 })
 
 test_that("pooling leaves the row sums of the decomposition untouched", {
-  limited <- fevd(fx_var_fitted(), response = "cons", n_ahead = 5,
+  limited <- fevd(fx_var_fitted(), response = "r", n_ahead = 5,
                   max_groups = 2)
 
   expect_equal(as.numeric(rowSums(limited)), rep(1, nrow(limited)))
@@ -140,43 +140,43 @@ test_that("pooling leaves the row sums of the decomposition untouched", {
 })
 
 test_that("a maximum of at least the number of variables changes nothing", {
-  full <- fevd(fx_var_fitted(), response = "cons", n_ahead = 3)
-  limited <- fevd(fx_var_fitted(), response = "cons", n_ahead = 3,
+  full <- fevd(fx_var_fitted(), response = "r", n_ahead = 3)
+  limited <- fevd(fx_var_fitted(), response = "r", n_ahead = 3,
                   max_groups = ncol(full) + 1)
 
   expect_equal(limited, full)
 })
 
 test_that("an implausible maximum is rejected", {
-  expect_error(fevd(fx_var_fitted(), response = "cons", max_groups = 0),
+  expect_error(fevd(fx_var_fitted(), response = "r", max_groups = 0),
                "positive integer")
-  expect_error(fevd(fx_var_fitted(), response = "cons", max_groups = c(1, 2)),
+  expect_error(fevd(fx_var_fitted(), response = "r", max_groups = c(1, 2)),
                "positive integer")
-  expect_error(fevd(fx_var_fitted(), response = "cons", max_groups = "two"),
+  expect_error(fevd(fx_var_fitted(), response = "r", max_groups = "two"),
                "positive integer")
 })
 
 test_that("a variance decomposition at horizon zero is the impact period alone", {
-  decomposition <- fevd(fx_var_fitted(), response = "invest", n_ahead = 0)
+  decomposition <- fevd(fx_var_fitted(), response = "y", n_ahead = 0)
 
   expect_s3_class(decomposition, "bvarfevd")
   expect_s3_class(decomposition, "ts")
   expect_identical(nrow(decomposition), 1L)
   # Phi_0 is the identity, so the decomposition on impact rests on the Choleski
-  # factor alone: invest is ordered first and only its own shock explains it.
+  # factor alone: y is ordered first and only its own shock explains it.
   expect_equal(as.numeric(decomposition[1, ]), c(1, 0, 0))
   expect_equal(as.numeric(rowSums(decomposition)), 1)
 })
 
 test_that("the horizon zero decomposition is the impact row of a longer one", {
-  impact <- fevd(fx_var_fitted(), response = "cons", n_ahead = 0)
-  longer <- fevd(fx_var_fitted(), response = "cons", n_ahead = 4)
+  impact <- fevd(fx_var_fitted(), response = "r", n_ahead = 0)
+  longer <- fevd(fx_var_fitted(), response = "r", n_ahead = 4)
 
   expect_equal(as.numeric(impact[1, ]), as.numeric(longer[1, ]))
 })
 
 test_that("a generalised decomposition at horizon zero is still a set of shares", {
-  decomposition <- fevd(fx_var_fitted(), response = "cons", n_ahead = 0,
+  decomposition <- fevd(fx_var_fitted(), response = "r", n_ahead = 0,
                         type = "gir", normalise_gir = TRUE)
 
   expect_identical(nrow(decomposition), 1L)
@@ -185,6 +185,6 @@ test_that("a generalised decomposition at horizon zero is still a set of shares"
 })
 
 test_that("a negative horizon is rejected", {
-  expect_error(fevd(fx_var_fitted(), response = "cons", n_ahead = -1),
+  expect_error(fevd(fx_var_fitted(), response = "r", n_ahead = -1),
                "at least 0")
 })

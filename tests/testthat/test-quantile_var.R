@@ -90,7 +90,8 @@ test_that("posterior draws arrive in the layout the package uses", {
 })
 
 test_that("the coefficients describe the quantile they were asked for", {
-  y <- matrix(ald_fitted(0.25)[["data"]][["train"]][["y"]])
+  # One row per period and variable, the order of the SUR regressors in z.
+  y <- matrix(t(ald_fitted(0.25)[["data"]][["train"]][["y"]]))
   z <- ald_fitted(0.25)[["data"]][["train"]][["z"]]
 
   share_below <- function(quantile) {
@@ -100,10 +101,10 @@ test_that("the coefficients describe the quantile they were asked for", {
 
   # The defining property of the estimand, and the one thing a model that has
   # dropped its skew term somewhere would fail: the share of residuals below
-  # zero is the quantile. Few draws, so the tolerance is wide -- a model
-  # estimating the median instead would come out near 0.5 for both.
-  expect_equal(share_below(0.25), 0.25, tolerance = 0.1)
-  expect_equal(share_below(0.75), 0.75, tolerance = 0.1)
+  # zero is the quantile. Few draws, so the tolerance is wide, and absolute --
+  # a model estimating the median instead would come out near 0.5 for both.
+  expect_lt(abs(share_below(0.25) - 0.25), 0.1)
+  expect_lt(abs(share_below(0.75) - 0.75), 0.1)
 })
 
 test_that("the log likelihood is added like any other model's", {
@@ -135,9 +136,9 @@ test_that("the summary reports the quantile and the applications still work", {
   expect_s3_class(summary(object), "summary.bvarmodel")
   expect_output(print(summary(object)), "Quantile-VAR")
   expect_output(print(summary(object)), "q = 0.25")
-  expect_s3_class(irf(object, impulse = "income", response = "cons", n_ahead = 3),
+  expect_s3_class(irf(object, impulse = "Dp", response = "r", n_ahead = 3),
                   "bvarirf")
-  expect_s3_class(fevd(object, response = "cons", n_ahead = 3), "bvarfevd")
+  expect_s3_class(fevd(object, response = "r", n_ahead = 3), "bvarfevd")
 })
 
 test_that("what a quantile model does not do is refused with a reason", {

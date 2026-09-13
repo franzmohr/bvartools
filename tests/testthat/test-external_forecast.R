@@ -1,5 +1,5 @@
 # The reference model of the comparisons below. The training samples of its
-# windows end in 1976Q4 to 1977Q4, the test data cover 1978.
+# windows end in 1996Q1 to 1997Q1, the test data run to 1998Q1.
 ext_reference <- function() {
   fx_expanding_forecast()
 }
@@ -14,7 +14,7 @@ ext_ends <- function() {
 # dated one quarter after the end of the training sample it belongs to, plus a
 # few days, which is the situation that argument 'data_lag' describes.
 ext_forecasts <- function(value = 0, offset = 0.05) {
-  full <- stats::window(diff(log(bvartools::e1)) * 100, end = c(1978, 4))
+  full <- var_data()
   result <- NULL
   for (end in ext_ends()) {
     for (h in 1:2) {
@@ -59,7 +59,7 @@ test_that("the periods of a publication are translated into forecast horizons", 
 })
 
 test_that("perfect foresight leaves no forecast errors", {
-  full <- stats::window(diff(log(bvartools::e1)) * 100, end = c(1978, 4))
+  full <- var_data()
   realised <- function(period, variable) {
     as.numeric(stats::window(full[, variable], start = period, end = period))
   }
@@ -166,7 +166,7 @@ test_that("the functions of the estimation workflow leave external forecasts unc
 })
 
 test_that("selection_criteria only provides out-of-sample statistics", {
-  full <- stats::window(diff(log(bvartools::e1)) * 100, end = c(1978, 4))
+  full <- var_data()
   external <- create_external_forecast(ext_forecasts(value = 0), ext_reference(),
                                        n_ahead = 2, data_lag = 1)
   external <- add_forecast_errors(external, test_sample = full)
@@ -181,7 +181,7 @@ test_that("selection_criteria only provides out-of-sample statistics", {
 })
 
 test_that("external forecasts can be compared with models in one list", {
-  full <- stats::window(diff(log(bvartools::e1)) * 100, end = c(1978, 4))
+  full <- var_data()
   external <- create_external_forecast(ext_forecasts(value = 0), ext_reference(),
                                        n_ahead = 2, data_lag = 1)
 

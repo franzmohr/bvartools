@@ -47,7 +47,7 @@ test_that("the converted model is usable by the application functions", {
   # The deterministic terms of the VEC keep their names across the conversion.
   expect_identical(var[["model"]][["deterministic"]], "const")
 
-  expect_s3_class(irf(var, impulse = "R", response = "Dp", n_ahead = 3),
+  expect_s3_class(irf(var, impulse = "lr", response = "Dp", n_ahead = 3),
                   "bvarirf")
   expect_s3_class(fevd(var, response = "Dp", n_ahead = 3), "bvarfevd")
   expect_no_error(summary(var))
@@ -112,7 +112,7 @@ test_that("a converted time varying VEC model forecasts and responds", {
   var <- vec_to_var(fx_vec_tvp_fitted("gamma"))
 
   expect_no_error(summary(var, period = 1))
-  expect_s3_class(irf(var, impulse = "R", response = "Dp", n_ahead = 3), "bvarirf")
+  expect_s3_class(irf(var, impulse = "lr", response = "Dp", n_ahead = 3), "bvarirf")
   expect_s3_class(fevd(var, response = "Dp", n_ahead = 3, period = 1), "bvarfevd")
   expect_plots(plot(var))
 
@@ -124,13 +124,13 @@ test_that("a converted time varying VEC model forecasts and responds", {
 
 test_that("an expanding window of VEC models can be evaluated out of sample", {
   full <- vec_data()
-  train <- stats::window(full, end = c(1987, 4))
+  train <- stats::window(full, end = c(1994, 4))
   model <- create_bvecmodel(train, p = 2, r = 1, const = "unrestricted",
                             iterations = 10, burnin = 5)
   model <- add_priors(model, coef = list(v_i = 1, v_i_det = 1 / 10),
                       coint = list(v_i = 0, p_tau_i = 1),
                       sigma = list(df = "k", scale = 1))
-  windows <- use_expanding_window(model, start = c(1987, 2))
+  windows <- use_expanding_window(model, start = c(1994, 2))
   windows <- add_initial_values(windows)
   set.seed(23)
   windows <- add_posterior_coefficients(windows)

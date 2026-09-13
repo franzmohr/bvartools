@@ -47,9 +47,9 @@ test_that("a restored model can be used downstream", {
   write_to_hdf5(fx_var_fitted(), filename = path)
   restored <- read_model_from_hdf5(path)
 
-  expect_equal(irf(restored, impulse = "income", response = "cons",
+  expect_equal(irf(restored, impulse = "Dp", response = "r",
                    n_ahead = 3),
-               irf(fx_var_fitted(), impulse = "income", response = "cons",
+               irf(fx_var_fitted(), impulse = "Dp", response = "r",
                    n_ahead = 3))
 })
 
@@ -532,8 +532,8 @@ test_that("draws kept outside a group are still read", {
 forecast_errors_fitted_h5 <- function() {
   cached_fixture("forecast_errors_hdf5", {
     data <- var_data()
-    train <- stats::window(data, end = c(1977, 4))
-    test <- stats::window(data, start = c(1978, 1))
+    train <- stats::window(data, end = c(1997, 1))
+    test <- stats::window(data, start = c(1997, 2))
 
     object <- create_bvarmodel(train, p = 1, deterministic = "const",
                                iterations = fx_iterations, burnin = fx_burnin)

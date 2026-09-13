@@ -43,44 +43,44 @@ test_that("a rotated draw describes the data as well as the draw it came from", 
 test_that("every identified draw satisfies the restrictions", {
   object <- fx_var_sign()
 
-  for (response in c("invest", "cons")) {
-    impact <- sign_draws(object, "invest", response, n_ahead = 1)[, 1]
+  for (response in c("y", "r")) {
+    impact <- sign_draws(object, "y", response, n_ahead = 1)[, 1]
     expect_true(all(impact > 0))
   }
 })
 
 test_that("a negative restriction is imposed as asked", {
-  restrictions <- data.frame(impulse = "income",
-                             response = c("income", "cons"),
+  restrictions <- data.frame(impulse = "Dp",
+                             response = c("Dp", "r"),
                              sign = c(1, -1),
                              horizon = 0)
 
   set.seed(515)
   object <- add_sign_restrictions(fx_var_fitted(), restrictions)
 
-  expect_true(all(sign_draws(object, "income", "income", 1)[, 1] > 0))
-  expect_true(all(sign_draws(object, "income", "cons", 1)[, 1] < 0))
+  expect_true(all(sign_draws(object, "Dp", "Dp", 1)[, 1] > 0))
+  expect_true(all(sign_draws(object, "Dp", "r", 1)[, 1] < 0))
 })
 
 test_that("a restriction away from the impact period is imposed at its horizon", {
-  restrictions <- data.frame(impulse = "cons",
-                             response = "invest",
+  restrictions <- data.frame(impulse = "r",
+                             response = "y",
                              sign = -1,
                              horizon = 2)
 
   set.seed(616)
   object <- add_sign_restrictions(fx_var_fitted(), restrictions)
 
-  responses <- sign_draws(object, "cons", "invest", n_ahead = 3)
+  responses <- sign_draws(object, "r", "y", n_ahead = 3)
 
   # The third column is horizon 2, which is the one that was restricted.
   expect_true(all(responses[, 3] < 0))
 })
 
 test_that("the horizon column defaults to the impact period", {
-  with_horizon <- data.frame(impulse = "invest",
-                             response = "cons", sign = 1, horizon = 0)
-  without <- data.frame(impulse = "invest", response = "cons", sign = 1)
+  with_horizon <- data.frame(impulse = "y",
+                             response = "r", sign = 1, horizon = 0)
+  without <- data.frame(impulse = "y", response = "r", sign = 1)
 
   set.seed(717)
   a <- add_sign_restrictions(fx_var_fitted(), with_horizon)
@@ -102,7 +102,7 @@ test_that("the identification is reproducible from a seed", {
 })
 
 test_that("a variance decomposition of an identified model adds up", {
-  decomp <- fevd(fx_var_sign(), response = "cons", n_ahead = 4, type = "sign")
+  decomp <- fevd(fx_var_sign(), response = "r", n_ahead = 4, type = "sign")
 
   # A rotation of the Choleski factor still factorises Sigma, so the shares
   # remain shares.
@@ -128,8 +128,8 @@ test_that("a draw that no rotation was found for is dropped, not counted", {
   # Six restrictions across two shocks, with too few tries to satisfy them
   # every time. The point is the mixture: some draws identified, some not.
   demanding <- data.frame(
-    impulse = c(rep("invest", 3), rep("cons", 3)),
-    response = c("invest", "income", "cons", "cons", "invest", "income"),
+    impulse = c(rep("y", 3), rep("r", 3)),
+    response = c("y", "Dp", "r", "r", "y", "Dp"),
     sign = c(1, -1, -1, 1, -1, -1),
     horizon = 0
   )
@@ -148,7 +148,7 @@ test_that("a draw that no rotation was found for is dropped, not counted", {
   expect_equal(rowSums(is.na(rotations)), ifelse(identified, 0, ncol(rotations)))
 
   # The responses cover the identified draws and no others.
-  responses <- sign_draws(object, "invest", "income", n_ahead = 2)
+  responses <- sign_draws(object, "y", "Dp", n_ahead = 2)
   expect_identical(nrow(responses), sum(identified))
   expect_true(all(responses[, 1] < 0))
 
@@ -159,15 +159,17 @@ test_that("a draw that no rotation was found for is dropped, not counted", {
 })
 
 test_that("a search that finds nothing says so instead of returning an empty model", {
-  # Nine restrictions across all three shocks and a single try per draw. This
-  # is not a pattern the model cannot produce -- it is one it produces too
-  # rarely to stumble on, which is the case the message is written for. The
-  # seed is what makes the outcome of the search fixed.
+  # Nine restrictions across all three shocks, imposed on impact and one period
+  # later, and a single try per draw. This is not a pattern the model cannot
+  # produce -- given enough tries a few per cent of the draws are identified --
+  # it is one it produces too rarely to stumble on, which is the case the
+  # message is written for. The seed is what makes the outcome of the search
+  # fixed.
   demanding <- data.frame(
-    impulse = rep(c("invest", "income", "cons"), each = 3),
-    response = rep(c("invest", "income", "cons"), times = 3),
-    sign = c(1, -1, -1, -1, 1, -1, -1, -1, 1),
-    horizon = 0
+    impulse = rep(rep(c("y", "Dp", "r"), each = 3), 2),
+    response = rep(rep(c("y", "Dp", "r"), times = 3), 2),
+    sign = rep(c(1, -1, -1, -1, 1, -1, -1, -1, 1), 2),
+    horizon = rep(0:1, each = 9)
   )
 
   set.seed(919)
@@ -180,7 +182,7 @@ test_that("thinning carries the rotations along with the draws", {
 
   expect_identical(nrow(object[["posterior"]][["q"]][["coeffs"]]),
                    nrow(object[["posterior"]][["u_sigma_inv"]][["coeffs"]]))
-  expect_no_error(irf(object, impulse = "invest", response = "cons",
+  expect_no_error(irf(object, impulse = "y", response = "r",
                       type = "sign"))
 })
 
@@ -198,23 +200,23 @@ test_that("the rotations survive a round trip through HDF5", {
 test_that("the restriction table is checked before any rotation is drawn", {
   object <- fx_var_fitted()
 
-  expect_error(add_sign_restrictions(object, list(impulse = "invest")),
+  expect_error(add_sign_restrictions(object, list(impulse = "y")),
                "must be a data frame")
   expect_error(add_sign_restrictions(object, fx_sign_restrictions()[0, ]),
                "does not contain any restriction")
   expect_error(add_sign_restrictions(object,
-                                     data.frame(impulse = "invest", sign = 1)),
+                                     data.frame(impulse = "y", sign = 1)),
                "must contain the column 'response'")
   expect_error(add_sign_restrictions(object,
-                                     data.frame(impulse = "gdp", response = "cons",
+                                     data.frame(impulse = "gdp", response = "r",
                                                 sign = 1)),
                "names a variable 'gdp'")
   expect_error(add_sign_restrictions(object,
-                                     data.frame(impulse = "invest", response = "cons",
+                                     data.frame(impulse = "y", response = "r",
                                                 sign = 2)),
                "must be either 1 or -1")
   expect_error(add_sign_restrictions(object,
-                                     data.frame(impulse = "invest", response = "cons",
+                                     data.frame(impulse = "y", response = "r",
                                                 sign = 1, horizon = -1)),
                "non-negative integers")
   expect_error(add_sign_restrictions(object, fx_sign_restrictions(), max_tries = 0),
@@ -222,7 +224,7 @@ test_that("the restriction table is checked before any rotation is drawn", {
 
   # Two rows asking opposite things of the same response would spend the whole
   # budget of tries on every draw before failing.
-  contradictory <- data.frame(impulse = "invest", response = c("cons", "cons"),
+  contradictory <- data.frame(impulse = "y", response = c("r", "r"),
                               sign = c(1, -1), horizon = 0)
   expect_error(add_sign_restrictions(object, contradictory),
                "both signs of the same response")
@@ -241,9 +243,9 @@ test_that("models that have nothing to rotate are refused", {
 test_that("an unidentified model is refused by the analysis functions", {
   object <- fx_var_fitted()
 
-  expect_error(irf(object, impulse = "invest", response = "cons", type = "sign"),
+  expect_error(irf(object, impulse = "y", response = "r", type = "sign"),
                "add_sign_restrictions")
-  expect_error(fevd(object, response = "cons", type = "sign"),
+  expect_error(fevd(object, response = "r", type = "sign"),
                "add_sign_restrictions")
   expect_error(spillover(object, type = "sign"),
                "add_sign_restrictions")

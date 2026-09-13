@@ -1,5 +1,5 @@
 test_that("use_expanding_window builds one model per forecast origin", {
-  windows <- use_expanding_window(fx_var_model(), start = c(1976, 1))
+  windows <- use_expanding_window(fx_var_model(), start = c(1995, 2))
 
   expect_s3_class(windows, "expandingwindow")
   expect_true(all(vapply(windows, inherits, logical(1), "bvarmodel")))
@@ -7,12 +7,12 @@ test_that("use_expanding_window builds one model per forecast origin", {
   # The first window ends just before `start`, and one window is added per
   # period up to the end of the sample.
   n_after_start <- nrow(stats::window(fx_var_model()[["data"]][["train"]][["y"]],
-                                      start = c(1976, 1)))
+                                      start = c(1995, 2)))
   expect_length(windows, n_after_start + 1)
 })
 
 test_that("the estimation samples grow by one period at a time", {
-  windows <- use_expanding_window(fx_var_model(), start = c(1976, 1))
+  windows <- use_expanding_window(fx_var_model(), start = c(1995, 2))
   nobs <- vapply(windows,
                  function(x) nrow(x[["data"]][["train"]][["y"]]), integer(1))
   starts <- vapply(windows,
@@ -32,7 +32,7 @@ test_that("the whole workflow runs over an expanding window", {
                             iterations = 10, burnin = 5)
   model <- add_priors(model, coef = list(v_i = 0, v_i_det = 0),
                       sigma = list(df = 1, scale = 0.0001))
-  windows <- use_expanding_window(model, start = c(1978, 1))
+  windows <- use_expanding_window(model, start = c(1997, 2))
   windows <- add_initial_values(windows)
   set.seed(19)
   windows <- add_posterior_coefficients(windows)

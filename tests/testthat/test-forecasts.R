@@ -100,8 +100,8 @@ test_that("predict needs the forecast input and the simulated draws", {
 
 test_that("forecast errors are computed against a test sample", {
   data <- var_data()
-  train <- stats::window(data, end = c(1977, 4))
-  test <- stats::window(data, start = c(1978, 1))
+  train <- stats::window(data, end = c(1997, 1))
+  test <- stats::window(data, start = c(1997, 2))
 
   model <- create_bvarmodel(train, p = 1, deterministic = "const",
                             iterations = 10, burnin = 5)

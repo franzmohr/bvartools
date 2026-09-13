@@ -38,11 +38,11 @@ test_that("thin works for VEC models and model lists", {
 })
 
 test_that("window subsets the estimation sample in time", {
-  model <- stats::window(fx_var_model(), start = c(1965, 1), end = c(1970, 4))
+  model <- stats::window(fx_var_model(), start = c(1984, 2), end = c(1990, 1))
   y <- model[["data"]][["train"]][["y"]]
 
-  expect_equal(stats::tsp(y)[1], 1965)
-  expect_equal(stats::tsp(y)[2], 1970.75)
+  expect_equal(stats::tsp(y)[1], 1984.25)
+  expect_equal(stats::tsp(y)[2], 1990)
   expect_identical(nrow(y), 24L)
   # x is cut alongside y.
   expect_identical(nrow(model[["data"]][["train"]][["x"]]), nrow(y))
@@ -50,7 +50,7 @@ test_that("window subsets the estimation sample in time", {
 
 test_that("window cuts the SUR matrix in matching row blocks", {
   full <- fx_var_model()
-  cut <- stats::window(full, start = c(1965, 1), end = c(1970, 4))
+  cut <- stats::window(full, start = c(1984, 2), end = c(1990, 1))
   k <- full[["model"]][["k"]]
 
   expect_identical(nrow(cut[["data"]][["train"]][["z"]]),
@@ -65,16 +65,16 @@ test_that("window cuts the SUR matrix in matching row blocks", {
 })
 
 test_that("window works for VEC models and model lists", {
-  vec <- stats::window(fx_vec_model(), start = c(1980, 1))
-  models <- stats::window(fx_var_modellist(), start = c(1965, 1))
+  vec <- stats::window(fx_vec_model(), start = c(1987, 1))
+  models <- stats::window(fx_var_modellist(), start = c(1984, 2))
 
-  expect_equal(stats::tsp(vec[["data"]][["train"]][["y"]])[1], 1980)
+  expect_equal(stats::tsp(vec[["data"]][["train"]][["y"]])[1], 1987)
   expect_s3_class(models, "modellist")
   expect_true(all(vapply(
     models,
     function(x) stats::tsp(x[["data"]][["train"]][["y"]])[1],
     numeric(1)
-  ) == 1965))
+  ) == 1984.25))
 })
 
 test_that("thin keeps every block of draws in step", {
@@ -98,8 +98,8 @@ test_that("thin keeps every block of draws in step", {
 })
 
 test_that("window cuts the posterior paths to the periods it keeps", {
-  specs <- list(list(model = fx_var_tvp_fitted("sv"), start = c(1965, 1), end = c(1975, 4)),
-                list(model = fx_vec_tvp_fitted("sv"), start = c(1980, 1), end = c(1990, 4)))
+  specs <- list(list(model = fx_var_tvp_fitted("sv"), start = c(1984, 2), end = c(1995, 1)),
+                list(model = fx_vec_tvp_fitted("sv"), start = c(1987, 1), end = c(1997, 4)))
 
   for (spec in specs) {
     full <- spec[["model"]]

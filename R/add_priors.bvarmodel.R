@@ -132,8 +132,27 @@
 #' \eqn{\kappa_4} as the first, second, third and forth element in
 #' \code{varsel$minnesota}, respectively.
 #' 
-#' @return An object of class 'bvarmodel'.
-#' 
+#' @return The object in \code{object} with the element \code{priors} added, a list with
+#' \describe{
+#'   \item{\code{a}}{the prior of the coefficients: \code{type}, the \eqn{M \times 1}
+#'   prior means \code{mu} and the \eqn{M \times M} prior precision matrix
+#'   \code{v_inv}, where \eqn{M} is the number of coefficients. With variable selection
+#'   also \code{inprior} and \code{include}, for SSVS \code{tau0} and \code{tau1}, and
+#'   for TVP models \code{shape} and \code{rate} of the state variances.}
+#'   \item{\code{psi}}{for \code{error = "gamma+covar"} or \code{"sv+covar"}, the prior of
+#'   the error covariance coefficients with \code{type}, \code{mu}, \code{v_inv} and
+#'   \code{varsel}, and the variable selection and state variance elements as for
+#'   \code{a}.}
+#'   \item{\code{u_sigma}}{the prior of the error variances with its \code{type}:
+#'   \code{"wishart"} with \code{df} and \code{scale}, \code{"gamma"} with \code{shape}
+#'   and \code{rate}, or \code{"sv"} with \code{mu}, \code{v_inv}, \code{shape},
+#'   \code{rate}, \code{sigma} and \code{offset}. With a Minnesota prior it also holds
+#'   \code{u_sigma_inv}, the inverse error covariance matrix the prior was scaled with.
+#'   Not present for \code{error = "ald"}.}
+#'   \item{\code{u_scale}}{for \code{error = "ald"}, the prior of the scales of the
+#'   asymmetric Laplace distribution with \code{type}, \code{shape} and \code{rate}.}
+#' }
+#'
 #' @references
 #' 
 #' Chan, J., Koop, G., Poirier, D. J., & Tobias J. L. (2019). \emph{Bayesian econometric methods}

@@ -11,6 +11,11 @@
 
 \item{...}{additional arguments.}
 }
+\value{
+Nothing. The method raises an error, since forecasts of a VEC model are obtained
+from its VAR representation: apply \code{\link{vec_to_var}} first and then
+\code{\link{add_forecast_input}} to the resulting 'bvarmodel'.
+}
 \description{
 Guard method for objects of class 'bvecmodel'.
 }

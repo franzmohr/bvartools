@@ -15,7 +15,12 @@ Defaults is \code{"maxlik"}. Different approaches are used for TVP and SV models
 \item{...}{further arguments passed to or from other methods.}
 }
 \value{
-An object of class 'bvecmodel'.
+The object in \code{object} with the element \code{initial} added, a list with
+the starting values \code{beta} of the cointegration coefficients, a
+\eqn{K_\beta r \times 1} matrix, or \eqn{T K_\beta r \times 1} with initial state
+\code{beta_init} for time varying cointegration, and the starting values of the
+remaining coefficients and the error term with the elements described in
+\code{\link{add_initial_values.bvarmodel}}.
 }
 \description{
 Adds initial values to a VEC model, which was produced by

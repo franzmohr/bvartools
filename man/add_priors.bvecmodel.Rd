@@ -28,7 +28,18 @@ selection algorithm. Required if the model was created with
 \item{...}{further arguments passed to or from other methods.}
 }
 \value{
-An object of class 'bvecmodel'.
+The object in \code{object} with the element \code{priors} added, a list with
+\describe{
+  \item{\code{beta}}{the prior of the cointegration space with \code{type}
+  \code{"cointspace"}: \code{v_inv} and \code{p_tau_inv} for constant cointegration
+  parameters, or \code{rho}, \code{mu} and \code{v_inv} of the state equation for time
+  varying ones, together with the elements added by \code{p_tau_i = "ml"} or a
+  uniform prior on \eqn{\rho}.}
+  \item{\code{a}}{the prior of the loadings and the remaining coefficients, with the
+  same elements as for a VAR model in \code{\link{add_priors.bvarmodel}}.}
+  \item{\code{psi}, \code{u_sigma}}{the priors of the error covariance coefficients
+  and error variances, as for a VAR model.}
+}
 }
 \description{
 Adds prior specifications to a list of models, which was produced by

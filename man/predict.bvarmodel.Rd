@@ -14,7 +14,10 @@
 \item{...}{additional arguments.}
 }
 \value{
-An array of class 'bvarprd'.
+An object of class 'bvarprd', a list with element \code{fcst}, an
+\eqn{h \times K \times S} array of the \eqn{S} forecast draws, whose first two
+dimensions are named after the forecast periods and the endogenous variables, and
+element \code{y}, the endogenous variables of the training sample.
 }
 \description{
 Forecasting a Bayesian VAR object of class 'bvarmodel'.

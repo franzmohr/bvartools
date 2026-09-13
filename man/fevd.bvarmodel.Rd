@@ -49,7 +49,10 @@ matrices with one entry per draw. Ignored for every other value of \code{type}. 
 \item{...}{further arguments passed to or from other methods.}
 }
 \value{
-A time-series object of class 'bvarfevd'.
+A time-series object of class 'bvarfevd' running from period 0 to \code{n_ahead},
+with one column per variable holding the share of the forecast error variance of
+\code{response} that is due to its shocks. For \code{type = "oir"} the rows sum to
+one; for \code{type = "gir"} they do so only with \code{normalise_gir = TRUE}.
 }
 \description{
 Produces the forecast error variance decomposition for an object of class 'bvarmodel'.

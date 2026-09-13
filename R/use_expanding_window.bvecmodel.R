@@ -8,8 +8,10 @@
 #' expanding window approach.
 #' @param ... arguments passed forward to method.
 #' 
-#' @return A list of class 'expandingwindow'.
-#' 
+#' @return A list of class 'expandingwindow' with one object of class 'bvecmodel' per
+#' window. The training sample of the first ends in the period before \code{start}, and
+#' each further window adds one period.
+#'
 #' @examples
 #' 
 #' # Load data 

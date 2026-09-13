@@ -55,7 +55,10 @@
 #' single inclusion indicator describes it and the draws of those indicators are
 #' dropped.
 #'
-#' @return An object of class \code{'bvarmodel'}.
+#' @return An object of class \code{'bvarmodel'} with the elements \code{model} and
+#' \code{data} of the VAR in levels and, if \code{object} was estimated, element
+#' \code{posterior} with the transformed draws, including \code{loglik} if it was
+#' present. Priors and initial values are not carried over.
 #'
 #' @examples
 #'

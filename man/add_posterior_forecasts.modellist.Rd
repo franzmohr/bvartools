@@ -13,7 +13,8 @@ to \code{\link{add_posterior_coefficients}} and \code{\link{add_forecast_input}}
 \item{...}{arguments passed forward to method.}
 }
 \value{
-A list of class 'modellist'.
+The object in \code{object} with forecast draws added to each of its models, as
+described in \code{\link{add_posterior_forecasts.bvarmodel}}.
 }
 \description{
 Calculates and adds forecasts to the elements of an object of class 'modellist'.

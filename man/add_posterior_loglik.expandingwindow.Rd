@@ -13,7 +13,8 @@
 \item{...}{further arguments passed to or from other methods.}
 }
 \value{
-A list of class 'expandingwindow'.
+The object in \code{object} with log-likelihood draws added to each of its models, as
+described in \code{\link{add_posterior_loglik.bvarmodel}}.
 }
 \description{
 Forwards its elements to methods used to calculate posterior log-likelihoods.

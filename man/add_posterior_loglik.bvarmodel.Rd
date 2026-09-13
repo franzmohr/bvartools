@@ -13,7 +13,10 @@
 \item{...}{additional arguments.}
 }
 \value{
-An object of class 'bvarmodel'.
+The object in \code{object} with \code{posterior$loglik} added, a
+\code{\link[coda]{mcmc}} object with one row per draw and one column per period of the
+training sample, holding the pointwise log-likelihood that
+\code{\link{selection_criteria}} uses.
 }
 \description{
 Calculates and adds posterior log-likelihoods to an object of class 'bvarmodel'.

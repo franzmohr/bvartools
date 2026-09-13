@@ -12,7 +12,9 @@
 \item{...}{further arguments passed to or from other methods.}
 }
 \value{
-A list of class 'selcritlist'.
+A list of class 'selcritlist' with one object of class 'selcrit' per model, as
+described in \code{\link{selection_criteria.bvarmodel}}, which
+\code{\link{choose_best_model}} compares.
 }
 \description{
 Calculates model selection criteria for a list of Bayesian models.

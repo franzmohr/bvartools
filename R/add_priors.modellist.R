@@ -7,8 +7,9 @@
 #' to \code{\link{create_bvarmodel}} or \code{\link{create_bvecmodel}}.
 #' @param ... further arguments passed to or from other methods.
 #' 
-#' @return A list of class 'modellist'.
-#' 
+#' @return The object in \code{object} with priors added to each of its models, as
+#' described in \code{\link{add_priors.bvarmodel}}.
+#'
 #' @examples 
 #' 
 #' # Load data

@@ -57,7 +57,11 @@ such matrices with one entry per draw. Ignored for every other value of \code{ty
 \item{...}{further arguments passed to or from other methods.}
 }
 \value{
-A time-series object of class 'bvarirf' or, if \code{keep_draws = TRUE}, a simple matrix.
+A time-series object of class 'bvarirf' running from period 0 to \code{n_ahead},
+with the lower bound, the median and the upper bound of the credible band of the
+response in three columns named after their quantiles, e.g. \code{"2.5\%"},
+\code{"50\%"} and \code{"97.5\%"} for \code{ci = .95}. If \code{keep_draws = TRUE}, a
+matrix of class 'bvarirf' with one row per draw and one column per period instead.
 }
 \description{
 Computes the impulse response coefficients for an object of class 'bvarmodel'.

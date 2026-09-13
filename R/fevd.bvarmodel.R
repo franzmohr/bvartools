@@ -71,8 +71,11 @@
 #' 
 #' Since GIR-based FEVDs do not add up to unity, they can be normalised by setting \code{normalise_gir = TRUE}.
 #' 
-#' @return A time-series object of class 'bvarfevd'.
-#' 
+#' @return A time-series object of class 'bvarfevd' running from period 0 to \code{n_ahead},
+#' with one column per variable holding the share of the forecast error variance of
+#' \code{response} that is due to its shocks. For \code{type = "oir"} the rows sum to
+#' one; for \code{type = "gir"} they do so only with \code{normalise_gir = TRUE}.
+#'
 #' @examples
 #' 
 #' # Load data

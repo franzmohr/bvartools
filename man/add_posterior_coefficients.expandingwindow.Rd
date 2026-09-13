@@ -12,7 +12,8 @@
 \item{...}{further arguments passed to or from other methods.}
 }
 \value{
-A list of class 'expandingwindow'.
+The object in \code{object} with posterior draws added to each of its models, as
+described in \code{\link{add_posterior_coefficients.bvarmodel}}.
 }
 \description{
 Forwards model input to posterior simulation functions.

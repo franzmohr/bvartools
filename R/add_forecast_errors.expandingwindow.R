@@ -6,8 +6,9 @@
 #' @param test_sample a time-series object used as test data.
 #' @param ... arguments passed forward to method.
 #' 
-#' @return A list of class 'expandingwindow'.
-#' 
+#' @return The object in \code{object} with forecast errors added to each of its models, as
+#' described in \code{\link{add_forecast_errors.bvarmodel}}.
+#'
 #' @examples
 #' 
 #' # Load data

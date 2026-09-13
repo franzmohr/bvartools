@@ -6,8 +6,9 @@
 #' \code{\link{add_posterior_coefficients}}.
 #' @param ... further arguments passed to or from other methods.
 #' 
-#' @return A list of class 'expandingwindow'.
-#' 
+#' @return The object in \code{object} with log-likelihood draws added to each of its models, as
+#' described in \code{\link{add_posterior_loglik.bvarmodel}}.
+#'
 #' @examples
 #' 
 #' # Load data

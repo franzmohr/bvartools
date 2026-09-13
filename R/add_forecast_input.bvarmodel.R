@@ -12,7 +12,9 @@
 #' See 'Details'.
 #' @param ... arguments passed forward to method.
 #'
-#' @return A list of class 'bvarmodel'.
+#' @return The object in \code{object} with \code{model$h} set to \code{n_ahead} and
+#' \code{data$forecast$x} added, the regressors of the forecast periods in the layout of
+#' \code{data$train$x}, one row per period.
 #'
 #' @examples
 #' 

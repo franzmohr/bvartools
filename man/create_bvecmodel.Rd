@@ -72,7 +72,25 @@ to 50000).}
 moments, forecasts etc.}
 }
 \value{
-An object of class \code{'bvecmodel'}.
+An object of class 'bvecmodel' or, if a vector is given in \code{p}, \code{s}
+or \code{r}, a list of class 'modellist' with one such object per specification. A
+'bvecmodel' is a list with the elements
+\describe{
+  \item{\code{data}}{a list with element \code{original}, which holds the time-series
+  objects \code{endogen}, \code{exogen} and \code{deterministic} in levels, and
+  element \code{train}, which holds the estimation sample: \code{y}, a
+  \eqn{T \times K} time-series object of the differenced endogenous variables,
+  \code{w}, the lagged levels that enter the cointegration term, \code{x}, the
+  remaining regressors, and \code{z}, the corresponding \eqn{TK} row matrix of
+  regressors in SUR form.}
+  \item{\code{model}}{a list of the specification with the same elements as that of
+  a 'bvarmodel', where \code{type} is \code{"VEC"} and \code{p} is the lag order of
+  the VAR in levels, and additionally \code{rank}, the cointegration rank,
+  \code{k_beta}, the number of variables in the cointegration term, and
+  \code{n_restricted}, the number of deterministic terms restricted to it.}
+}
+The later steps of the workflow add the elements \code{priors}, \code{initial} and
+\code{posterior}.
 }
 \description{
 Produces the input for the estimation of a vector error correction (VEC) model.

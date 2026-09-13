@@ -15,7 +15,9 @@ Defaults to 0.95.}
 \item{...}{further arguments passed to or from other methods.}
 }
 \value{
-An object of class 'selcrit'.
+A list of class 'selcrit', which also inherits the class of the model, with the
+element \code{model} and one data frame per criterion, as described in
+\code{\link{selection_criteria.bvarmodel}}.
 }
 \description{
 Calculates model selection criteria for an object of class 'bvecmodel'.

@@ -25,9 +25,10 @@ added, so the result of each call must be assigned back:
   \item{\code{posterior}}{the draws added by \code{\link{add_posterior_coefficients}}
   and the later \code{add_posterior_*} functions.}
 }
-Posterior draws are stored with one row per parameter and one column per
-draw, which is also the orientation \code{\link{bvar}} and \code{\link{bvec}}
-expect.
+Posterior draws are stored as \code{\link[coda]{mcmc}} objects with one row
+per draw and one column per parameter. \code{\link{bvar}} and
+\code{\link{bvec}}, which collect the draws of a sampler written by the user,
+expect the transpose: one row per parameter and one column per draw.
 
 Passing a vector to an argument such as \code{p} or \code{r} creates one model
 per specification in a list of class 'modellist', and

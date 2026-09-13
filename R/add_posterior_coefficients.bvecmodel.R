@@ -32,8 +32,13 @@
 #' rather than leaving that one without a posterior and carrying it into
 #' whatever reads the results.
 #'
-#' @return An object of class 'bvecmodel', with its posterior draws added.
-#' 
+#' @return The object in \code{object} with the element \code{posterior} added, whose
+#' elements hold the draws after burn-in as \code{\link[coda]{mcmc}} objects with one
+#' row per draw and one column per parameter, in element \code{coeffs}: \code{beta}, the
+#' cointegration coefficients, \eqn{K_\beta r} columns or \eqn{T K_\beta r} for time
+#' varying cointegration, \code{a}, the loadings and the remaining coefficients, and the
+#' draws of the error term as described in \code{\link{add_posterior_coefficients.bvarmodel}}.
+#'
 #' @references
 #' 
 #' Chan, J., Koop, G., Poirier, D. J., & Tobias J. L. (2019). \emph{Bayesian econometric methods}

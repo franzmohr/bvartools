@@ -7,8 +7,10 @@
 #' Defaults to 0.95.
 #' @param ... further arguments passed to or from other methods.
 #' 
-#' @return An object of class 'selcrit'.
-#' 
+#' @return A list of class 'selcrit', which also inherits the class of the model, with the
+#' element \code{model} and one data frame per criterion, as described in
+#' \code{\link{selection_criteria.bvarmodel}}.
+#'
 #' @examples
 #' 
 #' # Load data

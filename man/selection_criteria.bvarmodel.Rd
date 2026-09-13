@@ -15,7 +15,15 @@ Defaults to 0.95.}
 \item{...}{further arguments passed to or from other methods.}
 }
 \value{
-An object of class 'selcrit'.
+A list of class 'selcrit', which also inherits the class of the model, with the
+element \code{model} and one data frame per criterion. If the model contains
+\code{posterior$loglik}, these are \code{LL}, \code{AIC}, \code{BIC}, \code{HQ},
+\code{WAIC} and \code{LOOIC}, each with the columns \code{mean}, \code{median},
+\code{qlower} and \code{qupper}, where bands that do not apply are \code{NA}. If it
+contains \code{posterior$forecast_errors}, these are \code{FE}, \code{AFE} and
+\code{RSFE}, the forecast errors and their absolute and root squared values, with the
+columns \code{variable}, \code{h}, \code{mean}, \code{median}, \code{qlower} and
+\code{qupper}.
 }
 \description{
 Calculates model selection criteria for an object of class 'bvarmodel'.

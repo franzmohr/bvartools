@@ -5,6 +5,10 @@
 #' @param object an object of class 'bvecmodel'.
 #' @param ... additional arguments.
 #'
+#' @return Nothing. The method raises an error, since forecasts of a VEC model are obtained
+#' from its VAR representation: apply \code{\link{vec_to_var}} first and then
+#' \code{\link{add_forecast_input}} to the resulting 'bvarmodel'.
+#'
 #' @export
 #' @method add_forecast_input bvecmodel
 add_forecast_input.bvecmodel <- function(object, ...){

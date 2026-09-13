@@ -20,6 +20,9 @@
 #' # Combine the models in one object
 #' model <- combine_models(model_1, model_2)
 #' 
+#' @return A list of class 'modellist' that holds the models of all arguments in one flat
+#' list, in the order in which they were given.
+#'
 #' @export
 combine_models <- function(...) {
   

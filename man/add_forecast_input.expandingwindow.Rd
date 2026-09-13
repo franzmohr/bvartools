@@ -13,7 +13,8 @@ be forward to their respective `add_forecast_input` method.}
 \item{...}{arguments passed forward to method.}
 }
 \value{
-A list of class 'expandingwindow'.
+The object in \code{object} with forecast input added to each of its models, as
+described in \code{\link{add_forecast_input.bvarmodel}}.
 }
 \description{
 Generates and adds data matrices for forecast simulation to the elements of

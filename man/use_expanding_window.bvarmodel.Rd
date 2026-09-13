@@ -16,7 +16,9 @@ expanding window approach.}
 \item{...}{arguments passed forward to method.}
 }
 \value{
-A list of class 'expandingwindow'.
+A list of class 'expandingwindow' with one object of class 'bvarmodel' per
+window. The training sample of the first ends in the period before \code{start}, and
+each further window adds one period.
 }
 \description{
 Creates objects for expanding window posterior simulation.

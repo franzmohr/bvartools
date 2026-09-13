@@ -61,12 +61,26 @@ to 20000).}
 moments, forecasts etc.}
 }
 \value{
-An object of class 'bvarmodel', which contains the following elements:
-\item{data}{A list of data objects, which can be used for posterior simulation. Element
-\code{y} is a time-series object of dependent variables. Element \code{x} is a time-series
-object of the regressors and element \code{z} is the corresponding matrix of regressors
-in SUR form.}
-\item{model}{A list of model specifications.}
+An object of class 'bvarmodel' or, if a vector is given in \code{p}, \code{s}
+or \code{quantile}, a list of class 'modellist' with one such object per
+specification. A 'bvarmodel' is a list with the elements
+\describe{
+  \item{\code{data}}{a list with element \code{original}, which holds the time-series
+  objects \code{endogen}, \code{exogen} and \code{deterministic}, and element
+  \code{train}, which holds the estimation sample: \code{y}, a \eqn{T \times K}
+  time-series object of the endogenous variables, \code{x}, a time-series object of
+  the regressors, and \code{z}, the corresponding \eqn{TK} row matrix of regressors
+  in SUR form.}
+  \item{\code{model}}{a list of the specification, including \code{type}
+  (\code{"VAR"}), \code{algorithm}, the name of the posterior simulation algorithm,
+  \code{k}, \code{p}, \code{m}, \code{s} and \code{n}, the numbers of endogenous
+  variables, lags, exogenous variables, their lags and deterministic terms,
+  \code{endogen}, the names of the endogenous variables, and \code{deterministic},
+  \code{structural}, \code{error}, \code{varsel}, \code{tvp}, \code{iterations},
+  \code{burnin} and, for \code{error = "ald"}, \code{quantile} as specified.}
+}
+The later steps of the workflow add the elements \code{priors}, \code{initial} and
+\code{posterior}.
 }
 \description{
 Produces the input for the estimation of a vector autoregressive (VAR) model.

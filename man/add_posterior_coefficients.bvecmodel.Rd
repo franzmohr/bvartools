@@ -17,7 +17,12 @@ If \code{NULL} (default), internal functions are used.}
 \item{...}{further arguments passed to or from other methods.}
 }
 \value{
-An object of class 'bvecmodel', with its posterior draws added.
+The object in \code{object} with the element \code{posterior} added, whose
+elements hold the draws after burn-in as \code{\link[coda]{mcmc}} objects with one
+row per draw and one column per parameter, in element \code{coeffs}: \code{beta}, the
+cointegration coefficients, \eqn{K_\beta r} columns or \eqn{T K_\beta r} for time
+varying cointegration, \code{a}, the loadings and the remaining coefficients, and the
+draws of the error term as described in \code{\link{add_posterior_coefficients.bvarmodel}}.
 }
 \description{
 Forwards model input to posterior simulation functions for vector error correction models.

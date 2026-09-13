@@ -29,8 +29,26 @@
 #' initial draws of the error variances of the state equations are always drawn
 #' from their prior distributions.
 #' 
-#' @return An object of class 'bvarmodel'.
-#' 
+#' @return The object in \code{object} with the element \code{initial} added, a list of
+#' starting values with
+#' \describe{
+#'   \item{\code{a}}{the coefficients, an \eqn{M \times 1} matrix, or \eqn{TM \times 1}
+#'   for TVP models, whose initial states and state precisions are held in
+#'   \code{a_init} and \code{a_sigma_inv}.}
+#'   \item{\code{u_sigma_inv}}{for \code{error = "wishart"}, the \eqn{K \times K} inverse
+#'   error covariance matrix.}
+#'   \item{\code{u_omega_inv}}{for gamma priors, the \eqn{K \times K} diagonal matrix of
+#'   error precisions.}
+#'   \item{\code{h}, \code{h_init}}{for stochastic volatility, the \eqn{T \times K}
+#'   log-volatilities and their initial states.}
+#'   \item{\code{psi}}{for \code{"gamma+covar"} and \code{"sv+covar"}, the error
+#'   covariance coefficients.}
+#'   \item{\code{a_lambda}}{with variable selection, the inclusion indicators.}
+#'   \item{\code{u_scale}, \code{w}}{for \code{error = "ald"}, the \eqn{K \times 1} scales
+#'   and the \eqn{T \times K} latent weights of the asymmetric Laplace distribution.}
+#' }
+#' Elements that do not apply to a model are absent.
+#'
 #' @examples 
 #' 
 #' # Load data

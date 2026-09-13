@@ -13,7 +13,10 @@ to \code{\link{add_posterior_coefficients}} and \code{\link{add_forecast_input}}
 \item{...}{arguments passed forward to method.}
 }
 \value{
-A list of class 'bvarmodel'.
+The object in \code{object} with \code{posterior$forecast} added, a
+\code{\link[coda]{mcmc}} object with one row per draw and \eqn{Kh} columns, stacked by
+period: the \eqn{K} variables of the first forecast period, then those of the second,
+and so on. \code{\link[=predict.bvarmodel]{predict}} summarises them.
 }
 \description{
 Calculates and adds forecasts to an object of class 'bvarmodel'.

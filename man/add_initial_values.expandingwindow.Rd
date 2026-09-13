@@ -13,7 +13,8 @@
 \item{...}{further arguments passed to or from other methods.}
 }
 \value{
-An object of class 'expandingwindow'.
+The object in \code{object} with initial values added to each of its models, as
+described in \code{\link{add_initial_values.bvarmodel}}.
 }
 \description{
 Adds initial values to a list of models by passing each element to

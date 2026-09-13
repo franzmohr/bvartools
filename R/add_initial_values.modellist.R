@@ -6,8 +6,9 @@
 #' @param object a list of class 'modellist' \code{\link{add_priors}}.
 #' @param ... further arguments passed to or from other methods.
 #' 
-#' @return An object of class 'modellist'.
-#' 
+#' @return The object in \code{object} with initial values added to each of its models, as
+#' described in \code{\link{add_initial_values.bvarmodel}}.
+#'
 #' @examples 
 #' 
 #' # Load data

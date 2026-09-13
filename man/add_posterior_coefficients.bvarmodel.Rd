@@ -17,7 +17,25 @@ If \code{NULL} (default), internalal functions are used.}
 \item{...}{further arguments passed to or from other methods.}
 }
 \value{
-An object of class 'bvarmodel', with its posterior draws added.
+The object in \code{object} with the element \code{posterior} added. Each of its
+elements is a list whose element \code{coeffs} holds the draws after burn-in as a
+\code{\link[coda]{mcmc}} object with one row per draw and one column per parameter:
+\describe{
+  \item{\code{a}}{the coefficients, \eqn{M} columns or \eqn{TM} for TVP models, in the
+  order of the columns of \code{data$train$z} with the contemporaneous coefficients
+  of structural models last. With variable selection element \code{lambda} holds the
+  inclusion indicators, and for TVP models element \code{sigma} the state variances.}
+  \item{\code{u_sigma_inv}}{the inverse error covariance matrix, \eqn{K^2} columns, or
+  \eqn{TK^2} if the error variances vary over time.}
+  \item{\code{u_omega_inv}}{for all errors but \code{"wishart"}, the error precisions,
+  \eqn{K} columns or \eqn{TK}.}
+  \item{\code{psi}}{for \code{"gamma+covar"} and \code{"sv+covar"}, the error covariance
+  coefficients.}
+  \item{\code{u_scale}}{for \code{error = "ald"}, the \eqn{K} scales of the asymmetric
+  Laplace distribution.}
+}
+Elements that do not apply to a model are absent or \code{NULL}. Note that
+\code{\link{bvar}} expects draws in the transposed orientation.
 }
 \description{
 Forwards model input to posterior simulation functions for vector autoregressive models.

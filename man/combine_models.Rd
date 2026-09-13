@@ -10,6 +10,10 @@ combine_models(...)
 \item{...}{One or multiple lists that contain either model objects or
 posterior objects.}
 }
+\value{
+A list of class 'modellist' that holds the models of all arguments in one flat
+list, in the order in which they were given.
+}
 \description{
 Convenience function that combines multiple models into one object.
 }

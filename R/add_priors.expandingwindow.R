@@ -7,8 +7,9 @@
 #' to \code{\link{use_expanding_window}}.
 #' @param ... further arguments passed to or from other methods.
 #' 
-#' @return A list of class 'expandingwindow'.
-#' 
+#' @return The object in \code{object} with priors added to each of its models, as
+#' described in \code{\link{add_priors.bvarmodel}}.
+#'
 #' @examples
 #' 
 #' data("us_macrodata")

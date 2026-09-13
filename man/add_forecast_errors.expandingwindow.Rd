@@ -14,7 +14,8 @@
 \item{...}{arguments passed forward to method.}
 }
 \value{
-A list of class 'expandingwindow'.
+The object in \code{object} with forecast errors added to each of its models, as
+described in \code{\link{add_forecast_errors.bvarmodel}}.
 }
 \description{
 Calculates and adds forecast errors for a list of Bayesian models.

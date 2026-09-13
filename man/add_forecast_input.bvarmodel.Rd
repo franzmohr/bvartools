@@ -27,7 +27,9 @@ See 'Details'.}
 \item{...}{arguments passed forward to method.}
 }
 \value{
-A list of class 'bvarmodel'.
+The object in \code{object} with \code{model$h} set to \code{n_ahead} and
+\code{data$forecast$x} added, the regressors of the forecast periods in the layout of
+\code{data$train$x}, one row per period.
 }
 \description{
 Generates and adds data matrices for forecast simulation to the elements of

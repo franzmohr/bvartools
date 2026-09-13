@@ -6,7 +6,9 @@
 #' @param test_sample a time-series object used as test data.
 #' @param ... arguments passed forward to method.
 #'
-#' @return A list of class 'bvarmodel'.
+#' @return The object in \code{object} with \code{posterior$forecast_errors} added, a
+#' \code{\link[coda]{mcmc}} object with one row per draw and \eqn{Kh} columns in the
+#' order of \code{posterior$forecast}. \code{\link{selection_criteria}} summarises them.
 #'
 #' @examples
 #' 

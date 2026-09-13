@@ -6,8 +6,11 @@
 #' \code{\link{add_posterior_coefficients}}.
 #' @param ... additional arguments.
 #' 
-#' @return An object of class 'bvecmodel'.
-#' 
+#' @return The object in \code{object} with \code{posterior$loglik} added, a
+#' \code{\link[coda]{mcmc}} object with one row per draw and one column per period of the
+#' training sample, holding the pointwise log-likelihood that
+#' \code{\link{selection_criteria}} uses.
+#'
 #' @examples
 #' 
 #' # Load data

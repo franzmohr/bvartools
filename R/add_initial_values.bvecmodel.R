@@ -33,8 +33,13 @@
 #' whether it is held there or drawn from the prior on it that
 #' \code{coint$rho_min} and \code{coint$rho_max} set up.
 #' 
-#' @return An object of class 'bvecmodel'.
-#' 
+#' @return The object in \code{object} with the element \code{initial} added, a list with
+#' the starting values \code{beta} of the cointegration coefficients, a
+#' \eqn{K_\beta r \times 1} matrix, or \eqn{T K_\beta r \times 1} with initial state
+#' \code{beta_init} for time varying cointegration, and the starting values of the
+#' remaining coefficients and the error term with the elements described in
+#' \code{\link{add_initial_values.bvarmodel}}.
+#'
 #' @examples
 #' 
 #' # Load data 

@@ -6,8 +6,9 @@
 #' to \code{\link{add_posterior_coefficients}} and \code{\link{add_forecast_input}}.
 #' @param ... arguments passed forward to method.
 #' 
-#' @return A list of class 'expandingwindow'.
-#' 
+#' @return The object in \code{object} with forecast draws added to each of its models, as
+#' described in \code{\link{add_posterior_forecasts.bvarmodel}}.
+#'
 #' @examples
 #' 
 #' # Load data

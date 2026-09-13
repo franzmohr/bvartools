@@ -13,7 +13,8 @@ to \code{\link{use_expanding_window}}.}
 \item{...}{further arguments passed to or from other methods.}
 }
 \value{
-A list of class 'expandingwindow'.
+The object in \code{object} with priors added to each of its models, as
+described in \code{\link{add_priors.bvarmodel}}.
 }
 \description{
 Adds prior specifications to a list of models by passing each element to

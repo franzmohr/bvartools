@@ -14,7 +14,10 @@ call to \code{\link{create_bvecmodel}}, optionally already estimated with
 \item{...}{arguments passed forward to method.}
 }
 \value{
-An object of class \code{'bvarmodel'}.
+An object of class \code{'bvarmodel'} with the elements \code{model} and
+\code{data} of the VAR in levels and, if \code{object} was estimated, element
+\code{posterior} with the transformed draws, including \code{loglik} if it was
+present. Priors and initial values are not carried over.
 }
 \description{
 An object of class \code{'bvecmodel'} is transformed into an object of class

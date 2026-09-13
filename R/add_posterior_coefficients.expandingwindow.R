@@ -5,8 +5,9 @@
 #' @param object an object of class 'expandingwindow'.
 #' @param ... further arguments passed to or from other methods.
 #' 
-#' @return A list of class 'expandingwindow'.
-#' 
+#' @return The object in \code{object} with posterior draws added to each of its models, as
+#' described in \code{\link{add_posterior_coefficients.bvarmodel}}.
+#'
 #' @examples
 #' 
 #' # Load data

@@ -5,8 +5,10 @@
 #' @param object an object of class 'modellist'.
 #' @param ... further arguments passed to or from other methods.
 #' 
-#' @return A list of class 'selcritlist'.
-#' 
+#' @return A list of class 'selcritlist' with one object of class 'selcrit' per model, as
+#' described in \code{\link{selection_criteria.bvarmodel}}, which
+#' \code{\link{choose_best_model}} compares.
+#'
 #' @examples
 #' 
 #' # Load data

@@ -91,9 +91,73 @@ inline arma::vec draw_normal_precision(const arma::mat &precision, const arma::v
     return mean + arma::solve(arma::trimatu(r), arma::randn<arma::vec>(precision.n_rows));
 }
 
-/// The same fill, once per period, into the block diagonal a time-varying Psi
-/// is stored as: block j of `Psi` is the contemporaneous matrix of period j,
-/// taken from column j of `psi`.
+/// How far apart consecutive periods' precisions sit in a column of posterior
+/// draws of u_sigma_inv: 0 where the column holds one k x k matrix for every
+/// period, k^2 where it holds one per period, stacked.
+///
+/// The log likelihood of a model whose precision moves has to score each period
+/// under that period's own. Reading the height rather than trusting a flag lets
+/// one loop serve a model either way -- VarTvpGamma's precision moves exactly
+/// when it has a covariance block -- and turns a draw of the wrong size into a
+/// message rather than a reshape that silently keeps the first block.
+inline arma::uword precision_stride(const arma::mat &u_sigma_inv, const int k, const int tt)
+{
+    const arma::uword kk = static_cast<arma::uword>(k) * k;
+    if (u_sigma_inv.n_rows == kk)
+    {
+        return 0;
+    }
+    if (u_sigma_inv.n_rows == kk * tt)
+    {
+        return kk;
+    }
+    throw std::invalid_argument(
+        "posterior draws of u_sigma_inv must have " + std::to_string(kk) +
+        " rows, one matrix per draw, or " + std::to_string(kk * tt) + ", one per period, got " +
+        std::to_string(u_sigma_inv.n_rows));
+}
+
+/// -log|Sigma| / 2 for the error covariance Sigma, read off its precision as
+/// log|Sigma^-1| / 2 -- the determinant term of a Gaussian log likelihood.
+///
+/// Through a Cholesky in logs. The spelling this replaced inverted the precision
+/// and took the log of the determinant of the result, which is a product of k
+/// variances: it underflows to zero, and the log to minus infinity, once k and
+/// the scale of the data are modest together -- twenty series with variances
+/// near 1e-16 are enough. Symmetrised on the way in for the reason
+/// draw_normal_precision() gives.
+inline double half_log_det_precision(const arma::mat &precision)
+{
+    double value = 0.0;
+    if (!arma::log_det_sympd(value, arma::mat(arma::symmatu(precision))))
+    {
+        throw std::runtime_error("a drawn error precision is not symmetric positive definite, so "
+                                 "the log likelihood has no determinant term for it");
+    }
+    return value / 2;
+}
+
+/// tt identity matrices of order k, stacked row-wise: rows j k .. (j + 1) k - 1
+/// are block j. The layout a time-varying Psi is held in, and the one the
+/// per-period error precisions of the time-varying models share.
+///
+/// It replaces the (k tt) square block diagonal both used to be spelled as,
+/// whose off-diagonal blocks were never read: 72 MB of zeros at k = 6,
+/// tt = 500, and a dense product of order (k tt)^3 wherever Psi' Omega Psi was
+/// formed from it rather than block by block.
+inline arma::mat stacked_identity(const int k, const int tt)
+{
+    arma::mat stack(static_cast<arma::uword>(k) * tt, k, arma::fill::zeros);
+    for (int j = 0; j < tt; j++)
+    {
+        stack.rows(j * k, (j + 1) * k - 1).diag().ones();
+    }
+    return stack;
+}
+
+/// The same fill, once per period, into the stack a time-varying Psi is held
+/// as: rows j k .. (j + 1) k - 1 of `Psi` are the contemporaneous matrix of
+/// period j, taken from column j of `psi`. See stacked_identity().
 ///
 /// Not expressed in terms of fill_strict_lower_triangle(): the destination is a
 /// submatrix of `Psi` rather than a matrix, and an Armadillo subview cannot be
@@ -105,7 +169,7 @@ inline void fill_psi_path(arma::mat &Psi, const arma::mat &psi, const int k)
     {
         for (int i = 1; i < k; i++)
         {
-            Psi.submat(j * k + i, j * k, j * k + i, j * k + i - 1) =
+            Psi.submat(j * k + i, 0, j * k + i, i - 1) =
                 arma::trans(psi.submat(i * (i - 1) / 2, j, (i + 1) * i / 2 - 1, j));
         }
     }

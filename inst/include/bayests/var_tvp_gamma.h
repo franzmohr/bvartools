@@ -42,9 +42,10 @@ public:
                            Reporter &reporter) const;
 
     /// Pointwise log likelihood, draws x periods. `draws.a` carries the whole
-    /// coefficient path -- every period is evaluated under its own
-    /// coefficients -- while `draws.u_sigma_inv` carries the last period only,
-    /// which is the precision this model scores every observation under.
+    /// coefficient path, so every period is evaluated under its own
+    /// coefficients. `draws.u_sigma_inv` carries one k x k block per period when
+    /// a covariance block makes the precision move and the single matrix of each
+    /// draw when it does not, and every period is scored under its own.
     arma::mat log_likelihood(const VarTvpGammaInput &input,
                              const VarTvpGammaDraws &draws) const;
 };

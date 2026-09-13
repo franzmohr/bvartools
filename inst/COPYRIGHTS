@@ -50,6 +50,7 @@ BSD 3-Clause portion
     src/core/algorithms/bvs.h
     src/core/algorithms/chan_jeliazkov_2009.cpp
     src/core/algorithms/chan_jeliazkov_2009.h
+    src/core/algorithms/inclusion_probability.h
     src/core/algorithms/inverse_gaussian.cpp
     src/core/algorithms/inverse_gaussian.h
     src/core/algorithms/kalman_durbin_koopman_2002.cpp

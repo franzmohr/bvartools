@@ -6,8 +6,7 @@
 
 #include "bayests/arma.h"
 #include "bayests/priors.h"
-
-#include <cmath>
+#include "core/algorithms/inclusion_probability.h"
 
 namespace bayests::core
 {
@@ -16,11 +15,11 @@ namespace bayests::core
 ///
 /// One inclusion indicator per selected coefficient, swept in a fresh random
 /// order every iteration. The indicator masks the regressors themselves and is
-/// accepted or rejected on a likelihood ratio, so exclusion is exact -- a
-/// coefficient that is out contributes nothing. That is the difference from
-/// SSVS, in ssvs.h, which leaves the regressors alone and instead moves the
-/// prior precision between a spike and a slab; the two are alternatives, chosen
-/// by VarSelection, and no sampler runs both at once.
+/// drawn from its full conditional, so exclusion is exact -- a coefficient that
+/// is out contributes nothing. That is the difference from SSVS, in ssvs.h,
+/// which leaves the regressors alone and instead moves the prior precision
+/// between a spike and a slab; the two are alternatives, chosen by VarSelection,
+/// and no sampler runs both at once. Korobilis (2013).
 ///
 /// A sampler holds one block per coefficient vector it selects over -- in
 /// practice one for the lag coefficients `a` and one for the contemporaneous
@@ -28,11 +27,11 @@ namespace bayests::core
 /// between draws used to be a dozen loose locals per block, distinguished only
 /// by an `a_` or `psi_` prefix.
 ///
-/// Every RNG call the scheme makes happens inside bvs_sweep(), in the order the
-/// samplers consumed them before this was factored out. That ordering is
-/// load-bearing: the regression harness in test/ pins the seed and fingerprints
-/// the output, so a draw added, dropped or reordered here shows up as a changed
-/// fingerprint on every fixture that exercises selection.
+/// Every RNG call the scheme makes happens inside bvs_sweep(): the permutation,
+/// then one uniform per selected position. The regression harness in test/ pins
+/// the seed and fingerprints the output, so a draw added, dropped or reordered
+/// here shows up as a changed fingerprint on every fixture that exercises
+/// selection.
 
 /// What a position stands for when BVS switches it off.
 enum class BvsScope
@@ -50,10 +49,9 @@ enum class BvsScope
 /// State a BVS sweep carries between draws.
 struct BvsBlock
 {
-    /// Inclusion indicators as they stood at the end of the last sweep. Read by
-    /// the prescreen and only refreshed once the sweep is over, so a decision
-    /// taken early in a sweep does not change the prescreen for a position
-    /// visited later in the same sweep.
+    /// Inclusion indicators as they stood at the end of the last sweep, which is
+    /// what the sampler masks its regressors with before drawing the
+    /// coefficients. Refreshed once the sweep is over.
     arma::vec lambda;
 
     /// diagmat(lambda), which is what actually masks the regressors and the
@@ -109,8 +107,27 @@ inline void switch_position_on(Coefficients &theta, const Coefficients &coef,
 
 } // namespace detail
 
-/// One BVS sweep: visit the selected positions in random order and accept or
-/// reject each one on a likelihood ratio against the current mask.
+/// One BVS sweep: visit the selected positions in random order and draw each
+/// indicator from its full conditional given the data and every other
+/// indicator.
+///
+/// With l0 and l1 the log likelihood of the mask with this position off and on,
+/// each plus the log prior of that state, the conditional probability of
+/// inclusion is exp(l1) / (exp(l0) + exp(l1)), and that is the Bernoulli draw
+/// made. Every indicator is drawn, and each is conditioned on the mask as it
+/// stands at that point of the sweep -- including the positions already visited
+/// -- which is what makes the sweep a Gibbs scan whose stationary distribution
+/// is the posterior over the indicators.
+///
+/// **The spelling this replaced did not have that stationary distribution.** It
+/// set an indicator to one when l1 - l0 exceeded the log of a uniform, which is
+/// inclusion with probability min(1, exp(l1 - l0)) rather than the logistic of
+/// it, and it visited a position only with the prior probability of the state
+/// the position was already in. Under a flat likelihood and a prior inclusion
+/// probability of one half, a position once included was never excluded again.
+/// Both came from bvartools' original bvs.cpp. It also scored every candidate
+/// against the mask as it stood before the sweep began, so no indicator saw the
+/// others' new values within a sweep.
 ///
 /// `coef` is masked in place on the way out, so it holds the drawn coefficients
 /// with the excluded positions zeroed -- a vector for a constant-coefficient
@@ -123,33 +140,20 @@ inline void switch_position_on(Coefficients &theta, const Coefficients &coef,
 /// residual is a single matrix product for a constant-coefficient model and a
 /// loop over periods for a time-varying one, and the precision is dense in some
 /// models and sparse in others. The sweep adds the log prior itself.
-///
-/// Two candidates are evaluated per surviving position -- the mask with this
-/// position forced off, and with it forced on -- against the mask as it stood
-/// before the sweep began.
 template <class Coefficients, class LogLikelihood>
 void bvs_sweep(BvsBlock &blk, Coefficients &coef, const BvsScope scope,
                LogLikelihood &&log_likelihood)
 {
     blk.order = arma::shuffle(blk.include);
 
-    const Coefficients masked = blk.lambda_diag * coef;
+    // The coefficients under the current mask, kept in step with every
+    // decision the sweep makes so that the next position is scored against it.
+    Coefficients masked = blk.lambda_diag * coef;
     Coefficients candidate;
 
     for (arma::uword j = 0; j < blk.order.n_elem; j++)
     {
         const arma::uword pos = blk.order(j);
-
-        // Prescreen: a position only gets the full likelihood treatment with
-        // probability equal to the prior of the state it is currently in. This
-        // is the one draw that happens whether or not the position is
-        // revisited, so it is taken before anything else.
-        const double lprior_current =
-            (blk.lambda(pos) == 1) ? blk.lprior_1(pos) : blk.lprior_0(pos);
-        if (std::log(arma::randu()) >= lprior_current)
-        {
-            continue;
-        }
 
         candidate = masked;
         detail::switch_position_off(candidate, pos, scope);
@@ -159,10 +163,22 @@ void bvs_sweep(BvsBlock &blk, Coefficients &coef, const BvsScope scope,
         detail::switch_position_on(candidate, coef, pos, scope);
         const double l1 = log_likelihood(candidate) + blk.lprior_1(pos);
 
-        blk.lambda_diag(pos, pos) = (l1 - l0 >= std::log(arma::randu())) ? 1.0 : 0.0;
+        // A NaN probability -- a likelihood that is not a number -- compares
+        // false and excludes, the same as an impossible inclusion.
+        const bool included = arma::randu() < inclusion_probability(l1 - l0);
+
+        blk.lambda_diag(pos, pos) = included ? 1.0 : 0.0;
+        if (included)
+        {
+            detail::switch_position_on(masked, coef, pos, scope);
+        }
+        else
+        {
+            detail::switch_position_off(masked, pos, scope);
+        }
     }
 
-    coef = blk.lambda_diag * coef;
+    coef = masked;
     blk.lambda = arma::vectorise(blk.lambda_diag.diag());
 }
 

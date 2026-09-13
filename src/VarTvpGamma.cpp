@@ -126,8 +126,8 @@ bayests::VarTvpGammaDraws read_draws_for_forecast(const Rcpp::List &object,
 }
 
 /// Every period is evaluated under its own coefficients, so `a` is the whole
-/// path here; the precision is the one period this model scores everything
-/// under.
+/// path here. So is the precision: with a covariance block it moves with Psi,
+/// and the log likelihood scores every period under its own.
 bayests::VarTvpGammaDraws read_draws_for_loglik(const Rcpp::List &object,
                                                 const bayests::VarTvpGammaInput &input) {
 
@@ -143,14 +143,7 @@ bayests::VarTvpGammaDraws read_draws_for_loglik(const Rcpp::List &object,
     read_draws_if_present(Rcpp::List(posterior["a"]), "coeffs", draws.a);
   }
   if (has(posterior, "u_sigma_inv")) {
-    const Rcpp::List block = posterior["u_sigma_inv"];
-    if (input.use_psi()) {
-      read_draws_last_period_if_present(block, "coeffs", input.train.periods(input.spec.k),
-                                        static_cast<arma::uword>(input.spec.k * input.spec.k),
-                                        draws.u_sigma_inv);
-    } else {
-      read_draws_if_present(block, "coeffs", draws.u_sigma_inv);
-    }
+    read_draws_if_present(Rcpp::List(posterior["u_sigma_inv"]), "coeffs", draws.u_sigma_inv);
   }
 
   return draws;

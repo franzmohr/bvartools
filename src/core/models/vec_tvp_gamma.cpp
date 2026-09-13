@@ -25,6 +25,7 @@ using core::coint_state_transition;
 using core::draw_coint_rho;
 using core::draw_normal_precision;
 using core::fill_psi_path;
+using core::stacked_identity;
 using core::fill_strict_lower_triangle;
 using core::fill_z_alpha;
 using core::fill_z_beta;
@@ -187,7 +188,7 @@ VecTvpGammaDraws VecTvpGammaSampler::draw_coefficients(const VecTvpGammaInput &i
         psi_lag = psi;
         psi_z = arma::zeros<arma::mat>(tt * (k - 1), n_psi);
         psi_B = arma::eye<arma::mat>(n_psi, n_psi);
-        Psi = arma::eye<arma::mat>(k * tt, k * tt);
+        Psi = stacked_identity(k, tt);
 
         out.psi = arma::mat(kk * tt, iterations);
         out.psi_sigma = arma::mat(n_psi, iterations);
@@ -238,9 +239,9 @@ VecTvpGammaDraws VecTvpGammaSampler::draw_coefficients(const VecTvpGammaInput &i
             if (use_psi)
             {
                 u_sigma_inv_blocks.rows(k * i, k * (i + 1) - 1) =
-                    arma::trans(Psi.submat(k * i, k * i, k * (i + 1) - 1, k * (i + 1) - 1)) *
+                    arma::trans(Psi.rows(k * i, k * (i + 1) - 1)) *
                     u_omega_inv *
-                    Psi.submat(k * i, k * i, k * (i + 1) - 1, k * (i + 1) - 1);
+                    Psi.rows(k * i, k * (i + 1) - 1);
             }
             else
             {
@@ -436,7 +437,7 @@ VecTvpGammaDraws VecTvpGammaSampler::draw_coefficients(const VecTvpGammaInput &i
             fill_psi_path(Psi, psi, k);
             for (int j = 0; j < tt; j++)
             {
-                u.col(j) = Psi.submat(k * j, k * j, k * (j + 1) - 1, k * (j + 1) - 1) * u.col(j);
+                u.col(j) = Psi.rows(k * j, k * (j + 1) - 1) * u.col(j);
             }
         }
 
@@ -483,7 +484,7 @@ VecTvpGammaDraws VecTvpGammaSampler::draw_coefficients(const VecTvpGammaInput &i
                 for (int i = 0; i < tt; i++)
                 {
                     out.psi.submat(i * kk, draw_pos, (i + 1) * kk - 1, draw_pos) = arma::vectorise(
-                        Psi.submat(i * k, i * k, (i + 1) * k - 1, (i + 1) * k - 1));
+                        Psi.rows(i * k, (i + 1) * k - 1));
                 }
 
                 out.psi_sigma.col(draw_pos) = arma::vectorise(psi_sigma.diag());
@@ -584,22 +585,31 @@ arma::mat VecTvpGammaSampler::log_likelihood(const VecTvpGammaInput &input,
 
     arma::mat loglik(draws, tt);
 
-    // One precision per draw, not one per period -- the same convention
-    // VarTvpGamma follows, and what read_loglik_coefficients() hands over: the
-    // last in-sample precision when a covariance block makes it move, and the
-    // single matrix of the draw when it does not.
+    // Every period under its own precision where a covariance block makes it
+    // move, and under the draw's single matrix where it does not; the height of
+    // what read_loglik_coefficients() hands over says which. Scoring the whole
+    // sample under the last period's, as this used to, is the likelihood of a
+    // model whose covariance block does not drift.
     const arma::mat diag_k = arma::eye(k, k);
     const double part_a = -k * std::log(2 * arma::datum::pi) / 2;
     arma::mat u_sigma_inv, z_period;
     arma::vec resid;
+    const arma::uword kk = static_cast<arma::uword>(k) * k;
+    const arma::uword u_stride = core::precision_stride(coefficients.u_sigma_inv, k, tt);
+    double part_b = 0.0;
 
     for (arma::uword draw = 0; draw < draws; draw++)
     {
-        u_sigma_inv = arma::reshape(coefficients.u_sigma_inv.col(draw), k, k);
-        const double part_b = -std::log(arma::det(arma::solve(u_sigma_inv, diag_k))) / 2;
-
         for (int i = 0; i < tt; i++)
         {
+            if (i == 0 || u_stride != 0)
+            {
+                const arma::uword first = static_cast<arma::uword>(i) * u_stride;
+                u_sigma_inv = arma::reshape(
+                    coefficients.u_sigma_inv.submat(first, draw, first + kk - 1, draw), k, k);
+                part_b = core::half_log_det_precision(u_sigma_inv);
+            }
+
             resid = ymat.col(i);
 
             if (use_a)

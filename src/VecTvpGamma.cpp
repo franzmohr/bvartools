@@ -126,7 +126,9 @@ void read_precision(const Rcpp::List &posterior, const bayests::VecTvpGammaInput
 }
 
 /// Every period is evaluated under its own coefficients, so both paths are read
-/// whole.
+/// whole. So is the precision, which read_precision() would slice to the last
+/// period when there is a covariance block: the log likelihood scores every
+/// period under its own.
 bayests::VecTvpGammaDraws read_draws_for_loglik(const Rcpp::List &object,
                                                 const bayests::VecTvpGammaInput &input) {
 
@@ -143,7 +145,9 @@ bayests::VecTvpGammaDraws read_draws_for_loglik(const Rcpp::List &object,
   if (has(posterior, "beta")) {
     read_draws_if_present(Rcpp::List(posterior["beta"]), "coeffs", draws.beta);
   }
-  read_precision(posterior, input, draws);
+  if (has(posterior, "u_sigma_inv")) {
+    read_draws_if_present(Rcpp::List(posterior["u_sigma_inv"]), "coeffs", draws.u_sigma_inv);
+  }
 
   return draws;
 }

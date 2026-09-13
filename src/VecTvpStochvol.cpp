@@ -114,8 +114,8 @@ bayests::VecTvpStochvolInput read_input(const Rcpp::List &object) {
   return input;
 }
 
-/// Every period is evaluated under its own coefficients, so both paths are read
-/// whole; the precision is the one period this model scores everything under.
+/// Every period is evaluated under its own coefficients and its own precision,
+/// so both paths and the precision are read whole.
 bayests::VecTvpStochvolDraws read_draws_for_loglik(const Rcpp::List &object,
                                                    const bayests::VecTvpStochvolInput &input) {
 
@@ -126,7 +126,6 @@ bayests::VecTvpStochvolDraws read_draws_for_loglik(const Rcpp::List &object,
   }
 
   const Rcpp::List posterior = object["posterior"];
-  const arma::uword k = static_cast<arma::uword>(input.spec.k);
 
   if (has(posterior, "a")) {
     read_draws_if_present(Rcpp::List(posterior["a"]), "coeffs", draws.a);
@@ -135,9 +134,7 @@ bayests::VecTvpStochvolDraws read_draws_for_loglik(const Rcpp::List &object,
     read_draws_if_present(Rcpp::List(posterior["beta"]), "coeffs", draws.beta);
   }
   if (has(posterior, "u_sigma_inv")) {
-    read_draws_last_period_if_present(Rcpp::List(posterior["u_sigma_inv"]), "coeffs",
-                                      input.train.periods(input.spec.k), k * k,
-                                      draws.u_sigma_inv);
+    read_draws_if_present(Rcpp::List(posterior["u_sigma_inv"]), "coeffs", draws.u_sigma_inv);
   }
 
   return draws;

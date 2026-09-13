@@ -26,6 +26,7 @@ using core::coint_state_transition;
 using core::draw_coint_rho;
 using core::draw_normal_precision;
 using core::fill_psi_path;
+using core::stacked_identity;
 using core::fill_strict_lower_triangle;
 using core::fill_z_alpha;
 using core::fill_z_beta;
@@ -178,7 +179,7 @@ VecTvpStochvolDraws VecTvpStochvolSampler::draw_coefficients(const VecTvpStochvo
 
     std::optional<BvsBlock> psi_bvs;
     arma::vec psi_theta_res;
-    arma::mat Psi_lambda, psi_u_omega_inv_diag;
+    arma::mat Psi_lambda;
 
     if (use_psi)
     {
@@ -186,7 +187,7 @@ VecTvpStochvolDraws VecTvpStochvolSampler::draw_coefficients(const VecTvpStochvo
         psi_lag = psi;
         psi_z = arma::zeros<arma::mat>(tt * (k - 1), n_psi);
         psi_B = arma::eye<arma::mat>(n_psi, n_psi);
-        Psi = arma::eye<arma::mat>(k * tt, k * tt);
+        Psi = stacked_identity(k, tt);
         psi_u_omega = arma::zeros<arma::mat>((k - 1) * tt, k - 1);
 
         out.psi = arma::mat(kk * tt, iterations);
@@ -209,7 +210,6 @@ VecTvpStochvolDraws VecTvpStochvolSampler::draw_coefficients(const VecTvpStochvo
             Psi_lambda = arma::eye<arma::mat>(k, k);
             psi_bvs.emplace(input.initial.psi_lambda, input.psi_varsel_prior);
             psi_theta_res = arma::zeros<arma::vec>((k - 1) * tt);
-            psi_u_omega_inv_diag = arma::zeros<arma::mat>((k - 1) * tt, (k - 1) * tt);
         }
     }
 
@@ -230,10 +230,32 @@ VecTvpStochvolDraws VecTvpStochvolSampler::draw_coefficients(const VecTvpStochvo
     const arma::mat &h0_prior_v_inv = input.u_sigma_prior.state.initial_state.v_inv;
     arma::mat h0_post_v, h0_sigma_inv;
 
-    arma::mat u_omega_inv_diag = arma::eye<arma::mat>(k * tt, k * tt);
-    u_omega_inv_diag.diag() = 1 / arma::exp(arma::vectorise(arma::trans(h)));
-    arma::mat u_sigma_inv_diag = use_psi ? arma::mat(arma::trans(Psi) * u_omega_inv_diag * Psi)
-                                         : u_omega_inv_diag;
+    // Two per-period precisions: that of each orthogonalised error, tt x k like
+    // h, and the error precision itself, one k x k block per period stacked
+    // row-wise. See var_tvp_gamma.cpp for why neither
+    // is the (k tt) square block diagonal: every reader is per-period already,
+    // and with a covariance block Psi' Omega Psi over the whole diagonal was a
+    // dense product of order (k tt)^3 on every draw.
+    arma::mat u_omega_inv = 1 / arma::exp(h);
+    arma::mat u_sigma_inv_blocks(k * tt, k);
+    const auto refresh_u_sigma_inv_blocks = [&]()
+    {
+        for (int i = 0; i < tt; i++)
+        {
+            const arma::mat omega_inv_i = arma::diagmat(u_omega_inv.row(i));
+            if (use_psi)
+            {
+                u_sigma_inv_blocks.rows(k * i, k * (i + 1) - 1) =
+                    arma::trans(Psi.rows(k * i, k * (i + 1) - 1)) * omega_inv_i *
+                    Psi.rows(k * i, k * (i + 1) - 1);
+            }
+            else
+            {
+                u_sigma_inv_blocks.rows(k * i, k * (i + 1) - 1) = omega_inv_i;
+            }
+        }
+    };
+    refresh_u_sigma_inv_blocks();
     arma::mat u_sigma = arma::zeros<arma::mat>(k * tt, k);
 
     out.u_omega_inv = arma::mat(k * tt, iterations);
@@ -252,7 +274,7 @@ VecTvpStochvolDraws VecTvpStochvolSampler::draw_coefficients(const VecTvpStochvo
             for (int i = 0; i < tt; i++)
             {
                 u_sigma.rows(k * i, k * (i + 1) - 1) = arma::solve(
-                    u_sigma_inv_diag.submat(k * i, k * i, k * (i + 1) - 1, k * (i + 1) - 1),
+                    u_sigma_inv_blocks.rows(k * i, k * (i + 1) - 1),
                     diag_k);
             }
 
@@ -295,9 +317,15 @@ VecTvpStochvolDraws VecTvpStochvolSampler::draw_coefficients(const VecTvpStochvo
                             y.subvec(i * k, (i + 1) * k - 1) -
                             z.rows(i * k, (i + 1) * k - 1) * theta.col(i);
                     }
-                    return -arma::as_scalar(arma::trans(a_theta_res) * u_sigma_inv_diag *
-                                            a_theta_res) /
-                           2;
+                    // sum_t r_t' S_t r_t, block by block.
+                    double quadratic_form = 0.0;
+                    for (int i = 0; i < tt; i++)
+                    {
+                        const arma::vec r = a_theta_res.subvec(i * k, (i + 1) * k - 1);
+                        quadratic_form +=
+                            arma::dot(r, u_sigma_inv_blocks.rows(k * i, k * (i + 1) - 1) * r);
+                    }
+                    return -quadratic_form / 2;
                 });
             }
 
@@ -372,9 +400,7 @@ VecTvpStochvolDraws VecTvpStochvolSampler::draw_coefficients(const VecTvpStochvo
             for (int j = 0; j < tt; j++)
             {
                 psi_u_omega.rows(j * (k - 1), (j + 1) * (k - 1) - 1) =
-                    u_omega_inv_diag.submat(j * k + 1, j * k + 1, (j + 1) * k - 1, (j + 1) * k - 1);
-                psi_u_omega.rows(j * (k - 1), (j + 1) * (k - 1) - 1).diag() =
-                    1 / psi_u_omega.rows(j * (k - 1), (j + 1) * (k - 1) - 1).diag();
+                    arma::diagmat(1 / u_omega_inv.submat(j, 1, j, k - 1));
             }
 
             if (use_varsel_psi)
@@ -408,12 +434,12 @@ VecTvpStochvolDraws VecTvpStochvolSampler::draw_coefficients(const VecTvpStochvo
             if (psi_bvs)
             {
                 psi_z = psi_z_bvs;
-                for (int i = 0; i < tt; i++)
-                {
-                    psi_u_omega_inv_diag.submat(i * (k - 1), i * (k - 1), (i + 1) * (k - 1) - 1,
-                                                (i + 1) * (k - 1) - 1) =
-                        u_omega_inv_diag.submat(i * k + 1, i * k + 1, (i + 1) * k - 1, (i + 1) * k - 1);
-                }
+
+                // Omega is diagonal, so the quadratic form against it is a
+                // weighted sum of squares: the weights are u_omega_inv's trailing
+                // k - 1 columns, laid out period by period as psi_theta_res is.
+                const arma::vec psi_weights =
+                    arma::vectorise(arma::trans(u_omega_inv.cols(1, k - 1)));
 
                 // path_row, for the reason spelled out at the same call in
                 // var_tvp_gamma.cpp: element scope reached period 0 alone.
@@ -424,16 +450,14 @@ VecTvpStochvolDraws VecTvpStochvolSampler::draw_coefficients(const VecTvpStochvo
                             psi_y.col(i) -
                             psi_z.rows(i * (k - 1), (i + 1) * (k - 1) - 1) * theta.col(i);
                     }
-                    return -arma::as_scalar(arma::trans(psi_theta_res) * psi_u_omega_inv_diag *
-                                            psi_theta_res) /
-                           2;
+                    return -arma::dot(psi_weights, arma::square(psi_theta_res)) / 2;
                 });
             }
 
             fill_psi_path(Psi, psi, k);
             for (int j = 0; j < tt; j++)
             {
-                u.col(j) = Psi.submat(k * j, k * j, k * (j + 1) - 1, k * (j + 1) - 1) * u.col(j);
+                u.col(j) = Psi.rows(k * j, k * (j + 1) - 1) * u.col(j);
             }
         }
 
@@ -459,17 +483,10 @@ VecTvpStochvolDraws VecTvpStochvolSampler::draw_coefficients(const VecTvpStochvo
         h_init = draw_normal_precision(h0_post_v,
                                        h0_prior_v_inv * h0_prior_mu + h0_sigma_inv * arma::trans(h.row(0)));
 
-        u_omega_inv_diag.diag() = 1 / arma::exp(arma::vectorise(arma::trans(h)));
+        u_omega_inv = 1 / arma::exp(h);
 
         // Update u_sigma_inv
-        if (use_psi)
-        {
-            u_sigma_inv_diag = arma::trans(Psi) * u_omega_inv_diag * Psi;
-        }
-        else
-        {
-            u_sigma_inv_diag.diag() = u_omega_inv_diag.diag();
-        }
+        refresh_u_sigma_inv_blocks();
 
         // Store draws
         if (input.spec.keeps(draw))
@@ -500,7 +517,7 @@ VecTvpStochvolDraws VecTvpStochvolSampler::draw_coefficients(const VecTvpStochvo
                 for (int i = 0; i < tt; i++)
                 {
                     out.psi.submat(i * kk, draw_pos, (i + 1) * kk - 1, draw_pos) = arma::vectorise(
-                        Psi.submat(i * k, i * k, (i + 1) * k - 1, (i + 1) * k - 1));
+                        Psi.rows(i * k, (i + 1) * k - 1));
                 }
 
                 out.psi_sigma.col(draw_pos) = arma::vectorise(psi_sigma.diag());
@@ -513,13 +530,12 @@ VecTvpStochvolDraws VecTvpStochvolSampler::draw_coefficients(const VecTvpStochvo
             }
 
             // Measurement error
-            out.u_omega_inv.col(draw_pos) = u_omega_inv_diag.diag();
+            out.u_omega_inv.col(draw_pos) = arma::vectorise(arma::trans(u_omega_inv));
 
             for (int i = 0; i < tt; i++)
             {
                 out.u_sigma_inv.submat(i * kk, draw_pos, (i + 1) * kk - 1, draw_pos) =
-                    arma::vectorise(u_sigma_inv_diag.submat(i * k, i * k, (i + 1) * k - 1,
-                                                            (i + 1) * k - 1));
+                    arma::vectorise(u_sigma_inv_blocks.rows(i * k, (i + 1) * k - 1));
             }
         }
     }
@@ -604,18 +620,30 @@ arma::mat VecTvpStochvolSampler::log_likelihood(const VecTvpStochvolInput &input
     // columns of the regressors are beta' w_{t-1}, so they differ by period and
     // by draw. The block is rebuilt in place, into a copy of the period's
     // regressors, and the data columns are copied along with it.
+    //
+    // Every period is scored under its own precision as well. The stochastic
+    // volatility moves it, and scoring the whole sample under the last period's,
+    // as this used to, is the likelihood of a model whose volatility does not.
     const arma::mat diag_k = arma::eye(k, k);
     const double part_a = -k * std::log(2 * arma::datum::pi) / 2;
     arma::mat u_sigma_inv, z_period;
     arma::vec resid;
+    const arma::uword kk = static_cast<arma::uword>(k) * k;
+    const arma::uword u_stride = core::precision_stride(coefficients.u_sigma_inv, k, tt);
+    double part_b = 0.0;
 
     for (arma::uword draw = 0; draw < draws; draw++)
     {
-        u_sigma_inv = arma::reshape(coefficients.u_sigma_inv.col(draw), k, k);
-        const double part_b = -std::log(arma::det(arma::solve(u_sigma_inv, diag_k))) / 2;
-
         for (int i = 0; i < tt; i++)
         {
+            if (i == 0 || u_stride != 0)
+            {
+                const arma::uword first = static_cast<arma::uword>(i) * u_stride;
+                u_sigma_inv = arma::reshape(
+                    coefficients.u_sigma_inv.submat(first, draw, first + kk - 1, draw), k, k);
+                part_b = core::half_log_det_precision(u_sigma_inv);
+            }
+
             resid = ymat.col(i);
 
             if (use_a)

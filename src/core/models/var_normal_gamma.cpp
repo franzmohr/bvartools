@@ -129,12 +129,6 @@ VarNormalGammaDraws VarNormalGammaSampler::draw_coefficients(const VarNormalGamm
 
             if (use_bvs)
             {
-                // Captured before the first draw fills psi_z, so this is the
-                // zero matrix -- and the selection step below restores it as
-                // such. Kept as it stands: changing what the BVS residuals are
-                // measured against would move the posterior, which is a
-                // modelling decision rather than part of this split.
-                psi_z_bvs = psi_z;
                 psi_bvs.emplace(input.initial.psi_lambda, input.psi_varsel_prior);
             }
         }
@@ -211,6 +205,18 @@ VarNormalGammaDraws VarNormalGammaSampler::draw_coefficients(const VarNormalGamm
         {
             psi_y = arma::vectorise(u.rows(1, k - 1));
             build_psi_regressors(psi_z, u);
+
+            // BVS draws psi against the regressors masked by the indicators the
+            // last sweep left, and scores its candidates against the unmasked
+            // ones. Kept here, once they hold this draw's errors: kept before
+            // the chain started, as they used to be, they were the zero matrix,
+            // every candidate scored the same and the data never reached the
+            // indicators.
+            if (psi_bvs)
+            {
+                psi_z_bvs = psi_z;
+                psi_z = psi_z * psi_bvs->lambda_diag;
+            }
 
             // Equation i is explained by the errors above it, so the psi block
             // carries k - 1 rows per period rather than k, and its precision is
@@ -433,13 +439,12 @@ arma::mat VarNormalGammaSampler::log_likelihood(const VarNormalGammaInput &input
     }
 
     // Calculate log likelihood
-    const arma::mat diag_k = arma::eye(k, k);
     const double part_a = -k * std::log(2 * arma::datum::pi) / 2;
     arma::mat u_sigma_inv;
     for (arma::uword draw = 0; draw < draws; draw++)
     {
         u_sigma_inv = arma::reshape(coefficients.u_sigma_inv.col(draw), k, k);
-        const double part_b = -std::log(arma::det(arma::solve(u_sigma_inv, diag_k))) / 2;
+        const double part_b = core::half_log_det_precision(u_sigma_inv);
         for (int i = 0; i < tt; i++)
         {
             const double part_c = -arma::as_scalar(arma::trans(u.submat(i * k, draw, (i + 1) * k - 1, draw)) * u_sigma_inv * u.submat(i * k, draw, (i + 1) * k - 1, draw)) / 2;

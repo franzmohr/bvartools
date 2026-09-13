@@ -340,7 +340,6 @@ arma::mat VecKlgs2010Sampler::log_likelihood(const VecKlgs2010Input &input,
     const int tt = static_cast<int>(input.train.periods(k));
     const arma::mat y_t = response_by_period(input.train, k, tt);
     const arma::mat w_t = arma::trans(input.train.w);
-    const arma::mat diag_k = arma::eye<arma::mat>(k, k);
 
     arma::mat design_t;
     if (use_a)
@@ -368,7 +367,7 @@ arma::mat VecKlgs2010Sampler::log_likelihood(const VecKlgs2010Input &input,
         }
 
         const arma::mat u_sigma_inv = arma::reshape(coefficients.u_sigma_inv.col(draw), k, k);
-        const double part_b = -std::log(arma::det(arma::solve(u_sigma_inv, diag_k))) / 2;
+        const double part_b = core::half_log_det_precision(u_sigma_inv);
         for (int i = 0; i < tt; i++)
         {
             const double part_c =

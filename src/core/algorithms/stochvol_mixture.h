@@ -45,8 +45,11 @@ namespace bayests::core
 /// cannot disagree with the tables. `-DARMA_NO_DEBUG`, which an embedded host
 /// sets, removes the size check that would otherwise catch it.
 ///
-/// The means are the published ones less 1.2704, the mean of the log
-/// chi-squared distribution, so that the mixture approximates it centred.
+/// The means are those of the log chi-squared distribution itself, uncentred.
+/// Kim, Shephard and Chib (1998) print theirs before subtracting 1.2704, that
+/// distribution's mean, so `stochvol_ksc_1998.cpp` holds them with it
+/// subtracted; Omori, Chib, Shephard and Nakajima (2007) print theirs already in
+/// that form, and `stochvol_ocsn_2007.cpp` holds them as printed.
 struct NormalMixture
 {
     arma::rowvec weight;

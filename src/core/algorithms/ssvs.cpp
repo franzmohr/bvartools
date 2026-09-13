@@ -3,6 +3,10 @@
 
 #include "core/algorithms/ssvs.h"
 
+#include "core/algorithms/inclusion_probability.h"
+
+#include <cmath>
+
 namespace bayests::core
 {
 
@@ -19,24 +23,26 @@ SsvsBlock::SsvsBlock(const arma::vec &initial_lambda, const VarSelPrior &prior)
 
 void ssvs_sweep(SsvsBlock &blk, const arma::vec &coef, arma::mat &prior_v_inv)
 {
-    blk.order = arma::shuffle(blk.include); // Reorder positions of variable selection
-
-    // Obtain inclusion posterior: the two mixture components evaluated at the
-    // current draw, weighted by the prior.
-    blk.u0 = 1 / blk.tau0 % arma::exp(-(arma::square(coef) / (2 * blk.tau0sq))) % (1 - blk.inprior);
-    blk.u1 = 1 / blk.tau1 % arma::exp(-(arma::square(coef) / (2 * blk.tau1sq))) % blk.inprior;
-    blk.post_incl = blk.u1 / (blk.u0 + blk.u1);
-
-    // Draw inclusion parameters in random order
-    for (arma::uword i = 0; i < blk.order.n_elem; i++)
+    for (arma::uword i = 0; i < blk.include.n_elem; i++)
     {
-        const arma::uword pos = blk.order(i);
-        const double draw = (arma::randu() < blk.post_incl(pos)) ? 1.0 : 0.0;
-        blk.lambda(pos) = draw;
+        const arma::uword pos = blk.include(i);
+        const double square = coef(pos) * coef(pos);
+
+        // The two mixture components evaluated at the current draw and weighted
+        // by the prior, in logs. Formed as densities, both underflow to zero for
+        // a coefficient many slab widths from zero, and their ratio is then a
+        // NaN that excludes the one coefficient the data most want in.
+        const double l1 = std::log(blk.inprior(pos)) - std::log(blk.tau1(pos)) -
+                          square / (2 * blk.tau1sq(pos));
+        const double l0 = std::log(1 - blk.inprior(pos)) - std::log(blk.tau0(pos)) -
+                          square / (2 * blk.tau0sq(pos));
+
+        const bool included = arma::randu() < inclusion_probability(l1 - l0);
+        blk.lambda(pos) = included ? 1.0 : 0.0;
 
         // The regressors are untouched; exclusion is expressed as a prior tight
         // enough around zero that the coefficient cannot move.
-        prior_v_inv(pos, pos) = 1 / ((draw == 0) ? blk.tau0sq(pos) : blk.tau1sq(pos));
+        prior_v_inv(pos, pos) = 1 / (included ? blk.tau1sq(pos) : blk.tau0sq(pos));
     }
 }
 

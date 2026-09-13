@@ -133,9 +133,6 @@ VecNormalStochvolDraws VecNormalStochvolSampler::draw_coefficients(
 
             if (use_bvs)
             {
-                // Captured before the first draw fills psi_z, so this is the
-                // zero matrix, exactly as in var_normal_stochvol.cpp.
-                psi_z_bvs = psi_z;
                 psi_bvs.emplace(input.initial.psi_lambda, input.psi_varsel_prior);
             }
         }
@@ -302,6 +299,16 @@ VecNormalStochvolDraws VecNormalStochvolSampler::draw_coefficients(
         {
             psi_y = arma::vectorise(u.rows(1, k - 1));
             build_psi_regressors(psi_z, u);
+
+            // BVS draws psi against the regressors masked by the indicators the
+            // last sweep left, and scores its candidates against the unmasked
+            // ones -- kept here, once they hold this draw's errors. See
+            // var_normal_gamma.cpp.
+            if (psi_bvs)
+            {
+                psi_z_bvs = psi_z;
+                psi_z = psi_z * psi_bvs->lambda_diag;
+            }
 
             // The psi block explains equations 1..k-1, so its precision is the
             // per-period volatility with the first equation's row and column
@@ -503,7 +510,7 @@ arma::mat VecNormalStochvolSampler::log_likelihood(
         {
             u_sigma_inv = arma::reshape(
                 coefficients.u_sigma_inv.submat(i * kk, draw, (i + 1) * kk - 1, draw), k, k);
-            const double part_b = -std::log(arma::det(arma::solve(u_sigma_inv, diag_k))) / 2;
+            const double part_b = core::half_log_det_precision(u_sigma_inv);
             const double part_c =
                 -arma::as_scalar(arma::trans(u.submat(i * k, draw, (i + 1) * k - 1, draw)) *
                                  u_sigma_inv * u.submat(i * k, draw, (i + 1) * k - 1, draw)) /

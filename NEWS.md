@@ -1,5 +1,56 @@
 # bvartools (development version)
 
+* **Vendored BayesTS core refreshed: BVS, SSVS and the log likelihood of the
+  time varying models are fixed.** Upstream found three errors in an audit, and
+  all three reached the models of this package. Thirty specifications -- every
+  VAR and VEC algorithm, each variable selection it offers, with and without a
+  covariance block -- were fitted from pinned seeds against the package built
+  before and after the refresh, and compared block by block. What moved is
+  listed below. Nothing else did.
+
+    **BVS draws its inclusion indicators from their posterior.** The sweep set an
+    indicator to one with probability `min(1, exp(l1 - l0))` rather than the
+    logistic of `l1 - l0`. It also scored every candidate against the inclusion
+    matrix as it stood before the sweep. The rule came from this package's
+    original `bvs.cpp`, and the chain it made did not have the posterior as its
+    stationary distribution: at a prior inclusion probability of 0.5 and an
+    uninformative likelihood, a coefficient once included stayed in. Each
+    indicator is now a Gibbs draw given the current state of all the others
+    (Korobilis, 2013). Separately, `VarNormalGamma`, `VarNormalStochvol`,
+    `VecNormalGamma` and `VecNormalStochvol` applied BVS to the covariance block
+    against regressors copied before the chain started, while they were still
+    zero, so `varsel$covar = TRUE` selected on the prior alone. **Draws change**
+    for every model with `varsel = "bvs"`, in every block.
+
+    **SSVS includes a coefficient far from zero.** The spike and slab densities
+    were formed before they were divided, so for a coefficient many slab widths
+    from zero both were zero, the inclusion probability was `NaN`, and the
+    coefficient the data most want in was excluded. The odds are now formed in
+    logs. **Draws change** for every model with `varsel = "ssvs"`.
+
+    **The time varying models score every period of the log likelihood under
+    its own error precision.** `add_posterior_loglik()` scored the whole sample
+    under the precision of the last period, which is the likelihood of a model
+    whose volatility does not move. That was wrong for `error = "sv"` and
+    `"sv+covar"`, and for `"gamma+covar"`, where the covariance block makes the
+    precision drift. WAIC and LOO of such a model, and therefore the model
+    comparisons built on them, compared the wrong thing. Taking the fix needed a
+    change here as well: the log likelihood bindings of `VarTvpGamma`,
+    `VarTvpStochvol`, `VecTvpGamma` and `VecTvpStochvol` in `src/` sliced the
+    precision to the last period before handing it over, and now pass the whole
+    path. Their forecasts still start from the last period. **Draws are
+    unchanged; the log likelihood changes** for those models.
+
+    The determinant term of every Gaussian log likelihood now goes through a
+    Cholesky factor in logs, so it cannot underflow for a large model. Elsewhere
+    the log likelihood changes by at most 3e-11 relative, and coefficients and
+    forecasts are bit-identical. The constant VEC samplers also refuse a prior
+    precision of the cointegration space that is not symmetric, which
+    `add_priors()` already did.
+
+    The refresh adds one file, `src/core/algorithms/inclusion_probability.h`,
+    which `inst/COPYRIGHTS` now lists.
+
 * **The package has a DOI, 10.5281/zenodo.22736604.** The GitHub release of
   0.3.0 is archived on Zenodo, and this concept DOI identifies the package as a
   whole: <https://doi.org/10.5281/zenodo.22736604> resolves to whichever version

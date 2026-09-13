@@ -52,8 +52,9 @@ public:
                            Reporter &reporter) const;
 
     /// Pointwise log likelihood, draws x periods. `draws.a` and `draws.beta`
-    /// carry the whole path; `draws.u_sigma_inv` carries the last period when
-    /// the precision moves and the single matrix of each draw when it does not.
+    /// carry the whole path; `draws.u_sigma_inv` carries one k x k block per
+    /// period when the precision moves and the single matrix of each draw when
+    /// it does not, and every period is scored under its own.
     arma::mat log_likelihood(const VecTvpGammaInput &input,
                              const VecTvpGammaDraws &draws) const;
 };

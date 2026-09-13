@@ -324,13 +324,12 @@ arma::mat VarNormalWishartSampler::log_likelihood(const VarNormalWishartInput &i
     }
 
     // Calculate log likelihood
-    const arma::mat diag_k = arma::eye(k, k);
     const double part_a = -k * std::log(2 * arma::datum::pi) / 2;
     arma::mat u_sigma_inv;
     for (arma::uword draw = 0; draw < draws; draw++)
     {
         u_sigma_inv = arma::reshape(coefficients.u_sigma_inv.col(draw), k, k);
-        const double part_b = -std::log(arma::det(arma::solve(u_sigma_inv, diag_k))) / 2;
+        const double part_b = core::half_log_det_precision(u_sigma_inv);
         for (int i = 0; i < tt; i++)
         {
             const double part_c = -arma::as_scalar(arma::trans(u.submat(i * k, draw, (i + 1) * k - 1, draw)) * u_sigma_inv * u.submat(i * k, draw, (i + 1) * k - 1, draw)) / 2;

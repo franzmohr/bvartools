@@ -3,7 +3,7 @@
 
 #include "bayests/inputs.h"
 
-#include <algorithm>
+#include <cstdio>
 #include <stdexcept>
 #include <string>
 
@@ -15,12 +15,71 @@ std::string dims(const arma::mat &m)
     return std::to_string(m.n_rows) + "x" + std::to_string(m.n_cols);
 }
 
+/// Three significant digits in whichever notation suits: std::to_string() prints
+/// a fixed six decimals, which turns every asymmetry worth reporting into 0.000000.
+std::string number(double x)
+{
+    char buffer[32];
+    std::snprintf(buffer, sizeof buffer, "%.3g", x);
+    return buffer;
+}
+
 void require_square(const arma::mat &m, arma::uword side, const char *what)
 {
     if (m.n_rows != side || m.n_cols != side)
     {
         throw std::invalid_argument(std::string(what) + " must be " + std::to_string(side) +
                                     "x" + std::to_string(side) + ", got " + dims(m));
+    }
+}
+
+/// How far a matrix may be from its transpose and still count as symmetric: the
+/// largest |m(i,j) - m(j,i)| against the largest |m(i,j)|.
+///
+/// Relative, because rounding scales with the entries. A prior precision of
+/// 1e4 I and one of 1e-4 I pick up the same error in proportion, and an absolute
+/// bound would be loose for the one and tight for the other.
+///
+/// And loose, because what rounding leaves is either nothing or a matter of
+/// conditioning. An outer product, a Kronecker product and (P + P') / 2 -- how
+/// bvartools symmetrises its "ml" prior -- are symmetric to the bit. A matrix
+/// inverted through a general LU rather than a Cholesky is off by about its
+/// condition number times machine epsilon, so 1e-8 passes such a matrix up to a
+/// condition number near 1e7, past the point where its inverse had eight digits
+/// to give. It also passes everything bvartools accepts: add_priors() tests with
+/// isSymmetric(), whose mean relative difference of 100 * .Machine$double.eps
+/// bounds the largest one by n^2 times that, under 1e-8 for any n below 670.
+///
+/// What it has to stop is a matrix that is not the one meant -- a triangle left
+/// empty, a product taken in the wrong order, an element mistyped -- and those
+/// are off by many orders of magnitude more.
+constexpr double kSymmetryTolerance = 1e-8;
+
+/// Refuses a matrix further from symmetric than rounding explains. For a matrix
+/// already known to be square, which is what makes the transpose comparable.
+///
+/// Refused rather than symmetrised on the way in. The samplers read these
+/// matrices partly through one triangle -- draw_normal_precision() factorises
+/// the upper -- and partly whole, in products with a mean or a draw, so an
+/// asymmetric one runs and stands for a prior that is neither the matrix nor its
+/// transpose. Averaging it would pick one of the readings for the file, which
+/// is the file's to say.
+void require_symmetric(const arma::mat &m, const char *what)
+{
+    if (m.is_empty())
+    {
+        return;
+    }
+
+    const double largest = arma::abs(m).max();
+    const double asymmetry = arma::abs(m - arma::trans(m)).max();
+
+    if (!(asymmetry <= kSymmetryTolerance * largest))
+    {
+        throw std::invalid_argument(
+            std::string(what) + " must be symmetric, but differs from its transpose by up to " +
+            number(asymmetry) + " against a largest absolute element of " + number(largest) +
+            "; the tolerance is " + number(kSymmetryTolerance) + " times that element");
     }
 }
 
@@ -753,6 +812,14 @@ void validate_constant_coint_block(const VarSpec &spec, const TrainData &train,
     // coincide, and rejected every well-formed file above it.
     require_square(prior.p_tau_inv, static_cast<arma::uword>(spec.k_beta),
                    "prior precision of the cointegration space");
+
+    // And symmetric, which both of those assume without checking.
+    // kron(., P_tau^-1) goes into the posterior precision of beta, which the draw
+    // reads through its upper triangle alone. beta' P_tau^-1 beta goes into the
+    // prior precision of the loadings, whose diagonal sees only the symmetric
+    // part of P_tau^-1 and whose off-diagonal sees the whole of it. So an
+    // asymmetric one was not even the same prior in the two blocks.
+    require_symmetric(prior.p_tau_inv, "prior precision of the cointegration space");
 }
 
 /// The time-varying cointegration block: a path, where it starts, the error
@@ -772,6 +839,11 @@ void validate_tvp_coint_block(const VarSpec &spec, const TrainData &train,
     require_length(prior.initial_state.mu, n_beta, "prior mean of beta before the sample");
     require_square(prior.initial_state.v_inv, n_beta, "prior precision of beta before the sample");
 
+    // Symmetric for the reason P_tau^-1 is in the constant block: the draw of the
+    // state before the sample factorises v_inv + rho^2 P'P through its upper
+    // triangle, and multiplies the prior mean by the whole of v_inv.
+    require_symmetric(prior.initial_state.v_inv, "prior precision of beta before the sample");
+
     validate_tvp_coint_rho(prior);
 
     // P_tau is the transition with rho taken out, and it has to leave the state
@@ -783,13 +855,7 @@ void validate_tvp_coint_block(const VarSpec &spec, const TrainData &train,
     {
         require_square(prior.p_tau, static_cast<arma::uword>(spec.k_beta),
                        "transition P_tau of the cointegration state equation");
-
-        const double scale = std::max(1.0, arma::abs(prior.p_tau).max());
-        if (!arma::approx_equal(prior.p_tau, arma::trans(prior.p_tau), "absdiff", 1e-10 * scale))
-        {
-            throw std::invalid_argument(
-                "the transition P_tau of the cointegration state equation must be symmetric");
-        }
+        require_symmetric(prior.p_tau, "transition P_tau of the cointegration state equation");
 
         const arma::vec eigval = arma::eig_sym(arma::symmatu(prior.p_tau));
         if (eigval.min() < -1e-10 || eigval.max() > 1.0 + 1e-10)

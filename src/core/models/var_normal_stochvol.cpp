@@ -121,11 +121,6 @@ VarNormalStochvolDraws VarNormalStochvolSampler::draw_coefficients(
 
             if (use_bvs)
             {
-                // Captured before the first draw fills psi_z, so this is the
-                // zero matrix -- and the selection step below restores it as
-                // such. Left as it stands: what the BVS residuals are measured
-                // against is a modelling decision, not part of this split.
-                psi_z_bvs = psi_z;
                 psi_bvs.emplace(input.initial.psi_lambda, input.psi_varsel_prior);
             }
         }
@@ -219,6 +214,16 @@ VarNormalStochvolDraws VarNormalStochvolSampler::draw_coefficients(
         {
             psi_y = arma::vectorise(u.rows(1, k - 1));
             build_psi_regressors(psi_z, u);
+
+            // BVS draws psi against the regressors masked by the indicators the
+            // last sweep left, and scores its candidates against the unmasked
+            // ones -- kept here, once they hold this draw's errors. See
+            // var_normal_gamma.cpp.
+            if (psi_bvs)
+            {
+                psi_z_bvs = psi_z;
+                psi_z = psi_z * psi_bvs->lambda_diag;
+            }
 
             // The psi block explains equations 1..k-1, so its precision is the
             // per-period volatility with the first equation's row and column
@@ -490,7 +495,6 @@ arma::mat VarNormalStochvolSampler::log_likelihood(const VarNormalStochvolInput 
     // Calculate log likelihood. Every period has its own precision, so unlike
     // the constant-variance models the determinant has to be recomputed inside
     // the inner loop rather than once per draw.
-    const arma::mat diag_k = arma::eye(k, k);
     const double part_a = -k * std::log(2 * arma::datum::pi) / 2;
     arma::mat u_sigma_inv;
     for (arma::uword draw = 0; draw < draws; draw++)
@@ -498,7 +502,7 @@ arma::mat VarNormalStochvolSampler::log_likelihood(const VarNormalStochvolInput 
         for (int i = 0; i < tt; i++)
         {
             u_sigma_inv = arma::reshape(coefficients.u_sigma_inv.submat(i * kk, draw, (i + 1) * kk - 1, draw), k, k);
-            const double part_b = -std::log(arma::det(arma::solve(u_sigma_inv, diag_k))) / 2;
+            const double part_b = core::half_log_det_precision(u_sigma_inv);
             const double part_c = -arma::as_scalar(arma::trans(u.submat(i * k, draw, (i + 1) * k - 1, draw)) * u_sigma_inv * u.submat(i * k, draw, (i + 1) * k - 1, draw)) / 2;
             loglik(draw, i) = part_a + part_b + part_c;
         }

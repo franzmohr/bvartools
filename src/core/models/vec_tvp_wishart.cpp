@@ -417,7 +417,7 @@ arma::mat VecTvpWishartSampler::log_likelihood(const VecTvpWishartInput &input,
     for (arma::uword draw = 0; draw < draws; draw++)
     {
         u_sigma_inv = arma::reshape(coefficients.u_sigma_inv.col(draw), k, k);
-        const double part_b = -std::log(arma::det(arma::solve(u_sigma_inv, diag_k))) / 2;
+        const double part_b = core::half_log_det_precision(u_sigma_inv);
 
         for (int i = 0; i < tt; i++)
         {

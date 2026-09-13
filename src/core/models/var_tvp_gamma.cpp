@@ -20,6 +20,7 @@ using core::BvsScope;
 using core::bvs_sweep;
 using core::draw_normal_precision;
 using core::fill_psi_path;
+using core::stacked_identity;
 using core::fill_strict_lower_triangle;
 using core::fill_strict_lower_triangle_by_column;
 using core::split_structural_coefficients;
@@ -128,7 +129,7 @@ VarTvpGammaDraws VarTvpGammaSampler::draw_coefficients(const VarTvpGammaInput &i
         out.psi = arma::mat(k * k * tt, iterations);
         out.psi_sigma = arma::mat(n_psi, iterations);
         psi_B = arma::eye<arma::mat>(n_psi, n_psi);
-        Psi = arma::eye<arma::mat>(k * tt, k * tt);
+        Psi = stacked_identity(k, tt);
         fill_psi_path(Psi, psi, k);
 
         psi_sigma = input.initial.psi_sigma_inv;
@@ -172,8 +173,8 @@ VarTvpGammaDraws VarTvpGammaSampler::draw_coefficients(const VarTvpGammaInput &i
     // selection step sums a quadratic form period by period, and the output
     // stores one block per period -- so the off-diagonal zeros were never read.
     //
-    // With a covariance block they were also expensive to produce: Psi is
-    // itself k tt square, so kron(I_tt, u_omega_inv) followed by
+    // With a covariance block they were also expensive to produce: Psi was
+    // then itself k tt square, so kron(I_tt, u_omega_inv) followed by
     // Psi' Omega Psi ran two dense products of order (k tt)^3 to fill a matrix
     // whose tt diagonal blocks are each just Psi_j' u_omega_inv Psi_j. That is a
     // factor tt^2 more arithmetic than the tt small products below, and 72 MB
@@ -187,9 +188,9 @@ VarTvpGammaDraws VarTvpGammaSampler::draw_coefficients(const VarTvpGammaInput &i
             if (use_psi)
             {
                 u_sigma_inv_blocks.rows(k * i, k * (i + 1) - 1) =
-                    arma::trans(Psi.submat(k * i, k * i, k * (i + 1) - 1, k * (i + 1) - 1)) *
+                    arma::trans(Psi.rows(k * i, k * (i + 1) - 1)) *
                     u_omega_inv *
-                    Psi.submat(k * i, k * i, k * (i + 1) - 1, k * (i + 1) - 1);
+                    Psi.rows(k * i, k * (i + 1) - 1);
             }
             else
             {
@@ -354,7 +355,7 @@ VarTvpGammaDraws VarTvpGammaSampler::draw_coefficients(const VarTvpGammaInput &i
             fill_psi_path(Psi, psi, k);
             for (int j = 0; j < tt; j++)
             {
-                u.col(j) = Psi.submat(k * j, k * j, k * (j + 1) - 1, k * (j + 1) - 1) * u.col(j);
+                u.col(j) = Psi.rows(k * j, k * (j + 1) - 1) * u.col(j);
             }
         }
 
@@ -389,7 +390,7 @@ VarTvpGammaDraws VarTvpGammaSampler::draw_coefficients(const VarTvpGammaInput &i
             {
                 for (int i = 0; i < tt; i++)
                 {
-                    out.psi.submat(i * kk, draw_pos, (i + 1) * kk - 1, draw_pos) = arma::vectorise(Psi.submat(i * k, i * k, (i + 1) * k - 1, (i + 1) * k - 1));
+                    out.psi.submat(i * kk, draw_pos, (i + 1) * kk - 1, draw_pos) = arma::vectorise(Psi.rows(i * k, (i + 1) * k - 1));
                 }
 
                 out.psi_sigma.col(draw_pos) = arma::vectorise(psi_sigma.diag());
@@ -575,15 +576,27 @@ arma::mat VarTvpGammaSampler::log_likelihood(const VarTvpGammaInput &input,
     }
 
     // Calculate log likelihood
-    const arma::mat diag_k = arma::eye(k, k);
+    // Every period under its own precision where the model's moves, and under
+    // the draw's single matrix where it does not; the height of what
+    // read_loglik_coefficients() hands over says which. Scoring the whole sample
+    // under the last period's, as this used to, is the likelihood of a model
+    // whose error covariance does not move.
+    const arma::uword kk = static_cast<arma::uword>(k) * k;
+    const arma::uword u_stride = core::precision_stride(coefficients.u_sigma_inv, k, tt);
     const double part_a = -k * std::log(2 * arma::datum::pi) / 2;
     arma::mat u_sigma_inv;
+    double part_b = 0.0;
     for (arma::uword draw = 0; draw < draws; draw++)
     {
-        u_sigma_inv = arma::reshape(coefficients.u_sigma_inv.col(draw), k, k);
-        const double part_b = -std::log(arma::det(arma::solve(u_sigma_inv, diag_k))) / 2;
         for (int i = 0; i < tt; i++)
         {
+            if (i == 0 || u_stride != 0)
+            {
+                const arma::uword first = static_cast<arma::uword>(i) * u_stride;
+                u_sigma_inv = arma::reshape(
+                    coefficients.u_sigma_inv.submat(first, draw, first + kk - 1, draw), k, k);
+                part_b = core::half_log_det_precision(u_sigma_inv);
+            }
             const double part_c = -arma::as_scalar(arma::trans(u.submat(i * k, draw, (i + 1) * k - 1, draw)) * u_sigma_inv * u.submat(i * k, draw, (i + 1) * k - 1, draw)) / 2;
             loglik(draw, i) = part_a + part_b + part_c;
         }

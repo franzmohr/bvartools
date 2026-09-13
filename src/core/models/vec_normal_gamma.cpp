@@ -153,11 +153,6 @@ VecNormalGammaDraws VecNormalGammaSampler::draw_coefficients(const VecNormalGamm
 
             if (use_bvs)
             {
-                // Captured before the first draw fills psi_z, so this is the
-                // zero matrix, exactly as in var_normal_gamma.cpp -- what the
-                // BVS residuals are measured against is a modelling decision
-                // rather than something to change while porting.
-                psi_z_bvs = psi_z;
                 psi_bvs.emplace(input.initial.psi_lambda, input.psi_varsel_prior);
             }
         }
@@ -286,6 +281,16 @@ VecNormalGammaDraws VecNormalGammaSampler::draw_coefficients(const VecNormalGamm
         {
             psi_y = arma::vectorise(u.rows(1, k - 1));
             build_psi_regressors(psi_z, u);
+
+            // BVS draws psi against the regressors masked by the indicators the
+            // last sweep left, and scores its candidates against the unmasked
+            // ones -- kept here, once they hold this draw's errors. See
+            // var_normal_gamma.cpp.
+            if (psi_bvs)
+            {
+                psi_z_bvs = psi_z;
+                psi_z = psi_z * psi_bvs->lambda_diag;
+            }
 
             // Equation i is explained by the errors above it, so the psi block
             // carries k - 1 rows per period rather than k, and its precision is
@@ -463,7 +468,7 @@ arma::mat VecNormalGammaSampler::log_likelihood(const VecNormalGammaInput &input
     for (arma::uword draw = 0; draw < draws; draw++)
     {
         u_sigma_inv = arma::reshape(coefficients.u_sigma_inv.col(draw), k, k);
-        const double part_b = -std::log(arma::det(arma::solve(u_sigma_inv, diag_k))) / 2;
+        const double part_b = core::half_log_det_precision(u_sigma_inv);
         for (int i = 0; i < tt; i++)
         {
             const double part_c =

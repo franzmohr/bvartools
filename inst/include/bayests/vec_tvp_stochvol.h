@@ -64,11 +64,10 @@ public:
                            const VecTvpStochvolDraws &draws,
                            Reporter &reporter) const;
 
-    /// Pointwise log likelihood, draws x periods. `draws.a` and `draws.beta`
-    /// carry the whole path -- every period is evaluated under its own
-    /// coefficients and its own cointegration vectors -- while
-    /// `draws.u_sigma_inv` carries the last period only, which is the precision
-    /// this model scores every observation under.
+    /// Pointwise log likelihood, draws x periods. `draws.a`, `draws.beta` and
+    /// `draws.u_sigma_inv` all carry the whole path -- every period is
+    /// evaluated under its own coefficients, its own cointegration vectors and
+    /// its own precision.
     arma::mat log_likelihood(const VecTvpStochvolInput &input,
                              const VecTvpStochvolDraws &draws) const;
 };

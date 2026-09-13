@@ -59,6 +59,26 @@
   return(.hdf5_keep(handles, parent$create_group(name)))
 }
 
+# Attaches `value` to `object` as the attribute `name`, and closes it again.
+#
+# hdf5r's `h5attr<-` creates the attribute and leaves its handle open for the
+# garbage collector. HDF5 keeps a file open for as long as anything in it is,
+# closing the file itself included, so every attribute written that way kept
+# the file open after the write had returned -- and on Windows locked against
+# every other process, BayesTS among them -- until a gc() happened to come
+# round. An attribute that is already there is replaced, as it was before.
+.hdf5_write_attr <- function(object, name, value) {
+
+  if (object$attr_exists(name)) {
+    object$attr_delete(name)
+  }
+
+  attribute <- object$create_attr(name, robj = value)
+  attribute$close()
+
+  return(invisible(NULL))
+}
+
 # Writes `value` into `group` under `name`, with `attrs` attached to it.
 #
 # The dataset is created once and its attributes are written on the handle that
@@ -93,11 +113,11 @@
   # therefore marked as such, and .hdf5_read_value() drops the dimensions again.
   # A file written elsewhere carries no mark and is read as it always was.
   if (is.null(dim(value))) {
-    hdf5r::h5attr(dataset, "rshape") <- "vector"
+    .hdf5_write_attr(dataset, "rshape", "vector")
   }
 
   for (i in names(attrs)) {
-    hdf5r::h5attr(dataset, i) <- attrs[[i]]
+    .hdf5_write_attr(dataset, i, attrs[[i]])
   }
 
   dataset$close()

@@ -139,11 +139,11 @@ write_to_hdf5.bvarmodel <- function(object, filename, group = "", ...) {
       next
     }
     if (!i %in% attrs_model) {
-      hdf5r::h5attr(group_model, i) <- object[["model"]][[i]]
+      .hdf5_write_attr(group_model, i, object[["model"]][[i]])
       attrs_model <- c(attrs_model, i)
     }
   }
-  hdf5r::h5attr(group_model, "rclass") <- class(object)
+  .hdf5_write_attr(group_model, "rclass", class(object))
 
   ## Sign restrictions ----
   #
@@ -158,9 +158,9 @@ write_to_hdf5.bvarmodel <- function(object, filename, group = "", ...) {
     restrictions <- as.matrix(sign_restrictions[["restrictions"]])
     .hdf5_write(group_sign, "restrictions", restrictions,
                 list("columns" = colnames(restrictions)))
-    hdf5r::h5attr(group_sign, "max_tries") <- sign_restrictions[["max_tries"]]
+    .hdf5_write_attr(group_sign, "max_tries", sign_restrictions[["max_tries"]])
     if (!is.null(sign_restrictions[["period"]])) {
-      hdf5r::h5attr(group_sign, "period") <- sign_restrictions[["period"]]
+      .hdf5_write_attr(group_sign, "period", sign_restrictions[["period"]])
     }
   }
 

@@ -1,5 +1,16 @@
 # bvartools (development version)
 
+* **`write_to_hdf5()` releases the file of a model before it returns.** The
+  specification of a model, its class and the properties of its datasets are
+  stored as HDF5 attributes, and they were written with hdf5r's `h5attr<-`,
+  which never closes the attribute it creates. HDF5 keeps a file open for as
+  long as anything in it is, so closing the file did not release it, and the
+  handles were left to R's garbage collector. Until it ran, the file was locked
+  against every other process on Windows: `bayests` could not open a model that
+  had just been exported and failed with "Unable to lock file", and succeeded
+  on the unchanged file after `gc()`. Each attribute is now closed as soon as it
+  is written. Reading a model was not affected.
+
 * **`create_bvarmodel()` uses `s = 2` by default, as its documentation already
   said and as `create_bvecmodel()` does.** The signature had `s = NULL`, so a
   call with `exogen` but without `s` stopped with "attempt to set an attribute

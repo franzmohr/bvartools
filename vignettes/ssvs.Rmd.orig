@@ -225,6 +225,10 @@ ssvs_est <- add_posterior_coefficients(model_with_priors)
 
 The output of `add_posterior_coefficients` is an object of class `bvarmodel`. Thus, further analytical steps can be done as described above.
 
+## Citing bvartools
+
+If you use `bvartools` in published work, please cite it. `citation("bvartools")` prints the reference, and the package has the DOI [10.5281/zenodo.22736604](https://doi.org/10.5281/zenodo.22736604), which always resolves to the latest archived version.
+
 ## References
 
 Chan, J., Koop, G., Poirier, D. J., & Tobias, J. L. (2019). *Bayesian Econometric Methods* (2nd ed.). Cambridge: University Press.

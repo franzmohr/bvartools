@@ -198,6 +198,10 @@ Two practical consequences follow. A response at a horizon the restrictions bind
 
 Only sign restrictions are supported. Zero restrictions on the impact responses cannot be imposed by searching, since the set of rotations that satisfies them has probability zero, and require the algorithm of Arias et al. (2018).
 
+## Citing bvartools
+
+If you use `bvartools` in published work, please cite it. `citation("bvartools")` prints the reference, and the package has the DOI [10.5281/zenodo.22736604](https://doi.org/10.5281/zenodo.22736604), which always resolves to the latest archived version.
+
 ## References
 
 Arias, J. E., Rubio-Ramírez, J. F., & Waggoner, D. F. (2018). Inference based on structural vector autoregressions identified with sign and zero restrictions: Theory and applications. *Econometrica, 86*(2), 685--720. https://doi.org/10.3982/ECTA14468

@@ -212,6 +212,10 @@ plot(irf(models[[pos]], impulse = "r", response = "dy", n_ahead = 10))
 
 ![plot of chunk unnamed-chunk-13](figures/model-comparison-unnamed-chunk-13-1.png)
 
+## Citing bvartools
+
+If you use `bvartools` in published work, please cite it. `citation("bvartools")` prints the reference, and the package has the DOI [10.5281/zenodo.22736604](https://doi.org/10.5281/zenodo.22736604), which always resolves to the latest archived version.
+
 ## Literature
 
 Chan, J., Koop, G., Poirier, D. J., & Tobias, J. L. (2019). *Bayesian Econometric Methods* (2nd ed.). Cambridge: University Press.

@@ -100,7 +100,15 @@
   if (is.null(sigma)) {
     stop("Argument 'sigma' may not be NULL.")
   }
-  
+
+  allowed_sigma_arguments <- c("df", "scale", "shape", "rate", "mu", "v_i",
+                               "state_variance", "offset")
+  for (i in names(sigma)) {
+    if (!i %in% allowed_sigma_arguments) {
+      stop(paste0("Element '", i, "' in argument 'sigma' is not recognised."))
+    }
+  }
+
   if (length(sigma) < 2) {
     stop("Argument 'sigma' must be at least of length 2.")
   } else {

@@ -56,6 +56,20 @@ test_that("a degrees of freedom of 'k' resolves to the number of variables", {
                model[["model"]][["k"]])
 })
 
+test_that("add_priors rejects unknown elements of sigma", {
+  expect_error(
+    add_priors(fx_var_model(), coef = list(v_i = 0, v_i_det = 0),
+               sigma = list(df = 3, scale = 2, sclae = 2)),
+    "Element 'sclae' in argument 'sigma' is not recognised"
+  )
+  expect_error(
+    add_priors(fx_vec_model(), coef = list(v_i = 1, v_i_det = 1 / 10),
+               coint = list(v_i = 0, p_tau_i = 1),
+               sigma = list(df = "k", scale = 1, covar = TRUE)),
+    "Element 'covar' in argument 'sigma' is not recognised"
+  )
+})
+
 test_that("VEC priors cover beta, the short-run coefficients and sigma", {
   model <- fx_vec_priors()
   spec <- model[["model"]]

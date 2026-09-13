@@ -19,3 +19,15 @@ from its VAR representation: apply \code{\link{vec_to_var}} first and then
 \description{
 Guard method for objects of class 'bvecmodel'.
 }
+\seealso{
+Other posterior simulation:
+\code{\link[=add_forecast_input.bvarmodel]{add_forecast_input.bvarmodel()}},
+\code{\link[=add_posterior_coefficients.bvarmodel]{add_posterior_coefficients.bvarmodel()}},
+\code{\link[=add_posterior_coefficients.bvecmodel]{add_posterior_coefficients.bvecmodel()}},
+\code{\link[=add_posterior_forecasts.bvarmodel]{add_posterior_forecasts.bvarmodel()}},
+\code{\link[=add_posterior_loglik.bvarmodel]{add_posterior_loglik.bvarmodel()}},
+\code{\link[=add_posterior_loglik.bvecmodel]{add_posterior_loglik.bvecmodel()}},
+\code{\link[=bvar]{bvar()}},
+\code{\link[=bvec]{bvec()}}
+}
+\concept{posterior simulation}

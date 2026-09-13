@@ -44,6 +44,7 @@
 #' model <- add_forecast_errors(model, test_sample = orig)
 #' 
 #'
+#' @family model comparison
 #' @export
 add_forecast_errors.bvarmodel <- function(object, test_sample, ...){
   

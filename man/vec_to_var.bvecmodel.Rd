@@ -105,3 +105,12 @@ object <- add_posterior_forecasts(object)
 \references{
 Lütkepohl, H. (2006). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
 }
+\seealso{
+Other post-estimation analysis:
+\code{\link[=add_sign_restrictions.bvarmodel]{add_sign_restrictions.bvarmodel()}},
+\code{\link[=fevd.bvarmodel]{fevd.bvarmodel()}},
+\code{\link[=irf.bvarmodel]{irf.bvarmodel()}},
+\code{\link[=predict.bvarmodel]{predict.bvarmodel()}},
+\code{\link[=spillover.bvarmodel]{spillover.bvarmodel()}}
+}
+\concept{post-estimation analysis}

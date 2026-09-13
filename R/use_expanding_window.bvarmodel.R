@@ -33,6 +33,7 @@
 #' # Create multiple model objects for expanding window
 #' model <- use_expanding_window(model, start = start_period)
 #' 
+#' @family model set-up
 #' @export
 #' @method use_expanding_window bvarmodel
 use_expanding_window.bvarmodel <- function(object, start, ...) {

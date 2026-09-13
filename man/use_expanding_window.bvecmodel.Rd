@@ -38,3 +38,16 @@ model <- create_bvecmodel(e6, p = 1, r = 1, const = "restricted",
 model <- use_expanding_window(model, start = 1998)
 
 }
+\seealso{
+Other model set-up:
+\code{\link[=add_initial_values.bvarmodel]{add_initial_values.bvarmodel()}},
+\code{\link[=add_initial_values.bvecmodel]{add_initial_values.bvecmodel()}},
+\code{\link[=add_priors.bvarmodel]{add_priors.bvarmodel()}},
+\code{\link[=add_priors.bvecmodel]{add_priors.bvecmodel()}},
+\code{\link[=combine_models]{combine_models()}},
+\code{\link[=create_bvarmodel]{create_bvarmodel()}},
+\code{\link[=create_bvecmodel]{create_bvecmodel()}},
+\code{\link[=transform_variables]{transform_variables()}},
+\code{\link[=use_expanding_window.bvarmodel]{use_expanding_window.bvarmodel()}}
+}
+\concept{model set-up}

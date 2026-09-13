@@ -46,6 +46,7 @@
 #' sel <- selection_criteria(model)
 #' sel
 #' 
+#' @family model comparison
 #' @export
 #' @method selection_criteria modellist
 selection_criteria.modellist <- function(object, ...){

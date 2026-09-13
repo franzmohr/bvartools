@@ -75,6 +75,7 @@
 #' # Plot absolute forecast errors of each period
 #' plot_forecast_errors_by_period(model)
 #'
+#' @family model comparison
 #' @export
 plot_forecast_errors_by_period <- function(x, criterion = "AFE", ci = .95,
                                            col = "black", pch = 20, cex = 1, lwd = 1,

@@ -124,6 +124,7 @@ NULL
 #' identification procedure. \emph{Journal of Monetary Economics, 52}(2), 381-419.
 #' \doi{10.1016/j.jmoneco.2004.05.007}
 #'
+#' @family post-estimation analysis
 #' @export
 #' @method add_sign_restrictions bvarmodel
 add_sign_restrictions.bvarmodel <- function(object, restrictions, max_tries = 1000,

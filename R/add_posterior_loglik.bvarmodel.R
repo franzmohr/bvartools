@@ -37,6 +37,7 @@
 #' object <- add_posterior_loglik(object)
 #' 
 #' 
+#' @family posterior simulation
 #' @export
 #' @method add_posterior_loglik bvarmodel
 add_posterior_loglik.bvarmodel <- function(object, ...) {

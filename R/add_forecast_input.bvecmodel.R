@@ -9,6 +9,7 @@
 #' from its VAR representation: apply \code{\link{vec_to_var}} first and then
 #' \code{\link{add_forecast_input}} to the resulting 'bvarmodel'.
 #'
+#' @family posterior simulation
 #' @export
 #' @method add_forecast_input bvecmodel
 add_forecast_input.bvecmodel <- function(object, ...){

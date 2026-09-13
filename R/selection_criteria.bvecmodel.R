@@ -44,6 +44,7 @@
 #' 
 #' 
 #' 
+#' @family model comparison
 #' @export
 #' @method selection_criteria bvecmodel
 selection_criteria.bvecmodel <- function(object, ci = 0.95, ...){

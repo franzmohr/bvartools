@@ -178,6 +178,7 @@
 #'                  A = draws_a[1:18,], C = draws_a[19:21, ],
 #'                  Sigma = draws_sigma)
 #'
+#' @family posterior simulation
 #' @export
 bvar <- function(data = NULL, exogen = NULL, y, x = NULL, z = NULL,
                  A0 = NULL, A = NULL, B = NULL,

@@ -321,6 +321,7 @@
 #'                     coint = list(rho = 0.999),
 #'                     sigma = list(df = "k", scale = 1))
 #'
+#' @family model set-up
 #' @export
 #' @method add_priors bvecmodel
 add_priors.bvecmodel <- function(object,

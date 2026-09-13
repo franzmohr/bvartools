@@ -32,3 +32,16 @@ model_2 <- create_bvecmodel(e6, p = 1, r = 0:1, const = "unrestricted")
 model <- combine_models(model_1, model_2)
 
 }
+\seealso{
+Other model set-up:
+\code{\link[=add_initial_values.bvarmodel]{add_initial_values.bvarmodel()}},
+\code{\link[=add_initial_values.bvecmodel]{add_initial_values.bvecmodel()}},
+\code{\link[=add_priors.bvarmodel]{add_priors.bvarmodel()}},
+\code{\link[=add_priors.bvecmodel]{add_priors.bvecmodel()}},
+\code{\link[=create_bvarmodel]{create_bvarmodel()}},
+\code{\link[=create_bvecmodel]{create_bvecmodel()}},
+\code{\link[=transform_variables]{transform_variables()}},
+\code{\link[=use_expanding_window.bvarmodel]{use_expanding_window.bvarmodel()}},
+\code{\link[=use_expanding_window.bvecmodel]{use_expanding_window.bvecmodel()}}
+}
+\concept{model set-up}

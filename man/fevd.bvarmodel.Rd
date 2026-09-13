@@ -139,3 +139,12 @@ Lütkepohl, H. (2006). \emph{New introduction to multiple time series analysis} 
 
 Pesaran, H. H., & Shin, Y. (1998). Generalized impulse response analysis in linear multivariate models. \emph{Economics Letters, 58}, 17-29.
 }
+\seealso{
+Other post-estimation analysis:
+\code{\link[=add_sign_restrictions.bvarmodel]{add_sign_restrictions.bvarmodel()}},
+\code{\link[=irf.bvarmodel]{irf.bvarmodel()}},
+\code{\link[=predict.bvarmodel]{predict.bvarmodel()}},
+\code{\link[=spillover.bvarmodel]{spillover.bvarmodel()}},
+\code{\link[=vec_to_var.bvecmodel]{vec_to_var.bvecmodel()}}
+}
+\concept{post-estimation analysis}

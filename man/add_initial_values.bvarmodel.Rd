@@ -80,3 +80,16 @@ model <- add_priors(model,
 model <- add_initial_values(model)
 
 }
+\seealso{
+Other model set-up:
+\code{\link[=add_initial_values.bvecmodel]{add_initial_values.bvecmodel()}},
+\code{\link[=add_priors.bvarmodel]{add_priors.bvarmodel()}},
+\code{\link[=add_priors.bvecmodel]{add_priors.bvecmodel()}},
+\code{\link[=combine_models]{combine_models()}},
+\code{\link[=create_bvarmodel]{create_bvarmodel()}},
+\code{\link[=create_bvecmodel]{create_bvecmodel()}},
+\code{\link[=transform_variables]{transform_variables()}},
+\code{\link[=use_expanding_window.bvarmodel]{use_expanding_window.bvarmodel()}},
+\code{\link[=use_expanding_window.bvecmodel]{use_expanding_window.bvecmodel()}}
+}
+\concept{model set-up}

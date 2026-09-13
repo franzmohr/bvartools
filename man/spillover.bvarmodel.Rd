@@ -159,3 +159,12 @@ Pesaran, H. H., & Shin, Y. (1998). Generalized impulse response analysis in
 linear multivariate models. \emph{Economics Letters, 58}, 17--29.
 \doi{10.1016/S0165-1765(97)00214-0}
 }
+\seealso{
+Other post-estimation analysis:
+\code{\link[=add_sign_restrictions.bvarmodel]{add_sign_restrictions.bvarmodel()}},
+\code{\link[=fevd.bvarmodel]{fevd.bvarmodel()}},
+\code{\link[=irf.bvarmodel]{irf.bvarmodel()}},
+\code{\link[=predict.bvarmodel]{predict.bvarmodel()}},
+\code{\link[=vec_to_var.bvecmodel]{vec_to_var.bvecmodel()}}
+}
+\concept{post-estimation analysis}

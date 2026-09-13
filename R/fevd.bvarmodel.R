@@ -111,6 +111,7 @@
 #' 
 #' Pesaran, H. H., & Shin, Y. (1998). Generalized impulse response analysis in linear multivariate models. \emph{Economics Letters, 58}, 17-29.
 #' 
+#' @family post-estimation analysis
 #' @export
 fevd.bvarmodel <- function(x, response = NULL, n_ahead = 5, type = "oir", normalise_gir = FALSE, period = NULL,
                            max_groups = NULL, impact = NULL, ...) {

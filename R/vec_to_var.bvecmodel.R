@@ -94,6 +94,7 @@
 #'
 #' Lütkepohl, H. (2006). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
 #'
+#' @family post-estimation analysis
 #' @export
 #' @method vec_to_var bvecmodel
 vec_to_var.bvecmodel <- function(object, ...) {

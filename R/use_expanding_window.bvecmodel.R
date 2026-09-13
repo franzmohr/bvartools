@@ -26,6 +26,7 @@
 #' # Create multiple model objects for expanding window
 #' model <- use_expanding_window(model, start = 1998)
 #' 
+#' @family model set-up
 #' @export
 #' @method use_expanding_window bvecmodel
 use_expanding_window.bvecmodel <- function(object, start, ...) {

@@ -183,6 +183,7 @@
 #'                     coef = list(v_i = 1, v_i_det = 1 / 10),
 #'                     sigma = list(df = "k", scale = 1))
 #' 
+#' @family model set-up
 #' @export
 #' @method add_priors bvarmodel
 add_priors.bvarmodel <- function(object,

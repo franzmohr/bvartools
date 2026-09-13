@@ -35,6 +35,7 @@
 #' # Add data used for forecast calculation
 #' model <- add_forecast_input(model, n_ahead = 4)
 #'
+#' @family posterior simulation
 #' @export
 #' @method add_forecast_input bvarmodel
 add_forecast_input.bvarmodel <- function(object, n_ahead = 10, deterministic = NULL, exogen = NULL, ...){

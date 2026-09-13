@@ -25,6 +25,7 @@
 #' 
 #' model <- align_model_obs(model)
 #' 
+#' @family model comparison
 #' @export
 align_model_obs.modellist <- function(object, ...) {
   

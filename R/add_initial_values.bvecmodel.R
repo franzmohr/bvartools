@@ -62,6 +62,7 @@
 #' # Add initial values
 #' model <- add_initial_values(model)
 #' 
+#' @family model set-up
 #' @export
 add_initial_values.bvecmodel <- function(object, method = "maxlik", ...){
   

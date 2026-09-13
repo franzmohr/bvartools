@@ -47,6 +47,7 @@
 #' macroeconomic research. \emph{Federal Reserve Bank of St. Louis Review,
 #' 103}(1), 1--44.
 #'
+#' @family model set-up
 #' @export
 transform_variables <- function(x, code) {
 

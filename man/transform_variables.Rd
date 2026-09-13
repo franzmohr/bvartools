@@ -58,3 +58,16 @@ McCracken, M. W., & Ng, S. (2021). FRED-QD: A quarterly database for
 macroeconomic research. \emph{Federal Reserve Bank of St. Louis Review,
 103}(1), 1--44.
 }
+\seealso{
+Other model set-up:
+\code{\link[=add_initial_values.bvarmodel]{add_initial_values.bvarmodel()}},
+\code{\link[=add_initial_values.bvecmodel]{add_initial_values.bvecmodel()}},
+\code{\link[=add_priors.bvarmodel]{add_priors.bvarmodel()}},
+\code{\link[=add_priors.bvecmodel]{add_priors.bvecmodel()}},
+\code{\link[=combine_models]{combine_models()}},
+\code{\link[=create_bvarmodel]{create_bvarmodel()}},
+\code{\link[=create_bvecmodel]{create_bvecmodel()}},
+\code{\link[=use_expanding_window.bvarmodel]{use_expanding_window.bvarmodel()}},
+\code{\link[=use_expanding_window.bvecmodel]{use_expanding_window.bvecmodel()}}
+}
+\concept{model set-up}

@@ -63,3 +63,12 @@ pred <- predict(model)
 \references{
 Lütkepohl, H. (2006). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
 }
+\seealso{
+Other post-estimation analysis:
+\code{\link[=add_sign_restrictions.bvarmodel]{add_sign_restrictions.bvarmodel()}},
+\code{\link[=fevd.bvarmodel]{fevd.bvarmodel()}},
+\code{\link[=irf.bvarmodel]{irf.bvarmodel()}},
+\code{\link[=spillover.bvarmodel]{spillover.bvarmodel()}},
+\code{\link[=vec_to_var.bvecmodel]{vec_to_var.bvecmodel()}}
+}
+\concept{post-estimation analysis}

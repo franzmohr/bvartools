@@ -64,6 +64,7 @@
 #' # Choose best model according to AIC
 #' choose_best_model(sel, criterion = "AIC")
 #' 
+#' @family model comparison
 #' @export
 #' @method choose_best_model selcritlist
 choose_best_model.selcritlist <- function(object, criterion = "WAIC", ...) {

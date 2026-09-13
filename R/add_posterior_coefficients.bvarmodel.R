@@ -61,6 +61,7 @@
 #' # Obtain posterior draws 
 #' model <- add_posterior_coefficients(model)
 #' 
+#' @family posterior simulation
 #' @export
 add_posterior_coefficients.bvarmodel <- function(object, posterior_function = NULL, ...){
   

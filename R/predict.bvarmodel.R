@@ -51,6 +51,7 @@
 #' 
 #' Lütkepohl, H. (2006). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
 #' 
+#' @family post-estimation analysis
 #' @export
 predict.bvarmodel <- function(object, n_ahead = 10, ...) {
   

@@ -39,6 +39,7 @@
 #' model <- add_posterior_loglik(model)
 #' 
 #' 
+#' @family posterior simulation
 #' @export
 #' @method add_posterior_loglik bvecmodel
 add_posterior_loglik.bvecmodel <- function(object, ...) {

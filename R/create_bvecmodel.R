@@ -131,6 +131,7 @@
 #' 
 #' Lütkepohl, H. (2006). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
 #' 
+#' @family model set-up
 #' @export
 create_bvecmodel <- function(data, p = 2, exogen = NULL, s = 2, r = NULL,
                              const = NULL, trend = NULL, seasonal = NULL,

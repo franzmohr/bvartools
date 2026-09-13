@@ -133,6 +133,7 @@
 #' linear multivariate models. \emph{Economics Letters, 58}, 17--29.
 #' \doi{10.1016/S0165-1765(97)00214-0}
 #'
+#' @family post-estimation analysis
 #' @export
 spillover.bvarmodel <- function(object, n_ahead = 10, type = "gir", ci = .95,
                                 keep_draws = FALSE, period = NULL, impact = NULL, ...) {

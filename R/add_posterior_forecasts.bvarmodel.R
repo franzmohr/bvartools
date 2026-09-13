@@ -40,6 +40,7 @@
 #' model <- add_posterior_forecasts(model)
 #'
 #'
+#' @family posterior simulation
 #' @export
 add_posterior_forecasts.bvarmodel <- function(object, ...){
   

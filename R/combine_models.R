@@ -23,6 +23,7 @@
 #' @return A list of class 'modellist' that holds the models of all arguments in one flat
 #' list, in the order in which they were given.
 #'
+#' @family model set-up
 #' @export
 combine_models <- function(...) {
   

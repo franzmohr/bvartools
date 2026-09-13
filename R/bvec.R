@@ -231,6 +231,7 @@
 #'                  C = draws_gamma[(k_nondet + 1):nrow(draws_gamma),],
 #'                  Sigma = draws_sigma)
 #'
+#' @family posterior simulation
 #' @export
 bvec <- function(y, alpha = NULL, beta = NULL, beta_x = NULL, beta_d = NULL, r = NULL,
                  w = NULL, w_x = NULL, w_d = NULL,

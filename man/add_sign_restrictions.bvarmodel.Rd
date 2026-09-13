@@ -149,3 +149,12 @@ Uhlig, H. (2005). What are the effects of monetary policy on output? Results fro
 identification procedure. \emph{Journal of Monetary Economics, 52}(2), 381-419.
 \doi{10.1016/j.jmoneco.2004.05.007}
 }
+\seealso{
+Other post-estimation analysis:
+\code{\link[=fevd.bvarmodel]{fevd.bvarmodel()}},
+\code{\link[=irf.bvarmodel]{irf.bvarmodel()}},
+\code{\link[=predict.bvarmodel]{predict.bvarmodel()}},
+\code{\link[=spillover.bvarmodel]{spillover.bvarmodel()}},
+\code{\link[=vec_to_var.bvecmodel]{vec_to_var.bvecmodel()}}
+}
+\concept{post-estimation analysis}

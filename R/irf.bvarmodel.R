@@ -104,6 +104,7 @@
 #' 
 #' Pesaran, H. H., Shin, Y. (1998). Generalized impulse response analysis in linear multivariate models. \emph{Economics Letters, 58}, 17-29.
 #' 
+#' @family post-estimation analysis
 #' @export
 #' @method irf bvarmodel
 irf.bvarmodel <- function(x, impulse = NULL, response = NULL, n_ahead = 5, ci = .95, shock = 1,

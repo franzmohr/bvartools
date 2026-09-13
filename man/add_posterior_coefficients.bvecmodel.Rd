@@ -91,3 +91,15 @@ simulation for cointegrated models with priors on the cointegration space.
 Korobilis, D. (2013). VAR forecasting using Bayesian variable selection.
 \emph{Journal of Applied Econometrics, 28}(2), 204--230. \doi{10.1002/jae.1271}
 }
+\seealso{
+Other posterior simulation:
+\code{\link[=add_forecast_input.bvarmodel]{add_forecast_input.bvarmodel()}},
+\code{\link[=add_forecast_input.bvecmodel]{add_forecast_input.bvecmodel()}},
+\code{\link[=add_posterior_coefficients.bvarmodel]{add_posterior_coefficients.bvarmodel()}},
+\code{\link[=add_posterior_forecasts.bvarmodel]{add_posterior_forecasts.bvarmodel()}},
+\code{\link[=add_posterior_loglik.bvarmodel]{add_posterior_loglik.bvarmodel()}},
+\code{\link[=add_posterior_loglik.bvecmodel]{add_posterior_loglik.bvecmodel()}},
+\code{\link[=bvar]{bvar()}},
+\code{\link[=bvec]{bvec()}}
+}
+\concept{posterior simulation}

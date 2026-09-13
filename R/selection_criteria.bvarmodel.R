@@ -48,6 +48,7 @@
 #' 
 #' 
 #' 
+#' @family model comparison
 #' @export
 #' @method selection_criteria bvarmodel
 selection_criteria.bvarmodel <- function(object, ci = 0.95, ...){

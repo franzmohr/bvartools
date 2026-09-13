@@ -179,3 +179,14 @@ ext <- add_forecast_errors(ext, test_sample = us_macrodata)
 selection_criteria(ext)
 
 }
+\seealso{
+Other model comparison:
+\code{\link[=add_forecast_errors.bvarmodel]{add_forecast_errors.bvarmodel()}},
+\code{\link[=align_model_obs.modellist]{align_model_obs.modellist()}},
+\code{\link[=choose_best_model.selcritlist]{choose_best_model.selcritlist()}},
+\code{\link[=plot_forecast_errors_by_period]{plot_forecast_errors_by_period()}},
+\code{\link[=selection_criteria.bvarmodel]{selection_criteria.bvarmodel()}},
+\code{\link[=selection_criteria.bvecmodel]{selection_criteria.bvecmodel()}},
+\code{\link[=selection_criteria.modellist]{selection_criteria.modellist()}}
+}
+\concept{model comparison}

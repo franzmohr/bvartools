@@ -105,3 +105,14 @@ model <- add_forecast_errors(model, test_sample = us_macrodata)
 plot_forecast_errors_by_period(model)
 
 }
+\seealso{
+Other model comparison:
+\code{\link[=add_forecast_errors.bvarmodel]{add_forecast_errors.bvarmodel()}},
+\code{\link[=align_model_obs.modellist]{align_model_obs.modellist()}},
+\code{\link[=choose_best_model.selcritlist]{choose_best_model.selcritlist()}},
+\code{\link[=create_external_forecast]{create_external_forecast()}},
+\code{\link[=selection_criteria.bvarmodel]{selection_criteria.bvarmodel()}},
+\code{\link[=selection_criteria.bvecmodel]{selection_criteria.bvecmodel()}},
+\code{\link[=selection_criteria.modellist]{selection_criteria.modellist()}}
+}
+\concept{model comparison}

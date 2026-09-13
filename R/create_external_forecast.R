@@ -102,6 +102,7 @@
 #' # Compare the forecast performance
 #' selection_criteria(ext)
 #'
+#' @family model comparison
 #' @export
 create_external_forecast <- function(forecasts, object, n_ahead = NULL,
                                      period = "period", origin = "origin",

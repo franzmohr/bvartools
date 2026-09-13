@@ -21,14 +21,9 @@ fx_iterations <- 30L
 fx_burnin <- 5L
 
 # The domestic series of the at_macrodata data set, which the fixtures are
-# built on. The data set is either one matrix of all series or a list of its
-# domestic ('endogen') and foreign ('exogen') series; both are taken.
+# built on.
 at_domestic <- function() {
-  data <- bvartools::at_macrodata
-  if (is.list(data) && !stats::is.ts(data)) {
-    data <- data[["endogen"]]
-  }
-  data
+  bvartools::at_macrodata[["endogen"]]
 }
 
 # Austrian output growth, inflation and the change in the short-term interest
@@ -298,8 +293,7 @@ temp_model_dir <- function() {
 
 # Austrian output, inflation and short-term interest rate in levels, from the
 # domestic series of the at_macrodata data set that new tests are written
-# against. The data set is either one matrix of all series or a list of its
-# domestic ('endogen') and foreign ('exogen') series; both are taken.
+# against.
 at_data <- function() {
   at_domestic()[, c("y", "Dp", "r")]
 }

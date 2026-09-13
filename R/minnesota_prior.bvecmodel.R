@@ -142,10 +142,13 @@ minnesota_prior.bvecmodel <- function(object, kappa1 = 2, kappa2 = 1, kappa3 = N
       pos_det <- NULL
       if (object[["model"]][["n_restricted"]] > 0 | object[["model"]][["n"]] > 0) {
         if (object[["model"]][["n_restricted"]] > 0) {
-          pos_det <- c(pos_det, k + m + 1:length(object[["model"]][["n_restricted"]]))
+          # 'n_restricted' and 'n' count the terms, so all of them enter the
+          # regressions rather than the first one alone, which length() of the
+          # count gave.
+          pos_det <- c(pos_det, k + m + 1:object[["model"]][["n_restricted"]])
         }
         if (object[["model"]][["n"]] > 0) {
-          pos_det <- c(pos_det, n_ect + k * p + m * s + 1:length(object[["model"]][["n"]]))
+          pos_det <- c(pos_det, n_ect + k * p + m * s + 1:object[["model"]][["n"]])
         }
       }
       
@@ -196,10 +199,14 @@ minnesota_prior.bvecmodel <- function(object, kappa1 = 2, kappa2 = 1, kappa3 = N
       }
       
       # Exogenous variables
-      if (m > 0) {
-        s <- s - 1
+      #
+      # 's' counts the blocks of differences from the contemporaneous one and is
+      # left as it is, because the deterministic terms below are placed after
+      # m * s columns. Decrementing it here let their prior overwrite the last
+      # block of the exogenous variables.
+      if (m > 0 & s > 0) {
         s_exo <- sqrt(apply(matrix(x[n_ect + k * p + 1:m,], m), 1, stats::var))
-        for (r in 1:(s + 1)) {
+        for (r in 1:s) {
           for (l in 1:k) {
             for (j in 1:m) {
               # Note that in the loop r starts at 1, so that this is equivalent to l + 1

@@ -1,5 +1,19 @@
 # bvartools (development version)
 
+* **`minnesota_prior()` gives exogenous variables of VEC models their own prior
+  variances.** The method for `bvecmodel` counted one block of exogenous
+  differences less than the model has before it placed the deterministic
+  terms, so their prior variance, `kappa1 * kappa4` times the residual
+  variance, overwrote the last block of the exogenous variables. With `s = 1`
+  that was every exogenous coefficient: with `us_macrodata`, `Dp` and `u`
+  endogenous and `r` exogenous, the prior variance of the difference of `r`
+  in the equation of `Dp` came to 1.76, the value of the deterministic terms,
+  whatever `kappa3` said, and with `s = 2` the same happened to its first
+  lag. The regressions that give the residual standard
+  deviations used only the first of several deterministic terms. **Results
+  change** for Minnesota priors of VEC models with exogenous variables, and of
+  VEC models with more than one restricted or unrestricted deterministic term.
+
 * **`generate_artificial_var()` simulates time varying, stochastic volatility
   and structural models.** With `tvp = TRUE` the coefficients and the free
   elements of Psi follow random walks, with `sv = TRUE` the log-volatilities

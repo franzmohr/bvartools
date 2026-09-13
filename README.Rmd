@@ -6,6 +6,8 @@ output:
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(fig.path = "man/figures/README-")
+# Keep R's own messages in English whatever the locale of the machine knitting this
+Sys.setLanguage("en")
 ```
 
 # bvartools
@@ -31,7 +33,7 @@ The package `bvartools` implements functions for Bayesian inference of linear ti
   * Set prior hyperparameters either manually or based on established approaches such as the Minnesota prior.
   * Set initial values based on maximum likelihood estimates or drawing from a prior.
 - *Posterior simulation*
-  * Perform posterior simulation of coefficients, forecasts and likelihoods using algorithms from the [BayesTS](github.com/franzmohr/BayesTS) library.
+  * Perform posterior simulation of coefficients, forecasts and likelihoods using algorithms from the [BayesTS](https://github.com/franzmohr/BayesTS) library.
   * Researchers can also choose to use their own algorithms.
 - *Evaluation*
   * Traditional summary statistics for individual coefficients
@@ -45,7 +47,7 @@ The package `bvartools` implements functions for Bayesian inference of linear ti
 - *Storage*
   * Write an estimated model to HDF5 and read it back, one model per file or several addressed by group, so a long simulation need not be repeated to be analysed again.
 
-In each step researchers are provided with the opportunity to fine-tune a model according to their specific requirements or to use the default framework for commonly used models and priors. Since version 1.0.0 the package includes simulation functions from the [BayesTS](github.com/franzmohr/BayesTS) C++ library.
+In each step researchers are provided with the opportunity to fine-tune a model according to their specific requirements or to use the default framework for commonly used models and priors. Since version 1.0.0 the package includes simulation functions from the [BayesTS](https://github.com/franzmohr/BayesTS) C++ library, which it links to R through `Rcpp` and `RcppArmadillo`.[^cpp]
 
 For Bayesian inference of *VAR models* the package covers
 
@@ -69,15 +71,18 @@ For Bayesian inference of *cointegrated VAR models* the package implements the a
 
 *Dynamic factor models* are no longer part of this package. They moved to [dfmtools](https://github.com/franzmohr/dfmtools), which implements the algorithm used in the textbook of Chan, Koop, Poirier and Tobias (2019).
 
-Similar packages worth checking out are
+Other CRAN packages for Bayesian VAR models, each with a different focus, are
 
-- [BVAR](https://cran.r-project.org/package=BVAR)
-- [bvarsv](https://cran.r-project.org/package=bvarsv)
-- [bvar](https://github.com/nk027/bvar)
-- [bvarr](https://github.com/bdemeshev/bvarr)
-- [bvars](https://github.com/joergrieger/bvars)
-- [mfbvar](https://github.com/ankargren/mfbvar)
-- [BMR](https://github.com/kthohr/BMR)
+| Package | Focus |
+|:--------|:------|
+| [BVAR](https://cran.r-project.org/package=BVAR) | Hierarchical selection of Minnesota and dummy-observation priors à la Giannone, Lenza and Primiceri (2015) |
+| [bsvars](https://cran.r-project.org/package=bsvars) | Structural VARs identified by exclusion restrictions, heteroskedasticity or non-normality |
+| [bsvarSIGNs](https://cran.r-project.org/package=bsvarSIGNs) | Structural VARs identified by sign, zero and narrative restrictions |
+| [bayesianVARs](https://cran.r-project.org/package=bayesianVARs) | VARs with stochastic volatility and global-local shrinkage priors |
+| [BGVAR](https://cran.r-project.org/package=BGVAR) | Bayesian global VARs |
+| [bvarsv](https://cran.r-project.org/package=bvarsv) | The TVP-VAR with stochastic volatility of Primiceri (2005) |
+
+`bvartools` sets itself apart by its cointegrated models with priors on the cointegration space, quantile VARs, expanding window forecast evaluation and the option to plug in custom posterior samplers.
 
 ## Installation
 
@@ -122,7 +127,7 @@ library(bvartools)
 data("e1")
 e1 <- diff(log(e1)) * 100
 
-# Reduce number of oberservations
+# Reduce number of observations
 e1 <- window(e1, end = c(1978, 4))
 
 # Plot the series
@@ -172,7 +177,7 @@ round(matrix(model[["initial"]][["a"]], 3), 3)
 
 #### Using the built-in functions of the package
 
-The output of `add_priors` and `add_initial_values` can be used as the input for user-written algorithms for posterior simulation. However, `bvartools` also comes with built-in posterior simulation functions from the [BayesTS](github.com/franzmohr/BayesTS) library. By using function `add_posterior_coefficients`, the model input is forwarded to a posterior function and the output is added to the original object:
+The output of `add_priors` and `add_initial_values` can be used as the input for user-written algorithms for posterior simulation. However, `bvartools` also comes with built-in posterior simulation functions from the [BayesTS](https://github.com/franzmohr/BayesTS) library. By using function `add_posterior_coefficients`, the model input is forwarded to a posterior function and the output is added to the original object:
 
 ```{r, eval = FALSE}
 model <- add_posterior_coefficients(model)
@@ -231,7 +236,7 @@ for (draw in 1:draws) {
 }
 ```
 
-After the posterior simulation, function `bvar` can be used to collect relevant output of the Gibbs sampler in a standardised object, which can be used by further applications such as `predict` to obtain forecasts or `irf` for impulse respons analysis.
+After the posterior simulation, function `bvar` can be used to collect relevant output of the Gibbs sampler in a standardised object, which can be used by further applications such as `predict` to obtain forecasts or `irf` for impulse response analysis.
 
 ```{r bvars-object}
 bvar_est <- bvar(y = model_with_prior[["data"]][["train"]][["y"]],
@@ -241,7 +246,7 @@ bvar_est <- bvar(y = model_with_prior[["data"]][["train"]][["y"]],
                  Sigma = draws_sigma)
 ```
 
-Summary statistics can be obained in the usual manner:
+Summary statistics can be obtained in the usual way using the `summary` method:
 
 ```{r summary}
 summary(bvar_est)
@@ -256,23 +261,15 @@ Posterior draws can be visually inspected by using the `plot` function. By defau
 plot(bvar_est)
 ```
 
-Alternatively, the trace plot of the post-burnin draws can be draws by adding the argument `type = "trace"`:
+Alternatively, the trace plot of the post-burnin draws can be drawn by adding the argument `type = "trace"`:
 
 ```{r, message=FALSE, warning=FALSE, fig.align='center', fig.height=5, fig.width=10}
 plot(bvar_est, type = "trace")
 ```
 
-### Summary statistics
-
-Summary statistics can be obtained in the usual way using the `summary` method.
-
-```{r}
-summary(bvar_est)
-```
-
 ### Thin results
 
-The MCMC series in object `est_bvar` can be thinned using
+The MCMC series in object `bvar_est` can be thinned using
 
 ```{r}
 bvar_est <- thin(bvar_est, thin = 10)
@@ -332,11 +329,15 @@ plot(bvar_fevd, main = "FEVD of consumption")
 
 ## References
 
+Chan, J., Koop, G., Poirier, D. J., & Tobias, J. L. (2019). *Bayesian Econometric Methods* (2nd ed.). Cambridge: Cambridge University Press.
+
 Diebold, F. X., & Yilmaz, K. (2012). Better to give than to receive: Predictive directional measurement of volatility spillovers. *International Journal of Forecasting, 28*(1), 57-66. <https://doi.org/10.1016/j.ijforecast.2011.02.006>
 
 Eddelbuettel, D., & Sanderson C. (2014). RcppArmadillo: Accelerating R with high-performance C++ linear algebra. *Computational Statistics and Data Analysis, 71*, 1054-1063. <https://doi.org/10.1016/j.csda.2013.02.005>
 
 George, E. I., Sun, D., & Ni, S. (2008). Bayesian stochastic search for VAR model restrictions. *Journal of Econometrics, 142*(1), 553-580. <https://doi.org/10.1016/j.jeconom.2007.08.017>
+
+Giannone, D., Lenza, M., & Primiceri, G. E. (2015). Prior selection for vector autoregressions. *Review of Economics and Statistics, 97*(2), 436-451. <https://doi.org/10.1162/REST_a_00483>
 
 Kim, S., Shephard, N., & Chib, S. (1998). Stochastic volatility: Likelihood inference and comparison with ARCH models. *Review of Economic Studies 65*(3), 361-396.
 
@@ -346,9 +347,13 @@ Koop, G., León-González, R., & Strachan R. W. (2011). Bayesian inference in a 
 
 Korobilis, D. (2013). VAR forecasting using Bayesian variable selection. *Journal of Applied Econometrics, 28*(2), 204-230. <https://doi.org/10.1002/jae.1271>
 
+Kozumi, H., & Kobayashi, G. (2011). Gibbs sampling methods for Bayesian quantile regression. *Journal of Statistical Computation and Simulation, 81*(11), 1565-1578. <https://doi.org/10.1080/00949655.2010.496117>
+
 Lütkepohl, H. (2006). *New introduction to multiple time series analysis* (2nd ed.). Berlin: Springer.
 
 Pesaran, H. H., & Shin, Y. (1998). Generalized impulse response analysis in linear multivariate models. *Economics Letters, 58*, 17-29. <https://doi.org/10.1016/S0165-1765(97)00214-0>
+
+Primiceri, G. E. (2005). Time varying structural vector autoregressions and monetary policy. *Review of Economic Studies, 72*(3), 821-852. <https://doi.org/10.1111/j.1467-937X.2005.00353.x>
 
 Sanderson, C., & Curtin, R. (2016). Armadillo: a template-based C++ library for linear algebra. *Journal of Open Source Software, 1*(2), 26. <https://doi.org/10.21105/joss.00026>
 

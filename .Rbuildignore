@@ -15,3 +15,6 @@ Rplots\.pdf$
 ^LICENSE$
 ^[.]claude-plugin$
 ^inst/agents/[.]claude-plugin$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$

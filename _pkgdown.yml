@@ -1,0 +1,124 @@
+url: https://franzmohr.github.io/bvartools/
+
+template:
+  bootstrap: 5
+
+home:
+  title: "bvartools: Bayesian VAR and VEC Models in R"
+  description: >
+    Bayesian inference of vector autoregressive and error correction models,
+    including stochastic volatility, time varying parameters, variable
+    selection, sign restrictions and quantile VARs.
+
+reference:
+- title: Model set-up
+  contents:
+  - create_bvarmodel
+  - create_bvecmodel
+  - starts_with("use_expanding_window")
+  - combine_models
+  - starts_with("align_model_obs")
+  - transform_variables
+  - starts_with("window.")
+  - generate_artificial_var
+
+- title: Priors and initial values
+  contents:
+  - starts_with("add_priors")
+  - starts_with("minnesota_prior")
+  - starts_with("ssvs_prior")
+  - starts_with("inclusion_prior")
+  - cointspace_prior
+  - starts_with("add_sign_restrictions")
+  - starts_with("add_initial_values")
+
+- title: Posterior simulation
+  contents:
+  - starts_with("add_posterior_coefficients")
+  - starts_with("add_posterior_loglik")
+  - starts_with("thin.")
+
+- title: Forecasting and model evaluation
+  contents:
+  - starts_with("add_forecast_input")
+  - starts_with("prepare_forecast_input")
+  - starts_with("add_posterior_forecasts")
+  - starts_with("predict.")
+  - starts_with("add_forecast_errors")
+  - get_forecast_errors
+  - plot_forecast_errors_by_period
+  - create_external_forecast
+  - starts_with("selection_criteria")
+  - starts_with("choose_best_model")
+  - get_model_specifications
+
+- title: Structural analysis
+  contents:
+  - starts_with("irf")
+  - starts_with("fevd")
+  - starts_with("spillover")
+  - starts_with("vec_to_var")
+  - starts_with("scale_error_correction")
+  - starts_with("rescale_error_correction")
+
+- title: Summaries and plots
+  contents:
+  - starts_with("summary.")
+  - starts_with("print.")
+  - starts_with("plot.")
+
+- title: Storage
+  contents:
+  - starts_with("write_to_hdf5")
+  - read_model_from_hdf5
+  - read_models_from_folder
+  - read_expanding_window_model_from_folder
+  - list_models_in_hdf5
+
+- title: Building blocks for custom samplers
+  desc: >
+    Posterior draws and data preparation steps for writing your own Gibbs
+    sampler, and the constructors that collect its output in a standard object.
+  contents:
+  - bvar
+  - bvec
+  - starts_with("post_")
+  - ssvs
+  - starts_with("stochvol_")
+  - kalman_durbin_koopman_2002
+  - starts_with("covar_")
+  - starts_with("coint_")
+  - generate_lower_block_diagonal
+  - sur_const_to_tvp
+  - loglik_normal
+
+- title: Data
+  contents:
+  - at_macrodata
+  - e1
+  - e3
+  - e6
+  - uk_macrodata
+  - us_macrodata
+
+articles:
+- title: VAR models
+  navbar: VAR models
+  contents:
+  - minnesota-prior
+  - ssvs
+  - sign-restrictions
+  - quantile-var
+  - tvp-sv-var
+
+- title: VEC models
+  navbar: VEC models
+  contents:
+  - bvec
+  - tvp-sv-vec
+
+- title: Model evaluation
+  navbar: Model evaluation
+  contents:
+  - model-comparison
+  - horse-races

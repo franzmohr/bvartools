@@ -37,7 +37,7 @@ workflow into multiple steps:
 - *Posterior simulation*
   - Perform posterior simulation of coefficients, forecasts and
     likelihoods using algorithms from the
-    [BayesTS](github.com/franzmohr/BayesTS) library.
+    [BayesTS](https://github.com/franzmohr/BayesTS) library.
   - Researchers can also choose to use their own algorithms.
 - *Evaluation*
   - Traditional summary statistics for individual coefficients
@@ -58,7 +58,8 @@ In each step researchers are provided with the opportunity to fine-tune
 a model according to their specific requirements or to use the default
 framework for commonly used models and priors. Since version 1.0.0 the
 package includes simulation functions from the
-[BayesTS](github.com/franzmohr/BayesTS) C++ library.
+[BayesTS](https://github.com/franzmohr/BayesTS) C++ library, which it
+links to R through `Rcpp` and `RcppArmadillo`.[^1]
 
 For Bayesian inference of *VAR models* the package covers
 
@@ -94,22 +95,28 @@ space – in the following variants
 - Stochastic volatility (SV) of the errors à la Kim, Shephard and Chib
   (1998)
 - Time varying parameter models (TVP-VEC) à la Koop, León-González and
-  Strachan (2011)[^1]
+  Strachan (2011)[^2]
 
 *Dynamic factor models* are no longer part of this package. They moved
 to [dfmtools](https://github.com/franzmohr/dfmtools), which implements
 the algorithm used in the textbook of Chan, Koop, Poirier and Tobias
 (2019).
 
-Similar packages worth checking out are
+Other CRAN packages for Bayesian VAR models, each with a different
+focus, are
 
-- [BVAR](https://cran.r-project.org/package=BVAR)
-- [bvarsv](https://cran.r-project.org/package=bvarsv)
-- [bvar](https://github.com/nk027/bvar)
-- [bvarr](https://github.com/bdemeshev/bvarr)
-- [bvars](https://github.com/joergrieger/bvars)
-- [mfbvar](https://github.com/ankargren/mfbvar)
-- [BMR](https://github.com/kthohr/BMR)
+| Package | Focus |
+|:---|:---|
+| [BVAR](https://cran.r-project.org/package=BVAR) | Hierarchical selection of Minnesota and dummy-observation priors à la Giannone, Lenza and Primiceri (2015) |
+| [bsvars](https://cran.r-project.org/package=bsvars) | Structural VARs identified by exclusion restrictions, heteroskedasticity or non-normality |
+| [bsvarSIGNs](https://cran.r-project.org/package=bsvarSIGNs) | Structural VARs identified by sign, zero and narrative restrictions |
+| [bayesianVARs](https://cran.r-project.org/package=bayesianVARs) | VARs with stochastic volatility and global-local shrinkage priors |
+| [BGVAR](https://cran.r-project.org/package=BGVAR) | Bayesian global VARs |
+| [bvarsv](https://cran.r-project.org/package=bvarsv) | The TVP-VAR with stochastic volatility of Primiceri (2005) |
+
+`bvartools` sets itself apart by its cointegrated models with priors on
+the cointegration space, quantile VARs, expanding window forecast
+evaluation and the option to plug in custom posterior samplers.
 
 ## Installation
 
@@ -126,11 +133,11 @@ devtools::install_github("franzmohr/bvartools")
 
 ### With an AI coding assistant
 
-`inst/agents/` holds documentation written for coding assistants: the rules that
-keep a bvartools analysis from quietly going wrong, and complete examples that
-the test suite runs. The installed package carries it at
-`system.file("agents", package = "bvartools")`, matching its version. In Claude
-Code it installs as a plugin:
+`inst/agents/` holds documentation written for coding assistants: the
+rules that keep a bvartools analysis from quietly going wrong, and
+complete examples that the test suite runs. The installed package
+carries it at `system.file("agents", package = "bvartools")`, matching
+its version. In Claude Code it installs as a plugin:
 
     /plugin marketplace add franzmohr/bvartools
     /plugin install bvartools@bvartools
@@ -158,14 +165,14 @@ the log-differenced series are used.
 library(bvartools)
 ```
 
-    ## Lade nötiges Paket: coda
+    ## Loading required package: coda
 
 ``` r
 # Load data
 data("e1")
 e1 <- diff(log(e1)) * 100
 
-# Reduce number of oberservations
+# Reduce number of observations
 e1 <- window(e1, end = c(1978, 4))
 
 # Plot the series
@@ -235,8 +242,8 @@ round(matrix(model[["initial"]][["a"]], 3), 3)
 The output of `add_priors` and `add_initial_values` can be used as the
 input for user-written algorithms for posterior simulation. However,
 `bvartools` also comes with built-in posterior simulation functions from
-the [BayesTS](github.com/franzmohr/BayesTS) library. By using function
-`add_posterior_coefficients`, the model input is forwarded to a
+the [BayesTS](https://github.com/franzmohr/BayesTS) library. By using
+function `add_posterior_coefficients`, the model input is forwarded to a
 posterior function and the output is added to the original object:
 
 ``` r
@@ -300,7 +307,7 @@ for (draw in 1:draws) {
 After the posterior simulation, function `bvar` can be used to collect
 relevant output of the Gibbs sampler in a standardised object, which can
 be used by further applications such as `predict` to obtain forecasts or
-`irf` for impulse respons analysis.
+`irf` for impulse response analysis.
 
 ``` r
 bvar_est <- bvar(y = model_with_prior[["data"]][["train"]][["y"]],
@@ -310,7 +317,8 @@ bvar_est <- bvar(y = model_with_prior[["data"]][["train"]][["y"]],
                  Sigma = draws_sigma)
 ```
 
-Summary statistics can be obained in the usual manner:
+Summary statistics can be obtained in the usual way using the `summary`
+method:
 
 ``` r
 summary(bvar_est)
@@ -410,7 +418,7 @@ plot(bvar_est)
 
 <img src="man/figures/README-unnamed-chunk-6-1.png" alt="" style="display: block; margin: auto;" /><img src="man/figures/README-unnamed-chunk-6-2.png" alt="" style="display: block; margin: auto;" /><img src="man/figures/README-unnamed-chunk-6-3.png" alt="" style="display: block; margin: auto;" />
 
-Alternatively, the trace plot of the post-burnin draws can be draws by
+Alternatively, the trace plot of the post-burnin draws can be drawn by
 adding the argument `type = "trace"`:
 
 ``` r
@@ -419,97 +427,9 @@ plot(bvar_est, type = "trace")
 
 <img src="man/figures/README-unnamed-chunk-7-1.png" alt="" style="display: block; margin: auto;" /><img src="man/figures/README-unnamed-chunk-7-2.png" alt="" style="display: block; margin: auto;" /><img src="man/figures/README-unnamed-chunk-7-3.png" alt="" style="display: block; margin: auto;" />
 
-### Summary statistics
-
-Summary statistics can be obtained in the usual way using the `summary`
-method.
-
-``` r
-summary(bvar_est)
-```
-
-    ## 
-    ## Bayesian VAR model with p = 2 
-    ## 
-    ## Endogenous variables: invest, income, cons
-    ## 
-    ## Variable: invest 
-    ## 
-    ##                 Mean        SD    Naive SD Time-series SD       2.5%        50%
-    ## invest.l1 -0.3209994 0.1280102 0.001280102    0.001286291 -0.5734283 -0.3216256
-    ## income.l1  0.1471972 0.5653707 0.005653707    0.005653707 -0.9601798  0.1439023
-    ## cons.l1    0.9662216 0.6767544 0.006767544    0.006777551 -0.3452887  0.9560136
-    ## invest.l2 -0.1600464 0.1263206 0.001263206    0.001304661 -0.4048865 -0.1611636
-    ## income.l2  0.1035875 0.5518755 0.005518755    0.005439039 -0.9653135  0.1010048
-    ## cons.l2    0.9347698 0.6893889 0.006893889    0.006893889 -0.4164533  0.9283409
-    ## const     -1.6636708 1.7556026 0.017556026    0.017556026 -5.1131347 -1.6427596
-    ##                 97.5%  
-    ## invest.l1 -0.06831104 *
-    ## income.l1  1.26083425  
-    ## cons.l1    2.32033944  
-    ## invest.l2  0.08747471  
-    ## income.l2  1.19676048  
-    ## cons.l2    2.28239234  
-    ## const      1.81571899  
-    ## 
-    ## Variable: income 
-    ## 
-    ##                   Mean         SD     Naive SD Time-series SD        2.5%
-    ## invest.l1  0.043538817 0.03282873 0.0003282873   0.0003339793 -0.02134167
-    ## income.l1 -0.152587178 0.14272417 0.0014272417   0.0014354001 -0.43483749
-    ## cons.l1    0.287002517 0.17214572 0.0017214572   0.0017583324 -0.05263822
-    ## invest.l2  0.049836048 0.03214857 0.0003214857   0.0003214857 -0.01314576
-    ## income.l2  0.019208561 0.13846407 0.0013846407   0.0013846407 -0.25073551
-    ## cons.l2   -0.008993818 0.17079324 0.0017079324   0.0017079324 -0.34237291
-    ## const      1.577324249 0.44978283 0.0044978283   0.0044978283  0.69836815
-    ##                    50%     97.5%  
-    ## invest.l1  0.043639581 0.1077596  
-    ## income.l1 -0.152102393 0.1277937  
-    ## cons.l1    0.284571823 0.6300760  
-    ## invest.l2  0.049738086 0.1135096  
-    ## income.l2  0.020273010 0.2888129  
-    ## cons.l2   -0.009633005 0.3335256  
-    ## const      1.573285781 2.4624095 *
-    ## 
-    ## Variable: cons 
-    ## 
-    ##                   Mean         SD     Naive SD Time-series SD        2.5%
-    ## invest.l1 -0.002622984 0.02648002 0.0002648002   0.0002648002 -0.05469872
-    ## income.l1  0.223177576 0.11668272 0.0011668272   0.0011668272 -0.00384140
-    ## cons.l1   -0.263005581 0.13888117 0.0013888117   0.0013888117 -0.53917857
-    ## invest.l2  0.033789248 0.02612399 0.0002612399   0.0002612399 -0.01770897
-    ## income.l2  0.354398279 0.11138451 0.0011138451   0.0011302181  0.13155910
-    ## cons.l2   -0.020350735 0.13877699 0.0013877699   0.0013661012 -0.29450792
-    ## const      1.292295624 0.35785838 0.0035785838   0.0035785838  0.59071911
-    ##                    50%       97.5%  
-    ## invest.l1 -0.002433263 0.049704315  
-    ## income.l1  0.222296885 0.449267333  
-    ## cons.l1   -0.262529739 0.007515141  
-    ## invest.l2  0.033990454 0.085768693  
-    ## income.l2  0.356159445 0.571057742 *
-    ## cons.l2   -0.019763112 0.254939286  
-    ## const      1.290012200 2.006568642 *
-    ## 
-    ## Variance-covariance matrix:
-    ## 
-    ##                     Mean        SD    Naive SD Time-series SD       2.5%
-    ## invest_invest 22.3072220 4.0178380 0.040178380    0.044990338 15.8398654
-    ## invest_income  0.7560915 0.7312545 0.007312545    0.008046444 -0.6330327
-    ## invest_cons    1.2955574 0.6021675 0.006021675    0.006781077  0.2156928
-    ## income_income  1.4378139 0.2610475 0.002610475    0.002853997  1.0191372
-    ## income_cons    0.6442296 0.1690491 0.001690491    0.001873490  0.3596336
-    ## cons_cons      0.9347527 0.1680653 0.001680653    0.001871957  0.6610009
-    ##                      50%     97.5%  
-    ## invest_invest 21.7999153 31.326979 *
-    ## invest_income  0.7285783  2.294064  
-    ## invest_cons    1.2701401  2.576358 *
-    ## income_income  1.4056673  2.037694 *
-    ## income_cons    0.6279908  1.032157 *
-    ## cons_cons      0.9140748  1.311783 *
-
 ### Thin results
 
-The MCMC series in object `est_bvar` can be thinned using
+The MCMC series in object `bvar_est` can be thinned using
 
 ``` r
 bvar_est <- thin(bvar_est, thin = 10)
@@ -591,6 +511,9 @@ plot(bvar_fevd, main = "FEVD of consumption")
 
 ## References
 
+Chan, J., Koop, G., Poirier, D. J., & Tobias, J. L. (2019). *Bayesian
+Econometric Methods* (2nd ed.). Cambridge: Cambridge University Press.
+
 Diebold, F. X., & Yilmaz, K. (2012). Better to give than to receive:
 Predictive directional measurement of volatility spillovers.
 *International Journal of Forecasting, 28*(1), 57-66.
@@ -604,6 +527,10 @@ Data Analysis, 71*, 1054-1063.
 George, E. I., Sun, D., & Ni, S. (2008). Bayesian stochastic search for
 VAR model restrictions. *Journal of Econometrics, 142*(1), 553-580.
 <https://doi.org/10.1016/j.jeconom.2007.08.017>
+
+Giannone, D., Lenza, M., & Primiceri, G. E. (2015). Prior selection for
+vector autoregressions. *Review of Economics and Statistics, 97*(2),
+436-451. <https://doi.org/10.1162/REST_a_00483>
 
 Kim, S., Shephard, N., & Chib, S. (1998). Stochastic volatility:
 Likelihood inference and comparison with ARCH models. *Review of
@@ -622,12 +549,20 @@ Korobilis, D. (2013). VAR forecasting using Bayesian variable selection.
 *Journal of Applied Econometrics, 28*(2), 204-230.
 <https://doi.org/10.1002/jae.1271>
 
+Kozumi, H., & Kobayashi, G. (2011). Gibbs sampling methods for Bayesian
+quantile regression. *Journal of Statistical Computation and Simulation,
+81*(11), 1565-1578. <https://doi.org/10.1080/00949655.2010.496117>
+
 Lütkepohl, H. (2006). *New introduction to multiple time series
 analysis* (2nd ed.). Berlin: Springer.
 
 Pesaran, H. H., & Shin, Y. (1998). Generalized impulse response analysis
 in linear multivariate models. *Economics Letters, 58*, 17-29.
 <https://doi.org/10.1016/S0165-1765(97)00214-0>
+
+Primiceri, G. E. (2005). Time varying structural vector autoregressions
+and monetary policy. *Review of Economic Studies, 72*(3), 821-852.
+<https://doi.org/10.1111/j.1467-937X.2005.00353.x>
 
 Sanderson, C., & Curtin, R. (2016). Armadillo: a template-based C++
 library for linear algebra. *Journal of Open Source Software, 1*(2), 26.
@@ -638,7 +573,10 @@ Results from an agnostic identification procedure. *Journal of Monetary
 Economics, 52*(2), 381-419.
 <https://doi.org/10.1016/j.jmoneco.2004.05.007>
 
-[^1]: The autocorrelation coefficient of the time varying cointegration
+[^1]: `RcppArmadillo` is the `Rcpp` bridge to the open source
+    ‘Armadillo’ library of Sanderson and Curtin (2016).
+
+[^2]: The autocorrelation coefficient of the time varying cointegration
     space is drawn along with the other parameters once `add_priors` is
     given the bounds `coint$rho_min` and `coint$rho_max` of a uniform
     prior on it. Name neither and it is held fixed at `coint$rho`, which

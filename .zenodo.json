@@ -2,6 +2,7 @@
   "upload_type": "software",
   "access_right": "open",
   "title": "bvartools: Bayesian Inference of Vector Autoregressive and Error Correction Models",
+  "version": "1.0.0",
   "description": "<p>An R package that assists in the set-up of algorithms for Bayesian inference of vector autoregressive (VAR) and error correction (VEC) models. It provides functions for posterior simulation, forecasting, impulse response analysis and forecast error variance decomposition, largely based on the introductory texts of Chan, Koop, Poirier and Tobias (2019), Koop and Korobilis (2010) and L&uuml;tkepohl (2006).</p>",
   "license": "GPL-2.0-or-later",
   "creators": [

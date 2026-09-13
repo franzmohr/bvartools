@@ -65,19 +65,19 @@
 #' Argument \code{error} specifies the structure of the covariance matrix of
 #' the error term and how it is estimated. Possible specifications are:
 #' \itemize{
-#'  \item{\code{"wishart"}: The covariance is estimated using a Wishart prior.}
-#'  \item{\code{"gamma"}: Only the diagonal elements of the covariance matrix are estimated using a gamma prior.
-#' Off-diagonal elements are not estimated and set to zero.}
-#'  \item{\code{"gamma+covar"}: The diagonal elements of the covariance matrix are estimated using a gamma prior.
-#' Covariances are estimated based on a triangular decomposition.}
-#'  \item{\code{"sv"}: Only the diagonal elements of the covariance matrix are estimated using a stochastic volatility
-#' algorithm. Off-diagonal elements are not estimated and set to zero.}
-#'  \item{\code{"sv+covar"}: Only the diagonal elements of the covariance matrix are estimated using a stochastic volatility
-#' algorithm. Covariances are estimated based on a triangular decomposition.}
-#'  \item{\code{"ald"}: The errors are assumed to follow an asymmetric Laplace distribution, which
+#'  \item \code{"wishart"}: The covariance is estimated using a Wishart prior.
+#'  \item \code{"gamma"}: Only the diagonal elements of the covariance matrix are estimated using a gamma prior.
+#' Off-diagonal elements are not estimated and set to zero.
+#'  \item \code{"gamma+covar"}: The diagonal elements of the covariance matrix are estimated using a gamma prior.
+#' Covariances are estimated based on a triangular decomposition.
+#'  \item \code{"sv"}: Only the diagonal elements of the covariance matrix are estimated using a stochastic volatility
+#' algorithm. Off-diagonal elements are not estimated and set to zero.
+#'  \item \code{"sv+covar"}: Only the diagonal elements of the covariance matrix are estimated using a stochastic volatility
+#' algorithm. Covariances are estimated based on a triangular decomposition.
+#'  \item \code{"ald"}: The errors are assumed to follow an asymmetric Laplace distribution, which
 #' turns the model into a Bayesian quantile regression: the coefficients describe the conditional
 #' quantile specified in argument \code{quantile} instead of the conditional mean. Off-diagonal
-#' elements of the covariance matrix are not estimated and set to zero. See 'Details'.}
+#' elements of the covariance matrix are not estimated and set to zero. See 'Details'.
 #' }
 #' 
 #' Models with \code{error = "ald"} estimate a conditional quantile after Kozumi and Kobayashi (2011).
@@ -97,9 +97,9 @@
 #' 
 #' Available specifications for argument \code{varsel} are:
 #' \itemize{
-#'  \item{\code{"none"}: No variable selection algorithm is used.}
-#'  \item{\code{"bvs"}: Bayesian variable selection as proposed in Korobilis (2013).}
-#'  \item{\code{"ssvs"}: Stochastic search variable selection as proposed in George et al. (2008).}
+#'  \item \code{"none"}: No variable selection algorithm is used.
+#'  \item \code{"bvs"}: Bayesian variable selection as proposed in Korobilis (2013).
+#'  \item \code{"ssvs"}: Stochastic search variable selection as proposed in George et al. (2008).
 #' }
 #' 
 #' @return An object of class 'bvarmodel' or, if a vector is given in \code{p}, \code{s}

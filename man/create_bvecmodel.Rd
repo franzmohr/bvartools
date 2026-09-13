@@ -121,27 +121,27 @@ produce a distinct model for all possible combinations of those specifications.
 Argument \code{error} specifies the structure of the covariance matrix of
 the error term and how it is estimated. Possible specifications are:
 \itemize{
- \item{\code{"wishart"}: The covariance is estimated using a Wishart prior.}
- \item{\code{"gamma"}: Only the diagonal elements of the covariance matrix are estimated using a gamma prior.
-Off-diagonal elements are not estimated and set to zero.}
- \item{\code{"gamma+covar"}: The diagonal elements of the covariance matrix are estimated using a gamma prior.
-Covariances are estimated based on a triangular decomposition.}
- \item{\code{"sv"}: Only the diagonal elements of the covariance matrix are estimated using a stochastic volatility
-algorithm. Off-diagonal elements are not estimated and set to zero.}
- \item{\code{"sv+covar"}: Only the diagonal elements of the covariance matrix are estimated using a stochastic volatility
-algorithm. Covariances are estimated based on a triangular decomposition.}
+ \item \code{"wishart"}: The covariance is estimated using a Wishart prior.
+ \item \code{"gamma"}: Only the diagonal elements of the covariance matrix are estimated using a gamma prior.
+Off-diagonal elements are not estimated and set to zero.
+ \item \code{"gamma+covar"}: The diagonal elements of the covariance matrix are estimated using a gamma prior.
+Covariances are estimated based on a triangular decomposition.
+ \item \code{"sv"}: Only the diagonal elements of the covariance matrix are estimated using a stochastic volatility
+algorithm. Off-diagonal elements are not estimated and set to zero.
+ \item \code{"sv+covar"}: Only the diagonal elements of the covariance matrix are estimated using a stochastic volatility
+algorithm. Covariances are estimated based on a triangular decomposition.
 }
 
 Available specifications for argument \code{varsel} are:
 \itemize{
- \item{\code{"none"}: No variable selection algorithm is used.}
- \item{\code{"bvs"}: Bayesian variable selection as proposed in Korobilis (2013).}
- \item{\code{"ssvs"}: Stochastic search variable selection as proposed in George et al. (2008).}
+ \item \code{"none"}: No variable selection algorithm is used.
+ \item \code{"bvs"}: Bayesian variable selection as proposed in Korobilis (2013).
+ \item \code{"ssvs"}: Stochastic search variable selection as proposed in George et al. (2008).
 }
 
 Available specifications for argument \code{algorithm} are:
 \itemize{
- \item{\code{"KLGS2010"}: Algorithm proposed in Koop, León-González & Strachan (2010).}
+ \item \code{"KLGS2010"}: Algorithm proposed in Koop, León-González & Strachan (2010).
 }
 }
 \examples{

@@ -11,17 +11,17 @@
 #' \eqn{R} draws, \eqn{LL^{(i)} = \sum_{t = 1}^{T} ll_t^{(i)}} and
 #' \eqn{\kappa} the number of estimated parameters, these are
 #' \itemize{
-#'  \item{\code{"LL"}: the log-likelihood \eqn{LL^{(i)}}, which is summarised by
-#' the mean, the median and the bounds of the credible band of its draws.}
-#'  \item{\code{"AIC"}: \eqn{D + 2 \kappa};}
-#'  \item{\code{"BIC"}: \eqn{D + \ln(T) \kappa};}
-#'  \item{\code{"HQ"}: \eqn{D + 2 \ln(\ln(T)) \kappa};}
-#'  \item{\code{"WAIC"}: \eqn{-2 \sum_{t = 1}^{T} \left( \ln \left(
+#'  \item \code{"LL"}: the log-likelihood \eqn{LL^{(i)}}, which is summarised by
+#' the mean, the median and the bounds of the credible band of its draws.
+#'  \item \code{"AIC"}: \eqn{D + 2 \kappa};
+#'  \item \code{"BIC"}: \eqn{D + \ln(T) \kappa};
+#'  \item \code{"HQ"}: \eqn{D + 2 \ln(\ln(T)) \kappa};
+#'  \item \code{"WAIC"}: \eqn{-2 \sum_{t = 1}^{T} \left( \ln \left(
 #' \frac{1}{R} \sum_{i = 1}^{R} \exp(ll_t^{(i)}) \right) -
-#' \mathrm{Var}_i \left[ ll_t^{(i)} \right] \right)};}
-#'  \item{\code{"LOOIC"}: \eqn{-2} times the expected log pointwise predictive
+#' \mathrm{Var}_i \left[ ll_t^{(i)} \right] \right)};
+#'  \item \code{"LOOIC"}: \eqn{-2} times the expected log pointwise predictive
 #' density of leave-one-out cross validation, obtained by Pareto smoothed
-#' importance sampling.}
+#' importance sampling.
 #' }
 #'
 #' \eqn{D} is the deviance of the model at its point estimate. Since AIC, BIC

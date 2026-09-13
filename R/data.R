@@ -102,30 +102,48 @@
 #' 
 #' @usage data("at_macrodata")
 #' 
-#' @format A named time-series object with 178 rows and 15 variables:
+#' @format A named list with two elements, which are quarterly time-series objects
+#' from 1979Q2 to 2023Q3 with 178 rows each:
 #' \describe{
-#'   \item{y}{log real GDP.}
-#'   \item{Dp}{rate of inflation, the quarterly change in the log CPI.}
-#'   \item{eq}{log real equity prices.}
-#'   \item{ep}{log exchange rate against the US dollar, deflated by the CPI.}
-#'   \item{r}{short-term interest rate, \eqn{0.25 ln(1 + R^{S} / 100)}.}
-#'   \item{lr}{long-term interest rate, \eqn{0.25 ln(1 + R^{L} / 100)}.}
-#'   \item{y.s, Dp.s, eq.s, ep.s, r.s, lr.s}{foreign counterparts of the domestic variables.}
-#'   \item{poil}{log of oil prices.}
-#'   \item{pmat}{log of agricultural raw material prices.}
-#'   \item{pmetal}{log of metals prices.}
+#'   \item{\code{endogen}}{a time-series object with 6 columns, the domestic
+#'   (endogenous) variables:
+#'     \describe{
+#'       \item{\code{y}}{log real GDP.}
+#'       \item{\code{Dp}}{rate of inflation, the quarterly change in the log CPI.}
+#'       \item{\code{eq}}{log real equity prices.}
+#'       \item{\code{ep}}{log exchange rate against the US dollar, deflated by the CPI.}
+#'       \item{\code{r}}{short-term interest rate,
+#'         \eqn{0.25 \ln(1 + R^S / 100)}{0.25 ln(1 + R^S / 100)}, where \eqn{R^S}{R^S}
+#'         is the annual short-term rate in percent.}
+#'       \item{\code{lr}}{long-term interest rate,
+#'         \eqn{0.25 \ln(1 + R^L / 100)}{0.25 ln(1 + R^L / 100)}, where \eqn{R^L}{R^L}
+#'         is the annual long-term rate in percent.}
+#'     }
+#'   }
+#'   \item{\code{exogen}}{a time-series object with 9 columns, the foreign and
+#'   global (weakly exogenous) variables:
+#'     \describe{
+#'       \item{\code{y.s}, \code{Dp.s}, \code{eq.s}, \code{ep.s}, \code{r.s}, \code{lr.s}}{foreign
+#'         counterparts of the domestic variables.}
+#'       \item{\code{poil}}{log oil prices.}
+#'       \item{\code{pmat}}{log agricultural raw material prices.}
+#'       \item{\code{pmetal}}{log metals prices.}
+#'     }
+#'   }
 #' }
 #' 
 #' @details The foreign variables are trade weighted averages of the series of the other
-#' countries of the database, for which the respective variable is available.
+#' countries of the database for which the respective variable is available.
 #' The weights are the shares of the countries in Austria's trade over the current and
 #' the two preceding years. Trade data are available from 1980 to 2016, so the weights of the years
 #' 1979 to 1982 are those of 1980 to 1982 and the weights from 2016 onwards are those of
 #' 2014 to 2016.
-#' 
+#'
 #' In a sub-model of a global VAR the domestic variables are endogenous, and the foreign
-#' and global variables are weakly exogenous. They can be passed to argument \code{exogen}
-#' of \code{\link{create_bvarmodel}} or \code{\link{create_bvecmodel}}.
+#' and global variables are weakly exogenous. The two elements of the list can therefore be
+#' passed to arguments \code{data} and \code{exogen} of \code{\link{create_bvarmodel}} or
+#' \code{\link{create_bvecmodel}}, e.g.
+#' \code{create_bvarmodel(data = at_macrodata$endogen, exogen = at_macrodata$exogen, s = 1)}.
 #' 
 #' @references
 #' 

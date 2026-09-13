@@ -21,14 +21,18 @@ submodel <- bgvars::create_varxsubmodel(object, submodel = "AT",
                                         p_endogen = 1, p_exogen = 1,
                                         iterations = 10, burnin = 10)[[1]]
 
-domestic <- submodel[["data"]][["original"]][["endogen"]]
-foreign <- submodel[["data"]][["original"]][["exogen"]]
+endogen <- submodel[["data"]][["original"]][["endogen"]]
 
-at_macrodata <- cbind(domestic, foreign, global_data)
-dimnames(at_macrodata) <- list(NULL, c(dimnames(domestic)[[2]],
-                                      dimnames(foreign)[[2]],
-                                      dimnames(global_data)[[2]]))
-plot(at_macrodata[, 1:8])
-plot(at_macrodata[, 9:15])
+foreign <- submodel[["data"]][["original"]][["exogen"]]
+exogen <- cbind(foreign, global_data)
+
+dimnames(exogen) <- list(NULL, c(dimnames(foreign)[[2]],
+                                 dimnames(global_data)[[2]]))
+
+plot(endogen)
+plot(exogen)
+
+at_macrodata <- list("endogen" = endogen,
+                     "exogen" = exogen)
 
 usethis::use_data(at_macrodata, overwrite = TRUE)

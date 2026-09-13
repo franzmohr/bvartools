@@ -1,5 +1,17 @@
 # bvartools (development version)
 
+* **A VEC model with constant coefficients and stochastic volatility can be
+  forecast.** `vec_to_var()` stopped on such a model with "posterior draws of
+  u_sigma_inv must have 9 rows, got 1584": the coefficients are constant, so it
+  handed them to the transformation in one piece, and with them the whole path
+  of the error precision, which the transformation checks against the size of
+  a single period. It now passes the precision of the last period, which the
+  coefficients do not depend on, and carries the path over to the VAR
+  representation unchanged. Its forecasts start from the precision of the last
+  in-sample period, as those of the time varying models do. VEC models with a
+  constant error covariance and those with time varying coefficients were not
+  affected.
+
 * **The samplers thin: `create_bvarmodel()` and `create_bvecmodel()` take
   `thin`.** A model with `thin = t` runs its chain for `burnin + iterations * t`
   draws and keeps the last of every `t` after the burn-in. So `iterations` is

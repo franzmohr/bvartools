@@ -311,7 +311,7 @@ vec_to_var.bvecmodel <- function(object, ...) {
     if (isTRUE(specs[["tvp"]])) {
       coeffs <- .vec_to_var_path(object)
     } else {
-      coeffs <- .VecToVarCoefficients(object)[["a"]][["coeffs"]]
+      coeffs <- .VecToVarCoefficients(.vec_to_var_one_precision(object))[["a"]][["coeffs"]]
     }
     if (is.null(mcpar)) {
       coeffs <- coda::as.mcmc(coeffs)
@@ -328,6 +328,28 @@ vec_to_var.bvecmodel <- function(object, ...) {
   class(result) <- c("bvarmodel", "list")
 
   return(result)
+}
+
+# The object the coefficient transformation of a VEC model with constant
+# coefficients is handed. The library transforms the coefficients and passes the
+# error precision through, which it checks against the size of one period. Under
+# stochastic volatility the posterior holds the whole path of the precision, so
+# the transformation gets its last period alone. The path itself is carried over
+# to the VAR representation untouched, and its forecast starts from that last
+# period.
+.vec_to_var_one_precision <- function(object) {
+
+  k <- object[["model"]][["k"]]
+  kk <- k * k
+  tt <- nrow(object[["data"]][["train"]][["y"]])
+
+  if (.u_sigma_is_path(object, k, tt)) {
+    u_sigma_inv <- .draws_matrix(object[["posterior"]][["u_sigma_inv"]][["coeffs"]])
+    object[["posterior"]][["u_sigma_inv"]][["coeffs"]] <-
+      u_sigma_inv[, (tt - 1) * kk + seq_len(kk), drop = FALSE]
+  }
+
+  return(object)
 }
 
 # Coefficient draws of the VAR representation of a VEC model whose coefficients

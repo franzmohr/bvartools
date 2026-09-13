@@ -1,5 +1,22 @@
 # bvartools (development version)
 
+* **The cointegration space prior can be centred on the maximum likelihood
+  estimate.** For VEC models with constant cointegration vectors,
+  `add_priors(coint = list(v_i = ..., p_tau_i = "ml", weight = 1))` centres the
+  prior of Koop et al. (2010) on the space spanned by Johansen's estimate of
+  beta. Its spread is calibrated so that, given the loadings, the prior on how
+  far beta tilts away from that space is the estimator's own sampling
+  distribution, worth `weight` samples of information. `coint$v_i = "ml"` sets
+  the shrinkage of the loadings from their maximum likelihood estimate.
+  `coint$p_tau_i` also accepts a full matrix now.
+
+  Such a prior cannot be combined with `coint$v_i = 0`, which is an error: the
+  sampler only ever uses the product of `v_i` and `p_tau_i`, so with a zero
+  shrinkage any `p_tau_i` gives the uniform prior on the space. And
+  `scale_error_correction()` refuses a model that already has a prior with a
+  direction, since that direction is stated in the units of the unscaled
+  series.
+
 * **A sampler that cannot run now stops.** `add_posterior_coefficients()` used
   to catch the error, print it, and return the *unestimated* model with an
   `error` element added -- an object of the right class, carrying the

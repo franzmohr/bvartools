@@ -120,23 +120,7 @@ add_initial_values.bvecmodel <- function(object, method = "maxlik", ...){
 
         w <- t(w)
 
-        if (k * (p - 1) + m * s + n > 0) {
-          x <- t(x) 
-          M <- diag(tt) - crossprod(x, solve(tcrossprod(x))) %*% x
-          R0 <- y %*% M # Residuals of regression of y on x
-          R1 <- w %*% M # Residuals of regression of w on x 
-        } else {
-          R0 <- y
-          R1 <- w
-        }
-        S00_inv <- solve(tcrossprod(R0) / tt)
-        S01 <- tcrossprod(R0, R1) / tt
-        S10 <- tcrossprod(R1, R0) / tt
-        S11 <- tcrossprod(R1) / tt
-        S11_sqrt_inv <- solve(.mroot(S11))
-        lambda <- eigen(S11_sqrt_inv %*% S10 %*% S00_inv %*% S01 %*% t(S11_sqrt_inv))#, symmetric = TRUE)
-        
-        beta <- t(crossprod(matrix(lambda$vectors[, 1:r] , nrow(w)), S11_sqrt_inv))
+        beta <- .coint_ml(object)[["beta"]]
         ect <- crossprod(beta, w)
         z[, 1:n_alpha] <- kronecker(t(ect), diag(1, k))
         if (object[["model"]][["tvp"]]) {
@@ -301,4 +285,52 @@ add_initial_values.bvecmodel <- function(object, method = "maxlik", ...){
   }
   R <- eig$vectors %*% val %*% t(eig$vectors)
   return(R)
+}
+
+
+
+# Johansen's maximum likelihood estimate of the error correction term
+#
+# Used for the initial values of a VEC model and for a cointegration space prior
+# centred on it (add_priors with coint$p_tau_i = "ml"). Works on
+# object$data$train as it stands, so on the scaled series if
+# scale_error_correction() has been applied.
+#
+# Returns the M x r cointegration matrix 'beta', normalised to beta' S11 beta =
+# I, the k x r loadings 'alpha' belonging to it, the k x k residual covariance
+# 'omega', and the M x T residuals 'r1' of the regression of w on the
+# short-run regressors, whose cross product is the information the estimate of
+# beta carries.
+.coint_ml <- function(object) {
+
+  y <- t(object[["data"]][["train"]][["y"]])
+  w <- t(object[["data"]][["train"]][["w"]])
+  x <- object[["data"]][["train"]][["x"]]
+  r <- object[["model"]][["rank"]]
+  tt <- ncol(y)
+
+  if (!is.null(x) && NCOL(x) > 0) {
+    x <- t(x)
+    M <- diag(tt) - crossprod(x, solve(tcrossprod(x))) %*% x
+    R0 <- y %*% M # Residuals of regression of y on x
+    R1 <- w %*% M # Residuals of regression of w on x
+  } else {
+    R0 <- y
+    R1 <- w
+  }
+  S00 <- tcrossprod(R0) / tt
+  S00_inv <- solve(S00)
+  S01 <- tcrossprod(R0, R1) / tt
+  S10 <- tcrossprod(R1, R0) / tt
+  S11 <- tcrossprod(R1) / tt
+  S11_sqrt_inv <- solve(.mroot(S11))
+  lambda <- eigen(S11_sqrt_inv %*% S10 %*% S00_inv %*% S01 %*% t(S11_sqrt_inv))
+
+  beta <- t(crossprod(matrix(lambda$vectors[, 1:r], nrow(w)), S11_sqrt_inv))
+  # beta' S11 beta is the identity up to rounding; not relied upon here.
+  bsb <- crossprod(beta, S11 %*% beta)
+  alpha <- S01 %*% beta %*% solve(bsb)
+  omega <- S00 - alpha %*% bsb %*% t(alpha)
+
+  return(list(beta = beta, alpha = alpha, omega = omega, r1 = R1))
 }

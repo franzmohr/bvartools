@@ -138,3 +138,105 @@ test_that("the prior support of rho is taken in pairs and has to hold rho", {
   # al. (2011), and it is what makes the draw an exact Gibbs block.
   expect_equal(unique(diag(drawn[["priors"]][["beta"]][["v_inv"]])), 1 - 0.99^2)
 })
+
+# --- cointegration space prior centred on the ML estimate --------------------
+
+ml_coint_priors <- function(coint, model = fx_vec_model()) {
+  add_priors(model, coef = list(v_i = 1, v_i_det = 1 / 10), coint = coint,
+             sigma = list(df = "k", scale = 1))
+}
+
+# The orthonormal basis of the space spanned by Johansen's estimate and of its
+# orthogonal complement.
+ml_space <- function(model = fx_vec_model()) {
+  beta <- bvartools:::.coint_ml(model)[["beta"]]
+  basis <- qr.Q(qr(beta), complete = TRUE)
+  r <- ncol(beta)
+  list(h = basis[, seq_len(r), drop = FALSE],
+       h_perp = basis[, -seq_len(r), drop = FALSE])
+}
+
+test_that("the ML cointegration estimate is the one used for initial values", {
+  expect_equal(matrix(fx_vec_initial()[["initial"]][["beta"]]),
+               matrix(bvartools:::.coint_ml(fx_vec_model())[["beta"]]))
+})
+
+test_that("a cointegration space prior can be centred on the ML estimate", {
+  model <- ml_coint_priors(list(v_i = 0.01, p_tau_i = "ml"))
+  p_tau_inv <- model[["priors"]][["beta"]][["p_tau_inv"]]
+  space <- ml_space()
+  k_beta <- model[["model"]][["k_beta"]]
+
+  expect_equal(model[["priors"]][["beta"]][["v_inv"]], 0.01)
+  expect_identical(dim(p_tau_inv), c(k_beta, k_beta))
+  expect_equal(p_tau_inv, t(p_tau_inv))
+  # Along the estimated space the prior is that of the uniform one ...
+  expect_equal(p_tau_inv %*% space[["h"]], space[["h"]])
+  # ... and away from it at least as tight.
+  expect_true(all(eigen(p_tau_inv, symmetric = TRUE)$values >= 1 - 1e-8))
+})
+
+test_that("the weight of the ML prior scales its precision off the space", {
+  space <- ml_space()
+  off_space <- function(weight) {
+    p_tau_inv <- ml_coint_priors(list(v_i = 0.01, p_tau_i = "ml", weight = weight))[["priors"]][["beta"]][["p_tau_inv"]]
+    drop(crossprod(space[["h_perp"]], p_tau_inv %*% space[["h_perp"]]))
+  }
+  expect_equal(off_space(10) / off_space(1), 10)
+
+  # A prior worth next to nothing is capped at the uniform prior rather than
+  # turned into one that favours the complement of the estimated space.
+  weak <- ml_coint_priors(list(v_i = 0.01, p_tau_i = "ml", weight = 1e-12))
+  expect_equal(weak[["priors"]][["beta"]][["p_tau_inv"]], diag(1, 2))
+})
+
+test_that("the loading shrinkage can be set from the ML loadings", {
+  model <- ml_coint_priors(list(v_i = "ml", p_tau_i = 1))
+  v_inv <- model[["priors"]][["beta"]][["v_inv"]]
+
+  expect_length(v_inv, 1)
+  expect_true(is.finite(v_inv) && v_inv > 0)
+  expect_equal(model[["priors"]][["beta"]][["p_tau_inv"]], diag(1, 2))
+})
+
+test_that("a full p_tau_i matrix is taken as it is", {
+  p_tau_i <- matrix(c(2, 0.5, 0.5, 1), 2)
+  model <- ml_coint_priors(list(v_i = 0.1, p_tau_i = p_tau_i))
+  expect_equal(model[["priors"]][["beta"]][["p_tau_inv"]], p_tau_i)
+  # Still the old behaviour for a vector of diagonal elements.
+  model <- ml_coint_priors(list(v_i = 0.1, p_tau_i = c(1, 2)))
+  expect_equal(model[["priors"]][["beta"]][["p_tau_inv"]], diag(c(1, 2)))
+})
+
+test_that("an ML cointegration prior is checked", {
+  # With zero shrinkage the sampler never sees p_tau_i.
+  expect_error(ml_coint_priors(list(v_i = 0, p_tau_i = "ml")), "coint[$]v_i")
+  expect_error(ml_coint_priors(list(v_i = 0.1, p_tau_i = "mle")), "coint[$]p_tau_i")
+  expect_error(ml_coint_priors(list(v_i = "mle", p_tau_i = 1)), "coint[$]v_i")
+  expect_error(ml_coint_priors(list(v_i = 0.1, p_tau_i = "ml", weight = 0)), "coint[$]weight")
+  expect_warning(ml_coint_priors(list(v_i = 0.1, p_tau_i = 1, weight = 2)), "coint[$]weight")
+  expect_error(ml_coint_priors(list(v_i = 0.1, p_tau_i = diag(3))), "coint[$]p_tau_i")
+  expect_error(ml_coint_priors(list(v_i = 0.1, p_tau_i = matrix(c(1, 0, 1, 1), 2))), "symmetric")
+})
+
+test_that("scaling is refused once the space prior has a direction", {
+  model <- ml_coint_priors(list(v_i = 0.01, p_tau_i = "ml"))
+  expect_error(scale_error_correction(model), "before 'add_priors'")
+  # A prior without a direction does not care.
+  expect_no_error(scale_error_correction(fx_vec_priors()))
+})
+
+test_that("a tight ML prior keeps the draws of beta in the estimated space", {
+  space <- ml_space()
+  model <- ml_coint_priors(list(v_i = "ml", p_tau_i = "ml", weight = 1e6))
+  model <- add_initial_values(model)
+  set.seed(314159)
+  model <- add_posterior_coefficients(model)
+
+  tilt <- function(object) {
+    draws <- object[["posterior"]][["beta"]][["coeffs"]]
+    abs(draws %*% space[["h_perp"]]) / abs(draws %*% space[["h"]])
+  }
+  expect_lt(max(tilt(model)), 1e-3)
+  expect_lt(stats::median(tilt(model)), stats::median(tilt(fx_vec_fitted())))
+})

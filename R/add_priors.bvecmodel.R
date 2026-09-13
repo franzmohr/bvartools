@@ -67,11 +67,16 @@
 #' prior on the cointegration space in the first case, and a state equation in
 #' the second.
 #' \describe{
-#'   \item{\code{v_i}}{numeric between 0 and 1 specifying the shrinkage of the cointegration space prior.
+#'   \item{\code{v_i}}{non-negative numeric specifying the shrinkage of the cointegration space prior,
+#'   or \code{"ml"}. See below. Required for models with constant cointegration parameters and not
+#'   used otherwise.}
+#'   \item{\code{p_tau_i}}{the inverse of the matrix \eqn{P_\tau}, which determines the
+#'   central location of the cointegration space \eqn{sp(\beta)}. Either a numeric of
+#'   its diagonal elements, a full symmetric matrix, or \code{"ml"}. See below.
 #'   Required for models with constant cointegration parameters and not used otherwise.}
-#'   \item{\code{p_tau_i}}{numeric of the diagonal elements of the inverse prior matrix of
-#'   the central location of the cointegration space \eqn{sp(\beta)}.
-#'   Required for models with constant cointegration parameters and not used otherwise.}
+#'   \item{\code{weight}}{positive numeric specifying the weight of a prior centred on the
+#'   maximum likelihood estimate in units of the information of the sample. Default is 1.
+#'   Only used if \code{p_tau_i = "ml"}.}
 #'   \item{\code{rho}}{a numeric specifying the autocorrelation coefficient
 #'   of the state equation of \eqn{\beta}. It must be smaller than 1.
 #'   Required for models with time varying cointegration parameters and not used otherwise.
@@ -85,6 +90,37 @@
 #'   Koop et al. (2011) use \eqn{(0.999, 1)}.
 #'   Only used for models with time varying cointegration parameters.}
 #' }
+#' For a model with constant cointegration parameters the prior is that of
+#' Koop et al. (2010). The sampler uses \code{v_i} and \code{p_tau_i} only through
+#' their product, so with \code{v_i = 0} the prior on the cointegration space is
+#' uniform whatever \code{p_tau_i} is. An informative prior on the space
+#' therefore needs a positive \code{v_i}, which also shrinks the loadings: for
+#' \eqn{\beta} close to the centre of the space they have prior
+#' \eqn{N(0, \Sigma / v)}.
+#'
+#' With \code{p_tau_i = "ml"} the prior is centred on the space spanned by
+#' Johansen's (1995) maximum likelihood estimate \eqn{\hat{\beta}}, computed from
+#' the error correction term as it is stored in the model -- so call
+#' \code{\link{scale_error_correction}} first if the series should be scaled.
+#' Let \eqn{H} be an orthonormal basis of that space, \eqn{H_\perp} one of its
+#' orthogonal complement and \eqn{\beta = H + H_\perp \delta}. The matrix
+#' \deqn{P_\tau^{-1} = H H^{\prime} + H_\perp T^{-1} H_\perp^{\prime}, \quad
+#' T = \frac{v}{w} (H_\perp^{\prime} S_{11} H_\perp)^{-1},}
+#' where \eqn{S_{11}} is the cross product of the residuals of a regression of the
+#' error correction term on the short-run regressors and \eqn{w} is \code{weight},
+#' makes the prior of \eqn{\delta} given \eqn{\alpha}
+#' \eqn{N(0, (\alpha^{\prime} \Sigma^{-1} \alpha)^{-1} \otimes w^{-1} (H_\perp^{\prime} S_{11} H_\perp)^{-1})}.
+#' This is the asymptotic distribution of the maximum likelihood estimator
+#' with its precision multiplied by \eqn{w}: \code{weight = 1} adds as much
+#' information about the space as the sample itself holds. Since the centre is
+#' estimated from the same sample, the posterior then overstates the precision
+#' of \eqn{sp(\beta)}. Eigenvalues of \eqn{T} are capped at one, which is the
+#' uniform prior.
+#'
+#' With \code{v_i = "ml"} the shrinkage is chosen so that the prior mean of
+#' \eqn{tr(\alpha^{\prime} \Sigma^{-1} \alpha)} is 100 times its maximum
+#' likelihood estimate. It can be combined with a numeric \code{p_tau_i}.
+#'
 #' For a model with time varying cointegration parameters the state equation is
 #' \eqn{\beta_t = \rho \beta_{t-1} + \eta_t} with \eqn{\eta_t \sim N(0, I)}, and
 #' the prior on the state before the sample is that equation's own stationary
@@ -181,6 +217,9 @@
 #' restrictions. \emph{Journal of Econometrics, 142}(1), 553--580.
 #' \doi{10.1016/j.jeconom.2007.08.017}
 #' 
+#' Johansen, S. (1995). \emph{Likelihood-based inference in cointegrated vector
+#' autoregressive models}. Oxford: Oxford University Press.
+#'
 #' Koop, G., León-González, R., & Strachan R. W. (2010). Efficient posterior
 #' simulation for cointegrated models with priors on the cointegration space.
 #' \emph{Econometric Reviews, 29}(2), 224--242.
@@ -281,6 +320,32 @@ add_priors.bvecmodel <- function(object,
     }
     if (!"p_tau_i" %in% names(coint)) {
       stop("Argument 'coint$p_tau_i' must be specified for VEC models with constant cointegration parameters.")
+    }
+    coint_v_ml <- identical(coint[["v_i"]], "ml")
+    coint_p_tau_ml <- identical(coint[["p_tau_i"]], "ml")
+    if (!coint_v_ml && !(is.numeric(coint[["v_i"]]) && length(coint[["v_i"]]) == 1 &&
+                         isTRUE(coint[["v_i"]] >= 0))) {
+      stop("Argument 'coint$v_i' must be a non-negative number or \"ml\".")
+    }
+    if (!coint_p_tau_ml && !is.numeric(coint[["p_tau_i"]])) {
+      stop("Argument 'coint$p_tau_i' must be numeric or \"ml\".")
+    }
+    # The sampler only ever uses the product v_i * p_tau_i, so under zero
+    # shrinkage any p_tau_i is the uniform prior on the space and a centre
+    # estimated for it would be silently thrown away.
+    if (coint_p_tau_ml && !coint_v_ml && coint[["v_i"]] == 0) {
+      stop("Argument 'coint$v_i' must be positive for 'coint$p_tau_i = \"ml\"': ",
+           "with zero shrinkage the prior on the cointegration space is uniform ",
+           "whatever 'coint$p_tau_i' is.")
+    }
+    if ("weight" %in% names(coint)) {
+      if (!(is.numeric(coint[["weight"]]) && length(coint[["weight"]]) == 1 &&
+            isTRUE(coint[["weight"]] > 0))) {
+        stop("Argument 'coint$weight' must be a positive number.")
+      }
+      if (!coint_p_tau_ml) {
+        warning("Argument 'coint$weight' is only used with 'coint$p_tau_i = \"ml\"' and is ignored.")
+      }
     }
   }
   
@@ -476,9 +541,74 @@ add_priors.bvecmodel <- function(object,
         object[["priors"]][["beta"]][["rho_max"]] <- coint[["rho_max"]]
       }
     } else {
+
+      k_beta <- n_ect / k
+      coint_v_inv <- coint[["v_i"]]
+
+      if (coint_v_ml | coint_p_tau_ml) {
+        if (NROW(object[["data"]][["train"]][["y"]]) <=
+            NCOL(object[["data"]][["train"]][["x"]]) + k_beta) {
+          stop("Not enough observations for the maximum likelihood estimate that ",
+               "'coint$v_i = \"ml\"' or 'coint$p_tau_i = \"ml\"' is based on.")
+        }
+
+        # Johansen's estimate, re-expressed for the orthonormal basis H of the
+        # space it spans: alpha beta' = alpha_h H'.
+        ml <- .coint_ml(object)
+        h <- ml[["beta"]] %*% solve(.mroot(crossprod(ml[["beta"]])))
+        h_perp <- qr.Q(qr(h), complete = TRUE)[, -(1:r), drop = FALSE]
+        alpha_h <- ml[["alpha"]] %*% t(crossprod(h, ml[["beta"]]))
+      }
+
+      # With beta close to H the loadings have prior N(0, Sigma / v), so the
+      # prior mean of tr(alpha' Sigma^-1 alpha) is r k / v. It is set to 100 times
+      # its ML estimate, which keeps the loadings weakly shrunk on the scale the
+      # data put them on.
+      if (coint_v_ml) {
+        coint_v_inv <- r * k /
+          (100 * sum(diag(t(alpha_h) %*% solve(ml[["omega"]]) %*% alpha_h)))
+      }
+
+      if (coint_p_tau_ml) {
+
+        # Write beta = H + H_perp delta. Given alpha the prior of Koop et al.
+        # (2010) implies vec(delta) ~ N(0, (alpha' Sigma^-1 alpha)^-1 kron T / v)
+        # for P_tau^-1 = H H' + H_perp T^-1 H_perp'. Johansen's estimator has the
+        # same Kronecker form, vec(delta) ~ N(0, (alpha' Omega^-1 alpha)^-1 kron
+        # (H_perp' S11 H_perp)^-1) with S11 the sum of the residual cross
+        # products, so T = v / weight * (H_perp' S11 H_perp)^-1 makes the prior on
+        # the space that sampling distribution, worth 'weight' samples.
+        #
+        # Eigenvalues of T above one are capped at one. One is the uniform prior
+        # on the space; beyond it the prior would favour the complement of the
+        # estimate rather than being weakly informative about it.
+        weight <- if (is.null(coint[["weight"]])) 1 else coint[["weight"]]
+        tilt <- solve(t(h_perp) %*% tcrossprod(ml[["r1"]]) %*% h_perp)
+        tilt <- eigen(coint_v_inv / weight * (tilt + t(tilt)) / 2, symmetric = TRUE)
+        tau <- pmin(tilt[["values"]], 1)
+        t_inv <- tilt[["vectors"]] %*% diag(1 / tau, nrow = length(tau)) %*% t(tilt[["vectors"]])
+        p_tau_inv <- tcrossprod(h) + h_perp %*% t_inv %*% t(h_perp)
+        p_tau_inv <- (p_tau_inv + t(p_tau_inv)) / 2
+      } else if (is.matrix(coint[["p_tau_i"]])) {
+        p_tau_inv <- coint[["p_tau_i"]]
+        if (!all(dim(p_tau_inv) == k_beta)) {
+          stop("Argument 'coint$p_tau_i' must be a ", k_beta, " x ", k_beta,
+               " matrix, one row and column per series in the error correction term.")
+        }
+        if (!isSymmetric(unname(p_tau_inv))) {
+          stop("Argument 'coint$p_tau_i' must be a symmetric matrix.")
+        }
+      } else {
+        if (!length(coint[["p_tau_i"]]) %in% c(1, k_beta)) {
+          stop("Argument 'coint$p_tau_i' must have one element or one per series ",
+               "in the error correction term.")
+        }
+        p_tau_inv <- diag(coint[["p_tau_i"]], k_beta)
+      }
+
       object[["priors"]][["beta"]] <- list("type" = "cointspace",
-                                           "v_inv" = coint[["v_i"]],
-                                           "p_tau_inv" = diag(coint[["p_tau_i"]], n_ect / k)) 
+                                           "v_inv" = coint_v_inv,
+                                           "p_tau_inv" = p_tau_inv)
     }
   }
   

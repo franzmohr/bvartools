@@ -47,6 +47,20 @@ scale_error_correction.bvecmodel <- function(object, ...) {
          "input data first.")
   }
 
+  # A cointegration space prior other than a multiple of the identity has a
+  # direction, and that direction is stated in the units of 'w' it was built
+  # against -- for coint$p_tau_i = "ml" the maximum likelihood estimate on the
+  # series as they were. Scaling afterwards would leave it pointing somewhere
+  # else without any sign of it.
+  p_tau_inv <- object[["priors"]][["beta"]][["p_tau_inv"]]
+  if (!is.null(p_tau_inv) &&
+      !isTRUE(all.equal(p_tau_inv, diag(p_tau_inv[1, 1], nrow(p_tau_inv)),
+                        check.attributes = FALSE))) {
+    stop("The model already has a cointegration space prior that depends on the ",
+         "scale of the error correction term. Call 'scale_error_correction' ",
+         "before 'add_priors'.")
+  }
+
   tt <- nrow(w)
   
   rescale_factors <- rep(1, ncol(w))

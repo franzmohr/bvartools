@@ -58,6 +58,7 @@ model <- add_forecast_errors(model, test_sample = orig)
 }
 \seealso{
 Other model comparison:
+\code{\link[=add_predictive_loglik]{add_predictive_loglik()}},
 \code{\link[=align_model_obs.modellist]{align_model_obs.modellist()}},
 \code{\link[=choose_best_model.selcritlist]{choose_best_model.selcritlist()}},
 \code{\link[=create_external_forecast]{create_external_forecast()}},

@@ -12,7 +12,7 @@ to \code{\link{selection_criteria}}.}
 
 \item{criterion}{the selection criterion that should be used. Available choices
 are \code{"LL"}, \code{"AIC"}, \code{"BIC"}, \code{"HQ"},
-\code{"WAIC"} (default) and \code{"LOOIC"}.}
+\code{"WAIC"} (default), \code{"LOOIC"} and \code{"LPL"}.}
 
 \item{...}{further arguments passed to or from other methods.}
 }
@@ -25,8 +25,8 @@ Chooses the best model according the selection criteria in an object of class
 'selcritlist'.
 }
 \details{
-If argument \code{criterion} is "LL", the model with the maximum value is chosen,
-otherwise, the model with the minimum value.
+If argument \code{criterion} is "LL" or "LPL", the model with the maximum value
+is chosen, otherwise, the model with the minimum value.
 
 Which criterion to use depends on the models that are compared. See
 \code{\link{selection_criteria}}, whose details set out what each of them
@@ -37,7 +37,10 @@ the fit used rather than by a count of parameters, which describes neither a
 model whose coefficients or variances follow a state equation nor one whose
 prior shrinks them. \code{"AIC"}, \code{"BIC"} and \code{"HQ"} remain the
 criteria for the lag order of a model with constant coefficients and a weak
-prior, which is the case they are derived for.
+prior, which is the case they are derived for. \code{"LPL"}, the log
+predictive likelihood of an expanding window exercise with
+\code{\link{add_predictive_loglik}}, is the criterion for the rank of a VEC
+model whose coefficients or variances follow a state equation.
 }
 \examples{
 # Load data
@@ -79,6 +82,7 @@ choose_best_model(sel, criterion = "AIC")
 \seealso{
 Other model comparison:
 \code{\link[=add_forecast_errors.bvarmodel]{add_forecast_errors.bvarmodel()}},
+\code{\link[=add_predictive_loglik]{add_predictive_loglik()}},
 \code{\link[=align_model_obs.modellist]{align_model_obs.modellist()}},
 \code{\link[=create_external_forecast]{create_external_forecast()}},
 \code{\link[=plot_forecast_errors_by_period]{plot_forecast_errors_by_period()}},

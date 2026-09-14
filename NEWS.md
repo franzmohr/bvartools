@@ -22,6 +22,23 @@
   but `VecNormalStochvol` and `VecTvpStochvol` keep `posterior$u_sigma_inv$sigma`
   as well, so their posteriors carry the same blocks as those of the VAR models.
 
+* **Predictive likelihoods for VEC models.** New `add_predictive_loglik()` adds
+  to every window of an expanding window exercise the draws of the one-step-ahead
+  log predictive density of the observation the next window adds, and
+  `selection_criteria()` sums them to the log predictive likelihood, criterion
+  `"LPL"`, which `choose_best_model()` maximises. Time varying coefficients,
+  cointegration spaces, error covariances and stochastic volatilities are
+  carried one period forward with their state equations first. The variance of
+  the random walk of the log volatilities is read from
+  `posterior$u_sigma_inv$sigma` where a sampler stores it, and drawn from its
+  conditional posterior given the path otherwise. This is the criterion Koop,
+  León-González and Strachan (2011) choose between time varying cointegration
+  models and ranks with: the pointwise log-likelihood behind WAIC and LOOIC is
+  evaluated at states that have seen the period's observation, and on the
+  Austrian sub-model of a global VEC model it left the ranks of a TVP-SV-VEC
+  0.2 apart where the predictive likelihood separated them by 3.7 with a standard
+  error of 1.5. `?selection_criteria` says when to use which.
+
 * **The prior of the loadings of a time varying VEC model follows `coef$v_i`.**
   `add_priors()` gave the loadings a prior precision of 1 / (1 - rho^2)
   whatever `coef$v_i` was, which put alpha beta' at unit prior variance rather

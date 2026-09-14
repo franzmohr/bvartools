@@ -7,12 +7,12 @@
 #' to \code{\link{selection_criteria}}.
 #' @param criterion the selection criterion that should be used. Available choices
 #' are \code{"LL"}, \code{"AIC"}, \code{"BIC"}, \code{"HQ"},
-#' \code{"WAIC"} (default) and \code{"LOOIC"}.
+#' \code{"WAIC"} (default), \code{"LOOIC"} and \code{"LPL"}.
 #' @param ... further arguments passed to or from other methods.
-#' 
+#'
 #' @details
-#' If argument \code{criterion} is "LL", the model with the maximum value is chosen,
-#' otherwise, the model with the minimum value.
+#' If argument \code{criterion} is "LL" or "LPL", the model with the maximum value
+#' is chosen, otherwise, the model with the minimum value.
 #'
 #' Which criterion to use depends on the models that are compared. See
 #' \code{\link{selection_criteria}}, whose details set out what each of them
@@ -23,8 +23,11 @@
 #' model whose coefficients or variances follow a state equation nor one whose
 #' prior shrinks them. \code{"AIC"}, \code{"BIC"} and \code{"HQ"} remain the
 #' criteria for the lag order of a model with constant coefficients and a weak
-#' prior, which is the case they are derived for.
-#' 
+#' prior, which is the case they are derived for. \code{"LPL"}, the log
+#' predictive likelihood of an expanding window exercise with
+#' \code{\link{add_predictive_loglik}}, is the criterion for the rank of a VEC
+#' model whose coefficients or variances follow a state equation.
+#'
 #' @returns An integer giving the position of the best model in the list provided
 #' in argument \code{object}.
 #' 
@@ -83,7 +86,7 @@ choose_best_model.selcritlist <- function(object, criterion = "WAIC", ...) {
     stop("None of the models in argument 'object' contains criterion '", criterion, "'.")
   }
 
-  if (criterion == "LL") {
+  if (criterion %in% c("LL", "LPL")) {
     pos <- which(res == max(res, na.rm = TRUE))
   } else {
     pos <- which(res == min(res, na.rm = TRUE))

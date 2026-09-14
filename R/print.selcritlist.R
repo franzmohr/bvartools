@@ -17,6 +17,7 @@ print.selcritlist <- function(x, digits = max(3L, getOption("digits") - 3L), rel
   # example, are not estimated, so they do not have in-sample criteria
   use_ll <- any(unlist(lapply(x, function(y) {!is.null(y[["LL"]])})))
   use_fe <- any(unlist(lapply(x, function(y) {!is.null(y[["FE"]])})))
+  use_lpl <- any(unlist(lapply(x, function(y) {!is.null(y[["LPL"]])})))
   ci <- attr(x[[1]], "ci")
 
   if (use_ll) {
@@ -70,6 +71,28 @@ print.selcritlist <- function(x, digits = max(3L, getOption("digits") - 3L), rel
       }
 
     }
+
+  }
+
+  if (use_lpl) {
+
+    cat("\n\n------------------------------------------\n")
+    cat("Predictive")
+    cat("\n------------------------------------------\n")
+    cat("\nLog predictive likelihood (LPL)\n\n")
+
+    temp <- as.data.frame(matrix(NA, n_models, 5))
+    names(temp) <- c("", "Mean", paste0("Quantile (", ci[1], ")"),
+                     paste0("Quantile (", ci[2], ")"), "Periods")
+    temp[, 1] <- paste0("Model ", 1:n_models)
+    for (i in 1:n_models) {
+      # Models, which do not contain the criterion, remain missing
+      if (!is.null(x[[i]][["LPL"]])) {
+        temp[i, 2:4] <- as.matrix(x[[i]][["LPL"]])[1, c("mean", "qlower", "qupper")]
+        temp[i, 5] <- nrow(attr(x[[i]][["LPL"]], "terms"))
+      }
+    }
+    .print_criteria_table(temp, digits = digits, ...)
 
   }
 

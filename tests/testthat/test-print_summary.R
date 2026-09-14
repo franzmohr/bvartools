@@ -200,3 +200,22 @@ test_that("a period is a single period of the sample", {
   expect_error(summary(model, period = tt + 1), "single integer")
   expect_identical(summary(model, period = 2)[["model"]][["period"]], 2L)
 })
+
+test_that("the summary of a model with one endogenous variable can be printed", {
+  # The variance of a single equation is the only entry of the lower triangle
+  # of its covariance table, and selecting it dropped the table to a vector,
+  # whose credible bounds print() then looked for as columns that no longer
+  # existed. Every AR model and every quantile regression failed this way.
+  data("at_macrodata", package = "bvartools", envir = environment())
+  y <- at_macrodata[["domestic"]][, "Dp", drop = FALSE] * 100
+  set.seed(1234567)
+  for (error in c("gamma", "ald")) {
+    model <- create_bvarmodel(y, p = 1, deterministic = "const", error = error,
+                              iterations = 20, burnin = 5)
+    model <- add_priors(model, coef = list(v_i = 0.01),
+                        sigma = list(shape = 3, rate = 0.01))
+    model <- add_initial_values(model)
+    model <- add_posterior_coefficients(model)
+    expect_output(print(summary(model)), "Variance:")
+  }
+})

@@ -1,5 +1,20 @@
 # bvartools (development version)
 
+* **`summary()` prints models with a single endogenous variable.** Printing
+  selected the variance from the lower triangle of the covariance table, which
+  for one equation is a single row and was dropped to a vector, so the credible
+  bounds were looked up as columns that no longer existed and printing stopped
+  with "undefined columns selected". Every AR model and every single-equation
+  quantile regression failed this way. The same selection in the summary of VEC
+  models is fixed too.
+
+* **New vignette on debt-at-risk.** `vignette("debt-at-risk")` implements the
+  debt-at-risk framework of Furceri, Giannone, Kisat, Lam and Li (2025) for
+  Austria with direct quantile regressions (`error = "ald"`, `p = 0`, exogenous
+  regressors at `s = 0`): predicted percentiles of future debt are smoothed into
+  skewed t densities and pooled with weights that maximise their
+  out-of-sample log score.
+
 * **`add_priors()` stores the error prior of VEC models as given.** It added
   the cointegration rank `r` to `sigma$df` and to the gamma `sigma$shape`. The
   VEC samplers with constant coefficients and a Wishart prior add `r` to the

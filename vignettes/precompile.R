@@ -60,6 +60,7 @@ if (length(vignettes) == 0) {
     "ssvs",
     "sign-restrictions",
     "quantile-var",
+    "debt-at-risk",
     "tvp-sv-var",
     "tvp-sv-vec",
     "model-comparison",

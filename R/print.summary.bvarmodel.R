@@ -169,7 +169,7 @@ print.summary.bvarmodel <- function(x, digits = max(3L, getOption("digits") - 3L
     dimnames(temp) <- list(dim_names_1, 
                            dim_names_2)
     
-    temp <- temp[which(lower.tri(matrix(1:(k * k), k), diag = TRUE)), ]
+    temp <- temp[which(lower.tri(matrix(1:(k * k), k), diag = TRUE)), , drop = FALSE]
     
     if (k == 1) {
       cat("\nVariance:\n\n")

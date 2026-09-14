@@ -1,0 +1,569 @@
+---
+title: "Debt-at-Risk with Bayesian Quantile Regressions"
+author: "Franz X. Mohr"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Debt-at-Risk with Bayesian Quantile Regressions}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+collapse = TRUE,
+comment = "#>",
+fig.path = "figures/debt-at-risk-",
+fig.align = "center"
+)
+```
+
+## Introduction
+
+Debt projections are usually point forecasts. Furceri, Giannone, Kisat, Lam and Li (2025) ask instead how high public debt could climb in a bad but plausible scenario, and call the answer *debt-at-risk*: the 95th percentile of the predictive distribution of the debt-to-GDP ratio a few years ahead, conditional on today's macro-financial conditions. The framework extends growth-at-risk (Adrian, Boyarchenko & Giannone, 2019) to the stock of public debt and has four steps:
+
+1. Regress future debt on current debt and *one* conditioning variable at a time -- financial stress, sovereign spreads, uncertainty, the primary balance, growth, inflation -- at the 5th, 25th, 50th, 75th and 95th percentiles.
+2. Smooth the five predicted quantiles of each regression into a skewed $t$ density.
+3. Pool the densities with weights that maximise their out-of-sample predictive accuracy.
+4. Read debt-at-risk and the upside and downside risks off the pooled density.
+
+This vignette implements the framework for a single country, Austria, with the Bayesian quantile regressions of `bvartools` (see the vignette on quantile VARs for how `error = "ald"` works). The steps are those of the paper. What differs follows from the data and is collected at the end.
+
+## Why direct regressions
+
+The vignette on quantile VARs explains why `add_posterior_forecasts` refuses a quantile model: the $h$ step ahead quantile is not the quantile of iterated one step ahead quantiles. Debt-at-risk does not iterate. Every horizon $h$ is a model of its own, which regresses debt $h$ quarters ahead directly on what is known today,
+
+$$Q_{\tau}(d_{t+h} \mid d_t, x_t) = c(\tau) + \beta_d(\tau) d_t + \beta_x(\tau) x_t,$$
+
+where $d_t$ is the debt ratio, $x_t$ one conditioning variable and $Q_{\tau}$ the $\tau$-th conditional quantile. Such a regression is a quantile model without lags of the dependent variable, in which the regressors enter as exogenous variables at lag zero: `p = 0` and `s = 0`.
+
+Furceri et al. (2025) estimate a location-scale model, $d_{t+h} = \alpha + X_t^{\prime}\beta + (\delta + X_t^{\prime}\gamma)\varepsilon_{t+h}$, following Machado and Santos Silva (2019). It implies quantile coefficients of the form $\beta_x(\tau) = \beta_x + \gamma_x q(\tau)$, where $q(\tau)$ is a quantile of the error term: the location $\beta_x$ shifts the whole distribution, the scale $\gamma_x$ widens or narrows it. A separate regression per quantile does not impose that the coefficients line up in this way, but it contains the location-scale model as a special case, and it can be read in the same terms: a coefficient that grows from the 5th to the 95th percentile is a variable that stretches the upper tail more than the lower one.
+
+## Data
+
+The quarterly series come from [AustriaMacroData](https://github.com/franzmohr/AustriaMacroData), a FRED-QD-style panel for Austria that is updated every month:
+
+```{r data-show, eval = FALSE}
+library(bvartools)
+
+url <- "https://raw.githubusercontent.com/franzmohr/AustriaMacroData/main/output/"
+aut <- read.csv(paste0(url, "aut_panel.csv"))
+deu <- read.csv(paste0(url, "deu_panel.csv"))
+```
+
+```{r data-read, include = FALSE}
+library(bvartools)
+
+url <- Sys.getenv("AUSTRIAMACRODATA_OUTPUT",
+                  "https://raw.githubusercontent.com/franzmohr/AustriaMacroData/main/output/")
+aut <- read.csv(paste0(url, "aut_panel.csv"))
+deu <- read.csv(paste0(url, "deu_panel.csv"))
+```
+
+The panel holds one column per series and one row per quarter. The following function turns a column into a quarterly time series without the missing values at its ends:
+
+```{r}
+panel_ts <- function(panel, column) {
+  first <- as.Date(panel[["date"]][1])
+  start <- c(as.integer(format(first, "%Y")), (as.integer(format(first, "%m")) - 1) %/% 3 + 1)
+  stats::na.omit(ts(panel[[column]], start = start, frequency = 4))
+}
+```
+
+Debt is the BIS series of credit to the general government at nominal value in percent of GDP, which is close to the Maastricht debt ratio. The conditioning variables follow the paper as far as Austrian data allow:
+
+* financial stress: the ECB's country-level Composite Indicator of Systemic Stress (CISS), a quarterly average of daily values;
+* the sovereign spread: the Austrian long-term government bond yield minus the German one, since the Bund rather than US Treasuries is the benchmark of a euro area country;
+* uncertainty: the World Uncertainty Index of Ahir, Bloom and Furceri (2022);
+* the primary balance in percent of GDP, averaged over four quarters, since Eurostat publishes its components without seasonal adjustment;
+* real GDP growth and HICP inflation, both over four quarters.
+
+```{r data}
+debt <- panel_ts(aut, "government_debt_to_gdp")
+
+conditioning <- cbind(
+  stress = panel_ts(aut, "financial_stress"),
+  spread = panel_ts(aut, "long_term_rate") - panel_ts(deu, "long_term_rate"),
+  uncertainty = panel_ts(aut, "world_uncertainty_index"),
+  primary_balance = stats::filter(panel_ts(aut, "government_primary_balance_to_gdp"),
+                                  rep(1 / 4, 4), sides = 1),
+  growth = 100 * diff(log(panel_ts(aut, "real_gdp")), lag = 4),
+  inflation = 100 * diff(log(panel_ts(aut, "cpi_index")), lag = 4)
+)
+conditioning <- window(conditioning, start = start(debt))
+```
+
+```{r data-plot, fig.width = 7, fig.height = 7.5}
+labels <- c(debt = "Government debt, % of GDP",
+            stress = "Financial stress (CISS)",
+            spread = "Spread to the German Bund, pp",
+            uncertainty = "World Uncertainty Index",
+            primary_balance = "Primary balance, % of GDP",
+            growth = "Real GDP growth, % over 4 quarters",
+            inflation = "HICP inflation, % over 4 quarters")
+
+series <- cbind(debt, conditioning)
+colnames(series) <- names(labels)
+
+op <- par(mfrow = c(4, 2), mar = c(2.5, 3.5, 2, 1), las = 1, bty = "n",
+          font.main = 1, cex.main = 0.95, col.axis = "#52514e", fg = "#c3c2b7")
+for (i in names(labels)) {
+  x <- stats::na.omit(series[, i])
+  plot(x, type = "n", main = labels[i], xlab = "", ylab = "")
+  abline(h = axTicks(2), col = "#e1e0d9")
+  lines(x, col = "#2a78d6", lwd = 2)
+}
+par(op)
+```
+
+Debt starts in 2000 and the primary balance in 2001, so a regression of debt three years ahead has fewer than 90 quarterly observations -- one country's history instead of the paper's panel of 90 countries. That shapes the specification below.
+
+As in the paper, the conditioning variables are standardised, so that every coefficient is the change in a percentile of future debt, in percentage points of GDP, that goes with a one standard deviation change of the variable. Current debt is centred at its sample mean, so that the intercept of a regression is the percentile of the change in debt at average debt and average conditions:
+
+```{r}
+conditioning <- ts(scale(conditioning), start = start(conditioning), frequency = 4)
+debt_centred <- debt - mean(debt)
+```
+
+## Quantile regressions
+
+### One model per conditioning variable and horizon
+
+Every model regresses the change in debt over the next $h$ quarters, $d_{t+h} - d_t$, on current debt and, except for the "unconditional" model of the paper, one conditioning variable. With $d_t$ among the regressors this is the same model as a regression of the level $d_{t+h}$ -- the coefficient of current debt is just smaller by one -- but it changes what a prior centred at zero means: that debt has no tendency to drift away from where it is, rather than that it is expected to vanish. The first function collects the regressors over the periods in which all of them are available, the second sets up the regression as a list of quantile models, one per percentile:
+
+```{r}
+probs <- c(0.05, 0.25, 0.5, 0.75, 0.95)
+
+complete_window <- function(x) {
+  available <- which(stats::complete.cases(x))
+  window(x, start = time(x)[min(available)], end = time(x)[max(available)])
+}
+
+regressors <- function(variable = NULL) {
+  if (is.null(variable)) {
+    x <- ts(matrix(debt_centred, dimnames = list(NULL, "debt")), start = start(debt), frequency = 4)
+  } else {
+    x <- cbind(debt_centred, conditioning[, variable])
+    colnames(x) <- c("debt", variable)
+  }
+  complete_window(x)
+}
+
+dar_model <- function(h, variable = NULL) {
+  x <- regressors(variable)
+  data <- cbind(stats::lag(debt, h) - debt, x)
+  colnames(data) <- c("debt_change", colnames(x))
+  data <- complete_window(data)
+  create_bvarmodel(data[, 1, drop = FALSE], p = 0,
+                   exogen = data[, -1, drop = FALSE], s = 0,
+                   deterministic = "const", error = "ald", quantile = probs,
+                   iterations = 2000, burnin = 500)
+}
+```
+
+`stats::lag(debt, h)` moves the series $h$ quarters back in time, so that the value in quarter $t$ is debt in quarter $t + h$.
+
+The priors are where a single country needs the Bayesian estimator most. The 95th percentile of a sample of 90 quarters is pinned down by its four or five largest observations, and a regression at that percentile inherits the fragility: without a prior, the slopes of the tails swing with a handful of episodes. A prior precision of 0.25 on the slopes -- a standard deviation of 2 percentage points of GDP per standard deviation of a conditioning variable -- lets the data move a slope where they are informative and pulls every percentile towards the unconditional percentile of the change in debt where they are not. The intercepts get a standard deviation of 10, and the scale of the asymmetric Laplace distribution an inverse gamma prior with mean 1:
+
+```{r}
+estimate <- function(object) {
+  object <- add_priors(object,
+                       coef = list(v_i = 0.25, v_i_det = 0.01),
+                       sigma = list(shape = 3, rate = 2))
+  object <- add_initial_values(object)
+  add_posterior_coefficients(object)
+}
+```
+
+The regression of debt three years ahead on current debt and financial stress, for instance, is
+
+```{r, message = FALSE, warning = FALSE}
+set.seed(1234567)
+stress_12 <- estimate(dar_model(12, "stress"))
+summary(stress_12[[5]])
+```
+
+where `stress_12[[5]]` is the model of the 95th percentile.
+
+### Coefficients across percentiles and horizons
+
+The next chunk estimates every model at horizons of one, two and three years -- the paper's five years would leave hardly more than five non-overlapping periods of Austrian data -- and keeps the posterior mean and the 5th and 95th percentiles of the draws of each coefficient of interest: the one of current debt in the unconditional model, and the one of the conditioning variable in the others.
+
+```{r coefficients, message = FALSE, warning = FALSE}
+sets <- c("debt", colnames(conditioning))
+variable_of <- function(set) if (set == "debt") NULL else set
+horizons <- c(4, 8, 12)
+
+coefficients <- NULL
+for (h in horizons) {
+  for (set in sets) {
+    models <- estimate(dar_model(h, variable_of(set)))
+    for (i in seq_along(probs)) {
+      a <- models[[i]][["posterior"]][["a"]][["coeffs"]]
+      draws <- a[, paste0(set, ".l00") == colnames(models[[i]][["data"]][["train"]][["x"]])]
+      coefficients <- rbind(coefficients,
+                            data.frame(h = h, set = set, quantile = probs[i],
+                                       mean = mean(draws),
+                                       lower = unname(quantile(draws, 0.05)),
+                                       upper = unname(quantile(draws, 0.95))))
+    }
+  }
+}
+```
+
+```{r coefficients-plot, fig.width = 7, fig.height = 8.5}
+quantile_colours <- c("#2a78d6", "#eb6834", "#1baf7a")
+
+op <- par(mfrow = c(4, 2), mar = c(2.5, 3.5, 2, 1), las = 1, bty = "n",
+          font.main = 1, cex.main = 0.95, col.axis = "#52514e", fg = "#c3c2b7")
+for (set in sets) {
+  s <- coefficients[coefficients$set == set & coefficients$quantile %in% c(0.05, 0.5, 0.95), ]
+  est <- matrix(s$mean, nrow = 3)
+  lower <- matrix(s$lower, nrow = 3)
+  upper <- matrix(s$upper, nrow = 3)
+  mids <- barplot(est, beside = TRUE, col = quantile_colours, border = NA,
+                  ylim = range(0, lower, upper), main = labels[set],
+                  names.arg = c("1 year", "2 years", "3 years"))
+  abline(h = 0, col = "#c3c2b7")
+  arrows(mids, lower, mids, upper, angle = 90, code = 3, length = 0.02, col = "#52514e")
+}
+plot.new()
+legend("center", legend = c("5th percentile", "Median", "95th percentile"),
+       fill = quantile_colours, border = NA, bty = "n", text.col = "#0b0b0b")
+par(op)
+```
+
+```{r coefficient-helper, include = FALSE}
+coef_at <- function(h, set, q) {
+  sprintf("%.1f", coefficients$mean[coefficients$h == h & coefficients$set == set & coefficients$quantile == q])
+}
+```
+
+The bars are posterior means and the whiskers span the 5th to 95th percentiles of the posterior draws. The panel of debt shows the coefficient of current debt in the unconditional model, in percentage points of change per percentage point of debt, where a negative value means that high debt tends to come down; every other panel shows the coefficient of the conditioning variable, in percentage points of GDP per standard deviation.
+
+Some of the patterns of the paper carry over, some do not, and the differences are instructive about what one country's two decades can say.
+
+* **Current debt** has a negative coefficient everywhere, and a much more negative one in the upper tail: three years ahead, `r coef_at(12, "debt", 0.5)` at the median but `r coef_at(12, "debt", 0.95)` at the 95th percentile. High debt tends to come down, and the upper tail of future debt hardly rises with current debt at all. Austrian debt has never exceeded the high 80s in this sample, so the 95th percentile learns a ceiling rather than a slope.
+* **Financial stress** raises the lower half and the middle of the distribution -- by `r coef_at(8, "stress", 0.05)` and `r coef_at(8, "stress", 0.5)` percentage points two years ahead -- but not its top. The paper finds the opposite asymmetry across 90 countries; in Austria the stress episodes of 2008 and 2012 lifted debt from low levels, which moves the bottom of the distribution more than its top.
+* **The sovereign spread** shifts the distribution up at all horizons, by `r coef_at(12, "spread", 0.5)` percentage points at the median three years ahead -- the clearest location effect among the variables.
+* **Growth** lowers future debt, most clearly in the lower half at one and two years, and **uncertainty** has coefficients whose intervals mostly include zero.
+* **The primary balance** has a positive coefficient in the upper tail, the opposite sign of the debt-dynamics identity. Conditional on current debt, the large deficits of 2009 and 2020 came when debt had already jumped, and debt fell in the following years; with few such episodes the regression cannot separate the two.
+
+The intervals are wide throughout, and a prior that pulls slopes towards zero is what keeps the tail coefficients in a range that can be read at all.
+
+## From quantiles to a density
+
+### Predicted quantiles
+
+A model predicts the five percentiles of the change in debt from the regressors of any quarter, and adding the debt of that quarter turns them into percentiles of future debt. The predictions of separate quantile regressions can cross -- nothing forces the 95th percentile of a given quarter above the 75th -- so they are sorted, which is the rearrangement of Chernozhukov, Fernández-Val and Galichon (2010) and changes nothing where they do not cross:
+
+```{r}
+predict_quantiles <- function(models, x) {
+  z <- cbind(as.matrix(x), 1)
+  q <- sapply(models, function(m) drop(z %*% colMeans(m[["posterior"]][["a"]][["coeffs"]])))
+  q <- t(apply(matrix(q, nrow = nrow(z)), 1, sort))
+  q <- q + as.numeric(window(debt, start = start(x), end = end(x)))
+  dimnames(q) <- list(as.character(time(x)), probs)
+  q
+}
+```
+
+### Fitting a skewed t distribution
+
+Following Adrian et al. (2019) and Furceri et al. (2025), the predicted quantiles are smoothed into the skewed $t$ distribution of Azzalini and Capitanio (2003), whose density is
+
+$$f(y) = \frac{2}{\omega} \, t_{\nu}(z) \, T_{\nu + 1}\left(\alpha z \sqrt{\frac{\nu + 1}{\nu + z^2}}\right), \qquad z = \frac{y - \xi}{\omega},$$
+
+with location $\xi$, scale $\omega$, shape $\alpha$ and degrees of freedom $\nu$, where $t_{\nu}$ and $T_{\nu}$ are the density and distribution function of a $t$ distribution. The four parameters are chosen to minimise the squared distance between the predicted 5th, 25th, 75th and 95th percentiles and those of the distribution. Base R has no quantile function of this distribution, so it is computed from the density on a fine grid. Location and scale enter the quantiles linearly, so for given shape and degrees of freedom they are a least squares regression, and only $\alpha$ and $\nu$ are searched for numerically:
+
+```{r}
+dst <- function(y, xi, omega, alpha, nu) {
+  z <- (y - xi) / omega
+  2 / omega * dt(z, nu) * pt(alpha * z * sqrt((nu + 1) / (nu + z^2)), nu + 1)
+}
+
+st_grid <- function(alpha, nu, z = seq(-40, 40, length.out = 8001)) {
+  d <- dst(z, 0, 1, alpha, nu)
+  cdf <- cumsum((d + c(0, d[-length(d)])) / 2) * (z[2] - z[1])
+  list(z = z, cdf = cdf / cdf[length(cdf)])
+}
+
+st_quantile <- function(p, alpha, nu) {
+  g <- st_grid(alpha, nu)
+  keep <- !duplicated(g$cdf)
+  approx(g$cdf[keep], g$z[keep], xout = p)$y
+}
+
+fit_skewt <- function(q, fit_probs = c(0.05, 0.25, 0.75, 0.95), start = NULL) {
+  q <- q[as.character(fit_probs)]
+  ls_fit <- function(par) {
+    z <- st_quantile(fit_probs, par[1], par[2])
+    b <- stats::lm.fit(cbind(1, z), q)$coefficients
+    if (b[2] <= 0) return(list(ssr = Inf))
+    list(ssr = sum((q - b[1] - b[2] * z)^2), xi = b[[1]], omega = b[[2]])
+  }
+  if (is.null(start)) {
+    grid <- expand.grid(alpha = seq(-6, 6, by = 1), nu = c(2, 4, 8, 16, 30))
+    start <- unlist(grid[which.min(apply(grid, 1, function(par) ls_fit(par)$ssr)), ])
+  } else {
+    start <- start[c("alpha", "nu")]
+  }
+  opt <- stats::optim(start, function(par) ls_fit(par)$ssr, method = "L-BFGS-B",
+                      lower = c(-20, 2), upper = c(20, 30))
+  res <- ls_fit(opt$par)
+  c(xi = res$xi, omega = res$omega, alpha = opt$par[[1]], nu = opt$par[[2]])
+}
+```
+
+Argument `start` lets the fit of one quarter start from the solution of the previous one, which saves the coarse grid search when many quarters are fitted in a row.
+
+## Pooling the densities
+
+Each conditioning variable gives its own density, and some of them predict better than others. Furceri et al. (2025) combine them in a linear pool, $f(y) = \sum_m w_m f_m(y)$, whose weights are non-negative, sum to one and maximise the out-of-sample predictive accuracy of the pool, measured by the log score. Conflitti, De Mol and Giannone (2015) show that the weights can be found by a simple fixed-point iteration, which never leaves the admissible set:
+
+```{r}
+pool_weights <- function(scores, tol = 1e-10, max_iter = 10000) {
+  w <- rep(1 / ncol(scores), ncol(scores))
+  for (i in 1:max_iter) {
+    w_new <- w * colMeans(scores / drop(scores %*% w))
+    if (max(abs(w_new - w)) < tol) break
+    w <- w_new
+  }
+  setNames(w_new, colnames(scores))
+}
+```
+
+`scores` holds one row per forecast origin and one column per model, each entry the predictive density of a model evaluated at the debt ratio that was later realised.
+
+The scores come from an expanding window exercise at the horizon of three years. `window` shortens the estimation sample of a model to end in some quarter $e$. Since a regression pairs debt in $t + h$ with the regressors of $t$, the last observation of that sample is only known in quarter $T = e + h$, which is the forecast origin: the prediction uses the regressors of $T$, and it is scored against debt in $T + h$. The first estimation sample ends in 2011Q4, so that even the primary balance, the shortest series, contributes ten years of observations; the last one ends $2h$ quarters before the latest debt observation.
+
+```{r scores, message = FALSE, warning = FALSE}
+h <- 12
+ends <- seq(2011.75, tail(time(debt), 1) - 2 * h / 4, by = 0.25)
+
+scores <- matrix(NA, length(ends), length(sets), dimnames = list(as.character(ends), sets))
+for (set in sets) {
+  full_sample <- dar_model(h, variable_of(set))
+  x <- regressors(variable_of(set))
+  par <- NULL
+  for (j in seq_along(ends)) {
+    models <- estimate(window(full_sample, end = ends[j]))
+    origin <- ends[j] + h / 4
+    q <- predict_quantiles(models, window(x, start = origin, end = origin))[1, ]
+    par <- fit_skewt(q, start = par)
+    realised <- window(debt, start = origin + h / 4, end = origin + h / 4)
+    scores[j, set] <- dst(realised, par[["xi"]], par[["omega"]], par[["alpha"]], par[["nu"]])
+  }
+}
+
+w <- pool_weights(scores)
+data.frame(average_log_score = round(colMeans(log(scores)), 2),
+           weight = round(w, 3))
+```
+
+The pool has an average log score of `r sprintf("%.2f", mean(log(scores %*% w)))`, and the best single model one of `r sprintf("%.2f", max(colMeans(log(scores))))`.
+
+The weights do not average; they select. The spread model gets `r sprintf("%.0f", 100 * w[["spread"]])` percent, and the pool is essentially that model. Two features of the exercise push in this direction. The scores come from `r nrow(scores)` forecast origins whose three-year periods overlap almost entirely, so they contain the information of a few independent periods at most. And an exact fit of the skewed $t$ distribution to four percentiles turns a narrowly estimated tail into a steep edge of the density: a realisation just beyond it gets a density close to zero. The primary balance model, with an average log score of `r sprintf("%.2f", colMeans(log(scores))[["primary_balance"]])`, is the model this happened to. In the paper, 20 years of scores per country and a large cross-section make the weights far less fragile.
+
+## Debt-at-risk
+
+### The predictive density today
+
+With the weights in hand, every model is estimated on the full sample and predicts the percentiles of debt three years ahead for every quarter in which all regressors are available:
+
+```{r full-sample, message = FALSE, warning = FALSE}
+models_12 <- lapply(sets, function(set) estimate(dar_model(h, variable_of(set))))
+names(models_12) <- sets
+
+origins <- time(complete_window(cbind(debt, conditioning)))
+predicted <- lapply(sets, function(set) {
+  x <- regressors(variable_of(set))
+  predict_quantiles(models_12[[set]], window(x, start = origins[1], end = tail(origins, 1)))
+})
+names(predicted) <- sets
+
+skewt <- lapply(sets, function(set) {
+  par <- NULL
+  t(apply(predicted[[set]], 1, function(q) par <<- fit_skewt(q, start = par)))
+})
+names(skewt) <- sets
+```
+
+The quantiles of the pool have no closed form, since the distribution function of a mixture has to be inverted numerically:
+
+```{r}
+pool_quantiles <- function(p, par, w) {
+  grids <- lapply(seq_len(nrow(par)), function(i) st_grid(par[i, "alpha"], par[i, "nu"]))
+  cdf <- function(y) {
+    sum(sapply(seq_along(grids), function(i) {
+      w[i] * approx(grids[[i]]$z, grids[[i]]$cdf, xout = (y - par[i, "xi"]) / par[i, "omega"],
+                    yleft = 0, yright = 1)$y
+    }))
+  }
+  range <- c(min(par[, "xi"] - 30 * par[, "omega"]), max(par[, "xi"] + 30 * par[, "omega"]))
+  sapply(p, function(pp) stats::uniroot(function(y) cdf(y) - pp, range, tol = 1e-6)$root)
+}
+```
+
+For the latest quarter in which all regressors are available, the density of debt three years ahead is
+
+```{r density-plot, fig.width = 6.5, fig.height = 4.2}
+latest <- length(origins)
+par_latest <- t(sapply(skewt, function(s) s[latest, ]))
+risk_latest <- pool_quantiles(c(0.05, 0.5, 0.95), par_latest, w)
+names(risk_latest) <- c("P5", "P50", "P95")
+
+y <- seq(min(par_latest[, "xi"]) - 25, max(par_latest[, "xi"]) + 35, by = 0.1)
+components <- sapply(sets, function(set) {
+  dst(y, par_latest[set, "xi"], par_latest[set, "omega"], par_latest[set, "alpha"], par_latest[set, "nu"])
+})
+pooled <- drop(components %*% w)
+
+op <- par(mar = c(4, 4, 1, 1), las = 1, bty = "n", col.axis = "#52514e", fg = "#c3c2b7")
+plot(y, pooled, type = "n", ylim = c(0, max(components, pooled)),
+     xlab = "Government debt, % of GDP", ylab = "Density")
+abline(h = axTicks(2), col = "#e1e0d9")
+matlines(y, components, col = "#c3c2b7", lty = 1, lwd = 1)
+lines(y, pooled, col = "#2a78d6", lwd = 2)
+points(risk_latest, drop(sapply(risk_latest, function(r) pooled[which.min(abs(y - r))])),
+       pch = 19, col = "#2a78d6", cex = 1.2)
+text(risk_latest, drop(sapply(risk_latest, function(r) pooled[which.min(abs(y - r))])),
+     labels = paste0(names(risk_latest), " = ", round(risk_latest, 1)), pos = 3, col = "#0b0b0b")
+legend("topleft", legend = c("Pooled density", "Single-variable densities"),
+       col = c("#2a78d6", "#c3c2b7"), lwd = c(2, 1), bty = "n", text.col = "#0b0b0b")
+par(op)
+```
+
+where the forecast origin is `r paste0(floor(origins[latest]), "Q", round(4 * (origins[latest] %% 1)) + 1)` and debt stood at `r round(window(debt, start = origins[latest], end = origins[latest]), 1)` percent of GDP. Following the paper, upside risk is the distance of debt-at-risk from the median of the unconditional model, which conditions on current debt only, and downside risk the distance of that median from the pooled 5th percentile:
+
+```{r}
+median_unconditional <- predicted[["debt"]][latest, "0.5"]
+round(c(debt_at_risk = risk_latest[["P95"]],
+        median_unconditional = median_unconditional,
+        upside_risk = risk_latest[["P95"]] - median_unconditional,
+        downside_risk = median_unconditional - risk_latest[["P5"]]), 1)
+```
+
+Debt-at-risk three years ahead is `r sprintf("%.1f", risk_latest[["P95"]])` percent of GDP, `r sprintf("%.1f", risk_latest[["P95"]] - median_unconditional)` percentage points above the unconditional median. The distribution is skewed to the downside: the risk that debt falls well below the median is about twice as large as the risk that it rises well above it. That is what Austria's history teaches a model conditioned on it -- the two periods in which debt stood above 80 percent of GDP, after 2010 and after 2020, were both followed by years of falling debt -- and it is a statement about this sample, not a forecast that fiscal policy will repeat it.
+
+### Which variables drive the upper tail
+
+Furceri et al. (2025) attribute debt-at-risk to its conditioning variables. The 95th percentile of a mixture is not the weighted average of the 95th percentiles of its components, so no attribution adds up exactly. A transparent approximation is the weighted distance of each model's predicted 95th percentile from the unconditional median:
+
+```{r contributions-plot, fig.width = 6.5, fig.height = 3.8}
+p95 <- sapply(predicted, function(q) q[latest, "0.95"])
+contributions <- w * (p95 - median_unconditional)
+
+short_labels <- c(debt = "Debt", stress = "Financial stress", spread = "Spread",
+                  uncertainty = "Uncertainty", primary_balance = "Primary balance",
+                  growth = "Growth", inflation = "Inflation")
+
+op <- par(mar = c(4, 8, 1, 1), las = 1, bty = "n", col.axis = "#52514e", fg = "#c3c2b7")
+barplot(rev(contributions), horiz = TRUE, col = "#2a78d6", border = NA,
+        names.arg = rev(short_labels[names(contributions)]),
+        xlab = "Contribution to upside risk, pp of GDP")
+abline(v = 0, col = "#c3c2b7")
+par(op)
+
+round(c(sum_of_contributions = sum(contributions),
+        upside_risk = risk_latest[["P95"]] - median_unconditional), 1)
+```
+
+With a pool that has all but selected one model, the attribution says the same thing as the weights: the upper tail is the spread model's. The approximation is close here, since the weighted distances add up to `r sprintf("%.1f", sum(contributions))` percentage points against an upside risk of `r sprintf("%.1f", risk_latest[["P95"]] - median_unconditional)`; with weights spread over several models of different skewness the gap can be larger.
+
+### Debt-at-risk over time
+
+Repeating the pooling for every forecast origin gives the history of debt-at-risk and of the risks around the median:
+
+```{r history, fig.width = 7, fig.height = 6.5}
+risk <- t(sapply(seq_along(origins), function(t) {
+  pool_quantiles(c(0.05, 0.95), t(sapply(skewt, function(s) s[t, ])), w)
+}))
+risk <- ts(cbind(p05 = risk[, 1], p95 = risk[, 2],
+                 median = predicted[["debt"]][, "0.5"],
+                 debt = window(debt, start = origins[1], end = tail(origins, 1))),
+           start = origins[1], frequency = 4)
+
+op <- par(mfrow = c(2, 1), mar = c(2.5, 4, 2, 1), las = 1, bty = "n",
+          font.main = 1, col.axis = "#52514e", fg = "#c3c2b7")
+# Leaves room above the data for the legend
+with_headroom <- function(x) range(x) + c(0, 0.3 * diff(range(x)))
+
+plot(risk[, c("debt", "p95")], plot.type = "single", type = "n",
+     ylim = with_headroom(risk[, c("debt", "p95")]), xlab = "", ylab = "% of GDP",
+     main = "Debt and debt-at-risk three years ahead")
+abline(h = axTicks(2), col = "#e1e0d9")
+lines(risk[, "debt"], col = "#2a78d6", lwd = 2)
+lines(risk[, "p95"], col = "#eb6834", lwd = 2)
+legend("topleft", legend = c("Debt at the forecast origin", "Debt-at-risk (P95)"),
+       col = c("#2a78d6", "#eb6834"), lwd = 2, bty = "n", horiz = TRUE, text.col = "#0b0b0b")
+
+upside <- risk[, "p95"] - risk[, "median"]
+downside <- risk[, "median"] - risk[, "p05"]
+plot(cbind(upside, downside), plot.type = "single", type = "n",
+     ylim = with_headroom(c(0, upside, downside)), xlab = "", ylab = "pp of GDP",
+     main = "Upside and downside risk")
+abline(h = axTicks(2), col = "#e1e0d9")
+lines(upside, col = "#eb6834", lwd = 2)
+lines(downside, col = "#2a78d6", lwd = 2)
+legend("topleft", legend = c("Upside risk (P95 - P50)", "Downside risk (P50 - P5)"),
+       col = c("#eb6834", "#2a78d6"), lwd = 2, bty = "n", horiz = TRUE, text.col = "#0b0b0b")
+par(op)
+```
+
+The horizontal axis is the forecast origin, not the quarter the prediction is about: the value plotted for 2020 is the 95th percentile of debt in 2023, as seen from 2020.
+
+This is the figure that shows most plainly what a single country's tail regressions can and cannot do. Debt at the forecast origin ranges from `r sprintf("%.0f", min(risk[, "debt"]))` to `r sprintf("%.0f", max(risk[, "debt"]))` percent of GDP, while debt-at-risk barely leaves a band between `r sprintf("%.0f", min(risk[, "p95"]))` and `r sprintf("%.0f", max(risk[, "p95"]))` percent, with its one spike at the height of the sovereign spreads of 2012. The 95th percentile regression has learnt where Austrian debt topped out over the sample and puts the upper tail there regardless of where debt starts: the risk measure moves with conditions that the sample has seen move debt, and it cannot anticipate a level of debt the sample has never reached. That is the case for the panel of the paper, in which other countries' histories tell the model what lies beyond one country's own.
+
+Upside risk is largest when debt is low and shrinks as debt approaches its historical ceiling. Downside risk even turns negative in `r years <- unique(floor(time(downside)[downside < 0])); if (length(years) > 1) paste(paste(head(years, -1), collapse = ", "), "and", tail(years, 1)) else years`, when the pooled 5th percentile lies above the unconditional median: the two come from different models, and nothing forces the one below the other.
+
+## Posterior uncertainty in the tail
+
+Everything so far uses posterior means of the coefficients. A Bayesian estimate also delivers the posterior of the predicted percentile itself, one value per draw. For the 95th percentile in the latest quarter:
+
+```{r}
+tail_posterior <- t(sapply(sets, function(set) {
+  x <- regressors(variable_of(set))
+  z <- c(window(x, start = origins[latest], end = origins[latest]), 1)
+  current <- as.numeric(window(debt, start = origins[latest], end = origins[latest]))
+  draws <- current + models_12[[set]][[5]][["posterior"]][["a"]][["coeffs"]] %*% z
+  c(mean = mean(draws), quantile(draws, c(0.05, 0.95)))
+}))
+round(tail_posterior, 1)
+```
+
+The same caveat as in the vignette on quantile VARs applies: the asymmetric Laplace distribution is a working likelihood, and without the adjustment of Yang, Wang and He (2016) the spread of these draws is not a calibrated credible interval. Read it as a statement about how firmly the sample pins down the tail, not as a probability.
+
+## What differs from the paper
+
+* **One country, not a panel.** Furceri et al. (2025) pool 90 countries with country fixed effects. A single country has neither the cross-section nor the need for fixed effects, and has a short sample instead: the Austrian regressions of debt three years ahead have fewer than 90 quarterly observations. The horizons are therefore one to three years rather than one to five, and informative priors on the slopes do some of the work that the cross-section does in the paper.
+* **One regression per quantile instead of a location-scale model.** The coefficients of different quantiles are not tied to each other by a common scale function; see the section on direct regressions.
+* **Pseudo out-of-sample weights.** The data are the latest vintage rather than what was known at each forecast origin, and the conditioning variables are standardised over the full sample. The weights therefore rest on predictions that could not have been made in real time, and on few, strongly overlapping three-year periods.
+* **No re-centring.** The paper shifts its predicted quantiles so that the median matches the IMF's World Economic Outlook projection. Nothing here depends on an external projection, so the median is the model's own.
+* **Different variables.** Debt is the BIS series of credit to the general government at nominal value, which is close to but not identical with the Maastricht debt ratio; the spread is taken against the German Bund; there is no social unrest index, since none is available for Austria at a quarterly frequency.
+* **No extensions.** The aggregation across countries, the prediction of fiscal crises and the analysis of heterogeneity across countries have no counterpart for a single country.
+
+## Citing bvartools
+
+If you use `bvartools` in published work, please cite it. `citation("bvartools")` prints the reference, and the package has the DOI [10.5281/zenodo.22736604](https://doi.org/10.5281/zenodo.22736604), which always resolves to the latest archived version.
+
+## References
+
+Adrian, T., Boyarchenko, N., & Giannone, D. (2019). Vulnerable growth. *American Economic Review, 109*(4), 1263-1289. <https://doi.org/10.1257/aer.20161923>
+
+Ahir, H., Bloom, N., & Furceri, D. (2022). The world uncertainty index. *NBER Working Paper* No. 29763.
+
+Azzalini, A., & Capitanio, A. (2003). Distributions generated by perturbation of symmetry with emphasis on a multivariate skew t-distribution. *Journal of the Royal Statistical Society Series B: Statistical Methodology, 65*(2), 367-389. <https://doi.org/10.1111/1467-9868.00391>
+
+Chernozhukov, V., Fernández-Val, I., & Galichon, A. (2010). Quantile and probability curves without crossing. *Econometrica, 78*(3), 1093-1125. <https://doi.org/10.3982/ECTA7880>
+
+Conflitti, C., De Mol, C., & Giannone, D. (2015). Optimal combination of survey forecasts. *International Journal of Forecasting, 31*(4), 1096-1103. <https://doi.org/10.1016/j.ijforecast.2015.03.009>
+
+Furceri, D., Giannone, D., Kisat, F., Lam, W. R., & Li, H. (2025). Debt-at-risk. *IMF Working Paper* No. 25/86. Washington, DC: International Monetary Fund.
+
+Holló, D., Kremer, M., & Lo Duca, M. (2012). CISS -- A composite indicator of systemic stress in the financial system. *ECB Working Paper* No. 1426.
+
+Kozumi, H., & Kobayashi, G. (2011). Gibbs sampling methods for Bayesian quantile regression. *Journal of Statistical Computation and Simulation, 81*(11), 1565-1578. <https://doi.org/10.1080/00949655.2010.496117>
+
+Machado, J. A. F., & Santos Silva, J. M. C. (2019). Quantiles via moments. *Journal of Econometrics, 213*(1), 145-173. <https://doi.org/10.1016/j.jeconom.2019.04.009>
+
+Yang, Y., Wang, H. J., & He, X. (2016). Posterior inference in Bayesian quantile regression with asymmetric Laplace likelihood. *International Statistical Review, 84*(3), 327-344. <https://doi.org/10.1111/insr.12114>

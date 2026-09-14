@@ -169,7 +169,15 @@
   once at the posterior mean of its parameters. For a VEC model the point is
   the matrix of the rank of the model closest to the posterior mean of
   `Pi = alpha beta'`, because `alpha` and `beta` are identified only up to a
-  rotation. The note about periods with a highly variable pointwise
+  rotation. Closest is measured as the likelihood measures it, weighting a
+  difference in `Pi` with the error correction term and the error precision,
+  so the point does not depend on the scale of the series. Measuring every
+  element of `Pi` alike, as a first version of this change did, gave up fit
+  where the levels are large: for VEC models of four `at_macrodata` levels of
+  rank 0 to 3, AIC of rank 2 came to 2213 against -121 at the maximum
+  likelihood estimate, and the ranks were ordered unlike maximum likelihood.
+  With the weighted point AIC lies within 7 of its maximum likelihood value and
+  orders them alike. The note about periods with a highly variable pointwise
   log-likelihood now refers to WAIC alone. **Results change** for AIC, BIC and
   HQ of every model.
 

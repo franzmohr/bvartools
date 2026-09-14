@@ -170,34 +170,98 @@ test_that("the penalty of an error correction model grows with the rank", {
   expect_true(all(diff(penalties) > 1))
 })
 
-test_that("the deviance of an error correction model is taken at the rank r mean of Pi", {
+test_that("the deviance of an error correction model is taken at the rank r mean of Pi in the metric of the likelihood", {
   model <- fx_vec_fitted()
   spec <- model[["model"]]
   k <- spec[["k"]]
   r <- spec[["rank"]]
   criteria <- selection_criteria(model)
 
-  y <- model[["data"]][["train"]][["y"]]
-  w <- model[["data"]][["train"]][["w"]]
-  x <- model[["data"]][["train"]][["x"]]
+  y <- as.matrix(model[["data"]][["train"]][["y"]])
+  w <- as.matrix(model[["data"]][["train"]][["w"]])
+  x <- as.matrix(model[["data"]][["train"]][["x"]])
   a <- as.matrix(model[["posterior"]][["a"]][["coeffs"]])
   beta <- as.matrix(model[["posterior"]][["beta"]][["coeffs"]])
   k_beta <- ncol(w)
 
   # alpha and beta are identified only up to a rotation, so the point is the
-  # posterior mean of Pi = alpha beta', reduced to rank r.
+  # posterior mean of Pi = alpha beta', reduced to rank r in the metric in which
+  # the likelihood sees a difference D in Pi: tr(Q D W'W D') with Q the mean
+  # error precision. With the Cholesky factors Q = U_q' U_q and W'W = U_w' U_w
+  # that is |U_q D U_w'|^2, minimised by a truncated SVD of U_q Pi_mean U_w' --
+  # another route to the point than the symmetric roots the package takes.
   pi_mean <- Reduce(`+`, lapply(seq_len(nrow(a)), function(i) {
     matrix(a[i, seq_len(k * r)], k, r) %*% t(matrix(beta[i, ], k_beta, r))
   })) / nrow(a)
-  s <- svd(pi_mean)
-  keep <- seq_len(r)
-  pi_r <- s$u[, keep, drop = FALSE] %*% diag(s$d[keep], r) %*% t(s$v[, keep, drop = FALSE])
-  gamma <- matrix(colMeans(a)[-seq_len(k * r)], k)
   precision <- matrix(colMeans(model[["posterior"]][["u_sigma_inv"]][["coeffs"]]), k)
+  u_q <- chol(precision)
+  u_w <- chol(crossprod(w))
+  s <- svd(u_q %*% pi_mean %*% t(u_w))
+  keep <- seq_len(r)
+  pi_r <- solve(u_q, s$u[, keep, drop = FALSE] %*% diag(s$d[keep], r)) %*%
+    t(solve(u_w, s$v[, keep, drop = FALSE]))
+  gamma <- matrix(colMeans(a)[-seq_len(k * r)], k)
   deviance <- -2 * mvn_loglik(y - w %*% t(pi_r) - x %*% t(gamma), precision)
 
   nparams <- r * (k + k_beta - r) + k * ncol(x) + k * (k + 1) / 2
   expect_equal(criteria[["AIC"]][["mean"]], deviance + 2 * nparams)
+
+  # It fits the posterior mean of Pi at least as well, in that metric, as the
+  # plain truncated SVD of Pi_mean that was used before.
+  misfit <- function(p) sum((u_q %*% (pi_mean - p) %*% t(u_w))^2)
+  plain <- svd(pi_mean)
+  pi_plain <- plain$u[, keep, drop = FALSE] %*% diag(plain$d[keep], r) %*% t(plain$v[, keep, drop = FALSE])
+  expect_lte(misfit(pi_r), misfit(pi_plain) + 1e-10)
+})
+
+test_that("AIC orders the ranks of a VEC model of at_macrodata levels as maximum likelihood does", {
+  # The error correction term holds levels on very different scales: output
+  # times 100 is about 450, the interest rate about 2. A rank r point that
+  # measured every element of Pi alike gave up fit where the series are large,
+  # and AIC ranked the ranks in an order unrelated to that of maximum likelihood.
+  data <- stats::window(at_data(), end = c(2019, 4)) * 100
+  # The posterior mean of Pi at rank one settles slowly: with 3000 draws one seed
+  # left AIC 11 above its maximum likelihood value, with 12000 draws two seeds
+  # are within 3.
+  models <- create_bvecmodel(data, p = 2, r = 0:2, const = "unrestricted",
+                             iterations = 12000, burnin = 1000)
+  models <- add_priors(models, coef = list(v_i = 0, v_i_det = 0),
+                       coint = list(v_i = 0, p_tau_i = 1),
+                       sigma = list(df = 1, scale = 0.0001))
+  models <- add_initial_values(models)
+  set.seed(20260914)
+  models <- add_posterior_coefficients(models)
+  models <- add_posterior_loglik(models)
+  criteria <- selection_criteria(models)
+
+  aic_ml <- vapply(models, function(model) {
+    y <- as.matrix(model[["data"]][["train"]][["y"]])
+    w <- as.matrix(model[["data"]][["train"]][["w"]])
+    x <- as.matrix(model[["data"]][["train"]][["x"]])
+    k <- ncol(y)
+    tt <- nrow(y)
+    r <- model[["model"]][["rank"]]
+    residual <- function(m) m - x %*% solve(crossprod(x), crossprod(x, m))
+    r0 <- residual(y)
+    r1 <- residual(w)
+    e <- r0
+    if (r > 0) {
+      # Johansen's reduced rank regression
+      s00 <- crossprod(r0) / tt
+      s11 <- crossprod(r1) / tt
+      s01 <- crossprod(r0, r1) / tt
+      b <- Re(eigen(solve(s11, t(s01)) %*% solve(s00, s01))$vectors[, seq_len(r), drop = FALSE])
+      pi_ml <- s01 %*% b %*% solve(t(b) %*% s11 %*% b) %*% t(b)
+      e <- r0 - r1 %*% t(pi_ml)
+    }
+    loglik <- mvn_loglik(e, solve(crossprod(e) / tt))
+    nparams <- r * (k + ncol(w) - r) + k * ncol(x) + k * (k + 1) / 2
+    -2 * loglik + 2 * nparams
+  }, numeric(1))
+  aic <- vapply(criteria, function(x) x[["AIC"]][["mean"]], numeric(1))
+
+  expect_true(all(abs(aic - aic_ml) < 5))
+  expect_identical(order(aic), order(aic_ml))
 })
 
 test_that("WAIC penalises by the flexibility a fit used", {

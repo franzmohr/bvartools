@@ -27,8 +27,9 @@
 # The loadings and cointegration vectors of a VEC model are the exception:
 # alpha and beta are identified only up to a rotation, so their means say
 # nothing, and the mean of Pi = alpha beta' is generally of full rank. The point
-# is therefore the best approximation of rank r to the posterior mean of Pi,
-# factored back into alpha and beta.
+# is therefore the approximation of rank r to the posterior mean of Pi that
+# fits best in the metric of the likelihood, factored back into alpha and beta;
+# see .posterior_mean_pi().
 .plugin_deviance <- function(object) {
 
   point <- .posterior_mean_model(object)
@@ -87,15 +88,37 @@
   object
 }
 
-# Replaces alpha and beta in the posterior mean of a VEC model by the rank r
+# Replaces alpha and beta in the posterior mean of a VEC model by a rank r
 # factorisation of the posterior mean of Pi, period by period for a time varying
 # model. 'a' holds alpha in its first k r elements per period, as a k x r matrix
 # stacked by column, and 'beta' holds the k_beta x r matrix of the period.
+#
+# Which matrix of rank r is closest depends on how a difference in Pi is
+# measured, and it has to be measured as the likelihood measures it: a change D
+# in Pi moves the errors of period t by D w_t, which the likelihood weighs with
+# the error precision. The point therefore minimises
+#
+#     sum_t (D w_t)' Q (D w_t) = tr(Q^(1/2) D (W'W) D' Q^(1/2)),  D = Pi_mean - Pi_r,
+#
+# with Q the posterior mean of the error precision (of the period, if it moves)
+# and W the error correction term. Its solution is the truncated SVD of
+# Q^(1/2) Pi_mean (W'W)^(1/2), transformed back. The plain truncated SVD of
+# Pi_mean, which was used before, measures every element of Pi alike. The series
+# in W are levels on scales of their own -- output times 100 is about 450 in
+# at_macrodata, an interest rate about 2 -- so it gave up fit where the series
+# are large to keep elements that hardly matter: in a four-variable VEC model of
+# at_macrodata levels the AIC of rank 2 came to 2213 against -121 at the maximum
+# likelihood estimate, and AIC ranked the ranks in an order unrelated to theirs.
+# The weighted point is also invariant to rescaling the series or the equations.
+# A time varying model is approximated period by period in the metric of the
+# whole sample's W'W.
 .posterior_mean_pi <- function(object, point) {
 
   k <- object[["model"]][["k"]]
   rank <- object[["model"]][["rank"]]
-  k_beta <- ncol(object[["data"]][["train"]][["w"]])
+  w <- as.matrix(object[["data"]][["train"]][["w"]])
+  k_beta <- ncol(w)
+  tt <- nrow(w)
   n_alpha <- k * rank
   n_beta <- k_beta * rank
 
@@ -107,6 +130,11 @@
 
   a_point <- as.numeric(point[["a"]][["coeffs"]])
   beta_point <- as.numeric(point[["beta"]][["coeffs"]])
+
+  metric_w <- .symmetric_roots(crossprod(w))
+  u_sigma_inv <- object[["posterior"]][["u_sigma_inv"]][["coeffs"]]
+  precision_mean <- if (is.null(u_sigma_inv)) NULL else colMeans(as.matrix(u_sigma_inv))
+  precision_path <- !is.null(precision_mean) && length(precision_mean) == k * k * tt
 
   for (t in seq_len(periods)) {
     pos_a <- (t - 1) * n_a
@@ -120,9 +148,19 @@
       pi_mean <- pi_mean + crossprod(alpha_q, beta_q) / draws
     }
 
-    decomposition <- svd(pi_mean, nu = rank, nv = rank)
-    alpha_t <- decomposition[["u"]] %*% diag(decomposition[["d"]][seq_len(rank)], rank)
-    beta_t <- decomposition[["v"]]
+    precision <- if (is.null(precision_mean)) {
+      diag(1, k)
+    } else if (precision_path) {
+      matrix(precision_mean[(t - 1) * k * k + seq_len(k * k)], k)
+    } else {
+      matrix(precision_mean, k)
+    }
+    metric_u <- .symmetric_roots(precision)
+
+    decomposition <- svd(metric_u[["root"]] %*% pi_mean %*% metric_w[["root"]], nu = rank, nv = rank)
+    alpha_t <- metric_u[["inv_root"]] %*% decomposition[["u"]] %*%
+      diag(decomposition[["d"]][seq_len(rank)], rank)
+    beta_t <- metric_w[["inv_root"]] %*% decomposition[["v"]]
 
     a_point[pos_a + seq_len(n_alpha)] <- as.numeric(alpha_t)
     beta_point[pos_beta + seq_len(n_beta)] <- as.numeric(beta_t)
@@ -132,6 +170,20 @@
   point[["beta"]][["coeffs"]] <- coda::mcmc(matrix(beta_point, nrow = 1), start = 1, end = 1, thin = 1)
 
   point
+}
+
+# The symmetric square root of a positive semi-definite matrix and the
+# Moore-Penrose inverse of that root. Directions without variation -- a series
+# in W that is a combination of others -- get a root of zero, and the fit in
+# them is indifferent to Pi, so the pseudo-inverse leaves them out.
+.symmetric_roots <- function(m) {
+  e <- eigen((m + t(m)) / 2, symmetric = TRUE)
+  values <- pmax(e[["values"]], 0)
+  keep <- values > max(values) * 1e-12
+  vectors <- e[["vectors"]]
+  list("root" = vectors %*% diag(sqrt(values), length(values)) %*% t(vectors),
+       "inv_root" = vectors[, keep, drop = FALSE] %*%
+         diag(1 / sqrt(values[keep]), sum(keep)) %*% t(vectors[, keep, drop = FALSE]))
 }
 
 # The criteria that are point estimates rather than quantities with a

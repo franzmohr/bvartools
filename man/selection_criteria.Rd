@@ -63,9 +63,13 @@ to it would charge the complexity of the model a second time and tilt every
 comparison towards the smaller model. \eqn{D} is therefore the deviance at
 the posterior mean of the parameters, obtained by evaluating the
 log-likelihood of the model once at that point. For a VEC model the point is
-the matrix of the rank of the model closest to the posterior mean of
-\eqn{\Pi = \alpha \beta^{\prime}}, since \eqn{\alpha} and \eqn{\beta} are
-identified only up to a rotation and their own means say nothing. Under a
+the matrix of the rank of the model that is closest to the posterior mean of
+\eqn{\Pi = \alpha \beta^{\prime}} in the metric of the likelihood, i.e. that
+minimises \eqn{tr(\bar{Q} \Delta W^{\prime} W \Delta^{\prime})}, where
+\eqn{\Delta} is its difference to the posterior mean, \eqn{\bar{Q}} the posterior mean of the
+error precision and \eqn{W} the error correction term, since \eqn{\alpha} and
+\eqn{\beta} are identified only up to a rotation and their own means say
+nothing. The point does not depend on the scale of the series. Under a
 flat prior \eqn{D} is close to the deviance at the maximum likelihood
 estimates. Evaluated at the maximum
 likelihood estimates AIC reduces to \eqn{T} times the expression in

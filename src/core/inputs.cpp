@@ -85,6 +85,28 @@ void require_symmetric(const arma::mat &m, const char *what)
     }
 }
 
+/// Refuses a symmetric matrix that is not positive definite, read off its
+/// eigenvalues rather than a Cholesky attempt, which Armadillo may report on the
+/// console when it fails.
+///
+/// For the prior precision of a random walk's state before the sample. The
+/// samplers integrate that state out of the prior of the first period, which
+/// takes the precision's inverse (see initial_state_variance()), so a zero or
+/// singular one -- a flat prior on the state -- has no variance to hand the
+/// smoother.
+void require_positive_definite(const arma::mat &m, const char *what)
+{
+    arma::vec eigenvalues;
+    if (m.is_empty() || !arma::eig_sym(eigenvalues, m) || !(eigenvalues.min() > 0.0))
+    {
+        throw std::invalid_argument(
+            std::string(what) + " must be positive definite, since the state it describes is "
+            "integrated out of the prior of the first period, which takes its inverse" +
+            (eigenvalues.n_elem > 0 ? "; its smallest eigenvalue is " + number(eigenvalues.min())
+                                    : std::string()));
+    }
+}
+
 void require_length(const arma::vec &v, arma::uword n, const char *what)
 {
     if (v.n_elem != n)
@@ -297,6 +319,8 @@ void validate_tvp_block(const RandomWalkPrior &prior, const arma::mat &path,
                    ("prior precision of " + vec + " before the sample").c_str());
     require_symmetric(prior.initial_state.v_inv,
                       ("prior precision of " + vec + " before the sample").c_str());
+    require_positive_definite(prior.initial_state.v_inv,
+                              ("prior precision of " + vec + " before the sample").c_str());
 }
 
 /// A structural model's contemporaneous coefficients are identified only

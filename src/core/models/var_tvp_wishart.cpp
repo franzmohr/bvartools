@@ -19,6 +19,7 @@ using core::BvsBlock;
 using core::BvsScope;
 using core::bvs_sweep;
 using core::draw_normal_precision;
+using core::initial_state_variance;
 using core::split_structural_coefficients;
 using core::stacked_response;
 using core::structural_inverse;
@@ -57,7 +58,7 @@ VarTvpWishartDraws VarTvpWishartSampler::draw_coefficients(const VarTvpWishartIn
     const arma::vec &a_sigma_prior_rate = input.a_prior.sigma.rate;
 
     arma::vec a0;
-    arma::mat a0_post_v, a0_sigma_inv;
+    arma::mat a0_post_v, a0_sigma_inv, a0_prior_v;
     const arma::vec &a0_prior_mu = input.a_prior.initial_state.mu;
     const arma::mat &a0_prior_v_inv = input.a_prior.initial_state.v_inv;
 
@@ -80,6 +81,7 @@ VarTvpWishartDraws VarTvpWishartSampler::draw_coefficients(const VarTvpWishartIn
         a_sigma_post_scale = a_sigma_prior_rate;
 
         a0 = input.initial.a_init;
+        a0_prior_v = initial_state_variance(input.a_prior.initial_state);
         a0_sigma_inv = a_sigma;
         a0_sigma_inv.diag() = 1 / a_sigma.diag();
 
@@ -137,9 +139,18 @@ VarTvpWishartDraws VarTvpWishartSampler::draw_coefficients(const VarTvpWishartIn
                 z = z_bvs * a_bvs->lambda_diag;
             }
 
-            // Update a
-            a = kalman_durbin_koopman_2002(ymat, z, u_sigma, a_sigma, a_B, a0, a_sigma)
+            // Update a, with a0 integrated out of the prior of the first period.
+            // See initial_state_variance().
+            a = kalman_durbin_koopman_2002(ymat, z, u_sigma, a_sigma, a_B, a0_prior_mu,
+                                           a0_prior_v + a_sigma)
                     .cols(0, tt - 1);
+
+            // Draw a0, given the path it was integrated out of and before a_sigma
+            // conditions on it
+            a0_sigma_inv.diag() = 1 / a_sigma.diag();
+            a0_post_v = a0_prior_v_inv + a0_sigma_inv;
+            a0 = draw_normal_precision(a0_post_v,
+                                       a0_prior_v_inv * a0_prior_mu + a0_sigma_inv * a.col(0));
 
             // Draw a_sigma
             a_lag.col(0) = a0;
@@ -150,12 +161,6 @@ VarTvpWishartDraws VarTvpWishartSampler::draw_coefficients(const VarTvpWishartIn
             {
                 a_sigma(i, i) = 1 / arma::randg<double>(arma::distr_param(a_sigma_post_shape(i), a_sigma_post_scale(i)));
             }
-
-            // Draw a0
-            a0_sigma_inv.diag() = 1 / a_sigma.diag();
-            a0_post_v = a0_prior_v_inv + a0_sigma_inv;
-            a0 = draw_normal_precision(a0_post_v,
-                                       a0_prior_v_inv * a0_prior_mu + a0_sigma_inv * a.col(0));
 
             if (a_bvs)
             {

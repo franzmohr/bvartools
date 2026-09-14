@@ -300,15 +300,55 @@ inline void build_psi_regressors(arma::mat &psi_z, const arma::mat &u)
     }
 }
 
-/// The two draws that follow a random walk coefficient path: the variance of its
-/// innovations, and the state of the period before the sample. Both are written
-/// in place.
+/// The prior variance of a random walk's state before the sample, which is what
+/// integrates that state out of the prior of the first period.
+///
+/// A random walk path is drawn by the simulation smoother, whose last two
+/// arguments are the prior mean and covariance of the state the first observation
+/// loads on. With a_1 = a_0 + v_1, v_1 ~ N(0, Sigma), and a_0 ~ N(mu_0, V_0), that
+/// prior is N(mu_0, V_0 + Sigma) once a_0 is integrated out. Every time-varying
+/// block passes exactly that, then draws a_0 given the path, and only then the
+/// variance Sigma.
+///
+/// The blocks used to hand the smoother the a_0 of the previous draw and Sigma
+/// itself, and to draw Sigma before a_0. Every one of those steps is a valid
+/// conditional, but together they tie a_1 and a_0 to each other with variance
+/// Sigma, and a random walk that is meant to move slowly has a small Sigma. With
+/// a prior rate of 1e-12 on it the chain could not move the level of a path at
+/// all: two chains started from different paths returned their own starting
+/// values as the posterior, to the digits printed, and a time-varying VEC's
+/// loadings stayed at whatever the host had initialised them to while its
+/// cointegration vectors moved, which is how solved global models came out
+/// explosive. Integrated out, a_0 leaves the level of the path to the data from
+/// the first draw.
+///
+/// The order is part of the fix rather than a detail of it. a_0 was left out of
+/// the path's draw, so it has to be drawn from its conditional on that path
+/// before anything conditions on it again -- Sigma's innovations include
+/// a_1 - a_0. Drawing Sigma first would make the sampler a partially collapsed
+/// Gibbs sampler in an order that does not preserve the posterior (van Dyk and
+/// Park, 2008).
+///
+/// Inverts the prior precision, which validate() therefore requires to be
+/// positive definite for every time-varying block. It does not change over the
+/// chain, so the callers take it once before the loop.
+inline arma::mat initial_state_variance(const NormalPrior &prior)
+{
+    return arma::inv_sympd(prior.v_inv);
+}
+
+/// The two draws that follow a random walk coefficient path: the state of the
+/// period before the sample, and the variance of its innovations. Both are
+/// written in place, in that order.
 ///
 /// `path` is n x tt, one period per column, as the simulation smoother returns
-/// it. The innovations are differences of the path against its own lag with the
-/// period before the sample taken from `init`, so their sum of squares is what
-/// the inverse gamma posterior of the variance adds to the prior rate; `init` is
-/// then normal, its only data being the first period of the path.
+/// it, drawn with the state before the sample integrated out -- see
+/// initial_state_variance(), which also says why `init` has to be drawn first.
+/// `init` is normal, its only data being the first period of the path. The
+/// innovations are then differences of the path against its own lag with the
+/// period before the sample taken from the `init` just drawn, so their sum of
+/// squares is what the inverse gamma posterior of the variance adds to the prior
+/// rate.
 ///
 /// `sigma` is the variance itself, not its inverse -- which is what the next draw
 /// of the path is handed. `post_shape` is the prior shape plus tt/2, which does
@@ -319,13 +359,18 @@ inline void build_psi_regressors(arma::mat &psi_z, const arma::mat &u)
 /// because that is what the mixture routine works in. Sharing one function would
 /// mean transposing one of them, which would reassociate the sums and move the
 /// posteriors of four samplers to save a dozen lines. The VAR and VEC
-/// time-varying models predate both and carry a copy each inline.
+/// time-varying models predate both and carry a copy each inline, in the same
+/// order.
 inline void draw_random_walk_state(arma::vec &sigma, arma::vec &init, const arma::mat &path,
                                    const arma::vec &post_shape, const arma::vec &prior_rate,
                                    const NormalPrior &init_prior)
 {
     const arma::uword n = path.n_rows;
     const arma::uword tt = path.n_cols;
+
+    const arma::mat init_precision = arma::diagmat(1.0 / sigma);
+    init = draw_normal_precision(init_prior.v_inv + init_precision,
+                                 init_prior.v_inv * init_prior.mu + init_precision * path.col(0));
 
     arma::mat differences(n, tt);
     differences.col(0) = path.col(0) - init;
@@ -337,10 +382,6 @@ inline void draw_random_walk_state(arma::vec &sigma, arma::vec &init, const arma
         sigma(i) = 1.0 / arma::randg<double>(arma::distr_param(
                              post_shape(i), 1.0 / (prior_rate(i) + sse(i) * 0.5)));
     }
-
-    const arma::mat init_precision = arma::diagmat(1.0 / sigma);
-    init = draw_normal_precision(init_prior.v_inv + init_precision,
-                                 init_prior.v_inv * init_prior.mu + init_precision * path.col(0));
 }
 
 /// The two draws that follow the log-volatility path in a stochastic volatility

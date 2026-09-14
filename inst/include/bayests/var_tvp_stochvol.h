@@ -34,10 +34,18 @@ public:
     VarTvpStochvolDraws draw_coefficients(const VarTvpStochvolInput &input,
                                           Reporter &reporter) const;
 
-    /// Simulates one forecast path per posterior draw, holding the
-    /// coefficients and the precision at their last in-sample values:
-    /// `draws.a` and `draws.u_sigma_inv` are expected to carry that period
-    /// alone, one column per draw.
+    /// Simulates one forecast path per posterior draw from the last in-sample
+    /// period: `draws.a`, `draws.u_sigma_inv`, `draws.u_omega_inv` (k) and
+    /// `draws.psi` (k * k) are expected to carry that period alone, one column
+    /// per draw.
+    ///
+    /// Under ForecastStates::simulate, the default, the coefficients, Psi and
+    /// the log-volatilities each take one step of their random walk per
+    /// horizon, by `draws.a_sigma`, `draws.psi_sigma` and `draws.h_sigma`, with
+    /// the positions `draws.a_lambda` and `draws.psi_lambda` exclude held at
+    /// zero, and the precision is rebuilt from them at every horizon. Under
+    /// ForecastStates::hold all of it stays where the sample ends and only
+    /// `draws.a` and `draws.u_sigma_inv` are read.
     ForecastDraws forecast(const VarTvpStochvolInput &input,
                            const VarTvpStochvolDraws &draws,
                            Reporter &reporter) const;

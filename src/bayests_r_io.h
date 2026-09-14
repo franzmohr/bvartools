@@ -184,6 +184,12 @@ inline bayests::VarSpec read_spec(const Rcpp::List &model, const char *covar_err
   read_double_if_present(model, "quantile", spec.quantile);
   spec.varsel = bayests::var_selection_from_string(optional_string(model, "varsel", "none"));
   spec.structural = optional_bool(model, "structural", false);
+  // Whether a time-varying model's forecast carries its random walks over the
+  // horizon or holds them at the last sample period. Absent unless
+  // add_posterior_forecasts() was given one, and `simulate` then, which is the
+  // core's own default.
+  spec.forecast_states = bayests::forecast_states_from_string(
+    optional_string(model, "forecast_states", "simulate"));
 
   if (covar_error != nullptr) {
     spec.covar = optional_string(model, "error", "") == covar_error;

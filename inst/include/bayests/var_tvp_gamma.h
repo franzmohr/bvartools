@@ -33,10 +33,17 @@ public:
     VarTvpGammaDraws draw_coefficients(const VarTvpGammaInput &input,
                                        Reporter &reporter) const;
 
-    /// Simulates one forecast path per posterior draw, holding the
-    /// coefficients and the precision at their last in-sample values:
-    /// `draws.a` and `draws.u_sigma_inv` are expected to carry that period
-    /// alone, one column per draw.
+    /// Simulates one forecast path per posterior draw from the last in-sample
+    /// period: `draws.a` and `draws.u_sigma_inv` are expected to carry that
+    /// period alone, one column per draw, and so is `draws.psi` (k * k).
+    ///
+    /// Under ForecastStates::simulate, the default, the coefficients and Psi
+    /// each take one step of their random walk per horizon, by `draws.a_sigma`
+    /// and `draws.psi_sigma`, with the positions `draws.a_lambda` and
+    /// `draws.psi_lambda` exclude held at zero; with a covariance block the
+    /// precision is rebuilt around `draws.u_omega_inv` (k) at every horizon.
+    /// Under ForecastStates::hold both stay where the sample ends and only
+    /// `draws.a` and `draws.u_sigma_inv` are read.
     ForecastDraws forecast(const VarTvpGammaInput &input,
                            const VarTvpGammaDraws &draws,
                            Reporter &reporter) const;

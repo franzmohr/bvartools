@@ -69,6 +69,7 @@ BSD 3-Clause portion
     src/core/algorithms/wishart.cpp
     src/core/algorithms/wishart.h
     src/core/models/ald_support.h
+    src/core/models/forecast_states.h
     src/core/models/model_support.h
     src/core/models/var_normal_ald.cpp
     src/core/models/var_normal_gamma.cpp

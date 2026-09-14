@@ -5,6 +5,7 @@
 
 #include "core/algorithms/bvs.h"
 #include "core/algorithms/kalman_durbin_koopman_2002.h"
+#include "core/models/forecast_states.h"
 #include "core/models/model_support.h"
 
 #include <cmath>
@@ -18,7 +19,14 @@ using core::build_psi_regressors;
 using core::BvsBlock;
 using core::BvsScope;
 using core::bvs_sweep;
+using core::covariance_root;
 using core::draw_normal_precision;
+using core::pack_strict_lower_triangle;
+using core::require_period_draws;
+using core::require_state_mask;
+using core::require_state_variances;
+using core::simulates_states;
+using core::step_random_walk;
 using core::initial_state_variance;
 using core::fill_psi_path;
 using core::stacked_identity;
@@ -496,10 +504,42 @@ ForecastDraws VarTvpGammaSampler::forecast(const VarTvpGammaInput &input,
     const arma::uword draws = coefficients.iterations();
     const bool p_larger_than_0 = p > 0;
 
+    // Whether each draw's random walks are carried over the horizon or held at
+    // the end of the sample: see core/models/forecast_states.h. The coefficients
+    // and Psi drift and the error precisions do not, so the precision has to be
+    // rebuilt at every horizon only where there is a Psi to move it.
+    const bool simulate = simulates_states(input.spec);
+    const bool use_psi = input.use_psi();
+    const bool precision_moves = simulate && use_psi;
+    const arma::uword k_u = static_cast<arma::uword>(k);
+    if (simulate)
+    {
+        if (nparams > 0)
+        {
+            require_state_variances(coefficients.a_sigma, static_cast<arma::uword>(nparams),
+                                    draws, "the coefficients");
+            require_state_mask(coefficients.a_lambda, static_cast<arma::uword>(nparams), draws,
+                               "the coefficients");
+        }
+        if (use_psi)
+        {
+            require_period_draws(coefficients.psi, k_u * k_u, draws, "Psi");
+            require_state_variances(coefficients.psi_sigma,
+                                    static_cast<arma::uword>(input.spec.n_psi()), draws,
+                                    "the covariance block");
+            require_state_mask(coefficients.psi_lambda, k_u * k_u, draws, "the covariance block");
+            require_period_draws(coefficients.u_omega_inv, k_u, draws, "u_omega_inv");
+        }
+    }
+
     arma::mat fcst = arma::zeros<arma::mat>(h * k, draws);
     const arma::mat diag_k = arma::eye<arma::mat>(k, k);
     arma::vec eigval;
     arma::mat eigvec;
+
+    // What a simulated forecast carries from one horizon to the next.
+    arma::vec a_state, a_sigma, a_mask, psi_state, psi_sigma, psi_mask;
+    arma::mat error_root;
 
     // Calculate forecasts
     for (arma::uword draw = 0; draw < draws; draw++)
@@ -507,22 +547,77 @@ ForecastDraws VarTvpGammaSampler::forecast(const VarTvpGammaInput &input,
         reporter.check_interrupt();
         reporter.progress(static_cast<long long>(draw) + 1, static_cast<long long>(draws));
 
-        // Once per draw: nothing in either depends on the horizon.
-        const arma::mat a0_inv =
+        // Once per draw: nothing in either depends on the horizon unless the
+        // states are simulated, and then both are rebuilt at every one.
+        arma::mat a0_inv =
             structural ? structural_inverse(a0, draw, diag_k) : arma::mat();
         // The draw's coefficients as the k x n_x matrix they are. The SUR
         // spelling this replaced had them as a vector and paid for the
         // reshape implicitly, once per horizon, by widening z instead.
-        const arma::mat a_draw =
+        arma::mat a_draw =
             use_a ? arma::reshape(a.col(draw), k, x.n_cols) : arma::mat();
 
-        // The error covariance factorised once per draw rather than once per
-        // horizon: the precision is the same at every horizon, and the
-        // factorisation draws nothing, so where it sits does not move a draw.
-        arma::eig_sym(eigval, eigvec, arma::solve(arma::reshape(coefficients.u_sigma_inv.col(draw), k, k), diag_k));
+        if (simulate)
+        {
+            if (nparams > 0)
+            {
+                a_state = coefficients.a.col(draw);
+                a_sigma = coefficients.a_sigma.col(draw);
+                if (coefficients.a_lambda.n_elem > 0)
+                {
+                    a_mask = coefficients.a_lambda.col(draw);
+                }
+            }
+            if (use_psi)
+            {
+                psi_state = pack_strict_lower_triangle(arma::reshape(coefficients.psi.col(draw), k, k));
+                psi_sigma = coefficients.psi_sigma.col(draw);
+                if (coefficients.psi_lambda.n_elem > 0)
+                {
+                    psi_mask = pack_strict_lower_triangle(
+                        arma::reshape(coefficients.psi_lambda.col(draw), k, k));
+                }
+            }
+        }
+
+        if (!precision_moves)
+        {
+            // The error covariance factorised once per draw rather than once per
+            // horizon: the precision is the same at every horizon, and the
+            // factorisation draws nothing, so where it sits does not move a draw.
+            arma::eig_sym(eigval, eigvec, arma::solve(arma::reshape(coefficients.u_sigma_inv.col(draw), k, k), diag_k));
+        }
 
         for (int i = 0; i < h; i++)
         {
+            if (simulate)
+            {
+                // Every state takes its step before the observation it generates:
+                // coefficients (contemporaneous ones included), then Psi.
+                if (nparams > 0)
+                {
+                    step_random_walk(a_state, a_sigma, a_mask);
+                    if (use_a)
+                    {
+                        a_draw = arma::reshape(a_state.head(n_non_structural), k, x.n_cols);
+                    }
+                    if (structural)
+                    {
+                        a0_inv = structural_inverse(arma::mat(a_state.tail(n_structural)), 0, diag_k);
+                    }
+                }
+                if (use_psi)
+                {
+                    step_random_walk(psi_state, psi_sigma, psi_mask);
+
+                    // Psi' Omega^-1 Psi, as the sampler forms it.
+                    arma::mat Psi = diag_k;
+                    fill_strict_lower_triangle(Psi, psi_state);
+                    error_root = covariance_root(
+                        arma::trans(Psi) * arma::diagmat(coefficients.u_omega_inv.col(draw)) * Psi);
+                }
+            }
+
             if (use_a)
             {
                 // Update the lagged-endogenous columns
@@ -535,7 +630,15 @@ ForecastDraws VarTvpGammaSampler::forecast(const VarTvpGammaInput &input,
             }
 
             // Add error
-            fcst.submat(i * k, draw, (i + 1) * k - 1, draw) = fcst.submat(i * k, draw, (i + 1) * k - 1, draw) + eigvec * arma::diagmat(arma::sqrt(eigval)) * arma::trans(eigvec) * arma::randn(k);
+            if (precision_moves)
+            {
+                fcst.submat(i * k, draw, (i + 1) * k - 1, draw) =
+                    fcst.submat(i * k, draw, (i + 1) * k - 1, draw) + error_root * arma::randn(k);
+            }
+            else
+            {
+                fcst.submat(i * k, draw, (i + 1) * k - 1, draw) = fcst.submat(i * k, draw, (i + 1) * k - 1, draw) + eigvec * arma::diagmat(arma::sqrt(eigval)) * arma::trans(eigvec) * arma::randn(k);
+            }
 
             if (structural)
             {

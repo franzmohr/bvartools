@@ -26,6 +26,29 @@ VarSelection var_selection_from_string(const std::string &name);
 /// Inverse of var_selection_from_string.
 const char *to_string(VarSelection selection);
 
+/// What a forecast does with the quantities a time-varying model lets drift --
+/// its coefficients, its covariance block, its log-volatilities -- over the
+/// horizon.
+enum class ForecastStates
+{
+    /// Each draw's random walks are carried forward, one innovation per horizon,
+    /// so the forecast is the predictive distribution of the model that was
+    /// estimated.
+    simulate,
+
+    /// Each draw's states are held at their last in-sample values for every
+    /// horizon: the forecast conditional on no drift after the end of the
+    /// sample, which is what every forecast here was before the choice existed.
+    hold
+};
+
+/// Parses the spelling used on disk. An empty name is the default, `simulate`;
+/// anything else that is not `simulate` or `hold` throws.
+ForecastStates forecast_states_from_string(const std::string &name);
+
+/// Inverse of forecast_states_from_string.
+const char *to_string(ForecastStates states);
+
 /// The shape of the model, independent of the data and the priors.
 struct VarSpec
 {
@@ -97,6 +120,14 @@ struct VarSpec
     /// coefficients rather than lag or deterministic terms, and are split off
     /// before a forecast path is simulated.
     bool structural = false;
+
+    /// What a forecast does with the states of a time-varying model. Read by the
+    /// forecasts of VarTvpWishart, VarTvpGamma, VarTvpStochvol,
+    /// VarNormalStochvol, DfmNormalStochvol, DfmTvpGamma and DfmTvpStochvol; the
+    /// VECs still forecast as `hold` whatever it says. A model whose coefficients
+    /// and precision are constant has nothing to carry, and the two values
+    /// coincide for it.
+    ForecastStates forecast_states = ForecastStates::simulate;
 
     /// The quantile a quantile regression model estimates, in (0, 1). The only
     /// field here that is not an integer, and the only one a model may leave at

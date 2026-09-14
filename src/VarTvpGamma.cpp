@@ -92,7 +92,7 @@ bayests::VarTvpGammaInput read_input(const Rcpp::List &object) {
   return input;
 }
 
-/// The forecast holds the coefficients and the precision at their last
+/// The forecast starts from the coefficients and the precision at their last
 /// in-sample values, so both are sliced to that period. The precision only
 /// moves with time when there is a covariance block to move it.
 bayests::VarTvpGammaDraws read_draws_for_forecast(const Rcpp::List &object,
@@ -119,6 +119,27 @@ bayests::VarTvpGammaDraws read_draws_for_forecast(const Rcpp::List &object,
       read_draws_last_period_if_present(block, "coeffs", tt, k * k, draws.u_sigma_inv);
     } else {
       read_draws_if_present(block, "coeffs", draws.u_sigma_inv);
+    }
+  }
+
+  // What simulating the states forward reads on top of the period they start
+  // from: how far each random walk moves per period, which coefficients
+  // selection left out, and -- where Psi moves the precision -- the diagonal it
+  // is rebuilt around at every horizon. A held forecast reads none of it.
+  if (input.spec.forecast_states == bayests::ForecastStates::simulate) {
+    if (has(posterior, "a")) {
+      const Rcpp::List block = posterior["a"];
+      read_draws_if_present(block, "sigma", draws.a_sigma);
+      read_draws_if_present(block, "lambda", draws.a_lambda);
+    }
+    if (input.use_psi() && has(posterior, "psi")) {
+      const Rcpp::List block = posterior["psi"];
+      read_draws_last_period_if_present(block, "coeffs", tt, k * k, draws.psi);
+      read_draws_if_present(block, "sigma", draws.psi_sigma);
+      read_draws_if_present(block, "lambda", draws.psi_lambda);
+      if (has(posterior, "u_omega_inv")) {
+        read_draws_if_present(Rcpp::List(posterior["u_omega_inv"]), "coeffs", draws.u_omega_inv);
+      }
     }
   }
 

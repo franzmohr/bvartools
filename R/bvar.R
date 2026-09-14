@@ -325,6 +325,13 @@ bvar <- function(data = NULL, exogen = NULL, y, x = NULL, z = NULL,
   model[["structural"]] <- structural
   model[["error"]] <- error
   model[["tvp"]] <- tvp
+  # Draws collected here carry no variances of the random walk innovations, so
+  # a forecast has nothing to simulate time varying coefficients or volatilities
+  # forward with and holds them at their last period, as it did before
+  # add_posterior_forecasts() learnt to simulate them.
+  if (tvp || sv) {
+    model[["forecast_states"]] <- "hold"
+  }
   model[["iterations"]] <- if (is.null(iterations)) draws else as.integer(iterations)
   model[["burnin"]] <- as.integer(burnin)
 

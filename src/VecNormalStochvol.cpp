@@ -187,7 +187,10 @@ Rcpp::List write_draws(const bayests::VecNormalStochvolDraws &draws) {
   }
 
   posteriors["u_omega_inv"] = Rcpp::List::create(Rcpp::Named("coeffs") = draws_to_r(draws.u_omega_inv));
-  posteriors["u_sigma_inv"] = Rcpp::List::create(Rcpp::Named("coeffs") = draws_to_r(draws.u_sigma_inv));
+  // `sigma` is the variance of the log-volatility innovations, as the VAR
+  // models keep it.
+  posteriors["u_sigma_inv"] = Rcpp::List::create(Rcpp::Named("coeffs") = draws_to_r(draws.u_sigma_inv),
+                                                 Rcpp::Named("sigma") = draws_to_r(draws.h_sigma));
 
   return posteriors;
 }

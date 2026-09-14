@@ -263,6 +263,7 @@ VecTvpStochvolDraws VecTvpStochvolSampler::draw_coefficients(const VecTvpStochvo
 
     out.u_omega_inv = arma::mat(k * tt, iterations);
     out.u_sigma_inv = arma::mat(kk * tt, iterations);
+    out.h_sigma = arma::mat(k, iterations);
 
     // Start simulation
     for (int draw = 0; draw < draws; draw++)
@@ -539,6 +540,7 @@ VecTvpStochvolDraws VecTvpStochvolSampler::draw_coefficients(const VecTvpStochvo
 
             // Measurement error
             out.u_omega_inv.col(draw_pos) = arma::vectorise(arma::trans(u_omega_inv));
+            out.h_sigma.col(draw_pos) = h_sigma;
 
             for (int i = 0; i < tt; i++)
             {

@@ -279,6 +279,16 @@ vec_to_var.bvecmodel <- function(object, ...) {
   model[["structural"]] <- structural
   model[["error"]] <- specs[["error"]]
   model[["tvp"]] <- specs[["tvp"]]
+  # A VEC model forecasts from its last period, holding its states there, and
+  # its VAR representation does the same. There is nothing to simulate forward
+  # with: the level coefficients are a function of the loadings, the cointegration
+  # vectors and the short-run coefficients rather than a random walk of their own,
+  # and a VEC model's posterior carries no variances of the log-volatility
+  # innovations.
+  if (isTRUE(specs[["tvp"]]) || identical(specs[["error"]], "sv") ||
+      identical(specs[["error"]], "sv+covar")) {
+    model[["forecast_states"]] <- "hold"
+  }
   model[["iterations"]] <- specs[["iterations"]]
   model[["burnin"]] <- specs[["burnin"]]
   model[["thin"]] <- specs[["thin"]]

@@ -6,6 +6,7 @@
 #include "core/algorithms/bvs.h"
 #include "core/algorithms/kalman_durbin_koopman_2002.h"
 #include "core/algorithms/wishart.h"
+#include "core/models/forecast_states.h"
 #include "core/models/model_support.h"
 
 #include <cmath>
@@ -19,6 +20,10 @@ using core::BvsBlock;
 using core::BvsScope;
 using core::bvs_sweep;
 using core::draw_normal_precision;
+using core::require_state_mask;
+using core::require_state_variances;
+using core::simulates_states;
+using core::step_random_walk;
 using core::initial_state_variance;
 using core::split_structural_coefficients;
 using core::stacked_response;
@@ -274,10 +279,25 @@ ForecastDraws VarTvpWishartSampler::forecast(const VarTvpWishartInput &input,
     const arma::uword draws = coefficients.iterations();
     const bool p_larger_than_0 = p > 0;
 
+    // Whether each draw's coefficients are carried over the horizon or held at
+    // the end of the sample: see core/models/forecast_states.h. The Wishart
+    // precision is constant, so it is the coefficients alone that move.
+    const bool simulate = simulates_states(input.spec) && nparams > 0;
+    if (simulate)
+    {
+        require_state_variances(coefficients.a_sigma, static_cast<arma::uword>(nparams), draws,
+                                "the coefficients");
+        require_state_mask(coefficients.a_lambda, static_cast<arma::uword>(nparams), draws,
+                           "the coefficients");
+    }
+
     arma::mat fcst = arma::zeros<arma::mat>(h * k, draws);
     const arma::mat diag_k = arma::eye<arma::mat>(k, k);
     arma::vec eigval;
     arma::mat eigvec;
+
+    // What a simulated forecast carries from one horizon to the next.
+    arma::vec a_state, a_sigma, a_mask;
 
     // Calculate forecasts
     for (arma::uword draw = 0; draw < draws; draw++)
@@ -285,14 +305,25 @@ ForecastDraws VarTvpWishartSampler::forecast(const VarTvpWishartInput &input,
         reporter.check_interrupt();
         reporter.progress(static_cast<long long>(draw) + 1, static_cast<long long>(draws));
 
-        // Once per draw: nothing in either depends on the horizon.
-        const arma::mat a0_inv =
+        // Once per draw: nothing in either depends on the horizon unless the
+        // coefficients are simulated, and then both are rebuilt at every one.
+        arma::mat a0_inv =
             structural ? structural_inverse(a0, draw, diag_k) : arma::mat();
         // The draw's coefficients as the k x n_x matrix they are. The SUR
         // spelling this replaced had them as a vector and paid for the
         // reshape implicitly, once per horizon, by widening z instead.
-        const arma::mat a_draw =
+        arma::mat a_draw =
             use_a ? arma::reshape(a.col(draw), k, x.n_cols) : arma::mat();
+
+        if (simulate)
+        {
+            a_state = coefficients.a.col(draw);
+            a_sigma = coefficients.a_sigma.col(draw);
+            if (coefficients.a_lambda.n_elem > 0)
+            {
+                a_mask = coefficients.a_lambda.col(draw);
+            }
+        }
 
         // The error covariance factorised once per draw rather than once per
         // horizon: the precision is the same at every horizon, and the
@@ -301,6 +332,21 @@ ForecastDraws VarTvpWishartSampler::forecast(const VarTvpWishartInput &input,
 
         for (int i = 0; i < h; i++)
         {
+            if (simulate)
+            {
+                // The step comes before the observation it generates, and the
+                // contemporaneous coefficients take theirs with the rest.
+                step_random_walk(a_state, a_sigma, a_mask);
+                if (use_a)
+                {
+                    a_draw = arma::reshape(a_state.head(n_non_structural), k, x.n_cols);
+                }
+                if (structural)
+                {
+                    a0_inv = structural_inverse(arma::mat(a_state.tail(n_structural)), 0, diag_k);
+                }
+            }
+
             if (use_a)
             {
                 // Update the lagged-endogenous columns

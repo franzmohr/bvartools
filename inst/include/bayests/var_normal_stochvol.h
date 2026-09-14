@@ -32,9 +32,15 @@ public:
     VarNormalStochvolDraws draw_coefficients(const VarNormalStochvolInput &input,
                                              Reporter &reporter) const;
 
-    /// Simulates one forecast path per posterior draw, holding the volatility
-    /// at its last in-sample value: `draws.u_sigma_inv` is expected to carry
-    /// that period alone, one vectorised k x k precision per column.
+    /// Simulates one forecast path per posterior draw from the last in-sample
+    /// volatility: `draws.u_sigma_inv` (k * k) and `draws.u_omega_inv` (k) are
+    /// expected to carry that period alone, one column per draw.
+    ///
+    /// Under ForecastStates::simulate, the default, the log-volatilities take
+    /// one step of their random walk per horizon, by `draws.h_sigma`, and the
+    /// precision is rebuilt from them and the constant `draws.psi` at every
+    /// horizon. Under ForecastStates::hold the volatility stays where the
+    /// sample ends and only `draws.u_sigma_inv` is read of the two.
     ForecastDraws forecast(const VarNormalStochvolInput &input,
                            const VarNormalStochvolDraws &draws,
                            Reporter &reporter) const;

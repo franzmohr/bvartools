@@ -32,10 +32,14 @@ public:
     VarTvpWishartDraws draw_coefficients(const VarTvpWishartInput &input,
                                         Reporter &reporter) const;
 
-    /// Simulates one forecast path per posterior draw, holding the
-    /// coefficients and the precision at their last in-sample values:
-    /// `draws.a` and `draws.u_sigma_inv` are expected to carry that period
-    /// alone, one column per draw.
+    /// Simulates one forecast path per posterior draw from the last in-sample
+    /// coefficients: `draws.a` is expected to carry that period alone, one
+    /// column per draw, beside the constant `draws.u_sigma_inv`.
+    ///
+    /// Under ForecastStates::simulate, the default, the coefficients take one
+    /// step of their random walk per horizon, by `draws.a_sigma`, with the
+    /// positions `draws.a_lambda` excludes held at zero. Under
+    /// ForecastStates::hold they stay where the sample ends.
     ForecastDraws forecast(const VarTvpWishartInput &input,
                            const VarTvpWishartDraws &draws,
                            Reporter &reporter) const;

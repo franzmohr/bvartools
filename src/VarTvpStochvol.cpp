@@ -125,6 +125,31 @@ bayests::VarTvpStochvolDraws read_draws_for_forecast(const Rcpp::List &object,
                                       draws.u_sigma_inv);
   }
 
+  // What simulating the states forward reads on top of the period they start
+  // from: how far each random walk moves per period, which coefficients
+  // selection left out, and the two halves the precision is rebuilt from at
+  // every horizon. A held forecast reads none of it.
+  if (input.spec.forecast_states == bayests::ForecastStates::simulate) {
+    if (has(posterior, "a")) {
+      const Rcpp::List block = posterior["a"];
+      read_draws_if_present(block, "sigma", draws.a_sigma);
+      read_draws_if_present(block, "lambda", draws.a_lambda);
+    }
+    if (has(posterior, "psi")) {
+      const Rcpp::List block = posterior["psi"];
+      read_draws_last_period_if_present(block, "coeffs", tt, k * k, draws.psi);
+      read_draws_if_present(block, "sigma", draws.psi_sigma);
+      read_draws_if_present(block, "lambda", draws.psi_lambda);
+    }
+    if (has(posterior, "u_omega_inv")) {
+      read_draws_last_period_if_present(Rcpp::List(posterior["u_omega_inv"]), "coeffs", tt, k,
+                                        draws.u_omega_inv);
+    }
+    if (has(posterior, "u_sigma_inv")) {
+      read_draws_if_present(Rcpp::List(posterior["u_sigma_inv"]), "sigma", draws.h_sigma);
+    }
+  }
+
   return draws;
 }
 
@@ -180,7 +205,10 @@ Rcpp::List write_draws(const bayests::VarTvpStochvolDraws &draws) {
   }
 
   posteriors["u_omega_inv"] = Rcpp::List::create(Rcpp::Named("coeffs") = draws_to_r(draws.u_omega_inv));
-  posteriors["u_sigma_inv"] = Rcpp::List::create(Rcpp::Named("coeffs") = draws_to_r(draws.u_sigma_inv));
+  // `sigma` is the variance of the log-volatility innovations, which a forecast
+  // simulates the volatility forward by.
+  posteriors["u_sigma_inv"] = Rcpp::List::create(Rcpp::Named("coeffs") = draws_to_r(draws.u_sigma_inv),
+                                                 Rcpp::Named("sigma") = draws_to_r(draws.h_sigma));
 
   return posteriors;
 }

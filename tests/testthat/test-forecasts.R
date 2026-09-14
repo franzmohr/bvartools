@@ -120,6 +120,54 @@ test_that("forecast errors are computed against a test sample", {
   expect_true(length(errors) > 0)
 })
 
+test_that("a time varying model simulates its states forward unless told to hold them", {
+  for (error in c("sv", "gamma")) {
+    fitted <- add_forecast_input(fx_var_tvp_fitted(error), n_ahead = 6)
+    k <- fitted[["model"]][["k"]]
+
+    if (error == "sv") {
+      # The step the volatility is simulated forward by, one per variable and draw.
+      sigma <- fitted[["posterior"]][["u_sigma_inv"]][["sigma"]]
+      expect_s3_class(sigma, "mcmc")
+      expect_identical(dim(sigma), c(nrow(fitted[["posterior"]][["a"]][["coeffs"]]), k))
+    }
+
+    set.seed(2718)
+    simulated <- add_posterior_forecasts(fitted)
+    set.seed(2718)
+    held <- add_posterior_forecasts(fitted, forecast_states = "hold")
+
+    expect_true(all(is.finite(simulated[["posterior"]][["forecast"]])))
+    expect_identical(held[["model"]][["forecast_states"]], "hold")
+    # From the same seed, the drift is the one thing separating the two.
+    expect_false(isTRUE(all.equal(unclass(simulated[["posterior"]][["forecast"]]),
+                                  unclass(held[["posterior"]][["forecast"]]))))
+  }
+
+  expect_error(add_posterior_forecasts(add_forecast_input(fx_var_tvp_fitted("gamma"), n_ahead = 2),
+                                       forecast_states = "sideways"))
+})
+
+test_that("a stochastic volatility VEC model keeps the variance of its log-volatility innovations", {
+  fitted <- fx_vec_tvp_fitted("sv")
+  sigma <- fitted[["posterior"]][["u_sigma_inv"]][["sigma"]]
+
+  # One per variable and draw, a chain like the other blocks, as the VAR models
+  # keep it -- even though a VEC model's forecast still holds its volatility.
+  expect_s3_class(sigma, "mcmc")
+  expect_identical(dim(sigma), c(nrow(fitted[["posterior"]][["a"]][["coeffs"]]),
+                                 fitted[["model"]][["k"]]))
+  expect_true(all(sigma > 0))
+})
+
+test_that("a stochastic volatility posterior without volatility steps forecasts only when held", {
+  old <- add_forecast_input(fx_var_tvp_fitted("sv"), n_ahead = 3)
+  old[["posterior"]][["u_sigma_inv"]][["sigma"]] <- NULL
+
+  expect_error(add_posterior_forecasts(old), "innovation variances")
+  expect_no_error(add_posterior_forecasts(old, forecast_states = "hold"))
+})
+
 test_that("predict returns every simulated period by default", {
   expect_no_warning(forecast <- stats::predict(fx_var_forecast()))
   expect_identical(dim(forecast[["fcst"]])[1], fx_var_forecast()[["model"]][["h"]])

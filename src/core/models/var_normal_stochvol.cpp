@@ -5,6 +5,7 @@
 
 #include "core/algorithms/bvs.h"
 #include "core/algorithms/stochvol_ocsn_2007.h"
+#include "core/models/forecast_states.h"
 #include "core/models/model_support.h"
 
 #include <cmath>
@@ -18,7 +19,12 @@ using core::build_psi_regressors;
 using core::BvsBlock;
 using core::BvsScope;
 using core::bvs_sweep;
+using core::covariance_root;
 using core::draw_normal_precision;
+using core::require_period_draws;
+using core::require_state_variances;
+using core::simulates_states;
+using core::step_random_walk;
 using core::draw_stochvol_state;
 using core::fill_strict_lower_triangle;
 using core::fill_strict_lower_triangle_by_column;
@@ -138,6 +144,7 @@ VarNormalStochvolDraws VarNormalStochvolSampler::draw_coefficients(
 
     out.u_omega_inv = arma::mat(k * tt, iterations);
     out.u_sigma_inv = arma::mat(k * k * tt, iterations);
+    out.h_sigma = arma::mat(k, iterations);
 
     // Start simulation
     for (int draw = 0; draw < draws; draw++)
@@ -274,6 +281,7 @@ VarNormalStochvolDraws VarNormalStochvolSampler::draw_coefficients(
             }
 
             out.u_omega_inv.col(draw_pos) = u_omega_inv_diag.diag();
+            out.h_sigma.col(draw_pos) = h_sigma;
 
             for (int i = 0; i < tt; i++)
             {
@@ -351,10 +359,31 @@ ForecastDraws VarNormalStochvolSampler::forecast(const VarNormalStochvolInput &i
     const arma::uword draws = coefficients.iterations();
     const bool p_larger_than_0 = p > 0;
 
+    // Whether each draw's log-volatilities are carried over the horizon or held
+    // at the end of the sample: see core/models/forecast_states.h. The
+    // coefficients and Psi are constant here, so the volatility is all that
+    // moves -- and with it the precision, rebuilt at every horizon.
+    const bool simulate = simulates_states(input.spec);
+    const bool use_psi = input.use_psi();
+    const arma::uword k_u = static_cast<arma::uword>(k);
+    if (simulate)
+    {
+        if (use_psi)
+        {
+            require_period_draws(coefficients.psi, k_u * k_u, draws, "Psi");
+        }
+        require_period_draws(coefficients.u_omega_inv, k_u, draws, "u_omega_inv");
+        require_state_variances(coefficients.h_sigma, k_u, draws, "the log-volatilities");
+    }
+
     arma::mat fcst = arma::zeros<arma::mat>(h * k, draws);
     const arma::mat diag_k = arma::eye<arma::mat>(k, k);
     arma::vec eigval;
     arma::mat eigvec;
+
+    // What a simulated forecast carries from one horizon to the next.
+    arma::vec h_state, h_sigma;
+    arma::mat error_root;
 
     // Calculate forecasts
     for (arma::uword draw = 0; draw < draws; draw++)
@@ -371,13 +400,36 @@ ForecastDraws VarNormalStochvolSampler::forecast(const VarNormalStochvolInput &i
         const arma::mat a_draw =
             use_a ? arma::reshape(a.col(draw), k, x.n_cols) : arma::mat();
 
-        // The error covariance factorised once per draw rather than once per
-        // horizon: the precision is the same at every horizon, and the
-        // factorisation draws nothing, so where it sits does not move a draw.
-        arma::eig_sym(eigval, eigvec, arma::solve(arma::reshape(coefficients.u_sigma_inv.col(draw), k, k), diag_k));
+        if (simulate)
+        {
+            h_state = -arma::log(coefficients.u_omega_inv.col(draw));
+            h_sigma = coefficients.h_sigma.col(draw);
+        }
+        else
+        {
+            // The error covariance factorised once per draw rather than once per
+            // horizon: the precision is the same at every horizon, and the
+            // factorisation draws nothing, so where it sits does not move a draw.
+            arma::eig_sym(eigval, eigvec, arma::solve(arma::reshape(coefficients.u_sigma_inv.col(draw), k, k), diag_k));
+        }
 
         for (int i = 0; i < h; i++)
         {
+            if (simulate)
+            {
+                // The step comes before the observation it generates.
+                step_random_walk(h_state, h_sigma, arma::vec());
+
+                // Psi' Omega^-1 Psi, as the sampler forms it.
+                arma::mat u_sigma_inv = arma::diagmat(arma::exp(-h_state));
+                if (use_psi)
+                {
+                    const arma::mat Psi = arma::reshape(coefficients.psi.col(draw), k, k);
+                    u_sigma_inv = arma::trans(Psi) * u_sigma_inv * Psi;
+                }
+                error_root = covariance_root(u_sigma_inv);
+            }
+
             if (use_a)
             {
                 // Update the lagged-endogenous columns
@@ -390,7 +442,15 @@ ForecastDraws VarNormalStochvolSampler::forecast(const VarNormalStochvolInput &i
             }
 
             // Add error
-            fcst.submat(i * k, draw, (i + 1) * k - 1, draw) = fcst.submat(i * k, draw, (i + 1) * k - 1, draw) + eigvec * arma::diagmat(arma::sqrt(eigval)) * arma::trans(eigvec) * arma::randn(k);
+            if (simulate)
+            {
+                fcst.submat(i * k, draw, (i + 1) * k - 1, draw) =
+                    fcst.submat(i * k, draw, (i + 1) * k - 1, draw) + error_root * arma::randn(k);
+            }
+            else
+            {
+                fcst.submat(i * k, draw, (i + 1) * k - 1, draw) = fcst.submat(i * k, draw, (i + 1) * k - 1, draw) + eigvec * arma::diagmat(arma::sqrt(eigval)) * arma::trans(eigvec) * arma::randn(k);
+            }
 
             if (structural)
             {

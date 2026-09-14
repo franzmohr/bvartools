@@ -79,6 +79,12 @@ struct VarNormalStochvolDraws
     /// periods stacked within a column.
     arma::mat u_sigma_inv;
 
+    /// k x iterations: the variance of the log-volatility innovations, one per
+    /// variable -- the step a forecast simulates the volatility forward by.
+    /// Stored at /posterior/u_sigma_inv/sigma, beside the /priors/u_sigma group
+    /// it is drawn under.
+    arma::mat h_sigma;
+
     arma::uword iterations() const { return u_sigma_inv.n_cols; }
     bool has_a() const { return a.n_elem > 0; }
     bool has_psi() const { return psi.n_elem > 0; }
@@ -174,6 +180,10 @@ struct VarTvpStochvolDraws
     /// (k * k * tt) x iterations: one vectorised precision matrix per period,
     /// periods stacked within a column.
     arma::mat u_sigma_inv;
+
+    /// k x iterations: the variance of the log-volatility innovations, as in
+    /// VarNormalStochvolDraws.
+    arma::mat h_sigma;
 
     arma::uword iterations() const { return u_sigma_inv.n_cols; }
     bool has_a() const { return a.n_elem > 0; }
@@ -301,6 +311,12 @@ struct VecNormalStochvolDraws
     /// periods stacked within a column.
     arma::mat u_sigma_inv;
 
+    /// k x iterations: the variance of the log-volatility innovations, as in
+    /// VarNormalStochvolDraws. Stored at /posterior/u_sigma_inv/sigma. A VEC's
+    /// forecast still holds its volatility at the last in-sample period and does
+    /// not read it.
+    arma::mat h_sigma;
+
     arma::uword iterations() const { return u_sigma_inv.n_cols; }
     bool has_a() const { return a.n_elem > 0; }
     bool has_beta() const { return beta.n_elem > 0; }
@@ -400,6 +416,10 @@ struct VecTvpStochvolDraws
     /// periods stacked within a column.
     arma::mat u_sigma_inv;
 
+    /// k x iterations: the variance of the log-volatility innovations, as in
+    /// VecNormalStochvolDraws.
+    arma::mat h_sigma;
+
     arma::uword iterations() const { return u_sigma_inv.n_cols; }
     bool has_a() const { return a.n_elem > 0; }
     bool has_beta() const { return beta.n_elem > 0; }
@@ -479,6 +499,14 @@ struct DfmNormalStochvolDraws
     /// (n_factors * tt) x iterations: the same for the factor innovations.
     arma::mat v_sigma_inv;
 
+    /// k x iterations and n_factors x iterations: the variances of the two
+    /// groups of log-volatility innovations -- the steps a forecast simulates
+    /// each volatility forward by. Stored at /posterior/u_sigma_inv/sigma and
+    /// /posterior/v_sigma_inv/sigma, beside the prior groups they are drawn
+    /// under.
+    arma::mat u_h_sigma;
+    arma::mat v_h_sigma;
+
     arma::uword iterations() const { return u_sigma_inv.n_cols; }
     bool has_a() const { return a.n_elem > 0; }
     bool has_factors() const { return factors.n_elem > 0; }
@@ -495,7 +523,7 @@ struct DfmNormalStochvolDraws
 /// point produced them, the same arrangement VarTvpGammaDraws has. The sampler
 /// and the pointwise log likelihood carry the whole path -- every period under
 /// its own coefficients -- while a forecast carries the last in-sample period
-/// alone, since that is what it holds constant over the horizon.
+/// alone, since that is where it starts the horizon from.
 struct DfmTvpGammaDraws
 {
     /// (k * n_factors * tt) x iterations: one vectorised M x N loading matrix
@@ -574,6 +602,11 @@ struct DfmTvpStochvolDraws
 
     /// (n_factors * tt) x iterations: the same for the factor innovations.
     arma::mat v_sigma_inv;
+
+    /// k x iterations and n_factors x iterations: the variances of the two
+    /// groups of log-volatility innovations, as in DfmNormalStochvolDraws.
+    arma::mat u_h_sigma;
+    arma::mat v_h_sigma;
 
     arma::uword iterations() const { return u_sigma_inv.n_cols; }
     bool has_a() const { return a.n_elem > 0; }

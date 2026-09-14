@@ -4,11 +4,21 @@
 \alias{add_posterior_forecasts.bvarmodel}
 \title{Add Forecasts}
 \usage{
-\method{add_posterior_forecasts}{bvarmodel}(object, ...)
+\method{add_posterior_forecasts}{bvarmodel}(object, forecast_states = NULL, ...)
 }
 \arguments{
 \item{object}{an object of class 'bvarmodel', usually, the result of a call
 to \code{\link{add_posterior_coefficients}} and \code{\link{add_forecast_input}}.}
+
+\item{forecast_states}{character, what a model with time varying coefficients or
+stochastic volatility does with them over the forecast horizon. \code{"simulate"}
+carries each draw's random walks forward, one step per period, so that the forecasts
+are draws from the posterior predictive distribution of the estimated model.
+\code{"hold"} keeps the coefficients and volatilities at their values in the last
+sample period, which gives forecasts conditional on no further drift and narrower
+intervals, and is what earlier versions of the package did. If \code{NULL} (default),
+the value in \code{object$model$forecast_states} is used, and \code{"simulate"} when
+there is none. Models with constant coefficients and volatility are unaffected.}
 
 \item{...}{arguments passed forward to method.}
 }
@@ -16,7 +26,13 @@ to \code{\link{add_posterior_coefficients}} and \code{\link{add_forecast_input}}
 The object in \code{object} with \code{posterior$forecast} added, a
 \code{\link[coda]{mcmc}} object with one row per draw and \eqn{Kh} columns, stacked by
 period: the \eqn{K} variables of the first forecast period, then those of the second,
-and so on. \code{\link[=predict.bvarmodel]{predict}} summarises them.
+and so on. \code{\link[=predict.bvarmodel]{predict}} summarises them. A
+\code{forecast_states} that was given is stored in \code{model$forecast_states}.
+
+Simulating the volatility forward needs the variance of the log-volatility
+innovations, \code{posterior$u_sigma_inv$sigma}, which \code{\link{add_posterior_coefficients}}
+stores. A stochastic volatility model fitted with an earlier version of the package
+lacks it and stops with an error unless \code{forecast_states = "hold"}.
 }
 \description{
 Calculates and adds forecasts to an object of class 'bvarmodel'.

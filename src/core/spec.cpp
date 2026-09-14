@@ -42,6 +42,25 @@ const char *to_string(VarSelection selection)
     return "none";
 }
 
+ForecastStates forecast_states_from_string(const std::string &name)
+{
+    if (name == "simulate" || name.empty())
+    {
+        return ForecastStates::simulate;
+    }
+    if (name == "hold")
+    {
+        return ForecastStates::hold;
+    }
+    throw std::invalid_argument("unknown forecast_states '" + name +
+                                "'; expected one of simulate, hold");
+}
+
+const char *to_string(ForecastStates states)
+{
+    return states == ForecastStates::hold ? "hold" : "simulate";
+}
+
 void VarSpec::validate() const
 {
     if (k <= 0)

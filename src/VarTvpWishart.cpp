@@ -71,7 +71,7 @@ bayests::VarTvpWishartInput read_input(const Rcpp::List &object) {
   return input;
 }
 
-/// The forecast holds the coefficients at their last in-sample value. The
+/// The forecast starts from the coefficients at their last in-sample value. The
 /// precision does not move with time in this model, so it is read whole.
 bayests::VarTvpWishartDraws read_draws_for_forecast(const Rcpp::List &object,
                                                     const bayests::VarTvpWishartInput &input) {
@@ -104,6 +104,14 @@ bayests::VarTvpWishartDraws read_draws_for_forecast(const Rcpp::List &object,
   }
   if (has(posterior, "u_sigma_inv")) {
     read_draws_if_present(Rcpp::List(posterior["u_sigma_inv"]), "coeffs", draws.u_sigma_inv);
+  }
+
+  // Simulating the coefficients forward reads how far each of them moves per
+  // period, and which of them selection left out. A held forecast reads neither.
+  if (input.spec.forecast_states == bayests::ForecastStates::simulate && has(posterior, "a")) {
+    const Rcpp::List block = posterior["a"];
+    read_draws_if_present(block, "sigma", draws.a_sigma);
+    read_draws_if_present(block, "lambda", draws.a_lambda);
   }
 
   return draws;

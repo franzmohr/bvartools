@@ -1,5 +1,27 @@
 # bvartools (development version)
 
+* **Forecasts of time varying and stochastic volatility models carry the drift
+  forward.** `add_posterior_forecasts()` forecast `VarTvpGamma`, `VarTvpStochvol`,
+  `VarTvpWishart` and `VarNormalStochvol` models from each draw's coefficients,
+  covariance block and volatilities in the last sample period, held for every
+  forecast period. That is the forecast of a model whose drift stops where the
+  sample does: its intervals left out the drift, and a held volatility
+  understated the expected variance of every period after the first. The
+  vendored BayesTS core now takes one step of each draw's random walks per
+  forecast period, by the innovation variances the sampler drew for them, and a
+  coefficient that BVS excluded stays at zero. The new argument
+  `add_posterior_forecasts(forecast_states = "hold")` gives the old forecasts and
+  is stored in `model$forecast_states`. For stochastic volatility models
+  `add_posterior_coefficients()` now also keeps `posterior$u_sigma_inv$sigma`,
+  the variance of the log-volatility innovations, which the forecast steps the
+  volatility by; a model fitted with an earlier version lacks it and forecasts
+  only with `forecast_states = "hold"` until it is fitted again. **Results
+  change** for the forecasts of those four models. Their coefficient draws and
+  log likelihoods are unchanged, which upstream verified by fingerprinting every
+  sampler before and after. VEC models still hold their states when forecast,
+  but `VecNormalStochvol` and `VecTvpStochvol` keep `posterior$u_sigma_inv$sigma`
+  as well, so their posteriors carry the same blocks as those of the VAR models.
+
 * **The prior of the loadings of a time varying VEC model follows `coef$v_i`.**
   `add_priors()` gave the loadings a prior precision of 1 / (1 - rho^2)
   whatever `coef$v_i` was, which put alpha beta' at unit prior variance rather

@@ -186,6 +186,23 @@ test_that("a time varying cointegration prior needs an autocorrelation", {
     do.call(add_priors, c(list(model), args, list(coint = list(rho = 0.999)))))
 })
 
+test_that("the prior of the loadings of a time varying VEC follows coef$v_i", {
+  model <- create_bvecmodel(vec_data(), p = 2, r = 1, tvp = TRUE,
+                            const = "unrestricted", iterations = 10, burnin = 5)
+  model <- add_priors(model,
+                      coef = list(v_i = 1 / 2, v_i_det = 0.1, shape = 3, rate = 0.0001),
+                      coint = list(rho = 0.999),
+                      sigma = list(df = "k", scale = 1))
+  n_alpha <- ncol(model[["data"]][["train"]][["y"]]) * model[["model"]][["rank"]]
+  precision <- diag(model[["priors"]][["a"]][["v_inv"]])
+
+  # Koop et al. (2011): the loadings' variance is that of the other
+  # coefficients times 1 - rho^2, so alpha beta' keeps the scale coef$v_i asks
+  # for once beta's stationary variance 1 / (1 - rho^2) is multiplied in.
+  expect_equal(precision[1:n_alpha], rep((1 / 2) / (1 - 0.999^2), n_alpha))
+  expect_equal(precision[n_alpha + 1], 1 / 2)
+})
+
 test_that("the prior support of rho is taken in pairs and has to hold rho", {
   model <- create_bvecmodel(vec_data(), p = 2, r = 1, tvp = TRUE,
                             const = "unrestricted", iterations = 10, burnin = 5)

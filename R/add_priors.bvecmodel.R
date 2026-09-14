@@ -487,9 +487,12 @@ add_priors.bvecmodel <- function(object,
         # beta_t has stationary variance 1 / (1 - rho^2), which for a rho just
         # below one is large, and only the product alpha beta' is identified --
         # so alpha's prior variance is shrunk by the same factor, leaving the
-        # product on the scale coef$v_i asks for.
+        # product on the scale coef$v_i asks for. Koop et al. (2011) scale the
+        # loadings' variance by 1 - rho^2 relative to the other coefficients,
+        # which is why coef$v_i enters here: a precision of 1 / (1 - rho^2)
+        # alone put the product at unit variance whatever coef$v_i was.
         if (r > 0) {
-          diag(v_i)[1:n_alpha] <- 1 / (1 - coint[["rho"]] * coint[["rho"]])
+          diag(v_i)[1:n_alpha] <- coef[["v_i"]] / (1 - coint[["rho"]] * coint[["rho"]])
         }
         if (n_det > 0 & !is.null(coef[["v_i_det"]])) {
           diag(v_i)[tot_par - n_struct - n_det + 1:n_det] <- coef[["v_i_det"]]

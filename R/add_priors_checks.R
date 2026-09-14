@@ -42,6 +42,10 @@
   if (inherits(object, "bvarmodel")) {
     allowed_coef_arguments <- c(allowed_coef_arguments, "coint_var")
   }
+  # Only an error correction model has loadings to give a rate of their own.
+  if (inherits(object, "bvecmodel")) {
+    allowed_coef_arguments <- c(allowed_coef_arguments, "rate_alpha")
+  }
   for (i in names(coef)) {
     if (!i %in% allowed_coef_arguments) {
       stop(paste0("Element '", i, "' in argument 'coef' is not recognised."))

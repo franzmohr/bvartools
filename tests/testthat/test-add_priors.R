@@ -203,6 +203,44 @@ test_that("the prior of the loadings of a time varying VEC follows coef$v_i", {
   expect_equal(precision[n_alpha + 1], 1 / 2)
 })
 
+test_that("the loadings of a time varying VEC can have a state variance rate of their own", {
+  model <- create_bvecmodel(vec_data(), p = 2, r = 1, tvp = TRUE,
+                            const = "unrestricted", iterations = 10, burnin = 5)
+  model <- add_priors(model,
+                      coef = list(v_i = 1, v_i_det = 0.1, shape = 3,
+                                  rate = 1e-5, rate_alpha = 1e-10, rate_det = 1e-8),
+                      coint = list(rho = 0.999),
+                      sigma = list(df = "k", scale = 1))
+  k <- ncol(model[["data"]][["train"]][["y"]])
+  n_alpha <- k * model[["model"]][["rank"]]
+  n_det <- k * model[["model"]][["n"]]
+  rate <- as.numeric(model[["priors"]][["a"]][["rate"]])
+  n_a <- length(rate)
+
+  # The loadings multiply levels and the deterministic terms shift every
+  # period, so both need far less drift than the coefficients of the
+  # differenced regressors to leave the residuals alone.
+  expect_equal(rate[1:n_alpha], rep(1e-10, n_alpha))
+  expect_equal(rate[n_a - n_det + 1:n_det], rep(1e-8, n_det))
+  expect_equal(rate[(n_alpha + 1):(n_a - n_det)], rep(1e-5, n_a - n_det - n_alpha))
+
+  # Without it the loadings take coef$rate, as before.
+  default <- add_priors(create_bvecmodel(vec_data(), p = 2, r = 1, tvp = TRUE,
+                                         const = "unrestricted", iterations = 10, burnin = 5),
+                        coef = list(v_i = 1, v_i_det = 0.1, shape = 3, rate = 1e-5, rate_det = 1e-8),
+                        coint = list(rho = 0.999), sigma = list(df = "k", scale = 1))
+  expect_equal(as.numeric(default[["priors"]][["a"]][["rate"]])[1:n_alpha], rep(1e-5, n_alpha))
+})
+
+test_that("a VAR model has no loadings to give a rate", {
+  model <- create_bvarmodel(var_data(), p = 1, deterministic = "const", tvp = TRUE,
+                            iterations = 10, burnin = 5)
+  expect_error(add_priors(model,
+                          coef = list(v_i = 1, v_i_det = 0.1, shape = 3, rate = 1e-5, rate_alpha = 1e-10),
+                          sigma = list(df = "k", scale = 1)),
+               "rate_alpha")
+})
+
 test_that("the prior support of rho is taken in pairs and has to hold rho", {
   model <- create_bvecmodel(vec_data(), p = 2, r = 1, tvp = TRUE,
                             const = "unrestricted", iterations = 10, burnin = 5)

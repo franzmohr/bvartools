@@ -62,6 +62,12 @@
 #'   \item{\code{rate_det}}{a numeric specifying the prior rate parameter of the error variances of the
 #'   state equation for coefficients, which correspond to deterministic terms. If it is not given,
 #'   \code{rate} is used. Only used for models with time varying parameters.}
+#'   \item{\code{rate_alpha}}{a numeric specifying the rate of the gamma prior on the precisions of
+#'   the state equation of the loadings. If it is not given, \code{rate} is used. Only used for
+#'   models with time varying parameters and a positive rank. The loadings multiply the levels in
+#'   the error correction term, so a drift that is negligible for a coefficient on a differenced
+#'   regressor moves the fitted value by much more; a rate several orders of magnitude below
+#'   \code{rate} keeps them from absorbing the residuals while the other coefficients vary.}
 #' }
 #' 
 #' Argument \code{coint} specifies the prior on the cointegration space. Its
@@ -501,6 +507,10 @@ add_priors.bvecmodel <- function(object,
         object[["priors"]][["a"]][["rate"]] <- matrix(coef[["rate"]], tot_par)
         if (n_det > 0 & !is.null(coef[["rate_det"]])) {
           object[["priors"]][["a"]][["rate"]][tot_par - n_struct - n_det + 1:n_det, ] <- coef[["rate_det"]]
+        }
+        # The loadings come first among the coefficients.
+        if (r > 0 & !is.null(coef[["rate_alpha"]])) {
+          object[["priors"]][["a"]][["rate"]][1:n_alpha, ] <- coef[["rate_alpha"]]
         }
       } else {
         v_i <- diag(coef[["v_i"]], tot_par)

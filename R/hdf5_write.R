@@ -202,3 +202,27 @@
 
   return(series)
 }
+
+# Name of a starting value inside /initial of a model file.
+#
+# R calls the starting error precision of every gamma model u_omega_inv. The
+# model file follows BayesTS, whose constant coefficient gamma samplers
+# (VarNormalGamma, VecNormalGamma) read /initial/u_sigma_inv and only the time
+# varying ones /initial/u_omega_inv. The Rcpp glue maps the name for a model
+# estimated inside R, but a file written under the R name left BayesTS without a
+# starting precision, and it refused the file. 'direction' is "write" for the
+# name in the file and "read" for the name in R.
+.hdf5_initial_name <- function(model, name, direction) {
+  constant_gamma <- isTRUE(model[["error"]] %in% c("gamma", "gamma+covar")) &&
+    !isTRUE(model[["tvp"]])
+  if (!constant_gamma) {
+    return(name)
+  }
+  if (direction == "write" && name == "u_omega_inv") {
+    return("u_sigma_inv")
+  }
+  if (direction == "read" && name == "u_sigma_inv") {
+    return("u_omega_inv")
+  }
+  name
+}

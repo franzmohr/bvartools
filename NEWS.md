@@ -1,5 +1,17 @@
 # bvartools (development version)
 
+* **`write_to_hdf5()` writes the starting error precision of constant gamma
+  models where BayesTS reads it.** R keeps the starting precision of every
+  model with a gamma error as `initial$u_omega_inv`, and the model file carried
+  that name. BayesTS reads it from `/initial/u_sigma_inv` for `VarNormalGamma`
+  and `VecNormalGamma`, and from `/initial/u_omega_inv` only for the time
+  varying gamma models, so it refused every exported VAR or VEC with constant
+  coefficients and an `error` of `"gamma"` or `"gamma+covar"`, structural models
+  among them, with "initial error precision must be 6x6, got 0x0". The file now
+  uses the BayesTS name for these models, and `read_model_from_hdf5()` maps it
+  back, so a model read from a file still estimates inside R. Models estimated
+  inside R were not affected.
+
 * **`summary()` prints models with a single endogenous variable.** Printing
   selected the variance from the lower triangle of the covariance table, which
   for one equation is a single row and was dropped to a vector, so the credible

@@ -654,3 +654,32 @@ test_that("a file without shape marks is read as it always was", {
 
   expect_true(is.matrix(read_model_from_hdf5(path)[["priors"]][["beta"]][["rho"]]))
 })
+
+test_that("the starting precision of a constant gamma model is where BayesTS reads it", {
+  # Regression test. BayesTS reads the starting error precision of
+  # VarNormalGamma and VecNormalGamma from /initial/u_sigma_inv, while R keeps
+  # it as u_omega_inv. The file used to carry the R name, so BayesTS refused a
+  # structural VAR with "initial error precision must be 3x3, got 0x0".
+  data("e1")
+  e1 <- diff(log(e1)) * 100
+  model <- create_bvarmodel(e1, p = 1, deterministic = "const",
+                            structural = TRUE, error = "gamma",
+                            iterations = 10, burnin = 5)
+  model <- add_priors(model, coef = list(v_i = 0.1, v_i_det = 0.1),
+                      sigma = list(shape = 3, rate = 1e-4))
+  model <- add_initial_values(model)
+
+  path <- temp_h5_file()
+  write_to_hdf5(model, filename = path)
+
+  h5 <- hdf5r::H5File$new(path, mode = "r")
+  in_file <- names(h5[["initial"]])
+  h5$close_all()
+  expect_true("u_sigma_inv" %in% in_file)
+  expect_false("u_omega_inv" %in% in_file)
+
+  restored <- read_model_from_hdf5(path)
+  expect_equal(restored[["initial"]][["u_omega_inv"]],
+               model[["initial"]][["u_omega_inv"]], ignore_attr = TRUE)
+  expect_null(restored[["initial"]][["u_sigma_inv"]])
+})

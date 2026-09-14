@@ -137,7 +137,8 @@ read_model_from_hdf5 <- function(filename, group = "") {
     result[["initial"]] <- list()
     
     for (i in names(h5_root[["initial"]])) {
-      result[["initial"]][[i]] <- .hdf5_read_value(h5_root[["initial"]][[i]])
+      result[["initial"]][[.hdf5_initial_name(result[["model"]], i, "read")]] <-
+        .hdf5_read_value(h5_root[["initial"]][[i]])
     }
   }
   

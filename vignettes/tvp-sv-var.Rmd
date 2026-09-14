@@ -583,9 +583,13 @@ question.
 
 ### Forecasts
 
-Forecasts are produced from the state of the **last** period of the estimation
-sample: the draws of $a_T$ and $\Sigma_T$ are carried forward over the whole
-horizon rather than extrapolated along their random walks.
+Forecasts start from the state of the **last** period of the estimation sample,
+and `add_posterior_forecasts` simulates each draw forward from there: the
+coefficients, the covariance block and the log-volatilities take a step of their
+random walks every quarter, so the forecast is a draw from the posterior
+predictive distribution of the estimated model. The bands reflect both the
+uncertainty about $a_T$ and $\Sigma_T$ and the drift the model allows after the
+end of the sample.
 
 
 ``` r
@@ -606,10 +610,31 @@ plot(predict(model, n_ahead = 8))
 <p class="caption">plot of chunk forecast</p>
 </div>
 
-That is a deliberate choice rather than a limitation of the sampler. A random
-walk has no mean to revert to, so simulating the states forward widens the
-forecast bands without adding information about where the coefficients are
-going.
+`forecast_states = "hold"` carries the draws of $a_T$ and $\Sigma_T$ forward over
+the whole horizon instead, which is the forecast conditional on no further
+drift. The width of the 90% intervals eight quarters ahead shows what the drift
+adds:
+
+
+``` r
+held <- add_posterior_forecasts(model, forecast_states = "hold")
+
+interval_width <- function(object) {
+  fcst <- predict(object, n_ahead = 8)[["fcst"]]
+  apply(fcst[8, , ], 1, function(x) diff(stats::quantile(x, c(0.05, 0.95))))
+}
+
+round(rbind(simulated = interval_width(model), held = interval_width(held)), 2)
+#>             dy   Dp    r
+#> simulated 2.56 1.12 1.09
+#> held      2.51 0.90 0.43
+```
+
+Eight quarters ahead, carrying the drift forward leaves the interval of output
+growth almost unchanged, widens that of inflation by about a quarter and makes
+that of the short-term rate two and a half times as wide. A forecast that holds
+the coefficients at the end of the sample understates the uncertainty this model
+implies.
 
 ## Other combinations
 

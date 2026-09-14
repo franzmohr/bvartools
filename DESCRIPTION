@@ -47,6 +47,7 @@ Collate:
     'add_posterior_loglik.bvecmodel.R'
     'add_posterior_loglik.expandingwindow.R'
     'add_posterior_loglik.modellist.R'
+    'add_predictive_loglik.R'
     'add_priors.R'
     'add_priors.bvarmodel.R'
     'add_priors.bvecmodel.R'

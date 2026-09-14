@@ -6,7 +6,21 @@
 #' @param ci a numeric between 0 and 1 specifying the probability of the credible band.
 #' Defaults to 0.95.
 #' @param ... further arguments passed to or from other methods.
-#' 
+#'
+#' @details
+#' The in-sample criteria are those of the last window, the one estimated on
+#' the most data, and the forecast error statistics those of all windows.
+#'
+#' If the windows hold the draws of \code{\link{add_predictive_loglik}},
+#' criterion \code{"LPL"} is the log predictive likelihood: the sum over the
+#' windows of the log of the mean of the draws of the predictive density of the
+#' observation that the next window adds. Its band is the normal interval of
+#' probability \code{ci} around the sum with standard error
+#' \eqn{\sqrt{n \mathrm{Var}(lpd_t)}} over the \eqn{n} periods, as for LOOIC.
+#' Attribute \code{"terms"} holds the log predictive density of each period and
+#' its numerical standard error, attribute \code{"nse"} the numerical standard
+#' error of the sum.
+#'
 #' @return An object of class 'selcrit'.
 #' 
 #' @examples
@@ -91,8 +105,27 @@ selection_criteria.expandingwindow <- function(object, ci = 0.95, ...){
   last_window <- object[[length(object)]]
   use_ll <- !is.null(last_window[["posterior"]][["loglik"]])
   use_fe <- !is.null(errors)
-  if (!use_ll & !use_fe) {
-    stop("Model object must contain at least either posterior draws of the log-likelihood or forecast errors.")
+  predictive <- Filter(Negate(is.null), lapply(object, function(x) x[["predictive"]]))
+  use_lpl <- length(predictive) > 0
+  if (!use_ll & !use_fe & !use_lpl) {
+    stop("Model object must contain at least either posterior draws of the log-likelihood, ",
+         "predictive log-likelihoods or forecast errors.")
+  }
+
+  # Log predictive likelihood
+  if (use_lpl) {
+    terms <- data.frame(
+      period = vapply(predictive, function(p) as.numeric(p[["period"]]), numeric(1)),
+      lpd = vapply(predictive, function(p) .log_mean_exp(p[["loglik"]]), numeric(1)),
+      nse = vapply(predictive, function(p) .nse_log_mean_exp(p[["loglik"]]), numeric(1)))
+    n_terms <- nrow(terms)
+    lpl <- sum(terms[["lpd"]])
+    se <- if (n_terms > 1) sqrt(n_terms * stats::var(terms[["lpd"]])) else NA_real_
+    z <- stats::qnorm(ci_high)
+    result[["LPL"]] <- data.frame(mean = lpl, median = NA_real_,
+                                  qlower = lpl - z * se, qupper = lpl + z * se)
+    attr(result[["LPL"]], "terms") <- terms
+    attr(result[["LPL"]], "nse") <- sqrt(sum(terms[["nse"]]^2))
   }
 
   # In-sample

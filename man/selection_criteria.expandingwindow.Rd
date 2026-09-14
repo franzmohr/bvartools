@@ -20,6 +20,20 @@ An object of class 'selcrit'.
 \description{
 Calculates model selection criteria for an object of class 'expandingwindow'.
 }
+\details{
+The in-sample criteria are those of the last window, the one estimated on
+the most data, and the forecast error statistics those of all windows.
+
+If the windows hold the draws of \code{\link{add_predictive_loglik}},
+criterion \code{"LPL"} is the log predictive likelihood: the sum over the
+windows of the log of the mean of the draws of the predictive density of the
+observation that the next window adds. Its band is the normal interval of
+probability \code{ci} around the sum with standard error
+\eqn{\sqrt{n \mathrm{Var}(lpd_t)}} over the \eqn{n} periods, as for LOOIC.
+Attribute \code{"terms"} holds the log predictive density of each period and
+its numerical standard error, attribute \code{"nse"} the numerical standard
+error of the sum.
+}
 \examples{
 
 # Load data

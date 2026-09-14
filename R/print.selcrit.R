@@ -34,9 +34,27 @@ print.selcrit <- function(x, digits = max(3L, getOption("digits") - 3L), ...){
 
     .print_waic_diagnostics(x[["WAIC"]])
     .print_loo_diagnostics(x[["LOOIC"]])
-    
+
   }
-  
+
+  if (!is.null(x[["LPL"]])) {
+
+    cat("\n\n------------------------------------------\n")
+    cat("Predictive")
+    cat("\n------------------------------------------\n\n")
+
+    result <- data.frame(Criterion = "LPL", Mean = x[["LPL"]][["mean"]],
+                         qlower = x[["LPL"]][["qlower"]], qupper = x[["LPL"]][["qupper"]])
+    names(result)[3:4] <- paste0("Quantile (", ci, ")")
+    .print_criteria_table(result, digits = digits, ...)
+
+    terms <- attr(x[["LPL"]], "terms")
+    cat("\nOne-step-ahead log predictive likelihood over ", nrow(terms), " periods; ",
+        "numerical standard error ", format(attr(x[["LPL"]], "nse"), digits = digits), ".\n",
+        sep = "")
+
+  }
+
   if (use_fe) {
     
     cat("\n\n------------------------------------------\n")

@@ -90,8 +90,7 @@ equation, where the prior on the state variances decides how much of the
 nominal freedom is used, and it does not describe a shrinkage prior, which
 buys back degrees of freedom that \eqn{\kappa} does not see. WAIC and LOOIC
 penalise by the flexibility the fit actually used and remain defined in
-those cases, so they are the criteria to compare constant, time varying and
-stochastic volatility specifications with.
+those cases.
 
 LOOIC estimates the same quantity as WAIC by reweighting the posterior
 towards the one that has not seen a period, which is the more accurate route
@@ -100,6 +99,20 @@ Pareto tail fitted to the importance ratios of a period exceeds its
 threshold when that period is too influential to be reweighted, and the
 print methods report how many periods this happened for.
 
+For a model whose coefficients or variances follow a state equation, the
+pointwise log-likelihood that WAIC and LOOIC are built from is evaluated at
+the states of each period, which have seen that period's observation. The
+state of a period is informed mostly by its own observation, so leaving the
+observation out by reweighting fails for exactly the periods a path bends
+towards, and neither criterion separates models that differ in how much of
+that freedom they have, such as the cointegration ranks of a time varying
+VEC model. The criterion for those comparisons is \code{"LPL"}, the log
+predictive likelihood of an expanding window exercise
+(\code{\link{add_predictive_loglik}}), whose densities condition only on the
+data before the period they evaluate and carry the states forward with their
+state equations. Koop, León-González and Strachan (2011) choose between time
+varying cointegration models with it.
+
 All criteria require that the models that are compared were estimated on the
 same observations. \code{\link{create_bvarmodel}} and
 \code{\link{create_bvecmodel}} ensure this for a vector of lag orders by
@@ -107,6 +120,10 @@ trimming the data by the maximum lag, and \code{\link{align_model_obs}}
 restricts models that were created separately to their common sample.
 }
 \references{
+Koop, G., León-González, R., & Strachan, R. W. (2011). Bayesian inference in
+a time varying cointegration model. \emph{Journal of Econometrics, 165}(2), 210--220.
+\doi{10.1016/j.jeconom.2011.07.007}
+
 Luetkepohl, H. (2006). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
 
 Vehtari, A., Gelman, A., & Gabry, J. (2017). Practical Bayesian model evaluation using

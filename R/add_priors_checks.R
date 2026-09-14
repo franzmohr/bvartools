@@ -129,12 +129,13 @@
       } else {
         stop("Gamma prior requires specification of elements 'shape' and 'rate' in 'sigma'.")
       }
-      if (sigma$shape < 0) {
+      .add_priors_check_per_equation(sigma, c("shape", "rate"), object$model$k)
+      if (is.numeric(sigma$shape) && any(sigma$shape < 0)) {
         stop("Argument 'sigma$shape' must be at least 0.")
       }
-      if (sigma$rate <= 0) {
+      if (any(sigma$rate <= 0)) {
         stop("Argument 'sigma$rate' must be larger than 0.")
-      } 
+      }
     }
     
     if (object$model$error %in% c("sv", "sv+covar")) {
@@ -150,10 +151,11 @@
       } else {
         stop("An asymmetric Laplace model requires specification of elements 'shape' and 'rate' in 'sigma'.")
       }
-      if (sigma$shape <= 0) {
+      .add_priors_check_per_equation(sigma, c("shape", "rate"), object$model$k)
+      if (any(sigma$shape <= 0)) {
         stop("Argument 'sigma$shape' must be larger than 0.")
       }
-      if (sigma$rate <= 0) {
+      if (any(sigma$rate <= 0)) {
         stop("Argument 'sigma$rate' must be larger than 0.")
       }
     }
@@ -186,6 +188,20 @@
 
 
 
+# The gamma priors of the error term are stored one per equation, so each of
+# their elements is either one value for every equation or one per equation.
+# A vector used to reach a scalar comparison and stop with "the condition has
+# length > 1".
+.add_priors_check_per_equation <- function(sigma, elements, k) {
+  for (i in elements) {
+    if (is.numeric(sigma[[i]]) && !length(sigma[[i]]) %in% c(1, k)) {
+      stop("Argument 'sigma$", i, "' must contain either one value or one per endogenous ",
+           "variable (", k, "), but it contains ", length(sigma[[i]]), ".", call. = FALSE)
+    }
+  }
+}
+
+
 .add_priors_check_ssvs <- function(object, ssvs) {
   
   use_ssvs_error <- FALSE
@@ -206,10 +222,6 @@
   if (object[["model"]][["error"]] == "gamma+covar" & use_ssvs_error & is.null(ssvs[["tau"]])) {
     stop("If SSVS should be applied to error covariances, argument 'varsel$tau' must be specified.")
   }
-  if (object[["model"]][["structural"]] & is.null(ssvs[["tau"]])) {
-    stop("If SSVS should be used with structural models, argument 'varsel$tau' must be specified.")
-  }
-  
   if (!is.null(ssvs[["semiautomatic"]])) {
     if (!"numeric" %in% class(ssvs[["semiautomatic"]])) {
       stop("Argument 'varsel$semiautomatic' must be a numeric vector.")

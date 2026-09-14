@@ -42,8 +42,8 @@ stopifnot(inherits(pred, "bvarprd"), all(dim(pred$fcst) == c(8, k, 300)))
 
 `pred$fcst` holds the draws, periods by variables by draws, and `pred$y` the
 training data; `plot(pred, n_pre = 20)` shows the last 20 observations with the
-bands. `n_ahead` in `predict()` cannot exceed the one given to
-`add_forecast_input()`; a longer request is cut back to it.
+bands. `n_ahead` in `predict()` defaults to the one given to
+`add_forecast_input()` and cannot exceed it; a longer request is cut back to it.
 
 ## Impulse responses
 

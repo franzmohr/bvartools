@@ -119,3 +119,8 @@ test_that("forecast errors are computed against a test sample", {
   expect_false(is.null(errors))
   expect_true(length(errors) > 0)
 })
+
+test_that("predict returns every simulated period by default", {
+  expect_no_warning(forecast <- stats::predict(fx_var_forecast()))
+  expect_identical(dim(forecast[["fcst"]])[1], fx_var_forecast()[["model"]][["h"]])
+})

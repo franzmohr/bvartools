@@ -154,7 +154,7 @@ add_initial_values.bvarmodel <- function(object, method = "ols", ...){
     if (!is.null(z)) {
       a_mu <- object[["priors"]][["a"]][["mu"]]
       a_vinv <- object[["priors"]][["a"]][["v_inv"]]
-      a <- a_mu + chol(a_vinv) %*% stats::rnorm(length(a_mu)) 
+      a <- .draw_normal_prior(a_mu, a_vinv, "coef")
       if (object[["model"]][["tvp"]]) {
         object[["initial"]][["a"]] <- matrix(a, length(a) * tt)
         object[["initial"]][["a_init"]] <- matrix(a, length(a))
@@ -168,7 +168,7 @@ add_initial_values.bvarmodel <- function(object, method = "ols", ...){
     if (object[["model"]][["error"]] %in% c("gamma+covar", "sv+covar") & k > 1) {
       psi_mu <- object[["priors"]][["psi"]][["mu"]]
       psi_vinv <- object[["priors"]][["psi"]][["v_inv"]]
-      psi <- psi_mu + chol(psi_vinv) %*% stats::rnorm(k * (k - 1) / 2)
+      psi <- .draw_normal_prior(psi_mu, psi_vinv, "coef")
       if (object[["model"]][["tvp"]]) {
         object[["initial"]][["psi"]] <- matrix(psi, length(psi) * tt)
         object[["initial"]][["psi_init"]] <- matrix(psi, length(psi))

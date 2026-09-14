@@ -72,41 +72,61 @@ ssvs_prior.bvecmodel <- function(object, tau = c(0.05, 10), semiautomatic = NULL
     }
     
     # Non-alpha coefficients ----
-    if (!is.null(object[["data"]][["train"]][["x"]])) {
+    structural <- object[["model"]][["structural"]] & k > 1
+    n_struct <- if (structural) k * (k - 1) / 2 else 0
+    has_x <- !is.null(object[["data"]][["train"]][["x"]])
+    x <- if (has_x) t(object[["data"]][["train"]][["x"]]) else matrix(NA_real_, 0, tt)
+    n_x <- nrow(x)
 
-      x <- t(object[["data"]][["train"]][["x"]])
+    if (!is.null(semiautomatic) & (has_x | structural)) {
 
-      if (!is.null(semiautomatic)) {
-        
-        # As in the VAR method: the least squares standard errors this scales
-        # by need more observations than there are regressors per equation.
-        if (tt <= nrow(x)) {
-          stop("Argument 'semiautomatic' scales the prior by least squares ",
-               "standard errors, but the training sample has ", tt,
-               " observations for ", nrow(x), " regressors per equation. ",
-               "Omit 'semiautomatic' to use the fixed values in 'tau', reduce ",
-               "the lag order, or provide a longer training sample.")
+      # As in the VAR method: the least squares standard errors this scales
+      # by need more observations than there are regressors per equation, of
+      # which the last equation of a structural model has k - 1 more.
+      n_max <- n_x + if (structural) k - 1 else 0
+      if (tt <= n_max) {
+        stop("Argument 'semiautomatic' scales the prior by least squares ",
+             "standard errors, but the training sample has ", tt,
+             " observations for ", n_max, " regressors per equation. ",
+             "Omit 'semiautomatic' to use the fixed values in 'tau', reduce ",
+             "the lag order, or provide a longer training sample.")
+      }
+
+      if (structural) {
+        # Equation i of a structural model regresses the difference of variable
+        # i on the regressors and on minus the current differences of the
+        # variables before it. The residuals of such a recursive system are
+        # orthogonal across equations, so the standard errors are those of least
+        # squares equation by equation, each with its own degrees of freedom.
+        # The contemporaneous coefficients used to fall back to 'tau'.
+        se_x <- matrix(NA_real_, k, n_x)
+        se_a0 <- matrix(NA_real_, k, k)
+        for (i in 1:k) {
+          z_i <- cbind(t(x), -t(y[seq_len(i - 1), , drop = FALSE]))
+          if (ncol(z_i) == 0) {
+            next
+          }
+          zz_inv <- solve(crossprod(z_i))
+          u_i <- y[i, ] - z_i %*% (zz_inv %*% crossprod(z_i, y[i, ]))
+          se_i <- sqrt(diag(zz_inv) * sum(u_i^2) / (tt - ncol(z_i)))
+          se_x[i, ] <- se_i[seq_len(n_x)]
+          se_a0[i, seq_len(i - 1)] <- se_i[n_x + seq_len(i - 1)]
         }
-
+        se_ols <- c(c(se_x), se_a0[lower.tri(se_a0)])
+      } else {
         ols <- tcrossprod(y, x) %*% solve(tcrossprod(x))
         u <- y - ols %*% x
-        sigma_ols <- tcrossprod(u) / (tt - nrow(x)) # OLS error covariance matrix
+        sigma_ols <- tcrossprod(u) / (tt - n_x) # OLS error covariance matrix
         cov_ols <- kronecker(solve(tcrossprod(x)), sigma_ols) # Sqrt of diagonal elements are the t-ratios
-        se_ols <- sqrt(diag(cov_ols)) # OLS standard errors 
-        
-        tau0 <- append(tau0, se_ols * semiautomatic[1]) # Prior if excluded
-        tau1 <- append(tau1, se_ols * semiautomatic[2]) # Prior if included
-        
-      } else {
-        tau0 <- append(tau0, rep(tau[1], k * nrow(x)))
-        tau1 <- append(tau1, rep(tau[2], k * nrow(x)))
+        se_ols <- sqrt(diag(cov_ols)) # OLS standard errors
       }
-    }
-    
-    if (object[["model"]][["structural"]]) {
-      message("Semiautomatic approach to SSVS not available for structural coefficients yet. Using values of argument 'tau' instead.")
-      tau0 <- append(tau0, rep(tau[1], k * (k - 1) / 2))
-      tau1 <- append(tau1, rep(tau[2], k * (k - 1) / 2))
+
+      tau0 <- append(tau0, se_ols * semiautomatic[1]) # Prior if excluded
+      tau1 <- append(tau1, se_ols * semiautomatic[2]) # Prior if included
+
+    } else {
+      tau0 <- append(tau0, rep(tau[1], k * n_x + n_struct))
+      tau1 <- append(tau1, rep(tau[2], k * n_x + n_struct))
     }
     
     result <- list("tau0" = matrix(tau0),

@@ -104,3 +104,46 @@ test_that("an expanding window with neither log-likelihood nor forecast errors i
   }
   expect_error(selection_criteria(windows), "log-likelihood")
 })
+
+test_that("the forecasts of every window start from the last period of that window", {
+  # A structural VARX of the first differences of at_macrodata, a window() of
+  # it, and a VEC model in levels through its VAR representation. The lags of
+  # the first forecast period used to come from the end of the whole series,
+  # whatever the estimation sample of the model.
+  domestic <- diff(at_data()) * 100
+  foreign <- diff(bvartools::at_macrodata[["foreign"]][, c("y.s", "poil")]) * 100
+  svarx <- create_bvarmodel(stats::window(domestic, end = c(2019, 4)), p = 2,
+                            exogen = stats::window(foreign, end = c(2019, 4)), s = 1,
+                            deterministic = "const", structural = TRUE, error = "gamma",
+                            iterations = 10, burnin = 5)
+
+  windows <- add_forecast_input(use_expanding_window(svarx, start = c(2019, 1)),
+                                n_ahead = 2, exogen = foreign)
+  expect_length(windows, 5)
+  for (w in windows) {
+    y <- as.matrix(w[["data"]][["train"]][["y"]])
+    n <- nrow(y)
+    x <- w[["data"]][["forecast"]][["x"]]
+    expect_equal(as.numeric(x[1, 1:6]), as.numeric(c(y[n, ], y[n - 1, ])))
+    expect_equal(as.numeric(x[2, 4:6]), as.numeric(y[n, ]))
+    ends <- stats::tsp(w[["data"]][["train"]][["y"]])[2]
+    next_period <- which(abs(stats::time(foreign) - (ends + 0.25)) < 1e-6)
+    expect_equal(as.numeric(x[1, 7:8]), as.numeric(foreign[next_period, ]))
+  }
+
+  cut <- add_forecast_input(window(svarx, end = c(2015, 4)), n_ahead = 1, exogen = foreign)
+  y <- as.matrix(cut[["data"]][["train"]][["y"]])
+  expect_equal(as.numeric(cut[["data"]][["forecast"]][["x"]][1, 1:3]), as.numeric(y[nrow(y), ]))
+
+  vec <- create_bvecmodel(stats::window(at_data(), end = c(2019, 4)) * 100, p = 2, r = 1,
+                          const = "unrestricted", iterations = 10, burnin = 5)
+  vec <- add_priors(vec, coef = list(v_i = 0, v_i_det = 0), coint = list(v_i = 0, p_tau_i = 1),
+                    sigma = list(df = "k", scale = 1e-4))
+  vec_windows <- add_initial_values(use_expanding_window(vec, start = c(2019, 3)))
+  set.seed(1)
+  vec_windows <- add_forecast_input(vec_to_var(add_posterior_coefficients(vec_windows)), n_ahead = 1)
+  for (w in vec_windows) {
+    y <- as.matrix(w[["data"]][["train"]][["y"]])
+    expect_equal(as.numeric(w[["data"]][["forecast"]][["x"]][1, 1:3]), as.numeric(y[nrow(y), ]))
+  }
+})

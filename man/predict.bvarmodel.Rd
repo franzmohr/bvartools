@@ -4,12 +4,14 @@
 \alias{predict.bvarmodel}
 \title{Predict Method for Objects of Class bvar}
 \usage{
-\method{predict}{bvarmodel}(object, n_ahead = 10, ...)
+\method{predict}{bvarmodel}(object, n_ahead = NULL, ...)
 }
 \arguments{
 \item{object}{an object of class 'bvarmodel'.}
 
-\item{n_ahead}{number of steps ahead at which to predict.}
+\item{n_ahead}{number of steps ahead at which to predict. If \code{NULL} (default), every
+period simulated by \code{\link{add_posterior_forecasts}}, i.e. the horizon given to
+\code{\link{add_forecast_input}}.}
 
 \item{...}{additional arguments.}
 }

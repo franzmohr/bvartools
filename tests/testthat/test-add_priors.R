@@ -398,3 +398,18 @@ test_that("a time varying ML prior is checked", {
   model <- tvp_ml_priors(list(rho = 0.999, p_tau_i = "ml", weight = 0.1))
   expect_error(scale_error_correction(model), "before 'add_priors'")
 })
+
+test_that("a gamma error prior can be given one value per equation", {
+  model <- create_bvarmodel(diff(at_data()) * 100, p = 1, deterministic = "const",
+                            error = "gamma", iterations = 10, burnin = 5)
+  priors <- add_priors(model, coef = list(v_i = 0, v_i_det = 0),
+                       sigma = list(shape = c(3, 4, 5), rate = c(1, 2, 3)))[["priors"]][["u_sigma"]]
+  expect_equal(as.numeric(priors[["shape"]]), c(3, 4, 5))
+  expect_equal(as.numeric(priors[["rate"]]), c(1, 2, 3))
+  expect_error(add_priors(model, coef = list(v_i = 0, v_i_det = 0),
+                          sigma = list(shape = 3, rate = c(1, 2))),
+               "one per endogenous variable")
+  expect_error(add_priors(model, coef = list(v_i = 0, v_i_det = 0),
+                          sigma = list(shape = 3, rate = c(1, -2, 3))),
+               "larger than 0")
+})

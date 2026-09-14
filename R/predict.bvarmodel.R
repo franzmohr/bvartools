@@ -3,7 +3,9 @@
 #' Forecasting a Bayesian VAR object of class 'bvarmodel'.
 #' 
 #' @param object an object of class 'bvarmodel'.
-#' @param n_ahead number of steps ahead at which to predict.
+#' @param n_ahead number of steps ahead at which to predict. If \code{NULL} (default), every
+#' period simulated by \code{\link{add_posterior_forecasts}}, i.e. the horizon given to
+#' \code{\link{add_forecast_input}}.
 #' @param ... additional arguments.
 #' 
 #' @details For the VAR model
@@ -53,17 +55,23 @@
 #' 
 #' @family post-estimation analysis
 #' @export
-predict.bvarmodel <- function(object, n_ahead = 10, ...) {
-  
+predict.bvarmodel <- function(object, n_ahead = NULL, ...) {
+
   # Prepare input
   if (is.null(object[["model"]][["h"]])) {
     stop("Missing specification of h in object$model$h. You might want to use\nfunction 'add_forecast_input' and then 'add_posterior_forecasts'\nbefore using this function.")
   }
-  
+
   if (is.null(object[["posterior"]][["forecast"]])) {
     stop("Missing element object$posterior$forecast. You might want to use\n'add_posterior_forecasts'\nbefore this function.")
   }
-  
+
+  # Every simulated period unless fewer are asked for. The default used to be
+  # 10, which warned whenever the forecasts had a shorter horizon.
+  if (is.null(n_ahead)) {
+    n_ahead <- object[["model"]][["h"]]
+  }
+
   if (object[["model"]][["h"]] < n_ahead) {
     warning("Argument 'n_ahead' is larger than the value in object$model$h.\nLimiting the output to the latter.")
     n_ahead <- object[["model"]][["h"]]

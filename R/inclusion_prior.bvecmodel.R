@@ -32,6 +32,7 @@
 #' \eqn{\frac{\kappa_1}{r}} \tab for own lags of endogenous variables, \cr
 #' \eqn{\frac{\kappa_2}{r}} \tab for other endogenous variables, \cr
 #' \eqn{\frac{\kappa_3}{1 + r}} \tab for unmodelled exogenous variables, \cr
+#' \eqn{\kappa_2} \tab for contemporaneous endogenous variables of a structural model, \cr
 #' \eqn{\kappa_{4}} \tab for deterministic variables.
 #' }
 #' 
@@ -164,7 +165,15 @@ inclusion_prior.bvecmodel <- function(object,
       }
       
       inprior[n_alpha + 1:(k * (n_gamma + n_upsilon + n_c_unres))] <- c(incl_matrix)
-    } 
+    }
+
+    # The contemporaneous coefficients of a structural model are those of the
+    # other endogenous variables at lag zero, which is how the Minnesota prior
+    # scales their variance too. They used to keep 'prob'.
+    if (minnesota_like & object[["model"]][["structural"]] & k > 1) {
+      n_struct <- k * (k - 1) / 2
+      inprior[ncol(z) - n_struct + 1:n_struct] <- kappa2
+    }
     
     # Exclude deterministics from variables selection algorithm
     if (n_c_unres > 0 & exclude_deterministics) {

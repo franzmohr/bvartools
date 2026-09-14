@@ -477,3 +477,54 @@ test_that("a Minnesota-like inclusion prior of a VEC model has one block per exo
                       varsel = list(inprior = 0.5, minnesota = kappa))
   expect_equal(as.numeric(model[["priors"]][["a"]][["inprior"]]), expected_prior(model))
 })
+
+test_that("the semiautomatic SSVS prior of a structural model uses least squares of its recursive equations", {
+  # A structural VAR and a structural VEC model of at_macrodata. Equation i
+  # regresses variable i on the regressors and on minus the current values of
+  # the variables before it. The VAR method refused structural models, and the
+  # VEC method fell back to 'tau' for their contemporaneous coefficients.
+  per_equation_se <- function(y, x) {
+    y <- matrix(as.numeric(y), nrow(y))
+    x <- matrix(as.numeric(x), nrow(x))
+    lapply(seq_len(ncol(y)), function(i) {
+      z <- cbind(x, -y[, seq_len(i - 1), drop = FALSE])
+      residuals <- y[, i] - z %*% solve(crossprod(z), crossprod(z, y[, i]))
+      sqrt(diag(solve(crossprod(z))) * sum(residuals^2) / (nrow(z) - ncol(z)))
+    })
+  }
+  stack_se <- function(se, n_x, k) {
+    c(c(t(sapply(se, function(s) s[seq_len(n_x)]))),
+      unlist(lapply(1:(k - 1), function(j) sapply((j + 1):k, function(i) se[[i]][n_x + j]))))
+  }
+
+  svar <- create_bvarmodel(diff(at_data()) * 100, p = 2, deterministic = "const",
+                           structural = TRUE, error = "gamma", varsel = "ssvs",
+                           iterations = 10, burnin = 5)
+  y <- as.matrix(svar[["data"]][["train"]][["y"]])
+  x <- as.matrix(svar[["data"]][["train"]][["x"]])
+  prior <- ssvs_prior(svar, semiautomatic = c(0.1, 10))
+  expect_equal(as.numeric(prior[["tau1"]]) / 10, stack_se(per_equation_se(y, x), ncol(x), 3))
+  expect_no_error(add_priors(svar, coef = list(v_i = 0), sigma = list(shape = 3, rate = 1),
+                             varsel = list(inprior = 0.5, semiautomatic = c(0.1, 10))))
+
+  svec <- create_bvecmodel(at_data() * 100, p = 2, r = 1, const = "unrestricted",
+                           structural = TRUE, error = "gamma", varsel = "ssvs",
+                           iterations = 10, burnin = 5)
+  y <- as.matrix(svec[["data"]][["train"]][["y"]])
+  x <- as.matrix(svec[["data"]][["train"]][["x"]])
+  prior <- ssvs_prior(svec, semiautomatic = c(0.1, 10))
+  expect_equal(as.numeric(prior[["tau1"]])[-(1:3)] / 10, stack_se(per_equation_se(y, x), ncol(x), 3))
+})
+
+test_that("a Minnesota-like inclusion prior gives the contemporaneous coefficients kappa2", {
+  svar <- create_bvarmodel(diff(at_data()) * 100, p = 1, deterministic = "const",
+                           structural = TRUE, error = "gamma", iterations = 10, burnin = 5)
+  prior <- inclusion_prior(svar, minnesota_like = TRUE, kappa1 = 0.8, kappa2 = 0.4, kappa4 = 0.9)
+  expect_equal(as.numeric(utils::tail(prior[["prior"]], 3)), rep(0.4, 3))
+  expect_equal(as.numeric(utils::tail(inclusion_prior(svar, prob = 0.3)[["prior"]], 3)), rep(0.3, 3))
+
+  svec <- create_bvecmodel(at_data() * 100, p = 2, r = 1, const = "unrestricted",
+                           structural = TRUE, error = "gamma", iterations = 10, burnin = 5)
+  prior <- inclusion_prior(svec, minnesota_like = TRUE, kappa1 = 0.8, kappa2 = 0.4, kappa4 = 0.9)
+  expect_equal(as.numeric(utils::tail(prior[["prior"]], 3)), rep(0.4, 3))
+})

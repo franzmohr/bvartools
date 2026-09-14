@@ -82,9 +82,10 @@ Argument \code{coef} can contain the following elements:
   \item{\code{max_var}}{a positive numeric specifying the maximum prior variance of the
   coefficients of non-deterministic variables in the Minnesota prior. Larger prior variances
   are set to this value. Only used if \code{minnesota} is given.}
-  \item{\code{shape}}{a numeric specifying the prior shape parameter of the error variances of the
-  state equation. Required for models with time varying parameters and not used otherwise.}
-  \item{\code{rate}}{a numeric specifying the prior rate parameter of the error variances of the
+  \item{\code{shape}}{a numeric specifying the shape of the gamma prior on the precisions, the
+  inverse error variances, of the state equation, whose mean is \code{shape / rate}. Required for
+  models with time varying parameters and not used otherwise.}
+  \item{\code{rate}}{a numeric specifying the rate of the gamma prior on the precisions of the
   state equation. Required for models with time varying parameters and not used otherwise.}
   \item{\code{rate_det}}{a numeric specifying the prior rate parameter of the error variances of the
   state equation for coefficients, which correspond to deterministic terms. If it is not given,
@@ -112,12 +113,13 @@ The elements are
   \item{\code{scale}}{a positive numeric specifying the prior error variance of the endogenous
   variables in the inverse Wishart prior.}
   \item{\code{shape}}{for \code{"gamma"} and \code{"gamma+covar"} a non-negative numeric, or a
-  character expression in \code{k} as for \code{df}, specifying the prior shape parameter of the
-  error variances. For models with stochastic
-  volatility a numeric specifying the prior shape parameter of the error variance of the state
-  equation of the log-volatilities.}
-  \item{\code{rate}}{a positive numeric specifying the prior rate parameter that corresponds to
-  \code{shape}.}
+  character expression in \code{k} as for \code{df}, specifying the shape of the gamma prior on
+  the error precisions, the inverse error variances, whose mean is \code{shape / rate}, either one
+  value or one per endogenous variable. For models with stochastic volatility a numeric
+  specifying the shape of the gamma prior on the precision of the state equation of the
+  log-volatilities.}
+  \item{\code{rate}}{a positive numeric specifying the rate that corresponds to \code{shape},
+  for \code{"gamma"} and \code{"gamma+covar"} either one value or one per endogenous variable.}
   \item{\code{mu}}{numeric of the prior mean of the initial state of the log-volatilities.
   Only used for models with time varying volatility.}
   \item{\code{v_i}}{numeric of the prior precision of the initial state of the log-volatilities.
@@ -156,6 +158,7 @@ inclusion probabilities are calculated in a Minnesota-like fashion as
 \eqn{\frac{\kappa_1}{l}} \tab for own lags of endogenous variables, \cr
 \eqn{\frac{\kappa_2}{l}} \tab for other endogenous variables, \cr
 \eqn{\frac{\kappa_3}{1 + l}} \tab for exogenous variables, \cr
+\eqn{\kappa_2} \tab for contemporaneous endogenous variables of a structural model, \cr
 \eqn{\kappa_{4}} \tab for deterministic variables, 
 }
 for lag \eqn{l} with \eqn{\kappa_1}, \eqn{\kappa_2}, \eqn{\kappa_3},

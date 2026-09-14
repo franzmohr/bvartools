@@ -68,21 +68,39 @@ ssvs_prior.bvarmodel <- function(object, tau = c(0.05, 10), semiautomatic = NULL
         k <- object[["model"]][["k"]]
         tt <- nrow(object[["data"]][["train"]][["y"]])
         
+        # Regressors per equation. Equation i of a structural model also has
+        # the current values of the i - 1 variables before it.
+        structural <- object[["model"]][["structural"]] & k > 1
+        if (structural) {
+          n_eq <- (ncol(z) - k * (k - 1) / 2) / k + 0:(k - 1)
+        } else {
+          n_eq <- rep(ncol(z) / k, k)
+        }
+
         # The semiautomatic approach scales the prior by least squares
         # standard errors, which do not exist unless the training sample is
         # longer than the number of regressors per equation. Without this the
         # failure surfaces as a singular matrix from solve().
-        if (tt <= ncol(z) / k) {
+        if (tt <= max(n_eq)) {
           stop("Argument 'semiautomatic' scales the prior by least squares ",
                "standard errors, but the training sample has ", tt,
-               " observations for ", ncol(z) / k, " regressors per equation. ",
+               " observations for ", max(n_eq), " regressors per equation. ",
                "Omit 'semiautomatic' to use the fixed values in 'tau', reduce ",
                "the lag order, or provide a longer training sample.")
         }
 
         ols <- solve(crossprod(z)) %*% crossprod(z, y)
         u <- matrix(y - z %*% ols, k)
-        sigma_ols <- tcrossprod(u) / (tt - ncol(z) / k) # OLS error covariance matrix
+        if (structural) {
+          # The residual of each equation of a recursive system is orthogonal to
+          # the variables before it and so to their residuals: the error
+          # covariance is diagonal, and each variance has the degrees of freedom
+          # of its own equation. The standard errors below are then those of
+          # least squares equation by equation.
+          sigma_ols <- diag(rowSums(u^2) / (tt - n_eq), k)
+        } else {
+          sigma_ols <- tcrossprod(u) / (tt - ncol(z) / k) # OLS error covariance matrix
+        }
         cov_ols <- solve(crossprod(z, kronecker(diag(1, tt), solve(sigma_ols))) %*% z)
         se_ols <- matrix(sqrt(diag(cov_ols))) # OLS standard errors
         

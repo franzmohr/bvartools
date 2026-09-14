@@ -40,19 +40,25 @@
   
   if (method == "prior") {
     # Errors
+    # The samplers read shape and rate as a Gamma(shape, rate) prior on each
+    # error precision, so that is what is drawn. This used to draw the inverse
+    # of a gamma with half the shape and the inverse rate, which for shape = 50
+    # and rate = 25 started the precisions near 0.001 rather than near 2.
     if (error %in% c("gamma", "gamma+covar")) {
-      sigma_shape <- sigma_prior[["shape"]]
-      sigma_rate <- 1 / sigma_prior[["rate"]]
-      object[["initial"]][["u_omega_inv"]] <- diag(1, k)
-      for (i in 1:k) {
-        object[["initial"]][["u_omega_inv"]][i, i] <- 1 / stats::rgamma(1, shape = sigma_shape[i] / 2, rate = sigma_rate[i] / 2)
+      sigma_shape <- as.numeric(sigma_prior[["shape"]])
+      if (any(sigma_shape <= 0)) {
+        stop("Initial values drawn from the prior need a proper gamma prior on the error ",
+             "precisions: argument 'sigma$shape' of add_priors() must be larger than 0.",
+             call. = FALSE)
       }
+      object[["initial"]][["u_omega_inv"]] <- diag(stats::rgamma(k, shape = sigma_shape,
+                                                                 rate = as.numeric(sigma_prior[["rate"]])), k)
     }
-    
+
     if (error %in% c("sv", "sv+covar")) {
       mu <- sigma_prior[["mu"]]
       vinv <- sigma_prior[["v_inv"]]
-      h_draw <- mu + chol(vinv) %*% stats::rnorm(k)
+      h_draw <- .draw_normal_prior(mu, vinv, "sigma")
       h <- matrix(h_draw, nrow = tt, ncol = k, byrow = TRUE)
       object[["initial"]][["h"]] <- h
       object[["initial"]][["h_init"]] <- matrix(h[1, ])
@@ -82,6 +88,24 @@
   }
   
   return(object)
+}
+
+# One draw from a normal prior given by its mean and precision matrix, which is
+# how add_priors() stores it.
+#
+# With R'R = V^-1, the draw mu + R^-1 e has covariance (R'R)^-1 = V. It used to
+# be mu + R e, whose covariance is the precision: a prior standard deviation of
+# 0.1 started the chain at coefficients with a standard deviation of 10. A prior
+# that is uninformative for some element has nothing to draw from, and chol()
+# only said that a leading minor was not positive.
+.draw_normal_prior <- function(mu, v_inv, argument) {
+  if (any(diag(as.matrix(v_inv)) <= 0)) {
+    stop("Initial values cannot be drawn from a prior that is uninformative for some ",
+         "of its elements: the prior precision in argument '", argument, "' of ",
+         "add_priors() must be larger than 0 for every element. Use the least squares ",
+         "initial values instead.", call. = FALSE)
+  }
+  mu + backsolve(chol(v_inv), stats::rnorm(length(mu)))
 }
 
 # Initial values of the two blocks a quantile regression model has and a mean
@@ -125,8 +149,9 @@
 # repeat its draws across R sessions.
 .add_initial_values_state_errors <- function(object, method) {
 
-  # The prior of each precision is Gamma(shape / 2, rate / 2), whose mean is
-  # shape / rate.
+  # The samplers read the prior of each precision as Gamma(shape, rate), whose
+  # mean is shape / rate. The draw used to be from Gamma(shape / 2, rate / 2),
+  # which has the same mean and twice the variance.
   state_precision <- function(prior) {
     shape <- as.numeric(prior[["shape"]])
     rate <- as.numeric(prior[["rate"]])
@@ -134,7 +159,7 @@
     result <- diag(0, n)
     for (i in 1:n) {
       if (method == "prior") {
-        result[i, i] <- stats::rgamma(1, shape = shape[i] / 2, rate = rate[i] / 2)
+        result[i, i] <- stats::rgamma(1, shape = shape[i], rate = rate[i])
       } else {
         result[i, i] <- shape[i] / rate[i]
       }

@@ -140,7 +140,12 @@ prepare_forecast_input.bvarmodel <- function(object, n_ahead = 10, deterministic
     x_time <- stats::time(x)
     
     if (p > 0) {
-      temp_p <- stats::embed(object[["data"]][["original"]][["endogen"]], p)
+      # The lags of the first forecast period are the last p periods of the
+      # estimation sample, which is also where the forecast starts in time. They
+      # used to be taken from the original series the model was created from:
+      # every window of use_expanding_window() but the last, and a model cut
+      # short by window(), then forecast from the end of the whole series.
+      temp_p <- stats::embed(as.matrix(y), p)
       temp_p <- temp_p[nrow(temp_p),]
       for (i in 1:p) {
         if (i <= n_ahead) {

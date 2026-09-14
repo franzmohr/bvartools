@@ -1,5 +1,56 @@
 # bvartools (development version)
 
+* **Forecasts of an expanding window start from the end of each window.**
+  `prepare_forecast_input()` took the lags of the first forecast period from
+  the original series a model was created from rather than from its estimation
+  sample, so every window of `use_expanding_window()` but the last forecast from
+  the last observations of the whole series, and so did a model cut short by
+  `window()`. On the first differences of `at_macrodata` the lagged values were
+  off by up to 7.9 for a structural VARX, and by about 1 for a VEC model in
+  levels through `vec_to_var()`. The forecast errors and out-of-sample criteria
+  of expanding windows were computed from these forecasts. **Results change**
+  for the forecasts of every window but the last.
+
+* **`add_initial_values(method = "prior")` draws from the prior.** The
+  coefficients, the covariance coefficients and the initial log-volatilities
+  were drawn with the prior precision as their covariance, so a prior standard
+  deviation of 0.1 started the chain at coefficients with a standard deviation
+  of 10. The precisions of a gamma error prior were drawn as the inverse of a
+  gamma with half the shape and the inverse rate, near 0.001 instead of near 2
+  for `shape = 50` and `rate = 25`, and the state precisions of time varying
+  models from a gamma with half the shape and rate, while the samplers read
+  `shape` and `rate` as a Gamma(shape, rate) prior on a precision. A prior that
+  is uninformative for some coefficients now stops with a message saying so,
+  where `chol()` reported a leading minor that was not positive. Only the
+  starting point of the chain changes.
+
+* **Semiautomatic SSVS priors for structural models.** `add_priors()` refused
+  `varsel$semiautomatic` for structural models, and `ssvs_prior()` fell back to
+  `tau` for the contemporaneous coefficients of a structural VEC model. Both
+  now scale by the least squares standard errors of the recursive system,
+  equation by equation: the regressors of equation i together with minus the
+  current values of the variables before it, and the error variance of each
+  equation with its own degrees of freedom.
+
+* **The Minnesota-like inclusion prior covers the contemporaneous coefficients
+  of structural models.** They kept `inprior` whatever `varsel$minnesota` said,
+  and now get kappa2, the inclusion probability of the other endogenous
+  variables, as the Minnesota prior gives them the variance of the other
+  endogenous variables. **Results change** for structural models with variable
+  selection and `varsel$minnesota`.
+
+* **Gamma priors are documented, and can differ by equation.** `?add_priors`
+  now says that `shape` and `rate` are those of a gamma prior on a precision,
+  with mean `shape / rate`, which is how every sampler reads them; a comment in
+  the code claimed the error prior was halved on its way to the sampler, which
+  it is not. `sigma$shape` and `sigma$rate` of a gamma or asymmetric Laplace
+  error prior can be given per equation, which stopped with "the condition has
+  length > 1".
+
+* **`predict()` returns every simulated period by default.** `n_ahead`
+  defaulted to 10 and warned whenever fewer periods had been simulated. It now
+  defaults to the horizon given to `add_forecast_input()`.
+
 * **`write_to_hdf5()` writes the starting error precision of constant gamma
   models where BayesTS reads it.** R keeps the starting precision of every
   model with a gamma error as `initial$u_omega_inv`, and the model file carried

@@ -53,9 +53,10 @@
 #'   \item{\code{max_var}}{a positive numeric specifying the maximum prior variance of the
 #'   coefficients of non-deterministic variables in the Minnesota prior. Larger prior variances
 #'   are set to this value. Only used if \code{minnesota} is given.}
-#'   \item{\code{shape}}{a numeric specifying the prior shape parameter of the error variances of the
-#'   state equation. Required for models with time varying parameters and not used otherwise.}
-#'   \item{\code{rate}}{a numeric specifying the prior rate parameter of the error variances of the
+#'   \item{\code{shape}}{a numeric specifying the shape of the gamma prior on the precisions, the
+#'   inverse error variances, of the state equation, whose mean is \code{shape / rate}. Required for
+#'   models with time varying parameters and not used otherwise.}
+#'   \item{\code{rate}}{a numeric specifying the rate of the gamma prior on the precisions of the
 #'   state equation. Required for models with time varying parameters and not used otherwise.}
 #'   \item{\code{rate_det}}{a numeric specifying the prior rate parameter of the error variances of the
 #'   state equation for coefficients, which correspond to deterministic terms. If it is not given,
@@ -79,13 +80,15 @@
 #'   \item{\code{scale}}{a positive numeric specifying the prior error variance of the endogenous
 #'   variables in the inverse Wishart prior.}
 #'   \item{\code{shape}}{for \code{"gamma"} and \code{"gamma+covar"} a non-negative numeric, or a
-#'   character expression in \code{k} as for \code{df}, specifying the prior shape parameter of the
-#'   error variances. For \code{"ald"} a positive numeric specifying the prior shape parameter of
-#'   the scale of the asymmetric Laplace distribution. For models with stochastic volatility a
-#'   numeric specifying the prior shape parameter of the error variance of the state equation of
-#'   the log-volatilities.}
-#'   \item{\code{rate}}{a positive numeric specifying the prior rate parameter that corresponds to
-#'   \code{shape}.}
+#'   character expression in \code{k} as for \code{df}, specifying the shape of the gamma prior on
+#'   the error precisions, the inverse error variances, whose mean is \code{shape / rate}. For
+#'   \code{"ald"} a positive numeric specifying the shape of the inverse gamma prior on the scale of
+#'   the asymmetric Laplace distribution. For both either one value or one per endogenous variable.
+#'   For models with stochastic volatility a numeric specifying the shape of the gamma prior on the
+#'   precision of the state equation of the log-volatilities.}
+#'   \item{\code{rate}}{a positive numeric specifying the rate that corresponds to \code{shape},
+#'   for \code{"gamma"}, \code{"gamma+covar"} and \code{"ald"} either one value or one per
+#'   endogenous variable.}
 #'   \item{\code{mu}}{numeric of the prior mean of the initial state of the log-volatilities.
 #'   Only used for models with time varying volatility.}
 #'   \item{\code{v_i}}{numeric of the prior precision of the initial state of the log-volatilities.
@@ -124,6 +127,7 @@
 #' \eqn{\frac{\kappa_{1}}{l}} \tab for own lags of endogenous variables, \cr
 #' \eqn{\frac{\kappa_{2}}{l}} \tab for other endogenous variables, \cr
 #' \eqn{\frac{\kappa_{3}}{1 + l}} \tab for exogenous variables, \cr
+#' \eqn{\kappa_{2}} \tab for contemporaneous endogenous variables of a structural model, \cr
 #' \eqn{\kappa_{4}} \tab for deterministic variables, 
 #' }
 #' for lag \eqn{l} with \eqn{\kappa_1}, \eqn{\kappa_2}, \eqn{\kappa_3},
@@ -546,8 +550,7 @@ add_priors.bvarmodel <- function(object,
     
     # The scale of the asymmetric Laplace, one per equation, with an inverse
     # gamma prior. Its shape and rate enter the sampler as they are given here,
-    # unlike the gamma prior on the error variances, which is specified in the
-    # chi-squared convention and halved on the way in.
+    # as those of the gamma priors on the error and state precisions do.
     object[["priors"]][["u_scale"]][["type"]] <- "ald"
     object[["priors"]][["u_scale"]][["shape"]] <- matrix(sigma[["shape"]], k)
     object[["priors"]][["u_scale"]][["rate"]] <- matrix(sigma[["rate"]], k)
@@ -582,7 +585,7 @@ add_priors.bvarmodel <- function(object,
       }
     }
     
-    if (help_df < 0) {
+    if (any(help_df < 0)) {
       stop("Current specification implies a negative prior degree of\nfreedom or shape parameter of the error term.")
     }
     

@@ -1,5 +1,22 @@
 # bvartools (development version)
 
+* **The documentation says what decides the drift of a time varying
+  cointegration space.** `?cointspace_prior`, the `coef$rate_alpha` item of
+  `?add_priors.bvecmodel` and the TVP-SV VEC vignette put the residuals a time
+  varying VEC model can absorb down to the drift of its loadings, and a small
+  `coef$rate` or `coef$rate_alpha` as the remedy. The cointegration vectors take
+  steps of unit variance that no rate reaches, and how far those steps move
+  `Pi_t` is set by the prior precision of the loadings relative to the scale of
+  `Pi` and by the levels of the series in the error correction term: for log
+  levels far from zero a step acts as a random walk intercept, or the loadings
+  are drawn close to zero and switch the term off. With the state variances of
+  all coefficients pinned at 1e-14, the US sub-model of bgvars' `gvar2023`
+  data set still reported residual standard deviations of 0.2 to 0.45 of maximum
+  likelihood. The section 'Prior on the cointegration space' now describes both
+  channels, with the evidence, why scaling the error correction term makes them
+  worse, and that the comparison of the residual variances with least squares
+  remains the check to make.
+
 * **The loadings of a time varying VEC model can drift more slowly than its
   other coefficients.** New element `coef$rate_alpha` of `add_priors()` sets the
   rate of the gamma prior on the precisions of the loadings' random walks, as

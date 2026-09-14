@@ -1,5 +1,24 @@
 # bvartools (development version)
 
+* **VEC models are forecast directly, with their states simulated forward.**
+  `add_forecast_input()`, `add_posterior_forecasts()`, `predict()` and
+  `add_forecast_errors()` now have methods for a `bvecmodel`; the first three
+  used to stop and point to `vec_to_var()`. The forecasts are of the levels, as
+  before: the regressors of the forecast periods are those of the VAR in levels,
+  assembled from the data `vec_to_var()` builds, and `predict()` shows them with
+  the history in levels. The simulation, though, runs on the VEC model's own
+  draws through the vendored BayesTS core. For a model with constant coefficients
+  that gives the same forecasts as converting first, from the same seed. For a
+  time varying model it does not: `add_posterior_forecasts(forecast_states =
+  "simulate")`, the default, steps the loadings, short-run coefficients,
+  cointegration vectors, covariance block and log-volatilities of each draw and
+  rebuilds the VAR in levels at every forecast period, where the VAR
+  representation can only hold its coefficients at the last period.
+  `forecast_states = "hold"` keeps them there. An expanding window of VEC models
+  can now be forecast and evaluated with `selection_criteria()` without
+  converting its windows. `irf()`, `fevd()` and `spillover()` still take the VAR
+  representation.
+
 * **Forecasts of VEC models with stochastic volatility carry the volatility
   forward.** `vec_to_var()` marked the VAR representation of every VEC model with
   stochastic volatility as `forecast_states = "hold"`, so its forecasts kept the

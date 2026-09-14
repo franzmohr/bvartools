@@ -82,6 +82,7 @@ choose_best_model(sel, criterion = "AIC")
 \seealso{
 Other model comparison:
 \code{\link[=add_forecast_errors.bvarmodel]{add_forecast_errors.bvarmodel()}},
+\code{\link[=add_forecast_errors.bvecmodel]{add_forecast_errors.bvecmodel()}},
 \code{\link[=add_predictive_loglik]{add_predictive_loglik()}},
 \code{\link[=align_model_obs.modellist]{align_model_obs.modellist()}},
 \code{\link[=create_external_forecast]{create_external_forecast()}},

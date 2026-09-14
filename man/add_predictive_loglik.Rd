@@ -114,6 +114,7 @@ a time varying cointegration model. \emph{Journal of Econometrics, 165}(2), 210-
 \seealso{
 Other model comparison:
 \code{\link[=add_forecast_errors.bvarmodel]{add_forecast_errors.bvarmodel()}},
+\code{\link[=add_forecast_errors.bvecmodel]{add_forecast_errors.bvecmodel()}},
 \code{\link[=align_model_obs.modellist]{align_model_obs.modellist()}},
 \code{\link[=choose_best_model.selcritlist]{choose_best_model.selcritlist()}},
 \code{\link[=create_external_forecast]{create_external_forecast()}},

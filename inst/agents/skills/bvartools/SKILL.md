@@ -67,10 +67,13 @@ is a column mean. `a` is vec of the `K x (Kp + M(s+1) + N)` coefficient matrix
 rebuilds it. The same model written to HDF5 and read from Python shows the
 transpose, parameters in rows, because R and HDF5 order dimensions differently.
 
-**4. A VEC is analysed as its VAR in levels.** `predict()`, `irf()`, `fevd()`,
-`spillover()` and `add_forecast_input()` for a forecast take a `bvarmodel`.
-`vec_to_var(model)` converts the estimated VEC draw by draw. `predict()` on a
-`bvecmodel` fails with "no applicable method".
+**4. A VEC is analysed as its VAR in levels.** `irf()`, `fevd()` and
+`spillover()` take a `bvarmodel`: `vec_to_var(model)` converts the estimated VEC
+draw by draw, and on a `bvecmodel` those functions stop with a message saying so.
+Forecasts are in levels either way. `add_forecast_input()`,
+`add_posterior_forecasts()` and `predict()` also take the `bvecmodel`, and there a
+model with time-varying coefficients simulates its loadings and cointegration
+vectors forward, which its VAR representation cannot.
 
 **5. Forecasts need `add_forecast_input()` first.** It sets the horizon and
 builds the out-of-sample regressors. Without it, `add_posterior_forecasts()`
@@ -148,7 +151,7 @@ suite, so the shapes they assert are what the installed version produces.
 
 | File | Contents |
 | --- | --- |
-| `references/recipes.md` | Complete examples: a VAR, a VEC through `vec_to_var()`, a TVP-SV model, lag order comparison, a quantile VAR, and an HDF5 round trip |
+| `references/recipes.md` | Complete examples: a VAR, a VEC forecast in levels, a TVP-SV model, lag order comparison, a quantile VAR, and an HDF5 round trip |
 | `references/priors.md` | Every element of `coef`, `sigma`, `coint` and `varsel`, what each model type requires, the Minnesota prior, and what `add_priors()` refuses |
 | `references/objects.md` | The layout of a model object, the columns of every block of draws by model type, reading coefficients and covariances, forecast stacking |
 | `references/analysis.md` | Forecasts with exogenous variables, the `irf()` and `fevd()` identification types, sign restrictions, spillovers |

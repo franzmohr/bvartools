@@ -229,14 +229,13 @@ test_that("an expanding window of VEC models can be evaluated out of sample", {
   expect_true(all(c("FE", "AFE", "RSFE") %in% names(criteria)))
 })
 
-test_that("the analysis functions point a VEC model to its VAR representation", {
+test_that("impulse responses and decompositions point a VEC model to its VAR representation", {
+  # Forecasts are not among them: a 'bvecmodel' is forecast directly, see
+  # test-forecast_bvecmodel.R.
   model <- fx_at_vec_tvp()
   calls <- list("irf" = function() irf(model),
                 "fevd" = function() fevd(model),
-                "spillover" = function() spillover(model),
-                "add_forecast_input" = function() add_forecast_input(model, n_ahead = 2),
-                "add_posterior_forecasts" = function() add_posterior_forecasts(model),
-                "predict" = function() stats::predict(model))
+                "spillover" = function() spillover(model))
 
   for (name in names(calls)) {
     expect_error(calls[[name]](), paste0("'", name, "' does not work directly on a 'bvecmodel'"),

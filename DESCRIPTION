@@ -20,6 +20,7 @@ Collate:
     'RcppExports.R'
     'add_forecast_errors.R'
     'add_forecast_errors.bvarmodel.R'
+    'add_forecast_errors.bvecmodel.R'
     'add_forecast_errors.expandingwindow.R'
     'add_forecast_errors.modellist.R'
     'add_forecast_input.R'

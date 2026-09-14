@@ -4,20 +4,39 @@
 \alias{add_forecast_input.bvecmodel}
 \title{Add Forecast Input Data}
 \usage{
-\method{add_forecast_input}{bvecmodel}(object, ...)
+\method{add_forecast_input}{bvecmodel}(
+  object,
+  n_ahead = 10,
+  deterministic = NULL,
+  exogen = NULL,
+  ...
+)
 }
 \arguments{
-\item{object}{an object of class 'bvecmodel'.}
+\item{object}{an object of class 'bvecmodel', usually, the result of a call to
+\code{\link{add_posterior_coefficients}}.}
 
-\item{...}{additional arguments.}
+\item{n_ahead}{an integer of the forecast horizon.}
+
+\item{deterministic, exogen}{the values of the deterministic terms and of the
+unmodelled variables in the forecast periods, as for
+\code{\link{add_forecast_input.bvarmodel}}.}
+
+\item{...}{further arguments passed to \code{\link{prepare_forecast_input}}.}
 }
 \value{
-Nothing. The method raises an error, since forecasts of a VEC model are obtained
-from its VAR representation: apply \code{\link{vec_to_var}} first and then
-\code{\link{add_forecast_input}} to the resulting 'bvarmodel'.
+The object in \code{object} with the forecast horizon in \code{model$h}
+and the regressors of the forecast periods, in levels, in \code{data$forecast$x}.
 }
 \description{
-Guard method for objects of class 'bvecmodel'.
+Prepares the input data of the forecast periods of a VEC model.
+}
+\details{
+A VEC model is forecast in levels: it is the same model as its VAR
+representation, and the forecast of the differences follows from that of the
+levels. The regressors of the forecast periods are therefore those of the VAR
+in levels, and are assembled from the data and specification that
+\code{\link{vec_to_var}} builds. The posterior draws are not converted.
 }
 \seealso{
 Other posterior simulation:

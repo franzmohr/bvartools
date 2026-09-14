@@ -76,7 +76,7 @@ crit <- selection_criteria(models)
 `vignette("model-comparison", package = "bvartools")` covers putting models on
 a common sample, and out-of-sample comparison with `use_expanding_window()`.
 
-## A VEC, forecast through its VAR in levels
+## A VEC, forecast in levels
 
 ```r
 data("e6")
@@ -95,18 +95,28 @@ vec <- add_posterior_coefficients(vec)
 stopifnot(all(dim(vec$posterior$beta$coeffs) == c(500, 3)))
 ```
 
-`predict()`, `irf()` and `fevd()` take the VAR in levels, so convert first:
+`add_forecast_input()`, `add_posterior_forecasts()` and `predict()` take the
+`bvecmodel` directly. The forecast is of the levels, one row per draw and
+`n_ahead * K` columns stacked by period. A VEC with time-varying coefficients or
+stochastic volatility simulates its loadings, cointegration vectors and
+volatility forward unless `forecast_states = "hold"`:
+
+```r
+vec <- add_forecast_input(vec, n_ahead = 8)
+vec <- add_posterior_forecasts(vec)
+stopifnot(all(dim(vec$posterior$forecast) == c(500, 8 * 2)))
+pred <- predict(vec, n_ahead = 8)
+stopifnot(inherits(pred, "bvarprd"))
+```
+
+`irf()`, `fevd()` and `spillover()` take the VAR in levels, so convert first:
 
 ```r
 level_var <- vec_to_var(vec)
 stopifnot(inherits(level_var, "bvarmodel"))
 
-level_var <- add_forecast_input(level_var, n_ahead = 8)
-level_var <- add_posterior_forecasts(level_var)
-pred <- predict(level_var, n_ahead = 8)
-
-refused <- tryCatch(predict(vec, n_ahead = 8), error = function(e) "no method")
-stopifnot(identical(refused, "no method"))
+refused <- tryCatch(irf(vec), error = function(e) "use vec_to_var")
+stopifnot(identical(refused, "use vec_to_var"))
 ```
 
 ## Time-varying coefficients with stochastic volatility

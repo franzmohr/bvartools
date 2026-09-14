@@ -4,20 +4,28 @@
 \alias{predict.bvecmodel}
 \title{Predict Method for Objects of Class bvecmodel}
 \usage{
-\method{predict}{bvecmodel}(object, ...)
+\method{predict}{bvecmodel}(object, n_ahead = NULL, ...)
 }
 \arguments{
-\item{object}{an object of class 'bvecmodel'.}
+\item{object}{an object of class 'bvecmodel', usually, the result of a call to
+\code{\link{add_posterior_forecasts}}.}
 
-\item{...}{additional arguments.}
+\item{n_ahead}{number of steps ahead at which to predict. If \code{NULL} (default), every
+period simulated by \code{\link{add_posterior_forecasts}}.}
+
+\item{...}{additional arguments passed to \code{\link{predict.bvarmodel}}.}
 }
 \value{
-Nothing. The method raises an error, since forecasts of a VEC model are obtained
-from its VAR representation: apply \code{\link{vec_to_var}} first and then
-\code{predict} to the resulting 'bvarmodel'.
+A time-series object of class \code{"bvarprd"}, as returned by
+\code{\link{predict.bvarmodel}}.
 }
 \description{
-Guard method for objects of class 'bvecmodel'.
+Summarises the forecasts of a VEC model, in levels.
+}
+\details{
+The forecasts are of the levels, and so is the history they are shown with: it
+is recovered from the differences and the error correction term the way
+\code{\link{vec_to_var}} recovers it.
 }
 \seealso{
 Other posterior simulation:

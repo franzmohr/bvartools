@@ -4,20 +4,46 @@
 \alias{add_posterior_forecasts.bvecmodel}
 \title{Add Forecasts}
 \usage{
-\method{add_posterior_forecasts}{bvecmodel}(object, ...)
+\method{add_posterior_forecasts}{bvecmodel}(object, forecast_states = NULL, ...)
 }
 \arguments{
-\item{object}{an object of class 'bvecmodel'.}
+\item{object}{an object of class 'bvecmodel', usually, the result of a call to
+\code{\link{add_posterior_coefficients}} and \code{\link{add_forecast_input}}.}
 
-\item{...}{additional arguments.}
+\item{forecast_states}{character, what a VEC model with time varying coefficients or
+stochastic volatility does with them over the forecast horizon. \code{"simulate"}
+carries each draw's random walks forward, one step per period -- the loadings and
+short-run coefficients, the cointegration vectors through their state equation, the
+covariance block and the log-volatilities -- and rebuilds the VAR in levels from them at
+every period, so that the forecasts are draws from the posterior predictive distribution
+of the estimated model. \code{"hold"} keeps them at their values in the last sample
+period. If \code{NULL} (default), the value in \code{object$model$forecast_states} is
+used, and \code{"simulate"} when there is none. Models with constant coefficients and
+volatility are unaffected.}
+
+\item{...}{further arguments passed to or from other methods.}
 }
 \value{
-Nothing. The method raises an error, since forecasts of a VEC model are obtained
-from its VAR representation: apply \code{\link{vec_to_var}} first and then
-\code{\link{add_posterior_forecasts}} to the resulting 'bvarmodel'.
+The object in \code{object} with \code{posterior$forecast} added, a
+\code{\link[coda]{mcmc}} object with one row per draw and \eqn{Kh} columns of forecasts
+of the levels, stacked by period. \code{predict} summarises them. A
+\code{forecast_states} that was given is stored in \code{model$forecast_states}.
 }
 \description{
-Guard method for objects of class 'bvecmodel'.
+Simulates forecasts of a VEC model, in levels, from its posterior draws.
+}
+\details{
+The forecasts are those of the VAR in levels the VEC model implies. For a model
+with constant coefficients they are the forecasts \code{\link{vec_to_var}} followed by
+\code{\link{add_posterior_forecasts.bvarmodel}} gives. For a model with time varying
+coefficients they are not: its VAR representation has no state equation of its own and
+holds its coefficients at the last period, while this method steps the states of the VEC
+model and converts them to levels anew in every forecast period.
+
+Simulating the volatility forward needs \code{posterior$u_sigma_inv$sigma}, the variance
+of the log-volatility innovations, which \code{\link{add_posterior_coefficients}}
+stores. A model with stochastic volatility estimated with an earlier version of the
+package lacks it and stops with an error unless \code{forecast_states = "hold"}.
 }
 \seealso{
 Other posterior simulation:

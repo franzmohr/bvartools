@@ -4,8 +4,11 @@ Every `r` block on this page runs in the package's test suite, top to bottom in
 one session, so the shapes asserted with `stopifnot()` are what the installed
 version produces.
 
-All four take a `'bvarmodel'` with posterior draws. **Convert a VEC with
-`vec_to_var()` first.** For a model with time-varying parameters or stochastic
+Impulse responses, variance decompositions and spillovers take a `'bvarmodel'`
+with posterior draws. **Convert a VEC with `vec_to_var()` first** for those.
+Forecasts are the exception: `add_forecast_input()`, `add_posterior_forecasts()`
+and `predict()` also take the `'bvecmodel'` itself and forecast it in levels —
+see `recipes.md`. For a model with time-varying parameters or stochastic
 volatility, `period` picks the period whose draws are used; the default is the
 last one.
 

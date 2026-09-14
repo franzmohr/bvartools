@@ -201,7 +201,8 @@ never worse.
 ## VEC models
 
 A VEC's `posterior` holds `a` (the loadings and the short-run coefficients),
-`beta` and the error term. Forecasts and impulse responses are computed from the
-VAR in levels, which `vec_to_var()` builds draw by draw; it keeps `model`, `data`
-and `posterior` and drops the priors and starting values. `recipes.md` has the
-whole sequence.
+`beta` and the error term. `add_posterior_forecasts()` on the `bvecmodel` adds
+`forecast`, of the levels, laid out as a VAR's. Impulse responses are computed
+from the VAR in levels, which `vec_to_var()` builds draw by draw; it keeps
+`model`, `data` and `posterior` and drops the priors and starting values.
+`recipes.md` has the whole sequence.

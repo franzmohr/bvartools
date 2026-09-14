@@ -24,8 +24,9 @@ context at all times.
    afterwards.
 4. **Posterior draws are rows**: `model$posterior$<block>$coeffs` is a
    `coda::mcmc` matrix, draws × parameters. A posterior mean is `colMeans()`.
-5. **A VEC is analysed in levels**: `vec_to_var()` before `add_forecast_input()`,
-   `predict()`, `irf()`, `fevd()` or `spillover()`.
+5. **A VEC is analysed in levels**: `vec_to_var()` before `irf()`, `fevd()` or
+   `spillover()`. `add_forecast_input()`, `add_posterior_forecasts()` and
+   `predict()` take the `bvecmodel` itself and forecast in levels.
 6. **Vector arguments** (`p = 1:3`) create a `'modellist'`, and every step maps
    over it.
 7. **Refusals are statistical**: no structural model with a Wishart prior, no

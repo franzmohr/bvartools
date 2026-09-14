@@ -664,8 +664,10 @@ plot(predict(bvar_form, n_ahead = 8), n_pre = 20)
 The constant coefficient model with stochastic volatility, estimated with
 `tvp = FALSE`, remains the model a TVP-SV specification has to beat. The two
 can be compared out of sample by estimating both over an expanding window with
-`use_expanding_window` and converting the models of its windows with
-`vec_to_var` before they are forecast.
+`use_expanding_window` and forecasting the models of its windows directly:
+`add_forecast_input` and `add_posterior_forecasts` take VEC models, forecast
+them in levels and, for the time varying one, simulate its cointegration vectors
+and volatility forward over the forecast horizon.
 
 ## Citing bvartools
 

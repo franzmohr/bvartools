@@ -158,7 +158,23 @@ test_that("a VEC model with stochastic volatility forecasts from its last period
 
   var <- add_forecast_input(var, n_ahead = 2)
 
-  # The forecast draws its errors under the precision of the last in-sample
+  # The coefficients are constant and the volatility is the VEC model's own
+  # random walk, whose innovation variances the posterior carries: the VAR
+  # representation simulates it forward rather than holding it.
+  expect_null(var[["model"]][["forecast_states"]])
+  expect_false(is.null(var[["posterior"]][["u_sigma_inv"]][["sigma"]]))
+
+  forecast_with <- function(object, states) {
+    set.seed(1)
+    unclass(add_posterior_forecasts(object, forecast_states = states)[["posterior"]][["forecast"]])
+  }
+  simulated <- forecast_with(var, "simulate")
+  expect_identical(dim(simulated), c(as.integer(fx_iterations), as.integer(2 * k)))
+  expect_true(all(is.finite(simulated)))
+  expect_false(isTRUE(all.equal(simulated, forecast_with(var, "hold"),
+                                check.attributes = FALSE)))
+
+  # A held forecast draws its errors under the precision of the last in-sample
   # period: a path that holds that period throughout gives the same forecast,
   # one that holds the first period does not. The variants are built before
   # any forecast is, so that each starts from a posterior without one.
@@ -170,16 +186,23 @@ test_that("a VEC model with stochastic volatility forecasts from its last period
   }
   held_last <- hold_period(var, tt)
   held_first <- hold_period(var, 1L)
-  simulate <- function(object) {
-    set.seed(1)
-    unclass(add_posterior_forecasts(object)[["posterior"]][["forecast"]])
-  }
 
-  forecast <- simulate(var)
-  expect_identical(dim(forecast), c(as.integer(fx_iterations), as.integer(2 * k)))
-  expect_true(all(is.finite(forecast)))
-  expect_equal(simulate(held_last), forecast, ignore_attr = TRUE)
-  expect_false(isTRUE(all.equal(simulate(held_first), forecast, check.attributes = FALSE)))
+  forecast <- forecast_with(var, "hold")
+  expect_equal(forecast_with(held_last, "hold"), forecast, ignore_attr = TRUE)
+  expect_false(isTRUE(all.equal(forecast_with(held_first, "hold"), forecast,
+                                check.attributes = FALSE)))
+
+  # A posterior without the innovation variances -- one estimated before they
+  # were kept -- converts to a VAR representation that holds the volatility.
+  old <- vec
+  old[["posterior"]][["u_sigma_inv"]][["sigma"]] <- NULL
+  expect_identical(vec_to_var(old)[["model"]][["forecast_states"]], "hold")
+})
+
+test_that("a converted time varying VEC model holds its states", {
+  for (error in c("gamma", "sv")) {
+    expect_identical(vec_to_var(fx_vec_tvp_fitted(error))[["model"]][["forecast_states"]], "hold")
+  }
 })
 
 test_that("an expanding window of VEC models can be evaluated out of sample", {

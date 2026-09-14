@@ -80,7 +80,18 @@ sample, and its impulse responses and variance decompositions are those of
 the period given in their argument \code{period}. The draws of the variances
 of the state equations of the VEC coefficients and of \eqn{\rho} are dropped,
 since they describe how the coefficients of the VEC model drift and have no
-counterpart among the coefficients in levels.
+counterpart among the coefficients in levels. For the same reason its
+forecasts hold the coefficients and volatilities at the last period rather than
+simulating them forward: \code{model$forecast_states} is set to \code{"hold"}.
+
+A model with constant coefficients and stochastic volatility has a VAR
+representation with the same covariance block and the same log-volatility
+random walk, so its forecasts simulate the volatility forward like those of any
+other VAR model with stochastic volatility; see
+\code{\link{add_posterior_forecasts.bvarmodel}}. A model of that kind estimated
+with an earlier version of the package lacks \code{posterior$u_sigma_inv$sigma},
+the variance of the log-volatility innovations, and its VAR representation
+holds the volatility instead.
 }
 \examples{
 

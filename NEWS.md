@@ -1,5 +1,19 @@
 # bvartools (development version)
 
+* **Forecasts of VEC models with stochastic volatility carry the volatility
+  forward.** `vec_to_var()` marked the VAR representation of every VEC model with
+  stochastic volatility as `forecast_states = "hold"`, so its forecasts kept the
+  volatility of the last period for every forecast period. With constant
+  coefficients that representation is a `VarNormalStochvol` model with the same
+  covariance block and the same log-volatility random walk, and its posterior
+  carries the innovation variances, so it now simulates the volatility forward
+  like any other VAR model with stochastic volatility. A model estimated before
+  `posterior$u_sigma_inv$sigma` was kept still holds, and so does every time
+  varying VEC model, whose level coefficients are not a random walk of their own.
+  **Results change** for forecasts of VEC models with stochastic volatility and
+  constant coefficients obtained through `vec_to_var()`; `add_posterior_forecasts(
+  forecast_states = "hold")` gives the old ones.
+
 * **Vendored BayesTS core refreshed: VEC samplers can simulate their states
   forward.** The core's forecasts of time varying and stochastic volatility VEC
   models now step the loadings, short-run coefficients, cointegration vectors,

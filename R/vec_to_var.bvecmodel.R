@@ -64,7 +64,18 @@
 #' the period given in their argument \code{period}. The draws of the variances
 #' of the state equations of the VEC coefficients and of \eqn{\rho} are dropped,
 #' since they describe how the coefficients of the VEC model drift and have no
-#' counterpart among the coefficients in levels.
+#' counterpart among the coefficients in levels. For the same reason its
+#' forecasts hold the coefficients and volatilities at the last period rather than
+#' simulating them forward: \code{model$forecast_states} is set to \code{"hold"}.
+#'
+#' A model with constant coefficients and stochastic volatility has a VAR
+#' representation with the same covariance block and the same log-volatility
+#' random walk, so its forecasts simulate the volatility forward like those of any
+#' other VAR model with stochastic volatility; see
+#' \code{\link{add_posterior_forecasts.bvarmodel}}. A model of that kind estimated
+#' with an earlier version of the package lacks \code{posterior$u_sigma_inv$sigma},
+#' the variance of the log-volatility innovations, and its VAR representation
+#' holds the volatility instead.
 #'
 #' @return An object of class \code{'bvarmodel'} with the elements \code{model} and
 #' \code{data} of the VAR in levels and, if \code{object} was estimated, element
@@ -279,14 +290,24 @@ vec_to_var.bvecmodel <- function(object, ...) {
   model[["structural"]] <- structural
   model[["error"]] <- specs[["error"]]
   model[["tvp"]] <- specs[["tvp"]]
-  # A VEC model forecasts from its last period, holding its states there, and
-  # its VAR representation does the same. There is nothing to simulate forward
-  # with: the level coefficients are a function of the loadings, the cointegration
-  # vectors and the short-run coefficients rather than a random walk of their own,
-  # and a VEC model's posterior carries no variances of the log-volatility
-  # innovations.
-  if (isTRUE(specs[["tvp"]]) || identical(specs[["error"]], "sv") ||
-      identical(specs[["error"]], "sv+covar")) {
+  # Whether the VAR representation can simulate its states forward, which is
+  # what add_posterior_forecasts() does unless told otherwise.
+  #
+  # A time varying one cannot: its level coefficients are a function of the
+  # loadings, the cointegration vectors and the short-run coefficients rather
+  # than a random walk of their own, so there is no innovation variance to step
+  # them by, and it holds them at the last period.
+  #
+  # A model with constant coefficients and stochastic volatility can. The level
+  # VAR is then a VarNormalStochvol model with the same Psi and the same
+  # log-volatility random walk, and the posterior carries everything its
+  # simulated forecast reads -- unless it was estimated before
+  # u_sigma_inv$sigma was kept, in which case it holds the volatility. An object
+  # without draws is left unmarked, so that estimating it later decides.
+  sv <- identical(specs[["error"]], "sv") || identical(specs[["error"]], "sv+covar")
+  if (isTRUE(specs[["tvp"]]) ||
+      (sv && !is.null(object[["posterior"]]) &&
+       is.null(object[["posterior"]][["u_sigma_inv"]][["sigma"]]))) {
     model[["forecast_states"]] <- "hold"
   }
   model[["iterations"]] <- specs[["iterations"]]

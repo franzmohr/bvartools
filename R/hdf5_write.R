@@ -154,18 +154,21 @@
 #
 # The error correction term of a model that has been through
 # scale_error_correction() carries the factors it was divided by, and they are
-# the only way back to the scale of the data. Without them an exported model
-# that was scaled could never be interpreted again, so they travel with it. The
-# names are not stored: they are the variable names, which are written anyway.
-# The class is, because a series built by this package and one supplied by the
-# user differ in whether it lists "array", and the reader cannot tell them apart.
+# the only way back to the scale of the data, as are the means a centred term
+# lost. Without them an exported model that was scaled or centred could never be
+# interpreted again, so they travel with it. The names are not stored: they are
+# the variable names, which are written anyway. The class is, because a series
+# built by this package and one supplied by the user differ in whether it lists
+# "array", and the reader cannot tell them apart.
 .hdf5_series_attrs <- function(x) {
 
   result <- list("variables" = dimnames(x)[[2]], "tsp" = stats::tsp(x),
                  "rclass" = class(x))
 
-  if (!is.null(attr(x, "scale"))) {
-    result[["scale"]] <- unname(attr(x, "scale"))
+  for (name in c("scale", "centre")) {
+    if (!is.null(attr(x, name))) {
+      result[[name]] <- unname(attr(x, name))
+    }
   }
 
   return(result)

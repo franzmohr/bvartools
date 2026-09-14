@@ -49,7 +49,8 @@
 #'
 #' The function is available for VEC models, which includes the rank zero
 #' models in differences that ranks are compared with. The windows must have
-#' been simulated on unscaled error correction terms, or put back with
+#' been simulated on error correction terms that are neither scaled nor
+#' centred, or put back with
 #' \code{\link{rescale_error_correction}} first, and structural models are not
 #' supported.
 #'
@@ -151,9 +152,12 @@ add_predictive_loglik.modellist <- function(object, ...) {
   if (is.null(current[["posterior"]][["u_sigma_inv"]][["coeffs"]])) {
     stop("Window ", i, " holds no posterior draws. Use 'add_posterior_coefficients' first.")
   }
-  if (!is.null(attr(current[["data"]][["train"]][["w"]], "scale")) ||
-      !is.null(attr(following[["data"]][["train"]][["w"]], "scale"))) {
-    stop("The error correction terms of window ", i, " are scaled. Use ",
+  transformed <- function(model) {
+    w <- model[["data"]][["train"]][["w"]]
+    !is.null(attr(w, "scale")) || !is.null(attr(w, "centre"))
+  }
+  if (transformed(current) || transformed(following)) {
+    stop("The error correction terms of window ", i, " are scaled or centred. Use ",
          "'rescale_error_correction' before 'add_predictive_loglik'.")
   }
 

@@ -347,8 +347,9 @@ bvec <- function(y, alpha = NULL, beta = NULL, beta_x = NULL, beta_d = NULL, r =
 
   # The levels of the endogenous variables are the sum of their differences and
   # their first lag in the error correction term. If the error correction term
-  # was rescaled with scale_error_correction, its series have to be put back on
-  # the scale of the differences before they can be added up.
+  # was scaled or centred with scale_error_correction, its series have to be put
+  # back on the scale of the differences, and given back their means, before
+  # they can be added up.
   if (is.null(data) & !is.null(w)) {
     w_level <- w
     w_scale <- attr(w, "scale")
@@ -357,6 +358,13 @@ bvec <- function(y, alpha = NULL, beta = NULL, beta_x = NULL, beta_d = NULL, r =
         stop("Attribute 'scale' of argument 'w' does not have one element per column of 'w'.")
       }
       w_level[] <- w_level * t(matrix(w_scale, NCOL(w), NROW(w)))
+    }
+    w_centre <- attr(w, "centre")
+    if (!is.null(w_centre)) {
+      if (length(w_centre) != NCOL(w)) {
+        stop("Attribute 'centre' of argument 'w' does not have one element per column of 'w'.")
+      }
+      w_level[] <- w_level + t(matrix(w_centre, NCOL(w), NROW(w)))
     }
     data <- .subset_ts(y + w_level, 1:k, sub("^l\\.", "", dimnames(w)[[2]]))
   }

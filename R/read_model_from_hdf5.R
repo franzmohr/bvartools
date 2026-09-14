@@ -89,12 +89,15 @@ read_model_from_hdf5 <- function(filename, group = "") {
           result[["data"]][["train"]][[i]] <- .hdf5_restore_class(result[["data"]][["train"]][[i]], dataset)
 
           # A model that was exported while its error correction term was
-          # scaled carries the factors it was divided by. They are named after
-          # the variables, which is why the names are not stored separately.
-          if ("scale" %in% hdf5r::h5attr_names(dataset)) {
-            factors <- hdf5r::h5attr(dataset, "scale")
-            names(factors) <- variables
-            attr(result[["data"]][["train"]][[i]], "scale") <- factors
+          # scaled or centred carries the factors it was divided by and the
+          # means it lost. They are named after the variables, which is why the
+          # names are not stored separately.
+          for (name in c("scale", "centre")) {
+            if (name %in% hdf5r::h5attr_names(dataset)) {
+              factors <- hdf5r::h5attr(dataset, name)
+              names(factors) <- variables
+              attr(result[["data"]][["train"]][[i]], name) <- factors
+            }
           }
         }
       }

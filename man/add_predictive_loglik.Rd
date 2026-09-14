@@ -70,7 +70,8 @@ periods a path bends towards.
 
 The function is available for VEC models, which includes the rank zero
 models in differences that ranks are compared with. The windows must have
-been simulated on unscaled error correction terms, or put back with
+been simulated on error correction terms that are neither scaled nor
+centred, or put back with
 \code{\link{rescale_error_correction}} first, and structural models are not
 supported.
 }

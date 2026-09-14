@@ -7,6 +7,7 @@
 #include "bayests/vec_to_var.h"
 #include "core/algorithms/bvs.h"
 #include "core/algorithms/stochvol_ocsn_2007.h"
+#include "core/models/forecast_states.h"
 #include "core/models/model_support.h"
 #include "core/models/vec_support.h"
 
@@ -17,6 +18,13 @@
 namespace bayests
 {
 
+using core::covariance_root;
+using core::require_period_draws;
+using core::require_state_variances;
+using core::simulate_vec_forecast;
+using core::simulates_states;
+using core::step_random_walk;
+using core::VecForecastStep;
 using core::build_psi_regressors;
 using core::BvsBlock;
 using core::BvsScope;
@@ -427,23 +435,74 @@ ForecastDraws VecNormalStochvolSampler::forecast(const VecNormalStochvolInput &i
                                                  Reporter &reporter) const
 {
     // Only the precision moves, so it is the only thing the caller has to have
-    // sliced to the last in-sample period. From there this is the constant VEC's
-    // forecast exactly -- see VecNormalWishartSampler::forecast() for why the
-    // level VAR does the simulating and what that demands of
-    // `input.forecast.x`.
-    VarNormalWishartInput var_input;
-    var_input.spec = vec_to_var_spec(input.spec);
-    var_input.forecast = input.forecast;
+    // sliced to the last in-sample period.
+    if (!simulates_states(input.spec))
+    {
+        // Held: this is the constant VEC's forecast exactly -- see
+        // VecNormalWishartSampler::forecast() for why the level VAR does the
+        // simulating and what that demands of `input.forecast.x`.
+        VarNormalWishartInput var_input;
+        var_input.spec = vec_to_var_spec(input.spec);
+        var_input.forecast = input.forecast;
 
-    VecNormalWishartDraws vec_draws;
-    vec_draws.a = coefficients.a;
-    vec_draws.beta = coefficients.beta;
-    vec_draws.u_sigma_inv = coefficients.u_sigma_inv;
+        VecNormalWishartDraws vec_draws;
+        vec_draws.a = coefficients.a;
+        vec_draws.beta = coefficients.beta;
+        vec_draws.u_sigma_inv = coefficients.u_sigma_inv;
 
-    const VarNormalWishartDraws var_coefficients =
-        vec_to_var_coefficients(input.spec, vec_draws);
+        const VarNormalWishartDraws var_coefficients =
+            vec_to_var_coefficients(input.spec, vec_draws);
 
-    return VarNormalWishartSampler{}.forecast(var_input, var_coefficients, reporter);
+        return VarNormalWishartSampler{}.forecast(var_input, var_coefficients, reporter);
+    }
+
+    // Simulated: the coefficients, the cointegration vectors and Psi are
+    // constant, and every horizon the log-volatilities take a step of their
+    // random walk and the precision is rebuilt from them. See
+    // core::simulate_vec_forecast().
+    const int k = input.spec.k;
+    const arma::uword k_u = static_cast<arma::uword>(k);
+    const arma::uword draws = coefficients.iterations();
+    const bool use_psi = input.use_psi();
+
+    if (use_psi)
+    {
+        require_period_draws(coefficients.psi, k_u * k_u, draws, "Psi");
+    }
+    require_period_draws(coefficients.u_omega_inv, k_u, draws, "u_omega_inv");
+    require_state_variances(coefficients.h_sigma, k_u, draws, "the log-volatilities");
+
+    arma::vec h_state, h_sigma;
+
+    const auto step = [&](const arma::uword draw, const int i, VecForecastStep &out) {
+        if (i == 0)
+        {
+            if (coefficients.has_a())
+            {
+                out.period.a = coefficients.a.col(draw);
+            }
+            if (coefficients.has_beta())
+            {
+                out.period.beta = coefficients.beta.col(draw);
+            }
+            h_state = -arma::log(coefficients.u_omega_inv.col(draw));
+            h_sigma = coefficients.h_sigma.col(draw);
+        }
+
+        step_random_walk(h_state, h_sigma, arma::vec());
+
+        // Psi' Omega^-1 Psi, as the sampler forms it.
+        arma::mat precision = arma::diagmat(arma::exp(-h_state));
+        if (use_psi)
+        {
+            const arma::mat Psi = arma::reshape(coefficients.psi.col(draw), k, k);
+            precision = arma::trans(Psi) * precision * Psi;
+        }
+        out.period.u_sigma_inv = arma::vectorise(precision);
+        out.error_root = covariance_root(precision);
+    };
+
+    return ForecastDraws{simulate_vec_forecast(input.spec, input.forecast, draws, reporter, step)};
 }
 
 arma::mat VecNormalStochvolSampler::log_likelihood(

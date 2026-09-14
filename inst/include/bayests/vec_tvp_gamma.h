@@ -42,11 +42,19 @@ public:
     /// Simulates one forecast path per posterior draw, in levels.
     ///
     /// `draws.a` and `draws.beta` are expected to carry the last in-sample
-    /// period alone, one column per draw, and so is `draws.u_sigma_inv` when the
-    /// model has a covariance block to make it move. The draws are then
-    /// rewritten in the level VAR parameterisation and simulated by
-    /// VarNormalWishartSampler, so `input.forecast.x` is expected in that level
-    /// layout and not in the differenced one `input.train.z` uses.
+    /// period alone, one column per draw, and so are `draws.u_sigma_inv` and
+    /// `draws.psi` (k * k) when the model has a covariance block to make them
+    /// move. `input.forecast.x` is expected in the level layout and not in the
+    /// differenced one `input.train.z` uses.
+    ///
+    /// Under ForecastStates::simulate, the default, each horizon the
+    /// coefficients step by `draws.a_sigma`, the cointegration vectors by their
+    /// state equation as in VecTvpWishartSampler::forecast(), and Psi by
+    /// `draws.psi_sigma`, with the positions the two selection masks exclude
+    /// held at zero; the level VAR and the precision, rebuilt around the constant
+    /// `draws.u_omega_inv` (k), are formed again at every horizon. Under
+    /// ForecastStates::hold the draws are rewritten in the level VAR
+    /// parameterisation once and simulated by VarNormalWishartSampler.
     ForecastDraws forecast(const VecTvpGammaInput &input,
                            const VecTvpGammaDraws &draws,
                            Reporter &reporter) const;

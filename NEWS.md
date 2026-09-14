@@ -1,5 +1,16 @@
 # bvartools (development version)
 
+* **Vendored BayesTS core refreshed: VEC samplers can simulate their states
+  forward.** The core's forecasts of time varying and stochastic volatility VEC
+  models now step the loadings, short-run coefficients, cointegration vectors,
+  covariance block and log-volatilities and rebuild the level VAR at every
+  forecast period, as its VAR forecasts already did. Nothing changes at the R
+  level: a `bvecmodel` is still forecast through `vec_to_var()`, whose objects
+  hold their states. The internal VEC bindings hand the core the draws a
+  simulated forecast reads, so they stay usable from inside the package.
+  Coefficient draws, log likelihoods and every forecast this package produces
+  are unchanged.
+
 * **Forecasts of time varying and stochastic volatility models carry the drift
   forward.** `add_posterior_forecasts()` forecast `VarTvpGamma`, `VarTvpStochvol`,
   `VarTvpWishart` and `VarNormalStochvol` models from each draw's coefficients,

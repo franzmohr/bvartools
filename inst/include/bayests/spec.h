@@ -122,11 +122,11 @@ struct VarSpec
     bool structural = false;
 
     /// What a forecast does with the states of a time-varying model. Read by the
-    /// forecasts of VarTvpWishart, VarTvpGamma, VarTvpStochvol,
-    /// VarNormalStochvol, DfmNormalStochvol, DfmTvpGamma and DfmTvpStochvol; the
-    /// VECs still forecast as `hold` whatever it says. A model whose coefficients
-    /// and precision are constant has nothing to carry, and the two values
-    /// coincide for it.
+    /// forecasts of every model with something that drifts: VarTvpWishart,
+    /// VarTvpGamma, VarTvpStochvol, VarNormalStochvol, VecTvpWishart,
+    /// VecTvpGamma, VecTvpStochvol, VecNormalStochvol, DfmNormalStochvol,
+    /// DfmTvpGamma and DfmTvpStochvol. A model whose coefficients and precision
+    /// are constant has nothing to carry, and the two values coincide for it.
     ForecastStates forecast_states = ForecastStates::simulate;
 
     /// The quantile a quantile regression model estimates, in (0, 1). The only

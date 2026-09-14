@@ -41,11 +41,16 @@ public:
 
     /// Simulates one forecast path per posterior draw, in levels.
     ///
-    /// The coefficients are constant, so only the precision has a period to be
-    /// held at: `draws.u_sigma_inv` is expected to carry the last in-sample one
-    /// alone. The draws are then rewritten in the level VAR parameterisation and
-    /// simulated by VarNormalWishartSampler, so `input.forecast.x` is expected in
-    /// that level layout and not in the differenced one `input.train.z` uses.
+    /// The coefficients are constant, so only the precision has a period to start
+    /// from: `draws.u_sigma_inv` and `draws.u_omega_inv` (k) are expected to
+    /// carry the last in-sample one alone. `input.forecast.x` is expected in the
+    /// level layout and not in the differenced one `input.train.z` uses.
+    ///
+    /// Under ForecastStates::simulate, the default, each horizon the
+    /// log-volatilities take a step of their random walk by `draws.h_sigma` and
+    /// the precision is rebuilt from them and the constant `draws.psi`. Under
+    /// ForecastStates::hold the draws are rewritten in the level VAR
+    /// parameterisation once and simulated by VarNormalWishartSampler.
     ForecastDraws forecast(const VecNormalStochvolInput &input,
                            const VecNormalStochvolDraws &draws,
                            Reporter &reporter) const;

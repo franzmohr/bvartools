@@ -141,6 +141,20 @@ bayests::VecTvpWishartDraws read_draws_for_forecast(const Rcpp::List &object,
     read_draws_if_present(Rcpp::List(posterior["u_sigma_inv"]), "coeffs", draws.u_sigma_inv);
   }
 
+  // What simulating the states forward reads on top of the period they start
+  // from: how far the coefficients move per period, which of them selection
+  // left out, and rho where the chain drew it. A held forecast reads none of it.
+  if (input.spec.forecast_states == bayests::ForecastStates::simulate) {
+    if (n_a > 0 && has(posterior, "a")) {
+      const Rcpp::List block = posterior["a"];
+      read_draws_if_present(block, "sigma", draws.a_sigma);
+      read_draws_if_present(block, "lambda", draws.a_lambda);
+    }
+    if (n_beta > 0 && has(posterior, "beta")) {
+      read_draws_if_present(Rcpp::List(posterior["beta"]), "rho", draws.rho);
+    }
+  }
+
   return draws;
 }
 

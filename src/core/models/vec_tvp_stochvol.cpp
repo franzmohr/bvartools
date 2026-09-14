@@ -8,6 +8,7 @@
 #include "core/algorithms/bvs.h"
 #include "core/algorithms/kalman_durbin_koopman_2002.h"
 #include "core/algorithms/stochvol_ocsn_2007.h"
+#include "core/models/forecast_states.h"
 #include "core/models/model_support.h"
 #include "core/models/vec_support.h"
 
@@ -18,6 +19,16 @@
 namespace bayests
 {
 
+using core::covariance_root;
+using core::pack_strict_lower_triangle;
+using core::require_period_draws;
+using core::require_state_mask;
+using core::require_state_variances;
+using core::simulate_vec_forecast;
+using core::simulates_states;
+using core::step_coint_state;
+using core::step_random_walk;
+using core::VecForecastStep;
 using core::build_psi_regressors;
 using core::BvsBlock;
 using core::BvsScope;
@@ -558,30 +569,145 @@ ForecastDraws VecTvpStochvolSampler::forecast(const VecTvpStochvolInput &input,
                                               const VecTvpStochvolDraws &coefficients,
                                               Reporter &reporter) const
 {
-    // Everything moves with time, so the forecast holds all of it at the last
-    // in-sample period -- which is what the caller is expected to have sliced
-    // out, one column per draw, as the header says. From there this is the
-    // constant-coefficient VEC's forecast exactly: rewrite each draw in the
-    // level parameterisation and let the VAR simulate the path.
-    //
-    // Nothing is validated here that the two calls below do not already check:
-    // the conversion rejects draws that do not match the spec -- including the
-    // last-period slicing being wrong, which shows up as the wrong row count --
-    // and the VAR's forecast rejects a `z` that does not match the converted
-    // coefficients.
-    VarNormalWishartInput var_input;
-    var_input.spec = vec_to_var_spec(input.spec);
-    var_input.forecast = input.forecast;
+    // Everything moves with time, so the forecast starts all of it from the
+    // last in-sample period -- which is what the caller is expected to have
+    // sliced out, one column per draw, as the header says.
+    if (!simulates_states(input.spec))
+    {
+        // Held: this is the constant-coefficient VEC's forecast exactly --
+        // rewrite each draw in the level parameterisation and let the VAR
+        // simulate the path.
+        //
+        // Nothing is validated here that the two calls below do not already
+        // check: the conversion rejects draws that do not match the spec --
+        // including the last-period slicing being wrong, which shows up as the
+        // wrong row count -- and the VAR's forecast rejects a `z` that does not
+        // match the converted coefficients.
+        VarNormalWishartInput var_input;
+        var_input.spec = vec_to_var_spec(input.spec);
+        var_input.forecast = input.forecast;
 
-    VecNormalWishartDraws last_period;
-    last_period.a = coefficients.a;
-    last_period.beta = coefficients.beta;
-    last_period.u_sigma_inv = coefficients.u_sigma_inv;
+        VecNormalWishartDraws last_period;
+        last_period.a = coefficients.a;
+        last_period.beta = coefficients.beta;
+        last_period.u_sigma_inv = coefficients.u_sigma_inv;
 
-    const VarNormalWishartDraws var_coefficients =
-        vec_to_var_coefficients(input.spec, last_period);
+        const VarNormalWishartDraws var_coefficients =
+            vec_to_var_coefficients(input.spec, last_period);
 
-    return VarNormalWishartSampler{}.forecast(var_input, var_coefficients, reporter);
+        return VarNormalWishartSampler{}.forecast(var_input, var_coefficients, reporter);
+    }
+
+    // Simulated: every horizon the coefficients take a step of their random
+    // walk, the cointegration vectors a step of their state equation, Psi and
+    // the log-volatilities steps of theirs, and the level VAR and the precision
+    // are rebuilt from them. See core::simulate_vec_forecast().
+    const int k = input.spec.k;
+    const arma::uword k_u = static_cast<arma::uword>(k);
+    const arma::uword draws = coefficients.iterations();
+    const arma::uword n_a = static_cast<arma::uword>(input.spec.nparams_per_period_vec());
+    const arma::uword n_beta = static_cast<arma::uword>(input.spec.n_beta());
+    const bool use_beta = input.use_beta();
+    const bool use_psi = input.use_psi();
+
+    if (n_a > 0)
+    {
+        require_period_draws(coefficients.a, n_a, draws, "a");
+        require_state_variances(coefficients.a_sigma, n_a, draws, "the coefficients");
+        require_state_mask(coefficients.a_lambda, n_a, draws, "the coefficients");
+    }
+    if (use_beta)
+    {
+        require_period_draws(coefficients.beta, n_beta, draws, "beta");
+        if (coefficients.has_rho())
+        {
+            require_period_draws(coefficients.rho, 1, draws, "rho");
+        }
+    }
+    if (use_psi)
+    {
+        require_period_draws(coefficients.psi, k_u * k_u, draws, "Psi");
+        require_state_variances(coefficients.psi_sigma,
+                                static_cast<arma::uword>(input.spec.n_psi()), draws,
+                                "the covariance block");
+        require_state_mask(coefficients.psi_lambda, k_u * k_u, draws, "the covariance block");
+    }
+    require_period_draws(coefficients.u_omega_inv, k_u, draws, "u_omega_inv");
+    require_state_variances(coefficients.h_sigma, k_u, draws, "the log-volatilities");
+
+    const arma::mat transition =
+        use_beta ? core::coint_state_transition(input.beta_prior.p_tau, input.spec.rank,
+                                                input.spec.k_beta)
+                 : arma::mat();
+    const arma::mat diag_k = arma::eye<arma::mat>(k, k);
+
+    arma::vec a_state, a_sigma, a_mask, beta_state, psi_state, psi_sigma, psi_mask, h_state,
+        h_sigma;
+    double rho = input.beta_prior.rho;
+
+    const auto step = [&](const arma::uword draw, const int i, VecForecastStep &out) {
+        if (i == 0)
+        {
+            if (n_a > 0)
+            {
+                a_state = coefficients.a.col(draw);
+                a_sigma = coefficients.a_sigma.col(draw);
+                if (coefficients.a_lambda.n_elem > 0)
+                {
+                    a_mask = coefficients.a_lambda.col(draw);
+                }
+            }
+            if (use_beta)
+            {
+                beta_state = coefficients.beta.col(draw);
+                rho = coefficients.has_rho() ? coefficients.rho(0, draw) : input.beta_prior.rho;
+            }
+            if (use_psi)
+            {
+                psi_state =
+                    pack_strict_lower_triangle(arma::reshape(coefficients.psi.col(draw), k, k));
+                psi_sigma = coefficients.psi_sigma.col(draw);
+                if (coefficients.psi_lambda.n_elem > 0)
+                {
+                    psi_mask = pack_strict_lower_triangle(
+                        arma::reshape(coefficients.psi_lambda.col(draw), k, k));
+                }
+            }
+            h_state = -arma::log(coefficients.u_omega_inv.col(draw));
+            h_sigma = coefficients.h_sigma.col(draw);
+        }
+
+        // The coefficients, the cointegration vectors, Psi, then the
+        // log-volatilities.
+        if (n_a > 0)
+        {
+            step_random_walk(a_state, a_sigma, a_mask);
+            out.period.a = a_state;
+        }
+        if (use_beta)
+        {
+            step_coint_state(beta_state, rho, transition);
+            out.period.beta = beta_state;
+        }
+        if (use_psi)
+        {
+            step_random_walk(psi_state, psi_sigma, psi_mask);
+        }
+        step_random_walk(h_state, h_sigma, arma::vec());
+
+        // Psi' Omega^-1 Psi, as the sampler forms it period by period.
+        arma::mat precision = arma::diagmat(arma::exp(-h_state));
+        if (use_psi)
+        {
+            arma::mat Psi = diag_k;
+            core::fill_strict_lower_triangle(Psi, psi_state);
+            precision = arma::trans(Psi) * precision * Psi;
+        }
+        out.period.u_sigma_inv = arma::vectorise(precision);
+        out.error_root = covariance_root(precision);
+    };
+
+    return ForecastDraws{simulate_vec_forecast(input.spec, input.forecast, draws, reporter, step)};
 }
 
 arma::mat VecTvpStochvolSampler::log_likelihood(const VecTvpStochvolInput &input,

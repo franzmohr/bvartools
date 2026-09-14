@@ -6,7 +6,10 @@
 
 #include "bayests/arma.h"
 #include "bayests/priors.h"
+#include "bayests/reporter.h"
+#include "bayests/vec_to_var.h"
 #include "core/algorithms/truncated_normal.h"
+#include "core/models/model_support.h"
 
 #include <cmath>
 #include <stdexcept>
@@ -284,6 +287,138 @@ inline arma::mat coint_state_transition(const arma::mat &p_tau, const int rank, 
         return arma::eye<arma::mat>(n_beta, n_beta);
     }
     return arma::kron(arma::eye<arma::mat>(rank, rank), p_tau);
+}
+
+/// One step of the cointegration state equation over a forecast horizon,
+///
+///     beta_{T+i} = rho P beta_{T+i-1} + eta,   eta ~ N(0, I),
+///
+/// with the same rho and P = I_r kron P_tau the chain ran under. The innovation
+/// variance is the identity for the reason TvpCointSpacePrior gives: it is what
+/// pins beta's scale against alpha's, in the forecast as in the sample.
+inline void step_coint_state(arma::vec &beta, const double rho, const arma::mat &transition)
+{
+    beta = rho * (transition * beta) + arma::randn<arma::vec>(beta.n_elem);
+}
+
+/// What one horizon of a simulated VEC forecast hands the level VAR: the VEC's
+/// coefficients and cointegration vectors at that horizon, and its precision,
+/// as the one-column posterior vec_to_var_coefficients() converts -- and the
+/// square root of that horizon's error covariance, which the error is drawn
+/// through.
+struct VecForecastStep
+{
+    VecNormalWishartDraws period;
+    arma::mat error_root;
+};
+
+/// Simulates one forecast path per draw of a VEC whose states drift over the
+/// horizon, in levels.
+///
+/// A VEC forecast is its level VAR's, and the hold forecast converts each draw
+/// once and lets the VAR run. When the loadings, the short-run coefficients or
+/// the cointegration vectors move, the level coefficients are a different
+/// function of them at every horizon -- A_1 = A_0 + alpha beta' + Gamma_1 is not
+/// linear in the states -- so the conversion is made again at each one, from the
+/// states `step` has just advanced, and the VAR's one-step recursion is written
+/// out here rather than delegated.
+///
+/// `step(draw, i, out)` is called once per horizon, i = 0 included, before that
+/// horizon's error is drawn: it starts the draw's states from the end of the
+/// sample when i is zero, draws their innovations, and fills `out`. What it
+/// draws and in which order is the model's business; this draws exactly k
+/// standard normals per horizon after it.
+///
+/// `input.forecast.x` is in the level layout, as for the hold forecast, and is
+/// checked the way VarNormalWishartSampler::forecast() checks it.
+template <typename Step>
+inline arma::mat simulate_vec_forecast(const VarSpec &spec, const ForecastData &forecast,
+                                       const arma::uword draws, Reporter &reporter, Step &&step)
+{
+    const VarSpec var_spec = vec_to_var_spec(spec);
+    const int k = var_spec.k;
+    const int p = var_spec.p;
+    const int h = var_spec.h;
+    const bool structural = var_spec.structural;
+    const int n_structural = var_spec.n_structural();
+
+    if (k <= 0)
+    {
+        throw std::invalid_argument("model must have at least one endogenous variable (k)");
+    }
+    if (h <= 0)
+    {
+        throw std::invalid_argument("forecast horizon (h) must be positive");
+    }
+
+    arma::mat x = forecast.x;
+    require_forecast_regressors(var_spec, x);
+    require_forecast_horizons(x, h);
+
+    // The level VAR's own count, contemporaneous block last, which is the shape
+    // vec_to_var_coefficients() returns.
+    const int nparams = var_spec.nparams_per_period();
+    const int n_lagged = nparams - n_structural;
+    const bool use_a = x.n_elem > 0 && n_lagged > 0;
+    if (use_a && x.n_cols * static_cast<arma::uword>(k) != static_cast<arma::uword>(n_lagged))
+    {
+        throw std::invalid_argument(
+            "forecast regressors and the level VAR disagree: x has " + std::to_string(x.n_cols) +
+            " columns, which over k = " + std::to_string(k) + " equations is " +
+            std::to_string(x.n_cols * static_cast<arma::uword>(k)) +
+            " coefficients, and the level VAR of this VEC has " + std::to_string(n_lagged));
+    }
+
+    arma::mat fcst = arma::zeros<arma::mat>(static_cast<arma::uword>(h) * k, draws);
+    const arma::mat diag_k = arma::eye<arma::mat>(k, k);
+    VecForecastStep current;
+    arma::mat a_draw, a0_inv;
+
+    for (arma::uword draw = 0; draw < draws; draw++)
+    {
+        reporter.check_interrupt();
+        reporter.progress(static_cast<long long>(draw) + 1, static_cast<long long>(draws));
+
+        for (int i = 0; i < h; i++)
+        {
+            step(draw, i, current);
+            const VarNormalWishartDraws level = vec_to_var_coefficients(spec, current.period);
+
+            if (use_a)
+            {
+                a_draw = arma::reshape(level.a.submat(0, 0, n_lagged - 1, 0), k, x.n_cols);
+            }
+            if (structural)
+            {
+                a0_inv = structural_inverse(arma::mat(level.a.rows(n_lagged, nparams - 1)), 0,
+                                            diag_k);
+            }
+
+            const arma::uword first = static_cast<arma::uword>(i) * k;
+            const arma::uword last = first + k - 1;
+            if (use_a)
+            {
+                if (i > 0 && p > 0)
+                {
+                    update_forecast_lags(x, fcst, draw, i, k, p);
+                }
+                fcst.submat(first, draw, last, draw) = a_draw * arma::trans(x.row(i));
+            }
+
+            fcst.submat(first, draw, last, draw) =
+                fcst.submat(first, draw, last, draw) + current.error_root * arma::randn(k);
+
+            // A_0 y_t = A_1 y_{t-1} + ... + u_t, so the inverse applies to the
+            // whole right-hand side, signal and error alike.
+            if (structural)
+            {
+                fcst.submat(first, draw, last, draw) = a0_inv * fcst.submat(first, draw, last, draw);
+            }
+        }
+    }
+
+    reporter.finish();
+    return fcst;
 }
 
 /// One draw of rho, the autoregression of the cointegration state equation

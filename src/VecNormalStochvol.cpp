@@ -115,8 +115,10 @@ bayests::VecNormalStochvolDraws read_coefficient_draws(const Rcpp::List &posteri
   return draws;
 }
 
-/// The volatility is held at its last in-sample value, so the forecast wants
-/// that period of the precision path alone.
+/// The volatility starts from its last in-sample value, so the forecast wants
+/// that period of the precision path alone -- and, when it simulates the
+/// volatility forward, the same period of its diagonal and the variance of the
+/// log-volatility innovations to step it by.
 bayests::VecNormalStochvolDraws read_draws_for_forecast(
     const Rcpp::List &object, const bayests::VecNormalStochvolInput &input) {
 
@@ -126,12 +128,22 @@ bayests::VecNormalStochvolDraws read_draws_for_forecast(
 
   const Rcpp::List posterior = object["posterior"];
   bayests::VecNormalStochvolDraws draws = read_coefficient_draws(posterior);
+  const arma::uword k = static_cast<arma::uword>(input.spec.k);
 
   if (has(posterior, "u_sigma_inv")) {
-    const arma::uword k = static_cast<arma::uword>(input.spec.k);
     read_draws_last_period_if_present(Rcpp::List(posterior["u_sigma_inv"]), "coeffs",
                                       input.train.periods(input.spec.k), k * k,
                                       draws.u_sigma_inv);
+  }
+
+  if (input.spec.forecast_states == bayests::ForecastStates::simulate) {
+    if (has(posterior, "u_omega_inv")) {
+      read_draws_last_period_if_present(Rcpp::List(posterior["u_omega_inv"]), "coeffs",
+                                        input.train.periods(input.spec.k), k, draws.u_omega_inv);
+    }
+    if (has(posterior, "u_sigma_inv")) {
+      read_draws_if_present(Rcpp::List(posterior["u_sigma_inv"]), "sigma", draws.h_sigma);
+    }
   }
 
   return draws;

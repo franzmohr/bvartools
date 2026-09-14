@@ -47,12 +47,19 @@ public:
     /// Simulates one forecast path per posterior draw, in levels.
     ///
     /// Everything this model estimates moves with time, so the forecast starts
-    /// from the last in-sample period of all of it: `draws.a`, `draws.beta` and
-    /// `draws.u_sigma_inv` are expected to carry that period alone, one column
-    /// per draw. Those are then rewritten in the level VAR parameterisation and
-    /// the path is simulated by VarNormalWishartSampler, for the reason
-    /// VecNormalWishartSampler::forecast() gives: a VEC and its level VAR are
-    /// the same model, and only one of them has a recursion worth writing twice.
+    /// from the last in-sample period of all of it: `draws.a`, `draws.beta`,
+    /// `draws.u_sigma_inv`, `draws.u_omega_inv` (k) and `draws.psi` (k * k) are
+    /// expected to carry that period alone, one column per draw. A VEC and its
+    /// level VAR are the same model, so the path is simulated in the level
+    /// parameterisation, for the reason VecNormalWishartSampler::forecast() gives.
+    ///
+    /// Under ForecastStates::simulate, the default, each horizon the
+    /// coefficients step by `draws.a_sigma`, the cointegration vectors by their
+    /// state equation as in VecTvpWishartSampler::forecast(), Psi by
+    /// `draws.psi_sigma` and the log-volatilities by `draws.h_sigma`, and the
+    /// level VAR and the precision are rebuilt from them at every horizon. Under
+    /// ForecastStates::hold the draws are rewritten in the level VAR
+    /// parameterisation once and simulated by VarNormalWishartSampler.
     ///
     /// `input.forecast.x` is consequently expected in that level layout -- p + 1
     /// lags of the endogenous variables, s + 2 blocks of the unmodelled ones,

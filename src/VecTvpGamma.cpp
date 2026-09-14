@@ -179,6 +179,32 @@ bayests::VecTvpGammaDraws read_draws_for_forecast(const Rcpp::List &object,
   }
   read_precision(posterior, input, draws);
 
+  // What simulating the states forward reads on top of the period they start
+  // from: how far each random walk moves per period, which coefficients
+  // selection left out, rho where the chain drew it, and -- where Psi moves the
+  // precision -- the period Psi starts from and the diagonal it is rebuilt
+  // around. A held forecast reads none of it.
+  if (input.spec.forecast_states == bayests::ForecastStates::simulate) {
+    if (n_a > 0 && has(posterior, "a")) {
+      const Rcpp::List block = posterior["a"];
+      read_draws_if_present(block, "sigma", draws.a_sigma);
+      read_draws_if_present(block, "lambda", draws.a_lambda);
+    }
+    if (n_beta > 0 && has(posterior, "beta")) {
+      read_draws_if_present(Rcpp::List(posterior["beta"]), "rho", draws.rho);
+    }
+    if (input.use_psi() && has(posterior, "psi")) {
+      const arma::uword k = static_cast<arma::uword>(input.spec.k);
+      const Rcpp::List block = posterior["psi"];
+      read_draws_last_period_if_present(block, "coeffs", tt, k * k, draws.psi);
+      read_draws_if_present(block, "sigma", draws.psi_sigma);
+      read_draws_if_present(block, "lambda", draws.psi_lambda);
+      if (has(posterior, "u_omega_inv")) {
+        read_draws_if_present(Rcpp::List(posterior["u_omega_inv"]), "coeffs", draws.u_omega_inv);
+      }
+    }
+  }
+
   return draws;
 }
 

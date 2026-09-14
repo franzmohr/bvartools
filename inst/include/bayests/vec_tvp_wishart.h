@@ -40,10 +40,17 @@ public:
     ///
     /// `draws.a` and `draws.beta` are expected to carry the last in-sample
     /// period alone, one column per draw; the precision does not move, so it is
-    /// passed whole. The draws are then rewritten in the level VAR
-    /// parameterisation and simulated by VarNormalWishartSampler, so
-    /// `input.forecast.x` is expected in that level layout and not in the
-    /// differenced one `input.train.z` uses.
+    /// passed whole. `input.forecast.x` is expected in the level layout and not
+    /// in the differenced one `input.train.z` uses.
+    ///
+    /// Under ForecastStates::simulate, the default, each horizon the
+    /// coefficients take a step of their random walk by `draws.a_sigma` -- the
+    /// positions `draws.a_lambda` excludes held at zero -- and the cointegration
+    /// vectors a step of their state equation, rho (I_r kron P_tau) beta + eta
+    /// with eta ~ N(0, I), under `draws.rho` where the chain drew it and
+    /// `input.beta_prior` otherwise; the level VAR is rebuilt from both at every
+    /// horizon. Under ForecastStates::hold the draws are rewritten in the level
+    /// VAR parameterisation once and simulated by VarNormalWishartSampler.
     ForecastDraws forecast(const VecTvpWishartInput &input,
                            const VecTvpWishartDraws &draws,
                            Reporter &reporter) const;

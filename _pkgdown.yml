@@ -109,7 +109,6 @@ articles:
   - ssvs
   - sign-restrictions
   - quantile-var
-  - debt-at-risk
   - tvp-sv-var
 
 - title: VEC models

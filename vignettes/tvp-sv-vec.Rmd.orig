@@ -114,6 +114,15 @@ squares value, and in every chain with `rate = 0.000001` when the series were
 scaled, at between 3 and 10 percent. With `rate = 0.000001` and unscaled series,
 all four chains put it at about 95 percent.
 
+Neither choice reaches all of the drift, though. The cointegration vectors take
+steps of unit variance whatever `coef$rate` is, and how far those steps move
+$\Pi_t$ depends on the prior precision of the loadings relative to the scale of
+$\Pi$ and on the levels of the series in the error correction term, as section
+'Prior on the cointegration space' of `?add_priors.bvecmodel` explains. Small
+rates alone therefore do not guarantee that a model passes the comparison with
+least squares, which is why that comparison is the check to make, whichever
+block would fit the residuals.
+
 Argument `coint` is where a VEC model differs. `rho` is the autocorrelation of
 the state equation of $\beta$ and must be smaller than one. The prior on the
 state before the sample is that equation's own stationary distribution,

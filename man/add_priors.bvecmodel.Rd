@@ -95,7 +95,9 @@ Argument \code{coef} can contain the following elements:
   models with time varying parameters and a positive rank. The loadings multiply the levels in
   the error correction term, so a drift that is negligible for a coefficient on a differenced
   regressor moves the fitted value by much more; a rate several orders of magnitude below
-  \code{rate} keeps them from absorbing the residuals while the other coefficients vary.}
+  \code{rate} keeps their drift from absorbing the residuals while the other coefficients vary.
+  It does not reach the steps of the cointegration vectors, which can absorb the residuals as
+  well; see section 'Prior on the cointegration space'.}
 }
 
 Argument \code{coint} specifies the prior on the cointegration space. Its
@@ -246,21 +248,6 @@ only the product \eqn{\alpha \beta^{\prime}} is identified, so their prior
 variance is shrunk by \eqn{1 - \rho^2}, leaving the product on the scale
 \code{coef$v_i} asks for.
 
-Be careful with \code{\link{scale_error_correction}} in a model whose
-coefficients vary over time. Scaling makes the levels in the error correction
-term large relative to the residuals, so a small drift in a loading moves the
-fitted value by a lot, and the coefficient paths can absorb the residuals of an
-equation almost entirely: its residual variance -- or, under stochastic
-volatility, its volatility path -- is then reported far below that of a least
-squares fit of the same regressors and nearly constant over the sample. In the
-model of the vignette on time varying parameters and stochastic volatility in
-error correction models, \code{vignette("tvp-sv-vec", package = "bvartools")},
-a scaled error correction term did that to one equation in each of four chains
-with different seeds, and the unscaled one with a small \code{coef$rate} in
-none. It is safer to leave the series unscaled, to choose a small
-\code{coef$rate}, and to compare the residual variances with those of a least
-squares fit, for a model that is to be used in chains with different seeds.
-
 When \eqn{\rho} is drawn, those last two are computed from \code{coint$rho}
 once and do not follow the draw: the state before the sample keeps the normal
 prior built here, and the loadings keep the shrinkage of
@@ -272,7 +259,67 @@ before the sample free of \eqn{\rho}, the conditional posterior of \eqn{\rho}
 is a normal truncated to the prior's support. Draws of \eqn{\rho} are
 returned in \code{object$posterior$beta$rho}.
 
-For such a model \code{p_tau_i = "ml"} centres the marginal prior of the
+How far the space moves is not set by the prior on any variance. The steps
+\eqn{\eta_t} have unit variance whatever \code{coef$rate} and
+\code{coef$rate_alpha} are, and how far a step moves
+\eqn{\Pi_t = \alpha_t \beta_t^{\prime}} depends on the scale of \eqn{\beta_t}.
+Only the product is identified, so the posterior can pair small loadings with
+large cointegration vectors, which a unit step barely turns, or large loadings
+with small ones, which it turns a lot. Two things decide which. One is the
+prior precision of the loadings, \code{coef$v_i} \eqn{/ (1 - \rho^2)}, which
+restrains the drift only if it is tight relative to the scale of \eqn{\Pi} the
+data call for, and that scale depends on the units of the data. The other is
+the series in the error correction term: a step moves
+\eqn{\beta_t^{\prime} w_t} by \eqn{\eta_t^{\prime} w_t}, which grows with the
+levels of the series and not only with their variation. For log levels far
+from zero the shift is of the order of the levels themselves, and the sampler
+either lets it act as a random walk intercept, which no prior on the
+deterministic terms controls and which can absorb the residuals of an
+equation, or draws loadings close to zero, which switches the error
+correction term off.
+
+Both have been seen. In the US sub-model of the \pkg{bgvars} data set
+\code{gvar2023}, with the oil price among its endogenous variables and a rank
+of one, a prior that pinned the state variances of all coefficients, the
+loadings and the constant included, at 1e-14 still left residual standard
+deviations of 0.2 to 0.45 of the maximum likelihood ones and a posterior mean
+log-likelihood several hundred above the maximum of the constant coefficient
+model. The Austrian sub-model under the same prior drew loadings close to zero
+and lost fit the constant coefficient model has. On data simulated from a
+constant coefficient VEC model, whose posterior under such a prior should
+reproduce the maximum likelihood fit, it did so only with the series centred
+and \code{coef$v_i = 10}, or around zero and \code{coef$v_i = 100}. Around 12,
+where log levels usually are, it drew loadings close to zero, and around zero
+with \code{coef$v_i = 1} it fitted part of the residuals.
+
+The same mechanism makes \code{\link{scale_error_correction}} risky in a model
+whose coefficients vary over time. It divides the series by the standard
+deviation of their differences, which makes them, and with them both a drift
+in a loading and a step of \eqn{\beta_t^{\prime} w_t}, larger by the same
+factor. The coefficient paths can then absorb the residuals of an equation
+almost entirely: its residual variance -- or, under stochastic volatility, its
+volatility path -- is reported far below that of a least squares fit of the
+same regressors and nearly constant over the sample. In the model of the
+vignette on time varying parameters and stochastic volatility in error
+correction models, \code{vignette("tvp-sv-vec", package = "bvartools")}, a
+scaled error correction term did that to one equation in each of four chains
+with different seeds, and the unscaled one with a small \code{coef$rate} in
+none.
+
+It is safer to leave the series unscaled, to set \code{coef$v_i} with the
+scale of \eqn{\Pi} in mind as well as choosing small rates, and to compare the
+residual variances with those of a least squares fit of the same regressors,
+in chains with different seeds, for a model that is to be used. Small rates
+alone do not guarantee that a model passes that check, and passing it is what
+says that neither the coefficients nor the cointegration vectors fit the
+residuals. Centring the series would take away the intercept that the steps of
+\eqn{\beta_t} otherwise form, and for a constant coefficient model with an
+unrestricted constant it is an exact reparameterisation, but
+\code{\link{vec_to_var}} and the forecasts recover the levels from the error
+correction term and expect its series as they are.
+
+For a model with time varying cointegration parameters
+\code{p_tau_i = "ml"} centres the marginal prior of the
 cointegration space on Johansen's estimate as well, using the informative
 marginal prior of Koop et al. (2011, working paper version). The state
 equation becomes

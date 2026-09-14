@@ -44,7 +44,7 @@
 #' data("e6")
 #' 
 #' # Generate model input
-#' object <- create_bvecmodel(e6, r = 1, const = "unrestricted")
+#' object <- create_bvecmodel(e6, p = 2, r = 1, const = "unrestricted")
 #' 
 #' # Obtain inclusion prior
 #' priors <- inclusion_prior(object)

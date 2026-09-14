@@ -25,6 +25,7 @@ using core::draw_normal_precision;
 using core::fill_strict_lower_triangle;
 using core::fill_z_alpha_constant;
 using core::fill_z_beta_constant;
+using core::normalise_beta;
 using core::reparameterise_alpha;
 using core::stacked_response;
 
@@ -91,14 +92,13 @@ VecNormalStochvolDraws VecNormalStochvolSampler::draw_coefficients(
     }
 
     // Coefficients (cointegration)
-    arma::mat alpha, Alpha, beta_mat, Beta_mat, BB_sqrt, diag_r;
+    arma::mat alpha, Alpha, beta_mat, Beta_mat, BB_sqrt;
     double coint_v_inv = 0.0;
     arma::mat coint_p_tau_inv, prior_beta_vinv, post_beta_v, z_beta, dz_beta;
     arma::vec y_beta, Beta;
 
     if (use_beta)
     {
-        diag_r = arma::eye(rank, rank);
         beta_mat = arma::reshape(input.initial.beta, k_beta, rank);
         coint_v_inv = input.beta_prior.v_inv;
         coint_p_tau_inv = input.beta_prior.p_tau_inv;
@@ -260,7 +260,7 @@ VecNormalStochvolDraws VecNormalStochvolSampler::draw_coefficients(
 
             // Reparameterise alpha
             alpha = arma::reshape(a.subvec(0, n_alpha - 1), k, rank);
-            Alpha = reparameterise_alpha(alpha, diag_r);
+            Alpha = reparameterise_alpha(alpha);
 
             // Update beta. Unlike vec_normal_wishart.cpp the data term cannot
             // collapse to kron(Alpha' S Alpha, sum_t w_t w_t'): that identity
@@ -279,8 +279,7 @@ VecNormalStochvolDraws VecNormalStochvolSampler::draw_coefficients(
             // identified, so the draw is split between the two by the
             // normalisation below -- and both halves have to be carried forward
             // together.
-            BB_sqrt = arma::sqrtmat_sympd(arma::trans(Beta_mat) * Beta_mat);
-            beta_mat = Beta_mat * arma::solve(BB_sqrt, diag_r);
+            normalise_beta(Beta_mat, beta_mat, BB_sqrt);
 
             alpha = Alpha * BB_sqrt;
             a.subvec(0, n_alpha - 1) = arma::vectorise(alpha);

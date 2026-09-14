@@ -34,7 +34,7 @@ Calculates the priors for a Bayesian VAR model, which employs stochastic search 
 data("e6")
 
 # Generate model input
-object <- create_bvecmodel(e6, r = 1)
+object <- create_bvecmodel(e6, p = 2, r = 1)
 
 # Obtain SSVS prior
 prior <- ssvs_prior(object, semiautomatic = c(.1, 10))

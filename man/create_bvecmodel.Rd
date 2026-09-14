@@ -6,9 +6,9 @@
 \usage{
 create_bvecmodel(
   data,
-  p = 2,
+  p,
   exogen = NULL,
-  s = 2,
+  s = NULL,
   r = NULL,
   const = NULL,
   trend = NULL,
@@ -26,13 +26,17 @@ create_bvecmodel(
 \arguments{
 \item{data}{a time-series object of endogenous variables.}
 
-\item{p}{an integer vector of the lag order of the series in the (levels) VAR. Thus, the
-resulting model's lag will be \eqn{p - 1}. See 'Details'.}
+\item{p}{an integer vector of the lag order of the endogenous variables in the
+corresponding VAR in levels, which must be at least 1. Following common convention,
+the resulting VEC model contains \eqn{p - 1} lags of the differenced endogenous
+variables. There is no default. See 'Details'.}
 
 \item{exogen}{an optional time-series object of external regressors.}
 
-\item{s}{an optional integer vector of the lag order of the exogenous variables of the series
-in the (levels) VAR. Thus, the resulting model's lag will be \eqn{s - 1}. See 'Details'.}
+\item{s}{an integer vector of the lag order of the exogenous variables in the
+corresponding VAR in levels, which must be at least 1. The resulting VEC model contains
+the contemporaneous difference of the exogenous variables and \eqn{s - 1} lags of it.
+Must be specified if \code{exogen} is given and is ignored otherwise. See 'Details'.}
 
 \item{r}{an integer vector of the cointegration rank. See 'Details'.}
 

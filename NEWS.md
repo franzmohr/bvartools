@@ -1,5 +1,39 @@
 # bvartools (development version)
 
+* **`add_initial_values()` stores the LS error covariance coefficients in the
+  order the samplers read them.** The strict lower triangle of `Psi` is stored
+  row by row, but the regression that estimates it returned its coefficients
+  column by column. The two orders agree for up to three endogenous variables
+  and differ from four on, so a model with `error = "gamma+covar"` or
+  `"sv+covar"` started its chain with the coefficients in the wrong places.
+  A constant coefficient model soon draws its way out of that. A time varying
+  one whose state variances start small, as `add_initial_values()` sets them
+  under a small prior rate, stays at those starting values, and so did its
+  error variances: in a six-variable `sv+covar` model the error standard
+  deviations of the last three equations came out 9 to 52 times their least
+  squares values, and its log-likelihood, WAIC and LOOIC with them. **Results
+  change** for models with a covariance block, at least four endogenous
+  variables and the default `method`.
+
+* **VEC models with constant coefficients no longer stop with
+  `sqrtmat_sympd(): transformation failed`.** The vendored BayesTS core
+  normalises the cointegration draws through a singular value decomposition
+  instead of the matrix square root of their cross product, which failed on an
+  ill-conditioned draw: a full-rank VEC model with a Wishart prior and BVS on
+  six Austrian series stopped partway through its chain. Draws change by a
+  rounding error only, at most 1.2e-13 relative in BayesTS's test suite.
+
+* **`create_bvecmodel()` requires the lag orders of the VAR in levels.**
+  Argument `p` no longer defaults to 2, and `s` must be given whenever
+  `exogen` is. Both are lag orders of the corresponding VAR in levels, as is
+  common in the literature, so the VEC model has `p - 1` lags of differences
+  and the exogenous variables enter with their contemporaneous difference and
+  `s - 1` lags of it. Leaving them without a default avoids a VEC model whose
+  lags were never chosen, and avoids reading `p` as the number of lagged
+  differences. `p` and `s` must be whole numbers of at least 1, and `s` is
+  ignored without `exogen`. **Breaking change:** calls that relied on the
+  defaults now stop with an error.
+
 * **`minnesota_prior()` gives exogenous variables of VEC models their own prior
   variances.** The method for `bvecmodel` counted one block of exogenous
   differences less than the model has before it placed the deterministic

@@ -9,6 +9,7 @@
 #include "core/algorithms/ssvs.h"
 #include "core/algorithms/wishart.h"
 #include "core/models/model_support.h"
+#include "core/models/vec_support.h"
 
 #include <cmath>
 #include <optional>
@@ -21,6 +22,8 @@ namespace bayests
     using core::BvsBlock;
     using core::BvsScope;
     using core::draw_normal_precision;
+    using core::normalise_beta;
+    using core::reparameterise_alpha;
     using core::ssvs_sweep;
     using core::SsvsBlock;
     using core::stacked_response;
@@ -68,7 +71,7 @@ namespace bayests
         arma::sp_mat diag_tt, u_sigma_inv_diag;
 
         // Coefficients (cointegration)
-        arma::mat alpha, Alpha, beta, beta_mat, Beta, Beta_mat, BB_sqrt, diag_r;
+        arma::mat alpha, Alpha, beta, beta_mat, Beta, Beta_mat, BB_sqrt;
         // Initialised, not merely declared: block 3 reads it whenever the model
         // has a cointegration relation, and a rank-zero VEC never assigns it.
         double coint_v_inv = 0.0;
@@ -113,7 +116,6 @@ namespace bayests
 
         if (use_beta)
         {
-            diag_r = arma::eye(rank, rank);
             beta = input.initial.beta;
             w_cross = w_t * arma::trans(w_t);
             beta_mat = arma::reshape(beta, k_beta, rank);
@@ -217,7 +219,7 @@ namespace bayests
 
                 // Reparameterise alpha
                 alpha = arma::reshape(a.subvec(0, n_alpha - 1), k, rank);
-                Alpha = alpha * arma::solve(arma::sqrtmat_sympd(arma::trans(alpha) * alpha), diag_r);
+                Alpha = reparameterise_alpha(alpha);
 
                 // Update beta
                 prior_beta_vinv = arma::kron(Alpha.t() * u_sigma_inv * Alpha, coint_v_inv * coint_p_tau_inv);
@@ -231,8 +233,7 @@ namespace bayests
                 // identified, so the draw is split between the two by the
                 // normalisation below -- and both halves have to be carried
                 // forward together.
-                BB_sqrt = arma::sqrtmat_sympd(arma::trans(Beta_mat) * Beta_mat);
-                beta_mat = Beta_mat * arma::solve(BB_sqrt, diag_r);
+                normalise_beta(Beta_mat, beta_mat, BB_sqrt);
 
                 alpha = Alpha * BB_sqrt;
                 a.subvec(0, n_alpha - 1) = arma::vectorise(alpha);

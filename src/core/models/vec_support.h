@@ -9,6 +9,8 @@
 #include "core/algorithms/truncated_normal.h"
 
 #include <cmath>
+#include <stdexcept>
+#include <string>
 
 namespace bayests::core
 {
@@ -83,17 +85,67 @@ inline void fill_z_beta(arma::mat &z_b, const arma::mat &a, const arma::mat &w_t
     }
 }
 
+namespace detail
+{
+
+/// The thin SVD x = U diag(s) V' of an n x r matrix with n >= r.
+///
+/// Every factor this file normalises by is a function of it, and it is taken
+/// on x itself rather than by an eigendecomposition of x' x. Squaring x squares
+/// its condition number, so a draw that is merely ill-conditioned -- a loading
+/// matrix whose singular values span eight orders of magnitude, which a
+/// full-rank VEC reaches on real data -- gives an x' x whose smallest
+/// eigenvalue is rounding noise. arma::sqrtmat_sympd() refused one that came
+/// out below zero and threw partway through a chain; one that came out just
+/// above it was inverted into a factor that was not semi-orthogonal at all,
+/// without a word. The SVD resolves the same small singular value to working
+/// precision.
+inline void thin_svd(arma::mat &u, arma::vec &s, arma::mat &v, const arma::mat &x,
+                     const char *what)
+{
+    if (!arma::svd_econ(u, s, v, x))
+    {
+        throw std::runtime_error(std::string("the singular value decomposition of ") + what +
+                                 " failed; the draw is not finite");
+    }
+}
+
+} // namespace detail
+
 /// The semi-orthogonal factor of the loadings, alpha (alpha' alpha)^{-1/2}.
 ///
 /// Only the product alpha beta' is identified, so the constant-coefficient VECs
 /// split every draw between the two halves: beta is drawn against this
-/// normalised Alpha and the scale is handed back afterwards, out of the square
-/// root of Beta' Beta. Koop, Leon-Gonzalez and Strachan (2010). The
+/// normalised Alpha and the scale is handed back afterwards by
+/// normalise_beta(). Koop, Leon-Gonzalez and Strachan (2010). The
 /// time-varying VECs do not do this -- their state equations carry the
 /// normalisation instead, see TvpCointSpacePrior.
-inline arma::mat reparameterise_alpha(const arma::mat &alpha, const arma::mat &diag_r)
+///
+/// With alpha = U S V', alpha (alpha' alpha)^{-1/2} = U S V' V S^{-1} V' = U V',
+/// which is what is returned -- see detail::thin_svd() for why it is not
+/// computed as written.
+inline arma::mat reparameterise_alpha(const arma::mat &alpha)
 {
-    return alpha * arma::solve(arma::sqrtmat_sympd(arma::trans(alpha) * alpha), diag_r);
+    arma::mat u, v;
+    arma::vec s;
+    detail::thin_svd(u, s, v, alpha, "the loadings alpha");
+    return u * arma::trans(v);
+}
+
+/// The other half of that split: the draw `Beta` becomes the semi-orthogonal
+/// beta = Beta (Beta' Beta)^{-1/2}, written to `beta`, and its scale
+/// (Beta' Beta)^{1/2} is written to `scale` for the caller to hand back to the
+/// loadings as Alpha * scale.
+///
+/// With Beta = U S V', those are U V' and V S V'. The scale is symmetric by
+/// construction, which the product of a square root and its inverse was not.
+inline void normalise_beta(const arma::mat &Beta, arma::mat &beta, arma::mat &scale)
+{
+    arma::mat u, v;
+    arma::vec s;
+    detail::thin_svd(u, s, v, Beta, "the cointegration draw Beta");
+    beta = u * arma::trans(v);
+    scale = v * arma::diagmat(s) * arma::trans(v);
 }
 
 /// The transition of the cointegration state equation with rho taken out,

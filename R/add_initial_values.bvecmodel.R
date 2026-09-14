@@ -166,7 +166,13 @@ add_initial_values.bvecmodel <- function(object, method = "maxlik", ...){
       y_covar <- kronecker(-t(u), diag(1, k))
       pos <- NULL
       for (j in 1:k) {pos <- c(pos, (j - 1) * k + 1:j)}
-      y_covar <- y_covar[, -pos]
+      # The columns left over are ordered by the error that explains, i.e. by
+      # column of Psi's strict lower triangle. Psi is stored row by row, which is
+      # how the samplers and the loop below unpack it, and the two orders differ
+      # from k = 4 on.
+      by_row <- matrix(0, k, k)
+      by_row[lower.tri(by_row)] <- seq_len(k * (k - 1) / 2)
+      y_covar <- y_covar[, -pos, drop = FALSE][, t(by_row)[upper.tri(by_row)], drop = FALSE]
       psi <- solve(crossprod(y_covar)) %*% crossprod(y_covar, matrix(u))
       if (object[["model"]][["tvp"]]) {
         object[["initial"]][["psi"]] <- matrix(psi, length(psi) * tt)

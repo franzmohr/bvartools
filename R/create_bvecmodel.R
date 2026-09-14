@@ -3,12 +3,16 @@
 #' Produces the input for the estimation of a vector error correction (VEC) model.
 #' 
 #' @param data a time-series object of endogenous variables.
-#' @param p an integer vector of the lag order of the series in the (levels) VAR. Thus, the
-#' resulting model's lag will be \eqn{p - 1}. See 'Details'.
+#' @param p an integer vector of the lag order of the endogenous variables in the
+#' corresponding VAR in levels, which must be at least 1. Following common convention,
+#' the resulting VEC model contains \eqn{p - 1} lags of the differenced endogenous
+#' variables. There is no default. See 'Details'.
 #' @param r an integer vector of the cointegration rank. See 'Details'.
 #' @param exogen an optional time-series object of external regressors.
-#' @param s an optional integer vector of the lag order of the exogenous variables of the series
-#' in the (levels) VAR. Thus, the resulting model's lag will be \eqn{s - 1}. See 'Details'.
+#' @param s an integer vector of the lag order of the exogenous variables in the
+#' corresponding VAR in levels, which must be at least 1. The resulting VEC model contains
+#' the contemporaneous difference of the exogenous variables and \eqn{s - 1} lags of it.
+#' Must be specified if \code{exogen} is given and is ignored otherwise. See 'Details'.
 #' @param const a character specifying whether a constant term enters the error correction
 #' term (\code{"restricted"}) or the non-cointegration term as an \code{"unrestricted"} variable.
 #' If \code{NULL} (default) no constant term will be added.
@@ -139,20 +143,38 @@
 #' 
 #' @family model set-up
 #' @export
-create_bvecmodel <- function(data, p = 2, exogen = NULL, s = 2, r = NULL,
+create_bvecmodel <- function(data, p, exogen = NULL, s = NULL, r = NULL,
                              const = NULL, trend = NULL, seasonal = NULL,
                              structural = FALSE, error = "wishart", tvp = FALSE,
                              varsel = "none", algorithm = NULL,
                              iterations = 20000, burnin = 2000, thin = 1) {
-  
+
   # Input checks ----
   if (!"ts" %in% class(data)) {
     stop("Argument 'data' must be an object of class 'ts'.")
   }
-  
+
+  # Lag orders refer to the VAR in levels, as is common in the literature, and
+  # have no default so that they cannot be mistaken for the lags of differences.
+  if (missing(p)) {
+    stop("Argument 'p' must be specified. It is the lag order of the VAR in levels, ",
+         "so that the VEC model has p - 1 lags of differences.")
+  }
+  if (!is.numeric(p) || length(p) == 0 || anyNA(p) || any(p != round(p))) {
+    stop("Argument 'p' must be an integer vector.")
+  }
+
   if (!is.null(exogen)) {
     if (!"ts" %in% class(exogen)) {
       stop("Argument 'exogen' must be an object of class 'ts'.")
+    }
+    if (is.null(s)) {
+      stop("Argument 's' must be specified if 'exogen' is given. It is the lag order ",
+           "of the exogenous variables in the VAR in levels, so that the VEC model has ",
+           "s - 1 lags of their differences besides the contemporaneous one.")
+    }
+    if (!is.numeric(s) || length(s) == 0 || anyNA(s) || any(s != round(s))) {
+      stop("Argument 's' must be an integer vector.")
     }
   }
   
@@ -176,10 +198,10 @@ create_bvecmodel <- function(data, p = 2, exogen = NULL, s = 2, r = NULL,
     }
   }
   
-  if (0 %in% p) {
+  if (any(p < 1)) {
     stop("Argument 'p' must be at least 1 for any error correction model.")
   }
-  if (0 %in% s) {
+  if (!is.null(exogen) && any(s < 1)) {
     stop("Argument 's' must be at least 1 for any error correction model.")
   }
   
@@ -523,11 +545,11 @@ create_bvecmodel <- function(data, p = 2, exogen = NULL, s = 2, r = NULL,
           pos <- c(pos, 1:(k * (i - 1)))
         }
         if (i >= 1) {
-          model_i[["p"]] <- i
+          model_i[["p"]] <- as.integer(i)
         }
         if (use_exo) {
           pos <- c(pos, k * (p_max - 1) + 1:(m * j))
-          model_i[["s"]] <- j
+          model_i[["s"]] <- as.integer(j)
         }
         if (use_det_ur) {
           pos <- c(pos, k * (p_max - 1) + m * s_max + 1:n_det_ur)

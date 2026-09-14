@@ -19,6 +19,7 @@ namespace
 {
 
 using core::draw_normal_precision;
+using core::normalise_beta;
 using core::reparameterise_alpha;
 using core::stacked_response;
 
@@ -102,7 +103,7 @@ VecKlgs2010Draws VecKlgs2010Sampler::draw_coefficients(const VecKlgs2010Input &i
     arma::mat prior_a_vinv, a_mat, post_a_v, design_t;
 
     // Coefficients (cointegration)
-    arma::mat alpha, Alpha, beta_mat, Beta_mat, BB_sqrt, diag_r;
+    arma::mat alpha, Alpha, beta_mat, Beta_mat, BB_sqrt;
     arma::mat prior_beta_vinv, post_beta_v, alpha_sigma_alpha;
     // Initialised, not merely declared: block 3 reads it whenever the model
     // has a cointegration relation, and a rank-zero VEC never assigns it.
@@ -125,7 +126,6 @@ VecKlgs2010Draws VecKlgs2010Sampler::draw_coefficients(const VecKlgs2010Input &i
 
     if (use_beta)
     {
-        diag_r = arma::eye(rank, rank);
         beta_mat = arma::reshape(input.initial.beta, k_beta, rank);
         w_cross = w_t * arma::trans(w_t);
         coint_v_inv = input.beta_prior.v_inv;
@@ -202,7 +202,7 @@ VecKlgs2010Draws VecKlgs2010Sampler::draw_coefficients(const VecKlgs2010Input &i
 
             // Reparameterise alpha
             alpha = a_mat.cols(0, rank - 1);
-            Alpha = reparameterise_alpha(alpha, diag_r);
+            Alpha = reparameterise_alpha(alpha);
 
             // Update beta
             alpha_sigma_alpha = arma::trans(Alpha) * u_sigma_inv * Alpha;
@@ -217,8 +217,7 @@ VecKlgs2010Draws VecKlgs2010Sampler::draw_coefficients(const VecKlgs2010Input &i
             // identified, so the draw is split between the two by the
             // normalisation below -- and both halves have to be carried
             // forward together.
-            BB_sqrt = arma::sqrtmat_sympd(arma::trans(Beta_mat) * Beta_mat);
-            beta_mat = Beta_mat * arma::solve(BB_sqrt, diag_r);
+            normalise_beta(Beta_mat, beta_mat, BB_sqrt);
 
             alpha = Alpha * BB_sqrt;
             a_mat.cols(0, rank - 1) = alpha;

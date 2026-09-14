@@ -107,3 +107,30 @@ test_that("initial values are added to every model of a modellist", {
   expect_true(all(vapply(models, function(x) !is.null(x[["initial"]]),
                          logical(1))))
 })
+
+test_that("the LS covariance coefficients are stored row by row", {
+  # Psi's strict lower triangle is stored row by row, the order the samplers
+  # unpack it in. Its LS regressors come out column by column, and the two
+  # orders only differ from k = 4 on, so three variables would not catch it.
+  levels <- at_domestic()
+  data <- stats::ts.intersect(y = diff(levels[, "y"]), Dp = levels[, "Dp"],
+                              r = diff(levels[, "r"]), lr = diff(levels[, "lr"])) * 100
+  model <- create_bvarmodel(stats::window(data, end = c(1998, 1)), p = 1,
+                            deterministic = "const", error = "gamma+covar",
+                            iterations = fx_iterations, burnin = fx_burnin)
+  model <- add_initial_values(add_priors(model, coef = list(v_i = 0, v_i_det = 0),
+                                         sigma = list(shape = 3, rate = 0.0001)))
+
+  y <- t(model[["data"]][["train"]][["y"]])
+  x <- t(model[["data"]][["train"]][["x"]])
+  u <- y - tcrossprod(y, x) %*% solve(tcrossprod(x)) %*% x
+  k <- nrow(u)
+  expected <- NULL
+  for (i in 2:k) {
+    regressors <- -t(u[1:(i - 1), , drop = FALSE])
+    expected <- c(expected, solve(crossprod(regressors), crossprod(regressors, u[i, ])))
+  }
+
+  expect_equal(k, 4L)
+  expect_equal(as.numeric(model[["initial"]][["psi"]]), expected)
+})

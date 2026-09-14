@@ -148,87 +148,128 @@ inline void normalise_beta(const arma::mat &Beta, arma::mat &beta, arma::mat &sc
     scale = v * arma::diagmat(s) * arma::trans(v);
 }
 
-namespace detail
+/// What the draw of the cointegration matrix conditions on: see
+/// augment_loadings().
+struct CointDrawLoadings
 {
+    /// k x rank: the loadings' rows of the semi-orthogonal A. The data enter the
+    /// draw of B through them, and the loadings after the draw are these rows
+    /// times the scale normalise_beta() returns. With k_beta = k they are the
+    /// Alpha of reparameterise_alpha().
+    arma::mat top;
+    /// n_beta x n_beta prior precision of vec(B), the k_beta x rank draw.
+    arma::mat prior_vinv;
+};
 
-/// log |x' P^-1 x| for an n x r matrix x of full column rank, with an empty
-/// `p_tau_inv` read as the identity.
+/// The collapsed Gibbs step of Koop, Leon-Gonzalez and Strachan (2010) for a
+/// cointegration term with any number of rows: the loadings' side of the draw of
+/// the cointegration matrix, and the exact normal prior that draw is taken from.
 ///
-/// Through the thin SVD x = U S V', as log |S|^2 + log |U' P^-1 U|: the second
-/// matrix is as well conditioned as P, so the determinant of the r x r product
-/// x' P^-1 x, whose condition number is that of x squared, is never formed. See
-/// thin_svd() for why that matters on real data.
-inline double log_det_projected(const arma::mat &x, const arma::mat &p_tau_inv, const char *what)
-{
-    arma::mat u, v;
-    arma::vec s;
-    thin_svd(u, s, v, x, what);
-    double result = 2.0 * arma::accu(arma::log(s));
-    if (!p_tau_inv.is_empty())
-    {
-        double log_det = 0.0;
-        if (!arma::log_det_sympd(log_det, arma::mat(arma::symmatu(arma::trans(u) * p_tau_inv * u))))
-        {
-            throw std::runtime_error(std::string("the cointegration space prior is not positive definite along ") +
-                                     what);
-        }
-        result += log_det;
-    }
-    return result;
-}
-
-} // namespace detail
-
-/// Whether to keep the normal draw `Beta` of the unnormalised cointegration
-/// matrix: the Metropolis-Hastings step that makes the constant VECs sample the
-/// cointegration space prior they are given when the cointegration term has more
-/// rows than the model has equations.
-///
-/// The prior is Koop, Leon-Gonzalez and Strachan's (2010): beta semi-orthogonal
-/// with the matrix angular central Gaussian density |beta' P^-1 beta|^(-k_beta/2),
-/// and alpha | beta ~ N(0, v^-1 (beta' P^-1 beta)^-1 kron G). The samplers draw
-/// alpha against that, change to A = alpha (alpha' alpha)^(-1/2) and
+/// The prior is theirs: beta semi-orthogonal with the matrix angular central
+/// Gaussian density |beta' P^-1 beta|^(-k_beta/2), and
+/// alpha | beta ~ N(0, v^-1 (beta' P^-1 beta)^-1 kron G). The samplers draw
+/// alpha against it, change to A = alpha (alpha' alpha)^(-1/2) and
 /// B = beta (alpha' alpha)^(1/2), draw B given A from a normal and split it back
-/// with normalise_beta(). Written in A and B, however, the prior is that normal
-/// kernel times
+/// with normalise_beta(). That B is normal given A is the paper's Proposition 1,
+/// which needs alpha and beta to have the same number of rows. With
+/// deterministic terms restricted to the cointegration space or unmodelled
+/// variables in it, k_beta > k, and in (A, B) the prior is then the normal kernel
+/// times |B' P^-1 B|^(-(k_beta - k)/2): the exponents of the density of beta and
+/// of the normaliser of alpha | beta no longer cancel, nor do the two polar
+/// Jacobians. A normal draw taken as it is overstates |Pi|.
 ///
-///     h(B) = |B' P^-1 B|^(-(k_beta - k)/2):
+/// Rather than correct the normal draw -- as a Metropolis-Hastings proposal it
+/// was kept so rarely on the country models of a global VEC, where k_beta - k is
+/// four to seven, that a chain could stay at its starting values for thousands
+/// of draws -- the loadings are given the rows they lack. k_beta - k auxiliary
+/// rows are drawn from
 ///
-/// its own two factors leave |B' P^-1 B|^((k - k_beta)/2) |B' B|^((k_beta - k)/2),
-/// and the polar Jacobian from (alpha, beta) to (A, B) contributes
-/// |B' B|^((k - k_beta)/2). The factor is one when k_beta = k, the case the paper
-/// derives. With deterministic terms restricted to the cointegration space or
-/// unmodelled variables in it, k_beta > k, and a normal draw taken as it is
-/// overstates |Pi| -- by a quarter to a third of the prior mass in a
-/// simulation-based calibration with k = 2 and one or two restricted terms.
+///     alpha_aux | beta ~ N(0, c^-1 (beta' Q beta)^-1 kron gamma^-1 I),
 ///
-/// The normal draw is therefore a proposal from the normal part of the
-/// conditional, kept with probability min(1, h(Beta) / h(B)) against the current
-/// B = beta (alpha' alpha)^(1/2). `alpha` is the current k x rank loading matrix,
-/// `beta` the current semi-orthogonal k_beta x rank one. On rejection both stay
-/// as they are, which is all the caller has to do. No random number is used when
-/// k_beta = k, so the draws of those models do not change.
-inline bool accept_coint_draw(const arma::mat &Beta, const arma::mat &alpha, const arma::mat &beta,
-                              const arma::mat &p_tau_inv)
+/// independent of alpha, the other coefficients, the error precision and the
+/// data, so the model for everything else is unchanged. Stacked beneath alpha
+/// they make a k_beta x rank matrix alpha_+, and the change to
+/// A = alpha_+ (alpha_+' alpha_+)^(-1/2) and B = beta (alpha_+' alpha_+)^(1/2)
+/// is the paper's with equal dimensions:
+///
+/// - With v > 0, c = v and Q = P^-1, so alpha_+ | beta is the paper's prior with
+///   G_+ = diag(G, gamma^-1 I). The normaliser of alpha_+ | beta cancels the
+///   density of beta, the polar Jacobians cancel each other, and the prior in
+///   (A, B) is the normal kernel with precision
+///   v (A' G_+^-1 A) kron P^-1.
+/// - With v = 0 the prior on alpha is flat and the one on the space uniform,
+///   whatever P is, which is how the samplers have always read a zero
+///   shrinkage. Then c = 1 and Q = I: the normaliser of alpha_aux is one for a
+///   semi-orthogonal beta, and the prior in (A, B) is the normal kernel with
+///   precision gamma (A_aux' A_aux) kron I.
+///
+/// Pi = alpha beta' = A_top B', with A_top the first k rows of A, so the data
+/// enter the draw of B through A_top and the posterior of B given A is normal
+/// exactly -- no correction, no rejection. After the draw, alpha = A_top times
+/// the scale of B, and the auxiliary rows are discarded: they are drawn afresh
+/// from their conditional before every draw of B, which is what lets the other
+/// blocks go on sampling the model without them.
+///
+/// `g_inv` is the precision G^-1 the loadings' prior uses. gamma is its mean
+/// diagonal element, which puts the auxiliary rows on the scale of the loadings.
+/// Any positive gamma leaves the posterior unchanged and could only affect how
+/// fast the chain mixes; on the US model of test/unit_coint_dees_us.cpp, scaling
+/// it by anything from 1e-4 to 1e4 did not measurably. `p_tau_inv` may be empty, read as the identity.
+///
+/// With k_beta = k there is nothing to augment: no random number is drawn, and
+/// `top` and `prior_vinv` are exactly what the samplers used before, so the draws
+/// of those models do not change.
+inline CointDrawLoadings augment_loadings(const arma::mat &alpha, const arma::mat &beta,
+                                          const arma::mat &g_inv, const double v_inv,
+                                          const arma::mat &p_tau_inv)
 {
-    const double excess = static_cast<double>(beta.n_rows) - static_cast<double>(alpha.n_rows);
-    if (excess <= 0.0)
+    const arma::uword k = alpha.n_rows;
+    const arma::uword rank = alpha.n_cols;
+    const arma::uword k_beta = beta.n_rows;
+    const arma::mat p_inv =
+        p_tau_inv.is_empty() ? arma::mat(arma::eye<arma::mat>(k_beta, k_beta)) : p_tau_inv;
+
+    CointDrawLoadings out;
+
+    if (k_beta <= k)
     {
-        return true;
+        out.top = reparameterise_alpha(alpha);
+        out.prior_vinv = arma::kron(arma::trans(out.top) * g_inv * out.top, v_inv * p_inv);
+        return out;
     }
 
-    // |B' P^-1 B| for the current B = beta (alpha' alpha)^(1/2) is
-    // |alpha' alpha| |beta' P^-1 beta|, and alpha' alpha is alpha's own Gram
-    // matrix, so neither square root is taken.
-    const double log_det_proposal = detail::log_det_projected(Beta, p_tau_inv, "the cointegration draw Beta");
-    const double log_det_current = detail::log_det_projected(alpha, arma::mat(), "the loadings alpha") +
-                                   detail::log_det_projected(beta, p_tau_inv, "the cointegration matrix beta");
-    const double log_ratio = -0.5 * excess * (log_det_proposal - log_det_current);
-    if (std::isnan(log_ratio))
+    const arma::uword n_aux = k_beta - k;
+    const double gamma = arma::trace(g_inv) / static_cast<double>(k);
+    if (!std::isfinite(gamma) || gamma <= 0.0)
     {
-        throw std::runtime_error("the acceptance ratio of the cointegration draw is not a number");
+        throw std::runtime_error("the error precision is not positive, so the auxiliary loadings of "
+                                 "the cointegration draw have no scale");
     }
-    return log_ratio >= 0.0 || std::log(arma::randu<double>()) < log_ratio;
+
+    const arma::mat space =
+        v_inv > 0.0 ? arma::mat(v_inv * p_inv) : arma::mat(arma::eye<arma::mat>(k_beta, k_beta));
+
+    // alpha_aux = Z C^-T / sqrt(gamma) with Z standard normal and C' C the row
+    // precision c beta' Q beta: vec(Z M) has covariance M' M kron I, and
+    // M' M = C^-1 C^-T = (C' C)^-1.
+    arma::mat chol_upper;
+    if (!arma::chol(chol_upper, arma::mat(arma::symmatu(arma::trans(beta) * space * beta))))
+    {
+        throw std::runtime_error("the cointegration space prior is not positive definite along the "
+                                 "cointegration matrix beta");
+    }
+    const arma::mat aux =
+        arma::trans(arma::solve(arma::trimatu(chol_upper),
+                                arma::mat(arma::trans(arma::randn<arma::mat>(n_aux, rank))))) /
+        std::sqrt(gamma);
+
+    const arma::mat a_full = reparameterise_alpha(arma::join_cols(alpha, aux));
+    out.top = a_full.rows(0, k - 1);
+    const arma::mat a_aux = a_full.rows(k, k_beta - 1);
+
+    out.prior_vinv = arma::kron(arma::trans(out.top) * g_inv * out.top, v_inv * p_inv) +
+                     arma::kron(gamma * (arma::trans(a_aux) * a_aux), space);
+    return out;
 }
 
 /// The transition of the cointegration state equation with rho taken out,

@@ -36,15 +36,16 @@
   of `Pi`: in a simulation-based calibration with two endogenous variables and a
   restricted constant, the true size of `Pi` had a mean rank of 0.39 among its
   posterior draws over 1000 replications, where a correct sampler gives 0.50. The
-  vendored BayesTS core now accepts or rejects that draw with the missing factor
-  in a Metropolis-Hastings step, after which the calibration gives mean ranks of
-  0.49 to 0.51 with restricted constants, trends and exogenous variables. In a
-  VEC model of Austrian output, inflation and short and long-term rates from
-  `at_macrodata`, with three foreign series and a restricted trend and a flat
-  prior, the posterior mean of `Pi` had been up to 3.5 posterior standard
-  deviations from its maximum likelihood estimate and the chains mixed poorly,
-  with fewer than 100 effective draws in 4000; it is now within 1.0, with about
-  1900. **Results change** for VEC models created with
+  vendored BayesTS core now draws it exactly, by giving the loadings the rows
+  they lack for the duration of that draw, after which the calibration gives mean
+  ranks of 0.49 to 0.51 with restricted constants, trends and exogenous
+  variables. The draw is a Gibbs step, so the cointegration matrix moves in every
+  iteration: in a VEC model of Austrian output, inflation and short and
+  long-term rates from `at_macrodata`, with three foreign series, a restricted
+  trend and a flat prior, the posterior mean of `Pi` lies within 0.8 posterior
+  standard deviations of its maximum likelihood estimate, and the median
+  effective sample size of its elements is about 900 of 4000 draws.
+  **Results change** for VEC models created with
   `const`, `trend` or `seasonal` set to `"restricted"` or with `exogen`, unless
   `tvp = TRUE`. Models without them are unaffected, and their draws are the same
   as before for a given seed.

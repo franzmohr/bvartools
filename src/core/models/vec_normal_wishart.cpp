@@ -21,10 +21,10 @@ namespace bayests
     using core::bvs_sweep;
     using core::BvsBlock;
     using core::BvsScope;
+    using core::augment_loadings;
+    using core::CointDrawLoadings;
     using core::draw_normal_precision;
-    using core::accept_coint_draw;
     using core::normalise_beta;
-    using core::reparameterise_alpha;
     using core::ssvs_sweep;
     using core::SsvsBlock;
     using core::stacked_response;
@@ -218,32 +218,30 @@ namespace bayests
                     y_beta = y;
                 }
 
-                // Reparameterise alpha
+                // Reparameterise alpha, with auxiliary rows when k_beta > k: see
+                // augment_loadings(). Alpha is then the loadings' rows of the
+                // semi-orthogonal factor rather than that factor itself.
                 alpha = arma::reshape(a.subvec(0, n_alpha - 1), k, rank);
-                Alpha = reparameterise_alpha(alpha);
+                const CointDrawLoadings loadings =
+                    augment_loadings(alpha, beta_mat, u_sigma_inv, coint_v_inv, coint_p_tau_inv);
+                Alpha = loadings.top;
 
                 // Update beta
-                prior_beta_vinv = arma::kron(Alpha.t() * u_sigma_inv * Alpha, coint_v_inv * coint_p_tau_inv);
+                prior_beta_vinv = loadings.prior_vinv;
                 post_beta_v = prior_beta_vinv + arma::kron(arma::trans(Alpha) * u_sigma_inv * Alpha, w_cross);
                 Beta = draw_normal_precision(post_beta_v,
                                              arma::vectorise(w_t * arma::trans(arma::reshape(y_beta, k, tt)) *
                                                              u_sigma_inv * Alpha));
                 Beta_mat = arma::reshape(Beta, k_beta, rank);
 
-                // The normal draw is a proposal when k_beta > k, see
-                // accept_coint_draw(); a rejection keeps alpha and beta as they
-                // are.
-                if (accept_coint_draw(Beta_mat, alpha, beta_mat, coint_p_tau_inv))
-                {
-                    // Final cointegration values. Only the product alpha beta'
-                    // is identified, so the draw is split between the two by the
-                    // normalisation below -- and both halves have to be carried
-                    // forward together.
-                    normalise_beta(Beta_mat, beta_mat, BB_sqrt);
+                // Final cointegration values. Only the product alpha beta' is
+                // identified, so the draw is split between the two by the
+                // normalisation below -- and both halves have to be carried
+                // forward together.
+                normalise_beta(Beta_mat, beta_mat, BB_sqrt);
 
-                    alpha = Alpha * BB_sqrt;
-                    a.subvec(0, n_alpha - 1) = arma::vectorise(alpha);
-                }
+                alpha = Alpha * BB_sqrt;
+                a.subvec(0, n_alpha - 1) = arma::vectorise(alpha);
 
                 z.cols(0, n_alpha - 1) = arma::kron(arma::trans(arma::trans(beta_mat) * w_t), diag_k);
                 u = arma::reshape(y - z * a, k, tt);

@@ -107,12 +107,12 @@ same problem. The coefficient paths can absorb most of the residuals of the
 short-term interest rate equation, whose residual standard deviation is then
 reported at a small fraction of the one of a least squares fit of the same
 regressors and almost flat over forty years -- the symptom the VAR vignette
-describes. Whether a chain ends up in that state depends on the seed, which is
-what makes it easy to miss. In chains of the length used here, one in four did
-with `rate = 0.0001`, and with `rate = 0.000001` one in four still did when the
-series were scaled. With `rate = 0.000001` and unscaled series, eight chains with
-different seeds all put the residual standard deviation of that equation at
-about 70 percent of the least squares value.
+describes. In four chains of the length used here, each with a different seed,
+that happened in every chain with `rate = 0.0001`, which put the residual
+standard deviation of that equation at between 4 and 53 percent of the least
+squares value, and in every chain with `rate = 0.000001` when the series were
+scaled, at between 3 and 10 percent. With `rate = 0.000001` and unscaled series,
+all four chains put it at about 95 percent.
 
 Argument `coint` is where a VEC model differs. `rho` is the autocorrelation of
 the state equation of $\beta$ and must be smaller than one. The prior on the
@@ -223,8 +223,10 @@ stats::ts.plot(path, lty = c(2, 1, 2),
 abline(h = 0, lty = "dotted")
 ```
 
-The band of this element is widest in the early 1980s and changes little after
-the middle of that decade, while its median stays close to zero throughout.
+The band of this element is widest in the early 1980s and narrows over the
+sample, while its median rises from about -0.05 to zero: whatever adjustment
+of the short-term rate to its own level there is fades out over the four
+decades.
 
 Note what is *not* plotted here. The path of $\beta_t$ on its own is not a
 quantity to read: a cointegration vector is identified only up to
@@ -263,7 +265,7 @@ a quarter of a percentage point in the early 1980s to a tenth of that once the
 rate approached its lower bound, with a brief return during the financial
 crisis. A model that averaged over the sample would report credible bands for
 the 2010s that are far too wide. The volatilities of the other two equations
-move much less: the one of inflation falls by about two fifths until 2000, the one
+move much less: the one of inflation falls by about half until 2000, the one
 of the long-term rate by about a quarter, most of it in the first half of the
 1980s.
 
@@ -361,7 +363,7 @@ round(band_width(model_ml) / band_width(model), 2)
 A ratio below one means that the prior centred on the maximum likelihood
 estimate narrows the band of that element. Here it does so for all elements but
 one, most for the adjustment to the lagged long-term rate, while the band of the
-adjustment of inflation to its own level is about a tenth wider than under the
+adjustment of inflation to its own level is about five percent wider than under the
 noninformative prior. It need not narrow every band,
 and that is a property of how the prior is built rather than a failure of it: a
 larger `weight` makes the prior tighter by lowering $T$, but $T$ is also how

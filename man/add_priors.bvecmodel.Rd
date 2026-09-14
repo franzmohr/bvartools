@@ -241,18 +241,19 @@ variance is shrunk by \eqn{1 - \rho^2}, leaving the product on the scale
 \code{coef$v_i} asks for.
 
 Be careful with \code{\link{scale_error_correction}} in a model whose
-coefficients vary over time. With a scaled error correction term, the
-coefficient paths can absorb the residuals of an equation almost entirely: its
-residual variance -- or, under stochastic volatility, its volatility path -- is
-then reported far below that of a least squares fit of the same regressors and
-nearly constant over the sample. Whether a chain ends up in that state can
-depend on the seed, so a single run that looks fine does not rule it out, and a
-tighter \code{coint$rho} makes it rarer without preventing it. It is safer to
-leave the series unscaled, to choose a small \code{coef$rate}, and to compare
-the residual variances with those of a least squares fit in chains with
-different seeds. The vignette on time varying parameters and stochastic
-volatility in error correction models,
-\code{vignette("tvp-sv-vec", package = "bvartools")}, shows an example.
+coefficients vary over time. Scaling makes the levels in the error correction
+term large relative to the residuals, so a small drift in a loading moves the
+fitted value by a lot, and the coefficient paths can absorb the residuals of an
+equation almost entirely: its residual variance -- or, under stochastic
+volatility, its volatility path -- is then reported far below that of a least
+squares fit of the same regressors and nearly constant over the sample. In the
+model of the vignette on time varying parameters and stochastic volatility in
+error correction models, \code{vignette("tvp-sv-vec", package = "bvartools")},
+a scaled error correction term did that to one equation in each of four chains
+with different seeds, and the unscaled one with a small \code{coef$rate} in
+none. It is safer to leave the series unscaled, to choose a small
+\code{coef$rate}, and to compare the residual variances with those of a least
+squares fit, for a model that is to be used in chains with different seeds.
 
 When \eqn{\rho} is drawn, those last two are computed from \code{coint$rho}
 once and do not follow the draw: the state before the sample keeps the normal

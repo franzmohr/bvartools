@@ -95,8 +95,9 @@ stopifnot(all(second_lag < first_lag))
 | `"ald"` (VAR only) | `shape`, `rate` | Scales of the asymmetric Laplace distribution |
 
 - `df` and a gamma `shape` accept a number or an expression in `k`, the number
-  of endogenous variables, such as `"k"` or `"k + 3"`. **For a VEC the rank `r`
-  is added** to the value given.
+  of endogenous variables, such as `"k"` or `"k + 3"`, and are stored as given,
+  for a VEC as for a VAR. The Wishart VEC samplers add the rank `r` to the
+  posterior degrees of freedom themselves.
 - `+covar` estimates the error covariances through a triangular decomposition;
   without it the error term is diagonal.
 - For stochastic volatility, `shape` and `rate` are the prior of the variance of
@@ -182,7 +183,7 @@ vec <- add_priors(vec,
                   sigma = list(df = "k", scale = 1))
 
 stopifnot(identical(vec$priors$beta$type, "cointspace"),
-          vec$priors$u_sigma$df == ncol(e6) + 1)   # "k" plus the rank
+          vec$priors$u_sigma$df == ncol(e6))   # "k", as given
 ```
 
 A prior centred on the maximum likelihood estimate goes with starting values

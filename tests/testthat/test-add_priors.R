@@ -56,6 +56,30 @@ test_that("a degrees of freedom of 'k' resolves to the number of variables", {
                model[["model"]][["k"]])
 })
 
+test_that("the error prior of a VEC model is stored as given, without the rank", {
+  # The constant VECs with a Wishart prior add the rank to the posterior degrees
+  # of freedom themselves, for the prior of the loadings given the error
+  # covariance (Koop et al., 2010, eq. 8). Adding it to the prior as well
+  # counted it twice.
+  data <- stats::window(at_data(), end = c(2019, 4)) * 100
+  for (r in 1:2) {
+    wishart <- create_bvecmodel(data, p = 2, r = r, const = "unrestricted",
+                                iterations = 10, burnin = 5)
+    wishart <- add_priors(wishart, coef = list(v_i = 0, v_i_det = 0),
+                          coint = list(v_i = 0, p_tau_i = 1),
+                          sigma = list(df = "k + 1", scale = 1))
+    expect_equal(wishart[["priors"]][["u_sigma"]][["df"]], ncol(data) + 1)
+
+    gamma <- create_bvecmodel(data, p = 2, r = r, const = "unrestricted",
+                              error = "gamma", iterations = 10, burnin = 5)
+    gamma <- add_priors(gamma, coef = list(v_i = 0, v_i_det = 0),
+                        coint = list(v_i = 0, p_tau_i = 1),
+                        sigma = list(shape = 3, rate = 1))
+    expect_equal(as.numeric(gamma[["priors"]][["u_sigma"]][["shape"]]),
+                 rep(3, ncol(data)))
+  }
+})
+
 test_that("add_priors rejects unknown elements of sigma", {
   expect_error(
     add_priors(fx_var_model(), coef = list(v_i = 0, v_i_det = 0),

@@ -1,5 +1,16 @@
 # bvartools (development version)
 
+* **`add_priors()` stores the error prior of VEC models as given.** It added
+  the cointegration rank `r` to `sigma$df` and to the gamma `sigma$shape`. The
+  VEC samplers with constant coefficients and a Wishart prior add `r` to the
+  posterior degrees of freedom themselves, which the prior of the loadings
+  given the error covariance requires (Koop, León-González and Strachan, 2010,
+  eq. 8), so `r` entered twice, and for the gamma shape and the time varying
+  models there was no reason for it. `sigma$df` and `sigma$shape` now mean the
+  same for VEC models as for VAR models. **Results change** slightly for every
+  VEC model with a positive rank and a Wishart or gamma error prior: its prior
+  on the errors is `r` degrees of freedom weaker.
+
 * **VEC models with restricted deterministic terms or exogenous variables sample
   the posterior of their cointegration space prior.** The samplers of the VEC
   models with constant coefficients follow Koop, León-González and Strachan

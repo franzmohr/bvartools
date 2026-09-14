@@ -599,11 +599,10 @@ drift away from one.
 
 ## Impulse responses and forecasts
 
-Impulse responses, variance decompositions and forecasts of a VEC model are
-obtained from its VAR representation in levels, which `vec_to_var` computes
-draw by draw. A time varying model is a VEC model per period, so the
-transformation is applied period by period, and the result is a VAR model with
-time varying parameters:
+Impulse responses and variance decompositions of a VEC model are obtained from
+its VAR representation in levels, which `vec_to_var` computes draw by draw. A
+time varying model is a VEC model per period, so the transformation is applied
+period by period, and the result is a VAR model with time varying parameters:
 
 
 ``` r
@@ -637,17 +636,21 @@ plot(feir, main = "Forecast error impulse response, 1985Q1",
 <p class="caption">plot of chunk feir-1985</p>
 </div>
 
-Forecasts start from the last period of the sample and hold the coefficients
-at their values in that period over the forecast horizon. Their bands
-therefore reflect the uncertainty about where the coefficients are at the end
-of the sample, but not that the coefficients may keep drifting afterwards.
+Forecasts are made from the VEC model itself. `add_forecast_input` prepares the
+regressors of the forecast periods, in levels, and `add_posterior_forecasts`
+simulates each draw forward from the last period of the sample: the loadings,
+the short-run coefficients and the volatilities take a step of their random
+walks every quarter, the cointegration vectors a step of their state equation,
+and the VAR in levels is rebuilt from them in every period. The bands therefore
+reflect both the uncertainty about where the coefficients are at the end of the
+sample and the drift the model allows after it.
 
 
 ``` r
-bvar_form <- add_forecast_input(bvar_form, n_ahead = 8)
-bvar_form <- add_posterior_forecasts(bvar_form)
+model <- add_forecast_input(model, n_ahead = 8)
+model <- add_posterior_forecasts(model)
 
-plot(predict(bvar_form, n_ahead = 8), n_pre = 20)
+plot(predict(model, n_ahead = 8), n_pre = 20)
 ```
 
 <div class="figure" style="text-align: center">
@@ -660,6 +663,26 @@ plot(predict(bvar_form, n_ahead = 8), n_pre = 20)
 <img src="figures/tvp-sv-vec-forecasts-3.png" alt="plot of chunk forecasts"  />
 <p class="caption">plot of chunk forecasts</p>
 </div>
+
+The VAR representation above has no state equation for its coefficients in
+levels, so it can only hold them at their values in the last period.
+`forecast_states = "hold"` gives that forecast from the VEC model as well. The
+width of the 90% intervals eight quarters ahead shows what the drift adds:
+
+
+``` r
+held <- add_posterior_forecasts(model, forecast_states = "hold")
+
+interval_width <- function(object) {
+  fcst <- predict(object, n_ahead = 8)[["fcst"]]
+  apply(fcst[8, , ], 1, function(x) diff(stats::quantile(x, c(0.05, 0.95))))
+}
+
+round(rbind(simulated = interval_width(model), held = interval_width(held)), 2)
+#>              r   lr   Dp
+#> simulated 1.81 2.37 1.77
+#> held      0.69 1.21 1.19
+```
 
 The constant coefficient model with stochastic volatility, estimated with
 `tvp = FALSE`, remains the model a TVP-SV specification has to beat. The two

@@ -1,5 +1,19 @@
 # bvartools (development version)
 
+* **The loadings of a time varying VEC model can drift more slowly than its
+  other coefficients.** New element `coef$rate_alpha` of `add_priors()` sets the
+  rate of the gamma prior on the precisions of the loadings' random walks, as
+  `coef$rate_det` does for the deterministic terms; without it the loadings take
+  `coef$rate`, as before. The loadings multiply the levels in the error
+  correction term, so one rate for all coefficients either freezes the
+  coefficients of the differenced regressors or lets the loadings -- and, with a
+  large `rate_det`, the constant -- absorb the residuals. On the sub-models of
+  the TVP-SV-GVEC vignette of bgvars, a rate of 1e-5 with `rate_alpha = 1e-10`
+  and `rate_det = 1e-8` let the short-run coefficients drift while every
+  equation kept a residual standard deviation of the order of least squares,
+  where a common rate of 1e-5 took it down to 0.3 to 0.8 of it. A VAR model
+  refuses the element.
+
 * **VEC models are forecast directly, with their states simulated forward.**
   `add_forecast_input()`, `add_posterior_forecasts()`, `predict()` and
   `add_forecast_errors()` now have methods for a `bvecmodel`; the first three

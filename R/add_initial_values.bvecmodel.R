@@ -127,7 +127,10 @@ add_initial_values.bvecmodel <- function(object, method = "maxlik", ...){
 
         w <- t(w)
 
-        beta <- .coint_ml(object)[["beta"]]
+        # On the scale of the state equation for a time varying model, before
+        # the loadings are estimated against it, so that they come out on the
+        # matching scale.
+        beta <- .tvp_initial_beta_scale(.coint_ml(object)[["beta"]], object)
         ect <- crossprod(beta, w)
         z[, 1:n_alpha] <- kronecker(t(ect), diag(1, k))
         if (object[["model"]][["tvp"]]) {
@@ -214,6 +217,7 @@ add_initial_values.bvecmodel <- function(object, method = "maxlik", ...){
     if (r > 0) {
       beta <- matrix(0, n_ect / k, object[["model"]][["rank"]])
       beta[1:object[["model"]][["rank"]], 1:object[["model"]][["rank"]]] <- diag(1, object[["model"]][["rank"]])
+      beta <- .tvp_initial_beta_scale(beta, object)
       object[["initial"]][["beta"]] <- beta
       z[, 1:n_alpha] <- kronecker(t(crossprod(beta, w)), diag(1, k))
       if (object[["model"]][["tvp"]]) {
@@ -311,6 +315,28 @@ add_initial_values.bvecmodel <- function(object, method = "maxlik", ...){
 # 'omega', and the M x T residuals 'r1' of the regression of w on the
 # short-run regressors, whose cross product is the information the estimate of
 # beta carries.
+# Starting values of a time varying cointegration space on the scale of its
+# state equation.
+#
+# beta_t = rho beta_{t-1} + eta_t with eta_t ~ N(0, I) is stationary at
+# N(0, I / (1 - rho^2)), so a cointegration vector of k_w elements has a norm of
+# about sqrt(k_w / (1 - rho^2)): some 45 for seven levels at rho = 0.999. The ML
+# estimate is normalised to beta' S11 beta = I instead, which for series in
+# levels is orders of magnitude smaller, and a chain started there spends its
+# first draws growing beta and shrinking the loadings. Each column is rescaled
+# to the stationary norm; its direction, and so the cointegration space, is
+# kept. A constant cointegration space, or a prior without rho, is left alone.
+.tvp_initial_beta_scale <- function(beta, object) {
+
+  rho <- object[["priors"]][["beta"]][["rho"]]
+  if (!isTRUE(object[["model"]][["tvp"]]) || is.null(rho)) {
+    return(beta)
+  }
+
+  target <- sqrt(nrow(beta) / (1 - rho^2))
+  sweep(beta, 2, sqrt(colSums(beta^2)) / target, "/")
+}
+
 .coint_ml <- function(object) {
 
   y <- t(object[["data"]][["train"]][["y"]])

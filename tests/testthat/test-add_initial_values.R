@@ -190,3 +190,41 @@ test_that("initial values of a VEC model drawn from the prior follow the prior v
                      coint = list(v_i = 0, p_tau_i = 1), sigma = list(shape = 50, rate = 25))
   expect_error(add_initial_values(flat, method = "prior"), "uninformative")
 })
+
+test_that("a time varying cointegration space starts on the scale of its state equation", {
+  make <- function(tvp) {
+    model <- create_bvecmodel(vec_data(), p = 2, r = 1, tvp = tvp, const = "unrestricted",
+                              iterations = 10, burnin = 5)
+    add_priors(model,
+               coef = if (tvp) list(v_i = 1, v_i_det = 0.1, shape = 3, rate = 1e-4) else list(v_i = 1, v_i_det = 0.1),
+               coint = if (tvp) list(rho = 0.999) else list(v_i = 0, p_tau_i = 1),
+               sigma = list(df = "k", scale = 1))
+  }
+  tvp <- add_initial_values(make(TRUE))
+  constant <- add_initial_values(make(FALSE))
+  k <- ncol(tvp[["data"]][["train"]][["y"]])
+  k_w <- ncol(tvp[["data"]][["train"]][["w"]])
+  tt <- nrow(tvp[["data"]][["train"]][["y"]])
+
+  # beta_t = rho beta_{t-1} + eta_t, eta_t ~ N(0, I), has a stationary norm of
+  # about sqrt(k_w / (1 - rho^2)), and the chain starts there.
+  beta_tvp <- matrix(tvp[["initial"]][["beta_init"]], k_w)
+  expect_equal(sqrt(sum(beta_tvp^2)), sqrt(k_w / (1 - 0.999^2)))
+  expect_equal(matrix(tvp[["initial"]][["beta"]], k_w)[, 1], as.numeric(beta_tvp))
+  expect_equal(ncol(matrix(tvp[["initial"]][["beta"]], k_w)), tt)
+
+  # Same direction as the ML estimate, which a constant model still starts at,
+  # so the cointegration space is the same.
+  beta_ml <- constant[["initial"]][["beta"]]
+  expect_equal(beta_ml, .coint_ml(constant)[["beta"]])
+  expect_equal(abs(sum(beta_tvp * beta_ml)) / sqrt(sum(beta_tvp^2) * sum(beta_ml^2)), 1)
+
+  # The loadings are estimated against the rescaled beta, so Pi is unchanged.
+  pi_tvp <- matrix(tvp[["initial"]][["a_init"]][1:k], k) %*% t(beta_tvp)
+  pi_constant <- matrix(constant[["initial"]][["a"]][1:k], k) %*% t(beta_ml)
+  expect_equal(pi_tvp, pi_constant)
+
+  # Starting values from the prior get the same scale.
+  from_prior <- add_initial_values(make(TRUE), method = "prior")
+  expect_equal(sqrt(sum(from_prior[["initial"]][["beta_init"]]^2)), sqrt(k_w / (1 - 0.999^2)))
+})

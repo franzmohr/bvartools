@@ -146,10 +146,14 @@ inclusion_prior.bvecmodel <- function(object,
         }
       }
       
+      # The exogenous variables enter with their current difference and s - 1
+      # lags of it, n_upsilon = m * s columns in all. Filling s lags after the
+      # current difference ran past the matrix whenever the model had fewer
+      # unrestricted deterministic terms than exogenous variables.
       if (m > 0) {
         incl_matrix[, n_gamma + 1:m] <- kappa3
-        if (s > 0) {
-          for (i in 1:s) {
+        if (s > 1) {
+          for (i in 1:(s - 1)) {
             incl_matrix[, n_gamma + m + (i - 1) * m + 1:m] <- kappa3 / (1 + i)
           }
         }

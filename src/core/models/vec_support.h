@@ -148,6 +148,89 @@ inline void normalise_beta(const arma::mat &Beta, arma::mat &beta, arma::mat &sc
     scale = v * arma::diagmat(s) * arma::trans(v);
 }
 
+namespace detail
+{
+
+/// log |x' P^-1 x| for an n x r matrix x of full column rank, with an empty
+/// `p_tau_inv` read as the identity.
+///
+/// Through the thin SVD x = U S V', as log |S|^2 + log |U' P^-1 U|: the second
+/// matrix is as well conditioned as P, so the determinant of the r x r product
+/// x' P^-1 x, whose condition number is that of x squared, is never formed. See
+/// thin_svd() for why that matters on real data.
+inline double log_det_projected(const arma::mat &x, const arma::mat &p_tau_inv, const char *what)
+{
+    arma::mat u, v;
+    arma::vec s;
+    thin_svd(u, s, v, x, what);
+    double result = 2.0 * arma::accu(arma::log(s));
+    if (!p_tau_inv.is_empty())
+    {
+        double log_det = 0.0;
+        if (!arma::log_det_sympd(log_det, arma::mat(arma::symmatu(arma::trans(u) * p_tau_inv * u))))
+        {
+            throw std::runtime_error(std::string("the cointegration space prior is not positive definite along ") +
+                                     what);
+        }
+        result += log_det;
+    }
+    return result;
+}
+
+} // namespace detail
+
+/// Whether to keep the normal draw `Beta` of the unnormalised cointegration
+/// matrix: the Metropolis-Hastings step that makes the constant VECs sample the
+/// cointegration space prior they are given when the cointegration term has more
+/// rows than the model has equations.
+///
+/// The prior is Koop, Leon-Gonzalez and Strachan's (2010): beta semi-orthogonal
+/// with the matrix angular central Gaussian density |beta' P^-1 beta|^(-k_beta/2),
+/// and alpha | beta ~ N(0, v^-1 (beta' P^-1 beta)^-1 kron G). The samplers draw
+/// alpha against that, change to A = alpha (alpha' alpha)^(-1/2) and
+/// B = beta (alpha' alpha)^(1/2), draw B given A from a normal and split it back
+/// with normalise_beta(). Written in A and B, however, the prior is that normal
+/// kernel times
+///
+///     h(B) = |B' P^-1 B|^(-(k_beta - k)/2):
+///
+/// its own two factors leave |B' P^-1 B|^((k - k_beta)/2) |B' B|^((k_beta - k)/2),
+/// and the polar Jacobian from (alpha, beta) to (A, B) contributes
+/// |B' B|^((k - k_beta)/2). The factor is one when k_beta = k, the case the paper
+/// derives. With deterministic terms restricted to the cointegration space or
+/// unmodelled variables in it, k_beta > k, and a normal draw taken as it is
+/// overstates |Pi| -- by a quarter to a third of the prior mass in a
+/// simulation-based calibration with k = 2 and one or two restricted terms.
+///
+/// The normal draw is therefore a proposal from the normal part of the
+/// conditional, kept with probability min(1, h(Beta) / h(B)) against the current
+/// B = beta (alpha' alpha)^(1/2). `alpha` is the current k x rank loading matrix,
+/// `beta` the current semi-orthogonal k_beta x rank one. On rejection both stay
+/// as they are, which is all the caller has to do. No random number is used when
+/// k_beta = k, so the draws of those models do not change.
+inline bool accept_coint_draw(const arma::mat &Beta, const arma::mat &alpha, const arma::mat &beta,
+                              const arma::mat &p_tau_inv)
+{
+    const double excess = static_cast<double>(beta.n_rows) - static_cast<double>(alpha.n_rows);
+    if (excess <= 0.0)
+    {
+        return true;
+    }
+
+    // |B' P^-1 B| for the current B = beta (alpha' alpha)^(1/2) is
+    // |alpha' alpha| |beta' P^-1 beta|, and alpha' alpha is alpha's own Gram
+    // matrix, so neither square root is taken.
+    const double log_det_proposal = detail::log_det_projected(Beta, p_tau_inv, "the cointegration draw Beta");
+    const double log_det_current = detail::log_det_projected(alpha, arma::mat(), "the loadings alpha") +
+                                   detail::log_det_projected(beta, p_tau_inv, "the cointegration matrix beta");
+    const double log_ratio = -0.5 * excess * (log_det_proposal - log_det_current);
+    if (std::isnan(log_ratio))
+    {
+        throw std::runtime_error("the acceptance ratio of the cointegration draw is not a number");
+    }
+    return log_ratio >= 0.0 || std::log(arma::randu<double>()) < log_ratio;
+}
+
 /// The transition of the cointegration state equation with rho taken out,
 /// I_r kron P_tau: the same P_tau for each of the rank relations, which `beta`
 /// stacks as vec of a k_beta x rank matrix. An empty `p_tau` is the identity. See

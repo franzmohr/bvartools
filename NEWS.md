@@ -1,5 +1,38 @@
 # bvartools (development version)
 
+* **VEC models with restricted deterministic terms or exogenous variables sample
+  the posterior of their cointegration space prior.** The samplers of the VEC
+  models with constant coefficients follow Koop, León-González and Strachan
+  (2010), who derive them for a cointegration term with one row per endogenous
+  variable. A constant, trend or seasonal dummies restricted to the cointegration
+  space, or exogenous variables, add rows, and the draw of the cointegration
+  matrix then left out a factor of the prior. The posterior overstated the size
+  of `Pi`: in a simulation-based calibration with two endogenous variables and a
+  restricted constant, the true size of `Pi` had a mean rank of 0.39 among its
+  posterior draws over 1000 replications, where a correct sampler gives 0.50. The
+  vendored BayesTS core now accepts or rejects that draw with the missing factor
+  in a Metropolis-Hastings step, after which the calibration gives mean ranks of
+  0.49 to 0.51 with restricted constants, trends and exogenous variables. In a
+  VEC model of Austrian output, inflation and short and long-term rates from
+  `at_macrodata`, with three foreign series and a restricted trend and a flat
+  prior, the posterior mean of `Pi` had been up to 3.5 posterior standard
+  deviations from its maximum likelihood estimate and the chains mixed poorly,
+  with fewer than 100 effective draws in 4000; it is now within 1.0, with about
+  1900. **Results change** for VEC models created with
+  `const`, `trend` or `seasonal` set to `"restricted"` or with `exogen`, unless
+  `tvp = TRUE`. Models without them are unaffected, and their draws are the same
+  as before for a given seed.
+
+* **Minnesota-like inclusion priors work for VEC models with exogenous
+  variables.** `inclusion_prior()` with `minnesota_like = TRUE`, and so
+  `add_priors()` with `varsel$minnesota`, filled `s` blocks of lagged exogenous
+  differences after the current one, although a VEC model has `s - 1`. Whenever
+  the model had fewer unrestricted deterministic terms than exogenous variables,
+  as with the three foreign series of `at_macrodata` and a constant, this
+  stopped with "subscript out of bounds". With at least as many deterministic
+  terms the surplus block was overwritten by theirs, so the probabilities were
+  already right there.
+
 * **`add_initial_values()` stores the LS error covariance coefficients in the
   order the samplers read them.** The strict lower triangle of `Psi` is stored
   row by row, but the regression that estimates it returned its coefficients

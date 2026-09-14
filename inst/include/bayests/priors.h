@@ -20,7 +20,17 @@ struct NormalPrior
     arma::mat v_inv;
 };
 
-/// Prior on the cointegration space.
+/// Prior on the cointegration space of Koop, Leon-Gonzalez and Strachan (2010).
+///
+/// The semi-orthogonal k_beta x rank matrix beta has the matrix angular central
+/// Gaussian density |beta' P_tau^-1 beta|^(-k_beta/2), uniform on the space when
+/// `p_tau_inv` is the identity, and the loadings are normal given it,
+/// alpha | beta ~ N(0, v^-1 (beta' P_tau^-1 beta)^-1 kron G), with G the error
+/// precision's inverse (VecNormalStochvol: its average over the sample). `v_inv`
+/// is v, zero for a flat prior on alpha. The constant VECs sample exactly this for
+/// any k_beta, including a cointegration term with restricted deterministic terms
+/// or unmodelled variables; see accept_coint_draw() in
+/// src/core/models/vec_support.h.
 struct ConstantCointSpacePrior
 {
     double v_inv;

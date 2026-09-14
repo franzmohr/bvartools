@@ -22,6 +22,7 @@ namespace bayests
     using core::BvsBlock;
     using core::BvsScope;
     using core::draw_normal_precision;
+    using core::accept_coint_draw;
     using core::normalise_beta;
     using core::reparameterise_alpha;
     using core::ssvs_sweep;
@@ -229,14 +230,20 @@ namespace bayests
                                                              u_sigma_inv * Alpha));
                 Beta_mat = arma::reshape(Beta, k_beta, rank);
 
-                // Final cointegration values. Only the product alpha beta' is
-                // identified, so the draw is split between the two by the
-                // normalisation below -- and both halves have to be carried
-                // forward together.
-                normalise_beta(Beta_mat, beta_mat, BB_sqrt);
+                // The normal draw is a proposal when k_beta > k, see
+                // accept_coint_draw(); a rejection keeps alpha and beta as they
+                // are.
+                if (accept_coint_draw(Beta_mat, alpha, beta_mat, coint_p_tau_inv))
+                {
+                    // Final cointegration values. Only the product alpha beta'
+                    // is identified, so the draw is split between the two by the
+                    // normalisation below -- and both halves have to be carried
+                    // forward together.
+                    normalise_beta(Beta_mat, beta_mat, BB_sqrt);
 
-                alpha = Alpha * BB_sqrt;
-                a.subvec(0, n_alpha - 1) = arma::vectorise(alpha);
+                    alpha = Alpha * BB_sqrt;
+                    a.subvec(0, n_alpha - 1) = arma::vectorise(alpha);
+                }
 
                 z.cols(0, n_alpha - 1) = arma::kron(arma::trans(arma::trans(beta_mat) * w_t), diag_k);
                 u = arma::reshape(y - z * a, k, tt);

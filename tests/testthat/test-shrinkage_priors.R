@@ -423,3 +423,57 @@ test_that("add_priors rejects unknown elements of varsel", {
     "Element 'inprob' in argument 'varsel' is not recognised"
   )
 })
+
+test_that("a Minnesota-like inclusion prior of a VEC model has one block per exogenous difference", {
+  # The exogenous variables of a VEC model enter with their current difference
+  # and s - 1 lags of it. The prior was filled with s lags after the current
+  # difference, which ran past the matrix whenever the model had fewer
+  # unrestricted deterministic terms than exogenous variables.
+  endo <- stats::window(at_domestic()[, c("y", "r")], end = c(2019, 4)) * 100
+  exo <- stats::window(bvartools::at_macrodata[["foreign"]][, c("y.s", "r.s", "poil")],
+                       end = c(2019, 4)) * 100
+  kappa <- c(0.8, 0.5, 0.4, 0.9)
+
+  # The expected probabilities, read off the names of the regressors rather than
+  # from the positions of their blocks.
+  expected_prior <- function(model) {
+    k <- model[["model"]][["k"]]
+    x_names <- colnames(model[["data"]][["train"]][["x"]])
+    endo_names <- model[["model"]][["endogen"]]
+    is_diff <- grepl("^d[.].+[.]l[0-9]+$", x_names)
+    variable <- sub("^d[.](.+)[.]l[0-9]+$", "\\1", x_names)
+    lag <- rep(NA_integer_, length(x_names))
+    lag[is_diff] <- as.integer(sub("^.*[.]l", "", x_names[is_diff]))
+    prior <- matrix(NA_real_, k, length(x_names))
+    for (j in seq_along(x_names)) {
+      if (is_diff[j] && variable[j] %in% endo_names) {
+        prior[, j] <- ifelse(endo_names == variable[j], kappa[1], kappa[2]) / lag[j]
+      } else if (is_diff[j]) {
+        prior[, j] <- kappa[3] / (1 + lag[j])
+      } else {
+        prior[, j] <- kappa[4]
+      }
+    }
+    c(rep(1, k * model[["model"]][["rank"]]), prior)
+  }
+
+  for (s in 1:3) {
+    for (const in list(NULL, "unrestricted")) {
+      model <- create_bvecmodel(endo, p = 2, exogen = exo, s = s, r = 1, const = const,
+                                varsel = "bvs", iterations = 10, burnin = 5)
+      prior <- inclusion_prior(model, minnesota_like = TRUE, kappa1 = kappa[1],
+                               kappa2 = kappa[2], kappa3 = kappa[3], kappa4 = kappa[4])
+      expect_equal(as.numeric(prior[["prior"]]), expected_prior(model),
+                   info = paste("s =", s, "and const", if (is.null(const)) "absent" else const))
+    }
+  }
+
+  # The same prior reached through add_priors()
+  model <- create_bvecmodel(endo, p = 2, exogen = exo, s = 2, r = 1,
+                            varsel = "bvs", iterations = 10, burnin = 5)
+  model <- add_priors(model, coef = list(v_i = 1),
+                      coint = list(v_i = 0, p_tau_i = 1),
+                      sigma = list(df = "k", scale = 1),
+                      varsel = list(inprior = 0.5, minnesota = kappa))
+  expect_equal(as.numeric(model[["priors"]][["a"]][["inprior"]]), expected_prior(model))
+})

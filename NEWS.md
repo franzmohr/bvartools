@@ -17,6 +17,22 @@
   worse, and that the comparison of the residual variances with least squares
   remains the check to make.
 
+* **Time varying cointegration spaces start on the scale of their state
+  equation.** `add_initial_values()` started the cointegration vectors of a time
+  varying VEC model at the maximum likelihood estimate normalised to
+  beta' S11 beta = I, whose scale depends on the data and has nothing to do
+  with the state equation beta_t = rho beta_{t-1} + eta_t, eta_t ~ N(0, I). Each
+  vector now starts at the same direction rescaled to the stationary norm
+  sqrt(k_w / (1 - rho^2)), and the loadings are estimated against it, so the
+  starting Pi is unchanged; the starting values drawn from the prior get the same
+  scale. On the Austrian sub-model of bgvars' TVP-SV-GVEC vignette the old start
+  had a norm of 552 against a posterior of about 45, and the chain took some
+  1,200 to 1,500 iterations to get there -- more than the vignette's burn-in of
+  1,000 -- during which the cointegration space turned about ten times more
+  slowly than it does in the posterior. From the new start, 59, it is there from
+  the first draws. **Results change** for time varying VEC models, mostly in
+  their early draws.
+
 * **The loadings of a time varying VEC model can drift more slowly than its
   other coefficients.** New element `coef$rate_alpha` of `add_priors()` sets the
   rate of the gamma prior on the precisions of the loadings' random walks, as

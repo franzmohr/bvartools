@@ -1,5 +1,14 @@
 # bvartools (development version)
 
+* **The prior of the loadings of a time varying VEC model follows `coef$v_i`.**
+  `add_priors()` gave the loadings a prior precision of 1 / (1 - rho^2)
+  whatever `coef$v_i` was, which put alpha beta' at unit prior variance rather
+  than on the scale `coef$v_i` asks for, as `?cointspace_prior` says. Koop et al.
+  (2011) scale the variance of the loadings by 1 - rho^2 relative to that of
+  the other coefficients, and the precision is now `coef$v_i / (1 - rho^2)`.
+  **Results change** for time varying VEC models with a `coef$v_i` other than 1;
+  the tvp-sv-vec vignette uses 1 and is unaffected.
+
 * **Time varying coefficients leave their starting values.** The time varying
   samplers of the vendored BayesTS core drew a coefficient path against the
   previous draw of the state before the sample, with the random walk's own

@@ -1,5 +1,22 @@
 # bvartools (development version)
 
+* **The error correction term can be centred.** `scale_error_correction()` has
+  new arguments `scale`, `TRUE` by default as before, and `centre`, `FALSE` by
+  default. `centre = TRUE` subtracts the sample mean of each stochastic series
+  in the error correction term, leaves the restricted deterministic terms as
+  they are and stores the means as attribute `"centre"`; with `scale = FALSE`
+  the term is centred only. The unrestricted constant takes up the means, so
+  centring needs one, and the starting values of the constant are shifted with
+  the series. `rescale_error_correction()` shifts the draws of the constant back
+  by `-alpha beta' m` -- period by period, with the loadings and cointegration
+  vectors of that period, for a time varying model -- so the fitted values and
+  the log-likelihood of every draw are unchanged, and gives the series their
+  means back. For a model with time varying cointegration vectors this keeps a
+  step of those vectors from acting as a random walk intercept on series far
+  from zero. `vec_to_var()` and `add_predictive_loglik()` refuse a centred term
+  as they refuse a scaled one, `bvec()` adds the means back when it rebuilds the
+  levels, and the means travel with a model written to HDF5.
+
 * **The documentation says what decides the drift of a time varying
   cointegration space.** `?cointspace_prior`, the `coef$rate_alpha` item of
   `?add_priors.bvecmodel` and the TVP-SV VEC vignette put the residuals a time

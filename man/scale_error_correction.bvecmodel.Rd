@@ -4,10 +4,16 @@
 \alias{scale_error_correction.bvecmodel}
 \title{Scale Error Correction}
 \usage{
-\method{scale_error_correction}{bvecmodel}(object, ...)
+\method{scale_error_correction}{bvecmodel}(object, scale = TRUE, centre = FALSE, ...)
 }
 \arguments{
 \item{object}{object of class 'bvecmodel'.}
+
+\item{scale}{logical. If \code{TRUE}, the default, the series are divided by
+scaling factors. See 'Details'.}
+
+\item{centre}{logical. If \code{TRUE}, the sample mean of each stochastic
+series is subtracted from it. Default is \code{FALSE}. See 'Details'.}
 
 \item{...}{arguments passed forward to method.}
 }
@@ -15,14 +21,47 @@
 An object of class 'bvecmodel'.
 }
 \description{
-Scales the series in the error correction series in an object of class
-'bvecmodel'.
+Scales, centres, or centres and scales the series in the error correction
+term of an object of class 'bvecmodel'.
 }
 \details{
-The function transforms element \code{object$data$train$w}. For
-stochastic variables, the series are divided by the standard deviation of
-the corresponding differenced series. If the time-series object contains
-a column named \code{"trend"}, this series is divided by its own standard
-deviation, i.e. in levels. The scaling factors are stored as a new attribute
-\code{object$data$train$w} named \code{"scale"}.
+The function transforms element \code{object$data$train$w}, and
+\code{\link{rescale_error_correction}} undoes the transformation once the
+posterior draws are in.
+
+With \code{scale = TRUE}, stochastic series are divided by the standard
+deviation of the corresponding differenced series. If the time-series object
+contains a column named \code{"trend"}, this series is divided by its own
+standard deviation, i.e. in levels. The scaling factors are stored as a new
+attribute of \code{object$data$train$w} named \code{"scale"}.
+
+With \code{centre = TRUE}, the sample mean of each stochastic series is
+subtracted from it. The deterministic terms restricted to the cointegration
+space, which are the last columns of the term, are left as they are. The
+means are stored as attribute \code{"centre"}, with zeros for the
+deterministic terms. If both arguments are \code{TRUE}, the series are
+centred first and scaled second, so that \eqn{w_t} becomes
+\eqn{D^{-1} (w_t - m)}.
+
+Centring requires an unrestricted constant, which takes up what the series
+lose: \eqn{\Pi w_t + c = \Pi (w_t - m) + (c + \Pi m)}. For a model with
+constant coefficients it is therefore a reparameterisation that leaves the
+likelihood and the priors on \eqn{\alpha} and \eqn{\beta} as they are and
+changes only what the prior of the constant refers to. For a model with
+time varying cointegration vectors it changes more. A step \eqn{\eta_t} of
+their state equation moves \eqn{\beta_t^{\prime} w_t} by
+\eqn{\eta_t^{\prime} w_t}, which for series far from zero acts as a random
+walk intercept that no prior on the deterministic terms controls; see
+section 'Prior on the cointegration space' of \code{\link{cointspace_prior}}.
+On centred series the same step moves the term by
+\eqn{\eta_t^{\prime} (w_t - m)}, and the intercept is left to the constant
+and its own prior.
+
+Starting values of the constant in \code{object$initial} are shifted by
+\eqn{\Pi m}, computed from the starting values of the loadings and of
+\eqn{\beta}, so that the chain starts from the model it simulates.
+
+Neither transformation can be applied twice, and neither can be added to a
+model that already carries the other: \code{rescale_error_correction} has
+to be called in between.
 }

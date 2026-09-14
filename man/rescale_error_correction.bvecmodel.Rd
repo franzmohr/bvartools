@@ -15,14 +15,16 @@
 An object of class 'bvecmodel'.
 }
 \description{
-Rescales the series in the error correction series in an object of class
-'bvecmodel'.
+Puts the series in the error correction term of an object of class
+'bvecmodel', and the posterior draws that belong to them, back in terms of
+the input data.
 }
 \details{
-The function transforms element \code{object$data$train$w} and
-the posterior draws of \eqn{\beta} to the original scale of the input data,
-based on the scaling factors that are stored in attribute \code{"scale"} of
-\code{object$data$train$w}.
+The function transforms element \code{object$data$train$w}, the
+posterior draws and the starting values back to the series of the input
+data, based on the attributes \code{"scale"} and \code{"centre"} that
+\code{\link{scale_error_correction}} stored in \code{object$data$train$w},
+and drops the attributes.
 
 If \eqn{D} is the diagonal matrix of scaling factors, function
 \code{\link{scale_error_correction}} replaced \eqn{w_t} by
@@ -30,4 +32,16 @@ If \eqn{D} is the diagonal matrix of scaling factors, function
 \eqn{\alpha \beta^{\prime} D^{-1} w_t}. The draws of \eqn{\beta} are
 therefore multiplied by \eqn{D^{-1}}, while the draws of \eqn{\alpha} are
 not affected by the transformation and are carried over unchanged.
+
+If the series were centred on their means \eqn{m}, the estimated term is
+\eqn{\alpha \beta^{\prime} D^{-1} (w_t - m)}, with \eqn{D} the identity
+matrix if they were not scaled. The draws of the unrestricted constant are
+therefore shifted by \eqn{-\alpha \beta^{\prime} D^{-1} m}, draw by draw
+and, for a model with time varying parameters, period by period with the
+loadings and the cointegration vectors of that period. The fitted values and
+the log-likelihood of every draw are unchanged by that. The starting values
+of the constant are shifted in the same way. If variable selection covered
+the deterministic terms, the draws of the inclusion indicators of the
+constant are carried over as they are, so they describe the constant of the
+centred series.
 }

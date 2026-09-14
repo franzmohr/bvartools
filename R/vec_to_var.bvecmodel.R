@@ -39,9 +39,10 @@
 #' no observations are gained or lost. The levels of the endogenous variables
 #' are recovered from their differences and their first lag in the error
 #' correction term, which requires both to be on the same scale. If the error
-#' correction term was rescaled with \code{\link{scale_error_correction}}, the
-#' function therefore expects \code{\link{rescale_error_correction}} to have
-#' been applied before the transformation.
+#' correction term was scaled or centred with
+#' \code{\link{scale_error_correction}}, the function therefore expects
+#' \code{\link{rescale_error_correction}} to have been applied before the
+#' transformation.
 #'
 #' Note that the covariance matrix of the error term is not affected by the
 #' transformation, since both parameterisations describe the same error term.
@@ -164,9 +165,9 @@ vec_to_var.bvecmodel <- function(object, ...) {
 
   # The levels of the endogenous variables are recovered by adding up the
   # differences in 'y' and their first lag in 'w', which requires both to be on
-  # the same scale.
-  if (!is.null(attr(w, "scale"))) {
-    stop("The series in the error correction term are still on the scale of 'scale_error_correction'. Use 'rescale_error_correction' to put them back on the scale of the input data before the model is transformed.")
+  # the same scale and 'w' to carry its means.
+  if (!is.null(attr(w, "scale")) || !is.null(attr(w, "centre"))) {
+    stop("The series in the error correction term are still scaled or centred by 'scale_error_correction'. Use 'rescale_error_correction' to put them back on the scale of the input data before the model is transformed.")
   }
 
   ts_info <- stats::tsp(y_diff)

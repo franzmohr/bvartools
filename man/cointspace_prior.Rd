@@ -180,11 +180,14 @@ residual variances with those of a least squares fit of the same regressors,
 in chains with different seeds, for a model that is to be used. Small rates
 alone do not guarantee that a model passes that check, and passing it is what
 says that neither the coefficients nor the cointegration vectors fit the
-residuals. Centring the series would take away the intercept that the steps of
-\eqn{\beta_t} otherwise form, and for a constant coefficient model with an
-unrestricted constant it is an exact reparameterisation, but
-\code{\link{vec_to_var}} and the forecasts recover the levels from the error
-correction term and expect its series as they are.
+residuals. \code{scale_error_correction(object, scale = FALSE, centre = TRUE)}
+centres the series before posterior simulation, which takes away the
+intercept that the steps of \eqn{\beta_t} otherwise form on series far from
+zero, and \code{\link{rescale_error_correction}} writes the draws back in
+terms of the series as they are, so that \code{\link{vec_to_var}} and the
+forecasts can use them. It does not reach the other channel, the scale of the
+loadings, and whether a centred model is right is again what the comparison
+with least squares shows.
 
 For a model with time varying cointegration parameters
 \code{p_tau_i = "ml"} centres the marginal prior of the

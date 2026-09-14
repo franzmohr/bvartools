@@ -18,10 +18,10 @@ namespace bayests
 namespace
 {
 
+using core::augment_loadings;
+using core::CointDrawLoadings;
 using core::draw_normal_precision;
-using core::accept_coint_draw;
 using core::normalise_beta;
-using core::reparameterise_alpha;
 using core::stacked_response;
 
 /// The response as the compact form wants it: k x tt, one period per column.
@@ -201,35 +201,34 @@ VecKlgs2010Draws VecKlgs2010Sampler::draw_coefficients(const VecKlgs2010Input &i
             const arma::mat y_beta_t =
                 use_non_alpha ? arma::mat(y_t - a_mat.cols(rank, n_design - 1) * x_t) : y_t;
 
-            // Reparameterise alpha
+            // Reparameterise alpha, with auxiliary rows when k_beta > k: see
+            // augment_loadings(). It draws them exactly as VecNormalWishart
+            // does, so the two samplers stay the same chain. Alpha is then the
+            // loadings' rows of the semi-orthogonal factor rather than that
+            // factor itself.
             alpha = a_mat.cols(0, rank - 1);
-            Alpha = reparameterise_alpha(alpha);
+            const CointDrawLoadings loadings =
+                augment_loadings(alpha, beta_mat, u_sigma_inv, coint_v_inv, coint_p_tau_inv);
+            Alpha = loadings.top;
 
             // Update beta
             alpha_sigma_alpha = arma::trans(Alpha) * u_sigma_inv * Alpha;
-            prior_beta_vinv = arma::kron(alpha_sigma_alpha, coint_v_inv * coint_p_tau_inv);
+            prior_beta_vinv = loadings.prior_vinv;
             post_beta_v = prior_beta_vinv + arma::kron(alpha_sigma_alpha, w_cross);
             Beta_mat = arma::reshape(
                 draw_normal_precision(post_beta_v, arma::vectorise(w_t * arma::trans(y_beta_t) *
                                                                    u_sigma_inv * Alpha)),
                 k_beta, rank);
 
-            // The normal draw is a proposal when k_beta > k, see
-            // accept_coint_draw(); a rejection keeps alpha and beta as they are.
-            // It uses the RNG exactly as VecNormalWishart does, so the two
-            // samplers stay the same chain.
-            if (accept_coint_draw(Beta_mat, alpha, beta_mat, coint_p_tau_inv))
-            {
-                // Final cointegration values. Only the product alpha beta' is
-                // identified, so the draw is split between the two by the
-                // normalisation below -- and both halves have to be carried
-                // forward together.
-                normalise_beta(Beta_mat, beta_mat, BB_sqrt);
+            // Final cointegration values. Only the product alpha beta' is
+            // identified, so the draw is split between the two by the
+            // normalisation below -- and both halves have to be carried
+            // forward together.
+            normalise_beta(Beta_mat, beta_mat, BB_sqrt);
 
-                alpha = Alpha * BB_sqrt;
-                a_mat.cols(0, rank - 1) = alpha;
-                a.subvec(0, n_alpha - 1) = arma::vectorise(alpha);
-            }
+            alpha = Alpha * BB_sqrt;
+            a_mat.cols(0, rank - 1) = alpha;
+            a.subvec(0, n_alpha - 1) = arma::vectorise(alpha);
 
             design_t.rows(0, rank - 1) = arma::trans(beta_mat) * w_t;
         }

@@ -27,10 +27,10 @@ struct NormalPrior
 /// `p_tau_inv` is the identity, and the loadings are normal given it,
 /// alpha | beta ~ N(0, v^-1 (beta' P_tau^-1 beta)^-1 kron G), with G the error
 /// precision's inverse (VecNormalStochvol: its average over the sample). `v_inv`
-/// is v, zero for a flat prior on alpha. The constant VECs sample exactly this for
-/// any k_beta, including a cointegration term with restricted deterministic terms
-/// or unmodelled variables; see accept_coint_draw() in
-/// src/core/models/vec_support.h.
+/// is v, zero for a flat prior on alpha and a uniform prior on the space whatever
+/// `p_tau_inv` is. The constant VECs sample exactly this for any k_beta, including
+/// a cointegration term with restricted deterministic terms or unmodelled
+/// variables; see augment_loadings() in src/core/models/vec_support.h.
 struct ConstantCointSpacePrior
 {
     double v_inv;

@@ -1,5 +1,25 @@
 # bvartools (development version)
 
+* **Time varying coefficients leave their starting values.** The time varying
+  samplers of the vendored BayesTS core drew a coefficient path against the
+  previous draw of the state before the sample, with the random walk's own
+  innovation variance as the prior covariance of the first period, and then drew
+  that state given the path. The two steps tied each other with that variance,
+  so with a small one -- a `coef$rate` of 1e-8 or 1e-12, as the time varying
+  vignettes use -- the chain could not move the level of a coefficient path:
+  the posterior of the coefficients was the output of `add_initial_values()`.
+  Two chains started from different values returned their own starting values,
+  and a time varying VEC model kept its loadings at their maximum likelihood
+  starting values while its cointegration vectors moved, which could leave it
+  without error correction. The path is now drawn with the state before the
+  sample integrated out of the first period's prior, and that state is drawn
+  before the innovation variance. This covers the coefficients and the
+  covariance block of `VarTvpGamma`, `VarTvpStochvol`, `VarTvpWishart`,
+  `VarTvpAld`, `VecTvpGamma`, `VecTvpStochvol` and `VecTvpWishart`. The prior
+  precision of the state before the sample must now be positive definite, since
+  the draw takes its inverse, so `coef$v_i = 0` stops a time varying model with
+  a message saying so. **Results change** for every time varying model.
+
 * **Forecasts of an expanding window start from the end of each window.**
   `prepare_forecast_input()` took the lags of the first forecast period from
   the original series a model was created from rather than from its estimation

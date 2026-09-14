@@ -24,6 +24,7 @@ using core::bvs_sweep;
 using core::coint_state_transition;
 using core::draw_coint_rho;
 using core::draw_normal_precision;
+using core::initial_state_variance;
 using core::fill_z_alpha;
 using core::fill_z_beta;
 using core::stacked_response;
@@ -69,7 +70,7 @@ VecTvpWishartDraws VecTvpWishartSampler::draw_coefficients(const VecTvpWishartIn
     arma::mat a, a_B, a_sigma, a_lag;
     arma::vec a_sigma_post_shape, a_sigma_post_scale;
     arma::vec a0;
-    arma::mat a0_post_v, a0_sigma_inv;
+    arma::mat a0_post_v, a0_sigma_inv, a0_prior_v;
 
     // Variable selection
     std::optional<BvsBlock> a_bvs;
@@ -95,6 +96,7 @@ VecTvpWishartDraws VecTvpWishartSampler::draw_coefficients(const VecTvpWishartIn
         a_sigma_post_scale = a_sigma_prior_rate;
 
         a0 = input.initial.a_init;
+        a0_prior_v = initial_state_variance(input.a_prior.initial_state);
         a0_sigma_inv = a_sigma;
         a0_sigma_inv.diag() = 1 / a_sigma.diag();
 
@@ -193,9 +195,17 @@ VecTvpWishartDraws VecTvpWishartSampler::draw_coefficients(const VecTvpWishartIn
                 z_masked = z * a_bvs->lambda_diag;
             }
 
-            // Update a
-            a = kalman_durbin_koopman_2002(ymat, z_a, u_sigma, a_sigma, a_B, a0, a_sigma)
+            // Update a, with a0 integrated out of the prior of the first period.
+            // See initial_state_variance().
+            a = kalman_durbin_koopman_2002(ymat, z_a, u_sigma, a_sigma, a_B, a0_prior_mu,
+                                           a0_prior_v + a_sigma)
                     .cols(0, tt - 1);
+
+            // Draw a0, given the path it was integrated out of and before a_sigma
+            // conditions on it
+            a0_sigma_inv.diag() = 1 / a_sigma.diag();
+            a0_post_v = a0_prior_v_inv + a0_sigma_inv;
+            a0 = draw_normal_precision(a0_post_v, a0_prior_v_inv * a0_prior_mu + a0_sigma_inv * a.col(0));
 
             // Draw a_sigma
             a_lag.col(0) = a0;
@@ -207,11 +217,6 @@ VecTvpWishartDraws VecTvpWishartSampler::draw_coefficients(const VecTvpWishartIn
                 a_sigma(i, i) = 1 / arma::randg<double>(
                                         arma::distr_param(a_sigma_post_shape(i), a_sigma_post_scale(i)));
             }
-
-            // Draw a0
-            a0_sigma_inv.diag() = 1 / a_sigma.diag();
-            a0_post_v = a0_prior_v_inv + a0_sigma_inv;
-            a0 = draw_normal_precision(a0_post_v, a0_prior_v_inv * a0_prior_mu + a0_sigma_inv * a.col(0));
 
             if (a_bvs)
             {

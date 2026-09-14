@@ -18,6 +18,10 @@ value a model needs must be given, in the list it belongs to:
 A missing required element stops with a message naming it, and so does an
 element that is **not recognised**, in any of the four lists. Variances are given
 as **precisions**: `v_i = 0` is uninformative and a larger `v_i` shrinks harder.
+The exception is `coef` of a model with `tvp = TRUE`, where `v_i` and `v_i_det`
+are the prior precision of the coefficients before the sample and must be
+positive: the sampler integrates that state out of the first period's prior,
+which takes the inverse of the precision, and refuses a zero one.
 
 The page to read for the full list is the method's, not the generic's:
 `?add_priors.bvarmodel` and `?add_priors.bvecmodel` differ.

@@ -24,6 +24,7 @@ using core::bvs_sweep;
 using core::draw_ald_scale;
 using core::draw_ald_weights;
 using core::draw_normal_precision;
+using core::initial_state_variance;
 using core::stacked_response;
 
 VarTvpAldDraws VarTvpAldSampler::draw_coefficients(const VarTvpAldInput &input,
@@ -55,7 +56,7 @@ VarTvpAldDraws VarTvpAldSampler::draw_coefficients(const VarTvpAldInput &input,
     arma::mat a, a_B, a_sigma, a_lag;
     arma::vec a_sigma_post_shape, a_sigma_post_scale;
     arma::vec a0;
-    arma::mat a0_post_v, a0_sigma_inv;
+    arma::mat a0_post_v, a0_sigma_inv, a0_prior_v;
 
     // Variable selection
     std::optional<BvsBlock> a_bvs;
@@ -81,6 +82,7 @@ VarTvpAldDraws VarTvpAldSampler::draw_coefficients(const VarTvpAldInput &input,
         a_sigma_post_scale = a_sigma_prior_rate;
 
         a0 = input.initial.a_init;
+        a0_prior_v = initial_state_variance(input.a_prior.initial_state);
         a0_sigma_inv = a_sigma;
         a0_sigma_inv.diag() = 1 / a_sigma.diag();
 
@@ -153,8 +155,18 @@ VarTvpAldDraws VarTvpAldSampler::draw_coefficients(const VarTvpAldInput &input,
 
             // Update a. The response carries the offset: the smoother measures
             // z_t a_t against y_t - theta w_t, not against y_t.
-            a = kalman_durbin_koopman_2002(y_adjusted, z, u_sigma, a_sigma, a_B, a0, a_sigma)
+            // a0 is integrated out of the prior of the first period; see
+            // initial_state_variance().
+            a = kalman_durbin_koopman_2002(y_adjusted, z, u_sigma, a_sigma, a_B, a0_prior_mu,
+                                           a0_prior_v + a_sigma)
                     .cols(0, tt - 1);
+
+            // Draw a0, given the path it was integrated out of and before a_sigma
+            // conditions on it
+            a0_sigma_inv.diag() = 1 / a_sigma.diag();
+            a0_post_v = a0_prior_v_inv + a0_sigma_inv;
+            a0 = draw_normal_precision(a0_post_v,
+                                       a0_prior_v_inv * a0_prior_mu + a0_sigma_inv * a.col(0));
 
             // Draw a_sigma
             a_lag.col(0) = a0;
@@ -167,12 +179,6 @@ VarTvpAldDraws VarTvpAldSampler::draw_coefficients(const VarTvpAldInput &input,
                     1 / arma::randg<double>(
                             arma::distr_param(a_sigma_post_shape(i), a_sigma_post_scale(i)));
             }
-
-            // Draw a0
-            a0_sigma_inv.diag() = 1 / a_sigma.diag();
-            a0_post_v = a0_prior_v_inv + a0_sigma_inv;
-            a0 = draw_normal_precision(a0_post_v,
-                                       a0_prior_v_inv * a0_prior_mu + a0_sigma_inv * a.col(0));
 
             if (a_bvs)
             {

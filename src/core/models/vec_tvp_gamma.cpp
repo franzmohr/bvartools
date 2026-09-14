@@ -24,6 +24,7 @@ using core::bvs_sweep;
 using core::coint_state_transition;
 using core::draw_coint_rho;
 using core::draw_normal_precision;
+using core::initial_state_variance;
 using core::fill_psi_path;
 using core::stacked_identity;
 using core::fill_strict_lower_triangle;
@@ -76,7 +77,7 @@ VecTvpGammaDraws VecTvpGammaSampler::draw_coefficients(const VecTvpGammaInput &i
     arma::mat a, a_B, a_sigma, a_lag;
     arma::vec a_sigma_post_shape, a_sigma_post_scale;
     arma::vec a0;
-    arma::mat a0_post_v, a0_sigma_inv;
+    arma::mat a0_post_v, a0_sigma_inv, a0_prior_v;
 
     // Variable selection
     std::optional<BvsBlock> a_bvs;
@@ -101,6 +102,7 @@ VecTvpGammaDraws VecTvpGammaSampler::draw_coefficients(const VecTvpGammaInput &i
         a_sigma_post_scale = a_sigma_prior_rate;
 
         a0 = input.initial.a_init;
+        a0_prior_v = initial_state_variance(input.a_prior.initial_state);
         a0_sigma_inv = a_sigma;
         a0_sigma_inv.diag() = 1 / a_sigma.diag();
 
@@ -173,7 +175,7 @@ VecTvpGammaDraws VecTvpGammaSampler::draw_coefficients(const VecTvpGammaInput &i
     arma::mat psi, Psi, psi_B, psi_lag, psi_sigma, psi_y, psi_z, psi_z_bvs;
     arma::vec psi_sigma_post_shape, psi_sigma_post_scale;
     arma::vec psi0;
-    arma::mat psi0_post_v, psi0_sigma_inv;
+    arma::mat psi0_post_v, psi0_sigma_inv, psi0_prior_v;
 
     std::optional<BvsBlock> psi_bvs;
     arma::mat psi_theta_res, Psi_lambda, psi_u_omega_inv;
@@ -201,6 +203,7 @@ VecTvpGammaDraws VecTvpGammaSampler::draw_coefficients(const VecTvpGammaInput &i
         psi_sigma_post_scale = psi_sigma_prior_rate;
 
         psi0 = input.initial.psi_init;
+        psi0_prior_v = initial_state_variance(input.psi_prior.initial_state);
         psi0_sigma_inv = psi_sigma;
         psi0_sigma_inv.diag() = 1 / psi_sigma.diag();
 
@@ -268,9 +271,17 @@ VecTvpGammaDraws VecTvpGammaSampler::draw_coefficients(const VecTvpGammaInput &i
                 z_masked = z * a_bvs->lambda_diag;
             }
 
-            // Update a
-            a = kalman_durbin_koopman_2002(ymat, z_a, u_sigma, a_sigma, a_B, a0, a_sigma)
+            // Update a, with a0 integrated out of the prior of the first period.
+            // See initial_state_variance().
+            a = kalman_durbin_koopman_2002(ymat, z_a, u_sigma, a_sigma, a_B, a0_prior_mu,
+                                           a0_prior_v + a_sigma)
                     .cols(0, tt - 1);
+
+            // Draw a0, given the path it was integrated out of and before a_sigma
+            // conditions on it
+            a0_sigma_inv.diag() = 1 / a_sigma.diag();
+            a0_post_v = a0_prior_v_inv + a0_sigma_inv;
+            a0 = draw_normal_precision(a0_post_v, a0_prior_v_inv * a0_prior_mu + a0_sigma_inv * a.col(0));
 
             // Draw a_sigma
             a_lag.col(0) = a0;
@@ -282,11 +293,6 @@ VecTvpGammaDraws VecTvpGammaSampler::draw_coefficients(const VecTvpGammaInput &i
                 a_sigma(i, i) = 1 / arma::randg<double>(
                                         arma::distr_param(a_sigma_post_shape(i), a_sigma_post_scale(i)));
             }
-
-            // Draw a0
-            a0_sigma_inv.diag() = 1 / a_sigma.diag();
-            a0_post_v = a0_prior_v_inv + a0_sigma_inv;
-            a0 = draw_normal_precision(a0_post_v, a0_prior_v_inv * a0_prior_mu + a0_sigma_inv * a.col(0));
 
             if (a_bvs)
             {
@@ -393,9 +399,16 @@ VecTvpGammaDraws VecTvpGammaSampler::draw_coefficients(const VecTvpGammaInput &i
             // same path against the current ones.
             const arma::mat psi_sigma_u =
                 arma::diagmat(1.0 / arma::vec(u_omega_inv.diag()).tail(k - 1));
-            psi = kalman_durbin_koopman_2002(psi_y, psi_z, psi_sigma_u, psi_sigma, psi_B, psi0,
-                                             psi_sigma)
+            // With psi0 integrated out of the prior of the first period, as for a
+            psi = kalman_durbin_koopman_2002(psi_y, psi_z, psi_sigma_u, psi_sigma, psi_B,
+                                             psi0_prior_mu, psi0_prior_v + psi_sigma)
                       .cols(0, tt - 1);
+
+            // Draw psi0, given the path and before psi_sigma conditions on it
+            psi0_sigma_inv.diag() = 1 / psi_sigma.diag();
+            psi0_post_v = psi0_prior_v_inv + psi0_sigma_inv;
+            psi0 = draw_normal_precision(psi0_post_v,
+                                         psi0_prior_v_inv * psi0_prior_mu + psi0_sigma_inv * psi.col(0));
 
             // Draw psi_sigma
             psi_lag.col(0) = psi0;
@@ -408,12 +421,6 @@ VecTvpGammaDraws VecTvpGammaSampler::draw_coefficients(const VecTvpGammaInput &i
                 psi_sigma(i, i) = 1 / arma::randg<double>(arma::distr_param(
                                           psi_sigma_post_shape(i), psi_sigma_post_scale(i)));
             }
-
-            // Draw psi0
-            psi0_sigma_inv.diag() = 1 / psi_sigma.diag();
-            psi0_post_v = psi0_prior_v_inv + psi0_sigma_inv;
-            psi0 = draw_normal_precision(psi0_post_v,
-                                         psi0_prior_v_inv * psi0_prior_mu + psi0_sigma_inv * psi.col(0));
 
             if (psi_bvs)
             {

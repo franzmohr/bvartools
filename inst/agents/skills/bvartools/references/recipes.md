@@ -111,15 +111,19 @@ stopifnot(identical(refused, "no method"))
 
 ## Time-varying coefficients with stochastic volatility
 
-`tvp = TRUE` puts `shape` and `rate` for the state equation into `coef`.
-`error = "sv"` needs the six stochastic volatility elements in `sigma`:
+`tvp = TRUE` puts `shape` and `rate` for the state equation into `coef`, and
+turns `v_i` and `v_i_det` into the prior precision of the coefficients before
+the sample. Those must be positive: the sampler integrates that state out of the
+first period's prior, which takes the inverse of its precision, so the
+uninformative `v_i = 0` of a constant model is refused here. `error = "sv"`
+needs the six stochastic volatility elements in `sigma`:
 
 ```r
 tvp <- create_bvarmodel(e1, p = 1, deterministic = "const",
                         tvp = TRUE, error = "sv",
                         iterations = 300, burnin = 100)
 tvp <- add_priors(tvp,
-                  coef = list(v_i = 0, v_i_det = 0, shape = 3, rate = 0.0001),
+                  coef = list(v_i = 1, v_i_det = 0.1, shape = 3, rate = 0.0001),
                   sigma = list(mu = 0, v_i = 0.01, shape = 3, rate = 0.0001,
                                state_variance = 0.01, offset = 1e-5))
 tvp <- add_initial_values(tvp)

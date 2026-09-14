@@ -252,7 +252,8 @@ write_to_hdf5.bvarmodel <- function(object, filename, group = "", ...) {
   if (!is.null(object[["initial"]])) {
     group_initial <- .hdf5_group(handles, output, "initial")
     for (i in names(object[["initial"]])) {
-      .hdf5_write(group_initial, i, object[["initial"]][[i]])
+      .hdf5_write(group_initial, .hdf5_initial_name(object[["model"]], i, "write"),
+                  object[["initial"]][[i]])
     }
   }
 

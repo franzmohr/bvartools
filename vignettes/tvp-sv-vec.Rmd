@@ -684,6 +684,12 @@ round(rbind(simulated = interval_width(model), held = interval_width(held)), 2)
 #> held      0.69 1.21 1.19
 ```
 
+Eight quarters ahead, carrying the drift forward about doubles the interval of
+the long-term rate, widens that of inflation by half and makes that of the
+short-term rate between two and three times as wide. A forecast that holds the
+coefficients at the end of the sample understates the uncertainty this model
+implies.
+
 The constant coefficient model with stochastic volatility, estimated with
 `tvp = FALSE`, remains the model a TVP-SV specification has to beat. The two
 can be compared out of sample by estimating both over an expanding window with

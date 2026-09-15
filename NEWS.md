@@ -11,9 +11,13 @@
   by `-alpha beta' m` -- period by period, with the loadings and cointegration
   vectors of that period, for a time varying model -- so the fitted values and
   the log-likelihood of every draw are unchanged, and gives the series their
-  means back. For a model with time varying cointegration vectors this keeps a
-  step of those vectors from acting as a random walk intercept on series far
-  from zero. `vec_to_var()` and `add_predictive_loglik()` refuse a centred term
+  means back. For a model with time varying cointegration vectors this removes
+  the part of a step of those vectors that acts as a random walk intercept on
+  series far from zero. It does not settle how far the cointegration space
+  moves: in the US sub-model of bgvars' `gvar2023`, centring alone roughly
+  halved how far the error correction term and the constant moved over the
+  sample and left the oil price equation at about 0.8 of the maximum likelihood
+  residual standard deviation. `vec_to_var()` and `add_predictive_loglik()` refuse a centred term
   as they refuse a scaled one, `bvec()` adds the means back when it rebuilds the
   levels, and the means travel with a model written to HDF5.
 
@@ -28,8 +32,9 @@
   levels far from zero a step acts as a random walk intercept, or the loadings
   are drawn close to zero and switch the term off. With the state variances of
   all coefficients pinned at 1e-14, the US sub-model of bgvars' `gvar2023`
-  data set still reported residual standard deviations of 0.2 to 0.45 of maximum
-  likelihood. The section 'Prior on the cointegration space' now describes both
+  data set still reported the residual standard deviation of one equation as low
+  as 0.1 to 0.5 of maximum likelihood in some chains, with which equation and
+  how low depending on the chain. The section 'Prior on the cointegration space' now describes both
   channels, with the evidence, why scaling the error correction term makes them
   worse, and that the comparison of the residual variances with least squares
   remains the check to make.

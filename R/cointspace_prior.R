@@ -130,16 +130,20 @@
 #' Both have been seen. In the US sub-model of the \pkg{bgvars} data set
 #' \code{gvar2023}, with the oil price among its endogenous variables and a rank
 #' of one, a prior that pinned the state variances of all coefficients, the
-#' loadings and the constant included, at 1e-14 still left residual standard
-#' deviations of 0.2 to 0.45 of the maximum likelihood ones and a posterior mean
-#' log-likelihood several hundred above the maximum of the constant coefficient
-#' model. The Austrian sub-model under the same prior drew loadings close to zero
-#' and lost fit the constant coefficient model has. On data simulated from a
-#' constant coefficient VEC model, whose posterior under such a prior should
-#' reproduce the maximum likelihood fit, it did so only with the series centred
-#' and \code{coef$v_i = 10}, or around zero and \code{coef$v_i = 100}. Around 12,
-#' where log levels usually are, it drew loadings close to zero, and around zero
-#' with \code{coef$v_i = 1} it fitted part of the residuals.
+#' loadings and the constant included, at 1e-14 still left the residual standard
+#' deviation of one equation as low as 0.1 to 0.5 of the maximum likelihood one
+#' in some chains, with which equation and how low depending on the chain, and a
+#' saved chain reported a posterior mean log-likelihood several hundred above the
+#' maximum of the constant coefficient model. The chains do not move between
+#' these outcomes within a few thousand draws, so a single chain can report any
+#' of them. The Austrian sub-model under the same prior lost fit that the
+#' constant coefficient model has, and the chains that were inspected drew
+#' loadings close to zero. On data simulated from a constant coefficient VEC
+#' model, whose posterior under such a prior should reproduce the maximum
+#' likelihood fit, single chains did so only with the series centred and
+#' \code{coef$v_i = 10}, or around zero and \code{coef$v_i = 100}. Around 12,
+#' where log levels usually are, a chain drew loadings close to zero, and around
+#' zero with \code{coef$v_i = 1} one fitted part of the residuals.
 #'
 #' The same mechanism makes \code{\link{scale_error_correction}} risky in a model
 #' whose coefficients vary over time. It divides the series by the standard
@@ -162,13 +166,17 @@
 #' alone do not guarantee that a model passes that check, and passing it is what
 #' says that neither the coefficients nor the cointegration vectors fit the
 #' residuals. \code{scale_error_correction(object, scale = FALSE, centre = TRUE)}
-#' centres the series before posterior simulation, which takes away the
-#' intercept that the steps of \eqn{\beta_t} otherwise form on series far from
-#' zero, and \code{\link{rescale_error_correction}} writes the draws back in
-#' terms of the series as they are, so that \code{\link{vec_to_var}} and the
-#' forecasts can use them. It does not reach the other channel, the scale of the
-#' loadings, and whether a centred model is right is again what the comparison
-#' with least squares shows.
+#' centres the series before posterior simulation, which removes the part of a
+#' step of \eqn{\beta_t^{\prime} w_t} that comes from the levels of the series
+#' rather than from their variation, and \code{\link{rescale_error_correction}}
+#' writes the draws back in terms of the series as they are, so that
+#' \code{\link{vec_to_var}} and the forecasts can use them. It does not reach the
+#' other channel, the scale of the loadings, and it is not a full remedy: in the
+#' US sub-model above, centring alone roughly halved how far the error correction
+#' term and the constant moved over the sample and still left the oil price
+#' equation at about 0.8 of the maximum likelihood residual standard deviation in
+#' two chains. Whether a centred model is right is again what the comparison with
+#' least squares shows.
 #'
 #' For a model with time varying cointegration parameters
 #' \code{p_tau_i = "ml"} centres the marginal prior of the

@@ -1,5 +1,11 @@
 # bvartools (development version)
 
+* **The README explains how R's BLAS library affects speed.** A new section
+  under "Installation" shows how to switch R to OpenBLAS on Windows and Linux,
+  or to Accelerate on macOS. For a time varying parameter VAR this halved the
+  sampling time and matched the standalone BayesTS executable, while compiling
+  with `-O3` made no difference.
+
 * **`add_priors()` rejects non-positive Wishart degrees of freedom.** The
   documentation of `sigma$df` said "a non-negative integer" and `add_priors()`
   only stopped for negative values, but every Wishart sampler rejects

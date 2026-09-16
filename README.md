@@ -144,6 +144,40 @@ its version. In Claude Code it installs as a plugin:
 
 Other assistants can be pointed at `inst/agents/AGENTS.md`.
 
+### Speed and R’s BLAS library
+
+The samplers spend most of their time in linear algebra, which R hands
+to its BLAS library. The reference BLAS that comes with R on Windows and
+with many Linux builds is slow, and switching R to an optimised BLAS
+such as OpenBLAS speeds up estimation far more than any compiler
+setting. For a time varying parameter VAR with three variables and two
+lags, OpenBLAS halved the time of `add_posterior_coefficients()` and
+brought it level with the standalone BayesTS executable, while compiling
+with `-O3` instead of R’s default `-O2` made no difference. The BLAS
+belongs to the R installation rather than to the package, so it has to
+be changed there:
+
+- **Windows:** Replace `Rblas.dll` in the `bin/x64` folder of the R
+  installation with the OpenBLAS DLL renamed to `Rblas.dll`, and copy
+  the DLLs it depends on (for a MinGW build `libgfortran-5.dll`,
+  `libgomp-1.dll`, `libquadmath-0.dll`, `libgcc_s_seh-1.dll` and
+  `libwinpthread-1.dll`) into the same folder. Keep a copy of the
+  original file. Replace only `Rblas.dll`, not `Rlapack.dll`, which R
+  cannot load from OpenBLAS.
+- **Linux:** Install OpenBLAS, e.g. `sudo apt install libopenblas-dev`
+  on Debian and Ubuntu, and select it with
+  `sudo update-alternatives --config libblas.so.3-x86_64-linux-gnu`.
+  Distributions using FlexiBLAS, such as Fedora, select it through
+  `flexiblas`.
+- **macOS:** CRAN’s R can switch to Apple’s Accelerate framework as
+  described in the [R for macOS
+  FAQ](https://cran.r-project.org/bin/macosx/RMacOSX-FAQ.html).
+
+An optimised BLAS may use several threads for each operation. When
+several chains or models are run in parallel processes, set
+`OPENBLAS_NUM_THREADS=1` (or `OMP_NUM_THREADS=1` for an OpenMP build of
+OpenBLAS) so that the processes do not compete for the same cores.
+
 ## Usage
 
 This example covers the estimation of a simple Bayesian VAR (BVAR)

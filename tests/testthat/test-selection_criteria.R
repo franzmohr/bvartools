@@ -228,8 +228,8 @@ test_that("AIC orders the ranks of a VEC model of at_macrodata levels as maximum
   models <- add_priors(models, coef = list(v_i = 0, v_i_det = 0),
                        coint = list(v_i = 0, p_tau_i = 1),
                        sigma = list(df = 1, scale = 0.0001))
-  models <- add_initial_values(models)
   set.seed(20260914)
+  models <- add_initial_values(models)
   models <- add_posterior_coefficients(models)
   models <- add_posterior_loglik(models)
   criteria <- selection_criteria(models)

@@ -181,8 +181,8 @@ test_that("the generated data can be estimated", {
   model <- add_priors(model, coef = list(v_i = 1, v_i_det = 1 / 10),
                       coint = list(v_i = 0, p_tau_i = 1),
                       sigma = list(df = "k", scale = 1))
-  model <- add_initial_values(model)
   set.seed(9)
+  model <- add_initial_values(model)
   model <- add_posterior_coefficients(model)
 
   expect_identical(nrow(model[["posterior"]][["beta"]][["coeffs"]]), 10L)

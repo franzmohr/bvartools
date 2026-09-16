@@ -109,6 +109,8 @@ If researchers want to fine-tune individual prior specifications, this can be do
 Function `add_initial_values` adds initial values of posterior coefficients to `model_with_prior`. The default behaviour of the function is to obtain an LS estimate of the coefficients.
 
 ```{r}
+# The seed of the posterior simulation is drawn here
+set.seed(1234567)
 model <- add_initial_values(model, method = "ols")
 ```
 

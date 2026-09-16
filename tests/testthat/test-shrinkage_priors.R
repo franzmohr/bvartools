@@ -344,8 +344,8 @@ test_that("a VEC model with variable selection has finite inclusion priors and s
     expect_true(all(is.finite(inprior)), info = method)
     expect_true(all(inprior >= 0 & inprior <= 1), info = method)
 
-    model <- add_initial_values(model)
     set.seed(20260913)
+    model <- add_initial_values(model)
     expect_no_error(model <- add_posterior_coefficients(model))
     expect_identical(n_draws(model), 10L)
   }

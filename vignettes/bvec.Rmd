@@ -24,7 +24,6 @@ To illustrate the workflow of the analysis, the Austrian long-term interest rate
 
 ``` r
 library(bvartools)
-#> Lade nötiges Paket: coda
 
 data("at_macrodata")
 
@@ -330,9 +329,9 @@ object_ml <- add_priors(object_ml,
                         coint = list(v_i = "ml", p_tau_i = "ml", weight = 1),
                         sigma = list(df = 1, scale = .0001))
 
+set.seed(7654321)
 object_ml <- add_initial_values(object_ml, method = "maxlik")
 
-set.seed(7654321)
 bvec_ml <- add_posterior_coefficients(object_ml)
 ```
 
@@ -347,9 +346,9 @@ beta_ratio <- function(object) {
 
 round(rbind("Uniform prior" = beta_ratio(bvec_est),
             "ML prior, weight = 1" = beta_ratio(bvec_ml)), 3)
-#>                          5%    25%    50%    75%    95%
-#> Uniform prior        -8.886 -4.798 -3.730 -3.033 -2.337
-#> ML prior, weight = 1 -6.496 -4.418 -3.711 -3.222 -2.683
+#>                          5%    25%   50%    75%    95%
+#> Uniform prior        -8.886 -4.798 -3.73 -3.033 -2.337
+#> ML prior, weight = 1 -6.538 -4.437 -3.73 -3.213 -2.653
 ```
 
 Since the centre is estimated from the same sample that the model is estimated on, the data enter twice, and the posterior overstates the precision of the cointegration space. Smaller values of `weight` reduce this. The prior is most useful where the likelihood alone is weakly informative about the space, for example in short samples or in larger systems.

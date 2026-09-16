@@ -1,5 +1,16 @@
 # bvartools (development version)
 
+* **The vignettes and tests seed before `add_initial_values()`.** Since the
+  seed of the posterior simulation is drawn by `add_initial_values()`, a
+  `set.seed()` between it and `add_posterior_coefficients()` no longer changes
+  the draws, and a model whose initial values were added first was simulated
+  with a seed that no earlier call had fixed. The vignettes 'Introduction to
+  bvartools', 'Bayesian Error Correction Models with Priors on the
+  Cointegration Space', 'Bayesian Quantile VARs in bvartools' and 'Sign
+  Restrictions in bvartools' and 26 places in the tests called `set.seed()`
+  there.
+  It now comes first, and the four vignettes are pre-compiled again.
+
 * **Lists of models from other packages are seeded and simulated on several
   cores.** `add_seed()` on a `modellist` or an `expandingwindow` numbered only
   VAR and VEC models, and returned the dynamic factor models of dfmtools, which

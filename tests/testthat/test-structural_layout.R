@@ -18,8 +18,8 @@ structural_var_k4 <- function(varsel = "none") {
   model <- suppressWarnings(
     add_priors(model, coef = list(v_i = 1, v_i_det = 0.1), sigma = list(shape = 3, rate = 0.01),
                varsel = if (varsel == "bvs") list(inprior = 0.5) else NULL))
-  model <- add_initial_values(model)
   set.seed(20260914)
+  model <- add_initial_values(model)
   add_posterior_coefficients(model)
 }
 

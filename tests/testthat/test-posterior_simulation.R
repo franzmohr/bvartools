@@ -17,8 +17,8 @@ test_that("the burn-in draws are discarded", {
                             iterations = 12, burnin = 50)
   short <- add_priors(short, coef = list(v_i = 0, v_i_det = 0),
                       sigma = list(df = 1, scale = 0.0001))
-  short <- add_initial_values(short)
   set.seed(11)
+  short <- add_initial_values(short)
   short <- add_posterior_coefficients(short)
 
   # Only the post-burn-in draws are kept, regardless of the burn-in length.
@@ -92,8 +92,8 @@ test_that("posterior simulation runs for every model of a modellist", {
                              iterations = 10, burnin = 5)
   models <- add_priors(models, coef = list(v_i = 0, v_i_det = 0),
                        sigma = list(df = 1, scale = 0.0001))
-  models <- add_initial_values(models)
   set.seed(7)
+  models <- add_initial_values(models)
   models <- add_posterior_coefficients(models)
 
   expect_s3_class(models, "modellist")
@@ -112,8 +112,8 @@ test_that("stochastic volatility specifications produce draws", {
                       sigma = list(mu = 0, v_i = 0.01, shape = 3,
                                    rate = 0.0001, state_variance = 0.05,
                                    offset = 0.0001))
-  model <- add_initial_values(model)
   set.seed(3)
+  model <- add_initial_values(model)
   model <- add_posterior_coefficients(model)
 
   expect_identical(nrow(model[["posterior"]][["a"]][["coeffs"]]), 10L)
@@ -165,8 +165,8 @@ test_that("time varying parameters are drawn for every period", {
                       coef = list(v_i = 1, v_i_det = 1,
                                   shape = 3, rate = 0.0001),
                       sigma = list(df = 3, scale = 0.0001))
-  model <- add_initial_values(model)
   set.seed(3)
+  model <- add_initial_values(model)
   model <- add_posterior_coefficients(model)
 
   spec <- model[["model"]]

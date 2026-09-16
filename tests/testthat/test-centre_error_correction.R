@@ -24,8 +24,8 @@ centred_vec_priors <- function(model, tvp = FALSE) {
 centred_vec_fitted <- function(tvp = FALSE, scale = FALSE) {
   cached_fixture(paste0("vec_centred_", tvp, "_", scale), {
     model <- scale_error_correction(centred_vec_model(tvp), scale = scale, centre = TRUE)
-    model <- add_initial_values(centred_vec_priors(model, tvp))
     set.seed(20260914)
+    model <- add_initial_values(centred_vec_priors(model, tvp))
     add_posterior_loglik(add_posterior_coefficients(model))
   })
 }
@@ -179,8 +179,8 @@ test_that("bvec reconstructs the levels from a centred error correction term", {
   model <- create_bvecmodel(vec_data(), p = 1, r = 1, const = "unrestricted",
                             iterations = fx_iterations, burnin = fx_burnin)
   model <- scale_error_correction(model, centre = TRUE)
-  model <- add_initial_values(centred_vec_priors(model))
   set.seed(20260914)
+  model <- add_initial_values(centred_vec_priors(model))
   fitted <- add_posterior_coefficients(model)
   k <- fitted[["model"]][["k"]]
   r <- fitted[["model"]][["rank"]]

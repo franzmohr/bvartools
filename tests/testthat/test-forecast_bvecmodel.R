@@ -67,8 +67,8 @@ test_that("VEC models over an expanding window are forecast and evaluated direct
                       coint = list(v_i = 0, p_tau_i = 1),
                       sigma = list(df = "k", scale = 1))
   windows <- use_expanding_window(model, start = c(1994, 2))
-  windows <- add_initial_values(windows)
   set.seed(23)
+  windows <- add_initial_values(windows)
   windows <- add_posterior_coefficients(windows)
   windows <- add_posterior_loglik(windows)
 

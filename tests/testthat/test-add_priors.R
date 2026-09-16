@@ -412,8 +412,8 @@ test_that("scaling is refused once the space prior has a direction", {
 test_that("a tight ML prior keeps the draws of beta in the estimated space", {
   space <- ml_space()
   model <- ml_coint_priors(list(v_i = "ml", p_tau_i = "ml", weight = 1e6))
-  model <- add_initial_values(model)
   set.seed(314159)
+  model <- add_initial_values(model)
   model <- add_posterior_coefficients(model)
 
   tilt <- function(object) {

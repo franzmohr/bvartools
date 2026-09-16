@@ -49,8 +49,8 @@ test_that("without innovations the density is the log-likelihood of the last per
   for (spec in specs) {
     label <- paste(unlist(spec), collapse = " ")
     model <- do.call(predlik_vec, spec)
-    model <- add_initial_values(model)
     set.seed(20110816)
+    model <- add_initial_values(model)
     model <- add_posterior_loglik(add_posterior_coefficients(model))
 
     tt <- nrow(model[["data"]][["train"]][["y"]])
@@ -64,8 +64,8 @@ test_that("each window predicts the observation the next window adds", {
   model <- predlik_vec(tvp = FALSE, error = "wishart")
   windows <- use_expanding_window(model, start = stats::time(model[["data"]][["train"]][["y"]])[
     nrow(model[["data"]][["train"]][["y"]]) - 2])
-  windows <- add_initial_values(windows)
   set.seed(1)
+  windows <- add_initial_values(windows)
   windows <- add_posterior_coefficients(windows)
   windows <- add_predictive_loglik(windows)
 
@@ -84,8 +84,8 @@ test_that("each window predicts the observation the next window adds", {
 })
 
 test_that("time varying states are carried forward before the density is taken", {
-  model <- add_initial_values(predlik_vec(tvp = TRUE, error = "sv+covar"))
   set.seed(2)
+  model <- add_initial_values(predlik_vec(tvp = TRUE, error = "sv+covar"))
   model <- add_posterior_coefficients(model)
   newdata <- last_observation(model)
 
@@ -101,8 +101,8 @@ test_that("time varying states are carried forward before the density is taken",
 })
 
 test_that("the state variance of the log volatilities is read when it is stored", {
-  model <- add_initial_values(predlik_vec(tvp = TRUE, error = "sv"))
   set.seed(5)
+  model <- add_initial_values(predlik_vec(tvp = TRUE, error = "sv"))
   model <- add_posterior_coefficients(model)
   k <- ncol(model[["data"]][["train"]][["y"]])
   tt <- nrow(model[["data"]][["train"]][["y"]])
@@ -122,8 +122,8 @@ test_that("selection_criteria sums the predictive densities to the LPL", {
   class(models) <- c("modellist", "list")
   y <- models[[1]][["data"]][["train"]][["y"]]
   windows <- use_expanding_window(models, start = stats::time(y)[nrow(y) - 3])
-  windows <- add_initial_values(windows)
   set.seed(6)
+  windows <- add_initial_values(windows)
   windows <- add_posterior_coefficients(windows)
   windows <- add_predictive_loglik(windows)
 
@@ -149,10 +149,10 @@ test_that("windows the density cannot be taken for are refused", {
 
   model <- predlik_vec(tvp = FALSE, error = "wishart")
   y <- model[["data"]][["train"]][["y"]]
+  set.seed(7)
   windows <- add_initial_values(use_expanding_window(model, start = stats::time(y)[nrow(y) - 1]))
   expect_error(add_predictive_loglik(windows), "no posterior draws")
 
-  set.seed(7)
   windows <- add_posterior_coefficients(windows)
   # `[` drops the class of a list, so it is put back.
   single <- windows[1]

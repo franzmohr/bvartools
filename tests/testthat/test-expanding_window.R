@@ -33,8 +33,8 @@ test_that("the whole workflow runs over an expanding window", {
   model <- add_priors(model, coef = list(v_i = 0, v_i_det = 0),
                       sigma = list(df = 1, scale = 0.0001))
   windows <- use_expanding_window(model, start = c(1997, 2))
-  windows <- add_initial_values(windows)
   set.seed(19)
+  windows <- add_initial_values(windows)
   windows <- add_posterior_coefficients(windows)
   windows <- add_posterior_loglik(windows)
 
@@ -139,8 +139,8 @@ test_that("the forecasts of every window start from the last period of that wind
                           const = "unrestricted", iterations = 10, burnin = 5)
   vec <- add_priors(vec, coef = list(v_i = 0, v_i_det = 0), coint = list(v_i = 0, p_tau_i = 1),
                     sigma = list(df = "k", scale = 1e-4))
-  vec_windows <- add_initial_values(use_expanding_window(vec, start = c(2019, 3)))
   set.seed(1)
+  vec_windows <- add_initial_values(use_expanding_window(vec, start = c(2019, 3)))
   vec_windows <- add_forecast_input(vec_to_var(add_posterior_coefficients(vec_windows)), n_ahead = 1)
   for (w in vec_windows) {
     y <- as.matrix(w[["data"]][["train"]][["y"]])

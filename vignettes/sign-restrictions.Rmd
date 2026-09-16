@@ -52,9 +52,9 @@ model <- add_priors(model,
                     coef = list(v_i = 1, v_i_det = 1 / 10),
                     sigma = list(df = "k", scale = 1))
 
+set.seed(1234567)
 model <- add_initial_values(model)
 
-set.seed(1234567)
 model <- add_posterior_coefficients(model)
 ```
 
@@ -102,7 +102,7 @@ Some draws may not yield an admissible rotation within `max_tries` attempts, and
 ``` r
 summary(model)[["model"]][["sign_restrictions"]][c("accepted", "draws")]
 #> $accepted
-#> [1] 744
+#> [1] 737
 #> 
 #> $draws
 #> [1] 10000
@@ -156,8 +156,8 @@ round(chol_ir[1:4, ], 3)
 #>        2.5%   50% 97.5%
 #> [1,]  0.000 0.000 0.000
 #> [2,] -0.037 0.026 0.090
-#> [3,] -0.036 0.026 0.091
-#> [4,] -0.033 0.030 0.094
+#> [3,] -0.037 0.024 0.089
+#> [4,] -0.034 0.030 0.094
 ```
 
 The recursive responses show a mild form of the *price puzzle* of Sims (1992): the median response of inflation to a contractionary shock is positive at every horizon, which is the opposite of what a policy tightening is supposed to do, although its credible interval includes zero in the first quarters. They also begin at exactly zero, because ordering the policy rate last assumes that inflation cannot react within the quarter.

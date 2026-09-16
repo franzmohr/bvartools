@@ -73,6 +73,7 @@ model <- add_priors(model,
 ### Adding initial values
 
 ```{r}
+set.seed(1234567)
 model <- add_initial_values(model, method = "ols")
 ```
 
@@ -81,7 +82,6 @@ The initial value of each scale is the mean of the check function of the LS resi
 ## Obtaining posterior draws
 
 ```{r, message=FALSE, warning=FALSE}
-set.seed(1234567)
 model <- add_posterior_coefficients(model)
 ```
 
@@ -131,8 +131,8 @@ models <- create_bvarmodel(data, p = 1, deterministic = "const",
 models <- add_priors(models,
                      coef = list(v_i = 1),
                      sigma = list(shape = 3, rate = .01))
-models <- add_initial_values(models)
 set.seed(1234567)
+models <- add_initial_values(models)
 models <- add_posterior_coefficients(models)
 ```
 
@@ -175,8 +175,8 @@ tvp_model <- create_bvarmodel(data, p = 1, deterministic = "const",
 tvp_model <- add_priors(tvp_model,
                         coef = list(v_i = 1, shape = 3, rate = .0001),
                         sigma = list(shape = 3, rate = .01))
-tvp_model <- add_initial_values(tvp_model)
 set.seed(1234567)
+tvp_model <- add_initial_values(tvp_model)
 tvp_model <- add_posterior_coefficients(tvp_model)
 
 tvp_model[["model"]][["algorithm"]]

@@ -107,8 +107,8 @@ test_that("forecast errors are computed against a test sample", {
                             iterations = 10, burnin = 5)
   model <- add_priors(model, coef = list(v_i = 0, v_i_det = 0),
                       sigma = list(df = 1, scale = 0.0001))
-  model <- add_initial_values(model)
   set.seed(31)
+  model <- add_initial_values(model)
   model <- add_posterior_coefficients(model)
   model <- add_forecast_input(model, n_ahead = 4)
   model <- add_posterior_forecasts(model)

@@ -212,8 +212,8 @@ test_that("the generated data can be estimated", {
                             iterations = 10, burnin = 5)
   model <- add_priors(model, coef = list(v_i = 0, v_i_det = 0),
                       sigma = list(df = 1, scale = 0.0001))
-  model <- add_initial_values(model)
   set.seed(15)
+  model <- add_initial_values(model)
   model <- add_posterior_coefficients(model)
 
   expect_identical(dim(model[["posterior"]][["a"]][["coeffs"]]), c(10L, 4L))

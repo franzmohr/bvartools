@@ -60,8 +60,8 @@ test_that("a modellist of VEC models is converted element by element", {
   models <- add_priors(models, coef = list(v_i = 1, v_i_det = 1 / 10),
                        coint = list(v_i = 0, p_tau_i = 1),
                        sigma = list(df = "k", scale = 1))
-  models <- add_initial_values(models)
   set.seed(17)
+  models <- add_initial_values(models)
   models <- add_posterior_coefficients(models)
   converted <- vec_to_var(models)
 
@@ -128,8 +128,8 @@ test_that("a VEC model with stochastic volatility forecasts from its last period
   model <- add_priors(model, coef = list(v_i = 1, v_i_det = 0.1),
                       coint = list(v_i = 0, p_tau_i = 1),
                       sigma = tvp_sigma_prior("sv"))
-  model <- add_initial_values(model)
   set.seed(204)
+  model <- add_initial_values(model)
   vec <- add_posterior_coefficients(model)
 
   # The coefficients are constant, the error precision is a path. The
@@ -214,8 +214,8 @@ test_that("an expanding window of VEC models can be evaluated out of sample", {
                       coint = list(v_i = 0, p_tau_i = 1),
                       sigma = list(df = "k", scale = 1))
   windows <- use_expanding_window(model, start = c(1994, 2))
-  windows <- add_initial_values(windows)
   set.seed(23)
+  windows <- add_initial_values(windows)
   windows <- add_posterior_coefficients(windows)
 
   converted <- vec_to_var(windows)

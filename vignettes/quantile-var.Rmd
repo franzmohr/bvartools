@@ -72,6 +72,7 @@ model <- add_priors(model,
 
 
 ``` r
+set.seed(1234567)
 model <- add_initial_values(model, method = "ols")
 ```
 
@@ -81,7 +82,6 @@ The initial value of each scale is the mean of the check function of the LS resi
 
 
 ``` r
-set.seed(1234567)
 model <- add_posterior_coefficients(model)
 ```
 
@@ -103,59 +103,59 @@ summary(model)
 #> 
 #> Variable: dy 
 #> 
-#>              Mean        SD    Naive SD Time-series SD       2.5%         50%
-#> dy.l1 -0.04903842 0.0780494 0.001745238    0.004227637 -0.1966847 -0.05041271
-#> Dp.l1 -0.16504138 0.2113658 0.004726284    0.011272715 -0.5561355 -0.17619785
-#> r.l1  -0.05535336 0.1017347 0.002274857    0.005227429 -0.2568706 -0.05206691
-#> const  0.12426473 0.1213122 0.002712623    0.006538357 -0.1347308  0.13339408
+#>              Mean         SD    Naive SD Time-series SD       2.5%         50%
+#> dy.l1 -0.05070034 0.07681069 0.001717539    0.003829754 -0.1955109 -0.05341339
+#> Dp.l1 -0.18645801 0.21040121 0.004704714    0.011116518 -0.5870609 -0.18858131
+#> r.l1  -0.03917954 0.10502845 0.002348508    0.005297084 -0.2524339 -0.03744732
+#> const  0.11961806 0.11551694 0.002583037    0.005632198 -0.1089226  0.12320614
 #>           97.5% 
-#> dy.l1 0.1190112 
-#> Dp.l1 0.2817513 
-#> r.l1  0.1431015 
-#> const 0.3415723 
+#> dy.l1 0.1076530 
+#> Dp.l1 0.2390266 
+#> r.l1  0.1653208 
+#> const 0.3426683 
 #> 
 #> Variable: Dp 
 #> 
 #>             Mean         SD     Naive SD Time-series SD        2.5%        50%
-#> dy.l1 0.02748835 0.03073994 0.0006873658    0.001700689 -0.03425108 0.02718704
-#> Dp.l1 0.38958651 0.08540328 0.0019096754    0.004906762  0.22434898 0.39187049
-#> r.l1  0.14884315 0.05000869 0.0011182284    0.003023562  0.05341395 0.14846509
-#> const 0.02945898 0.05202418 0.0011632960    0.003286410 -0.08119868 0.03232272
+#> dy.l1 0.02427239 0.02836593 0.0006342814    0.001570115 -0.03465764 0.02549824
+#> Dp.l1 0.39143351 0.08451684 0.0018898541    0.005123243  0.23374426 0.38998695
+#> r.l1  0.14932538 0.05177775 0.0011577857    0.004030321  0.04858781 0.15002001
+#> const 0.03422483 0.04817026 0.0010771197    0.002736839 -0.06963914 0.03676856
 #>            97.5%  
-#> dy.l1 0.09171386  
-#> Dp.l1 0.54781470 *
-#> r.l1  0.24600289 *
-#> const 0.12177108  
+#> dy.l1 0.07931217  
+#> Dp.l1 0.55580432 *
+#> r.l1  0.24873370 *
+#> const 0.12479456  
 #> 
 #> Variable: r 
 #> 
 #>              Mean          SD     Naive SD Time-series SD         2.5%
-#> dy.l1  0.03258796 0.008273333 0.0001849974   0.0004512196  0.016769314
-#> Dp.l1  0.04661652 0.022393453 0.0005007328   0.0011824459  0.005701432
-#> r.l1   0.93871587 0.011337929 0.0002535238   0.0007093046  0.916329146
-#> const -0.06022946 0.010848768 0.0002425858   0.0004986221 -0.083295942
+#> dy.l1  0.03179936 0.008245381 0.0001843723   0.0004369241  0.015824997
+#> Dp.l1  0.04844036 0.023006443 0.0005144397   0.0012140855  0.004602469
+#> r.l1   0.93839226 0.011157976 0.0002494999   0.0006136322  0.916446482
+#> const -0.06005347 0.011175653 0.0002498952   0.0005369631 -0.082898648
 #>               50%       97.5%  
-#> dy.l1  0.03243320  0.04858576 *
-#> Dp.l1  0.04592719  0.09229169 *
-#> r.l1   0.93926071  0.95996589 *
-#> const -0.05989506 -0.04008388 *
+#> dy.l1  0.03184393  0.04695257 *
+#> Dp.l1  0.04819608  0.09398691 *
+#> r.l1   0.93836741  0.96043538 *
+#> const -0.05999209 -0.03904161 *
 #> 
 #> Variance-covariance matrix:
 #> 
 #>              Mean          SD     Naive SD Time-series SD         2.5%
-#> dy_dy 0.935427742 0.650417247 0.0145437718   0.0145437718 0.2009597330
+#> dy_dy 0.925692932 0.642990635 0.0143777077   0.0143777077 0.2033234199
 #> dy_Dp 0.000000000 0.000000000 0.0000000000   0.0000000000 0.0000000000
 #> dy_r  0.000000000 0.000000000 0.0000000000   0.0000000000 0.0000000000
-#> Dp_Dp 0.134201077 0.089895246 0.0020101188   0.0020865553 0.0302640553
+#> Dp_Dp 0.137292992 0.093405226 0.0020886043   0.0024557246 0.0314118604
 #> Dp_r  0.000000000 0.000000000 0.0000000000   0.0000000000 0.0000000000
-#> r_r   0.006833615 0.006876183 0.0001537561   0.0001537561 0.0004822742
+#> r_r   0.006722717 0.007114527 0.0001590857   0.0001561546 0.0004842506
 #>               50%      97.5%  
-#> dy_dy 0.767248449 2.74561650 *
+#> dy_dy 0.765535765 2.52794969 *
 #> dy_Dp 0.000000000 0.00000000  
 #> dy_r  0.000000000 0.00000000  
-#> Dp_Dp 0.111804173 0.38272701 *
+#> Dp_Dp 0.113931894 0.38344611 *
 #> Dp_r  0.000000000 0.00000000  
-#> r_r   0.004508007 0.02636603 *
+#> r_r   0.004518018 0.02569591 *
 ```
 
 ### Does it estimate the quantile it was asked for?
@@ -199,8 +199,8 @@ models <- create_bvarmodel(data, p = 1, deterministic = "const",
 models <- add_priors(models,
                      coef = list(v_i = 1),
                      sigma = list(shape = 3, rate = .01))
-models <- add_initial_values(models)
 set.seed(1234567)
+models <- add_initial_values(models)
 models <- add_posterior_coefficients(models)
 ```
 
@@ -213,7 +213,7 @@ data.frame(quantile = sapply(models, function(x) {x[["model"]][["quantile"]]}),
 #>   quantile share_below_zero
 #> 1      0.1            0.093
 #> 2      0.5            0.497
-#> 3      0.9            0.907
+#> 3      0.9            0.903
 ```
 
 The shares sit near their quantiles rather than on them. With 161 observations per equation one of them is worth 0.6 percentage points, and these are posterior means under an informative prior rather than the frequentist estimator, whose first order condition would pin the share exactly. What a model that had lost its quantile would show is different in kind: three shares near 0.5.
@@ -255,8 +255,8 @@ tvp_model <- create_bvarmodel(data, p = 1, deterministic = "const",
 tvp_model <- add_priors(tvp_model,
                         coef = list(v_i = 1, shape = 3, rate = .0001),
                         sigma = list(shape = 3, rate = .01))
-tvp_model <- add_initial_values(tvp_model)
 set.seed(1234567)
+tvp_model <- add_initial_values(tvp_model)
 tvp_model <- add_posterior_coefficients(tvp_model)
 
 tvp_model[["model"]][["algorithm"]]

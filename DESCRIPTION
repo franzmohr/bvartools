@@ -8,7 +8,7 @@ License: GPL (>= 2)
 Depends: 
     R (>= 3.5),
     coda
-Imports: grDevices, graphics, hdf5r, Matrix, methods, Rcpp (>= 1.0.12), stats
+Imports: grDevices, graphics, hdf5r, Matrix, methods, parallel, Rcpp (>= 1.0.12), stats
 LinkingTo: Rcpp, RcppArmadillo
 SystemRequirements: GNU make
 Encoding: UTF-8
@@ -107,6 +107,7 @@ Collate:
     'minnesota_prior.bvarmodel.R'
     'minnesota_prior.bvecmodel.R'
     'minnesota_prior.modellist.R'
+    'parallel_models.R'
     'plot.bvarfevd.R'
     'plot.bvarirf.R'
     'plot.bvarmodel.R'

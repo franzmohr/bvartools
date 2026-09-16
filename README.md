@@ -194,6 +194,24 @@ The script’s own session keeps all cores. To restrict it as well, set
 the variable before R starts, e.g.
 `OPENBLAS_NUM_THREADS=1 Rscript script.R`.
 
+For lists of models none of this is needed:
+`add_posterior_coefficients()`, `add_posterior_forecasts()` and
+`add_posterior_loglik()` take an argument `cores` for objects of class
+‘modellist’ and ‘expandingwindow’, start that many workers with one BLAS
+thread each and stop them again. For 16 TVP models, two lag orders over
+eight expanding windows, eight workers cut the time of
+`add_posterior_coefficients()` from 21 to 5 seconds.
+
+``` r
+models <- add_posterior_coefficients(models, cores = 8)
+```
+
+Seeded coefficient draws are the same on any number of workers. OpenBLAS
+rounds some results differently on one thread than on several, though,
+and a Markov chain carries that forward, so they equal those of a
+session that runs its BLAS on one thread rather than those of a session
+on several.
+
 ## Usage
 
 This example covers the estimation of a simple Bayesian VAR (BVAR)

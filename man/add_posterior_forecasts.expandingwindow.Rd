@@ -4,13 +4,17 @@
 \alias{add_posterior_forecasts.expandingwindow}
 \title{Add Forecasts}
 \usage{
-\method{add_posterior_forecasts}{expandingwindow}(object, ...)
+\method{add_posterior_forecasts}{expandingwindow}(object, ..., cores = 1)
 }
 \arguments{
 \item{object}{an object of class 'expandingwindow', usually, the result of a call
 to \code{\link{add_posterior_coefficients}} and \code{\link{add_forecast_input}}.}
 
 \item{...}{arguments passed forward to method.}
+
+\item{cores}{the number of worker processes the models are simulated on.
+Defaults to 1, which simulates them one after the other in this session.
+See section 'Parallel simulation'.}
 }
 \value{
 The object in \code{object} with forecast draws added to each of its models, as
@@ -19,6 +23,48 @@ described in \code{\link{add_posterior_forecasts.bvarmodel}}.
 \description{
 Calculates and adds forecasts to the elements of an object of class 'expandingwindow'.
 }
+\section{Parallel simulation}{
+
+With \code{cores} above 1 the models are simulated on a cluster of that many
+worker processes, started with \code{\link[parallel]{makeCluster}} and
+stopped when the call returns, but on no more workers than there are models.
+Nested lists, such as the 'modellist' of 'expandingwindow' lists that
+\code{\link{use_expanding_window}} returns for several specifications, are
+shared out model by model.
+
+Each worker runs with a single BLAS thread: the function sets
+\code{OPENBLAS_NUM_THREADS}, \code{OMP_NUM_THREADS}, \code{MKL_NUM_THREADS}
+and \code{VECLIB_MAXIMUM_THREADS} to 1 while the workers start, whatever
+this session has set, and puts them back afterwards. An optimised BLAS would
+otherwise start one thread per core in every worker, and the samplers do not
+become faster with more threads. The thread count of this session is not
+changed.
+
+The workers use the library paths of this session and load the installed
+version of the package. A function passed as \code{posterior_function},
+such as the one \code{\link{bayests_posterior}} returns, is sent to the
+workers along with the variables of the environment it was created in, and
+must not rely on anything else of this session.
+
+Coefficient draws do not depend on the number of workers. Every model is
+simulated with its own seed, see \code{\link{add_seed}}, and a model
+without one is given one from R's random number generator before it is sent
+off. The draws equal those of a simulation on one core in a session whose
+BLAS runs on one thread, as R's reference BLAS always does. An optimised
+BLAS such as OpenBLAS rounds some results differently in the last digits on
+one thread than on several, and a Markov chain carries such a difference
+forward, so a session running it on several threads gets different draws
+from the same posterior. Draws that are not seeded per model, such as those of
+\code{\link{add_posterior_forecasts}}, come from independent random number
+streams of the workers, set up with
+\code{\link[parallel]{clusterSetRNGStream}} from R's generator. They are
+reproduced by \code{\link{set.seed}} for a given number of workers, but
+differ from those of a simulation on one core.
+
+Starting the workers takes a moment, so a cluster pays off for lists of
+models that take longer than that to simulate.
+}
+
 \examples{
 
 # Load data

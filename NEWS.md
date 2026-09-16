@@ -1,5 +1,26 @@
 # bvartools (development version)
 
+* **Lists of models can be simulated on several cores.** The 'modellist' and
+  'expandingwindow' methods of `add_posterior_coefficients()`,
+  `add_posterior_forecasts()` and `add_posterior_loglik()` have a new argument
+  `cores`, 1 by default, which keeps the sequential simulation. With more, the
+  models -- counted through nested lists, such as the expanding windows of
+  several specifications -- are shared out over a PSOCK cluster of that many
+  workers, which is stopped when the call returns. The workers start with
+  `OPENBLAS_NUM_THREADS`, `OMP_NUM_THREADS`, `MKL_NUM_THREADS` and
+  `VECLIB_MAXIMUM_THREADS` set to 1, so that an optimised BLAS does not start
+  one thread per core in each of them, and the session gets its values back
+  afterwards. They use the library paths of the session. Coefficient draws are
+  seeded per model and do not depend on the number of workers; a model without
+  a seed is given one first. Forecasts draw from worker streams set up with
+  `clusterSetRNGStream()` from R's generator, so `set.seed()` reproduces them
+  for a given number of workers. An error on a worker is raised as on one core.
+  For 16 TVP models over eight expanding windows, eight workers cut the time of
+  `add_posterior_coefficients()` from 21 to 5 seconds. With OpenBLAS the
+  parallel draws equal those of a session running its BLAS on one thread:
+  OpenBLAS rounds some results differently on one thread than on several, and
+  a Markov chain carries the difference forward. `parallel` is a new import.
+
 * **The README explains how R's BLAS library affects speed.** A new section
   under "Installation" shows how to switch R to OpenBLAS on Windows and Linux,
   or to Accelerate on macOS. For a time varying parameter VAR this halved the

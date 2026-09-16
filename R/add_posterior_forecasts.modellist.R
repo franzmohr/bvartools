@@ -5,6 +5,8 @@
 #' @param object an object of class 'modellist', usually, the result of a call
 #' to \code{\link{add_posterior_coefficients}} and \code{\link{add_forecast_input}}.
 #' @param ... arguments passed forward to method.
+#' @inheritParams add_posterior_coefficients.modellist
+#' @inheritSection add_posterior_coefficients.modellist Parallel simulation
 #' 
 #' @return The object in \code{object} with forecast draws added to each of its models, as
 #' described in \code{\link{add_posterior_forecasts.bvarmodel}}.
@@ -40,7 +42,11 @@
 #' model <- add_posterior_forecasts(model)
 #' 
 #' @export
-add_posterior_forecasts.modellist <- function(object, ...){
+add_posterior_forecasts.modellist <- function(object, ..., cores = 1){
+
+  if (.use_cluster(object, cores)) {
+    return(.simulate_models_in_parallel(object, add_posterior_forecasts, cores, ...))
+  }
   
   for (i in 1:length(object)) {
     object[[i]] <- add_posterior_forecasts(object[[i]], ...)

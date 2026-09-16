@@ -5,6 +5,8 @@
 #' @param object an object of class 'expandingwindow', usually, the result of a call to
 #' \code{\link{add_posterior_coefficients}}.
 #' @param ... further arguments passed to or from other methods.
+#' @inheritParams add_posterior_coefficients.modellist
+#' @inheritSection add_posterior_coefficients.modellist Parallel simulation
 #' 
 #' @return The object in \code{object} with log-likelihood draws added to each of its models, as
 #' described in \code{\link{add_posterior_loglik.bvarmodel}}.
@@ -42,7 +44,11 @@
 #' model <- add_posterior_loglik(model)
 #' 
 #' @export
-add_posterior_loglik.expandingwindow <- function(object, ...){
+add_posterior_loglik.expandingwindow <- function(object, ..., cores = 1){
+
+  if (.use_cluster(object, cores)) {
+    return(.simulate_models_in_parallel(object, add_posterior_loglik, cores, ...))
+  }
   
   orig_class <- class(object)
   object <- lapply(object, add_posterior_loglik, ...)

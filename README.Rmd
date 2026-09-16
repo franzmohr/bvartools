@@ -140,7 +140,22 @@ so it has to be changed there:
 An optimised BLAS may use several threads for each operation. When several
 chains or models are run in parallel processes, set `OPENBLAS_NUM_THREADS=1`
 (or `OMP_NUM_THREADS=1` for an OpenMP build of OpenBLAS) so that the processes
-do not compete for the same cores.
+do not compete for the same cores. OpenBLAS reads the variable once, when R
+starts, so it has no effect in `.Renviron` or on the session that sets it with
+`Sys.setenv()`. Set it in the script before the line that starts the workers,
+which inherit it:
+
+```{r blas-threads, eval = FALSE}
+Sys.setenv(OPENBLAS_NUM_THREADS = 1)   # applies to workers started below
+
+library(parallel)
+cl <- makeCluster(4)
+# ... parLapply(cl, ...) running the models ...
+stopCluster(cl)
+```
+
+The script's own session keeps all cores. To restrict it as well, set the
+variable before R starts, e.g. `OPENBLAS_NUM_THREADS=1 Rscript script.R`.
 
 ## Usage
 

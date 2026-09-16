@@ -236,8 +236,8 @@ abline(h = 0, lty = "dashed")
 ```
 
 <div class="figure" style="text-align: center">
-<img src="figures/quantile-var-unnamed-chunk-10-1.png" alt="plot of chunk unnamed-chunk-10"  />
-<p class="caption">plot of chunk unnamed-chunk-10</p>
+<img src="figures/quantile-var-coefficient-by-quantile-1.png" alt="plot of chunk coefficient-by-quantile"  />
+<p class="caption">plot of chunk coefficient-by-quantile</p>
 </div>
 
 Since the models are independent of each other, a grid of this kind can be estimated in parallel without the samplers knowing about it.

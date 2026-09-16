@@ -1,5 +1,6 @@
 ---
 title: "Horse Races"
+author: "Franz X. Mohr"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Horse Races}
@@ -21,6 +22,9 @@ library(bvartools)
 
 ## Introduction
 
+In a horse race a set of competing models is estimated on the same data and ranked by how well they forecast. The comparison is more convincing, if it rests on forecasts that could actually have been made at the time. Therefore, each model is estimated repeatedly over an expanding window: the first window ends some periods before the end of the sample, each further window adds one period, and every estimate forecasts the periods, which follow the end of its window. The forecast errors of all windows are then summarised by out-of-sample statistics, which are complemented by the in-sample criteria of the vignette on model comparison.
+
+This vignette lets three specifications of a VAR model compete: models with a weakly informative prior and lag orders from one to four, a model with stochastic search variable selection (SSVS) and a model with Bayesian variable selection (BVS). The last section shows how forecasts from other sources can join the race.
 
 ## Workflow
 
@@ -42,6 +46,9 @@ expanding_window_start <- 2018
 # Shared specifications
 iterations <- 2000
 burnin <- 1000
+
+# Reset random number generator for reproducibility
+set.seed(1234567)
 ```
 
 
@@ -83,7 +90,7 @@ var_ssvs <- add_priors(var_ssvs,
 var_ssvs <- add_initial_values(var_ssvs)
 ```
 
-Thrird, create a series of VAR models with Bayesian variable selection à la Korobilis (2013):
+Third, create a series of VAR models with Bayesian variable selection à la Korobilis (2013):
 
 ```{r}
 var_bvs <- create_bvarmodel(data,
@@ -110,12 +117,6 @@ models <- combine_models(var_default,
                          var_ssvs,
                          var_bvs)
 ```
-
-<!-- Ensure that all models look at the same time series: -->
-
-<!-- ```{r} -->
-<!-- models <- align_model_obs(models) -->
-<!-- ``` -->
 
 
 ### Draw posteriors
@@ -164,35 +165,35 @@ print(sc, relative = 1)
 
 #### In-sample plots
 
-```{r, fig.width=5.5, fig.height=4.5}
+```{r bic, fig.width=5.5, fig.height=4.5}
 plot(sc, criterion = "BIC")
 ```
 
-```{r, fig.width=5.5, fig.height=4.5}
+```{r aic, fig.width=5.5, fig.height=4.5}
 plot(sc, criterion = "AIC")
 ```
 
 AIC and BIC penalise a model by the number of parameters it nominally has, which
-is the same number for all three models here: variable selection does not remove
+is the same number for the three models with four lags: variable selection does not remove
 a coefficient from the model, it shrinks it towards zero, and how much of the
 nominal freedom that leaves is decided by the data rather than by the count. WAIC
 penalises by the flexibility the fit actually used and is the criterion to
 compare such models with.
 
-```{r, fig.width=5.5, fig.height=4.5}
+```{r waic, fig.width=5.5, fig.height=4.5}
 plot(sc, criterion = "WAIC")
 ```
 
 #### Out-of-sample plots
 
-```{r, fig.width=5.5, fig.height=4.5}
+```{r fe, fig.width=5.5, fig.height=4.5}
 plot(sc, criterion = "FE")
 ```
-```{r, fig.width=5.5, fig.height=4.5}
+```{r afe, fig.width=5.5, fig.height=4.5}
 plot(sc, criterion = "AFE")
 ```
 
-```{r, fig.width=5.5, fig.height=4.5}
+```{r fe-by-period, fig.width=5.5, fig.height=4.5}
 plot_forecast_errors_by_period(models, criterion = "FE")
 ```
 
@@ -205,77 +206,95 @@ other, but also with the forecasts that institutions actually published. Functio
 to the list of models and which is then treated as one more competitor by all the
 functions above.
 
-The example below uses the [repository of macroeconomic
-projections](https://github.com/franzmohr/macroprojections), which collects the
-published forecasts of public institutions in a machine-readable format. It is not
-evaluated, because it requires an internet connection and the actual values of the
-forecasted variables, which have to be obtained from a statistical office. Any other
-source can be used in the same way, as long as the forecasts are provided in long
-format with one point forecast per row.
+Published forecasts can be taken from any source, as long as they are provided in
+long format with one point forecast per row. To keep this vignette self-contained,
+the following example uses two made-up forecasters instead. Each of them publishes
+a forecast for the current and the following three quarters at the beginning of
+every quarter from 2018Q1 to 2019Q4. Forecaster A is well informed: its forecasts
+are the realised values plus noise, which increases with the forecast horizon.
+Forecaster B always forecasts the mean of the series up to 2017Q4. Neither of them
+says anything about the performance of real forecasters.
 
-```{r, eval = FALSE}
-# Forecasts of Austrian institutions for Austria
-fcst <- read.csv("https://github.com/franzmohr/macroprojections/raw/master/data/forecasts.csv")
-fcst <- fcst[fcst[["ctry"]] == "122" &
-               fcst[["variable"]] %in% c("NGDP_RPCH", "PCPIPCH", "LUR"), ]
+```{r external-data}
+fcst <- expand.grid(origin = seq(2018, 2019.75, by = 0.25),
+                    h = 1:4,
+                    variable = colnames(data),
+                    forecaster = c("Forecaster A", "Forecaster B"),
+                    stringsAsFactors = FALSE)
 
-# 'actual' contains the annual realisations of the three variables, where the
-# columns are named as the variables of the forecasts
-model <- create_bvarmodel(actual, p = 1, deterministic = "const",
-                          iterations = 5000, burnin = 1000)
+# Period, for which a forecast is made, as in time(data)
+fcst[["period"]] <- fcst[["origin"]] + (fcst[["h"]] - 1) / 4
 
-model <- use_expanding_window(model, start = 2015)
+# Only periods with realised values can be evaluated
+fcst <- fcst[fcst[["period"]] <= 2019.75, ]
 
-model <- add_priors(model,
-                    coef = list(v_i = 1 / 10, v_i_det = 1 / 100),
-                    sigma = list(df = 3, scale = 1))
+# Realised values of each forecasted period
+realised <- data[cbind(match(round(fcst[["period"]] * 4), round(time(data) * 4)),
+                       match(fcst[["variable"]], colnames(data)))]
 
-model <- add_initial_values(model)
-model <- add_posterior_coefficients(model)
-model <- add_forecast_input(model, n_ahead = 3)
-model <- add_posterior_forecasts(model)
+# Sample before the first publication
+before <- window(data, end = c(2017, 4))
+
+noise <- rnorm(nrow(fcst),
+               sd = 0.5 * sqrt(fcst[["h"]]) *
+                 apply(diff(before), 2, sd)[fcst[["variable"]]])
+
+fcst[["value"]] <- ifelse(fcst[["forecaster"]] == "Forecaster A",
+                          realised + noise,
+                          colMeans(before)[fcst[["variable"]]])
+
+head(fcst)
 ```
 
 The columns of the data set do not have to follow a particular naming convention.
 They are specified in the arguments `period`, `origin`, `variable` and `value`,
-where `origin` contains the date, at which a forecast was published. Argument `by`
-produces one object per forecaster:
+where `origin` contains the date, at which a forecast was published, and periods
+follow the convention of `time`, i.e. 2018.25 for the second quarter of 2018. The
+names in column `variable` must be those of the endogenous variables of the models.
+Argument `by` produces one object per forecaster:
 
-```{r, eval = FALSE}
-external <- create_external_forecast(fcst, model,
-                                     period = "year",
-                                     origin = "pubdate",
+```{r external}
+external <- create_external_forecast(fcst, models,
+                                     period = "period",
+                                     origin = "origin",
                                      variable = "variable",
                                      value = "value",
-                                     by = "institution",
+                                     by = "forecaster",
                                      data_lag = 1)
 ```
 
-An institution, which publishes a forecast in the course of 2021, does not know the
-annual figures of 2021 yet. Argument `data_lag` states this publication lag of the
-data in periods, so that each forecast is matched to the estimation window, which
-ends in 2020. The forecast for 2021 is then the one-step ahead forecast of both the
-institution and the model. If an institution published multiple forecasts between
-two annual figures, only one of them is used, the latest by default, so that no
-forecaster enters the comparison twice.
+A forecaster, which publishes a forecast in the first quarter of 2018, does not
+know the value of that quarter yet and, since data are published with a delay, not
+even that of 2017Q4 in most cases. Argument `data_lag` states this publication lag
+of the data in periods, so that each forecast is matched to the estimation window,
+which ends in 2017Q4. The forecast for 2018Q1 is then the one-step ahead forecast of
+both the forecaster and the models. If a forecaster published multiple forecasts
+between two data releases, only one of them is used, the latest by default, so that
+no forecaster enters the comparison twice.
 
-From here on the external forecasts follow the workflow of the models. The functions,
-which add priors, initial values or posterior draws, are without effect for them:
+From here on the external forecasts follow the workflow of the models. The
+functions, which add priors, initial values or posterior draws, are without effect
+for them:
 
-```{r, eval = FALSE}
-models <- combine_models(model, external)
+```{r external-compare}
+all_models <- combine_models(models, external)
 
-models <- add_forecast_errors(models, test_sample = actual)
+all_models <- add_forecast_errors(all_models, test_sample = data)
 
-sc <- selection_criteria(models)
+sc_all <- selection_criteria(all_models)
 
-print(sc, relative = 1)
+print(sc_all, relative = 1)
 ```
 
-Since external forecasts are point forecasts, each publication contributes a single
-value to the out-of-sample statistics instead of a full posterior. Accordingly, their
-credible bands are degenerate and in-sample criteria are not available for them,
-which the printed comparison and the plots indicate by an empty entry.
+The two forecasters are the last two models of the list. Since external forecasts
+are point forecasts, each publication contributes a single value to the
+out-of-sample statistics instead of a full posterior. Accordingly, their credible
+bands are degenerate and in-sample criteria are not available for them, which the
+printed comparison and the plots indicate by an empty entry.
+
+```{r external-afe, fig.width=5.5, fig.height=4.5}
+plot(sc_all, criterion = "AFE")
+```
 
 
 ## Citing bvartools

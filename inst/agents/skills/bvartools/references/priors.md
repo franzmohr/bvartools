@@ -102,6 +102,9 @@ stopifnot(all(second_lag < first_lag))
   of endogenous variables, such as `"k"` or `"k + 3"`, and are stored as given,
   for a VEC as for a VAR. The Wishart VEC samplers add the rank `r` to the
   posterior degrees of freedom themselves.
+- The Wishart `df` must be positive. `add_priors()` stops for `df <= 0`,
+  including an expression in `k` that evaluates to zero or less, because
+  the samplers reject it; use `df = 1` or `"k"` for a weak prior.
 - `+covar` estimates the error covariances through a triangular decomposition;
   without it the error term is diagonal.
 - For stochastic volatility, `shape` and `rate` are the prior of the variance of

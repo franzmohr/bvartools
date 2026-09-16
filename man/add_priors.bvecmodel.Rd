@@ -114,7 +114,7 @@ Argument \code{sigma} must contain the elements that belong to the
 }
 The elements are
 \describe{
-  \item{\code{df}}{a non-negative integer, or a character expression in \code{k}, the number of
+  \item{\code{df}}{a positive integer, or a character expression in \code{k}, the number of
   endogenous variables, such as \code{"k"} or \code{"k + 3"}, specifying the prior degrees of
   freedom of the inverse Wishart prior. The samplers add the rank \eqn{r} of the cointegration
   matrix to the posterior degrees of freedom, as the prior of the loadings requires.}

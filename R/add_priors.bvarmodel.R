@@ -74,7 +74,7 @@
 #' }
 #' The elements are
 #' \describe{
-#'   \item{\code{df}}{a non-negative integer, or a character expression in \code{k}, the number of
+#'   \item{\code{df}}{a positive integer, or a character expression in \code{k}, the number of
 #'   endogenous variables, such as \code{"k"} or \code{"k + 3"}, specifying the prior degrees of
 #'   freedom of the inverse Wishart prior.}
 #'   \item{\code{scale}}{a positive numeric specifying the prior error variance of the endogenous
@@ -585,8 +585,11 @@ add_priors.bvarmodel <- function(object,
       }
     }
     
+    if (error_prior == "wishart" && any(as.integer(help_df) <= 0)) {
+      stop("Current specification implies non-positive prior degrees of freedom of the error term. 'sigma$df' must be positive.")
+    }
     if (any(help_df < 0)) {
-      stop("Current specification implies a negative prior degree of\nfreedom or shape parameter of the error term.")
+      stop("Current specification implies a negative prior shape parameter of the error term.")
     }
     
     if (error_prior == "wishart") {

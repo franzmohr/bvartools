@@ -1,5 +1,15 @@
 # bvartools (development version)
 
+* **`add_priors()` rejects non-positive Wishart degrees of freedom.** The
+  documentation of `sigma$df` said "a non-negative integer" and `add_priors()`
+  only stopped for negative values, but every Wishart sampler rejects
+  `df <= 0`, so `sigma = list(df = 0, ...)` passed `add_priors()` and failed
+  later in `add_posterior_coefficients()`. For VEC models this was hidden until
+  the error prior was stored as given, since `add_priors()` used to add the
+  rank to `df`. `add_priors()` now stops for `df <= 0` -- for a VAR after
+  truncating `df` to an integer, as it is stored -- and the documentation says
+  "a positive integer". The gamma `shape` keeps its non-negative check.
+
 * **The error correction term can be centred.** `scale_error_correction()` has
   new arguments `scale`, `TRUE` by default as before, and `centre`, `FALSE` by
   default. `centre = TRUE` subtracts the sample mean of each stochastic series

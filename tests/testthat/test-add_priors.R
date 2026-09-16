@@ -94,6 +94,50 @@ test_that("add_priors rejects unknown elements of sigma", {
   )
 })
 
+test_that("add_priors rejects non-positive Wishart degrees of freedom", {
+  # The samplers reject df <= 0, so add_priors() must stop before them.
+  msg <- "'sigma$df' must be positive"
+  expect_error(
+    add_priors(fx_var_model(), coef = list(v_i = 0, v_i_det = 0),
+               sigma = list(df = 0, scale = 0.0001)),
+    msg, fixed = TRUE
+  )
+  expect_error(
+    add_priors(fx_var_model(), coef = list(v_i = 0, v_i_det = 0),
+               sigma = list(df = "k - k", scale = 0.0001)),
+    msg, fixed = TRUE
+  )
+  # A VAR stores df as an integer, so a fraction below one truncates to zero.
+  expect_error(
+    add_priors(fx_var_model(), coef = list(v_i = 0, v_i_det = 0),
+               sigma = list(df = 0.5, scale = 0.0001)),
+    msg, fixed = TRUE
+  )
+  expect_error(
+    add_priors(fx_vec_model(), coef = list(v_i = 1, v_i_det = 1 / 10),
+               coint = list(v_i = 0, p_tau_i = 1),
+               sigma = list(df = 0, scale = 1)),
+    msg, fixed = TRUE
+  )
+  expect_error(
+    add_priors(fx_vec_model(), coef = list(v_i = 1, v_i_det = 1 / 10),
+               coint = list(v_i = 0, p_tau_i = 1),
+               sigma = list(df = -1, scale = 1)),
+    msg, fixed = TRUE
+  )
+
+  # The smallest accepted value reaches the sampler for both model classes.
+  var <- add_priors(fx_var_model(), coef = list(v_i = 0, v_i_det = 0),
+                    sigma = list(df = 1, scale = 0.0001))
+  expect_identical(var[["priors"]][["u_sigma"]][["df"]], 1L)
+  vec <- add_priors(fx_vec_model(), coef = list(v_i = 1, v_i_det = 1 / 10),
+                    coint = list(v_i = 0, p_tau_i = 1),
+                    sigma = list(df = 1, scale = 1))
+  expect_equal(vec[["priors"]][["u_sigma"]][["df"]], 1)
+  vec <- add_posterior_coefficients(add_initial_values(vec))
+  expect_false(is.null(vec[["posterior"]]))
+})
+
 test_that("add_priors rejects unknown elements of coint", {
   expect_error(
     add_priors(fx_vec_model(), coef = list(v_i = 1, v_i_det = 1 / 10),

@@ -173,8 +173,9 @@
       if (object[["model"]][["structural"]]) {
         stop("Structural models may not use a Wishart prior. Consider using a gamma prior instead.")
       }
-      if (sigma$df < 0) {
-        stop("Argument 'sigma$df' must be at least 0.")
+      # Expressions in k are checked once evaluated, in add_priors().
+      if (is.numeric(sigma$df) && any(sigma$df <= 0)) {
+        stop("Argument 'sigma$df' must be positive.")
       }
       if (sigma$scale <= 0) {
         stop("Argument 'sigma$scale' must be larger than 0.")

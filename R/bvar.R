@@ -125,7 +125,7 @@
 #' # Add priors
 #' model <- add_priors(data,
 #'                     coef = list(v_i = 0, v_i_det = 0),
-#'                     sigma = list(df = 0, scale = .00001))
+#'                     sigma = list(df = 1, scale = .00001))
 #'
 #' # Set RNG seed for reproducibility
 #' set.seed(1234567)

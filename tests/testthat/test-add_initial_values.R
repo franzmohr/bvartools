@@ -67,9 +67,11 @@ test_that("an unknown method and missing priors are rejected", {
 })
 
 test_that("a time varying model with BVS repeats its draws from the same seed", {
-  # The seed is set after add_initial_values(), and not before, on purpose: the
-  # state precisions of a TVP model used to be drawn there with no seed, so the
-  # chain started somewhere else in every R session.
+  # The two models go through add_initial_values() from different states of R's
+  # generator on purpose: the state precisions of a TVP model used to be drawn
+  # there, so the chain started somewhere else in every R session. The seeds
+  # add_initial_values() draws do differ, so both get the same one before the
+  # simulation.
   for (error in c("ald", "gamma")) {
     model <- create_bvarmodel(var_data(), p = 1, deterministic = "const", tvp = TRUE,
                               error = error, varsel = "bvs",
@@ -88,10 +90,8 @@ test_that("a time varying model with BVS repeats its draws from the same seed", 
                  as.numeric(model[["priors"]][["a"]][["shape"]] /
                               model[["priors"]][["a"]][["rate"]]))
 
-    set.seed(1000)
-    first <- add_posterior_coefficients(first)
-    set.seed(1000)
-    again <- add_posterior_coefficients(again)
+    first <- add_posterior_coefficients(add_seed(first, 1000))
+    again <- add_posterior_coefficients(add_seed(again, 1000))
     expect_identical(first[["posterior"]], again[["posterior"]], label = error)
   }
 })

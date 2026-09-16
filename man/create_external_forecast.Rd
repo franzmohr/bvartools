@@ -5,6 +5,7 @@
 \alias{create_external_forecast}
 \alias{add_priors.externalforecast}
 \alias{add_initial_values.externalforecast}
+\alias{add_seed.externalforecast}
 \alias{add_posterior_coefficients.externalforecast}
 \alias{add_posterior_loglik.externalforecast}
 \alias{add_forecast_input.externalforecast}
@@ -32,6 +33,8 @@ create_external_forecast(
 \method{add_priors}{externalforecast}(object, ...)
 
 \method{add_initial_values}{externalforecast}(object, ...)
+
+\method{add_seed}{externalforecast}(object, seed, ...)
 
 \method{add_posterior_coefficients}{externalforecast}(object, ...)
 
@@ -91,6 +94,8 @@ forecast is used, if multiple publications are matched to the same training
 sample. See 'Details'.}
 
 \item{...}{arguments passed forward to method.}
+
+\item{seed}{not used, since external forecasts are not simulated.}
 
 \item{x}{an object of class 'externalforecast'.}
 

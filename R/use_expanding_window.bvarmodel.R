@@ -62,6 +62,12 @@ use_expanding_window.bvarmodel <- function(object, start, ...) {
       temp[["data"]][["train"]][["z"]] <- temp[["data"]][["train"]][["z"]][1:(k * pos_end[i]), ]
     }
     
+    # Every window is simulated on its own, so a seed the model already has is
+    # counted up from window to window rather than shared.
+    if (!is.null(temp[["model"]][["seed"]])) {
+      temp[["model"]][["seed"]] <- .offset_seed(temp[["model"]][["seed"]], i - 1)
+    }
+
     result[[i]] <- temp
     rm(temp)
   }

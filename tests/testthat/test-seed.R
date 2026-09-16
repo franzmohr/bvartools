@@ -1,0 +1,184 @@
+test_that("add_initial_values() sets a seed that set.seed() reproduces", {
+  set.seed(1)
+  first <- add_initial_values(fx_var_priors())
+  set.seed(1)
+  again <- add_initial_values(fx_var_priors())
+
+  expect_type(first[["model"]][["seed"]], "integer")
+  expect_gte(first[["model"]][["seed"]], 0L)
+  expect_identical(first[["model"]][["seed"]], again[["model"]][["seed"]])
+})
+
+test_that("add_initial_values() keeps a seed the model already has", {
+  model <- add_seed(fx_var_priors(), 42)
+  expect_identical(add_initial_values(model)[["model"]][["seed"]], 42L)
+
+  vec <- add_seed(fx_vec_priors(), 43)
+  expect_identical(add_initial_values(vec)[["model"]][["seed"]], 43L)
+})
+
+test_that("add_seed() stores a seed as an integer and refuses anything else", {
+  expect_identical(add_seed(fx_var_initial(), 20260916)[["model"]][["seed"]], 20260916L)
+  expect_identical(add_seed(fx_vec_initial(), 0)[["model"]][["seed"]], 0L)
+
+  for (bad in list(-1, 1.5, NA, "1", c(1, 2), Inf, .Machine$integer.max + 1)) {
+    expect_error(add_seed(fx_var_initial(), bad), "whole number")
+  }
+})
+
+test_that("a list gets one seed per model, counted through nested lists", {
+  models <- create_bvarmodel(var_data(), p = 1:2, deterministic = "const",
+                             iterations = 10, burnin = 5)
+  models <- add_priors(models, coef = list(v_i = 0, v_i_det = 0),
+                       sigma = list(df = 1, scale = 0.0001))
+
+  seeded <- add_seed(models, 100)
+  expect_identical(vapply(seeded, function(m) m[["model"]][["seed"]], integer(1)),
+                   c(100L, 101L))
+
+  # use_expanding_window() on a 'modellist' returns a 'modellist' of
+  # 'expandingwindow' lists.
+  nested <- add_seed(use_expanding_window(models, start = c(1997, 2)), 1)
+  seeds <- unlist(lapply(nested, function(windows) {
+    vapply(windows, function(m) m[["model"]][["seed"]], integer(1))
+  }))
+  expect_identical(seeds, seq_along(seeds))
+})
+
+test_that("models that are not estimated are skipped and not counted", {
+  forecast <- structure(list(), class = "externalforecast")
+  models <- structure(list(fx_var_initial(), forecast, fx_var_initial()),
+                      class = c("modellist", "list"))
+
+  seeded <- add_seed(models, 5)
+  expect_identical(seeded[[1]][["model"]][["seed"]], 5L)
+  expect_identical(seeded[[2]], forecast)
+  expect_identical(seeded[[3]][["model"]][["seed"]], 6L)
+  expect_identical(add_seed(forecast, 1), forecast)
+})
+
+test_that("the seed of a model decides its draws and leaves R's generator as it was", {
+  model <- add_seed(fx_var_initial(), 7)
+
+  set.seed(1)
+  state <- get(".Random.seed", envir = globalenv())
+  first <- add_posterior_coefficients(model)
+  expect_identical(get(".Random.seed", envir = globalenv()), state)
+
+  set.seed(2)
+  second <- add_posterior_coefficients(model)
+  expect_equal(first[["posterior"]][["a"]][["coeffs"]],
+               second[["posterior"]][["a"]][["coeffs"]])
+})
+
+test_that("a seeded model draws the same under another kind of generator", {
+  model <- add_seed(fx_var_initial(), 7)
+  reference <- add_posterior_coefficients(model)[["posterior"]][["a"]][["coeffs"]]
+
+  # As on a cluster after parallel::clusterSetRNGStream().
+  old <- RNGkind("L'Ecuyer-CMRG")
+  set.seed(3)
+  other <- add_posterior_coefficients(model)[["posterior"]][["a"]][["coeffs"]]
+  kind_after <- RNGkind()[1]
+  RNGkind(old[1], old[2], old[3])
+
+  expect_equal(other, reference)
+  expect_identical(kind_after, "L'Ecuyer-CMRG")
+})
+
+test_that("a model without a seed draws from R's generator as it stands", {
+  model <- fx_var_initial()
+  model[["model"]][["seed"]] <- NULL
+  run <- function(state) {
+    set.seed(state)
+    add_posterior_coefficients(model)[["posterior"]][["a"]][["coeffs"]]
+  }
+
+  expect_equal(run(5), run(5))
+  expect_false(isTRUE(all.equal(run(5), run(6))))
+})
+
+test_that("the seed survives a round trip through an HDF5 file", {
+  var_file <- temp_h5_file()
+  write_to_hdf5(add_seed(fx_var_initial(), 123), filename = var_file)
+  expect_identical(read_model_from_hdf5(filename = var_file)[["model"]][["seed"]], 123L)
+
+  vec_file <- temp_h5_file()
+  write_to_hdf5(add_seed(fx_vec_initial(), 456), filename = vec_file)
+  expect_identical(read_model_from_hdf5(filename = vec_file)[["model"]][["seed"]], 456L)
+})
+
+test_that("expanding windows count a model's seed up from window to window", {
+  windows <- use_expanding_window(add_seed(fx_var_priors(), 10), start = c(1997, 2))
+  seeds <- vapply(windows, function(m) m[["model"]][["seed"]], integer(1))
+  expect_identical(seeds, 10L + seq_along(seeds) - 1L)
+
+  vec_windows <- use_expanding_window(add_seed(fx_vec_priors(), 20), start = c(2004, 1))
+  vec_seeds <- vapply(vec_windows, function(m) m[["model"]][["seed"]], integer(1))
+  expect_identical(vec_seeds, 20L + seq_along(vec_seeds) - 1L)
+
+  unseeded <- use_expanding_window(fx_var_priors(), start = c(1997, 2))
+  expect_true(all(vapply(unseeded, function(m) is.null(m[["model"]][["seed"]]), logical(1))))
+})
+
+test_that("bayests_posterior() needs an executable that exists", {
+  old_option <- options(bvartools.bayests_executable = NULL)
+  old_env <- Sys.getenv("BAYESTS_EXECUTABLE", unset = NA)
+  Sys.unsetenv("BAYESTS_EXECUTABLE")
+
+  expect_error(bayests_posterior(), "No BayesTS executable")
+  expect_error(bayests_posterior(executable = tempfile()), "not found")
+
+  options(old_option)
+  if (!is.na(old_env)) {
+    Sys.setenv(BAYESTS_EXECUTABLE = old_env)
+  }
+})
+
+# Runs only where BAYESTS_EXECUTABLE names a BayesTS build, and
+# BAYESTS_LIBRARY_PATH, if needed, the directories of its runtime libraries.
+bayests_for_tests <- function() {
+  executable <- Sys.getenv("BAYESTS_EXECUTABLE")
+  skip_if(!nzchar(executable) || !file.exists(executable),
+          "BAYESTS_EXECUTABLE does not name a BayesTS executable")
+  library_path <- Sys.getenv("BAYESTS_LIBRARY_PATH")
+  library_path <- if (nzchar(library_path)) {
+    strsplit(library_path, .Platform$path.sep, fixed = TRUE)[[1]]
+  }
+  bayests_posterior(executable = executable, library_path = library_path)
+}
+
+test_that("BayesTS draws have the structure of the internal ones", {
+  simulate <- bayests_for_tests()
+
+  for (model in list(add_seed(fx_var_initial(), 11), add_seed(fx_vec_initial(), 12))) {
+    internal <- draw_blocks(add_posterior_coefficients(model)[["posterior"]])
+    result <- add_posterior_coefficients(model, posterior_function = simulate)
+    external <- draw_blocks(result[["posterior"]])
+
+    expect_setequal(names(external), names(internal))
+    for (block in names(internal)) {
+      expect_identical(dim(external[[block]]), dim(internal[[block]]))
+      expect_equal(attr(external[[block]], "mcpar"), attr(internal[[block]], "mcpar"))
+    }
+    # Only the posterior is added.
+    expect_identical(result[["model"]], model[["model"]])
+    expect_identical(result[["data"]], model[["data"]])
+    expect_identical(result[["priors"]], model[["priors"]])
+  }
+})
+
+test_that("BayesTS draws with the model's seed and gives an unseeded model one", {
+  simulate <- bayests_for_tests()
+
+  model <- add_seed(fx_var_initial(), 11)
+  draws <- function() {
+    add_posterior_coefficients(model, posterior_function = simulate)[["posterior"]][["a"]][["coeffs"]]
+  }
+  expect_equal(draws(), draws())
+
+  unseeded <- fx_var_initial()
+  unseeded[["model"]][["seed"]] <- NULL
+  result <- add_posterior_coefficients(unseeded, posterior_function = simulate)
+  expect_type(result[["model"]][["seed"]], "integer")
+})

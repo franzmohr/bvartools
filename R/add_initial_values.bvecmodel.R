@@ -41,6 +41,12 @@
 #' remaining coefficients and the error term with the elements described in
 #' \code{\link{add_initial_values.bvarmodel}}.
 #'
+#' @section Seed:
+#' The function also stores the seed of the posterior simulation as element
+#' \code{seed} of \code{object$model}, unless the model has one already. It is
+#' drawn from R's random number generator, so \code{set.seed()} before this call
+#' makes it reproducible. \code{\link{add_seed}} replaces it.
+#'
 #' @examples
 #' 
 #' # Load data 
@@ -282,6 +288,13 @@ add_initial_values.bvecmodel <- function(object, method = "maxlik", ...){
   object <- .add_initial_values_measurement_errors(object = object,
                                                    method = method,
                                                    u = u)
+
+  # The seed of the posterior simulation, unless the model has one already. It is
+  # drawn from R's generator, so set.seed() before this call makes it
+  # reproducible, and add_seed() replaces it afterwards.
+  if (is.null(object[["model"]][["seed"]])) {
+    object[["model"]][["seed"]] <- .draw_model_seed()
+  }
   
   return(object)
 }

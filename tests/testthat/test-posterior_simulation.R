@@ -25,14 +25,16 @@ test_that("the burn-in draws are discarded", {
   expect_identical(nrow(short[["posterior"]][["a"]][["coeffs"]]), 12L)
 })
 
-test_that("posterior simulation is reproducible from the seed", {
-  run <- function(seed) {
-    set.seed(seed)
-    add_posterior_coefficients(fx_var_initial())[["posterior"]][["a"]][["coeffs"]]
+test_that("posterior simulation is reproducible from the model's seed", {
+  run <- function(seed, state) {
+    set.seed(state)
+    model <- add_seed(fx_var_initial(), seed)
+    add_posterior_coefficients(model)[["posterior"]][["a"]][["coeffs"]]
   }
 
-  expect_equal(run(2024), run(2024))
-  expect_false(isTRUE(all.equal(run(2024), run(2025))))
+  # The seed of the model decides the draws, not the state of R's generator.
+  expect_equal(run(2024, 1), run(2024, 2))
+  expect_false(isTRUE(all.equal(run(2024, 1), run(2025, 1))))
 })
 
 test_that("draws of the error precision are symmetric and positive definite", {

@@ -52,6 +52,14 @@ the state equation of \eqn{\beta} is taken from the prior specification,
 whether it is held there or drawn from the prior on it that
 \code{coint$rho_min} and \code{coint$rho_max} set up.
 }
+\section{Seed}{
+
+The function also stores the seed of the posterior simulation as element
+\code{seed} of \code{object$model}, unless the model has one already. It is
+drawn from R's random number generator, so \code{set.seed()} before this call
+makes it reproducible. \code{\link{add_seed}} replaces it.
+}
+
 \examples{
 
 # Load data 

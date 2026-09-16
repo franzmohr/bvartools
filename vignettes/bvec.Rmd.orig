@@ -61,7 +61,7 @@ Function `add_priors` adds the necessary prior specifications to object `object`
 object <- add_priors(object,
                      coef = list(v_i = 0, v_i_det = 0),
                      coint = list(v_i = 0, p_tau_i = 1),
-                     sigma = list(df = 0, scale = .0001))
+                     sigma = list(df = 1, scale = .0001))
 ```
 
 ### Adding initial values
@@ -109,7 +109,7 @@ p_tau_i <- object[["priors"]][["beta"]][["p_tau_inv"]]
 
 sigma_df_prior <- object[["priors"]][["u_sigma"]][["df"]] # Prior degrees of freedom
 sigma_scale_prior <- object[["priors"]][["u_sigma"]][["scale"]] # Prior covariance matrix
-sigma_df_post <- tt + sigma_df_prior # Posterior degrees of freedom
+sigma_df_post <- tt + sigma_df_prior + r # Posterior degrees of freedom (Koop et al., 2010, eq. 8)
 
 # Initial values
 beta <- object[["initial"]][["beta"]]
@@ -202,7 +202,7 @@ beta # Print
 
 Posterior draws can be inspected with `plot`. Note that the coefficients of the error correction term are displayed as draws of `Pi`, i.e. as the product of `alpha` and `beta`, since the two matrices are only identified up to a rotation.
 
-```{r, message=FALSE, warning=FALSE, fig.align='center', fig.height=4, fig.width=10}
+```{r histograms, message=FALSE, warning=FALSE, fig.align='center', fig.height=4, fig.width=10}
 plot(bvec_est)
 ```
 
@@ -237,7 +237,7 @@ object_ml <- create_bvecmodel(data, p = 4, r = 1,
 object_ml <- add_priors(object_ml,
                         coef = list(v_i = 0, v_i_det = 0),
                         coint = list(v_i = "ml", p_tau_i = "ml", weight = 1),
-                        sigma = list(df = 0, scale = .0001))
+                        sigma = list(df = 1, scale = .0001))
 
 object_ml <- add_initial_values(object_ml, method = "maxlik")
 

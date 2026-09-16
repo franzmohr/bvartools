@@ -1,5 +1,6 @@
 ---
 title: "Horse Races"
+author: "Franz X. Mohr"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Horse Races}
@@ -16,6 +17,9 @@ library(bvartools)
 
 ## Introduction
 
+In a horse race a set of competing models is estimated on the same data and ranked by how well they forecast. The comparison is more convincing, if it rests on forecasts that could actually have been made at the time. Therefore, each model is estimated repeatedly over an expanding window: the first window ends some periods before the end of the sample, each further window adds one period, and every estimate forecasts the periods, which follow the end of its window. The forecast errors of all windows are then summarised by out-of-sample statistics, which are complemented by the in-sample criteria of the vignette on model comparison.
+
+This vignette lets three specifications of a VAR model compete: models with a weakly informative prior and lag orders from one to four, a model with stochastic search variable selection (SSVS) and a model with Bayesian variable selection (BVS). The last section shows how forecasts from other sources can join the race.
 
 ## Workflow
 
@@ -39,6 +43,9 @@ expanding_window_start <- 2018
 # Shared specifications
 iterations <- 2000
 burnin <- 1000
+
+# Reset random number generator for reproducibility
+set.seed(1234567)
 ```
 
 
@@ -82,7 +89,7 @@ var_ssvs <- add_priors(var_ssvs,
 var_ssvs <- add_initial_values(var_ssvs)
 ```
 
-Thrird, create a series of VAR models with Bayesian variable selection à la Korobilis (2013):
+Third, create a series of VAR models with Bayesian variable selection à la Korobilis (2013):
 
 
 ``` r
@@ -111,12 +118,6 @@ models <- combine_models(var_default,
                          var_ssvs,
                          var_bvs)
 ```
-
-<!-- Ensure that all models look at the same time series: -->
-
-<!-- ```{r} -->
-<!-- models <- align_model_obs(models) -->
-<!-- ``` -->
 
 
 ### Draw posteriors
@@ -174,71 +175,71 @@ print(sc, relative = 1)
 #> Log-likelihood
 #> 
 #>            Mean Median Quantile (2.5%) Quantile (97.5%)
-#>  Model 1 -141.2 -140.8          -151.2           -133.0
-#>  Model 2 -131.3 -130.8          -141.9           -122.1
-#>  Model 3 -130.1 -129.8          -142.4           -119.8
-#>  Model 4 -128.5 -128.0          -141.9           -117.0
-#>  Model 5 -128.1 -127.9          -140.5           -117.6
-#>  Model 6 -138.9 -138.5          -153.2           -127.7
+#>  Model 1 -141.2 -140.8          -151.3           -133.3
+#>  Model 2 -131.4 -131.0          -142.1           -121.9
+#>  Model 3 -129.9 -129.5          -141.7           -119.5
+#>  Model 4 -128.6 -128.5          -142.0           -116.7
+#>  Model 5 -128.3 -128.1          -140.3           -118.2
+#>  Model 6 -138.7 -138.2          -152.5           -127.6
 #> 
 #> 
 #> Akaike Information Criterion (AIC)
 #> 
 #>           Mean Median Quantile (2.5%) Quantile (97.5%)
-#>  Model 1 300.4  300.4                                 
-#>  Model 2 289.4  289.4                                 
-#>  Model 3 296.0  296.0                                 
-#>  Model 4 302.2  302.2                                 
-#>  Model 5 318.3  318.3                                 
-#>  Model 6 341.5  341.5                                 
+#>  Model 1 300.5  300.5                                 
+#>  Model 2 289.5  289.5                                 
+#>  Model 3 295.9  295.9                                 
+#>  Model 4 302.3  302.3                                 
+#>  Model 5 317.8  317.8                                 
+#>  Model 6 341.6  341.6                                 
 #> 
 #> 
 #> Bayesian Information Criterion (BIC)
 #> 
 #>           Mean Median Quantile (2.5%) Quantile (97.5%)
-#>  Model 1 355.5  355.5                                 
+#>  Model 1 355.6  355.6                                 
 #>  Model 2 372.1  372.1                                 
-#>  Model 3 406.3  406.3                                 
+#>  Model 3 406.2  406.2                                 
 #>  Model 4 440.1  440.1                                 
-#>  Model 5 456.1  456.1                                 
-#>  Model 6 479.3  479.3                                 
+#>  Model 5 455.6  455.6                                 
+#>  Model 6 479.4  479.4                                 
 #> 
 #> 
 #> Hannan-Quinn Criterion (HQ)
 #> 
 #>           Mean Median Quantile (2.5%) Quantile (97.5%)
-#>  Model 1 322.8  322.8                                 
+#>  Model 1 322.9  322.9                                 
 #>  Model 2 323.0  323.0                                 
-#>  Model 3 340.8  340.8                                 
-#>  Model 4 358.2  358.2                                 
-#>  Model 5 374.3  374.3                                 
+#>  Model 3 340.7  340.7                                 
+#>  Model 4 358.3  358.3                                 
+#>  Model 5 373.8  373.8                                 
 #>  Model 6 397.5  397.5                                 
 #> 
 #> 
 #> Widely Applicable Information Criterion (WAIC)
 #> 
 #>           Mean Median Quantile (2.5%) Quantile (97.5%)
-#>  Model 1 303.7  303.7           218.0            389.4
-#>  Model 2 293.6  293.6           209.1            378.1
-#>  Model 3 302.0  302.0           211.9            392.1
-#>  Model 4 310.3  310.3           217.5            403.0
-#>  Model 5 286.9  286.9           197.4            376.3
-#>  Model 6 307.8  307.8           215.5            400.0
+#>  Model 1 303.7  303.7           218.1            389.3
+#>  Model 2 294.6  294.6           210.0            379.2
+#>  Model 3 301.5  301.5           211.1            392.0
+#>  Model 4 310.2  310.2           217.5            402.9
+#>  Model 5 287.9  287.9           198.2            377.6
+#>  Model 6 306.6  306.6           214.8            398.4
 #> 
-#> Periods with a pointwise log-likelihood variance above 0.4, which makes the correction of WAIC unreliable, in models 1 (10), 2 (17), 3 (25), 4 (28), 5 (16), 6 (16).
+#> Periods with a pointwise log-likelihood variance above 0.4, which makes the correction of WAIC unreliable, in models 1 (11), 2 (17), 3 (23), 4 (28), 5 (16), 6 (15).
 #> 
 #> 
 #> Leave-One-Out Information Criterion (LOOIC)
 #> 
 #>           Mean Median Quantile (2.5%) Quantile (97.5%)
-#>  Model 1 303.8  303.8           218.1            389.5
-#>  Model 2 294.1  294.1           209.5            378.7
-#>  Model 3 303.1  303.1           212.8            393.5
-#>  Model 4 311.4  311.4           219.0            403.7
-#>  Model 5 287.4  287.4           197.9            376.9
-#>  Model 6 308.2  308.2           216.0            400.4
+#>  Model 1 303.9  303.9           218.3            389.6
+#>  Model 2 295.1  295.1           210.4            379.9
+#>  Model 3 303.1  303.1           212.1            394.1
+#>  Model 4 312.1  312.1           218.8            405.4
+#>  Model 5 288.2  288.2           198.6            377.9
+#>  Model 6 307.6  307.6           215.1            400.2
 #> 
-#> Influential periods, whose importance sampling is unreliable, in models 3 (1), 4 (1), 5 (1), 6 (1), counted as a Pareto k above 0.7.
+#> Influential periods, whose importance sampling is unreliable, in models 3 (1), 4 (2), 6 (2), counted as a Pareto k above 0.7.
 #> 
 #> 
 #> ------------------------------------------
@@ -248,35 +249,35 @@ print(sc, relative = 1)
 #> Mean absolute forecast errors (MAFE)
 #> 
 #>  Variable h Model 1 Model 2 Model 3 Model 4 Model 5 Model 6
-#>        dy 1       1  1.0176  1.0165  1.0205  0.9891  0.9875
-#>        Dp 1       1  1.0202  1.0040  1.0302  1.0026  0.9884
-#>         r 1       1  0.9662  0.9696  0.9330  0.9591  0.9872
-#>        dy 2       1  1.0008  1.0061  1.0148  1.0116  0.9924
-#>        Dp 2       1  0.9872  1.0022  0.9970  0.9851  0.9407
-#>         r 2       1  1.1120  1.0817  1.0281  1.0294  1.0468
-#>        dy 3       1  1.0035  0.9996  1.0250  1.0032  0.9888
-#>        Dp 3       1  1.0113  0.9769  0.9803  0.9491  0.9691
-#>         r 3       1  1.1670  1.1860  1.1001  1.0755  1.1079
-#>        dy 4       1  1.0164  1.0177  1.0343  0.9912  0.9953
-#>        Dp 4       1  1.0256  1.0284  1.0218  0.9603  1.0058
-#>         r 4       1  1.1969  1.2154  1.1689  1.1038  1.1553
+#>        dy 1       1  1.0012  1.0006  1.0179  1.0019  0.9882
+#>        Dp 1       1  0.9399  0.9442  0.9488  0.9487  0.9738
+#>         r 1       1  0.9879  0.9713  0.9735  0.9491  0.9764
+#>        dy 2       1  0.9952  1.0086  1.0215  0.9825  0.9717
+#>        Dp 2       1  0.9405  0.9405  0.9352  0.9315  0.9790
+#>         r 2       1  1.1084  1.0904  1.0511  1.0169  1.0489
+#>        dy 3       1  1.0116  1.0179  1.0363  1.0113  1.0190
+#>        Dp 3       1  1.0005  1.0007  0.9875  0.9662  0.9978
+#>         r 3       1  1.1672  1.1822  1.1164  1.0585  1.1031
+#>        dy 4       1  1.0077  1.0215  1.0260  0.9947  0.9767
+#>        Dp 4       1  1.0190  1.0442  1.0324  0.9713  1.0178
+#>         r 4       1  1.2126  1.2328  1.1976  1.1134  1.1475
 #> 
 #> 
 #> Root mean squared forecast errors (RMSFE)
 #> 
 #>  Variable h Model 1 Model 2 Model 3 Model 4 Model 5 Model 6
-#>        dy 1       1  1.0165  1.0160  1.0186  0.9865  0.9846
-#>        Dp 1       1  1.0141  1.0043  1.0243  0.9965  0.9892
-#>         r 1       1  0.9691  0.9686  0.9366  0.9616  0.9911
-#>        dy 2       1  0.9944  1.0006  1.0141  1.0102  0.9921
-#>        Dp 2       1  0.9857  1.0023  0.9985  0.9797  0.9493
-#>         r 2       1  1.1114  1.0858  1.0317  1.0325  1.0454
-#>        dy 3       1  1.0036  1.0002  1.0258  1.0052  0.9903
-#>        Dp 3       1  1.0129  0.9814  0.9836  0.9522  0.9758
-#>         r 3       1  1.1749  1.1871  1.1040  1.0782  1.1109
-#>        dy 4       1  1.0198  1.0185  1.0388  0.9859  0.9931
-#>        Dp 4       1  1.0256  1.0284  1.0307  0.9604  1.0109
-#>         r 4       1  1.2018  1.2160  1.1733  1.1041  1.1538
+#>        dy 1       1  0.9955  0.9968  1.0150  0.9993  0.9868
+#>        Dp 1       1  0.9419  0.9486  0.9496  0.9505  0.9797
+#>         r 1       1  0.9868  0.9748  0.9745  0.9531  0.9819
+#>        dy 2       1  0.9942  1.0057  1.0193  0.9852  0.9759
+#>        Dp 2       1  0.9406  0.9438  0.9390  0.9339  0.9833
+#>         r 2       1  1.1125  1.0953  1.0558  1.0183  1.0551
+#>        dy 3       1  1.0114  1.0190  1.0392  1.0118  1.0162
+#>        Dp 3       1  0.9987  1.0013  0.9871  0.9663  0.9982
+#>         r 3       1  1.1809  1.1864  1.1201  1.0628  1.1126
+#>        dy 4       1  1.0054  1.0177  1.0254  0.9931  0.9774
+#>        Dp 4       1  1.0152  1.0428  1.0340  0.9720  1.0225
+#>         r 4       1  1.2232  1.2363  1.2059  1.1184  1.1622
 ```
 
 
@@ -287,17 +288,17 @@ print(sc, relative = 1)
 plot(sc, criterion = "BIC")
 ```
 
-![plot of chunk unnamed-chunk-14](figures/horse-races-unnamed-chunk-14-1.png)
+![plot of chunk bic](figures/horse-races-bic-1.png)
 
 
 ``` r
 plot(sc, criterion = "AIC")
 ```
 
-![plot of chunk unnamed-chunk-15](figures/horse-races-unnamed-chunk-15-1.png)
+![plot of chunk aic](figures/horse-races-aic-1.png)
 
 AIC and BIC penalise a model by the number of parameters it nominally has, which
-is the same number for all three models here: variable selection does not remove
+is the same number for the three models with four lags: variable selection does not remove
 a coefficient from the model, it shrinks it towards zero, and how much of the
 nominal freedom that leaves is decided by the data rather than by the count. WAIC
 penalises by the flexibility the fit actually used and is the criterion to
@@ -308,7 +309,7 @@ compare such models with.
 plot(sc, criterion = "WAIC")
 ```
 
-![plot of chunk unnamed-chunk-16](figures/horse-races-unnamed-chunk-16-1.png)
+![plot of chunk waic](figures/horse-races-waic-1.png)
 
 #### Out-of-sample plots
 
@@ -317,20 +318,20 @@ plot(sc, criterion = "WAIC")
 plot(sc, criterion = "FE")
 ```
 
-![plot of chunk unnamed-chunk-17](figures/horse-races-unnamed-chunk-17-1.png)
+![plot of chunk fe](figures/horse-races-fe-1.png)
 
 ``` r
 plot(sc, criterion = "AFE")
 ```
 
-![plot of chunk unnamed-chunk-18](figures/horse-races-unnamed-chunk-18-1.png)
+![plot of chunk afe](figures/horse-races-afe-1.png)
 
 
 ``` r
 plot_forecast_errors_by_period(models, criterion = "FE")
 ```
 
-![plot of chunk unnamed-chunk-19](figures/horse-races-unnamed-chunk-19-1.png)
+![plot of chunk fe-by-period](figures/horse-races-fe-by-period-1.png)
 
 
 ## Adding forecasts from other sources
@@ -341,80 +342,231 @@ other, but also with the forecasts that institutions actually published. Functio
 to the list of models and which is then treated as one more competitor by all the
 functions above.
 
-The example below uses the [repository of macroeconomic
-projections](https://github.com/franzmohr/macroprojections), which collects the
-published forecasts of public institutions in a machine-readable format. It is not
-evaluated, because it requires an internet connection and the actual values of the
-forecasted variables, which have to be obtained from a statistical office. Any other
-source can be used in the same way, as long as the forecasts are provided in long
-format with one point forecast per row.
+Published forecasts can be taken from any source, as long as they are provided in
+long format with one point forecast per row. To keep this vignette self-contained,
+the following example uses two made-up forecasters instead. Each of them publishes
+a forecast for the current and the following three quarters at the beginning of
+every quarter from 2018Q1 to 2019Q4. Forecaster A is well informed: its forecasts
+are the realised values plus noise, which increases with the forecast horizon.
+Forecaster B always forecasts the mean of the series up to 2017Q4. Neither of them
+says anything about the performance of real forecasters.
 
 
 ``` r
-# Forecasts of Austrian institutions for Austria
-fcst <- read.csv("https://github.com/franzmohr/macroprojections/raw/master/data/forecasts.csv")
-fcst <- fcst[fcst[["ctry"]] == "122" &
-               fcst[["variable"]] %in% c("NGDP_RPCH", "PCPIPCH", "LUR"), ]
+fcst <- expand.grid(origin = seq(2018, 2019.75, by = 0.25),
+                    h = 1:4,
+                    variable = colnames(data),
+                    forecaster = c("Forecaster A", "Forecaster B"),
+                    stringsAsFactors = FALSE)
 
-# 'actual' contains the annual realisations of the three variables, where the
-# columns are named as the variables of the forecasts
-model <- create_bvarmodel(actual, p = 1, deterministic = "const",
-                          iterations = 5000, burnin = 1000)
+# Period, for which a forecast is made, as in time(data)
+fcst[["period"]] <- fcst[["origin"]] + (fcst[["h"]] - 1) / 4
 
-model <- use_expanding_window(model, start = 2015)
+# Only periods with realised values can be evaluated
+fcst <- fcst[fcst[["period"]] <= 2019.75, ]
 
-model <- add_priors(model,
-                    coef = list(v_i = 1 / 10, v_i_det = 1 / 100),
-                    sigma = list(df = 3, scale = 1))
+# Realised values of each forecasted period
+realised <- data[cbind(match(round(fcst[["period"]] * 4), round(time(data) * 4)),
+                       match(fcst[["variable"]], colnames(data)))]
 
-model <- add_initial_values(model)
-model <- add_posterior_coefficients(model)
-model <- add_forecast_input(model, n_ahead = 3)
-model <- add_posterior_forecasts(model)
+# Sample before the first publication
+before <- window(data, end = c(2017, 4))
+
+noise <- rnorm(nrow(fcst),
+               sd = 0.5 * sqrt(fcst[["h"]]) *
+                 apply(diff(before), 2, sd)[fcst[["variable"]]])
+
+fcst[["value"]] <- ifelse(fcst[["forecaster"]] == "Forecaster A",
+                          realised + noise,
+                          colMeans(before)[fcst[["variable"]]])
+
+head(fcst)
+#>    origin h variable   forecaster  period      value
+#> 1 2018.00 1       dy Forecaster A 2018.00  1.6488127
+#> 2 2018.25 1       dy Forecaster A 2018.25  1.9068402
+#> 3 2018.50 1       dy Forecaster A 2018.50 -1.0217169
+#> 4 2018.75 1       dy Forecaster A 2018.75 -0.3977054
+#> 5 2019.00 1       dy Forecaster A 2019.00  0.7443746
+#> 6 2019.25 1       dy Forecaster A 2019.25  0.3509513
 ```
 
 The columns of the data set do not have to follow a particular naming convention.
 They are specified in the arguments `period`, `origin`, `variable` and `value`,
-where `origin` contains the date, at which a forecast was published. Argument `by`
-produces one object per forecaster:
+where `origin` contains the date, at which a forecast was published, and periods
+follow the convention of `time`, i.e. 2018.25 for the second quarter of 2018. The
+names in column `variable` must be those of the endogenous variables of the models.
+Argument `by` produces one object per forecaster:
 
 
 ``` r
-external <- create_external_forecast(fcst, model,
-                                     period = "year",
-                                     origin = "pubdate",
+external <- create_external_forecast(fcst, models,
+                                     period = "period",
+                                     origin = "origin",
                                      variable = "variable",
                                      value = "value",
-                                     by = "institution",
+                                     by = "forecaster",
                                      data_lag = 1)
 ```
 
-An institution, which publishes a forecast in the course of 2021, does not know the
-annual figures of 2021 yet. Argument `data_lag` states this publication lag of the
-data in periods, so that each forecast is matched to the estimation window, which
-ends in 2020. The forecast for 2021 is then the one-step ahead forecast of both the
-institution and the model. If an institution published multiple forecasts between
-two annual figures, only one of them is used, the latest by default, so that no
-forecaster enters the comparison twice.
+A forecaster, which publishes a forecast in the first quarter of 2018, does not
+know the value of that quarter yet and, since data are published with a delay, not
+even that of 2017Q4 in most cases. Argument `data_lag` states this publication lag
+of the data in periods, so that each forecast is matched to the estimation window,
+which ends in 2017Q4. The forecast for 2018Q1 is then the one-step ahead forecast of
+both the forecaster and the models. If a forecaster published multiple forecasts
+between two data releases, only one of them is used, the latest by default, so that
+no forecaster enters the comparison twice.
 
-From here on the external forecasts follow the workflow of the models. The functions,
-which add priors, initial values or posterior draws, are without effect for them:
+From here on the external forecasts follow the workflow of the models. The
+functions, which add priors, initial values or posterior draws, are without effect
+for them:
 
 
 ``` r
-models <- combine_models(model, external)
+all_models <- combine_models(models, external)
 
-models <- add_forecast_errors(models, test_sample = actual)
+all_models <- add_forecast_errors(all_models, test_sample = data)
 
-sc <- selection_criteria(models)
+sc_all <- selection_criteria(all_models)
 
-print(sc, relative = 1)
+print(sc_all, relative = 1)
+#> 
+#> ------------------------------------------
+#> In-sample
+#> ------------------------------------------
+#> 
+#> Log-likelihood
+#> 
+#>            Mean Median Quantile (2.5%) Quantile (97.5%)
+#>  Model 1 -141.2 -140.8          -151.3           -133.3
+#>  Model 2 -131.4 -131.0          -142.1           -121.9
+#>  Model 3 -129.9 -129.5          -141.7           -119.5
+#>  Model 4 -128.6 -128.5          -142.0           -116.7
+#>  Model 5 -128.3 -128.1          -140.3           -118.2
+#>  Model 6 -138.7 -138.2          -152.5           -127.6
+#>  Model 7                                               
+#>  Model 8                                               
+#> 
+#> 
+#> Akaike Information Criterion (AIC)
+#> 
+#>           Mean Median Quantile (2.5%) Quantile (97.5%)
+#>  Model 1 300.5  300.5                                 
+#>  Model 2 289.5  289.5                                 
+#>  Model 3 295.9  295.9                                 
+#>  Model 4 302.3  302.3                                 
+#>  Model 5 317.8  317.8                                 
+#>  Model 6 341.6  341.6                                 
+#>  Model 7                                              
+#>  Model 8                                              
+#> 
+#> 
+#> Bayesian Information Criterion (BIC)
+#> 
+#>           Mean Median Quantile (2.5%) Quantile (97.5%)
+#>  Model 1 355.6  355.6                                 
+#>  Model 2 372.1  372.1                                 
+#>  Model 3 406.2  406.2                                 
+#>  Model 4 440.1  440.1                                 
+#>  Model 5 455.6  455.6                                 
+#>  Model 6 479.4  479.4                                 
+#>  Model 7                                              
+#>  Model 8                                              
+#> 
+#> 
+#> Hannan-Quinn Criterion (HQ)
+#> 
+#>           Mean Median Quantile (2.5%) Quantile (97.5%)
+#>  Model 1 322.9  322.9                                 
+#>  Model 2 323.0  323.0                                 
+#>  Model 3 340.7  340.7                                 
+#>  Model 4 358.3  358.3                                 
+#>  Model 5 373.8  373.8                                 
+#>  Model 6 397.5  397.5                                 
+#>  Model 7                                              
+#>  Model 8                                              
+#> 
+#> 
+#> Widely Applicable Information Criterion (WAIC)
+#> 
+#>           Mean Median Quantile (2.5%) Quantile (97.5%)
+#>  Model 1 303.7  303.7           218.1            389.3
+#>  Model 2 294.6  294.6           210.0            379.2
+#>  Model 3 301.5  301.5           211.1            392.0
+#>  Model 4 310.2  310.2           217.5            402.9
+#>  Model 5 287.9  287.9           198.2            377.6
+#>  Model 6 306.6  306.6           214.8            398.4
+#>  Model 7                                              
+#>  Model 8                                              
+#> 
+#> Periods with a pointwise log-likelihood variance above 0.4, which makes the correction of WAIC unreliable, in models 1 (11), 2 (17), 3 (23), 4 (28), 5 (16), 6 (15).
+#> 
+#> 
+#> Leave-One-Out Information Criterion (LOOIC)
+#> 
+#>           Mean Median Quantile (2.5%) Quantile (97.5%)
+#>  Model 1 303.9  303.9           218.3            389.6
+#>  Model 2 295.1  295.1           210.4            379.9
+#>  Model 3 303.1  303.1           212.1            394.1
+#>  Model 4 312.1  312.1           218.8            405.4
+#>  Model 5 288.2  288.2           198.6            377.9
+#>  Model 6 307.6  307.6           215.1            400.2
+#>  Model 7                                              
+#>  Model 8                                              
+#> 
+#> Influential periods, whose importance sampling is unreliable, in models 3 (1), 4 (2), 6 (2), counted as a Pareto k above 0.7.
+#> 
+#> 
+#> ------------------------------------------
+#> Out-of-sample
+#> ------------------------------------------
+#> 
+#> Mean absolute forecast errors (MAFE)
+#> 
+#>  Variable h Model 1 Model 2 Model 3 Model 4 Model 5 Model 6 Model 7 Model 8
+#>        dy 1       1  1.0012  1.0006  1.0179  1.0019  0.9882  0.4509  0.6050
+#>        Dp 1       1  0.9399  0.9442  0.9488  0.9487  0.9738  0.3914  0.6127
+#>         r 1       1  0.9879  0.9713  0.9735  0.9491  0.9764  0.6489 10.0343
+#>        dy 2       1  0.9952  1.0086  1.0215  0.9825  0.9717  0.8154  0.5530
+#>        Dp 2       1  0.9405  0.9405  0.9352  0.9315  0.9790  0.8675  0.5850
+#>         r 2       1  1.1084  1.0904  1.0511  1.0169  1.0489  0.5860  6.8391
+#>        dy 3       1  1.0116  1.0179  1.0363  1.0113  1.0190  0.6000  0.5699
+#>        Dp 3       1  1.0005  1.0007  0.9875  0.9662  0.9978  0.4991  0.5804
+#>         r 3       1  1.1672  1.1822  1.1164  1.0585  1.1031  0.4572  5.4908
+#>        dy 4       1  1.0077  1.0215  1.0260  0.9947  0.9767  1.1346  0.5112
+#>        Dp 4       1  1.0190  1.0442  1.0324  0.9713  1.0178  1.1652  0.6914
+#>         r 4       1  1.2126  1.2328  1.1976  1.1134  1.1475  0.3615  4.7399
+#> 
+#> 
+#> Root mean squared forecast errors (RMSFE)
+#> 
+#>  Variable h Model 1 Model 2 Model 3 Model 4 Model 5 Model 6 Model 7 Model 8
+#>        dy 1       1  0.9955  0.9968  1.0150  0.9993  0.9868  0.4694  0.6098
+#>        Dp 1       1  0.9419  0.9486  0.9496  0.9505  0.9797  0.3932  0.6380
+#>         r 1       1  0.9868  0.9748  0.9745  0.9531  0.9819  0.6285  8.0116
+#>        dy 2       1  0.9942  1.0057  1.0193  0.9852  0.9759  0.7735  0.5792
+#>        Dp 2       1  0.9406  0.9438  0.9390  0.9339  0.9833  0.7922  0.6240
+#>         r 2       1  1.1125  1.0953  1.0558  1.0183  1.0551  0.5347  5.4637
+#>        dy 3       1  1.0114  1.0190  1.0392  1.0118  1.0162  0.6117  0.6080
+#>        Dp 3       1  0.9987  1.0013  0.9871  0.9663  0.9982  0.4288  0.6280
+#>         r 3       1  1.1809  1.1864  1.1201  1.0628  1.1126  0.4073  4.3971
+#>        dy 4       1  1.0054  1.0177  1.0254  0.9931  0.9774  1.2094  0.5897
+#>        Dp 4       1  1.0152  1.0428  1.0340  0.9720  1.0225  1.0409  0.6961
+#>         r 4       1  1.2232  1.2363  1.2059  1.1184  1.1622  0.3653  3.7953
 ```
 
-Since external forecasts are point forecasts, each publication contributes a single
-value to the out-of-sample statistics instead of a full posterior. Accordingly, their
-credible bands are degenerate and in-sample criteria are not available for them,
-which the printed comparison and the plots indicate by an empty entry.
+The two forecasters are the last two models of the list. Since external forecasts
+are point forecasts, each publication contributes a single value to the
+out-of-sample statistics instead of a full posterior. Accordingly, their credible
+bands are degenerate and in-sample criteria are not available for them, which the
+printed comparison and the plots indicate by an empty entry.
+
+
+``` r
+plot(sc_all, criterion = "AFE")
+```
+
+![plot of chunk external-afe](figures/horse-races-external-afe-1.png)
 
 
 ## Citing bvartools

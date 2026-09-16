@@ -3,7 +3,7 @@ title: "Model Comparison in bvartools"
 author: "Franz X. Mohr"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Model comparison in bvartools}
+  %\VignetteIndexEntry{Model Comparison in bvartools}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -35,7 +35,7 @@ data <- window(data, end = c(2019, 4))
 plot(data)
 ```
 
-![plot of chunk unnamed-chunk-2](figures/model-comparison-unnamed-chunk-2-1.png)
+![plot of chunk data](figures/model-comparison-data-1.png)
 
 ## Set up models
 
@@ -75,10 +75,16 @@ models <- add_initial_values(models)
 Posterior draws can be obtained using function `add_posterior_coefficients`.
 
 
+``` r
+models <- add_posterior_coefficients(models)
+```
 
 ## Model selection
 
 
+``` r
+models <- add_posterior_loglik(models)
+```
 
 If function `selection_criteria` is applied to an object of class `modellist`, it produces an object of class `selcritlist`. Its elements are of class `selcrit` and contain the log-likelihood and the selection criteria of the respective model, which are calculated from its posterior draws in the following way:
 
@@ -187,14 +193,14 @@ Method `plot.selcritlist` plots the criteria of the models against each other. T
 plot(selcrit, criterion = "AIC")
 ```
 
-![plot of chunk unnamed-chunk-10](figures/model-comparison-unnamed-chunk-10-1.png)
+![plot of chunk aic](figures/model-comparison-aic-1.png)
 
 
 ``` r
 plot(selcrit, criterion = "LOOIC")
 ```
 
-![plot of chunk unnamed-chunk-11](figures/model-comparison-unnamed-chunk-11-1.png)
+![plot of chunk looic](figures/model-comparison-looic-1.png)
 
 
 ``` r
@@ -210,7 +216,7 @@ AIC, HQ, WAIC and LOOIC have their lowest value for the model with $p = 2$. BIC 
 plot(irf(models[[pos]], impulse = "r", response = "dy", n_ahead = 10))
 ```
 
-![plot of chunk unnamed-chunk-13](figures/model-comparison-unnamed-chunk-13-1.png)
+![plot of chunk irf](figures/model-comparison-irf-1.png)
 
 ## Citing bvartools
 

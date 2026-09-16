@@ -6,6 +6,35 @@
   sampling time and matched the standalone BayesTS executable, while compiling
   with `-O3` made no difference.
 
+* **Every model carries the seed of its posterior simulation.**
+  `add_initial_values()` stores a seed, drawn from R's random number generator,
+  as `object$model$seed` unless the model has one, and the new `add_seed()`
+  replaces it -- for a `modellist` or an `expandingwindow` with `seed`,
+  `seed + 1`, ..., one per model, counted through nested lists. The internal
+  samplers of `add_posterior_coefficients()` draw with that seed: R's generator
+  is set to it, with R's default kinds, for the simulation and put back as it
+  was afterwards. **This changes the draws of existing code**, not their
+  distribution: a `set.seed()` between `add_initial_values()` and
+  `add_posterior_coefficients()` no longer has an effect, and results of
+  earlier versions do not reproduce draw for draw. `set.seed()` before
+  `add_initial_values()` still makes a script reproducible, and a model now
+  draws the same whichever worker of a cluster simulates it. A model without a
+  seed draws from R's generator as before. `write_to_hdf5()` writes the seed as
+  attribute `seed` of `/model` and `read_model_from_hdf5()` reads it back.
+  `use_expanding_window()` counts a seed the model already has up from window
+  to window.
+
+* **Posterior simulation with the BayesTS executable.** `bayests_posterior()`
+  returns a function for argument `posterior_function` of
+  `add_posterior_coefficients()`. It writes the model to a file, lets the
+  standalone `bayests posterior` draw into it with the model's seed and reads
+  the draws back; nothing else about the model changes. The draws have the
+  elements, dimensions and thinning of those of the internal samplers, whose
+  C++ code BayesTS shares. A BayesTS build linked against OpenBLAS drew 3.4 to
+  4.8 times faster than the internal samplers, which use R's reference BLAS,
+  on constant, stochastic volatility and time varying VAR and VEC models of
+  bgvars' `gvar2023` data.
+
 * **`add_priors()` rejects non-positive Wishart degrees of freedom.** The
   documentation of `sigma$df` said "a non-negative integer" and `add_priors()`
   only stopped for negative values, but every Wishart sampler rejects

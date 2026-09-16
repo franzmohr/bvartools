@@ -67,8 +67,7 @@ fx_var_initial <- function() {
 # application functions need.
 fx_var_fitted <- function() {
   cached_fixture("var_fitted", {
-    set.seed(987654)
-    object <- add_posterior_coefficients(fx_var_initial())
+    object <- add_posterior_coefficients(add_seed(fx_var_initial(), 987654))
     add_posterior_loglik(object)
   })
 }
@@ -86,8 +85,7 @@ fx_svar_fitted <- function() {
     model <- add_priors(model, coef = list(v_i = 0, v_i_det = 0),
                         sigma = list(shape = 1e-6, rate = 1e-6))
     model <- add_initial_values(model)
-    set.seed(202401)
-    add_posterior_coefficients(model)
+    add_posterior_coefficients(add_seed(model, 202401))
   })
 }
 
@@ -135,8 +133,7 @@ fx_vec_initial <- function() {
 
 fx_vec_fitted <- function() {
   cached_fixture("vec_fitted", {
-    set.seed(456789)
-    object <- add_posterior_coefficients(fx_vec_initial())
+    object <- add_posterior_coefficients(add_seed(fx_vec_initial(), 456789))
     add_posterior_loglik(object)
   })
 }
@@ -168,8 +165,7 @@ fx_var_modellist <- function() {
     models <- add_priors(models, coef = list(v_i = 0, v_i_det = 0),
                          sigma = list(df = 1, scale = 0.0001))
     models <- add_initial_values(models)
-    set.seed(135791)
-    models <- add_posterior_coefficients(models)
+    models <- add_posterior_coefficients(add_seed(models, 135791))
     add_posterior_loglik(models)
   })
 }
@@ -192,8 +188,7 @@ fx_expanding_window <- function() {
                         sigma = list(df = 1, scale = 0.0001))
     windows <- use_expanding_window(model, start = c(1997, 2))
     windows <- add_initial_values(windows)
-    set.seed(864209)
-    windows <- add_posterior_coefficients(windows)
+    windows <- add_posterior_coefficients(add_seed(windows, 864209))
     add_posterior_loglik(windows)
   })
 }
@@ -212,7 +207,7 @@ fx_expanding_forecast <- function() {
     windows <- use_expanding_window(model, start = c(1996, 2))
     windows <- add_initial_values(windows)
     set.seed(112358)
-    windows <- add_posterior_coefficients(windows)
+    windows <- add_posterior_coefficients(add_seed(windows, 112358))
     windows <- add_forecast_input(windows, n_ahead = 2)
     windows <- add_posterior_forecasts(windows)
     add_forecast_errors(windows, test_sample = full)
@@ -241,8 +236,7 @@ fx_var_tvp_fitted <- function(error) {
     model <- add_priors(model, coef = list(v_i = 1, v_i_det = 0.1, shape = 3, rate = 1e-4),
                         sigma = tvp_sigma_prior(error))
     model <- add_initial_values(model)
-    set.seed(314271)
-    model <- add_posterior_coefficients(model)
+    model <- add_posterior_coefficients(add_seed(model, 314271))
     add_posterior_loglik(model)
   })
 }
@@ -257,8 +251,7 @@ fx_vec_tvp_fitted <- function(error) {
                         coint = list(rho = 0.99, rho_min = 0.9, rho_max = 0.999),
                         sigma = tvp_sigma_prior(error))
     model <- add_initial_values(model)
-    set.seed(271828)
-    model <- add_posterior_coefficients(model)
+    model <- add_posterior_coefficients(add_seed(model, 271828))
     add_posterior_loglik(model)
   })
 }
@@ -313,8 +306,7 @@ fx_at_vec_tvp <- function() {
                               p_tau_i = "ml", weight = 0.1),
                  sigma = tvp_sigma_prior("sv")))
     model <- add_initial_values(model)
-    set.seed(179)
-    model <- add_posterior_coefficients(model)
+    model <- add_posterior_coefficients(add_seed(model, 179))
     add_posterior_loglik(model)
   })
 }
@@ -329,8 +321,7 @@ fx_at_var <- function() {
     model <- add_priors(model, coef = list(v_i = 1, v_i_det = 0.1),
                         sigma = list(shape = 3, rate = 0.01))
     model <- add_initial_values(model)
-    set.seed(180)
-    model <- add_posterior_coefficients(model)
+    model <- add_posterior_coefficients(add_seed(model, 180))
     add_posterior_loglik(model)
   })
 }

@@ -3,12 +3,12 @@ title: "Model Comparison in bvartools"
 author: "Franz X. Mohr"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Model comparison in bvartools}
+  %\VignetteIndexEntry{Model Comparison in bvartools}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r, include = FALSE}
+```{r setup, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
@@ -22,7 +22,7 @@ knitr::opts_chunk$set(
 
 For this illustration data set `at_macrodata` is used, which contains quarterly macroeconomic series of Austria. From its element `domestic`, which holds the domestic series, the growth rate of real GDP (`dy`), inflation (`Dp`) and the short-term interest rate (`r`) are taken, all in percent per quarter. The sample ends in 2019Q4, because output growth moved by ten percent within a quarter in 2020, which would dominate models with a constant error variance.
 
-```{r, message = FALSE, warning = FALSE, fig.height=4, fig.width=5}
+```{r data, message = FALSE, warning = FALSE, fig.height=4, fig.width=5}
 library(bvartools)
 
 set.seed(123456) # Set seed for reproducibility
@@ -74,13 +74,13 @@ models <- add_initial_values(models)
 
 Posterior draws can be obtained using function `add_posterior_coefficients`.
 
-```{r, message = FALSE, warning=FALSE, results='hide', echo = FALSE}
+```{r, message = FALSE, warning = FALSE}
 models <- add_posterior_coefficients(models)
 ```
 
 ## Model selection
 
-```{r, message = FALSE, warning=FALSE, results='hide', echo = FALSE}
+```{r, message = FALSE, warning = FALSE}
 models <- add_posterior_loglik(models)
 ```
 
@@ -117,11 +117,11 @@ selcrit
 
 Method `plot.selcritlist` plots the criteria of the models against each other. The log-likelihood is drawn with the credible band of its draws, WAIC and LOOIC with an interval built from their standard errors, and the criteria that count parameters as single values.
 
-```{r}
+```{r aic}
 plot(selcrit, criterion = "AIC")
 ```
 
-```{r}
+```{r looic}
 plot(selcrit, criterion = "LOOIC")
 ```
 
@@ -132,7 +132,7 @@ pos
 
 AIC, HQ, WAIC and LOOIC have their lowest value for the model with $p = 2$. BIC prefers the model with one lag: with 158 observations $\ln(T)$ is about 5, which is more than twice the 2 of the AIC, and nine additional coefficients for a second lag are more than the gain in fit pays for at that price. The model without lags comes last by a wide margin under every criterion, since the short-term interest rate is highly persistent. The intervals of WAIC and LOOIC overlap for all models with lags, however, so the data do not rank them decisively. The table also points out periods whose log-likelihood varies strongly across the draws, and that number increases with the lag order. The third element of `models` is used for further analysis.
 
-```{r}
+```{r irf}
 plot(irf(models[[pos]], impulse = "r", response = "dy", n_ahead = 10))
 ```
 

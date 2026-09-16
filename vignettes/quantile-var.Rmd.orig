@@ -147,7 +147,7 @@ The shares sit near their quantiles rather than on them. With 161 observations p
 
 Comparing one coefficient across the grid is what the exercise is usually for. The following extracts the posterior mean of the effect of the lagged short-term interest rate on output growth at each quantile:
 
-```{r, fig.align='center', fig.height=4, fig.width=5.5}
+```{r coefficient-by-quantile, fig.align='center', fig.height=4, fig.width=5.5}
 coefficient <- function(object) {
   colMeans(object[["posterior"]][["a"]][["coeffs"]])[7]
 }

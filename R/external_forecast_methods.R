@@ -3,6 +3,7 @@
 #' @param x an object of class 'externalforecast'.
 #' @param thin an integer specifying the thinning interval between successive draws.
 #' @param digits the number of significant digits.
+#' @param seed not used, since external forecasts are not simulated.
 #' @param ... arguments passed forward to method.
 #'
 #' @details
@@ -20,6 +21,12 @@ add_priors.externalforecast <- function(object, ...) {
 #' @rdname create_external_forecast
 #' @export
 add_initial_values.externalforecast <- function(object, ...) {
+  return(object)
+}
+
+#' @rdname create_external_forecast
+#' @export
+add_seed.externalforecast <- function(object, seed, ...) {
   return(object)
 }
 

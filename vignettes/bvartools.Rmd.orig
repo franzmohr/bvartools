@@ -25,7 +25,7 @@ The package `bvartools` implements functions for Bayesian inference of linear ti
   * Set prior hyperparameters either manually or based on established approaches such as the Minnesota prior.
   * Set initial values based on maximum likelihood estimates or drawing from a prior.
 - *Posterior simulation*
-  * Perform posterior simulation of coefficients, forecasts and likelihoods using algorithms from the [BayesTS](github.com/franzmohr/BayesTS) library.
+  * Perform posterior simulation of coefficients, forecasts and likelihoods using algorithms from the [BayesTS](https://github.com/franzmohr/BayesTS) library.
   * Researchers can also choose to use they own algorithms.
 - *Evaluation*
   * Traditional summary statistics for individual coefficients
@@ -36,7 +36,7 @@ The package `bvartools` implements functions for Bayesian inference of linear ti
   * Impulse response functions
   * Forecast error variance decomposition
 
-In each step researchers are provided with the opportunity to fine-tune a model according to their specific requirements or to use the default framework for commonly used models and priors. Since version 1.0.0 the package includes simulation functions from the [BayesTS](github.com/franzmohr/BayesTS) C++ library.
+In each step researchers are provided with the opportunity to fine-tune a model according to their specific requirements or to use the default framework for commonly used models and priors. Since version 1.0.0 the package includes simulation functions from the [BayesTS](https://github.com/franzmohr/BayesTS) C++ library.
 
 For Bayesian inference of *VAR models* the package covers
 
@@ -114,7 +114,7 @@ model <- add_initial_values(model, method = "ols")
 
 ## Obtaining posterior draws
 
-`bvartools` comes with built-in posterior simulation functions from the [BayesTS](github.com/franzmohr/BayesTS) library. By using function `add_posterior_coefficients` the model input is forwarded to a posterior function and the output is added to the original object:
+`bvartools` comes with built-in posterior simulation functions from the [BayesTS](https://github.com/franzmohr/BayesTS) library. By using function `add_posterior_coefficients` the model input is forwarded to a posterior function and the output is added to the original object:
 
 ```{r, message=FALSE, warning=FALSE}
 model <- add_posterior_coefficients(model)
@@ -122,19 +122,19 @@ model <- add_posterior_coefficients(model)
 
 If researchers prefer to use their own posterior algorithms, this can be done by specifying argument `posterior_function` with a function that uses object `model` as its input.
 
-## Evalutation
+## Evaluation
 
 ### Inspect posterior draws
 
 Posterior draws can be visually inspected by using the `plot` function. By default, it produces a series of histograms of all estimated coefficients.
 
-```{r, message=FALSE, warning=FALSE, fig.align='center', fig.height=5, fig.width=10}
+```{r histograms, message=FALSE, warning=FALSE, fig.align='center', fig.height=5, fig.width=10}
 plot(model)
 ```
 
-Alternatively, the trace plot of the post-burnin draws can be draws by adding the argument `type = "trace"`:
+Alternatively, the trace plot of the post-burnin draws can be drawn by adding the argument `type = "trace"`:
 
-```{r, message=FALSE, warning=FALSE, fig.align='center', fig.height=5, fig.width=10}
+```{r traceplots, message=FALSE, warning=FALSE, fig.align='center', fig.height=5, fig.width=10}
 plot(model, type = "trace")
 ```
 
@@ -256,7 +256,7 @@ These steps are exactly the same as described above. Thus, the following Gibbs s
 
 ### A Gibbs sampler algorithm
 
-```{r flat prior}
+```{r flat-prior}
 # Reset random number generator for reproducibility
 set.seed(1234567)
 

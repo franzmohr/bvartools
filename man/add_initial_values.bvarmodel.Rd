@@ -62,6 +62,14 @@ of the state equations start at the means of their gamma priors in case
 \code{method = "prior"}. So \code{method = "ols"} uses no random numbers, and a
 seed set after \code{add_initial_values} fixes the posterior draws.
 }
+\section{Seed}{
+
+The function also stores the seed of the posterior simulation as element
+\code{seed} of \code{object$model}, unless the model has one already. It is
+drawn from R's random number generator, so \code{set.seed()} before this call
+makes it reproducible. \code{\link{add_seed}} replaces it.
+}
+
 \examples{
 
 # Load data

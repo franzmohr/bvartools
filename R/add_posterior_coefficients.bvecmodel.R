@@ -25,6 +25,15 @@
 #' triangular elements are freely estimated. Since posterior draws are obtained based on the SUR form of
 #' the VEC model, the structural coefficients are drawn jointly with the other coefficients.
 #' 
+#' The internal samplers draw with the seed in \code{object$model$seed}, which
+#' \code{\link{add_initial_values}} sets and \code{\link{add_seed}} replaces.
+#' R's random number generator is set to that seed, with R's default kinds, for
+#' the simulation and put back as it was afterwards. A call of \code{set.seed()}
+#' between \code{add_initial_values()} and this function therefore does not
+#' change the draws. A model without a seed draws from R's generator as it
+#' stands. A \code{posterior_function} is called as it is and decides itself
+#' what to do with the seed; see \code{\link{bayests_posterior}}.
+#'
 #' A sampler that cannot run raises its error rather than returning something.
 #' The message names what about the input it could not work with. Applied to a
 #' list of models -- a 'modellist', an 'expandingwindow' or, in \pkg{bgvars}, a
@@ -100,14 +109,14 @@ add_posterior_coefficients.bvecmodel <- function(object, posterior_function = NU
     if (algorithm %in% c("VecKlgs2010", "VecNormalGamma", "VecNormalWishart",
                          "VecNormalStochvol", "VecTvpGamma", "VecTvpWishart",
                          "VecTvpStochvol")) {
-      object <- switch(algorithm,
+      object <- .with_model_seed(object[["model"]][["seed"]], switch(algorithm,
                        VecKlgs2010 = .VecKlgs2010Coefficients(object),
                        VecNormalGamma = .VecNormalGammaCoefficients(object),
                        VecNormalStochvol = .VecNormalStochvolCoefficients(object),
                        VecNormalWishart = .VecNormalWishartCoefficients(object),
                        VecTvpGamma = .VecTvpGammaCoefficients(object),
                        VecTvpStochvol = .VecTvpStochvolCoefficients(object),
-                       VecTvpWishart = .VecTvpWishartCoefficients(object))
+                       VecTvpWishart = .VecTvpWishartCoefficients(object)))
     } else {
       stop("Algorithm '", algorithm, "' not supported.")
     }

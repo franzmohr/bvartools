@@ -5,7 +5,7 @@ output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Stochastic Search Variable Selection in bvartools}
   %\VignetteEngine{knitr::rmarkdown}
-  \usepackage[utf8]{inputenc}
+  %\VignetteEncoding{UTF-8}
 ---
 
 ```{r setup, include = FALSE}
@@ -84,7 +84,7 @@ a <- matrix(0, m)
 a_v_i_prior <- diag(1 / c(tau1)^2, m) # Inverse of the prior covariance matrix
 
 # Data containers for posterior draws
-iterations <- 10000 # Number of total Gibs sampler draws
+iterations <- 10000 # Number of saved iterations of the Gibbs sampler
 burnin <- 5000 # Number of burn-in draws
 draws <- iterations + burnin # Total number of draws
 
@@ -143,7 +143,7 @@ The inclusion probabilities of the constant terms are 100 percent, because they 
 
 Using the results from above the researcher could proceed in the usual way and obtain forecasts and impulse responses based on the output of the Gibbs sampler. The advantage of this approach is that it does not only take into account parameter uncertainty, but also model uncertainty. This can be illustrated by the histogram of the posterior draws of the 6th coefficient, which describes the relationship between the first lag of inflation and the current value of the interest rate.
 
-```{r, fig.height=3.5, fig.width=4.5}
+```{r histogram, fig.height=3.5, fig.width=4.5}
 hist(draws_a[6,], main = "Interest rate ~ First lag of inflation", xlab = "Value of posterior draw")
 ```
 

@@ -20,7 +20,8 @@ add_seed(object, seed, ...)
 }
 \arguments{
 \item{object}{a model, usually after \code{\link{add_initial_values}}: an
-object of class 'bvarmodel' or 'bvecmodel', or a list of them of class
+object of class 'bvarmodel' or 'bvecmodel', a model of another package that
+provides an \code{add_seed} method for it, or a list of such models of class
 'modellist' or 'expandingwindow'.}
 
 \item{seed}{a non-negative whole number no larger than
@@ -51,8 +52,12 @@ different draws in the two.
 
 A list of models gets the seeds \code{seed}, \code{seed + 1}, \ldots, one per
 model in the order of its elements, counting through nested lists, so that no
-two of its models draw the same numbers. Elements that are not estimated, such
-as external forecasts, are left as they are and are not counted.
+two of its models draw the same numbers. A model is any element with an
+\code{add_seed} method of its own, so the models of other packages that
+provide one, such as the dynamic factor models of \pkg{dfmtools}, are
+counted with the rest. Elements that are not estimated, such as external
+forecasts, and elements without a method are left as they are and are not
+counted.
 }
 \examples{
 # Load data

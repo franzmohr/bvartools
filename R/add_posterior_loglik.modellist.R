@@ -40,7 +40,7 @@
 add_posterior_loglik.modellist <- function(object, ..., cores = 1){
 
   if (.use_cluster(object, cores)) {
-    return(.simulate_models_in_parallel(object, add_posterior_loglik, cores, ...))
+    return(.simulate_models_in_parallel(object, "add_posterior_loglik", cores, ...))
   }
   
   object <- lapply(object, add_posterior_loglik, ...)

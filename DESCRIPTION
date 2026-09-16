@@ -8,7 +8,7 @@ License: GPL (>= 2)
 Depends: 
     R (>= 3.5),
     coda
-Imports: grDevices, graphics, hdf5r, Matrix, methods, parallel, Rcpp (>= 1.0.12), stats
+Imports: grDevices, graphics, hdf5r, Matrix, methods, parallel, Rcpp (>= 1.0.12), stats, utils
 LinkingTo: Rcpp, RcppArmadillo
 SystemRequirements: GNU make
 Encoding: UTF-8

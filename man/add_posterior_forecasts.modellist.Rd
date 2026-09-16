@@ -41,7 +41,9 @@ become faster with more threads. The thread count of this session is not
 changed.
 
 The workers use the library paths of this session and load the installed
-version of the package. A function passed as \code{posterior_function},
+version of the package, together with every package that provides a method
+the models of the list need -- \pkg{dfmtools} for its dynamic factor models,
+for example. A function passed as \code{posterior_function},
 such as the one \code{\link{bayests_posterior}} returns, is sent to the
 workers along with the variables of the environment it was created in, and
 must not rely on anything else of this session.

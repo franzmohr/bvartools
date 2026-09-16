@@ -47,7 +47,7 @@
 add_posterior_loglik.expandingwindow <- function(object, ..., cores = 1){
 
   if (.use_cluster(object, cores)) {
-    return(.simulate_models_in_parallel(object, add_posterior_loglik, cores, ...))
+    return(.simulate_models_in_parallel(object, "add_posterior_loglik", cores, ...))
   }
   
   orig_class <- class(object)

@@ -148,6 +148,43 @@ test_that("workers load bvartools from the library of this session", {
   }
 })
 
+test_that("the packages whose methods the models need are found", {
+  models <- parallel_fixture()
+  var_models <- lapply(bvartools:::.model_paths(models), function(path) models[[path]])
+  expect_identical(bvartools:::.method_namespaces("add_posterior_coefficients", var_models),
+                   "bvartools")
+
+  # A method another package registers for a class of its own, as dfmtools does
+  # for its dynamic factor models: its environment is that package's namespace.
+  method <- function(object, ...) object
+  environment(method) <- asNamespace("splines")
+  registerS3method("add_posterior_coefficients", "bvartools_parallel_test_model",
+                   method, envir = asNamespace("bvartools"))
+  other <- structure(list(), class = c("bvartools_parallel_test_model", "list"))
+
+  expect_identical(bvartools:::.method_namespaces("add_posterior_coefficients",
+                                                  c(var_models, list(other))),
+                   c("bvartools", "splines"))
+  # A generic with no method for the class needs nothing loaded.
+  expect_identical(bvartools:::.method_namespaces("add_posterior_loglik", list(other)),
+                   character())
+})
+
+test_that("workers load the packages they are given", {
+  skip_if_workers_load_other_version()
+  # splines is a base package that a worker does not load on its own.
+  loaded <- function(package) isNamespaceLoaded(package)
+  environment(loaded) <- baseenv()
+
+  plain <- bvartools:::.start_model_cluster(1)
+  on.exit(parallel::stopCluster(plain), add = TRUE)
+  expect_false(parallel::clusterCall(plain, loaded, "splines")[[1]])
+
+  cl <- bvartools:::.start_model_cluster(1, packages = "splines")
+  on.exit(parallel::stopCluster(cl), add = TRUE)
+  expect_true(parallel::clusterCall(cl, loaded, "splines")[[1]])
+})
+
 test_that("a model without a seed is given one before it is sent off", {
   skip_if_workers_load_other_version()
   models <- parallel_fixture()

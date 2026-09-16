@@ -40,7 +40,7 @@
 add_posterior_coefficients.expandingwindow <- function(object, ..., cores = 1){
 
   if (.use_cluster(object, cores)) {
-    return(.simulate_models_in_parallel(object, add_posterior_coefficients, cores, ...,
+    return(.simulate_models_in_parallel(object, "add_posterior_coefficients", cores, ...,
                                         seed = TRUE))
   }
 

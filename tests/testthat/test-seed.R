@@ -57,6 +57,39 @@ test_that("models that are not estimated are skipped and not counted", {
   expect_identical(add_seed(forecast, 1), forecast)
 })
 
+test_that("a list seeds the models of other packages that have an add_seed() method", {
+  # As dfmtools registers add_seed() methods for its dynamic factor models.
+  registerS3method("add_seed", "bvartools_seed_test_model",
+                   function(object, seed, ...) {
+                     object[["model"]][["seed"]] <- as.integer(seed)
+                     object
+                   },
+                   envir = asNamespace("bvartools"))
+  other <- structure(list(model = list()),
+                     class = c("bvartools_seed_test_model", "list"))
+  unknown <- structure(list(model = list()),
+                       class = c("bvartools_seed_test_unknown", "list"))
+
+  models <- structure(list(fx_var_initial(), other, unknown, other),
+                      class = c("modellist", "list"))
+  seeded <- add_seed(models, 5)
+  expect_identical(seeded[[1]][["model"]][["seed"]], 5L)
+  expect_identical(seeded[[2]][["model"]][["seed"]], 6L)
+  expect_identical(seeded[[3]], unknown)
+  expect_identical(seeded[[4]][["model"]][["seed"]], 7L)
+})
+
+test_that("an external forecast in an expanding window list is not walked into", {
+  forecast <- structure(list(fx_var_initial()),
+                        class = c("externalforecast", "expandingwindow", "list"))
+  models <- structure(list(forecast, fx_var_initial()),
+                      class = c("modellist", "list"))
+
+  seeded <- add_seed(models, 3)
+  expect_identical(seeded[[1]], forecast)
+  expect_identical(seeded[[2]][["model"]][["seed"]], 3L)
+})
+
 test_that("the seed of a model decides its draws and leaves R's generator as it was", {
   model <- add_seed(fx_var_initial(), 7)
 

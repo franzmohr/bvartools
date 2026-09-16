@@ -28,7 +28,9 @@
 #' changed.
 #'
 #' The workers use the library paths of this session and load the installed
-#' version of the package. A function passed as \code{posterior_function},
+#' version of the package, together with every package that provides a method
+#' the models of the list need -- \pkg{dfmtools} for its dynamic factor models,
+#' for example. A function passed as \code{posterior_function},
 #' such as the one \code{\link{bayests_posterior}} returns, is sent to the
 #' workers along with the variables of the environment it was created in, and
 #' must not rely on anything else of this session.
@@ -82,7 +84,7 @@
 add_posterior_coefficients.modellist <- function(object, ..., cores = 1){
 
   if (.use_cluster(object, cores)) {
-    return(.simulate_models_in_parallel(object, add_posterior_coefficients, cores, ...,
+    return(.simulate_models_in_parallel(object, "add_posterior_coefficients", cores, ...,
                                         seed = TRUE))
   }
 

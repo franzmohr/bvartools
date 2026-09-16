@@ -47,7 +47,7 @@
 add_posterior_forecasts.expandingwindow <- function(object, ..., cores = 1){
 
   if (.use_cluster(object, cores)) {
-    return(.simulate_models_in_parallel(object, add_posterior_forecasts, cores, ...))
+    return(.simulate_models_in_parallel(object, "add_posterior_forecasts", cores, ...))
   }
   
   orig_class <- class(object)

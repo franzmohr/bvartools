@@ -3,7 +3,8 @@
 #' Sets the seed with which the posterior of a model is simulated.
 #'
 #' @param object a model, usually after \code{\link{add_initial_values}}: an
-#' object of class 'bvarmodel' or 'bvecmodel', or a list of them of class
+#' object of class 'bvarmodel' or 'bvecmodel', a model of another package that
+#' provides an \code{add_seed} method for it, or a list of such models of class
 #' 'modellist' or 'expandingwindow'.
 #' @param seed a non-negative whole number no larger than
 #' \code{.Machine$integer.max}.
@@ -26,8 +27,12 @@
 #'
 #' A list of models gets the seeds \code{seed}, \code{seed + 1}, \ldots, one per
 #' model in the order of its elements, counting through nested lists, so that no
-#' two of its models draw the same numbers. Elements that are not estimated, such
-#' as external forecasts, are left as they are and are not counted.
+#' two of its models draw the same numbers. A model is any element with an
+#' \code{add_seed} method of its own, so the models of other packages that
+#' provide one, such as the dynamic factor models of \pkg{dfmtools}, are
+#' counted with the rest. Elements that are not estimated, such as external
+#' forecasts, and elements without a method are left as they are and are not
+#' counted.
 #'
 #' @return \code{object} with the seed set.
 #'
@@ -80,22 +85,35 @@ add_seed.expandingwindow <- function(object, seed, ...) {
 # One seed per model, counted through nested lists: use_expanding_window() on a
 # 'modellist' returns a 'modellist' of 'expandingwindow' lists, and numbering
 # each inner list from 'seed' again would give models of different lists the
-# same seed.
+# same seed. The lists are those the parallel simulation walks, so that both
+# find the same models in the same order.
 .add_seed_to_list <- function(object, seed, ...) {
   seed <- .check_seed(seed)
   n <- 0
   set_seeds <- function(x) {
-    if (inherits(x, c("modellist", "expandingwindow"))) {
+    if (.is_model_container(x)) {
       for (i in seq_along(x)) {
         x[[i]] <- set_seeds(x[[i]])
       }
-    } else if (inherits(x, c("bvarmodel", "bvecmodel"))) {
+    } else if (.is_seeded_model(x)) {
       x <- add_seed(x, .offset_seed(seed, n), ...)
       n <<- n + 1
     }
     x
   }
   set_seeds(object)
+}
+
+# TRUE for an element of a list that add_seed() gives a seed: anything with an
+# add_seed() method of its own, the models of other packages that register one
+# included -- dfmtools does for its dynamic factor models. An external forecast
+# has a method too, but it is not estimated, so it is neither seeded nor
+# counted. Lists of models are walked rather than seeded.
+.is_seeded_model <- function(x) {
+  if (inherits(x, "externalforecast") || .is_model_container(x)) {
+    return(FALSE)
+  }
+  !is.null(.s3_method_for("add_seed", x))
 }
 
 # A seed is stored as an integer. A plain 20260916 in R is a double, and the

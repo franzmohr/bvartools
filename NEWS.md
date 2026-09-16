@@ -1,5 +1,18 @@
 # bvartools (development version)
 
+* **Lists of models from other packages are seeded and simulated on several
+  cores.** `add_seed()` on a `modellist` or an `expandingwindow` numbered only
+  VAR and VEC models, and returned the dynamic factor models of dfmtools, which
+  registers `add_seed()` methods of its own, without a seed. It now seeds and
+  counts every element with an `add_seed()` method of its own, external
+  forecasts excepted, and walks the same lists the parallel simulation does.
+  With `cores` above 1, the workers loaded bvartools but never the package that
+  registered the methods for such a model, so a list of dfmtools models stopped
+  with "no applicable method". Each worker now loads, after the library paths
+  of the session, the namespace of every method the models of the list
+  dispatch to, and a model without a seed is given one through `add_seed()`
+  whenever it has a method for it. `utils` is a new import.
+
 * **Lists of models can be simulated on several cores.** The 'modellist' and
   'expandingwindow' methods of `add_posterior_coefficients()`,
   `add_posterior_forecasts()` and `add_posterior_loglik()` have a new argument

@@ -46,7 +46,7 @@ add_posterior_loglik.bvecmodel <- function(object, ...) {
   
   # Input checks
   if (is.null(object[["posterior"]][["u_sigma_inv"]][["coeffs"]])) {
-    stop("Object does not contain posterior draws in posteriors$u_sigma_inv.")
+    stop("Object does not contain posterior draws in posterior$u_sigma_inv.")
   }
   
   algorithm <- object[["model"]][["algorithm"]]

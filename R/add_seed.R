@@ -2,7 +2,7 @@
 #'
 #' Sets the seed with which the posterior of a model is simulated.
 #'
-#' @param object a model, usually after \code{\link{add_initial_values}}: an
+#' @param object a model, at any point before the posterior is simulated: an
 #' object of class 'bvarmodel' or 'bvecmodel', a model of another package that
 #' provides an \code{add_seed} method for it, or a list of such models of class
 #' 'modellist' or 'expandingwindow'.
@@ -13,9 +13,11 @@
 #' @details
 #' Calling this function is optional. \code{\link{add_initial_values}} already
 #' stores a seed, drawn from R's random number generator, in element \code{seed}
-#' of \code{object$model}. \code{add_seed} replaces it, for example to give a
-#' model a seed that depends neither on the state of R's generator nor on the
-#' worker of a cluster that happens to simulate it.
+#' of \code{object$model}, unless the model has one. \code{add_seed} sets that
+#' element, for example to give a model a seed that depends neither on the state
+#' of R's generator nor on the worker of a cluster that happens to simulate it.
+#' It can be called before \code{add_initial_values}, which then keeps the seed
+#' it is given, or after it, which replaces the drawn one.
 #'
 #' The seed is part of the model. \code{\link{write_to_hdf5}} writes it as
 #' attribute \code{seed} of group \code{/model}, where the BayesTS executable
@@ -41,12 +43,10 @@
 #' data("e1")
 #' e1 <- diff(log(e1)) * 100
 #'
-#' # Generate model, add priors and initial values
+#' # Generate model
 #' model <- create_bvarmodel(data = e1, p = 2, iterations = 100, burnin = 50)
-#' model <- add_priors(model)
-#' model <- add_initial_values(model)
 #'
-#' # add_initial_values() has set a seed; replace it
+#' # Set the seed of the posterior simulation
 #' model <- add_seed(model, 20260916)
 #' model[["model"]][["seed"]]
 #'

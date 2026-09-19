@@ -3,7 +3,7 @@
 #' @section Model objects:
 #' Every step of an analysis takes a model object and returns it with something
 #' added, so the result of each call must be assigned back:
-#' \code{model <- add_priors(model)}. A model object is a list of class
+#' \code{model <- add_initial_values(model)}. A model object is a list of class
 #' 'bvarmodel' or 'bvecmodel' with the elements
 #' \describe{
 #'   \item{\code{data}}{the data matrices, with the estimation sample in

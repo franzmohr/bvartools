@@ -1,5 +1,14 @@
 # bvartools (development version)
 
+* **BayesTS can be run on stored models.** `bayests_files()` returns a function
+  that runs the BayesTS executable on a model file or on a whole directory of
+  them and leaves the results where it wrote them. `bayests_posterior()` remains
+  the way to draw a model that is in the session, but for a model that is
+  already stored it copies the draws three times and holds them in R for no
+  purpose; run on the files, nothing of them passes through the session. The
+  draws are the same either way, since a model is drawn with the seed in its
+  file.
+
 * **A model can be analysed from its file.** `open_model()` returns a handle to
   a model written with `write_to_hdf5()`, carrying its specification, its data
   and the length of its chain but none of its draws. `map_draws()` reads the

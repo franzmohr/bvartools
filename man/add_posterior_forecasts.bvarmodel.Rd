@@ -77,6 +77,7 @@ Other posterior simulation:
 \code{\link[=add_posterior_loglik.bvarmodel]{add_posterior_loglik.bvarmodel()}},
 \code{\link[=add_posterior_loglik.bvecmodel]{add_posterior_loglik.bvecmodel()}},
 \code{\link[=add_seed]{add_seed()}},
+\code{\link[=bayests_files]{bayests_files()}},
 \code{\link[=bayests_posterior]{bayests_posterior()}},
 \code{\link[=bvar]{bvar()}},
 \code{\link[=bvec]{bvec()}},

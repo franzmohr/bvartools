@@ -35,8 +35,10 @@ reference:
 
 - title: Posterior simulation
   contents:
+  - starts_with("add_seed")
   - starts_with("add_posterior_coefficients")
   - starts_with("add_posterior_loglik")
+  - bayests_posterior
   - starts_with("thin.")
 
 - title: Forecasting and model evaluation
@@ -46,6 +48,7 @@ reference:
   - starts_with("add_posterior_forecasts")
   - starts_with("predict.")
   - starts_with("add_forecast_errors")
+  - starts_with("add_predictive_loglik")
   - get_forecast_errors
   - plot_forecast_errors_by_period
   - create_external_forecast

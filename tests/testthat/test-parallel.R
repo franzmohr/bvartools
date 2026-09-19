@@ -71,9 +71,13 @@ test_that("coefficient draws on two workers equal those of one process", {
   expect_identical(draws_of(parallel, "a"), draws_of(sequential, "a"))
   expect_identical(draws_of(parallel, "u_sigma_inv"), draws_of(sequential, "u_sigma_inv"))
 
-  # They do not depend on the number of workers either.
-  expect_identical(draws_of(add_posterior_coefficients(models, cores = 3), "a"),
-                   draws_of(parallel, "a"))
+  # They do not depend on the number of workers either. A third worker is only
+  # asked for where a third process is allowed: 'parallel' refuses more than two
+  # under R CMD check, which sets '_R_CHECK_LIMIT_CORES_'.
+  if (!nzchar(Sys.getenv("_R_CHECK_LIMIT_CORES_"))) {
+    expect_identical(draws_of(add_posterior_coefficients(models, cores = 3), "a"),
+                     draws_of(parallel, "a"))
+  }
 
   # An expanding window on its own is shared out as well.
   window <- add_posterior_coefficients(models[[1]], cores = 2)
@@ -172,17 +176,25 @@ test_that("the packages whose methods the models need are found", {
 
 test_that("workers load the packages they are given", {
   skip_if_workers_load_other_version()
-  # splines is a base package that a worker does not load on its own.
   loaded <- function(package) isNamespaceLoaded(package)
   environment(loaded) <- baseenv()
 
+  # A base package that a worker has not loaded on its own, so that loading it
+  # is what the test sees. Which ones a worker starts with is a matter of the
+  # installation -- the machines of the continuous integration start with
+  # splines -- so it is asked rather than assumed.
   plain <- bvartools:::.start_model_cluster(1)
   on.exit(parallel::stopCluster(plain), add = TRUE)
-  expect_false(parallel::clusterCall(plain, loaded, "splines")[[1]])
+  candidates <- c("splines", "compiler", "grid", "tools")
+  unloaded <- candidates[!vapply(candidates, function(package) {
+    parallel::clusterCall(plain, loaded, package)[[1]]
+  }, logical(1))]
+  skip_if(length(unloaded) == 0, "a worker starts with every candidate package loaded")
+  package <- unloaded[1]
 
-  cl <- bvartools:::.start_model_cluster(1, packages = "splines")
+  cl <- bvartools:::.start_model_cluster(1, packages = package)
   on.exit(parallel::stopCluster(cl), add = TRUE)
-  expect_true(parallel::clusterCall(cl, loaded, "splines")[[1]])
+  expect_true(parallel::clusterCall(cl, loaded, package)[[1]])
 })
 
 test_that("a model without a seed is given one before it is sent off", {

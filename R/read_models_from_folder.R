@@ -3,6 +3,10 @@
 #' Imports every model stored below a folder.
 #'
 #' @param folder Path to a folder containing model data.
+#' @param draws the draws to read of every model, as
+#' \code{\link{read_model_from_hdf5}} takes them: \code{NULL}, the default, for
+#' the whole chain, a vector of positions for those draws, or
+#' \code{integer(0)} for none of them.
 #'
 #' @details
 #'
@@ -19,6 +23,12 @@
 #'
 #' The class of each model comes from the \code{rclass} attribute the writer
 #' records, not from its file name.
+#'
+#' \code{draws} is what makes a folder larger than the session readable: with
+#' \code{integer(0)} the models come back with their specification, their data
+#' and their priors and no draws, and with a vector of positions the chain is
+#' read a piece at a time. For working on the models rather than reading them,
+#' \code{\link{open_models}} hands them over one at a time instead.
 #'
 #' @return A named list of class 'modellist', or of class 'expandingwindow' if
 #' the models say they belong to one.
@@ -42,7 +52,7 @@
 #' names(models)
 #'
 #' @export
-read_models_from_folder <- function(folder) {
+read_models_from_folder <- function(folder, draws = NULL) {
 
   if (!dir.exists(folder)) {
     stop("Specified folder does not exist.")
@@ -71,7 +81,8 @@ read_models_from_folder <- function(folder) {
 
     for (group in list_models_in_hdf5(filename)) {
       result[[length(result) + 1]] <- read_model_from_hdf5(filename = filename,
-                                                           group = group)
+                                                           group = group,
+                                                           draws = draws)
       result_names <- c(result_names,
                         if (group == "") stem else paste0(stem, ":", group))
     }

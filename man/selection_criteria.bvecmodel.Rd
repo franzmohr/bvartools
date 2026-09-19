@@ -65,8 +65,11 @@ Other model comparison:
 \code{\link{analysis_of_stored_models}},
 \code{\link[=choose_best_model.selcritlist]{choose_best_model.selcritlist()}},
 \code{\link[=create_external_forecast]{create_external_forecast()}},
+\code{\link{folder_steps}},
 \code{\link[=map_draws]{map_draws()}},
+\code{\link[=map_models]{map_models()}},
 \code{\link[=open_model]{open_model()}},
+\code{\link[=open_models]{open_models()}},
 \code{\link[=plot_forecast_errors_by_period]{plot_forecast_errors_by_period()}},
 \code{\link[=selection_criteria.bvarmodel]{selection_criteria.bvarmodel()}},
 \code{\link[=selection_criteria.modellist]{selection_criteria.modellist()}}

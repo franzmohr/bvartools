@@ -1,5 +1,21 @@
 # bvartools (development version)
 
+* **A folder of models is worked on without holding it.** `open_models()`
+  returns a handle to a folder written with `write_to_hdf5()`, carrying a row
+  per model -- where it is and what it is -- and none of the draws.
+  `map_models()` reads one model, applies a function, writes it back and drops
+  it, and `add_priors()`, `add_initial_values()`, `add_seed()`,
+  `add_posterior_coefficients()`, `add_posterior_loglik()` and `thin()` have
+  methods for the handle, so a step costs one model per worker rather than the
+  whole folder. They take `models`, the models a step is applied to, which makes
+  a long estimation resumable, and the seeds are the ones the same models get as
+  a list, so a run taken in parts draws what a run over all of them draws. With
+  `write = FALSE` `map_models()` only reads, which is how
+  `selection_criteria()` compares a grid too large to hold, and
+  `read_models_from_folder()` takes `draws` for reading part of every chain.
+  This is the file-first workflow bgvars has for a global model, for any list of
+  models: a lag and rank grid, or an expanding window.
+
 * **BayesTS can be run on stored models.** `bayests_files()` returns a function
   that runs the BayesTS executable on a model file or on a whole directory of
   them and leaves the results where it wrote them. `bayests_posterior()` remains

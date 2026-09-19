@@ -4,10 +4,15 @@
 \alias{read_models_from_folder}
 \title{Import Models from a Folder of HDF5 Files}
 \usage{
-read_models_from_folder(folder)
+read_models_from_folder(folder, draws = NULL)
 }
 \arguments{
 \item{folder}{Path to a folder containing model data.}
+
+\item{draws}{the draws to read of every model, as
+\code{\link{read_model_from_hdf5}} takes them: \code{NULL}, the default, for
+the whole chain, a vector of positions for those draws, or
+\code{integer(0)} for none of them.}
 }
 \value{
 A named list of class 'modellist', or of class 'expandingwindow' if
@@ -30,6 +35,12 @@ whose depth depended on where the caller pointed could not provide them.
 
 The class of each model comes from the \code{rclass} attribute the writer
 records, not from its file name.
+
+\code{draws} is what makes a folder larger than the session readable: with
+\code{integer(0)} the models come back with their specification, their data
+and their priors and no draws, and with a vector of positions the chain is
+read a piece at a time. For working on the models rather than reading them,
+\code{\link{open_models}} hands them over one at a time instead.
 }
 \examples{
 

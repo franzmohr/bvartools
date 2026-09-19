@@ -64,6 +64,7 @@ Collate:
     'add_sign_restrictions.modellist.R'
     'align_model_obs.R'
     'align_model_obs.modellist.R'
+    'bayests_files.R'
     'bayests_posterior.R'
     'bvar.R'
     'bvar_fill_helper.R'

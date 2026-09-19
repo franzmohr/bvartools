@@ -215,3 +215,97 @@ test_that("BayesTS draws with the model's seed and gives an unseeded model one",
   result <- add_posterior_coefficients(unseeded, posterior_function = simulate)
   expect_type(result[["model"]][["seed"]], "integer")
 })
+
+test_that("bayests_files() needs an executable and a path that exist", {
+  old_option <- options(bvartools.bayests_executable = NULL)
+  old_env <- Sys.getenv("BAYESTS_EXECUTABLE", unset = NA)
+  Sys.unsetenv("BAYESTS_EXECUTABLE")
+
+  expect_error(bayests_files(), "No BayesTS executable")
+  expect_error(bayests_files(executable = tempfile()), "not found")
+
+  options(old_option)
+  if (!is.na(old_env)) {
+    Sys.setenv(BAYESTS_EXECUTABLE = old_env)
+  }
+
+  executable <- Sys.getenv("BAYESTS_EXECUTABLE")
+  skip_if(!nzchar(executable) || !file.exists(executable),
+          "BAYESTS_EXECUTABLE does not name a BayesTS executable")
+  run <- bayests_files(executable = executable)
+  expect_error(run(file.path(tempdir(), "no-such-directory")), "No such file")
+  expect_invisible(run(character(0)))
+})
+
+test_that("BayesTS run on the files draws what it draws on a model", {
+  simulate <- bayests_for_tests()
+  executable <- Sys.getenv("BAYESTS_EXECUTABLE")
+  library_path <- Sys.getenv("BAYESTS_LIBRARY_PATH")
+  library_path <- if (nzchar(library_path)) {
+    strsplit(library_path, .Platform$path.sep, fixed = TRUE)[[1]]
+  }
+  run <- bayests_files(executable = executable, library_path = library_path)
+
+  for (model in list(add_seed(fx_var_initial(), 11), add_seed(fx_vec_initial(), 12))) {
+
+    # The same model, once drawn through the session and once in its file.
+    in_session <- add_posterior_coefficients(model, posterior_function = simulate)
+
+    folder <- file.path(tempdir(), "bvartools-bayests-files")
+    unlink(folder, recursive = TRUE)
+    dir.create(folder, recursive = TRUE)
+    write_to_hdf5(model, filename = file.path(folder, "model.h5"))
+
+    expect_invisible(run(folder, command = "check"))
+    run(folder, args = c("--no-loglik", "--no-forecasts"))
+    in_file <- read_model_from_hdf5(file.path(folder, "model.h5"))
+
+    expect_false(is.null(in_file[["posterior"]]))
+    for (block in names(in_session[["posterior"]])) {
+      first <- in_session[["posterior"]][[block]]
+      second <- in_file[["posterior"]][[block]]
+      if (is.list(first)) {
+        first <- first[["coeffs"]]
+        second <- second[["coeffs"]]
+      }
+      expect_equal(unclass(second), unclass(first), info = block)
+    }
+    unlink(folder, recursive = TRUE)
+  }
+})
+
+test_that("BayesTS runs several paths at once and reports the ones that fail", {
+  bayests_for_tests()
+  executable <- Sys.getenv("BAYESTS_EXECUTABLE")
+  library_path <- Sys.getenv("BAYESTS_LIBRARY_PATH")
+  library_path <- if (nzchar(library_path)) {
+    strsplit(library_path, .Platform$path.sep, fixed = TRUE)[[1]]
+  }
+  run <- bayests_files(executable = executable, library_path = library_path)
+
+  # Three directories of one model each, checked two at a time.
+  root <- file.path(tempdir(), "bvartools-bayests-jobs")
+  unlink(root, recursive = TRUE)
+  folders <- file.path(root, c("one", "two", "three"))
+  for (i in seq_along(folders)) {
+    dir.create(folders[i], recursive = TRUE)
+    write_to_hdf5(add_seed(fx_var_initial(), 20 + i),
+                  filename = file.path(folders[i], "model.h5"))
+  }
+
+  expect_invisible(run(folders, command = "check", jobs = 2))
+  run(folders, args = c("--no-loglik", "--no-forecasts"), jobs = 2, poll = 0.2)
+  for (folder in folders) {
+    drawn <- read_model_from_hdf5(file.path(folder, "model.h5"))
+    expect_false(is.null(drawn[["posterior"]]))
+  }
+
+  # A path that holds nothing BayesTS can read fails, and says which.
+  empty <- file.path(root, "empty")
+  dir.create(empty)
+  writeLines("not a model", file.path(empty, "model.h5"))
+  expect_error(run(c(folders[1], empty), command = "check", jobs = 2),
+               "BayesTS failed on 1 path")
+
+  unlink(root, recursive = TRUE)
+})

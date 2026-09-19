@@ -23,10 +23,12 @@ there is none. Models with constant coefficients and volatility are unaffected.}
 \item{...}{arguments passed forward to method.}
 }
 \value{
-The object in \code{object} with \code{posterior$forecast} added, a
+The object in \code{object} with \code{posterior$forecast$forecasts} added, a
 \code{\link[coda]{mcmc}} object with one row per draw and \eqn{Kh} columns, stacked by
 period: the \eqn{K} variables of the first forecast period, then those of the second,
-and so on. \code{\link[=predict.bvarmodel]{predict}} summarises them. A
+and so on. \code{posterior$forecast} is the group everything the forecast periods
+produce hangs below, the \code{errors} of \code{\link{add_forecast_errors}} beside
+these. \code{\link[=predict.bvarmodel]{predict}} summarises them. A
 \code{forecast_states} that was given is stored in \code{model$forecast_states}.
 
 Simulating the volatility forward needs the variance of the log-volatility

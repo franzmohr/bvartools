@@ -64,7 +64,7 @@ add_forecast_input.bvecmodel <- function(object, n_ahead = 10, deterministic = N
 #' stores. A model with stochastic volatility estimated with an earlier version of the
 #' package lacks it and stops with an error unless \code{forecast_states = "hold"}.
 #'
-#' @return The object in \code{object} with \code{posterior$forecast} added, a
+#' @return The object in \code{object} with \code{posterior$forecast$forecasts} added, a
 #' \code{\link[coda]{mcmc}} object with one row per draw and \eqn{Kh} columns of forecasts
 #' of the levels, stacked by period. \code{predict} summarises them. A
 #' \code{forecast_states} that was given is stored in \code{model$forecast_states}.
@@ -103,9 +103,9 @@ add_posterior_forecasts.bvecmodel <- function(object, forecast_states = NULL, ..
                    stop("Algorithm '", algorithm, "' not supported."))
 
   mcpar_temp <- coda::mcpar(object[["posterior"]][["u_sigma_inv"]][["coeffs"]])
-  object[["posterior"]][["forecast"]] <- coda::mcmc(object[["posterior"]][["forecast"]],
-                                                     start = mcpar_temp[1], end = mcpar_temp[2],
-                                                     thin = mcpar_temp[3])
+  object[["posterior"]][["forecast"]][["forecasts"]] <- coda::mcmc(object[["posterior"]][["forecast"]][["forecasts"]],
+                                                                  start = mcpar_temp[1], end = mcpar_temp[2],
+                                                                  thin = mcpar_temp[3])
 
   class(object) <- class_of_object
 
@@ -136,8 +136,8 @@ add_posterior_forecasts.bvecmodel <- function(object, forecast_states = NULL, ..
 #' @method predict bvecmodel
 predict.bvecmodel <- function(object, n_ahead = NULL, ...){
 
-  if (is.null(object[["posterior"]][["forecast"]])) {
-    stop("Missing element object$posterior$forecast. You might want to use\n'add_forecast_input' and then 'add_posterior_forecasts'\nbefore this function.")
+  if (is.null(.forecast_draws(object))) {
+    stop("Missing element object$posterior$forecast$forecasts. You might want to use\n'add_forecast_input' and then 'add_posterior_forecasts'\nbefore this function.")
   }
 
   level <- .vec_level_form(object)

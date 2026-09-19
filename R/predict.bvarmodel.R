@@ -62,8 +62,8 @@ predict.bvarmodel <- function(object, n_ahead = NULL, ...) {
     stop("Missing specification of h in object$model$h. You might want to use\nfunction 'add_forecast_input' and then 'add_posterior_forecasts'\nbefore using this function.")
   }
 
-  if (is.null(object[["posterior"]][["forecast"]])) {
-    stop("Missing element object$posterior$forecast. You might want to use\n'add_posterior_forecasts'\nbefore this function.")
+  if (is.null(.forecast_draws(object))) {
+    stop("Missing element object$posterior$forecast$forecasts. You might want to use\n'add_posterior_forecasts'\nbefore this function.")
   }
 
   # Every simulated period unless fewer are asked for. The default used to be
@@ -79,7 +79,7 @@ predict.bvarmodel <- function(object, n_ahead = NULL, ...) {
   
   tt <- nrow(object[["data"]][["train"]][["y"]])
   varnames <- object[["model"]][["endogen"]]
-  draws <- nrow(object[["posterior"]][["forecast"]])
+  draws <- nrow(.forecast_draws(object))
   k <- object[["model"]][["k"]]
   
   tsp_temp <- stats::tsp(object[["data"]][["train"]][["y"]])
@@ -92,7 +92,7 @@ predict.bvarmodel <- function(object, n_ahead = NULL, ...) {
   # A draw contains the whole simulated horizon in SUR form. Only the first
   # 'n_ahead' periods of it are requested.
   for (i in 1:draws) {
-    result[,,i] <- t(matrix(object[["posterior"]][["forecast"]][i,], k)[, 1:n_ahead, drop = FALSE])
+    result[,,i] <- t(matrix(.forecast_draws(object)[i,], k)[, 1:n_ahead, drop = FALSE])
   }
   
   result <- list(fcst = result,

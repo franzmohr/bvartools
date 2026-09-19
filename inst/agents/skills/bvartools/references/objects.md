@@ -46,12 +46,20 @@ With `K` endogenous variables, `T` training periods and `M` coefficients,
 | `psi$coeffs` | `K^2` | `"gamma+covar"` and `"sv+covar"`: the whole triangular matrix, not only its free elements |
 | `u_scale$coeffs` | `K` | `"ald"`: the scales |
 | `beta$coeffs` | `k_beta*r`, or `T*k_beta*r` with time-varying cointegration | VEC models |
-| `forecast` | `K*h` | after `add_posterior_forecasts()` |
+| `forecast$forecasts` | `K*h` | after `add_posterior_forecasts()` |
+| `forecast$errors` | `K*h` | after `add_forecast_errors()` |
 | `loglik` | `T` | after `add_posterior_loglik()` |
-| `forecast_errors` | `K*h` | after `add_forecast_errors()` |
 
-`forecast`, `loglik` and `forecast_errors` are `mcmc` matrices themselves, not
-lists with `coeffs`.
+`loglik` is an `mcmc` matrix itself rather than a list with `coeffs`. `forecast`
+is a list, but not that kind either: it is the group everything the forecast
+periods produce hangs below, and its members are named after what they hold --
+all of them are draws, so none of them is called `draws`. It was a matrix at
+`posterior$forecast` with the errors beside it at `posterior$forecast_errors`
+until bvartools 0.3.0.9000; both of those names are gone.
+
+`posterior$loglik` is not a member of the group and is not the same statistic as
+a forecast score: it evaluates each observation of the training sample under
+states that have already seen it, which is what `WAIC` and `LOOIC` want.
 
 **Never transpose a posterior draw matrix to "fix" it.** Rows are draws: a
 posterior mean is `colMeans()`, a credible interval is a column quantile.
@@ -141,7 +149,7 @@ model <- add_forecast_input(model, n_ahead = 4)
 model <- add_posterior_forecasts(model)
 stopifnot(model$model$h == 4)
 
-f <- model$posterior$forecast
+f <- model$posterior$forecast$forecasts
 stopifnot(inherits(f, "mcmc"), ncol(f) == k * 4)
 
 pred <- predict(model, n_ahead = 4)

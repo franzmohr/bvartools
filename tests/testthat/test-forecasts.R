@@ -36,14 +36,14 @@ test_that("a forecast input in the old SUR layout is still accepted", {
   set.seed(7357)
   old <- add_posterior_forecasts(legacy)
 
-  expect_equal(unname(as.matrix(old[["posterior"]][["forecast"]])),
-               unname(as.matrix(compact[["posterior"]][["forecast"]])))
+  expect_equal(unname(as.matrix(old[["posterior"]][["forecast"]][["forecasts"]])),
+               unname(as.matrix(compact[["posterior"]][["forecast"]][["forecasts"]])))
 })
 
 test_that("forecast draws are stored for every period and variable", {
   model <- fx_var_forecast()
   spec <- model[["model"]]
-  draws <- model[["posterior"]][["forecast"]]
+  draws <- model[["posterior"]][["forecast"]][["forecasts"]]
 
   expect_s3_class(draws, "mcmc")
   expect_identical(dim(draws), c(fx_iterations, as.integer(5 * spec[["k"]])))
@@ -63,7 +63,7 @@ test_that("predict reshapes the draws into horizon, variable and iteration", {
 
   # Each draw is the corresponding row of the stored draws, read variable by
   # variable within a period.
-  expected <- t(matrix(model[["posterior"]][["forecast"]][1, ],
+  expected <- t(matrix(model[["posterior"]][["forecast"]][["forecasts"]][1, ],
                        model[["model"]][["k"]]))
   expect_equal(unname(forecast[["fcst"]][, , 1]), unname(expected))
 })
@@ -137,11 +137,11 @@ test_that("a time varying model simulates its states forward unless told to hold
     set.seed(2718)
     held <- add_posterior_forecasts(fitted, forecast_states = "hold")
 
-    expect_true(all(is.finite(simulated[["posterior"]][["forecast"]])))
+    expect_true(all(is.finite(simulated[["posterior"]][["forecast"]][["forecasts"]])))
     expect_identical(held[["model"]][["forecast_states"]], "hold")
     # From the same seed, the drift is the one thing separating the two.
-    expect_false(isTRUE(all.equal(unclass(simulated[["posterior"]][["forecast"]]),
-                                  unclass(held[["posterior"]][["forecast"]]))))
+    expect_false(isTRUE(all.equal(unclass(simulated[["posterior"]][["forecast"]][["forecasts"]]),
+                                  unclass(held[["posterior"]][["forecast"]][["forecasts"]]))))
   }
 
   expect_error(add_posterior_forecasts(add_forecast_input(fx_var_tvp_fitted("gamma"), n_ahead = 2),

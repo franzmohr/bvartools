@@ -59,10 +59,10 @@ test_that("forecasting an object that already carries a forecast replaces it", {
   expect_identical(sum(names(second[["posterior"]]) == "forecast"), 1L)
   # The draws follow the seed: the second forecast is not the first one
   # returned again, and it is what the same seed produces from scratch.
-  expect_false(identical(unclass(first[["posterior"]][["forecast"]]),
-                         unclass(second[["posterior"]][["forecast"]])))
-  expect_identical(second[["posterior"]][["forecast"]],
-                   fresh[["posterior"]][["forecast"]])
+  expect_false(identical(unclass(first[["posterior"]][["forecast"]][["forecasts"]]),
+                         unclass(second[["posterior"]][["forecast"]][["forecasts"]])))
+  expect_identical(second[["posterior"]][["forecast"]][["forecasts"]],
+                   fresh[["posterior"]][["forecast"]][["forecasts"]])
 })
 
 test_that("adding the log likelihood again replaces the stored one", {

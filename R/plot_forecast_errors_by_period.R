@@ -116,7 +116,7 @@ plot_forecast_errors_by_period <- function(x, criterion = "AFE", ci = .95,
     result <- NULL
     for (i in 1:length(y)) {
 
-      values <- y[[i]][["posterior"]][["forecast_errors"]]
+      values <- y[[i]][["posterior"]][["forecast"]][["errors"]]
       if (is.null(values)) {
         # No test data were available for the respective window
         next

@@ -199,7 +199,10 @@ test_that("the log likelihood and the forecasts of a thinned chain carry its lab
   model <- add_posterior_forecasts(add_forecast_input(model, n_ahead = 2))
 
   for (block in c("a", "loglik", "forecast")) {
-    draws <- if (block == "a") model[["posterior"]][["a"]][["coeffs"]] else model[["posterior"]][[block]]
+    draws <- switch(block,
+                    a = model[["posterior"]][["a"]][["coeffs"]],
+                    forecast = model[["posterior"]][["forecast"]][["forecasts"]],
+                    model[["posterior"]][[block]])
     expect_equal(attr(draws, "mcpar"), c(3, fx_iterations, 3), label = block)
   }
 })

@@ -1,5 +1,29 @@
 # bvartools (development version)
 
+* **The forecasts move to `posterior$forecast$forecasts`, with the forecast
+  errors beside them at `posterior$forecast$errors`.** `posterior$forecast` is
+  a group now rather than a matrix of draws, and `posterior$forecast_errors` is
+  gone. **This breaks code that reads either of the old names**, in a model
+  object as much as in a file written with `write_to_hdf5()`; the accessors
+  `predict()`, `get_forecast_errors()` and `selection_criteria()` are unchanged
+  and are the way to reach both without naming a path.
+
+  The group is the place for everything the forecast periods produce, which is
+  about to include the log predictive density of what those periods realised.
+  One matrix could not hold three things, and the errors were already spelling
+  the group with an underscore. The members are named after what they hold
+  rather than one of them being `draws`, since all of them are draws.
+  `posterior$loglik`, the in-sample pointwise log-likelihood, does not move: it
+  evaluates each observation of the sample under states that have already seen
+  it, which is a different statistic from a forecast score rather than the same
+  one over other periods.
+
+  It is the layout of the model file as well -- `/posterior/forecast/forecasts`
+  and `/posterior/forecast/errors` -- which is what BayesTS 0.3.0 writes. A
+  file written before that is migrated by running its forecast again. An object
+  in a session is migrated the same way, by `add_posterior_forecasts()`, and
+  says so rather than being read as one that was never forecast.
+
 * **A folder of models is worked on without holding it.** `open_models()`
   returns a handle to a folder written with `write_to_hdf5()`, carrying a row
   per model -- where it is and what it is -- and none of the draws.

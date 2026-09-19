@@ -431,7 +431,7 @@ build_external_forecast <- function(fcst, ref, n_ahead, data_lag, select) {
     result_i <- list("model" = model_i,
                      "data" = list("original" = list("endogen" = ref[["y"]]),
                                    "train" = list("y" = stats::window(ref[["y"]], end = end_i))),
-                     "posterior" = list("forecast" = coda::mcmc(fcst_i)))
+                     "posterior" = list("forecast" = list("forecasts" = coda::mcmc(fcst_i))))
 
     class(result_i) <- c("externalwindow", "bvarmodel", "list")
 

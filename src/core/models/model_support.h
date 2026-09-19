@@ -25,9 +25,9 @@ namespace bayests::core
 /// leaves this empty rather than failing. Empty then reads as "this model has no
 /// regressors": use_a comes out false, the signal term drops out of the
 /// recursion, and every horizon is drawn from the error distribution alone. That
-/// path is written to /posterior/forecast and reported as success, which is worse
-/// than producing nothing -- nothing downstream can tell it from a model whose
-/// coefficients are genuinely all zero.
+/// path is written to /posterior/forecast/forecasts and reported as success, which
+/// is worse than producing nothing -- nothing downstream can tell it from a model
+/// whose coefficients are genuinely all zero.
 ///
 /// Counted from the spec rather than from the posterior, so the message can say
 /// what was expected even when the draws are missing as well.

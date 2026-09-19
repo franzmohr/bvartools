@@ -57,7 +57,7 @@
   # Blocks that are not parameters of the likelihood, or whose mean is not a
   # point of the model: forecasts, their errors, the log-likelihood itself and
   # the rotations of a sign restricted identification.
-  skip <- c("loglik", "forecast", "forecast_errors", "q")
+  skip <- c("loglik", "forecast", "q")
 
   one_draw <- function(draws) {
     draws <- as.matrix(draws)

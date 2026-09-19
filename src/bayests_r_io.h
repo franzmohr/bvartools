@@ -310,6 +310,47 @@ inline Rcpp::List with_posterior_element(const Rcpp::List &object, const char *n
   return result;
 }
 
+/// The draws of a forecast, at posterior$forecast$forecasts.
+///
+/// One level in rather than at posterior$forecast itself, because the group is
+/// the place for everything the forecast periods produce: `errors` beside it,
+/// and `loglik` once the predictive density is written there. That is the layout
+/// of the model file, where `bayests` writes /posterior/forecast/forecasts, and
+/// the leaf is named after what it holds rather than being called `draws`
+/// because every member of the group is draws.
+///
+/// An object fitted before the group existed carries a matrix at
+/// posterior$forecast. It is replaced rather than merged into: the draws about
+/// to be written are the whole of what the group holds, and an `errors` computed
+/// against the old ones would not belong to them anyway.
+inline Rcpp::List with_forecast_draws(const Rcpp::List &object, const Rcpp::RObject &value)
+{
+  Rcpp::List result(Rf_shallow_duplicate(object));
+  const Rcpp::List current = object["posterior"];
+  Rcpp::List posterior(Rf_shallow_duplicate(current));
+
+  Rcpp::List forecast;
+  const bool had_group = posterior.containsElementNamed("forecast") &&
+                         Rf_isNewList(posterior["forecast"]);
+  if (had_group) {
+    forecast = Rcpp::List(Rf_shallow_duplicate(posterior["forecast"]));
+  }
+
+  if (forecast.containsElementNamed("forecasts")) {
+    forecast["forecasts"] = value;
+  } else {
+    forecast.push_back(value, "forecasts");
+  }
+
+  if (posterior.containsElementNamed("forecast")) {
+    posterior["forecast"] = forecast;
+  } else {
+    posterior.push_back(forecast, "forecast");
+  }
+  result["posterior"] = posterior;
+  return result;
+}
+
 } // namespace bayests_r
 
 #endif // BVARTOOLS_BAYESTS_R_IO_H

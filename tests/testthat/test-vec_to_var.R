@@ -117,8 +117,8 @@ test_that("a converted time varying VEC model forecasts and responds", {
   expect_plots(plot(var))
 
   forecast <- add_posterior_forecasts(add_forecast_input(var, n_ahead = 2))
-  expect_identical(nrow(forecast[["posterior"]][["forecast"]]), as.integer(fx_iterations))
-  expect_identical(ncol(forecast[["posterior"]][["forecast"]]),
+  expect_identical(nrow(forecast[["posterior"]][["forecast"]][["forecasts"]]), as.integer(fx_iterations))
+  expect_identical(ncol(forecast[["posterior"]][["forecast"]][["forecasts"]]),
                    as.integer(2 * var[["model"]][["k"]]))
 })
 
@@ -166,7 +166,7 @@ test_that("a VEC model with stochastic volatility forecasts from its last period
 
   forecast_with <- function(object, states) {
     set.seed(1)
-    unclass(add_posterior_forecasts(object, forecast_states = states)[["posterior"]][["forecast"]])
+    unclass(add_posterior_forecasts(object, forecast_states = states)[["posterior"]][["forecast"]][["forecasts"]])
   }
   simulated <- forecast_with(var, "simulate")
   expect_identical(dim(simulated), c(as.integer(fx_iterations), as.integer(2 * k)))

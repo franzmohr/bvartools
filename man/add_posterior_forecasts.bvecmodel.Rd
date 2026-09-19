@@ -24,7 +24,7 @@ volatility are unaffected.}
 \item{...}{further arguments passed to or from other methods.}
 }
 \value{
-The object in \code{object} with \code{posterior$forecast} added, a
+The object in \code{object} with \code{posterior$forecast$forecasts} added, a
 \code{\link[coda]{mcmc}} object with one row per draw and \eqn{Kh} columns of forecasts
 of the levels, stacked by period. \code{predict} summarises them. A
 \code{forecast_states} that was given is stored in \code{model$forecast_states}.

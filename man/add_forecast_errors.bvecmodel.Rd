@@ -16,7 +16,7 @@ covers the forecast periods.}
 \item{...}{further arguments passed to \code{\link{add_forecast_errors.bvarmodel}}.}
 }
 \value{
-The object in \code{object} with \code{posterior$forecast_errors} added, as
+The object in \code{object} with \code{posterior$forecast$errors} added, as
 described in \code{\link{add_forecast_errors.bvarmodel}}.
 }
 \description{

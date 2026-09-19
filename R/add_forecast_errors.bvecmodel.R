@@ -12,7 +12,7 @@
 #' the levels of \code{test_sample}, exactly as for the VAR representation
 #' \code{\link{vec_to_var}} would give.
 #'
-#' @return The object in \code{object} with \code{posterior$forecast_errors} added, as
+#' @return The object in \code{object} with \code{posterior$forecast$errors} added, as
 #' described in \code{\link{add_forecast_errors.bvarmodel}}.
 #'
 #' @family model comparison
@@ -20,7 +20,7 @@
 #' @method add_forecast_errors bvecmodel
 add_forecast_errors.bvecmodel <- function(object, test_sample, ...){
 
-  if (is.null(object[["posterior"]][["forecast"]])) {
+  if (is.null(.forecast_draws(object))) {
     stop("Object does not contain forecasts.")
   }
 
@@ -31,7 +31,7 @@ add_forecast_errors.bvecmodel <- function(object, test_sample, ...){
   level[["posterior"]] <- list("forecast" = object[["posterior"]][["forecast"]])
   level <- add_forecast_errors(level, test_sample = test_sample, ...)
 
-  object[["posterior"]][["forecast_errors"]] <- level[["posterior"]][["forecast_errors"]]
+  object[["posterior"]][["forecast"]][["errors"]] <- level[["posterior"]][["forecast"]][["errors"]]
 
   return(object)
 }

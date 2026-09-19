@@ -266,7 +266,14 @@ write_to_hdf5.bvarmodel <- function(object, filename, group = "", ...) {
     # One shape for all of them. These used to be a block of the same code
     # each, and one of the blocks attached its attributes to the datasets of
     # the block above it rather than to its own.
-    for (i in c("a", "psi", "u_omega_inv", "u_sigma_inv", "u_scale", "q")) {
+    #
+    # 'forecast' is one of them rather than a dataset on its own, because
+    # everything the forecast periods produce hangs below it: the paths in
+    # 'forecasts' and the 'errors' that add_forecast_errors() takes against a
+    # test sample. It is the layout BayesTS writes, and the members are named
+    # after what they hold rather than one of them being 'draws', since all of
+    # them are draws.
+    for (i in c("a", "psi", "u_omega_inv", "u_sigma_inv", "u_scale", "q", "forecast")) {
       if (i %in% names(object[["posterior"]])) {
         group_draws <- .hdf5_group(handles, group_posterior, i)
         for (j in names(object[["posterior"]][[i]])) {
@@ -277,7 +284,12 @@ write_to_hdf5.bvarmodel <- function(object, filename, group = "", ...) {
     }
 
     ## Draws kept on their own ----
-    for (i in c("loglik", "forecast", "forecast_errors")) {
+    #
+    # The in-sample pointwise log-likelihood is the only one left. It is not a
+    # member of the forecast group and is not the same statistic as the score
+    # that will go in there: it evaluates each observation of the sample under
+    # states that have already seen it.
+    for (i in c("loglik")) {
       if (i %in% names(object[["posterior"]])) {
         draws <- object[["posterior"]][[i]]
         .hdf5_write(group_posterior, i, draws, .hdf5_draws_attrs(draws))

@@ -104,7 +104,7 @@ volatility forward unless `forecast_states = "hold"`:
 ```r
 vec <- add_forecast_input(vec, n_ahead = 8)
 vec <- add_posterior_forecasts(vec)
-stopifnot(all(dim(vec$posterior$forecast) == c(500, 8 * 2)))
+stopifnot(all(dim(vec$posterior$forecast$forecasts) == c(500, 8 * 2)))
 pred <- predict(vec, n_ahead = 8)
 stopifnot(inherits(pred, "bvarprd"))
 ```

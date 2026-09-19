@@ -160,7 +160,7 @@ Rcpp::List VecKlgs2010Forecasts(Rcpp::List object) {
   const bayests::ForecastDraws forecast =
     bayests::VecKlgs2010Sampler().forecast(input, draws, reporter);
 
-  return with_posterior_element(object, "forecast", Rcpp::wrap(draws_to_r(forecast.values)));
+  return with_forecast_draws(object, Rcpp::wrap(draws_to_r(forecast.values)));
 }
 
 // [[Rcpp::export(.VecKlgs2010LogLik)]]

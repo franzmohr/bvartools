@@ -592,20 +592,21 @@ test_that("forecast errors survive the round trip", {
   object <- forecast_errors_fitted_h5()
   # The name the rest of the package uses. The writers looked for the singular
   # of it, which nothing produces, so the errors were dropped on the way out
-  # and the loss was visible only on reading the file back.
-  expect_true("forecast_errors" %in% names(object[["posterior"]]))
+  # and the loss was visible only on reading the file back. They are a member of
+  # the forecast group now, which is the name the file has to carry.
+  expect_true("errors" %in% names(object[["posterior"]][["forecast"]]))
 
   path <- temp_h5_file()
   write_to_hdf5(object, filename = path)
   restored <- read_model_from_hdf5(path)
 
-  expect_true("forecast_errors" %in% names(restored[["posterior"]]))
-  expect_equal(unclass(restored[["posterior"]][["forecast_errors"]]),
-               unclass(object[["posterior"]][["forecast_errors"]]),
+  expect_true("errors" %in% names(restored[["posterior"]][["forecast"]]))
+  expect_equal(unclass(restored[["posterior"]][["forecast"]][["errors"]]),
+               unclass(object[["posterior"]][["forecast"]][["errors"]]),
                ignore_attr = TRUE)
   # The forecasts they were computed from come back as well.
-  expect_equal(unclass(restored[["posterior"]][["forecast"]]),
-               unclass(object[["posterior"]][["forecast"]]),
+  expect_equal(unclass(restored[["posterior"]][["forecast"]][["forecasts"]]),
+               unclass(object[["posterior"]][["forecast"]][["forecasts"]]),
                ignore_attr = TRUE)
 })
 

@@ -50,7 +50,7 @@ test_that("each publication becomes one window of the training sample before it"
 test_that("the periods of a publication are translated into forecast horizons", {
   external <- create_external_forecast(ext_forecasts(value = 1), ext_reference(),
                                        n_ahead = 2, data_lag = 1)
-  forecast <- external[[1]][["posterior"]][["forecast"]]
+  forecast <- external[[1]][["posterior"]][["forecast"]][["forecasts"]]
 
   # One row, because external forecasts are point forecasts, and one column per
   # endogenous variable within each of the two forecast horizons
@@ -81,7 +81,7 @@ test_that("a forecast horizon beyond 'n_ahead' is dropped", {
   external <- create_external_forecast(rbind(forecasts, extra), ext_reference(),
                                        n_ahead = 2, data_lag = 1)
 
-  expect_identical(ncol(external[[1]][["posterior"]][["forecast"]]), 6L)
+  expect_identical(ncol(external[[1]][["posterior"]][["forecast"]][["forecasts"]]), 6L)
 })
 
 test_that("variables that are not part of the models are reported and dropped", {
@@ -109,8 +109,8 @@ test_that("only one publication per training sample is used", {
 
   expect_length(last, length(ext_ends()))
   expect_length(first, length(ext_ends()))
-  expect_true(all(last[[1]][["posterior"]][["forecast"]] == 2))
-  expect_true(all(first[[1]][["posterior"]][["forecast"]] == 1))
+  expect_true(all(last[[1]][["posterior"]][["forecast"]][["forecasts"]] == 2))
+  expect_true(all(first[[1]][["posterior"]][["forecast"]][["forecasts"]] == 1))
 })
 
 test_that("one object per forecaster is produced", {
@@ -147,9 +147,9 @@ test_that("annual forecasts of the publication year are one-step ahead forecasts
   # ends in 2017 and the forecast for 2018 is a one-step ahead forecast
   expect_length(external, 2)
   expect_equal(stats::tsp(external[[1]][["data"]][["train"]][["y"]])[2], 2017)
-  expect_equal(as.numeric(external[[1]][["posterior"]][["forecast"]]), c(1, 2))
+  expect_equal(as.numeric(external[[1]][["posterior"]][["forecast"]][["forecasts"]]), c(1, 2))
   expect_equal(stats::tsp(external[[2]][["data"]][["train"]][["y"]])[2], 2018)
-  expect_equal(as.numeric(external[[2]][["posterior"]][["forecast"]]), c(3, NA))
+  expect_equal(as.numeric(external[[2]][["posterior"]][["forecast"]][["forecasts"]]), c(3, NA))
 })
 
 test_that("the functions of the estimation workflow leave external forecasts unchanged", {

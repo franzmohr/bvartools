@@ -231,7 +231,7 @@ Rcpp::List VecTvpWishartForecasts(Rcpp::List object) {
   const bayests::ForecastDraws forecast =
     bayests::VecTvpWishartSampler().forecast(input, draws, reporter);
 
-  return with_posterior_element(object, "forecast", Rcpp::wrap(draws_to_r(forecast.values)));
+  return with_forecast_draws(object, Rcpp::wrap(draws_to_r(forecast.values)));
 }
 
 // [[Rcpp::export(.VecTvpWishartLogLik)]]

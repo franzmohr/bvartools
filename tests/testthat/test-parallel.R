@@ -103,8 +103,11 @@ test_that("forecasts on two workers are reproduced by set.seed()", {
   second <- add_posterior_forecasts(models, cores = 2)
 
   expect_identical(draws_of(first, "forecast"), draws_of(second, "forecast"))
-  expect_identical(lapply(draws_of(first, "forecast"), dim),
-                   lapply(draws_of(add_posterior_forecasts(models), "forecast"), dim))
+  # draws_of() hands back the whole forecast group, so the shape to compare is
+  # that of its paths.
+  paths <- function(object) lapply(draws_of(object, "forecast"), `[[`, "forecasts")
+  expect_identical(lapply(paths(first), dim),
+                   lapply(paths(add_posterior_forecasts(models)), dim))
 })
 
 test_that("workers run with one BLAS thread and the session keeps its own", {

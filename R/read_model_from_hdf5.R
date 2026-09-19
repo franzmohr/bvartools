@@ -188,8 +188,10 @@ read_model_from_hdf5 <- function(filename, group = "", draws = NULL) {
         }
       } else {
         # The draws the writer keeps on their own rather than in a group,
-        # loglik and forecast among them. Told apart from a group by what they
-        # are rather than by name, so that another one needs nothing here.
+        # loglik among them. Told apart from a group by what they are rather
+        # than by name, so that another one needs nothing here -- which is what
+        # let the forecast become a group, read as posterior$forecast$forecasts
+        # beside its errors, without a line of this changing.
         result[["posterior"]][[i]] <- coda::mcmc(.read_draw_rows(element, draws))
       }
     }

@@ -6,9 +6,10 @@
 #' @param test_sample a time-series object used as test data.
 #' @param ... arguments passed forward to method.
 #'
-#' @return The object in \code{object} with \code{posterior$forecast_errors} added, a
+#' @return The object in \code{object} with \code{posterior$forecast$errors} added, a
 #' \code{\link[coda]{mcmc}} object with one row per draw and \eqn{Kh} columns in the
-#' order of \code{posterior$forecast}. \code{\link{selection_criteria}} summarises them.
+#' order of \code{posterior$forecast$forecasts}, which it is stored beside.
+#' \code{\link{selection_criteria}} summarises them.
 #'
 #' @examples
 #' 
@@ -48,11 +49,11 @@
 #' @export
 add_forecast_errors.bvarmodel <- function(object, test_sample, ...){
   
-  if (is.null(object[["posterior"]][["forecast"]])) {
+  if (is.null(.forecast_draws(object))) {
     stop("Object does not contain forecasts.")
   }
   k <- object[["model"]][["k"]]
-  draws <- nrow(object[["posterior"]][["forecast"]])
+  draws <- nrow(.forecast_draws(object))
   h <- object[["model"]][["h"]]
   
   if (k == 1) {
@@ -76,10 +77,10 @@ add_forecast_errors.bvarmodel <- function(object, test_sample, ...){
     }
     test_sample <- as.matrix(test_sample[1:h, ])
     
-    mc_stats <- coda::mcpar(object[["posterior"]][["forecast"]])
+    mc_stats <- coda::mcpar(.forecast_draws(object))
     
     # Repeat the available test data and subtract corresponding forecasts without loop
-    object[["posterior"]][["forecast_errors"]] <- coda::mcmc(t(matrix(t(test_sample), h * k, draws)) - object[["posterior"]][["forecast"]][, 1:(h * k)],
+    object[["posterior"]][["forecast"]][["errors"]] <- coda::mcmc(t(matrix(t(test_sample), h * k, draws)) - .forecast_draws(object)[, 1:(h * k)],
                                                              start = mc_stats[1], end = mc_stats[2], thin = mc_stats[3])
   }
   

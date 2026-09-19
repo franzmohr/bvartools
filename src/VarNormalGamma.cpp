@@ -158,7 +158,7 @@ Rcpp::List VarNormalGammaForecasts(Rcpp::List object) {
   const bayests::ForecastDraws forecast =
     bayests::VarNormalGammaSampler().forecast(input, draws, reporter);
 
-  return with_posterior_element(object, "forecast", Rcpp::wrap(draws_to_r(forecast.values)));
+  return with_forecast_draws(object, Rcpp::wrap(draws_to_r(forecast.values)));
 }
 
 // [[Rcpp::export(.VarNormalGammaLogLik)]]

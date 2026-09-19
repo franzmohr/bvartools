@@ -14,9 +14,9 @@ test_that("a constant VEC model forecasts in levels as its VAR representation do
   from_var <- add_posterior_forecasts(var)
 
   expect_s3_class(from_vec, "bvecmodel")
-  expect_s3_class(from_vec[["posterior"]][["forecast"]], "mcmc")
-  expect_equal(unclass(from_vec[["posterior"]][["forecast"]]),
-               unclass(from_var[["posterior"]][["forecast"]]), ignore_attr = TRUE)
+  expect_s3_class(from_vec[["posterior"]][["forecast"]][["forecasts"]], "mcmc")
+  expect_equal(unclass(from_vec[["posterior"]][["forecast"]][["forecasts"]]),
+               unclass(from_var[["posterior"]][["forecast"]][["forecasts"]]), ignore_attr = TRUE)
 
   pred_vec <- stats::predict(from_vec)
   pred_var <- stats::predict(from_var)
@@ -35,7 +35,7 @@ test_that("a time varying VEC model simulates its states forward unless told to 
     set.seed(11)
     held <- add_posterior_forecasts(vec, forecast_states = "hold")
 
-    forecast <- simulated[["posterior"]][["forecast"]]
+    forecast <- simulated[["posterior"]][["forecast"]][["forecasts"]]
     expect_identical(dim(forecast), c(as.integer(fx_iterations), as.integer(4 * k)))
     expect_true(all(is.finite(forecast)))
     expect_identical(held[["model"]][["forecast_states"]], "hold")
@@ -43,7 +43,7 @@ test_that("a time varying VEC model simulates its states forward unless told to 
     # From the same seed, the drift of the states is the one thing separating
     # the two.
     expect_false(isTRUE(all.equal(unclass(forecast),
-                                  unclass(held[["posterior"]][["forecast"]]),
+                                  unclass(held[["posterior"]][["forecast"]][["forecasts"]]),
                                   check.attributes = FALSE)))
 
     expect_s3_class(stats::predict(simulated), "bvarprd")
@@ -74,7 +74,7 @@ test_that("VEC models over an expanding window are forecast and evaluated direct
 
   windows <- add_forecast_input(windows, n_ahead = 2)
   windows <- add_posterior_forecasts(windows)
-  expect_true(all(vapply(windows, function(x) !is.null(x[["posterior"]][["forecast"]]),
+  expect_true(all(vapply(windows, function(x) !is.null(x[["posterior"]][["forecast"]][["forecasts"]]),
                          logical(1))))
 
   windows <- add_forecast_errors(windows, test_sample = full)

@@ -6,6 +6,10 @@
 #' @param group the group the model's tree hangs under inside its file.
 #' Defaults to \code{""}, the root of the file, which is where a file holding a
 #' single model puts it. See 'Details'.
+#' @param draws the draws to read, as their positions in the chain. Defaults to
+#' \code{NULL}, every draw. An integer vector reads those draws of every block
+#' of the posterior, and \code{integer(0)} reads none of them, which gives the
+#' model, its data and its priors without the draws. See 'Details'.
 #' 
 #' @details
 #' 
@@ -15,11 +19,23 @@
 #' 
 #' The spelling is the one the BayesTS command line uses for its \code{--group}
 #' flag: a leading slash and no trailing slash, with \code{""} for the root.
+#'
+#' \code{draws} reads part of a chain. Every block of a posterior holds one row
+#' per draw, and only the rows asked for are read from the file, so a caller
+#' that works through a long chain in pieces -- solving a global model draw by
+#' draw, for instance -- never holds more of it than the piece it is working
+#' on. \code{integer(0)} reads a model without its draws, which is what a step
+#' needs that only looks at what a model is.
+#'
+#' A partial read cannot describe the chain it came from, so the blocks it
+#' returns are labelled as a chain of their own, from one to the number of draws
+#' read. A full read keeps the labels the file carries.
 #' 
 #' @export
-read_model_from_hdf5 <- function(filename, group = "") {
+read_model_from_hdf5 <- function(filename, group = "", draws = NULL) {
   
   group <- .normalize_hdf5_group(group)
+  draws <- .check_read_draws(draws)
   
   h5_file <- hdf5r::h5file(filename, mode = "r")
   on.exit(if (h5_file$is_valid) h5_file$close_all(), add = TRUE)
@@ -160,16 +176,21 @@ read_model_from_hdf5 <- function(filename, group = "") {
         # time varying model keeps beside its coefficients, was exactly that.
         for (j in names(element)) {
           dataset <- element[[j]]
-          result[["posterior"]][[i]][[j]] <- coda::mcmc(as.matrix(hdf5r::readDataSet(dataset)),
-                                                        start = hdf5r::h5attr(dataset, "start"),
-                                                        end = hdf5r::h5attr(dataset, "end"),
-                                                        thin = hdf5r::h5attr(dataset, "thin")) 
+          block <- .read_draw_rows(dataset, draws)
+          result[["posterior"]][[i]][[j]] <- if (is.null(draws)) {
+            coda::mcmc(block,
+                       start = hdf5r::h5attr(dataset, "start"),
+                       end = hdf5r::h5attr(dataset, "end"),
+                       thin = hdf5r::h5attr(dataset, "thin"))
+          } else {
+            coda::mcmc(block)
+          }
         }
       } else {
         # The draws the writer keeps on their own rather than in a group,
         # loglik and forecast among them. Told apart from a group by what they
         # are rather than by name, so that another one needs nothing here.
-        result[["posterior"]][[i]] <- coda::mcmc(hdf5r::readDataSet(element))
+        result[["posterior"]][[i]] <- coda::mcmc(.read_draw_rows(element, draws))
       }
     }
   }
@@ -200,4 +221,50 @@ read_model_from_hdf5 <- function(filename, group = "") {
   class(result) <- result_class
   
   return(result)
+}
+
+
+# The draws to read, checked once so that a bad request fails before the file is
+# opened rather than on the first block that is read.
+.check_read_draws <- function(draws) {
+
+  if (is.null(draws)) {
+    return(NULL)
+  }
+  if (!is.numeric(draws) || anyNA(draws) || any(draws %% 1 != 0)) {
+    stop("Argument 'draws' must be whole numbers, the positions of the draws to read.")
+  }
+  draws <- as.integer(draws)
+  if (length(draws) > 0 && min(draws) < 1) {
+    stop("Argument 'draws' must be positions of draws, so at least one.")
+  }
+
+  draws
+}
+
+# One block of a posterior, as a matrix of the draws asked for. Rows are read
+# from the file rather than read and then subset, which is what keeps a partial
+# read small.
+.read_draw_rows <- function(dataset, draws) {
+
+  if (is.null(draws)) {
+    return(as.matrix(hdf5r::readDataSet(dataset)))
+  }
+
+  dims <- dataset$dims
+  n_draws <- dims[1]
+  n_columns <- if (length(dims) > 1) dims[2] else 1L
+
+  if (length(draws) == 0) {
+    return(matrix(numeric(0), nrow = 0, ncol = n_columns))
+  }
+  if (max(draws) > n_draws) {
+    stop("Draw ", max(draws), " was asked for, and the chain holds ", n_draws, ".")
+  }
+
+  if (length(dims) > 1) {
+    matrix(dataset[draws, ], nrow = length(draws), ncol = n_columns)
+  } else {
+    matrix(dataset[draws], nrow = length(draws), ncol = 1L)
+  }
 }

@@ -1,5 +1,15 @@
 # bvartools (development version)
 
+* **`add_predictive_loglik()` takes VAR models.** It refused anything but a VEC
+  model, so the log predictive likelihood, the criterion for models whose
+  coefficients or variances follow a state equation, was unavailable for the VAR
+  models such a comparison puts a VEC model against. A VAR model is the case of a
+  VEC model without an error correction term, so the density is the same
+  expression with the cointegration block left out: windows of class 'bvarmodel'
+  are now accepted, their rank counts as zero, and the check for a scaled or
+  centred error correction term applies to VEC windows alone. Windows of mixed
+  forms are still refused.
+
 * **The vignettes and tests seed before `add_initial_values()`.** Since the
   seed of the posterior simulation is drawn by `add_initial_values()`, a
   `set.seed()` between it and `add_posterior_coefficients()` no longer changes

@@ -1,4 +1,4 @@
-# One-step-ahead predictive densities of VEC models over expanding windows.
+# One-step-ahead predictive densities of VAR and VEC models over expanding windows.
 
 predlik_sigma <- function(error) {
   switch(error,
@@ -31,7 +31,7 @@ predlik_vec <- function(tvp, error, r = 1, varsel = "none", iterations = 40) {
 }
 
 last_observation <- function(model) {
-  .predictive_observation(model, model[["model"]][["rank"]])
+  .predictive_observation(model, .predictive_rank(model))
 }
 
 test_that("without innovations the density is the log-likelihood of the last period", {
@@ -54,7 +54,7 @@ test_that("without innovations the density is the log-likelihood of the last per
     model <- add_posterior_loglik(add_posterior_coefficients(model))
 
     tt <- nrow(model[["data"]][["train"]][["y"]])
-    density <- .vec_predictive_log_density(model, last_observation(model), innovations = FALSE)
+    density <- .predictive_log_density(model, last_observation(model), innovations = FALSE)
     expect_equal(density, as.numeric(model[["posterior"]][["loglik"]][, tt]),
                  tolerance = 1e-10, info = label)
   }
@@ -79,7 +79,7 @@ test_that("each window predicts the observation the next window adds", {
     expect_length(windows[[i]][["predictive"]][["loglik"]], 40L)
     # A constant model carries nothing forward, so the draws are deterministic.
     expect_equal(windows[[i]][["predictive"]][["loglik"]],
-                 .vec_predictive_log_density(windows[[i]], last_observation(windows[[i + 1]])))
+                 .predictive_log_density(windows[[i]], last_observation(windows[[i + 1]])))
   }
 })
 
@@ -90,10 +90,10 @@ test_that("time varying states are carried forward before the density is taken",
   newdata <- last_observation(model)
 
   set.seed(3)
-  first <- .vec_predictive_log_density(model, newdata)
+  first <- .predictive_log_density(model, newdata)
   set.seed(4)
-  second <- .vec_predictive_log_density(model, newdata)
-  fixed <- .vec_predictive_log_density(model, newdata, innovations = FALSE)
+  second <- .predictive_log_density(model, newdata)
+  fixed <- .predictive_log_density(model, newdata, innovations = FALSE)
 
   expect_true(all(is.finite(first)))
   expect_false(isTRUE(all.equal(first, second)))
@@ -144,8 +144,10 @@ test_that("selection_criteria sums the predictive densities to the LPL", {
 })
 
 test_that("windows the density cannot be taken for are refused", {
+  # A VAR model is taken, so what a VAR window without draws is refused for is
+  # the draws, as a VEC window would be.
   var_windows <- use_expanding_window(fx_var_model(), start = c(1997, 2))
-  expect_error(add_predictive_loglik(var_windows), "VEC models only")
+  expect_error(add_predictive_loglik(var_windows), "no posterior draws")
 
   model <- predlik_vec(tvp = FALSE, error = "wishart")
   y <- model[["data"]][["train"]][["y"]]
@@ -166,4 +168,90 @@ test_that("windows the density cannot be taken for are refused", {
   gapped <- windows[c(1, 3)]
   class(gapped) <- class(windows)
   expect_error(add_predictive_loglik(gapped), "exactly one")
+})
+
+# --- VAR models -----------------------------------------------------------------
+#
+# A VAR model is the case of a VEC model without an error correction term, so the
+# same two identities have to hold for it: without innovations the density is the
+# pointwise log-likelihood of the last period, and every window predicts the
+# observation the next window adds.
+
+predlik_var <- function(tvp, error, varsel = "none", iterations = 40) {
+  model <- create_bvarmodel(var_data(), p = 2, deterministic = "const", tvp = tvp,
+                            error = error, varsel = varsel,
+                            iterations = iterations, burnin = 20)
+  coef <- if (tvp) {
+    list(v_i = 1, v_i_det = 0.1, shape = 3, rate = 1e-4)
+  } else {
+    list(v_i = 1, v_i_det = 0.1)
+  }
+  args <- list(model, coef = coef, sigma = predlik_sigma(error))
+  if (varsel == "bvs") {
+    args[["varsel"]] <- list(inprior = 0.5, exclude_det = TRUE)
+  }
+  do.call(add_priors, args)
+}
+
+test_that("a VAR model has a rank of zero in the density", {
+  model <- predlik_var(tvp = FALSE, error = "wishart")
+  expect_identical(.predictive_rank(model), 0L)
+  expect_identical(.predictive_rank(predlik_vec(tvp = FALSE, error = "wishart")), 1L)
+})
+
+test_that("without innovations the density of a VAR is the log-likelihood of the last period", {
+  specs <- list(
+    list(tvp = FALSE, error = "wishart"),
+    list(tvp = FALSE, error = "sv+covar"),
+    list(tvp = TRUE, error = "wishart"),
+    list(tvp = TRUE, error = "sv+covar"),
+    list(tvp = TRUE, error = "sv+covar", varsel = "bvs"))
+
+  for (spec in specs) {
+    label <- paste(unlist(spec), collapse = " ")
+    model <- do.call(predlik_var, spec)
+    set.seed(20110816)
+    model <- add_initial_values(model)
+    model <- add_posterior_loglik(add_posterior_coefficients(model))
+
+    tt <- nrow(model[["data"]][["train"]][["y"]])
+    density <- .predictive_log_density(model, last_observation(model), innovations = FALSE)
+    expect_equal(density, as.numeric(model[["posterior"]][["loglik"]][, tt]),
+                 tolerance = 1e-10, info = label)
+  }
+})
+
+test_that("the windows of a VAR model predict the observation the next one adds", {
+  model <- predlik_var(tvp = FALSE, error = "wishart")
+  y <- model[["data"]][["train"]][["y"]]
+  windows <- use_expanding_window(model, start = stats::time(y)[nrow(y) - 2])
+  set.seed(7)
+  windows <- add_initial_values(windows)
+  windows <- add_posterior_coefficients(windows)
+  windows <- add_predictive_loglik(windows)
+
+  n <- length(windows)
+  expect_null(windows[[n]][["predictive"]])
+  for (i in seq_len(n - 1)) {
+    next_y <- windows[[i + 1]][["data"]][["train"]][["y"]]
+    expect_equal(windows[[i]][["predictive"]][["period"]],
+                 stats::time(next_y)[nrow(next_y)])
+    expect_length(windows[[i]][["predictive"]][["loglik"]], 40L)
+    expect_equal(windows[[i]][["predictive"]][["loglik"]],
+                 .predictive_log_density(windows[[i]], last_observation(windows[[i + 1]])))
+  }
+  expect_equal(selection_criteria(windows)[["LPL"]][["mean"]],
+               sum(vapply(windows[-n], function(x) {
+                 .log_mean_exp(x[["predictive"]][["loglik"]])
+               }, numeric(1))))
+})
+
+test_that("windows of mixed forms are refused", {
+  vec <- predlik_vec(tvp = FALSE, error = "wishart")
+  y <- vec[["data"]][["train"]][["y"]]
+  windows <- use_expanding_window(vec, start = stats::time(y)[nrow(y) - 1])
+  set.seed(8)
+  windows <- add_posterior_coefficients(add_initial_values(windows))
+  windows[[2]] <- structure(windows[[2]], class = c("list"))
+  expect_error(add_predictive_loglik(windows), "VAR and VEC models only")
 })

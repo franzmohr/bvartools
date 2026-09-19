@@ -78,6 +78,14 @@ VEC model must have been simulated on error correction terms that are neither
 scaled nor centred, or put back with
 \code{\link{rescale_error_correction}} first, and structural models are not
 supported.
+
+The expression is the normal density of the observation, so the function is
+available for the algorithms whose observation is normal given the parameters
+of a draw, and refuses the others. The asymmetric Laplace algorithms of
+quantile estimation, \code{"VarNormalAld"} and \code{"VarTvpAld"}, are
+refused: the precision their samplers store is the one of the normal that
+their scale mixture conditions on period by period, not the density of an
+observation, whose mixing variable would have to be integrated out.
 }
 \examples{
 

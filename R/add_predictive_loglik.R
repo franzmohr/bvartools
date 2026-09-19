@@ -58,6 +58,14 @@
 #' \code{\link{rescale_error_correction}} first, and structural models are not
 #' supported.
 #'
+#' The expression is the normal density of the observation, so the function is
+#' available for the algorithms whose observation is normal given the parameters
+#' of a draw, and refuses the others. The asymmetric Laplace algorithms of
+#' quantile estimation, \code{"VarNormalAld"} and \code{"VarTvpAld"}, are
+#' refused: the precision their samplers store is the one of the normal that
+#' their scale mixture conditions on period by period, not the density of an
+#' observation, whose mixing variable would have to be integrated out.
+#'
 #' @return The object in \code{object}, with element \code{predictive} added to
 #' every window but the last. It is a list with \code{loglik}, the draws of the
 #' log predictive density, and \code{period}, the time of the predicted
@@ -120,6 +128,7 @@ add_predictive_loglik.expandingwindow <- function(object, ...) {
     if (!inherits(object[[i]], "bvecmodel") && !inherits(object[[i]], "bvarmodel")) {
       stop("Predictive log-likelihoods are available for VAR and VEC models only.")
     }
+    .check_predictive_algorithm(object[[i]], i)
   }
 
   for (i in seq_len(n_windows - 1)) {
@@ -145,6 +154,39 @@ add_predictive_loglik.modellist <- function(object, ...) {
   class(object) <- orig_class
 
   return(object)
+}
+
+# The algorithms the density below is the density of: the ones whose observation
+# is normal given the parameters of a draw. Everything else is refused rather
+# than handed to an expression that does not describe it, which a whitelist does
+# and a list of exceptions would not -- an algorithm added later is refused
+# until its density is written down.
+#
+# The asymmetric Laplace models are the ones this keeps out today. They do store
+# 'u_sigma_inv', the precision of the normal that the sampler's scale mixture
+# conditions on period by period, so the expression below would run on them and
+# return a number; but that number is a normal density at the mixing variables
+# of the last period of the sample, not the predictive density of an asymmetric
+# Laplace observation, whose mixing variable of the predicted period has to be
+# integrated out.
+.predictive_algorithms <- c("VarNormalGamma", "VarNormalStochvol", "VarNormalWishart",
+                            "VarTvpGamma", "VarTvpStochvol", "VarTvpWishart",
+                            "VecKlgs2010", "VecNormalGamma", "VecNormalStochvol",
+                            "VecNormalWishart", "VecTvpGamma", "VecTvpStochvol",
+                            "VecTvpWishart")
+
+# Refuses a window whose algorithm the density is not the density of.
+.check_predictive_algorithm <- function(model, i) {
+
+  algorithm <- model[["model"]][["algorithm"]]
+  if (is.null(algorithm) || !algorithm %in% .predictive_algorithms) {
+    stop("Predictive log-likelihoods are not available for the algorithm ",
+         if (is.null(algorithm)) "of window " else paste0("'", algorithm, "' of window "), i,
+         ". They are available for the algorithms with a normal likelihood: ",
+         paste(.predictive_algorithms, collapse = ", "), ".")
+  }
+
+  invisible(TRUE)
 }
 
 # The rank of a window. A VAR model has none, and enters the density as the case

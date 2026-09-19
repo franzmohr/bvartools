@@ -255,3 +255,31 @@ test_that("windows of mixed forms are refused", {
   windows[[2]] <- structure(windows[[2]], class = c("list"))
   expect_error(add_predictive_loglik(windows), "VAR and VEC models only")
 })
+
+test_that("an algorithm whose likelihood is not normal is refused", {
+  # A quantile VAR does store 'u_sigma_inv': the precision of the normal that
+  # its scale mixture conditions on, period by period. The density would run on
+  # it and return a number that is not the predictive density of the model, so
+  # the algorithm is refused -- before the draws are looked at, which is why
+  # these windows are never estimated.
+  ald_windows <- function(tvp) {
+    model <- create_bvarmodel(var_data(), p = 1, deterministic = "const",
+                              error = "ald", quantile = 0.25, tvp = tvp,
+                              iterations = fx_iterations, burnin = fx_burnin)
+    y <- model[["data"]][["train"]][["y"]]
+    use_expanding_window(model, start = stats::time(y)[nrow(y) - 1])
+  }
+
+  expect_error(add_predictive_loglik(ald_windows(tvp = FALSE)),
+               "'VarNormalAld' of window 1")
+  expect_error(add_predictive_loglik(ald_windows(tvp = TRUE)),
+               "'VarTvpAld' of window 1")
+
+  # A window that does not say what estimated it is refused as well: the
+  # algorithms the density is the density of are named, and nothing else passes.
+  unnamed <- ald_windows(tvp = FALSE)
+  unnamed[[1]][["model"]][["algorithm"]] <- "VarSomethingNew"
+  expect_error(add_predictive_loglik(unnamed), "'VarSomethingNew' of window 1")
+  unnamed[[1]][["model"]][["algorithm"]] <- NULL
+  expect_error(add_predictive_loglik(unnamed), "the algorithm of window 1")
+})

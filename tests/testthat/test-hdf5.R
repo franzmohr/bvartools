@@ -683,3 +683,70 @@ test_that("the starting precision of a constant gamma model is where BayesTS rea
                model[["initial"]][["u_omega_inv"]], ignore_attr = TRUE)
   expect_null(restored[["initial"]][["u_sigma_inv"]])
 })
+
+# --- Reading part of a chain -----------------------------------------------------
+#
+# A caller that works through a long chain in pieces reads the draws it is
+# working on rather than the whole posterior.
+
+test_that("read_model_from_hdf5 reads the draws it is asked for", {
+  model <- fx_var_model()
+  set.seed(4711)
+  model <- add_posterior_loglik(add_posterior_coefficients(add_initial_values(
+    add_priors(model, coef = list(v_i = 1), sigma = list(df = 3, scale = 1e-8)))))
+
+  file <- file.path(tempdir(), "bvartools-partial-read.h5")
+  unlink(file)
+  write_to_hdf5(model, filename = file)
+
+  whole <- read_model_from_hdf5(filename = file)
+  part <- read_model_from_hdf5(filename = file, draws = c(2L, 5L))
+
+  a <- unclass(whole[["posterior"]][["a"]][["coeffs"]])
+  expect_equal(unclass(part[["posterior"]][["a"]][["coeffs"]]),
+               a[c(2, 5), , drop = FALSE], ignore_attr = TRUE)
+  expect_equal(nrow(part[["posterior"]][["u_sigma_inv"]][["coeffs"]]), 2L)
+  expect_equal(unclass(part[["posterior"]][["loglik"]]),
+               unclass(whole[["posterior"]][["loglik"]])[c(2, 5), , drop = FALSE],
+               ignore_attr = TRUE)
+
+  # Everything that is not a draw comes back as it does from a full read.
+  expect_identical(part[["model"]], whole[["model"]])
+  expect_equal(part[["data"]], whole[["data"]])
+  expect_equal(part[["priors"]], whole[["priors"]])
+  expect_s3_class(part, class(whole)[1])
+})
+
+test_that("no draws gives the model without its chain", {
+  model <- fx_var_model()
+  set.seed(4712)
+  model <- add_posterior_coefficients(add_initial_values(
+    add_priors(model, coef = list(v_i = 1), sigma = list(df = 3, scale = 1e-8))))
+
+  file <- file.path(tempdir(), "bvartools-no-draws.h5")
+  unlink(file)
+  write_to_hdf5(model, filename = file)
+
+  none <- read_model_from_hdf5(filename = file, draws = integer(0))
+  expect_equal(nrow(none[["posterior"]][["a"]][["coeffs"]]), 0L)
+  expect_equal(ncol(none[["posterior"]][["a"]][["coeffs"]]),
+               ncol(model[["posterior"]][["a"]][["coeffs"]]))
+  expect_equal(none[["data"]], read_model_from_hdf5(filename = file)[["data"]])
+})
+
+test_that("draws that are not in the chain are refused", {
+  model <- fx_var_model()
+  set.seed(4713)
+  model <- add_posterior_coefficients(add_initial_values(
+    add_priors(model, coef = list(v_i = 1), sigma = list(df = 3, scale = 1e-8))))
+
+  file <- file.path(tempdir(), "bvartools-bad-draws.h5")
+  unlink(file)
+  write_to_hdf5(model, filename = file)
+
+  draws <- nrow(model[["posterior"]][["a"]][["coeffs"]])
+  expect_error(read_model_from_hdf5(filename = file, draws = draws + 1L),
+               "the chain holds")
+  expect_error(read_model_from_hdf5(filename = file, draws = 0L), "at least one")
+  expect_error(read_model_from_hdf5(filename = file, draws = 1.5), "whole numbers")
+})

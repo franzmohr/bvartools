@@ -1,5 +1,15 @@
 # bvartools (development version)
 
+* **`read_model_from_hdf5()` reads part of a chain.** It read every draw of
+  every block, so a caller working through a long chain -- solving a global
+  model of time varying sub-models draw by draw, say -- had to hold the whole
+  posterior of every model to get at one draw of it. The new `draws` argument
+  takes the positions of the draws to read, and only those rows are read from
+  the file; `integer(0)` gives the model, its data and its priors without the
+  draws. A partial read cannot describe the chain it came from, so its blocks
+  are labelled as a chain of their own, while a full read keeps the labels the
+  file carries.
+
 * **`add_predictive_loglik()` takes VAR models.** It refused anything but a VEC
   model, so the log predictive likelihood, the criterion for models whose
   coefficients or variances follow a state equation, was unavailable for the VAR

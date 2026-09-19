@@ -4,7 +4,7 @@
 \alias{read_model_from_hdf5}
 \title{Import Models from HDF5 Files}
 \usage{
-read_model_from_hdf5(filename, group = "")
+read_model_from_hdf5(filename, group = "", draws = NULL)
 }
 \arguments{
 \item{filename}{Path to an HDF5 file containing model data.}
@@ -12,6 +12,11 @@ read_model_from_hdf5(filename, group = "")
 \item{group}{the group the model's tree hangs under inside its file.
 Defaults to \code{""}, the root of the file, which is where a file holding a
 single model puts it. See 'Details'.}
+
+\item{draws}{the draws to read, as their positions in the chain. Defaults to
+\code{NULL}, every draw. An integer vector reads those draws of every block
+of the posterior, and \code{integer(0)} reads none of them, which gives the
+model, its data and its priors without the draws. See 'Details'.}
 }
 \description{
 Imports model information and posterior draws from an HDF5 file.
@@ -23,4 +28,15 @@ instead of at the root, so one file can hold several models side by side.
 
 The spelling is the one the BayesTS command line uses for its \code{--group}
 flag: a leading slash and no trailing slash, with \code{""} for the root.
+
+\code{draws} reads part of a chain. Every block of a posterior holds one row
+per draw, and only the rows asked for are read from the file, so a caller
+that works through a long chain in pieces -- solving a global model draw by
+draw, for instance -- never holds more of it than the piece it is working
+on. \code{integer(0)} reads a model without its draws, which is what a step
+needs that only looks at what a model is.
+
+A partial read cannot describe the chain it came from, so the blocks it
+returns are labelled as a chain of their own, from one to the number of draws
+read. A full read keeps the labels the file carries.
 }

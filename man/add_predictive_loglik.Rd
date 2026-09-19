@@ -69,9 +69,13 @@ equation, where leave-one-out importance sampling fails for exactly the
 periods a path bends towards.
 
 The function is available for VEC models, which includes the rank zero
-models in differences that ranks are compared with. The windows must have
-been simulated on error correction terms that are neither scaled nor
-centred, or put back with
+models in differences that ranks are compared with, and for VAR models, whose
+regressors are the lags of the endogenous variables, the exogenous variables
+and the deterministic terms of the period that is predicted. A VAR model is
+the case of a VEC model without an error correction term, so the density is
+the same expression with the cointegration block left out. The windows of a
+VEC model must have been simulated on error correction terms that are neither
+scaled nor centred, or put back with
 \code{\link{rescale_error_correction}} first, and structural models are not
 supported.
 }

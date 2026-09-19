@@ -48,9 +48,13 @@
 #' periods a path bends towards.
 #'
 #' The function is available for VEC models, which includes the rank zero
-#' models in differences that ranks are compared with. The windows must have
-#' been simulated on error correction terms that are neither scaled nor
-#' centred, or put back with
+#' models in differences that ranks are compared with, and for VAR models, whose
+#' regressors are the lags of the endogenous variables, the exogenous variables
+#' and the deterministic terms of the period that is predicted. A VAR model is
+#' the case of a VEC model without an error correction term, so the density is
+#' the same expression with the cointegration block left out. The windows of a
+#' VEC model must have been simulated on error correction terms that are neither
+#' scaled nor centred, or put back with
 #' \code{\link{rescale_error_correction}} first, and structural models are not
 #' supported.
 #'
@@ -113,8 +117,8 @@ add_predictive_loglik.expandingwindow <- function(object, ...) {
   }
 
   for (i in seq_len(n_windows)) {
-    if (!inherits(object[[i]], "bvecmodel")) {
-      stop("Predictive log-likelihoods are available for VEC models only.")
+    if (!inherits(object[[i]], "bvecmodel") && !inherits(object[[i]], "bvarmodel")) {
+      stop("Predictive log-likelihoods are available for VAR and VEC models only.")
     }
   }
 
@@ -123,9 +127,9 @@ add_predictive_loglik.expandingwindow <- function(object, ...) {
     following <- object[[i + 1]]
     .check_predictive_window(current, following, i)
 
-    newdata <- .predictive_observation(following, current[["model"]][["rank"]])
+    newdata <- .predictive_observation(following, .predictive_rank(current))
     object[[i]][["predictive"]] <- list(
-      loglik = .vec_predictive_log_density(current, newdata),
+      loglik = .predictive_log_density(current, newdata),
       period = newdata[["period"]])
   }
 
@@ -143,6 +147,13 @@ add_predictive_loglik.modellist <- function(object, ...) {
   return(object)
 }
 
+# The rank of a window. A VAR model has none, and enters the density as the case
+# of rank zero.
+.predictive_rank <- function(model) {
+  rank <- model[["model"]][["rank"]]
+  if (is.null(rank)) 0L else as.integer(rank)
+}
+
 # Refuses a pair of windows the density cannot be evaluated for, and says which.
 .check_predictive_window <- function(current, following, i) {
 
@@ -156,7 +167,8 @@ add_predictive_loglik.modellist <- function(object, ...) {
     w <- model[["data"]][["train"]][["w"]]
     !is.null(attr(w, "scale")) || !is.null(attr(w, "centre"))
   }
-  if (transformed(current) || transformed(following)) {
+  # Only a VEC model has an error correction term to transform.
+  if (inherits(current, "bvecmodel") && (transformed(current) || transformed(following))) {
     stop("The error correction terms of window ", i, " are scaled or centred. Use ",
          "'rescale_error_correction' before 'add_predictive_loglik'.")
   }
@@ -190,7 +202,8 @@ add_predictive_loglik.modellist <- function(object, ...) {
        period = stats::time(y)[tt])
 }
 
-# Draws of the log density of one observation under a VEC model's posterior.
+# Draws of the log density of one observation under the posterior of a VAR or a
+# VEC model.
 #
 # 'newdata' holds the observation, y, and its regressors: w, the error
 # correction term (NULL at rank zero), and x, the other regressors, both in the
@@ -198,12 +211,12 @@ add_predictive_loglik.modellist <- function(object, ...) {
 # carried forward, which makes the result the pointwise log-likelihood of the
 # last period of the sample if 'newdata' is that period -- the identity the
 # tests check the layouts against.
-.vec_predictive_log_density <- function(model, newdata, innovations = TRUE) {
+.predictive_log_density <- function(model, newdata, innovations = TRUE) {
 
   post <- model[["posterior"]]
   k <- NCOL(model[["data"]][["train"]][["y"]])
   kk <- k * k
-  r <- model[["model"]][["rank"]]
+  r <- .predictive_rank(model)
   tvp <- isTRUE(model[["model"]][["tvp"]])
   sv <- model[["model"]][["error"]] %in% c("sv", "sv+covar")
   tt <- NROW(model[["data"]][["train"]][["y"]])

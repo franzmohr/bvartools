@@ -12,7 +12,8 @@ Imports: grDevices, graphics, hdf5r, Matrix, methods, parallel, Rcpp (>= 1.0.12)
 LinkingTo: Rcpp, RcppArmadillo
 SystemRequirements: GNU make
 Encoding: UTF-8
-URL: https://github.com/franzmohr/bvartools
+URL: https://github.com/franzmohr/bvartools,
+    https://franzmohr.github.io/bvartools/
 BugReports: https://github.com/franzmohr/bvartools/issues
 Suggests: knitr, pkgload, rmarkdown, testthat (>= 3.0.0)
 VignetteBuilder: knitr

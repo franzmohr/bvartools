@@ -1,0 +1,18 @@
+pandoc: 3.8.3
+pkgdown: 2.2.1
+pkgdown_sha: ~
+articles:
+  bvartools: bvartools.html
+  bvec: bvec.html
+  horse-races: horse-races.html
+  minnesota-prior: minnesota-prior.html
+  model-comparison: model-comparison.html
+  quantile-var: quantile-var.html
+  sign-restrictions: sign-restrictions.html
+  ssvs: ssvs.html
+  tvp-sv-var: tvp-sv-var.html
+  tvp-sv-vec: tvp-sv-vec.html
+last_built: 2026-09-19T14:38Z
+urls:
+  reference: https://franzmohr.github.io/bvartools/reference
+  article: https://franzmohr.github.io/bvartools/articles

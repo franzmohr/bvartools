@@ -1,5 +1,16 @@
 # bvartools (development version)
 
+* **A model can be analysed from its file.** `open_model()` returns a handle to
+  a model written with `write_to_hdf5()`, carrying its specification, its data
+  and the length of its chain but none of its draws. `map_draws()` reads the
+  chain in pieces and applies a function to each, and `irf()` and `fevd()` have
+  methods for such a handle: an impulse response stacks the responses of the
+  pieces and takes its quantiles over all of them, a variance decomposition
+  averages the pieces before shares are normalised or groups collapsed. Both
+  give what the same call on the model in memory gives, which is what the tests
+  check. This is for the models whose draws are what they are large in -- a time
+  varying model, or a global model solved from many sub-models.
+
 * **`read_model_from_hdf5()` reads part of a chain.** It read every draw of
   every block, so a caller working through a long chain -- solving a global
   model of time varying sub-models draw by draw, say -- had to hold the whole

@@ -232,12 +232,22 @@ irf.bvarmodel <- function(x, impulse = NULL, response = NULL, n_ahead = 5, ci = 
   }
   
   if (!keep_draws) {
-    ci_low <- (1 - ci) / 2
-    ci_high <- 1 - ci_low
-    pr <- c(ci_low, .5, ci_high)
-    result <- stats::ts(t(apply(result, 2, stats::quantile, probs = pr)), start = 0, frequency = 1) 
+    result <- .summarise_irf_draws(result, ci)
   }
   
   class(result) <- append("bvarirf", class(result))
   return(result)
+}
+
+# The quantiles an impulse response reports, over the draws of the responses.
+# Shared with the method for a stored model, which takes them over the draws of
+# every piece of the chain together, so that the two cannot summarise the same
+# responses differently.
+.summarise_irf_draws <- function(result, ci) {
+
+  ci_low <- (1 - ci) / 2
+  ci_high <- 1 - ci_low
+  pr <- c(ci_low, .5, ci_high)
+
+  stats::ts(t(apply(result, 2, stats::quantile, probs = pr)), start = 0, frequency = 1)
 }

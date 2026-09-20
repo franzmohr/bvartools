@@ -1,5 +1,23 @@
 # bvartools (development version)
 
+* **`selection_criteria()` has a default method.** A model of a class this
+  package has no method for -- a dynamic factor model of dfmtools, say -- now
+  gets `LL`, `WAIC`, `LOOIC` from `posterior$loglik` and `LPL` from
+  `posterior$forecast$loglik`, which is everything the draws alone support.
+  `choose_best_model()` ranks the result and `print()` shows it, both unchanged.
+
+  What the default cannot report is `AIC`, `BIC` and `HQ`, which charge a model
+  for its size and so need a count of its free parameters, and `FE`, `AFE` and
+  `RSFE`, which need the variables named and paired up. Those are properties of
+  a model rather than of its draws, and a class that has them should write its
+  own method. The periods of the `LPL` terms are numbered from one for the same
+  reason: this method does not know where a model keeps its sample, so it cannot
+  say when the scored periods were.
+
+  The point is that one implementation serves every class. WAIC and LOOIC in
+  particular need nothing but a pointwise log-likelihood, and a package that has
+  one should not have to write them again to report them.
+
 * **Dynamic multipliers.** `multipliers()` returns the response of an endogenous
   variable to a change in a weakly exogenous one, with methods for a
   `bvarmodel` and a `bvecmodel`. The change is held from period zero on by

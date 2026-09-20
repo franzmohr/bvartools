@@ -121,6 +121,7 @@ Other model comparison:
 \code{\link[=open_models]{open_models()}},
 \code{\link[=selection_criteria.bvarmodel]{selection_criteria.bvarmodel()}},
 \code{\link[=selection_criteria.bvecmodel]{selection_criteria.bvecmodel()}},
+\code{\link[=selection_criteria.default]{selection_criteria.default()}},
 \code{\link[=selection_criteria.modellist]{selection_criteria.modellist()}}
 }
 \concept{model comparison}

@@ -88,6 +88,7 @@
 #' # Obtain posterior draws 
 #' model <- add_posterior_coefficients(model)
 #' 
+#' @seealso \code{\link{bvartools_model}} describes the object this returns, element by element.
 #' @family posterior simulation
 #' @export
 add_posterior_coefficients.bvecmodel <- function(object, posterior_function = NULL, ...){

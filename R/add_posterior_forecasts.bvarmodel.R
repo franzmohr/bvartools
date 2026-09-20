@@ -57,6 +57,7 @@
 #' model <- add_posterior_forecasts(model)
 #'
 #'
+#' @seealso \code{\link{bvartools_model}} describes the object this returns, element by element.
 #' @family posterior simulation
 #' @export
 add_posterior_forecasts.bvarmodel <- function(object, forecast_states = NULL, ...){

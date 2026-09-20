@@ -70,6 +70,8 @@ model <- add_posterior_forecasts(model)
 
 }
 \seealso{
+\code{\link{bvartools_model}} describes the object this returns, element by element.
+
 Other posterior simulation:
 \code{\link[=add_forecast_input.bvarmodel]{add_forecast_input.bvarmodel()}},
 \code{\link[=add_forecast_input.bvecmodel]{add_forecast_input.bvecmodel()}},

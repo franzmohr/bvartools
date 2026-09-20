@@ -159,6 +159,7 @@
 #' 
 #' Lütkepohl, H. (2006). \emph{New Introduction to Multiple Time Series Analysis} (2nd ed.). Berlin: Springer.
 #' 
+#' @seealso \code{\link{bvartools_model}} describes the object this returns, element by element.
 #' @family model set-up
 #' @export
 create_bvarmodel <- function(data, p = 2,

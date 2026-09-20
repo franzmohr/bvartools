@@ -101,6 +101,8 @@ Korobilis, D. (2013). VAR forecasting using Bayesian variable selection.
 \emph{Journal of Applied Econometrics, 28}(2), 204--230. \doi{10.1002/jae.1271}
 }
 \seealso{
+\code{\link{bvartools_model}} describes the object this returns, element by element.
+
 Other posterior simulation:
 \code{\link[=add_forecast_input.bvarmodel]{add_forecast_input.bvarmodel()}},
 \code{\link[=add_forecast_input.bvecmodel]{add_forecast_input.bvecmodel()}},

@@ -69,6 +69,7 @@ Collate:
     'bvar.R'
     'bvar_fill_helper.R'
     'bvartools-package.R'
+    'bvartools_model.R'
     'bvec.R'
     'check_bvarpost_input.R'
     'check_bvecpost_input.R'

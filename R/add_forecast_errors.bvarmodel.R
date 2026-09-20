@@ -46,6 +46,7 @@
 #' model <- add_forecast_errors(model, test_sample = orig)
 #' 
 #'
+#' @seealso \code{\link{bvartools_model}} describes the object this returns, element by element.
 #' @family model comparison
 #' @export
 add_forecast_errors.bvarmodel <- function(object, test_sample = NULL, ...){

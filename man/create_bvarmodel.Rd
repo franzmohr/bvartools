@@ -198,6 +198,8 @@ Kozumi, H., & Kobayashi, G. (2011). Gibbs sampling methods for Bayesian quantile
 Lütkepohl, H. (2006). \emph{New Introduction to Multiple Time Series Analysis} (2nd ed.). Berlin: Springer.
 }
 \seealso{
+\code{\link{bvartools_model}} describes the object this returns, element by element.
+
 Other model set-up:
 \code{\link[=add_initial_values.bvarmodel]{add_initial_values.bvarmodel()}},
 \code{\link[=add_initial_values.bvecmodel]{add_initial_values.bvecmodel()}},

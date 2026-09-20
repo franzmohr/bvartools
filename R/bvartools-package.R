@@ -4,28 +4,21 @@
 #' Every step of an analysis takes a model object and returns it with something
 #' added, so the result of each call must be assigned back:
 #' \code{model <- add_initial_values(model)}. A model object is a list of class
-#' 'bvarmodel' or 'bvecmodel' with the elements
-#' \describe{
-#'   \item{\code{data}}{the data matrices, with the estimation sample in
-#'   \code{data$train} (\code{y}, \code{x} and \code{z} in SUR form).}
-#'   \item{\code{model}}{the specification: variables, lag orders, deterministic
-#'   terms, error and variable selection types, iterations and burn-in draws.}
-#'   \item{\code{priors}}{the prior hyperparameters, added by \code{\link{add_priors}}.}
-#'   \item{\code{initial}}{the starting values of the sampler, added by
-#'   \code{\link{add_initial_values}}.}
-#'   \item{\code{posterior}}{the draws added by \code{\link{add_posterior_coefficients}}
-#'   and the later \code{add_posterior_*} functions.}
-#' }
-#' Posterior draws are stored as \code{\link[coda]{mcmc}} objects with one row
-#' per draw and one column per parameter. \code{\link{bvar}} and
-#' \code{\link{bvec}}, which collect the draws of a sampler written by the user,
-#' expect the transpose: one row per parameter and one column per draw.
+#' 'bvarmodel' or 'bvecmodel' whose elements are \code{model}, the
+#' specification, \code{data}, \code{priors}, \code{initial} and
+#' \code{posterior}, the draws -- stored as \code{\link[coda]{mcmc}} objects
+#' with one row per draw and one column per parameter.
 #'
 #' Passing a vector to an argument such as \code{p} or \code{r} creates one model
 #' per specification in a list of class 'modellist', and
 #' \code{\link{use_expanding_window}} creates a list of class 'expandingwindow'.
 #' The functions of the workflow accept these lists as well and apply to each
 #' model in turn.
+#'
+#' \code{\link{bvartools_model}} describes the whole object element by element:
+#' what each one holds, which step adds it, how the draws are laid out and which
+#' path of a model file each corresponds to. It is the page to read before
+#' reaching into the object by hand.
 #'
 #' @section Workflow of a VAR model:
 #' \enumerate{

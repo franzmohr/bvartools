@@ -6,6 +6,10 @@ version produces.
 
 ## The layout of a model
 
+`?bvartools_model` is the canonical description of the object and ships with the
+package. This file is the same ground in the shape an agent reads; where the two
+disagree, the help page is right.
+
 `create_bvarmodel()` and `create_bvecmodel()` return a list of class
 `'bvarmodel'` or `'bvecmodel'`, and every later step returns it with something
 added:

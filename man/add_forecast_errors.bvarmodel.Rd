@@ -59,6 +59,8 @@ model <- add_forecast_errors(model, test_sample = orig)
 
 }
 \seealso{
+\code{\link{bvartools_model}} describes the object this returns, element by element.
+
 Other model comparison:
 \code{\link[=add_forecast_errors.bvecmodel]{add_forecast_errors.bvecmodel()}},
 \code{\link[=add_predictive_loglik]{add_predictive_loglik()}},

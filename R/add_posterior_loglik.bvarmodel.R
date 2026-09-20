@@ -37,6 +37,7 @@
 #' object <- add_posterior_loglik(object)
 #' 
 #' 
+#' @seealso \code{\link{bvartools_model}} describes the object this returns, element by element.
 #' @family posterior simulation
 #' @export
 #' @method add_posterior_loglik bvarmodel

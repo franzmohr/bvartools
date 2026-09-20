@@ -184,6 +184,8 @@ Korobilis, D. (2013). VAR forecasting using Bayesian variable selection.
 Lütkepohl, H. (2006). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
 }
 \seealso{
+\code{\link{bvartools_model}} describes the object this returns, element by element.
+
 Other model set-up:
 \code{\link[=add_initial_values.bvarmodel]{add_initial_values.bvarmodel()}},
 \code{\link[=add_initial_values.bvecmodel]{add_initial_values.bvecmodel()}},

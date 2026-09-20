@@ -185,6 +185,23 @@ struct VarSelPrior
     arma::uword size() const { return include.n_elem; }
 };
 
+
+/// Matrix normal prior on a coefficient matrix whose equations share their
+/// regressors.
+///
+/// The covariance of vec(Theta) is `cov` kron Sigma, so only the regressor side
+/// is stored here -- the equation side is the error covariance and is already
+/// carried by the Wishart prior beside this one. That factorisation is what
+/// makes the posterior conjugate, and it is also what a Minnesota prior cannot
+/// express: scaling each equation by its own residual variance is precisely the
+/// part a Kronecker covariance has no room for, so the natural conjugate form
+/// puts that scaling in Sigma instead.
+struct MatrixNormalPrior
+{
+    arma::mat mean; ///< n_reg x k, the coefficient matrix before the sample.
+    arma::mat cov;  ///< n_reg x n_reg, the regressor side of its covariance.
+};
+
 } // namespace bayests
 
 #endif // BAYESTS_PRIORS_H

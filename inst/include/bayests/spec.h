@@ -141,6 +141,18 @@ struct VarSpec
     /// without the sampler knowing.
     double quantile = 0.5;
 
+    /// The two discount factors of `VarTvpDiscount`, each in (0, 1]. Like
+    /// `quantile` they are continuous and every other model ignores them, and
+    /// like it a grid of them is a list of models rather than a vector here.
+    ///
+    /// One is not a neutral default but a meaningful model: `delta_beta = 1`
+    /// holds the coefficients constant and `delta_sigma = 1` holds the error
+    /// covariance constant, and both at one is the conjugate normal inverse
+    /// Wishart posterior of a constant coefficient VAR -- computed one period
+    /// at a time rather than approximated.
+    double delta_beta = 1.0;
+    double delta_sigma = 1.0;
+
     /// Total length of the chain: the burn-in, then `thin` draws for every one
     /// kept.
     int draws() const { return burnin + iterations * thin; }

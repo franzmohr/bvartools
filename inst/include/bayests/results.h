@@ -672,6 +672,74 @@ struct ForecastDraws
     arma::mat values;
 };
 
+
+/// The posterior of a discounted time varying parameter VAR.
+///
+/// Not draws. Every other result struct in this file holds one column per
+/// iteration; this one holds the posterior itself, which is closed form here:
+/// per period a matrix Student t over the coefficients and an inverse Wishart
+/// over the error covariance, both exact. One column per period throughout, as
+/// a draw is one column elsewhere.
+///
+/// `a_cov` is the regressor side of the coefficient covariance and `u_sigma`
+/// the error side, so the two together give the joint posterior and not only
+/// the marginal bands in `a_scale`. Anything that wants draws -- an impulse
+/// response, a forecast fan -- builds them from those two, and they are i.i.d.
+/// rather than a chain: there is nothing to burn in and nothing to thin.
+///
+/// Those draws are correct **per period**. The smoothed posterior is not
+/// independent across periods, so joining one draw per period into a
+/// trajectory is not a draw of the path, and anything needing a coherent path
+/// has to sample it backwards instead.
+struct VarTvpDiscountPosterior
+{
+    arma::mat a;         ///< nparams x tt, the posterior mean of vec(B_t).
+    arma::mat a_scale;   ///< nparams x tt, the marginal Student t scale.
+    arma::mat a_cov;     ///< n_reg * n_reg x tt, the regressor side of it.
+    arma::mat u_sigma;   ///< k * k x tt, the posterior estimate of Sigma_t.
+    arma::vec df;        ///< tt, the degrees of freedom of both of the above.
+
+    arma::mat forecast_mean; ///< k x tt, the one step ahead predictive mean.
+    arma::vec loglik;        ///< tt, its exact log density at what happened.
+
+    arma::uword periods() const { return u_sigma.n_cols; }
+};
+
+/// The posterior of a discounted time varying parameter VEC.
+///
+/// VarTvpDiscountPosterior with the cointegration matrix carried alongside, and
+/// everything that struct says about the shape of it holds here: a posterior
+/// rather than draws, one column per period, exact.
+///
+/// `a` is laid out as every VEC's is -- vec(alpha) first, then the short-run
+/// blocks -- because the design puts the `rank` error correction columns in
+/// front. So a column of it is a column of a VecNormalWishart posterior, and
+/// vec_to_var_coefficients() converts it to the level VAR without a
+/// rearrangement.
+///
+/// **`beta` is copied in from the input rather than estimated**, and it is here
+/// so that a stored posterior says which space it conditioned on. Without it
+/// the loadings are numbers with no relation attached: alpha and beta are
+/// identified only as their product, so alpha alone means nothing. Constant
+/// over the sample by construction -- one column, not one per period, which is
+/// the difference from the three sampling VECs.
+struct VecTvpDiscountPosterior
+{
+    arma::mat a;       ///< nparams x tt, the posterior mean of vec(B_t).
+    arma::mat a_scale; ///< nparams x tt, the marginal Student t scale.
+    arma::mat a_cov;   ///< n_design * n_design x tt, the regressor side of it.
+    arma::mat u_sigma; ///< k * k x tt, the posterior estimate of Sigma_t.
+    arma::vec df;      ///< tt, the degrees of freedom of both of the above.
+
+    arma::vec beta; ///< n_beta, the space the run conditioned on. Empty at rank zero.
+
+    arma::mat forecast_mean; ///< k x tt, the one step ahead predictive mean.
+    arma::vec loglik;        ///< tt, its exact log density at what happened.
+
+    arma::uword periods() const { return u_sigma.n_cols; }
+    bool has_beta() const { return beta.n_elem > 0; }
+};
+
 } // namespace bayests
 
 #endif // BAYESTS_RESULTS_H

@@ -1,5 +1,30 @@
 # bvartools (development version)
 
+* **Vendored BayesTS core refreshed to upstream `7d7c6ca`, which is BayesTS
+  0.3.0 and the fix that followed it.** **Draws are unchanged**, for every
+  sampler here, and nothing this package compiles behaves differently: the four
+  headers that changed -- `bayests/inputs.h`, `priors.h`, `results.h` and
+  `spec.h` -- gain declarations and nothing else, and no vendored source reads
+  what they declare. The fix itself does not reach this package. It is to
+  `core/models/factor_score.h`, the filter a *factor* model's forecast is scored
+  by, which is one of the sources `src/core/VENDORED.md` records as not copied;
+  a VAR or a VEC is scored by its own pointwise log likelihood over the scored
+  periods, which needs no filter. dfmtools, which does vendor that file, carries
+  the fix.
+
+    What 0.3.0 adds is `VarTvpDiscount` and `VecTvpDiscount`, two models with a
+    closed-form posterior rather than a chain. **They are not vendored yet.**
+    They are this package's kind of model rather than a factor model, so unlike
+    everything else in that section of `VENDORED.md` they are held back only
+    until there is a binding to reach them, and their entries in the refresh
+    script's `skip` say so. Their inputs, priors and posteriors are declared
+    here regardless, in the four headers above, because every model shares those.
+
+    `src/core/VENDORED.md` now also records which upstream commit the copy is
+    at, which it never has. Nothing but a reader enforces that paragraph -- the
+    refresh script compares files and `inst/COPYRIGHTS`, not prose -- so it says
+    to check it against the upstream log during a refresh.
+
 * **`selection_criteria()` has a default method.** A model of a class this
   package has no method for -- a dynamic factor model of dfmtools, say -- now
   gets `LL`, `WAIC`, `LOOIC` from `posterior$loglik` and `LPL` from

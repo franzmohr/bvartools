@@ -43,8 +43,8 @@ applied to.
 
 data("e1")
 e1 <- diff(log(e1)) * 100
-model <- gen_var(e1, p = 2, deterministic = "const",
-                 iterations = 100, burnin = 10)
+model <- create_bvarmodel(e1, p = 2, deterministic = "const",
+                          iterations = 100, burnin = 10)
 # Number of iterations and burn-in should be much higher.
 
 model <- add_priors(model,

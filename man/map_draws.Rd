@@ -36,8 +36,8 @@ from.
 
 data("e1")
 e1 <- diff(log(e1)) * 100
-model <- gen_var(e1, p = 2, deterministic = "const",
-                 iterations = 100, burnin = 10)
+model <- create_bvarmodel(e1, p = 2, deterministic = "const",
+                          iterations = 100, burnin = 10)
 model <- add_priors(model,
                     coef = list(v_i = 0, v_i_det = 0),
                     sigma = list(df = 1, scale = .0001))

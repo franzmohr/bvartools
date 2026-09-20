@@ -468,3 +468,79 @@ test_that("a model with nothing to summarise is refused", {
   model[["posterior"]][["loglik"]] <- NULL
   expect_error(selection_criteria(model), "a scored forecast")
 })
+
+
+# --- the default method ------------------------------------------------------
+#
+# A model class this package has no method for -- a dynamic factor model of
+# dfmtools, say -- still has a pointwise log-likelihood and may have a scored
+# forecast, and those are all the criteria below need. What they cannot have is
+# the ones that charge a model for its size, which need a count of its free
+# parameters, and the forecast errors, which need the variables paired up.
+
+bare_model <- function(loglik = TRUE, score = TRUE, draws = 50) {
+  set.seed(19)
+  posterior <- list()
+  if (loglik) {
+    posterior[["loglik"]] <- matrix(stats::rnorm(draws * 4, -3), draws, 4)
+  }
+  if (score) {
+    posterior[["forecast"]] <- list(loglik = matrix(stats::rnorm(draws * 3, -3), draws, 3))
+  }
+  structure(list(model = list(k = 2), posterior = posterior),
+            class = c("dfmodel", "list"))
+}
+
+test_that("a class without a method of its own reaches the default", {
+  criteria <- selection_criteria(bare_model())
+
+  expect_s3_class(criteria, "selcrit")
+  # The object's own class travels with it, so a print method for it still works.
+  expect_s3_class(criteria, "dfmodel")
+  expect_named(criteria, c("model", "LL", "WAIC", "LOOIC", "LPL"))
+})
+
+test_that("the default reports the criteria the draws support and no others", {
+  # The ones that need a parameter count or the forecast errors are absent
+  # rather than wrong.
+  criteria <- selection_criteria(bare_model())
+  for (absent in c("AIC", "BIC", "HQ", "FE", "AFE", "RSFE")) {
+    expect_null(criteria[[absent]])
+  }
+
+  loglik_only <- selection_criteria(bare_model(score = FALSE))
+  expect_named(loglik_only, c("model", "LL", "WAIC", "LOOIC"))
+
+  score_only <- selection_criteria(bare_model(loglik = FALSE))
+  expect_named(score_only, c("model", "LPL"))
+})
+
+test_that("the default computes the same LPL as a scored model", {
+  object <- bare_model()
+  score <- object[["posterior"]][["forecast"]][["loglik"]]
+  criteria <- selection_criteria(object)
+
+  lpd <- apply(score, 2, function(column) {
+    top <- max(column)
+    top + log(mean(exp(column - top)))
+  })
+  expect_equal(criteria[["LPL"]][["mean"]], sum(lpd))
+  # Numbered from one: this method cannot know when the scored periods were.
+  expect_equal(attr(criteria[["LPL"]], "terms")[["period"]], 1:3)
+})
+
+test_that("an object with neither is refused", {
+  expect_error(selection_criteria(bare_model(loglik = FALSE, score = FALSE)),
+               "posterior$loglik", fixed = TRUE)
+})
+
+test_that("a scored model of an unknown class can be chosen on its LPL", {
+  better <- bare_model()
+  better[["posterior"]][["forecast"]][["loglik"]] <-
+    better[["posterior"]][["forecast"]][["loglik"]] + 1
+
+  criteria <- lapply(list(bare_model(), better), selection_criteria)
+  class(criteria) <- c("selcritlist", "list")
+
+  expect_identical(choose_best_model(criteria, criterion = "LPL"), 2L)
+})

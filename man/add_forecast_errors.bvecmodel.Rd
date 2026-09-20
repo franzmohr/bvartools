@@ -44,6 +44,7 @@ Other model comparison:
 \code{\link[=plot_forecast_errors_by_period]{plot_forecast_errors_by_period()}},
 \code{\link[=selection_criteria.bvarmodel]{selection_criteria.bvarmodel()}},
 \code{\link[=selection_criteria.bvecmodel]{selection_criteria.bvecmodel()}},
+\code{\link[=selection_criteria.default]{selection_criteria.default()}},
 \code{\link[=selection_criteria.modellist]{selection_criteria.modellist()}}
 }
 \concept{model comparison}

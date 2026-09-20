@@ -7,6 +7,7 @@
 #include "core/algorithms/stochvol_ocsn_2007.h"
 #include "core/models/forecast_states.h"
 #include "core/models/model_support.h"
+#include "core/models/predictive_score.h"
 
 #include <cmath>
 #include <optional>
@@ -516,6 +517,55 @@ arma::mat VarNormalStochvolSampler::log_likelihood(const VarNormalStochvolInput 
     }
 
     return loglik;
+}
+
+arma::mat VarNormalStochvolSampler::predictive_log_density(
+    const VarNormalStochvolInput &input, const VarNormalStochvolDraws &coefficients) const
+{
+    core::require_scorable(input.spec, "VarNormalStochvol");
+    const arma::uword periods = core::scored_horizons(input.test.y, input.spec);
+    const arma::mat x =
+        core::realised_regressors(input.forecast.x, input.test.y, input.spec.k, input.spec.p);
+
+    VarNormalStochvolInput scored;
+    scored.spec = input.spec;
+    scored.train.y = input.test.y.head_rows(periods);
+    scored.train.x = x;
+    scored.train.z = core::sur_regressors(x, input.spec.k);
+
+    // The coefficients of this model stand still and the volatility does not,
+    // so what is carried forward is the log variance, and the precision of each
+    // scored period is rebuilt from it the way the sampler forms it:
+    // Psi' Omega^-1 Psi, with Psi standing still as well.
+    VarNormalStochvolDraws scored_draws;
+    scored_draws.a = coefficients.a;
+    scored_draws.psi = coefficients.psi;
+
+    const arma::uword k = static_cast<arma::uword>(input.spec.k);
+
+    if (core::simulates_states(input.spec))
+    {
+        const arma::mat omega_inv = core::carry_log_volatility_forward(
+            coefficients.u_omega_inv, coefficients.h_sigma, periods, true);
+        // Psi stands still in this model, so the same one serves every period.
+        const arma::mat psi_path = input.use_psi()
+                                       ? arma::repmat(coefficients.psi, periods, 1)
+                                       : arma::mat();
+        scored_draws.u_omega_inv = omega_inv;
+        scored_draws.u_sigma_inv = core::precision_path(omega_inv, psi_path, k, periods);
+    }
+    else
+    {
+        // Held at the end of the sample, which is the one period the forecast
+        // readers hand over, repeated for every scored period.
+        scored_draws.u_sigma_inv = arma::repmat(coefficients.u_sigma_inv, periods, 1);
+        if (coefficients.u_omega_inv.n_elem > 0)
+        {
+            scored_draws.u_omega_inv = arma::repmat(coefficients.u_omega_inv, periods, 1);
+        }
+    }
+
+    return log_likelihood(scored, scored_draws);
 }
 
 } // namespace bayests

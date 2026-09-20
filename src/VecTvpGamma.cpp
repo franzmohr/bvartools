@@ -36,6 +36,16 @@ bayests::VecTvpGammaInput read_input(const Rcpp::List &object) {
       const Rcpp::List forecast = data["forecast"];
       read_forecast_regressors(forecast, input.spec.k, input.forecast.x);
     }
+    // What the horizon realised, where the model carries it: one row per
+    // period and one column per variable, in levels, which is what
+    // /data/test/y of a model file holds and what add_forecast_errors() leaves
+    // behind. Absent from every model that is forecast rather than scored, and
+    // left for the core to complain about only if a score is actually asked
+    // for.
+    if (has(data, "test")) {
+      const Rcpp::List test = data["test"];
+      read_mat_if_present(test, "y", input.test.y);
+    }
   }
 
   // Every path is stored flat in R and wanted one column per period, so the
@@ -294,7 +304,7 @@ Rcpp::List VecTvpGammaForecasts(Rcpp::List object) {
   const bayests::ForecastDraws forecast =
     bayests::VecTvpGammaSampler().forecast(input, draws, reporter);
 
-  return with_forecast_draws(object, Rcpp::wrap(draws_to_r(forecast.values)));
+  return with_forecast_member(object, "forecasts", Rcpp::wrap(draws_to_r(forecast.values)));
 }
 
 // [[Rcpp::export(.VecTvpGammaLogLik)]]
@@ -308,6 +318,22 @@ Rcpp::List VecTvpGammaLogLik(Rcpp::List object) {
   const arma::mat loglik = bayests::VecTvpGammaSampler().log_likelihood(input, draws);
 
   return with_posterior_element(object, "loglik", Rcpp::wrap(loglik));
+}
+
+// [[Rcpp::export(.VecTvpGammaScore)]]
+Rcpp::List VecTvpGammaScore(Rcpp::List object) {
+
+  const bayests::VecTvpGammaInput input = read_input(object);
+  // The same slice a forecast reads: what moves with time is taken at the last
+  // in-sample period, which is where carrying it forward over the scored
+  // periods starts, together with the state variances each step is drawn with.
+  const bayests::VecTvpGammaDraws draws = read_draws_for_forecast(object, input);
+
+  // Draws by scored periods already, the same orientation the pointwise log
+  // likelihood comes back in, so there is no transpose at this boundary either.
+  const arma::mat score = bayests::VecTvpGammaSampler().predictive_log_density(input, draws);
+
+  return with_forecast_member(object, "loglik", Rcpp::wrap(score));
 }
 
 /*** R

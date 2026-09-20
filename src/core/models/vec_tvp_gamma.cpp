@@ -23,6 +23,7 @@ using core::pack_strict_lower_triangle;
 using core::require_period_draws;
 using core::require_state_mask;
 using core::require_state_variances;
+using core::score_vec_forecast;
 using core::simulate_vec_forecast;
 using core::simulates_states;
 using core::step_coint_state;
@@ -538,85 +539,71 @@ VecTvpGammaDraws VecTvpGammaSampler::draw_coefficients(const VecTvpGammaInput &i
     return out;
 }
 
-ForecastDraws VecTvpGammaSampler::forecast(const VecTvpGammaInput &input,
-                                           const VecTvpGammaDraws &coefficients,
-                                           Reporter &reporter) const
+namespace
 {
-    // The caller is expected to have sliced the last in-sample period out of
-    // everything that moves -- `a`, `beta`, and the precision when a covariance
-    // block makes it move.
-    if (!simulates_states(input.spec))
+
+/// How a VecTvpGamma's states move over a horizon, in one place.
+///
+/// The forecast and the score need the same walk and have to take it
+/// identically, or the two would describe different models from the same file.
+/// Built only on the simulated path; held states convert once and are the
+/// constant VEC's case.
+struct VecTvpGammaWalk
+{
+    const VecTvpGammaInput &input;
+    const VecTvpGammaDraws &coefficients;
+    int k;
+    arma::uword n_a;
+    bool use_beta;
+    bool use_psi;
+    arma::mat transition;
+    arma::mat diag_k;
+    arma::vec a_state, a_sigma, a_mask, beta_state, psi_state, psi_sigma, psi_mask;
+    double rho;
+
+    VecTvpGammaWalk(const VecTvpGammaInput &in, const VecTvpGammaDraws &draws_in)
+        : input(in), coefficients(draws_in), k(in.spec.k),
+          n_a(static_cast<arma::uword>(in.spec.nparams_per_period_vec())),
+          use_beta(in.use_beta()), use_psi(in.use_psi()),
+          diag_k(arma::eye<arma::mat>(in.spec.k, in.spec.k)), rho(in.beta_prior.rho)
     {
-        // Held: this is the constant VEC's forecast exactly -- rewrite each draw
-        // in the level parameterisation and let the VAR simulate the path.
-        // Nothing is validated here that the two calls below do not already
-        // check.
-        VarNormalWishartInput var_input;
-        var_input.spec = vec_to_var_spec(input.spec);
-        var_input.forecast = input.forecast;
+        const arma::uword k_u = static_cast<arma::uword>(k);
+        const arma::uword draws = draws_in.iterations();
+        const arma::uword n_beta = static_cast<arma::uword>(in.spec.n_beta());
 
-        VecNormalWishartDraws last_period;
-        last_period.a = coefficients.a;
-        last_period.beta = coefficients.beta;
-        last_period.u_sigma_inv = coefficients.u_sigma_inv;
-
-        const VarNormalWishartDraws var_coefficients =
-            vec_to_var_coefficients(input.spec, last_period);
-
-        return VarNormalWishartSampler{}.forecast(var_input, var_coefficients, reporter);
-    }
-
-    // Simulated: every horizon the coefficients take a step of their random
-    // walk, the cointegration vectors a step of their state equation and Psi a
-    // step of its own random walk, and the level VAR and the precision are
-    // rebuilt from them. The error precisions are constant. See
-    // core::simulate_vec_forecast().
-    const int k = input.spec.k;
-    const arma::uword k_u = static_cast<arma::uword>(k);
-    const arma::uword draws = coefficients.iterations();
-    const arma::uword n_a = static_cast<arma::uword>(input.spec.nparams_per_period_vec());
-    const arma::uword n_beta = static_cast<arma::uword>(input.spec.n_beta());
-    const bool use_beta = input.use_beta();
-    const bool use_psi = input.use_psi();
-
-    if (n_a > 0)
-    {
-        require_period_draws(coefficients.a, n_a, draws, "a");
-        require_state_variances(coefficients.a_sigma, n_a, draws, "the coefficients");
-        require_state_mask(coefficients.a_lambda, n_a, draws, "the coefficients");
-    }
-    if (use_beta)
-    {
-        require_period_draws(coefficients.beta, n_beta, draws, "beta");
-        if (coefficients.has_rho())
+        if (n_a > 0)
         {
-            require_period_draws(coefficients.rho, 1, draws, "rho");
+            require_period_draws(draws_in.a, n_a, draws, "a");
+            require_state_variances(draws_in.a_sigma, n_a, draws, "the coefficients");
+            require_state_mask(draws_in.a_lambda, n_a, draws, "the coefficients");
+        }
+        if (use_beta)
+        {
+            require_period_draws(draws_in.beta, n_beta, draws, "beta");
+            if (draws_in.has_rho())
+            {
+                require_period_draws(draws_in.rho, 1, draws, "rho");
+            }
+            transition = core::coint_state_transition(in.beta_prior.p_tau, in.spec.rank,
+                                                      in.spec.k_beta);
+        }
+        if (use_psi)
+        {
+            require_period_draws(draws_in.psi, k_u * k_u, draws, "Psi");
+            require_state_variances(draws_in.psi_sigma,
+                                    static_cast<arma::uword>(in.spec.n_psi()), draws,
+                                    "the covariance block");
+            require_state_mask(draws_in.psi_lambda, k_u * k_u, draws, "the covariance block");
+            require_period_draws(draws_in.u_omega_inv, k_u, draws, "u_omega_inv");
+        }
+        else
+        {
+            require_period_draws(draws_in.u_sigma_inv, k_u * k_u, draws, "u_sigma_inv");
         }
     }
-    if (use_psi)
+
+    void operator()(const arma::uword draw, const int i, VecForecastStep &out)
     {
-        require_period_draws(coefficients.psi, k_u * k_u, draws, "Psi");
-        require_state_variances(coefficients.psi_sigma,
-                                static_cast<arma::uword>(input.spec.n_psi()), draws,
-                                "the covariance block");
-        require_state_mask(coefficients.psi_lambda, k_u * k_u, draws, "the covariance block");
-        require_period_draws(coefficients.u_omega_inv, k_u, draws, "u_omega_inv");
-    }
-    else
-    {
-        require_period_draws(coefficients.u_sigma_inv, k_u * k_u, draws, "u_sigma_inv");
-    }
-
-    const arma::mat transition =
-        use_beta ? core::coint_state_transition(input.beta_prior.p_tau, input.spec.rank,
-                                                input.spec.k_beta)
-                 : arma::mat();
-    const arma::mat diag_k = arma::eye<arma::mat>(k, k);
-
-    arma::vec a_state, a_sigma, a_mask, beta_state, psi_state, psi_sigma, psi_mask;
-    double rho = input.beta_prior.rho;
-
-    const auto step = [&](const arma::uword draw, const int i, VecForecastStep &out) {
         if (i == 0)
         {
             if (n_a > 0)
@@ -675,9 +662,47 @@ ForecastDraws VecTvpGammaSampler::forecast(const VecTvpGammaInput &input,
             out.period.u_sigma_inv = arma::vectorise(precision);
             out.error_root = covariance_root(precision);
         }
-    };
+    }
+};
 
-    return ForecastDraws{simulate_vec_forecast(input.spec, input.forecast, draws, reporter, step)};
+} // namespace
+
+ForecastDraws VecTvpGammaSampler::forecast(const VecTvpGammaInput &input,
+                                           const VecTvpGammaDraws &coefficients,
+                                           Reporter &reporter) const
+{
+    // The caller is expected to have sliced the last in-sample period out of
+    // everything that moves -- `a`, `beta`, and the precision when a covariance
+    // block makes it move.
+    if (!simulates_states(input.spec))
+    {
+        // Held: this is the constant VEC's forecast exactly -- rewrite each draw
+        // in the level parameterisation and let the VAR simulate the path.
+        // Nothing is validated here that the two calls below do not already
+        // check.
+        VarNormalWishartInput var_input;
+        var_input.spec = vec_to_var_spec(input.spec);
+        var_input.forecast = input.forecast;
+
+        VecNormalWishartDraws last_period;
+        last_period.a = coefficients.a;
+        last_period.beta = coefficients.beta;
+        last_period.u_sigma_inv = coefficients.u_sigma_inv;
+
+        const VarNormalWishartDraws var_coefficients =
+            vec_to_var_coefficients(input.spec, last_period);
+
+        return VarNormalWishartSampler{}.forecast(var_input, var_coefficients, reporter);
+    }
+
+    // Simulated: every horizon the coefficients take a step of their random
+    // walk, the cointegration vectors a step of their state equation and Psi a
+    // step of its own random walk, and the level VAR and the precision are
+    // rebuilt from them. The error precisions are constant. See
+    // core::simulate_vec_forecast().
+    VecTvpGammaWalk walk(input, coefficients);
+    return ForecastDraws{simulate_vec_forecast(input.spec, input.forecast,
+                                               coefficients.iterations(), reporter, walk)};
 }
 
 arma::mat VecTvpGammaSampler::log_likelihood(const VecTvpGammaInput &input,
@@ -773,6 +798,34 @@ arma::mat VecTvpGammaSampler::log_likelihood(const VecTvpGammaInput &input,
     }
 
     return loglik;
+}
+
+arma::mat VecTvpGammaSampler::predictive_log_density(
+    const VecTvpGammaInput &input, const VecTvpGammaDraws &coefficients) const
+{
+    if (!simulates_states(input.spec))
+    {
+        // Held: the constant VEC's case exactly -- one conversion and the level
+        // VAR's score, which is also where the structural refusal lives.
+        VarNormalWishartInput var_input;
+        var_input.spec = vec_to_var_spec(input.spec);
+        var_input.forecast = input.forecast;
+        var_input.test = input.test;
+
+        VecNormalWishartDraws last_period;
+        last_period.a = coefficients.a;
+        last_period.beta = coefficients.beta;
+        last_period.u_sigma_inv = coefficients.u_sigma_inv;
+
+        return VarNormalWishartSampler{}.predictive_log_density(
+            var_input, vec_to_var_coefficients(input.spec, last_period));
+    }
+
+    // Simulated: the same walk the forecast takes, against the realised levels
+    // instead of a drawn path.
+    VecTvpGammaWalk walk(input, coefficients);
+    return score_vec_forecast(input.spec, input.forecast, input.test.y,
+                              coefficients.iterations(), walk);
 }
 
 } // namespace bayests

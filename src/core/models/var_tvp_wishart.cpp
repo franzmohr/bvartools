@@ -8,6 +8,7 @@
 #include "core/algorithms/wishart.h"
 #include "core/models/forecast_states.h"
 #include "core/models/model_support.h"
+#include "core/models/predictive_score.h"
 
 #include <cmath>
 #include <optional>
@@ -431,6 +432,37 @@ arma::mat VarTvpWishartSampler::log_likelihood(const VarTvpWishartInput &input,
     }
 
     return loglik;
+}
+
+arma::mat VarTvpWishartSampler::predictive_log_density(const VarTvpWishartInput &input,
+                                                       const VarTvpWishartDraws &coefficients) const
+{
+    core::require_scorable(input.spec, "VarTvpWishart");
+    const arma::uword periods = core::scored_horizons(input.test.y, input.spec);
+    const arma::mat x =
+        core::realised_regressors(input.forecast.x, input.test.y, input.spec.k, input.spec.p);
+
+    VarTvpWishartInput scored;
+    scored.spec = input.spec;
+    scored.train.y = input.test.y.head_rows(periods);
+    scored.train.x = x;
+    scored.train.z = core::sur_regressors(x, input.spec.k);
+
+    // The coefficients are the only thing that moves here; the Wishart
+    // precision is the same at every horizon. log_likelihood() of this model
+    // evaluates every period under its own coefficients, so what it wants is
+    // the path, which is what the sample's last period carried forward one step
+    // per scored period is.
+    VarTvpWishartDraws scored_draws;
+    scored_draws.u_sigma_inv = coefficients.u_sigma_inv;
+    if (coefficients.has_a())
+    {
+        scored_draws.a = core::carry_state_forward(
+            coefficients.a, coefficients.a_sigma, coefficients.a_lambda, periods,
+            core::simulates_states(input.spec), "the coefficients");
+    }
+
+    return log_likelihood(scored, scored_draws);
 }
 
 } // namespace bayests

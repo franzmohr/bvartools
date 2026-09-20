@@ -43,6 +43,20 @@ public:
     /// draw, one column per observation, as expected by WAIC and PSIS-LOO.
     arma::mat log_likelihood(const VarNormalGammaInput &input,
                              const VarNormalGammaDraws &draws) const;
+
+    /// The log predictive density of what the horizon realised, draws x scored
+    /// periods -- one row per posterior draw, one column per period of
+    /// `input.test.y`.
+    ///
+    /// Each column conditions on the realised observations before it rather than
+    /// on a simulated path, so the log of the mean of exp() over draws is the
+    /// one step ahead predictive density given everything known up to that
+    /// period, and those sum over the horizons to the log predictive likelihood
+    /// of the whole realised path. Requires `input.test.y` and
+    /// `input.forecast.x`; throws for a structural model, which this expression
+    /// is not the density of.
+    arma::mat predictive_log_density(const VarNormalGammaInput &input,
+                                     const VarNormalGammaDraws &draws) const;
 };
 
 } // namespace bayests

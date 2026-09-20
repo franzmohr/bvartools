@@ -56,6 +56,27 @@ public:
     /// coefficients and its own precision.
     arma::mat log_likelihood(const VarTvpStochvolInput &input,
                              const VarTvpStochvolDraws &draws) const;
+
+    /// The log predictive density of what the horizon realised, draws x scored
+    /// periods -- one row per posterior draw, one column per period of
+    /// `input.test.y`.
+    ///
+    /// Each column conditions on the realised observations before it rather than
+    /// on a simulated path, so the log of the mean of exp() over draws is the
+    /// one step ahead predictive density given everything known up to that
+    /// period, and those sum over the horizons to the log predictive likelihood
+    /// of the whole realised path.
+    ///
+    /// Expects the draws a forecast expects -- the last in-sample period of
+    /// what moves, plus the innovation variances to move it by -- and carries
+    /// them forward one step per scored period, honouring
+    /// `spec.forecast_states`. Under `simulate` that is one sampled state path
+    /// per draw, so the score is drawn rather than computed and `/model/seed`
+    /// is what repeats it. Requires `input.test.y` and `input.forecast.x`;
+    /// throws for a structural model, which this expression is not the density
+    /// of.
+    arma::mat predictive_log_density(const VarTvpStochvolInput &input,
+                                     const VarTvpStochvolDraws &draws) const;
 };
 
 } // namespace bayests

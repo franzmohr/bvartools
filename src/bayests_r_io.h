@@ -310,20 +310,24 @@ inline Rcpp::List with_posterior_element(const Rcpp::List &object, const char *n
   return result;
 }
 
-/// The draws of a forecast, at posterior$forecast$forecasts.
+/// One member of the forecast group of the posterior, at
+/// posterior$forecast$<name>.
 ///
 /// One level in rather than at posterior$forecast itself, because the group is
-/// the place for everything the forecast periods produce: `errors` beside it,
-/// and `loglik` once the predictive density is written there. That is the layout
+/// the place for everything the forecast periods produce: the paths in
+/// `forecasts`, the `errors` add_forecast_errors() takes against a test sample,
+/// and the `loglik` add_predictive_loglik() scores them with. That is the layout
 /// of the model file, where `bayests` writes /posterior/forecast/forecasts, and
-/// the leaf is named after what it holds rather than being called `draws`
-/// because every member of the group is draws.
+/// the leaves are named after what they hold rather than one of them being
+/// called `draws` because every member of the group is draws.
 ///
 /// An object fitted before the group existed carries a matrix at
-/// posterior$forecast. It is replaced rather than merged into: the draws about
-/// to be written are the whole of what the group holds, and an `errors` computed
-/// against the old ones would not belong to them anyway.
-inline Rcpp::List with_forecast_draws(const Rcpp::List &object, const Rcpp::RObject &value)
+/// posterior$forecast rather than a list. The matrix is the paths, so it is
+/// dropped rather than merged into: whatever is about to be written belongs to
+/// the draws the caller has just produced, and an `errors` or a `loglik` taken
+/// against the old paths would not belong with them anyway.
+inline Rcpp::List with_forecast_member(const Rcpp::List &object, const char *name,
+                                       const Rcpp::RObject &value)
 {
   Rcpp::List result(Rf_shallow_duplicate(object));
   const Rcpp::List current = object["posterior"];
@@ -336,10 +340,10 @@ inline Rcpp::List with_forecast_draws(const Rcpp::List &object, const Rcpp::RObj
     forecast = Rcpp::List(Rf_shallow_duplicate(posterior["forecast"]));
   }
 
-  if (forecast.containsElementNamed("forecasts")) {
-    forecast["forecasts"] = value;
+  if (forecast.containsElementNamed(name)) {
+    forecast[name] = value;
   } else {
-    forecast.push_back(value, "forecasts");
+    forecast.push_back(value, name);
   }
 
   if (posterior.containsElementNamed("forecast")) {

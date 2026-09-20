@@ -10,6 +10,7 @@
 #include "bayests/vec_to_var.h"
 #include "core/algorithms/truncated_normal.h"
 #include "core/models/model_support.h"
+#include "core/models/predictive_score.h"
 
 #include <cmath>
 #include <stdexcept>
@@ -419,6 +420,75 @@ inline arma::mat simulate_vec_forecast(const VarSpec &spec, const ForecastData &
 
     reporter.finish();
     return fcst;
+}
+
+/// The score of a VEC whose states drift, the mirror of simulate_vec_forecast().
+///
+/// The same `step`, called the same way, and the same change of basis at every
+/// horizon. What differs is the last move of each period: a forecast draws an
+/// error and carries the draw forward on it, while a score evaluates the
+/// density of what the period realised and carries the *realised* value
+/// forward. That is what makes the regressors free of the draw -- they are
+/// built once, from the realised levels, before any draw is looked at -- and it
+/// is why the columns that come back are one step ahead densities that sum over
+/// the periods to a log predictive likelihood. See predictive_score.h.
+///
+/// `realised` is `/data/test/y`, the levels the horizon turned out to hold, and
+/// may be shorter than `h`: the horizons that were not realised cannot be
+/// scored and are dropped. `forecast.x` is the level layout, as for a forecast.
+///
+/// Returns draws x scored periods.
+template <typename Step>
+inline arma::mat score_vec_forecast(const VarSpec &spec, const ForecastData &forecast,
+                                    const arma::mat &realised, const arma::uword draws,
+                                    Step &&step)
+{
+    const VarSpec var_spec = vec_to_var_spec(spec);
+    require_scorable(var_spec, "this VEC");
+
+    const int k = var_spec.k;
+    const arma::uword periods = scored_horizons(realised, var_spec);
+    const arma::mat x = realised_regressors(forecast.x, realised, k, var_spec.p);
+
+    const int nparams = var_spec.nparams_per_period();
+    const int n_structural = var_spec.n_structural();
+    const int n_lagged = nparams - n_structural;
+    const bool use_a = x.n_elem > 0 && n_lagged > 0;
+    if (use_a && x.n_cols * static_cast<arma::uword>(k) != static_cast<arma::uword>(n_lagged))
+    {
+        throw std::invalid_argument(
+            "forecast regressors and the level VAR disagree: x has " + std::to_string(x.n_cols) +
+            " columns, which over k = " + std::to_string(k) + " equations is " +
+            std::to_string(x.n_cols * static_cast<arma::uword>(k)) +
+            " coefficients, and the level VAR of this VEC has " + std::to_string(n_lagged));
+    }
+
+    arma::mat loglik(draws, periods);
+    const double constant = -k * std::log(2 * arma::datum::pi) / 2;
+    VecForecastStep current;
+
+    for (arma::uword draw = 0; draw < draws; draw++)
+    {
+        for (arma::uword i = 0; i < periods; i++)
+        {
+            step(draw, static_cast<int>(i), current);
+            const VarNormalWishartDraws level = vec_to_var_coefficients(spec, current.period);
+
+            arma::vec u = arma::trans(realised.row(i));
+            if (use_a)
+            {
+                const arma::mat a_draw =
+                    arma::reshape(level.a.submat(0, 0, n_lagged - 1, 0), k, x.n_cols);
+                u -= a_draw * arma::trans(x.row(i));
+            }
+
+            const arma::mat precision = arma::reshape(current.period.u_sigma_inv, k, k);
+            loglik(draw, i) = constant + half_log_det_precision(precision) -
+                              arma::as_scalar(arma::trans(u) * precision * u) / 2;
+        }
+    }
+
+    return loglik;
 }
 
 /// One draw of rho, the autoregression of the cointegration state equation

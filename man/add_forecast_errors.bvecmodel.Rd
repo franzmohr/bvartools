@@ -32,6 +32,8 @@ the levels of \code{test_sample}, exactly as for the VAR representation
 Other model comparison:
 \code{\link[=add_forecast_errors.bvarmodel]{add_forecast_errors.bvarmodel()}},
 \code{\link[=add_predictive_loglik]{add_predictive_loglik()}},
+\code{\link[=add_predictive_loglik.bvarmodel]{add_predictive_loglik.bvarmodel()}},
+\code{\link[=add_predictive_loglik.bvecmodel]{add_predictive_loglik.bvecmodel()}},
 \code{\link[=align_model_obs.modellist]{align_model_obs.modellist()}},
 \code{\link{analysis_of_stored_models}},
 \code{\link[=choose_best_model.selcritlist]{choose_best_model.selcritlist()}},

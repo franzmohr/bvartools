@@ -385,4 +385,22 @@ arma::mat VecKlgs2010Sampler::log_likelihood(const VecKlgs2010Input &input,
     return loglik;
 }
 
+arma::mat VecKlgs2010Sampler::predictive_log_density(const VecKlgs2010Input &input,
+                                                       const VecKlgs2010Draws &coefficients) const
+{
+    // Nothing of the differenced parameterisation is needed. The realised
+    // values and the forecast regressors are both in levels, and the level VAR
+    // of this model is the same model, so the score is the one the VAR takes --
+    // which is also where the structural refusal and the shape checks live.
+    VarNormalWishartInput var_input;
+    var_input.spec = vec_to_var_spec(input.spec);
+    var_input.forecast = input.forecast;
+    var_input.test = input.test;
+
+    const VarNormalWishartDraws var_coefficients =
+        vec_to_var_coefficients(input.spec, as_wishart_draws(coefficients));
+
+    return VarNormalWishartSampler{}.predictive_log_density(var_input, var_coefficients);
+}
+
 } // namespace bayests

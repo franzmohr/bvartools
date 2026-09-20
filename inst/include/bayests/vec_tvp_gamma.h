@@ -65,6 +65,19 @@ public:
     /// it does not, and every period is scored under its own.
     arma::mat log_likelihood(const VecTvpGammaInput &input,
                              const VecTvpGammaDraws &draws) const;
+
+    /// The log predictive density of what the horizon realised, draws x scored
+    /// periods -- one row per posterior draw, one column per period of
+    /// `input.test.y`, which for a VEC holds the realised levels.
+    ///
+    /// Scored in the level parameterisation this model forecasts in, under the
+    /// states each draw reaches by stepping forward, with the change of basis
+    /// made again at every period because the level coefficients are not linear
+    /// in the states. Under `hold` nothing steps and the conversion is made
+    /// once. See VarNormalWishartSampler::predictive_log_density() for what the
+    /// number is and what it conditions on.
+    arma::mat predictive_log_density(const VecTvpGammaInput &input,
+                                     const VecTvpGammaDraws &draws) const;
 };
 
 } // namespace bayests

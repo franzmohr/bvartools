@@ -53,6 +53,20 @@ public:
     /// one column per observation, as expected by WAIC and PSIS-LOO.
     arma::mat log_likelihood(const VecNormalGammaInput &input,
                              const VecNormalGammaDraws &draws) const;
+
+    /// The log predictive density of what the horizon realised, draws x scored
+    /// periods -- one row per posterior draw, one column per period of
+    /// `input.test.y`.
+    ///
+    /// A VEC and its level VAR are the same model, and both `input.test.y` and
+    /// `input.forecast.x` are in the level parameterisation, which is the one a
+    /// VEC is forecast in. So the score is the level VAR's, taken on the draws
+    /// this one's rewritten in that basis -- see
+    /// VarNormalWishartSampler::predictive_log_density() for what it is and
+    /// what it conditions on, and vec_to_var_coefficients() for the change of
+    /// basis.
+    arma::mat predictive_log_density(const VecNormalGammaInput &input,
+                                     const VecNormalGammaDraws &draws) const;
 };
 
 } // namespace bayests

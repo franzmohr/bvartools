@@ -37,6 +37,16 @@ bayests::VecNormalGammaInput read_input(const Rcpp::List &object) {
       const Rcpp::List forecast = data["forecast"];
       read_forecast_regressors(forecast, input.spec.k, input.forecast.x);
     }
+    // What the horizon realised, where the model carries it: one row per
+    // period and one column per variable, in levels, which is what
+    // /data/test/y of a model file holds and what add_forecast_errors() leaves
+    // behind. Absent from every model that is forecast rather than scored, and
+    // left for the core to complain about only if a score is actually asked
+    // for.
+    if (has(data, "test")) {
+      const Rcpp::List test = data["test"];
+      read_mat_if_present(test, "y", input.test.y);
+    }
   }
 
   const Rcpp::List initial = has(object, "initial") ? Rcpp::List(object["initial"]) : Rcpp::List();
@@ -183,7 +193,7 @@ Rcpp::List VecNormalGammaForecasts(Rcpp::List object) {
   const bayests::ForecastDraws forecast =
     bayests::VecNormalGammaSampler().forecast(input, draws, reporter);
 
-  return with_forecast_draws(object, Rcpp::wrap(draws_to_r(forecast.values)));
+  return with_forecast_member(object, "forecasts", Rcpp::wrap(draws_to_r(forecast.values)));
 }
 
 // [[Rcpp::export(.VecNormalGammaLogLik)]]
@@ -197,6 +207,19 @@ Rcpp::List VecNormalGammaLogLik(Rcpp::List object) {
   const arma::mat loglik = bayests::VecNormalGammaSampler().log_likelihood(input, draws);
 
   return with_posterior_element(object, "loglik", Rcpp::wrap(loglik));
+}
+
+// [[Rcpp::export(.VecNormalGammaScore)]]
+Rcpp::List VecNormalGammaScore(Rcpp::List object) {
+
+  const bayests::VecNormalGammaInput input = read_input(object);
+  const bayests::VecNormalGammaDraws draws = read_draws(object);
+
+  // Draws by scored periods already, the same orientation the pointwise log
+  // likelihood comes back in, so there is no transpose at this boundary either.
+  const arma::mat score = bayests::VecNormalGammaSampler().predictive_log_density(input, draws);
+
+  return with_forecast_member(object, "loglik", Rcpp::wrap(score));
 }
 
 /*** R

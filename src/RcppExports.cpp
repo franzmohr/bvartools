@@ -69,6 +69,17 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// VarNormalGammaScore
+Rcpp::List VarNormalGammaScore(Rcpp::List object);
+RcppExport SEXP _bvartools_VarNormalGammaScore(SEXP objectSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
+    rcpp_result_gen = Rcpp::wrap(VarNormalGammaScore(object));
+    return rcpp_result_gen;
+END_RCPP
+}
 // VarNormalStochvolCoefficients
 Rcpp::List VarNormalStochvolCoefficients(Rcpp::List object);
 RcppExport SEXP _bvartools_VarNormalStochvolCoefficients(SEXP objectSEXP) {
@@ -102,6 +113,17 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// VarNormalStochvolScore
+Rcpp::List VarNormalStochvolScore(Rcpp::List object);
+RcppExport SEXP _bvartools_VarNormalStochvolScore(SEXP objectSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
+    rcpp_result_gen = Rcpp::wrap(VarNormalStochvolScore(object));
+    return rcpp_result_gen;
+END_RCPP
+}
 // VarNormalWishartCoefficients
 Rcpp::List VarNormalWishartCoefficients(Rcpp::List object);
 RcppExport SEXP _bvartools_VarNormalWishartCoefficients(SEXP objectSEXP) {
@@ -132,6 +154,17 @@ BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
     rcpp_result_gen = Rcpp::wrap(VarNormalWishartLogLik(object));
+    return rcpp_result_gen;
+END_RCPP
+}
+// VarNormalWishartScore
+Rcpp::List VarNormalWishartScore(Rcpp::List object);
+RcppExport SEXP _bvartools_VarNormalWishartScore(SEXP objectSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
+    rcpp_result_gen = Rcpp::wrap(VarNormalWishartScore(object));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -190,6 +223,17 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// VarTvpGammaScore
+Rcpp::List VarTvpGammaScore(Rcpp::List object);
+RcppExport SEXP _bvartools_VarTvpGammaScore(SEXP objectSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
+    rcpp_result_gen = Rcpp::wrap(VarTvpGammaScore(object));
+    return rcpp_result_gen;
+END_RCPP
+}
 // VarTvpStochvolCoefficients
 Rcpp::List VarTvpStochvolCoefficients(Rcpp::List object);
 RcppExport SEXP _bvartools_VarTvpStochvolCoefficients(SEXP objectSEXP) {
@@ -220,6 +264,17 @@ BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
     rcpp_result_gen = Rcpp::wrap(VarTvpStochvolLogLik(object));
+    return rcpp_result_gen;
+END_RCPP
+}
+// VarTvpStochvolScore
+Rcpp::List VarTvpStochvolScore(Rcpp::List object);
+RcppExport SEXP _bvartools_VarTvpStochvolScore(SEXP objectSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
+    rcpp_result_gen = Rcpp::wrap(VarTvpStochvolScore(object));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -256,6 +311,17 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// VarTvpWishartScore
+Rcpp::List VarTvpWishartScore(Rcpp::List object);
+RcppExport SEXP _bvartools_VarTvpWishartScore(SEXP objectSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
+    rcpp_result_gen = Rcpp::wrap(VarTvpWishartScore(object));
+    return rcpp_result_gen;
+END_RCPP
+}
 // VecKlgs2010Coefficients
 Rcpp::List VecKlgs2010Coefficients(Rcpp::List object);
 RcppExport SEXP _bvartools_VecKlgs2010Coefficients(SEXP objectSEXP) {
@@ -286,6 +352,17 @@ BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
     rcpp_result_gen = Rcpp::wrap(VecKlgs2010LogLik(object));
+    return rcpp_result_gen;
+END_RCPP
+}
+// VecKlgs2010Score
+Rcpp::List VecKlgs2010Score(Rcpp::List object);
+RcppExport SEXP _bvartools_VecKlgs2010Score(SEXP objectSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
+    rcpp_result_gen = Rcpp::wrap(VecKlgs2010Score(object));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -322,6 +399,17 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// VecNormalGammaScore
+Rcpp::List VecNormalGammaScore(Rcpp::List object);
+RcppExport SEXP _bvartools_VecNormalGammaScore(SEXP objectSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
+    rcpp_result_gen = Rcpp::wrap(VecNormalGammaScore(object));
+    return rcpp_result_gen;
+END_RCPP
+}
 // VecNormalStochvolCoefficients
 Rcpp::List VecNormalStochvolCoefficients(Rcpp::List object);
 RcppExport SEXP _bvartools_VecNormalStochvolCoefficients(SEXP objectSEXP) {
@@ -352,6 +440,17 @@ BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
     rcpp_result_gen = Rcpp::wrap(VecNormalStochvolLogLik(object));
+    return rcpp_result_gen;
+END_RCPP
+}
+// VecNormalStochvolScore
+Rcpp::List VecNormalStochvolScore(Rcpp::List object);
+RcppExport SEXP _bvartools_VecNormalStochvolScore(SEXP objectSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
+    rcpp_result_gen = Rcpp::wrap(VecNormalStochvolScore(object));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -388,6 +487,17 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// VecNormalWishartScore
+Rcpp::List VecNormalWishartScore(Rcpp::List object);
+RcppExport SEXP _bvartools_VecNormalWishartScore(SEXP objectSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
+    rcpp_result_gen = Rcpp::wrap(VecNormalWishartScore(object));
+    return rcpp_result_gen;
+END_RCPP
+}
 // VecTvpGammaCoefficients
 Rcpp::List VecTvpGammaCoefficients(Rcpp::List object);
 RcppExport SEXP _bvartools_VecTvpGammaCoefficients(SEXP objectSEXP) {
@@ -418,6 +528,17 @@ BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
     rcpp_result_gen = Rcpp::wrap(VecTvpGammaLogLik(object));
+    return rcpp_result_gen;
+END_RCPP
+}
+// VecTvpGammaScore
+Rcpp::List VecTvpGammaScore(Rcpp::List object);
+RcppExport SEXP _bvartools_VecTvpGammaScore(SEXP objectSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
+    rcpp_result_gen = Rcpp::wrap(VecTvpGammaScore(object));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -454,6 +575,17 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// VecTvpStochvolScore
+Rcpp::List VecTvpStochvolScore(Rcpp::List object);
+RcppExport SEXP _bvartools_VecTvpStochvolScore(SEXP objectSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
+    rcpp_result_gen = Rcpp::wrap(VecTvpStochvolScore(object));
+    return rcpp_result_gen;
+END_RCPP
+}
 // VecTvpWishartCoefficients
 Rcpp::List VecTvpWishartCoefficients(Rcpp::List object);
 RcppExport SEXP _bvartools_VecTvpWishartCoefficients(SEXP objectSEXP) {
@@ -484,6 +616,17 @@ BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
     rcpp_result_gen = Rcpp::wrap(VecTvpWishartLogLik(object));
+    return rcpp_result_gen;
+END_RCPP
+}
+// VecTvpWishartScore
+Rcpp::List VecTvpWishartScore(Rcpp::List object);
+RcppExport SEXP _bvartools_VecTvpWishartScore(SEXP objectSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
+    rcpp_result_gen = Rcpp::wrap(VecTvpWishartScore(object));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -1011,44 +1154,57 @@ static const R_CallMethodDef CallEntries[] = {
     {"_bvartools_VarNormalGammaCoefficients", (DL_FUNC) &_bvartools_VarNormalGammaCoefficients, 1},
     {"_bvartools_VarNormalGammaForecasts", (DL_FUNC) &_bvartools_VarNormalGammaForecasts, 1},
     {"_bvartools_VarNormalGammaLogLik", (DL_FUNC) &_bvartools_VarNormalGammaLogLik, 1},
+    {"_bvartools_VarNormalGammaScore", (DL_FUNC) &_bvartools_VarNormalGammaScore, 1},
     {"_bvartools_VarNormalStochvolCoefficients", (DL_FUNC) &_bvartools_VarNormalStochvolCoefficients, 1},
     {"_bvartools_VarNormalStochvolForecasts", (DL_FUNC) &_bvartools_VarNormalStochvolForecasts, 1},
     {"_bvartools_VarNormalStochvolLogLik", (DL_FUNC) &_bvartools_VarNormalStochvolLogLik, 1},
+    {"_bvartools_VarNormalStochvolScore", (DL_FUNC) &_bvartools_VarNormalStochvolScore, 1},
     {"_bvartools_VarNormalWishartCoefficients", (DL_FUNC) &_bvartools_VarNormalWishartCoefficients, 1},
     {"_bvartools_VarNormalWishartForecasts", (DL_FUNC) &_bvartools_VarNormalWishartForecasts, 1},
     {"_bvartools_VarNormalWishartLogLik", (DL_FUNC) &_bvartools_VarNormalWishartLogLik, 1},
+    {"_bvartools_VarNormalWishartScore", (DL_FUNC) &_bvartools_VarNormalWishartScore, 1},
     {"_bvartools_VarTvpAldCoefficients", (DL_FUNC) &_bvartools_VarTvpAldCoefficients, 1},
     {"_bvartools_VarTvpAldLogLik", (DL_FUNC) &_bvartools_VarTvpAldLogLik, 1},
     {"_bvartools_VarTvpGammaCoefficients", (DL_FUNC) &_bvartools_VarTvpGammaCoefficients, 1},
     {"_bvartools_VarTvpGammaForecasts", (DL_FUNC) &_bvartools_VarTvpGammaForecasts, 1},
     {"_bvartools_VarTvpGammaLogLik", (DL_FUNC) &_bvartools_VarTvpGammaLogLik, 1},
+    {"_bvartools_VarTvpGammaScore", (DL_FUNC) &_bvartools_VarTvpGammaScore, 1},
     {"_bvartools_VarTvpStochvolCoefficients", (DL_FUNC) &_bvartools_VarTvpStochvolCoefficients, 1},
     {"_bvartools_VarTvpStochvolForecasts", (DL_FUNC) &_bvartools_VarTvpStochvolForecasts, 1},
     {"_bvartools_VarTvpStochvolLogLik", (DL_FUNC) &_bvartools_VarTvpStochvolLogLik, 1},
+    {"_bvartools_VarTvpStochvolScore", (DL_FUNC) &_bvartools_VarTvpStochvolScore, 1},
     {"_bvartools_VarTvpWishartCoefficients", (DL_FUNC) &_bvartools_VarTvpWishartCoefficients, 1},
     {"_bvartools_VarTvpWishartForecasts", (DL_FUNC) &_bvartools_VarTvpWishartForecasts, 1},
     {"_bvartools_VarTvpWishartLogLik", (DL_FUNC) &_bvartools_VarTvpWishartLogLik, 1},
+    {"_bvartools_VarTvpWishartScore", (DL_FUNC) &_bvartools_VarTvpWishartScore, 1},
     {"_bvartools_VecKlgs2010Coefficients", (DL_FUNC) &_bvartools_VecKlgs2010Coefficients, 1},
     {"_bvartools_VecKlgs2010Forecasts", (DL_FUNC) &_bvartools_VecKlgs2010Forecasts, 1},
     {"_bvartools_VecKlgs2010LogLik", (DL_FUNC) &_bvartools_VecKlgs2010LogLik, 1},
+    {"_bvartools_VecKlgs2010Score", (DL_FUNC) &_bvartools_VecKlgs2010Score, 1},
     {"_bvartools_VecNormalGammaCoefficients", (DL_FUNC) &_bvartools_VecNormalGammaCoefficients, 1},
     {"_bvartools_VecNormalGammaForecasts", (DL_FUNC) &_bvartools_VecNormalGammaForecasts, 1},
     {"_bvartools_VecNormalGammaLogLik", (DL_FUNC) &_bvartools_VecNormalGammaLogLik, 1},
+    {"_bvartools_VecNormalGammaScore", (DL_FUNC) &_bvartools_VecNormalGammaScore, 1},
     {"_bvartools_VecNormalStochvolCoefficients", (DL_FUNC) &_bvartools_VecNormalStochvolCoefficients, 1},
     {"_bvartools_VecNormalStochvolForecasts", (DL_FUNC) &_bvartools_VecNormalStochvolForecasts, 1},
     {"_bvartools_VecNormalStochvolLogLik", (DL_FUNC) &_bvartools_VecNormalStochvolLogLik, 1},
+    {"_bvartools_VecNormalStochvolScore", (DL_FUNC) &_bvartools_VecNormalStochvolScore, 1},
     {"_bvartools_VecNormalWishartCoefficients", (DL_FUNC) &_bvartools_VecNormalWishartCoefficients, 1},
     {"_bvartools_VecNormalWishartForecasts", (DL_FUNC) &_bvartools_VecNormalWishartForecasts, 1},
     {"_bvartools_VecNormalWishartLogLik", (DL_FUNC) &_bvartools_VecNormalWishartLogLik, 1},
+    {"_bvartools_VecNormalWishartScore", (DL_FUNC) &_bvartools_VecNormalWishartScore, 1},
     {"_bvartools_VecTvpGammaCoefficients", (DL_FUNC) &_bvartools_VecTvpGammaCoefficients, 1},
     {"_bvartools_VecTvpGammaForecasts", (DL_FUNC) &_bvartools_VecTvpGammaForecasts, 1},
     {"_bvartools_VecTvpGammaLogLik", (DL_FUNC) &_bvartools_VecTvpGammaLogLik, 1},
+    {"_bvartools_VecTvpGammaScore", (DL_FUNC) &_bvartools_VecTvpGammaScore, 1},
     {"_bvartools_VecTvpStochvolCoefficients", (DL_FUNC) &_bvartools_VecTvpStochvolCoefficients, 1},
     {"_bvartools_VecTvpStochvolForecasts", (DL_FUNC) &_bvartools_VecTvpStochvolForecasts, 1},
     {"_bvartools_VecTvpStochvolLogLik", (DL_FUNC) &_bvartools_VecTvpStochvolLogLik, 1},
+    {"_bvartools_VecTvpStochvolScore", (DL_FUNC) &_bvartools_VecTvpStochvolScore, 1},
     {"_bvartools_VecTvpWishartCoefficients", (DL_FUNC) &_bvartools_VecTvpWishartCoefficients, 1},
     {"_bvartools_VecTvpWishartForecasts", (DL_FUNC) &_bvartools_VecTvpWishartForecasts, 1},
     {"_bvartools_VecTvpWishartLogLik", (DL_FUNC) &_bvartools_VecTvpWishartLogLik, 1},
+    {"_bvartools_VecTvpWishartScore", (DL_FUNC) &_bvartools_VecTvpWishartScore, 1},
     {"_bvartools_coint_kls2010_reparameterise_two", (DL_FUNC) &_bvartools_coint_kls2010_reparameterise_two, 2},
     {"_bvartools_coint_prepare_sur_data", (DL_FUNC) &_bvartools_coint_prepare_sur_data, 6},
     {"_bvartools_covar_prepare_data", (DL_FUNC) &_bvartools_covar_prepare_data, 5},

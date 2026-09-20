@@ -122,6 +122,22 @@ model shares and which are copied whole. That validator calls only the local
 helpers in `inputs.cpp`, so it links with the sampler absent, exactly as the four
 DFM validators do.
 
+**The factor model's Kalman filter.** `core/models/factor_score.h` is what
+scores a forecast of a factor model: its history reaches the density through the
+latent factors, so the realised observation of each scored period updates their
+distribution before the next is predicted, and the score is a prediction error
+decomposition rather than a log likelihood over another sample. Only the four
+DFM sources include it, so here it would be unreachable.
+
+It is the one skipped file that would compile if it were copied: unlike the
+samplers above it reaches for nothing but `bayests/spec.h` and
+`core/models/predictive_score.h`, both of which are here. It is skipped all the
+same, because `inst/COPYRIGHTS` has to name every vendored file and a reviewer
+reading that list should not find one that nothing includes. The VAR and VEC
+models are scored by `predictive_score.h` alone -- with realised history their
+regressors do not depend on the draw, so the score is the model's own pointwise
+log likelihood over the scored periods, and no filter is needed.
+
 `core/algorithms/chan_jeliazkov_2009.cpp` is copied and now carries a second
 entry point, `chan_jeliazkov_2009_conditional`, which holds the trailing elements
 of every state column at observed values instead of drawing them. Nothing here

@@ -86,6 +86,14 @@ quantile estimation, \code{"VarNormalAld"} and \code{"VarTvpAld"}, are
 refused: the precision their samplers store is the one of the normal that
 their scale mixture conditions on period by period, not the density of an
 observation, whose mixing variable would have to be integrated out.
+
+The methods for a single fitted model, \code{\link{add_predictive_loglik.bvarmodel}}
+and \code{\link{add_predictive_loglik.bvecmodel}}, score a forecast against
+the observations its horizon realised instead. That is the same statistic over
+a different set of periods -- one step ahead densities, each conditioning on
+the realised history before it -- and it is BayesTS that computes it rather
+than the R code here. It is stored in \code{posterior$forecast$loglik}, beside
+the forecasts it scores, rather than in \code{predictive}.
 }
 \examples{
 
@@ -125,9 +133,15 @@ a time varying cointegration model. \emph{Journal of Econometrics, 165}(2), 210-
 \doi{10.1016/j.jeconom.2011.07.007}
 }
 \seealso{
+Methods for a single fitted model:
+\code{\link{add_predictive_loglik.bvarmodel}},
+\code{\link{add_predictive_loglik.bvecmodel}}.
+
 Other model comparison:
 \code{\link[=add_forecast_errors.bvarmodel]{add_forecast_errors.bvarmodel()}},
 \code{\link[=add_forecast_errors.bvecmodel]{add_forecast_errors.bvecmodel()}},
+\code{\link[=add_predictive_loglik.bvarmodel]{add_predictive_loglik.bvarmodel()}},
+\code{\link[=add_predictive_loglik.bvecmodel]{add_predictive_loglik.bvecmodel()}},
 \code{\link[=align_model_obs.modellist]{align_model_obs.modellist()}},
 \code{\link{analysis_of_stored_models}},
 \code{\link[=choose_best_model.selcritlist]{choose_best_model.selcritlist()}},

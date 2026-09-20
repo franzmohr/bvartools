@@ -6,6 +6,7 @@
 #include "core/algorithms/bvs.h"
 #include "core/algorithms/ssvs.h"
 #include "core/models/model_support.h"
+#include "core/models/predictive_score.h"
 
 #include <cmath>
 #include <optional>
@@ -458,6 +459,33 @@ arma::mat VarNormalGammaSampler::log_likelihood(const VarNormalGammaInput &input
     }
 
     return loglik;
+}
+
+arma::mat VarNormalGammaSampler::predictive_log_density(const VarNormalGammaInput &input,
+                                                        const VarNormalGammaDraws &coefficients) const
+{
+    core::require_scorable(input.spec, "VarNormalGamma");
+    const arma::uword periods = core::scored_horizons(input.test.y, input.spec);
+    const arma::mat x =
+        core::realised_regressors(input.forecast.x, input.test.y, input.spec.k, input.spec.p);
+
+    // The scored periods as a sample of their own. Nothing in this model moves
+    // over the horizon, so a draw describes period T + i exactly as it
+    // describes the sample, and the density of the realised values under it is
+    // the pointwise log likelihood over that sample -- the same expression, the
+    // same code, a different tt.
+    //
+    // Only the spec and the three members below are filled, which is everything
+    // log_likelihood() reads. unit.predictive_score pins the two against each
+    // other on a sample this is handed back verbatim, so a density that grew a
+    // dependency would fail there rather than quietly score against a default.
+    VarNormalGammaInput scored;
+    scored.spec = input.spec;
+    scored.train.y = input.test.y.head_rows(periods);
+    scored.train.x = x;
+    scored.train.z = core::sur_regressors(x, input.spec.k);
+
+    return log_likelihood(scored, coefficients);
 }
 
 } // namespace bayests

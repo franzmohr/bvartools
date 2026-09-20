@@ -35,6 +35,15 @@ bayests::VarNormalWishartInput read_input(const Rcpp::List &object) {
       const Rcpp::List forecast = data["forecast"];
       read_forecast_regressors(forecast, input.spec.k, input.forecast.x);
     }
+    // What the horizon realised, where the model carries it: one row per
+    // period and one column per variable, which is what /data/test/y of a model
+    // file holds and what add_forecast_errors() leaves behind. Absent from
+    // every model that is forecast rather than scored, and left for the core to
+    // complain about only if a score is actually asked for.
+    if (has(data, "test")) {
+      const Rcpp::List test = data["test"];
+      read_mat_if_present(test, "y", input.test.y);
+    }
   }
 
   // Only draw_coefficients() needs the priors and the initial values, so a
@@ -146,7 +155,7 @@ Rcpp::List VarNormalWishartForecasts(Rcpp::List object) {
   const bayests::ForecastDraws forecast =
     bayests::VarNormalWishartSampler().forecast(input, draws, reporter);
 
-  return with_forecast_draws(object, Rcpp::wrap(draws_to_r(forecast.values)));
+  return with_forecast_member(object, "forecasts", Rcpp::wrap(draws_to_r(forecast.values)));
 }
 
 // [[Rcpp::export(.VarNormalWishartLogLik)]]
@@ -160,6 +169,19 @@ Rcpp::List VarNormalWishartLogLik(Rcpp::List object) {
   const arma::mat loglik = bayests::VarNormalWishartSampler().log_likelihood(input, draws);
 
   return with_posterior_element(object, "loglik", Rcpp::wrap(loglik));
+}
+
+// [[Rcpp::export(.VarNormalWishartScore)]]
+Rcpp::List VarNormalWishartScore(Rcpp::List object) {
+
+  const bayests::VarNormalWishartInput input = read_input(object);
+  const bayests::VarNormalWishartDraws draws = read_draws(object);
+
+  // Draws by scored periods already, the same orientation the pointwise log
+  // likelihood comes back in, so there is no transpose at this boundary either.
+  const arma::mat score = bayests::VarNormalWishartSampler().predictive_log_density(input, draws);
+
+  return with_forecast_member(object, "loglik", Rcpp::wrap(score));
 }
 
 /*** R

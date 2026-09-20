@@ -21,6 +21,7 @@ namespace bayests
 using core::covariance_root;
 using core::require_period_draws;
 using core::require_state_variances;
+using core::score_vec_forecast;
 using core::simulate_vec_forecast;
 using core::simulates_states;
 using core::step_random_walk;
@@ -430,6 +431,69 @@ VecNormalStochvolDraws VecNormalStochvolSampler::draw_coefficients(
     return out;
 }
 
+namespace
+{
+
+/// How a VecNormalStochvol's states move over a horizon, in one place.
+///
+/// The forecast and the score need the same walk and have to take it
+/// identically, or the two would describe different models from the same file.
+/// Built only on the simulated path; held states convert once and are the
+/// constant VEC's case.
+struct VecNormalStochvolWalk
+{
+    const VecNormalStochvolDraws &coefficients;
+    int k;
+    bool use_psi;
+    arma::vec h_state, h_sigma;
+
+    VecNormalStochvolWalk(const VecNormalStochvolInput &input,
+                          const VecNormalStochvolDraws &draws_in)
+        : coefficients(draws_in), k(input.spec.k), use_psi(input.use_psi())
+    {
+        const arma::uword k_u = static_cast<arma::uword>(k);
+        const arma::uword draws = draws_in.iterations();
+
+        if (use_psi)
+        {
+            require_period_draws(draws_in.psi, k_u * k_u, draws, "Psi");
+        }
+        require_period_draws(draws_in.u_omega_inv, k_u, draws, "u_omega_inv");
+        require_state_variances(draws_in.h_sigma, k_u, draws, "the log-volatilities");
+    }
+
+    void operator()(const arma::uword draw, const int i, VecForecastStep &out)
+    {
+        if (i == 0)
+        {
+            if (coefficients.has_a())
+            {
+                out.period.a = coefficients.a.col(draw);
+            }
+            if (coefficients.has_beta())
+            {
+                out.period.beta = coefficients.beta.col(draw);
+            }
+            h_state = -arma::log(coefficients.u_omega_inv.col(draw));
+            h_sigma = coefficients.h_sigma.col(draw);
+        }
+
+        step_random_walk(h_state, h_sigma, arma::vec());
+
+        // Psi' Omega^-1 Psi, as the sampler forms it.
+        arma::mat precision = arma::diagmat(arma::exp(-h_state));
+        if (use_psi)
+        {
+            const arma::mat Psi = arma::reshape(coefficients.psi.col(draw), k, k);
+            precision = arma::trans(Psi) * precision * Psi;
+        }
+        out.period.u_sigma_inv = arma::vectorise(precision);
+        out.error_root = covariance_root(precision);
+    }
+};
+
+} // namespace
+
 ForecastDraws VecNormalStochvolSampler::forecast(const VecNormalStochvolInput &input,
                                                  const VecNormalStochvolDraws &coefficients,
                                                  Reporter &reporter) const
@@ -460,49 +524,9 @@ ForecastDraws VecNormalStochvolSampler::forecast(const VecNormalStochvolInput &i
     // constant, and every horizon the log-volatilities take a step of their
     // random walk and the precision is rebuilt from them. See
     // core::simulate_vec_forecast().
-    const int k = input.spec.k;
-    const arma::uword k_u = static_cast<arma::uword>(k);
-    const arma::uword draws = coefficients.iterations();
-    const bool use_psi = input.use_psi();
-
-    if (use_psi)
-    {
-        require_period_draws(coefficients.psi, k_u * k_u, draws, "Psi");
-    }
-    require_period_draws(coefficients.u_omega_inv, k_u, draws, "u_omega_inv");
-    require_state_variances(coefficients.h_sigma, k_u, draws, "the log-volatilities");
-
-    arma::vec h_state, h_sigma;
-
-    const auto step = [&](const arma::uword draw, const int i, VecForecastStep &out) {
-        if (i == 0)
-        {
-            if (coefficients.has_a())
-            {
-                out.period.a = coefficients.a.col(draw);
-            }
-            if (coefficients.has_beta())
-            {
-                out.period.beta = coefficients.beta.col(draw);
-            }
-            h_state = -arma::log(coefficients.u_omega_inv.col(draw));
-            h_sigma = coefficients.h_sigma.col(draw);
-        }
-
-        step_random_walk(h_state, h_sigma, arma::vec());
-
-        // Psi' Omega^-1 Psi, as the sampler forms it.
-        arma::mat precision = arma::diagmat(arma::exp(-h_state));
-        if (use_psi)
-        {
-            const arma::mat Psi = arma::reshape(coefficients.psi.col(draw), k, k);
-            precision = arma::trans(Psi) * precision * Psi;
-        }
-        out.period.u_sigma_inv = arma::vectorise(precision);
-        out.error_root = covariance_root(precision);
-    };
-
-    return ForecastDraws{simulate_vec_forecast(input.spec, input.forecast, draws, reporter, step)};
+    VecNormalStochvolWalk walk(input, coefficients);
+    return ForecastDraws{simulate_vec_forecast(input.spec, input.forecast,
+                                               coefficients.iterations(), reporter, walk)};
 }
 
 arma::mat VecNormalStochvolSampler::log_likelihood(
@@ -586,6 +610,30 @@ arma::mat VecNormalStochvolSampler::log_likelihood(
     }
 
     return loglik;
+}
+
+arma::mat VecNormalStochvolSampler::predictive_log_density(
+    const VecNormalStochvolInput &input, const VecNormalStochvolDraws &coefficients) const
+{
+    if (!simulates_states(input.spec))
+    {
+        VarNormalWishartInput var_input;
+        var_input.spec = vec_to_var_spec(input.spec);
+        var_input.forecast = input.forecast;
+        var_input.test = input.test;
+
+        VecNormalWishartDraws vec_draws;
+        vec_draws.a = coefficients.a;
+        vec_draws.beta = coefficients.beta;
+        vec_draws.u_sigma_inv = coefficients.u_sigma_inv;
+
+        return VarNormalWishartSampler{}.predictive_log_density(
+            var_input, vec_to_var_coefficients(input.spec, vec_draws));
+    }
+
+    VecNormalStochvolWalk walk(input, coefficients);
+    return score_vec_forecast(input.spec, input.forecast, input.test.y,
+                              coefficients.iterations(), walk);
 }
 
 } // namespace bayests

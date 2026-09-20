@@ -32,6 +32,15 @@ bayests::VarTvpStochvolInput read_input(const Rcpp::List &object) {
       const Rcpp::List forecast = data["forecast"];
       read_forecast_regressors(forecast, input.spec.k, input.forecast.x);
     }
+    // What the horizon realised, where the model carries it: one row per
+    // period and one column per variable, which is what /data/test/y of a model
+    // file holds and what add_forecast_errors() leaves behind. Absent from
+    // every model that is forecast rather than scored, and left for the core to
+    // complain about only if a score is actually asked for.
+    if (has(data, "test")) {
+      const Rcpp::List test = data["test"];
+      read_mat_if_present(test, "y", input.test.y);
+    }
   }
 
   const arma::uword tt = input.train.y.n_elem > 0 && input.spec.k > 0
@@ -243,7 +252,7 @@ Rcpp::List VarTvpStochvolForecasts(Rcpp::List object) {
   const bayests::ForecastDraws forecast =
     bayests::VarTvpStochvolSampler().forecast(input, draws, reporter);
 
-  return with_forecast_draws(object, Rcpp::wrap(draws_to_r(forecast.values)));
+  return with_forecast_member(object, "forecasts", Rcpp::wrap(draws_to_r(forecast.values)));
 }
 
 // [[Rcpp::export(.VarTvpStochvolLogLik)]]
@@ -255,6 +264,22 @@ Rcpp::List VarTvpStochvolLogLik(Rcpp::List object) {
   const arma::mat loglik = bayests::VarTvpStochvolSampler().log_likelihood(input, draws);
 
   return with_posterior_element(object, "loglik", Rcpp::wrap(loglik));
+}
+
+// [[Rcpp::export(.VarTvpStochvolScore)]]
+Rcpp::List VarTvpStochvolScore(Rcpp::List object) {
+
+  const bayests::VarTvpStochvolInput input = read_input(object);
+  // The same slice a forecast reads: what moves with time is taken at the last
+  // in-sample period, which is where carrying it forward over the scored
+  // periods starts, together with the state variances each step is drawn with.
+  const bayests::VarTvpStochvolDraws draws = read_draws_for_forecast(object, input);
+
+  // Draws by scored periods already, the same orientation the pointwise log
+  // likelihood comes back in, so there is no transpose at this boundary either.
+  const arma::mat score = bayests::VarTvpStochvolSampler().predictive_log_density(input, draws);
+
+  return with_forecast_member(object, "loglik", Rcpp::wrap(score));
 }
 
 /*** R

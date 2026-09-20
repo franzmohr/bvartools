@@ -21,6 +21,10 @@
     .Call(`_bvartools_VarNormalGammaLogLik`, object)
 }
 
+.VarNormalGammaScore <- function(object) {
+    .Call(`_bvartools_VarNormalGammaScore`, object)
+}
+
 .VarNormalStochvolCoefficients <- function(object) {
     .Call(`_bvartools_VarNormalStochvolCoefficients`, object)
 }
@@ -33,6 +37,10 @@
     .Call(`_bvartools_VarNormalStochvolLogLik`, object)
 }
 
+.VarNormalStochvolScore <- function(object) {
+    .Call(`_bvartools_VarNormalStochvolScore`, object)
+}
+
 .VarNormalWishartCoefficients <- function(object) {
     .Call(`_bvartools_VarNormalWishartCoefficients`, object)
 }
@@ -43,6 +51,10 @@
 
 .VarNormalWishartLogLik <- function(object) {
     .Call(`_bvartools_VarNormalWishartLogLik`, object)
+}
+
+.VarNormalWishartScore <- function(object) {
+    .Call(`_bvartools_VarNormalWishartScore`, object)
 }
 
 .VarTvpAldCoefficients <- function(object) {
@@ -65,6 +77,10 @@
     .Call(`_bvartools_VarTvpGammaLogLik`, object)
 }
 
+.VarTvpGammaScore <- function(object) {
+    .Call(`_bvartools_VarTvpGammaScore`, object)
+}
+
 .VarTvpStochvolCoefficients <- function(object) {
     .Call(`_bvartools_VarTvpStochvolCoefficients`, object)
 }
@@ -75,6 +91,10 @@
 
 .VarTvpStochvolLogLik <- function(object) {
     .Call(`_bvartools_VarTvpStochvolLogLik`, object)
+}
+
+.VarTvpStochvolScore <- function(object) {
+    .Call(`_bvartools_VarTvpStochvolScore`, object)
 }
 
 .VarTvpWishartCoefficients <- function(object) {
@@ -89,6 +109,10 @@
     .Call(`_bvartools_VarTvpWishartLogLik`, object)
 }
 
+.VarTvpWishartScore <- function(object) {
+    .Call(`_bvartools_VarTvpWishartScore`, object)
+}
+
 .VecKlgs2010Coefficients <- function(object) {
     .Call(`_bvartools_VecKlgs2010Coefficients`, object)
 }
@@ -99,6 +123,10 @@
 
 .VecKlgs2010LogLik <- function(object) {
     .Call(`_bvartools_VecKlgs2010LogLik`, object)
+}
+
+.VecKlgs2010Score <- function(object) {
+    .Call(`_bvartools_VecKlgs2010Score`, object)
 }
 
 .VecNormalGammaCoefficients <- function(object) {
@@ -113,6 +141,10 @@
     .Call(`_bvartools_VecNormalGammaLogLik`, object)
 }
 
+.VecNormalGammaScore <- function(object) {
+    .Call(`_bvartools_VecNormalGammaScore`, object)
+}
+
 .VecNormalStochvolCoefficients <- function(object) {
     .Call(`_bvartools_VecNormalStochvolCoefficients`, object)
 }
@@ -123,6 +155,10 @@
 
 .VecNormalStochvolLogLik <- function(object) {
     .Call(`_bvartools_VecNormalStochvolLogLik`, object)
+}
+
+.VecNormalStochvolScore <- function(object) {
+    .Call(`_bvartools_VecNormalStochvolScore`, object)
 }
 
 .VecNormalWishartCoefficients <- function(object) {
@@ -137,6 +173,10 @@
     .Call(`_bvartools_VecNormalWishartLogLik`, object)
 }
 
+.VecNormalWishartScore <- function(object) {
+    .Call(`_bvartools_VecNormalWishartScore`, object)
+}
+
 .VecTvpGammaCoefficients <- function(object) {
     .Call(`_bvartools_VecTvpGammaCoefficients`, object)
 }
@@ -147,6 +187,10 @@
 
 .VecTvpGammaLogLik <- function(object) {
     .Call(`_bvartools_VecTvpGammaLogLik`, object)
+}
+
+.VecTvpGammaScore <- function(object) {
+    .Call(`_bvartools_VecTvpGammaScore`, object)
 }
 
 .VecTvpStochvolCoefficients <- function(object) {
@@ -161,6 +205,10 @@
     .Call(`_bvartools_VecTvpStochvolLogLik`, object)
 }
 
+.VecTvpStochvolScore <- function(object) {
+    .Call(`_bvartools_VecTvpStochvolScore`, object)
+}
+
 .VecTvpWishartCoefficients <- function(object) {
     .Call(`_bvartools_VecTvpWishartCoefficients`, object)
 }
@@ -171,6 +219,10 @@
 
 .VecTvpWishartLogLik <- function(object) {
     .Call(`_bvartools_VecTvpWishartLogLik`, object)
+}
+
+.VecTvpWishartScore <- function(object) {
+    .Call(`_bvartools_VecTvpWishartScore`, object)
 }
 
 #' Cointegration Reparameterisation

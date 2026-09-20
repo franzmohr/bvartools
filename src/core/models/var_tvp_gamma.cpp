@@ -7,6 +7,7 @@
 #include "core/algorithms/kalman_durbin_koopman_2002.h"
 #include "core/models/forecast_states.h"
 #include "core/models/model_support.h"
+#include "core/models/predictive_score.h"
 
 #include <cmath>
 #include <optional>
@@ -721,6 +722,53 @@ arma::mat VarTvpGammaSampler::log_likelihood(const VarTvpGammaInput &input,
     }
 
     return loglik;
+}
+
+arma::mat VarTvpGammaSampler::predictive_log_density(const VarTvpGammaInput &input,
+                                                       const VarTvpGammaDraws &coefficients) const
+{
+    core::require_scorable(input.spec, "VarTvpGamma");
+    const arma::uword periods = core::scored_horizons(input.test.y, input.spec);
+    const arma::mat x =
+        core::realised_regressors(input.forecast.x, input.test.y, input.spec.k, input.spec.p);
+
+    VarTvpGammaInput scored;
+    scored.spec = input.spec;
+    scored.train.y = input.test.y.head_rows(periods);
+    scored.train.x = x;
+    scored.train.z = core::sur_regressors(x, input.spec.k);
+
+    const arma::uword k = static_cast<arma::uword>(input.spec.k);
+    const bool simulate = core::simulates_states(input.spec);
+
+    VarTvpGammaDraws scored_draws;
+    scored_draws.psi = coefficients.psi;
+    if (coefficients.has_a())
+    {
+        scored_draws.a = core::carry_state_forward(
+            coefficients.a, coefficients.a_sigma, coefficients.a_lambda, periods, simulate,
+            "the coefficients");
+    }
+
+    // The precision moves only where the covariance block is on and drifting
+    // with it. Where it does not, the sample's last one serves every period,
+    // and log_likelihood() reads a constant precision as readily as a path.
+    if (simulate && input.use_psi())
+    {
+        const arma::mat psi_path =
+            core::carry_psi_forward(coefficients.psi, coefficients.psi_sigma,
+                                    coefficients.psi_lambda, periods, k, true);
+        const arma::mat omega_path = arma::repmat(coefficients.u_omega_inv, periods, 1);
+        scored_draws.u_omega_inv = omega_path;
+        scored_draws.u_sigma_inv = core::precision_path(omega_path, psi_path, k, periods);
+    }
+    else
+    {
+        scored_draws.u_sigma_inv = coefficients.u_sigma_inv;
+        scored_draws.u_omega_inv = coefficients.u_omega_inv;
+    }
+
+    return log_likelihood(scored, scored_draws);
 }
 
 } // namespace bayests

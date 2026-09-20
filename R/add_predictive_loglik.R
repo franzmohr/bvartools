@@ -66,10 +66,22 @@
 #' their scale mixture conditions on period by period, not the density of an
 #' observation, whose mixing variable would have to be integrated out.
 #'
+#' The methods for a single fitted model, \code{\link{add_predictive_loglik.bvarmodel}}
+#' and \code{\link{add_predictive_loglik.bvecmodel}}, score a forecast against
+#' the observations its horizon realised instead. That is the same statistic over
+#' a different set of periods -- one step ahead densities, each conditioning on
+#' the realised history before it -- and it is BayesTS that computes it rather
+#' than the R code here. It is stored in \code{posterior$forecast$loglik}, beside
+#' the forecasts it scores, rather than in \code{predictive}.
+#'
 #' @return The object in \code{object}, with element \code{predictive} added to
 #' every window but the last. It is a list with \code{loglik}, the draws of the
 #' log predictive density, and \code{period}, the time of the predicted
 #' observation.
+#'
+#' @seealso Methods for a single fitted model:
+#' \code{\link{add_predictive_loglik.bvarmodel}},
+#' \code{\link{add_predictive_loglik.bvecmodel}}.
 #'
 #' @references
 #'
@@ -169,19 +181,26 @@ add_predictive_loglik.modellist <- function(object, ...) {
 # of the last period of the sample, not the predictive density of an asymmetric
 # Laplace observation, whose mixing variable of the predicted period has to be
 # integrated out.
+# It governs both statistics: the expanding window density computed in R below
+# and the score BayesTS takes of a forecast in add_predictive_loglik.bvarmodel().
+# Upstream implements predictive_log_density() for exactly these thirteen
+# algorithms and for no others, so the two lists are the same list.
 .predictive_algorithms <- c("VarNormalGamma", "VarNormalStochvol", "VarNormalWishart",
                             "VarTvpGamma", "VarTvpStochvol", "VarTvpWishart",
                             "VecKlgs2010", "VecNormalGamma", "VecNormalStochvol",
                             "VecNormalWishart", "VecTvpGamma", "VecTvpStochvol",
                             "VecTvpWishart")
 
-# Refuses a window whose algorithm the density is not the density of.
-.check_predictive_algorithm <- function(model, i) {
+# Refuses a model whose algorithm the density is not the density of. 'i' names
+# the window it is, where the caller is working through an expanding window
+# exercise, and is left out where the model stands on its own.
+.check_predictive_algorithm <- function(model, i = NULL) {
 
   algorithm <- model[["model"]][["algorithm"]]
   if (is.null(algorithm) || !algorithm %in% .predictive_algorithms) {
     stop("Predictive log-likelihoods are not available for the algorithm ",
-         if (is.null(algorithm)) "of window " else paste0("'", algorithm, "' of window "), i,
+         if (is.null(algorithm)) "" else paste0("'", algorithm, "' "),
+         if (is.null(i)) "of this model" else paste0("of window ", i),
          ". They are available for the algorithms with a normal likelihood: ",
          paste(.predictive_algorithms, collapse = ", "), ".")
   }

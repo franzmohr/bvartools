@@ -41,6 +41,8 @@ Other model comparison:
 \code{\link[=add_forecast_errors.bvarmodel]{add_forecast_errors.bvarmodel()}},
 \code{\link[=add_forecast_errors.bvecmodel]{add_forecast_errors.bvecmodel()}},
 \code{\link[=add_predictive_loglik]{add_predictive_loglik()}},
+\code{\link[=add_predictive_loglik.bvarmodel]{add_predictive_loglik.bvarmodel()}},
+\code{\link[=add_predictive_loglik.bvecmodel]{add_predictive_loglik.bvecmodel()}},
 \code{\link{analysis_of_stored_models}},
 \code{\link[=choose_best_model.selcritlist]{choose_best_model.selcritlist()}},
 \code{\link[=create_external_forecast]{create_external_forecast()}},

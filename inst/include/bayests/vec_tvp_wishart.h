@@ -61,6 +61,21 @@ public:
     /// precision of each draw.
     arma::mat log_likelihood(const VecTvpWishartInput &input,
                              const VecTvpWishartDraws &draws) const;
+
+    /// The log predictive density of what the horizon realised, draws x scored
+    /// periods -- one row per posterior draw, one column per period of
+    /// `input.test.y`, which for a VEC holds the realised levels.
+    ///
+    /// Scored in the level parameterisation this model forecasts in, under the
+    /// states each draw reaches by stepping forward: the coefficients by their
+    /// random walk and the cointegration vectors by their state equation, one
+    /// step per scored period, with the change of basis made again at each one
+    /// because the level coefficients are not linear in the states. Under
+    /// `hold` nothing steps and the conversion is made once. See
+    /// VarNormalWishartSampler::predictive_log_density() for what the number is
+    /// and what it conditions on.
+    arma::mat predictive_log_density(const VecTvpWishartInput &input,
+                                     const VecTvpWishartDraws &draws) const;
 };
 
 } // namespace bayests

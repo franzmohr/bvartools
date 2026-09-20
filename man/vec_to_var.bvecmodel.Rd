@@ -135,6 +135,9 @@ Other post-estimation analysis:
 \code{\link[=fevd.bvecmodel]{fevd.bvecmodel()}},
 \code{\link[=irf.bvarmodel]{irf.bvarmodel()}},
 \code{\link[=irf.bvecmodel]{irf.bvecmodel()}},
+\code{\link[=multipliers]{multipliers()}},
+\code{\link[=multipliers.bvarmodel]{multipliers.bvarmodel()}},
+\code{\link[=multipliers.bvecmodel]{multipliers.bvecmodel()}},
 \code{\link[=predict.bvarmodel]{predict.bvarmodel()}},
 \code{\link[=spillover.bvarmodel]{spillover.bvarmodel()}},
 \code{\link[=spillover.bvecmodel]{spillover.bvecmodel()}}

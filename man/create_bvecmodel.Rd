@@ -18,6 +18,8 @@ create_bvecmodel(
   tvp = FALSE,
   varsel = "none",
   algorithm = NULL,
+  delta_beta = 1,
+  delta_sigma = 1,
   iterations = 20000,
   burnin = 2000,
   thin = 1
@@ -69,6 +71,12 @@ that should be employed. Default is \code{"none"}. See 'Details'.}
 \item{algorithm}{algorithm that should be used for posterior simulation. If \code{NULL}
 (default), standard algorithms will be used. See 'Details' for available
 non-standard options.}
+
+\item{delta_beta, delta_sigma}{numeric discount factors in \eqn{(0, 1]} of the
+discounted model, the first governing the coefficients and the second the
+error covariance. Both default to 1, at which the quantity they govern does
+not move. Ignored unless \code{algorithm = "discount"}, and a vector in
+either produces one model per value. See 'Details'.}
 
 \item{iterations}{an integer of MCMC draws excluding burn-in draws (defaults
 to 50000).}
@@ -154,7 +162,40 @@ Available specifications for argument \code{varsel} are:
 Available specifications for argument \code{algorithm} are:
 \itemize{
  \item \code{"KLGS2010"}: Algorithm proposed in Koop, León-González & Strachan (2010).
+ \item \code{"discount"}: The discounted time varying parameter model of
+ West & Harrison (1997, ch. 16) with the discounted Wishart of Uhlig (1997),
+ estimated by \code{VecTvpDiscount}.
 }
+
+The discounted model is not a sampler. Its posterior is closed form -- one
+pass over the sample, no chain -- so \code{burnin} must be 0 and \code{thin}
+1, and \code{iterations} says only how many i.i.d. draws a forecast takes
+from the answer. Its error covariance is the inverse Wishart whole, so
+\code{error} must be \code{"wishart"} and neither variable selection nor a
+structural model is available. What it buys is speed and an exact marginal
+likelihood: the sum of \code{/posterior/loglik} is the log marginal
+likelihood of the sample given the rank, the cointegration matrix and the two
+discounts, so a grid over any of them can be compared without a chain being
+run for any of it.
+
+The one assumption that separates it from the sampling VEC models is that the
+cointegration space is given rather than estimated. \code{\link{add_initial_values}}
+puts Johansen's maximum likelihood estimate at \code{/initial/beta} and the
+model conditions on it, so what drifts is the adjustment to the long-run
+relations and not the relations themselves. That is a different question from
+the one \code{"KLGS2010"} answers, not a cheaper way of answering the same
+one.
+
+\code{\link{add_posterior_coefficients}} estimates it like any other
+algorithm, the filter being part of the vendored BayesTS core. It consumes no
+random numbers, so two runs agree to the bit and a model estimated here and
+the same model estimated by the \code{bayests} command line over a file
+written with \code{\link{write_to_hdf5}} give the same numbers rather than
+merely the same distribution. What comes back is a posterior rather than a
+chain: one row per period under \code{posterior$a$mean},
+\code{posterior$a$cov}, \code{posterior$u_sigma$scale} and
+\code{posterior$df}, and no \code{coeffs} anywhere, because joining one
+draw per period would look like a sampled path and is not one.
 }
 \examples{
 
@@ -182,6 +223,12 @@ Korobilis, D. (2013). VAR forecasting using Bayesian variable selection.
 \emph{Journal of Applied Econometrics, 28}(2), 204--230. \doi{10.1002/jae.1271}
 
 Lütkepohl, H. (2006). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
+
+Uhlig, H. (1997). Bayesian vector autoregressions with stochastic volatility.
+\emph{Econometrica, 65}(1), 59--73. \doi{10.2307/2171813}
+
+West, M., & Harrison, J. (1997). \emph{Bayesian forecasting and dynamic models}
+(2nd ed.). New York: Springer.
 }
 \seealso{
 \code{\link{bvartools_model}} describes the object this returns, element by element.

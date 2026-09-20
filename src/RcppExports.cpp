@@ -190,6 +190,50 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// VarTvpDiscountCoefficients
+Rcpp::List VarTvpDiscountCoefficients(Rcpp::List object);
+RcppExport SEXP _bvartools_VarTvpDiscountCoefficients(SEXP objectSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
+    rcpp_result_gen = Rcpp::wrap(VarTvpDiscountCoefficients(object));
+    return rcpp_result_gen;
+END_RCPP
+}
+// VarTvpDiscountForecasts
+Rcpp::List VarTvpDiscountForecasts(Rcpp::List object);
+RcppExport SEXP _bvartools_VarTvpDiscountForecasts(SEXP objectSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
+    rcpp_result_gen = Rcpp::wrap(VarTvpDiscountForecasts(object));
+    return rcpp_result_gen;
+END_RCPP
+}
+// VarTvpDiscountLogLik
+Rcpp::List VarTvpDiscountLogLik(Rcpp::List object);
+RcppExport SEXP _bvartools_VarTvpDiscountLogLik(SEXP objectSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
+    rcpp_result_gen = Rcpp::wrap(VarTvpDiscountLogLik(object));
+    return rcpp_result_gen;
+END_RCPP
+}
+// VarTvpDiscountScore
+Rcpp::List VarTvpDiscountScore(Rcpp::List object);
+RcppExport SEXP _bvartools_VarTvpDiscountScore(SEXP objectSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
+    rcpp_result_gen = Rcpp::wrap(VarTvpDiscountScore(object));
+    return rcpp_result_gen;
+END_RCPP
+}
 // VarTvpGammaCoefficients
 Rcpp::List VarTvpGammaCoefficients(Rcpp::List object);
 RcppExport SEXP _bvartools_VarTvpGammaCoefficients(SEXP objectSEXP) {
@@ -495,6 +539,50 @@ BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
     rcpp_result_gen = Rcpp::wrap(VecNormalWishartScore(object));
+    return rcpp_result_gen;
+END_RCPP
+}
+// VecTvpDiscountCoefficients
+Rcpp::List VecTvpDiscountCoefficients(Rcpp::List object);
+RcppExport SEXP _bvartools_VecTvpDiscountCoefficients(SEXP objectSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
+    rcpp_result_gen = Rcpp::wrap(VecTvpDiscountCoefficients(object));
+    return rcpp_result_gen;
+END_RCPP
+}
+// VecTvpDiscountForecasts
+Rcpp::List VecTvpDiscountForecasts(Rcpp::List object);
+RcppExport SEXP _bvartools_VecTvpDiscountForecasts(SEXP objectSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
+    rcpp_result_gen = Rcpp::wrap(VecTvpDiscountForecasts(object));
+    return rcpp_result_gen;
+END_RCPP
+}
+// VecTvpDiscountLogLik
+Rcpp::List VecTvpDiscountLogLik(Rcpp::List object);
+RcppExport SEXP _bvartools_VecTvpDiscountLogLik(SEXP objectSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
+    rcpp_result_gen = Rcpp::wrap(VecTvpDiscountLogLik(object));
+    return rcpp_result_gen;
+END_RCPP
+}
+// VecTvpDiscountScore
+Rcpp::List VecTvpDiscountScore(Rcpp::List object);
+RcppExport SEXP _bvartools_VecTvpDiscountScore(SEXP objectSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type object(objectSEXP);
+    rcpp_result_gen = Rcpp::wrap(VecTvpDiscountScore(object));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -1165,6 +1253,10 @@ static const R_CallMethodDef CallEntries[] = {
     {"_bvartools_VarNormalWishartScore", (DL_FUNC) &_bvartools_VarNormalWishartScore, 1},
     {"_bvartools_VarTvpAldCoefficients", (DL_FUNC) &_bvartools_VarTvpAldCoefficients, 1},
     {"_bvartools_VarTvpAldLogLik", (DL_FUNC) &_bvartools_VarTvpAldLogLik, 1},
+    {"_bvartools_VarTvpDiscountCoefficients", (DL_FUNC) &_bvartools_VarTvpDiscountCoefficients, 1},
+    {"_bvartools_VarTvpDiscountForecasts", (DL_FUNC) &_bvartools_VarTvpDiscountForecasts, 1},
+    {"_bvartools_VarTvpDiscountLogLik", (DL_FUNC) &_bvartools_VarTvpDiscountLogLik, 1},
+    {"_bvartools_VarTvpDiscountScore", (DL_FUNC) &_bvartools_VarTvpDiscountScore, 1},
     {"_bvartools_VarTvpGammaCoefficients", (DL_FUNC) &_bvartools_VarTvpGammaCoefficients, 1},
     {"_bvartools_VarTvpGammaForecasts", (DL_FUNC) &_bvartools_VarTvpGammaForecasts, 1},
     {"_bvartools_VarTvpGammaLogLik", (DL_FUNC) &_bvartools_VarTvpGammaLogLik, 1},
@@ -1193,6 +1285,10 @@ static const R_CallMethodDef CallEntries[] = {
     {"_bvartools_VecNormalWishartForecasts", (DL_FUNC) &_bvartools_VecNormalWishartForecasts, 1},
     {"_bvartools_VecNormalWishartLogLik", (DL_FUNC) &_bvartools_VecNormalWishartLogLik, 1},
     {"_bvartools_VecNormalWishartScore", (DL_FUNC) &_bvartools_VecNormalWishartScore, 1},
+    {"_bvartools_VecTvpDiscountCoefficients", (DL_FUNC) &_bvartools_VecTvpDiscountCoefficients, 1},
+    {"_bvartools_VecTvpDiscountForecasts", (DL_FUNC) &_bvartools_VecTvpDiscountForecasts, 1},
+    {"_bvartools_VecTvpDiscountLogLik", (DL_FUNC) &_bvartools_VecTvpDiscountLogLik, 1},
+    {"_bvartools_VecTvpDiscountScore", (DL_FUNC) &_bvartools_VecTvpDiscountScore, 1},
     {"_bvartools_VecTvpGammaCoefficients", (DL_FUNC) &_bvartools_VecTvpGammaCoefficients, 1},
     {"_bvartools_VecTvpGammaForecasts", (DL_FUNC) &_bvartools_VecTvpGammaForecasts, 1},
     {"_bvartools_VecTvpGammaLogLik", (DL_FUNC) &_bvartools_VecTvpGammaLogLik, 1},

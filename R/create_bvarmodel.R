@@ -24,6 +24,14 @@
 #' is created per quantile, so a vector produces a list of models. See 'Details'.
 #' @param varsel character specifying the type of variable selection algorithm
 #' that should be employed. Default is \code{"none"}. See 'Details'.
+#' @param algorithm algorithm that should be used for posterior simulation. If
+#' \code{NULL} (default), the algorithm is named by \code{tvp} and \code{error}.
+#' The one non-standard option is \code{"discount"}. See 'Details'.
+#' @param delta_beta,delta_sigma numeric discount factors in \eqn{(0, 1]} of the
+#' discounted model, the first governing the coefficients and the second the
+#' error covariance. Both default to 1, at which the quantity they govern does
+#' not move. Ignored unless \code{algorithm = "discount"}, and a vector in
+#' either produces one model per value. See 'Details'.
 #' @param iterations an integer of MCMC draws excluding burn-in draws (defaults
 #' to 20000).
 #' @param burnin an integer of MCMC draws used to initialize the sampler
@@ -107,6 +115,30 @@
 #'  \item \code{"bvs"}: Bayesian variable selection as proposed in Korobilis (2013).
 #'  \item \code{"ssvs"}: Stochastic search variable selection as proposed in George et al. (2008).
 #' }
+#'
+#' The one specification for argument \code{algorithm} is \code{"discount"}, the
+#' discounted time varying parameter model of West & Harrison (1997, ch. 16)
+#' with the discounted Wishart of Uhlig (1997), estimated by
+#' \code{VarTvpDiscount}. It is not a sampler: its posterior is closed form --
+#' one pass over the sample, no chain -- so \code{burnin} must be 0 and
+#' \code{thin} 1, and \code{iterations} says only how many i.i.d. draws a
+#' forecast takes from the answer. Its error covariance is the inverse Wishart
+#' whole, so \code{error} must be \code{"wishart"} and neither variable
+#' selection nor a structural model is available. What it buys is speed and an
+#' exact marginal likelihood: the sum of \code{/posterior/loglik} is the log
+#' marginal likelihood of the sample given the two discounts, so a grid over
+#' them can be compared without a chain being run for any of it.
+#'
+#' \code{\link{add_posterior_coefficients}} estimates it like any other
+#' algorithm, the filter being part of the vendored BayesTS core. It consumes no
+#' random numbers, so two runs agree to the bit and a model estimated here and
+#' the same model estimated by the \code{bayests} command line over a file
+#' written with \code{\link{write_to_hdf5}} give the same numbers rather than
+#' merely the same distribution. What comes back is a posterior rather than a
+#' chain: one row per period under \code{posterior$a$mean},
+#' \code{posterior$a$cov}, \code{posterior$u_sigma$scale} and
+#' \code{posterior$df}, and no \code{coeffs} anywhere, because joining one
+#' draw per period would look like a sampled path and is not one.
 #' 
 #' @return An object of class 'bvarmodel' or, if a vector is given in \code{p}, \code{s}
 #' or \code{quantile}, a list of class 'modellist' with one such object per
@@ -159,6 +191,12 @@
 #' 
 #' Lütkepohl, H. (2006). \emph{New Introduction to Multiple Time Series Analysis} (2nd ed.). Berlin: Springer.
 #' 
+#' Uhlig, H. (1997). Bayesian vector autoregressions with stochastic volatility.
+#' \emph{Econometrica, 65}(1), 59--73. \doi{10.2307/2171813}
+#' 
+#' West, M., & Harrison, J. (1997). \emph{Bayesian forecasting and dynamic models}
+#' (2nd ed.). New York: Springer.
+#' 
 #' @seealso \code{\link{bvartools_model}} describes the object this returns, element by element.
 #' @family model set-up
 #' @export
@@ -171,6 +209,9 @@ create_bvarmodel <- function(data, p = 2,
                              quantile = 0.5,
                              tvp = FALSE,
                              varsel = "none",
+                             algorithm = NULL,
+                             delta_beta = 1,
+                             delta_sigma = 1,
                              iterations = 20000,
                              burnin = 2000,
                              thin = 1) {
@@ -289,7 +330,26 @@ create_bvarmodel <- function(data, p = 2,
     model_type <- paste0(model_type, "Ald")
   }
   model_type <- paste0("Var", model_type)
-  
+
+  # The one algorithm outside the naming grammar for a VAR. See
+  # R/discount_models.R for what it is and where the rest of the package has to
+  # be told about it.
+  if (!is.null(algorithm)) {
+    if (!identical(algorithm, "discount")) {
+      stop("Specified algorithm not recognized.")
+    }
+    model_type <- "VarTvpDiscount"
+    # Refused here rather than by BayesTS on the written file: for a grid of
+    # models that is one error instead of one per file.
+    .check_discount_specification(error, varsel, structural, burnin, thin)
+    .check_discount_deltas(delta_beta, delta_sigma, k)
+    # The coefficients of this model drift, which is what `tvp` says. What
+    # governs how far they drift is `delta_beta`, and it is a model in its own
+    # right at one, where they do not move at all.
+    tvp <- TRUE
+  }
+  use_discount <- identical(model_type, "VarTvpDiscount")
+
   model <- NULL
   model[["type"]] <- ifelse(length(data_name) == 1, "AR", "VAR")
   model[["algorithm"]] <- model_type
@@ -468,14 +528,32 @@ create_bvarmodel <- function(data, p = 2,
   # this loop once and never see the field.
   quantiles <- if (error == "ald") quantile else NA_real_
   
+  # A grid over the two discounts, for the one algorithm that has them. Every
+  # other model gets the single specification it always had, so the two inner
+  # loops run once and change nothing. See create_bvecmodel() for why a grid
+  # over them is worth having.
+  if (use_discount) {
+    grid_beta <- as.numeric(delta_beta)
+    grid_sigma <- as.numeric(delta_sigma)
+  } else {
+    grid_beta <- NA_real_
+    grid_sigma <- NA_real_
+  }
+
   result <- NULL
   for (i in p) { # for each lag p
     for (j in s) { # for each lag s
      for (q in quantiles) { # for each quantile
+      for (d_beta in grid_beta) {
+       for (d_sigma in grid_sigma) {
       pos <- NULL
       model_i <- model
       if (error == "ald") {
         model_i[["quantile"]] <- q
+      }
+      if (use_discount) {
+        model_i[["delta_beta"]] <- d_beta
+        model_i[["delta_sigma"]] <- d_sigma
       }
       if (i >= 1) {
         pos <- c(pos, k + 1:(k * i))
@@ -519,6 +597,8 @@ create_bvarmodel <- function(data, p = 2,
       
       result <- c(result, list(result_i)) 
       
+       }
+      }
      }
     }
   }

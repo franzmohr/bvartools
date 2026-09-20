@@ -35,6 +35,11 @@
 #' @param algorithm algorithm that should be used for posterior simulation. If \code{NULL}
 #' (default), standard algorithms will be used. See 'Details' for available
 #' non-standard options.
+#' @param delta_beta,delta_sigma numeric discount factors in \eqn{(0, 1]} of the
+#' discounted model, the first governing the coefficients and the second the
+#' error covariance. Both default to 1, at which the quantity they govern does
+#' not move. Ignored unless \code{algorithm = "discount"}, and a vector in
+#' either produces one model per value. See 'Details'.
 #' @param iterations an integer of MCMC draws excluding burn-in draws (defaults
 #' to 50000).
 #' @param burnin an integer of MCMC draws used to initialize the sampler
@@ -92,7 +97,40 @@
 #' Available specifications for argument \code{algorithm} are:
 #' \itemize{
 #'  \item \code{"KLGS2010"}: Algorithm proposed in Koop, León-González & Strachan (2010).
+#'  \item \code{"discount"}: The discounted time varying parameter model of
+#'  West & Harrison (1997, ch. 16) with the discounted Wishart of Uhlig (1997),
+#'  estimated by \code{VecTvpDiscount}.
 #' }
+#'
+#' The discounted model is not a sampler. Its posterior is closed form -- one
+#' pass over the sample, no chain -- so \code{burnin} must be 0 and \code{thin}
+#' 1, and \code{iterations} says only how many i.i.d. draws a forecast takes
+#' from the answer. Its error covariance is the inverse Wishart whole, so
+#' \code{error} must be \code{"wishart"} and neither variable selection nor a
+#' structural model is available. What it buys is speed and an exact marginal
+#' likelihood: the sum of \code{/posterior/loglik} is the log marginal
+#' likelihood of the sample given the rank, the cointegration matrix and the two
+#' discounts, so a grid over any of them can be compared without a chain being
+#' run for any of it.
+#'
+#' The one assumption that separates it from the sampling VEC models is that the
+#' cointegration space is given rather than estimated. \code{\link{add_initial_values}}
+#' puts Johansen's maximum likelihood estimate at \code{/initial/beta} and the
+#' model conditions on it, so what drifts is the adjustment to the long-run
+#' relations and not the relations themselves. That is a different question from
+#' the one \code{"KLGS2010"} answers, not a cheaper way of answering the same
+#' one.
+#'
+#' \code{\link{add_posterior_coefficients}} estimates it like any other
+#' algorithm, the filter being part of the vendored BayesTS core. It consumes no
+#' random numbers, so two runs agree to the bit and a model estimated here and
+#' the same model estimated by the \code{bayests} command line over a file
+#' written with \code{\link{write_to_hdf5}} give the same numbers rather than
+#' merely the same distribution. What comes back is a posterior rather than a
+#' chain: one row per period under \code{posterior$a$mean},
+#' \code{posterior$a$cov}, \code{posterior$u_sigma$scale} and
+#' \code{posterior$df}, and no \code{coeffs} anywhere, because joining one
+#' draw per period would look like a sampled path and is not one.
 #' 
 #' @return An object of class 'bvecmodel' or, if a vector is given in \code{p}, \code{s}
 #' or \code{r}, a list of class 'modellist' with one such object per specification. A
@@ -141,6 +179,12 @@
 #' 
 #' Lütkepohl, H. (2006). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
 #' 
+#' Uhlig, H. (1997). Bayesian vector autoregressions with stochastic volatility.
+#' \emph{Econometrica, 65}(1), 59--73. \doi{10.2307/2171813}
+#' 
+#' West, M., & Harrison, J. (1997). \emph{Bayesian forecasting and dynamic models}
+#' (2nd ed.). New York: Springer.
+#' 
 #' @seealso \code{\link{bvartools_model}} describes the object this returns, element by element.
 #' @family model set-up
 #' @export
@@ -148,6 +192,7 @@ create_bvecmodel <- function(data, p, exogen = NULL, s = NULL, r = NULL,
                              const = NULL, trend = NULL, seasonal = NULL,
                              structural = FALSE, error = "wishart", tvp = FALSE,
                              varsel = "none", algorithm = NULL,
+                             delta_beta = 1, delta_sigma = 1,
                              iterations = 20000, burnin = 2000, thin = 1) {
 
   # Input checks ----
@@ -268,13 +313,25 @@ create_bvecmodel <- function(data, p, exogen = NULL, s = NULL, r = NULL,
     }
     algo <- paste0("Vec", algo) 
   } else {
-    if (!algorithm %in% c("KLGS2010")) {
+    if (!algorithm %in% c("KLGS2010", "discount")) {
       stop("Specified algorithm not recognized.")
     }
     if (algorithm == "KLGS2010") {
       algo <- "VecKlgs2010"
     }
+    if (algorithm == "discount") {
+      algo <- "VecTvpDiscount"
+      # Refused here rather than by BayesTS on the written file: for a grid of
+      # models that is one error instead of one per file.
+      .check_discount_specification(error, varsel, structural, burnin, thin)
+      .check_discount_deltas(delta_beta, delta_sigma, k)
+      # The coefficients of this model drift, which is what `tvp` says. What
+      # governs how far they drift is `delta_beta`, and it is a model in its own
+      # right at one, where they do not move at all.
+      tvp <- TRUE
+    }
   }
+  use_discount <- identical(algo, "VecTvpDiscount")
   
   model <- NULL
   model[["type"]] <- ifelse(length(data_name) == 1, "EC", "VEC")
@@ -533,13 +590,36 @@ create_bvecmodel <- function(data, p, exogen = NULL, s = NULL, r = NULL,
     y_A0 <- y_A0[, -pos]
   }
   
+  # A grid over the two discounts, for the one algorithm that has them. Every
+  # other model gets the single specification it always had, so the two inner
+  # loops run once and change nothing.
+  #
+  # The discounts enter the file and nothing else -- not the data, not the
+  # design -- so a grid over them costs one specification each and is the
+  # cheapest comparison this package offers: the sum of /posterior/loglik is the
+  # exact marginal likelihood of the sample given the discounts, so the grid is
+  # scored without a chain being run for any of it.
+  if (use_discount) {
+    grid_beta <- as.numeric(delta_beta)
+    grid_sigma <- as.numeric(delta_sigma)
+  } else {
+    grid_beta <- NA_real_
+    grid_sigma <- NA_real_
+  }
+
   result <- NULL
   for (i in p) {
     for (j in s) {
       for (rank in r) {
+       for (d_beta in grid_beta) {
+        for (d_sigma in grid_sigma) {
         
         pos <- NULL
         model_i <- model
+        if (use_discount) {
+          model_i[["delta_beta"]] <- d_beta
+          model_i[["delta_sigma"]] <- d_sigma
+        }
         
         # Build the matrix of regressors from object x
         if (i > 1) {
@@ -595,6 +675,8 @@ create_bvecmodel <- function(data, p, exogen = NULL, s = NULL, r = NULL,
         class(result_i) <- c("bvecmodel", "list") 
         
         result <- c(result, list(result_i)) 
+        }
+       }
       }
     }
   }

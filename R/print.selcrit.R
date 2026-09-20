@@ -4,7 +4,7 @@
 #' @rdname selection_criteria
 print.selcrit <- function(x, digits = max(3L, getOption("digits") - 3L), ...){
   
-  use_ll <- !is.null(x[["LL"]])
+  use_ll <- !is.null(x[["LL"]]) || !is.null(x[["LML"]])
   use_fe <- !is.null(x[["FE"]])
   ci <- attr(x, "ci")
   
@@ -17,7 +17,12 @@ print.selcrit <- function(x, digits = max(3L, getOption("digits") - 3L), ...){
     
     # Only the criteria the object actually carries. WAIC needs more than one
     # draw to estimate the variance it penalises with, so it can be absent.
-    criterion <- c("LL", "AIC", "HQ", "BIC", "WAIC", "LOOIC")
+    # LML is the discounted models' one in-sample criterion and stands where LL
+    # stands for the samplers, without the deviance-based criteria beside it:
+    # there is no chain to estimate an effective number of parameters from, and
+    # the marginal likelihood has already paid for the complexity a count of
+    # parameters would charge for.
+    criterion <- c("LL", "LML", "AIC", "HQ", "BIC", "WAIC", "LOOIC")
     criterion <- criterion[!vapply(x[criterion], is.null, logical(1))]
 
     result <- as.data.frame(matrix(NA, length(criterion), 5))

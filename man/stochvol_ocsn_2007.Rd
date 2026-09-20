@@ -87,6 +87,6 @@ Chan, J., Koop, G., Poirier, D. J., & Tobias J. L. (2019). \emph{Bayesian econom
 Kim, S., Shephard, N., & Chib, S. (1998). Stochastic volatility. Likelihood inference and comparison
 with ARCH models. \emph{Review of Economic Studies 65}(3), 361--393. \doi{10.1111/1467-937X.00050}
 
-Omori, Y., Chib, S., Shephard, N., & Nakajima, J. (2007). Stochastic volatiltiy with leverage. Fast and efficient likelihood inference.
+Omori, Y., Chib, S., Shephard, N., & Nakajima, J. (2007). Stochastic volatility with leverage. Fast and efficient likelihood inference.
 \emph{Journal of Econometrics 140}(2), 425--449. \doi{10.1016/j.jeconom.2006.07.008}
 }

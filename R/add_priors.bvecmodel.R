@@ -228,6 +228,25 @@ add_priors.bvecmodel <- function(object,
                                  varsel = NULL,
                                  ...){
   
+  # The discounted model takes a different pair of objects, and takes no
+  # cointegration space prior at all: it conditions on a fixed space rather than
+  # drawing one, and add_initial_values() is where that space is put. Handled
+  # before anything else so that `coint`, which is never given for it, is never
+  # forced.
+  if (.is_discount(object)) {
+    if (!missing(coint) && !is.null(coint)) {
+      stop("The discounted VEC conditions on a fixed cointegration matrix ",
+           "rather than drawing one, so there is no cointegration space prior ",
+           "to specify. add_initial_values() puts the space at /initial/beta, ",
+           "and the model is estimated given it.")
+    }
+    if (!is.null(varsel)) {
+      stop("Variable selection is not available for the discounted models: ",
+           "they have no draws for an inclusion indicator to be drawn alongside.")
+    }
+    return(.add_priors_discount(object, coef, sigma))
+  }
+
   # Input checks ----
   
   ## coefficients ----

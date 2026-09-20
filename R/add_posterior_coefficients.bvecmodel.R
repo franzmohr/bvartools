@@ -102,6 +102,13 @@ add_posterior_coefficients.bvecmodel <- function(object, posterior_function = NU
   # the failure surfaced later and somewhere else.
   if (is.null(posterior_function)) {
 
+    # Not a sampler. The filter runs in the vendored core like every algorithm
+    # below, but what it returns is a posterior rather than a chain, so it does
+    # not fall through to the mcpar the draws of the others are labelled with.
+    if (.is_discount(object)) {
+      return(.discount_coefficients(object))
+    }
+
     # Check if the input is suitable for the posterior simulation functions
     .check_bvecpost_input(object)
 

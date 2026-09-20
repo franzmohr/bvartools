@@ -1,7 +1,75 @@
-# bvartools (development version)
+# bvartools 1.0.0
 
-* **Vendored BayesTS core refreshed to upstream `7d7c6ca`, which is BayesTS
-  0.3.0 and the fix that followed it.** **Draws are unchanged**, for every
+* **The two discounted models, `VarTvpDiscount` and `VecTvpDiscount`, can be set
+  up, estimated, forecast, scored, written and read back.** They are reached
+  with `algorithm = "discount"` of `create_bvarmodel()` and
+  `create_bvecmodel()`, and `add_posterior_coefficients()` estimates them here
+  like any other algorithm: the filter is part of the vendored BayesTS core, as
+  every sampler in this package is. Estimating one consumes no random numbers,
+  so a model estimated in R and the same model estimated by the `bayests`
+  command line over a written file agree to the bit rather than merely in
+  distribution. No sampler here changes, and no model that does not ask for the
+  new algorithm is written differently.
+
+    What comes back is a posterior rather than a chain, and the steps that
+    follow know it: `posterior$a$mean`, `posterior$a$scale`, `posterior$a$cov`,
+    `posterior$u_sigma$scale` and `posterior$df` hold one row per period and
+    carry no `mcpar`, and there is no `coeffs` anywhere, because joining one
+    draw per period would look like a sampled path and is not one.
+
+    They are not samplers. The posterior is the matrix normal dynamic linear
+    model of West & Harrison (1997, ch. 16) with the discounted Wishart of Uhlig
+    (1997), closed form in one pass over the sample, so `burnin` must be 0 and
+    `thin` 1 and `iterations` says only how many i.i.d. draws a forecast takes.
+    Two discounts govern it, `delta_beta` for the coefficients and
+    `delta_sigma` for the error covariance, both in `(0, 1]` and both a model in
+    their own right at 1, where the quantity they govern does not move. A vector
+    in either gives one model per value, as a vector in `p`, `s` or `r` does.
+
+    What they buy, besides the speed, is that the sum of `/posterior/loglik` is
+    the **exact** log marginal likelihood of the sample rather than an estimate
+    of it. `selection_criteria()` reports it as `LML`, and it is the one
+    criterion they carry: there is no chain to estimate an effective number of
+    parameters from, and the marginal likelihood has already paid for the
+    complexity a count of parameters would charge for. `choose_best_model()`
+    maximises it, so a grid over the rank, the lag order, the cointegration
+    matrix or the two discounts is compared without a chain being run for any of
+    it.
+
+    Three things about the file differ from every other model here, and each is
+    a different model rather than a spelling. The coefficient prior is a matrix
+    normal at `/priors/a/mean` and `/priors/a/cov` -- an n_design x k mean and
+    the n_design x n_design regressor side of a covariance -- and not the
+    `/priors/a/mu` and `/priors/a/v_inv` of a sampler, which a discounted model
+    reads as no prior at all. `add_priors()` therefore takes `coef$v_i`,
+    `coef$v_i_det`, `coef$v_i_alpha` and `coef$const`, refuses `coef$shape` and
+    `coef$rate`, which are the prior of state variances this model does not
+    have, and refuses `coef$v_i = 0`, a precision with no covariance to write.
+    The SUR matrix `/data/train/z` is not written, the filter running against
+    the compact `/data/train/x` instead. And a discounted VEC **conditions on a
+    fixed cointegration matrix** rather than drawing one:
+    `add_initial_values()` puts Johansen's estimate at `/initial/beta`, or the
+    space given in its new `beta` argument, and there is no cointegration space
+    prior to specify. What drifts is the adjustment to the long-run relations
+    and not the relations themselves, which is a different question from the one
+    `algorithm = "KLGS2010"` answers rather than a cheaper way of answering the
+    same one.
+
+    `open_models()` reports `delta_beta` and `delta_sigma` in the manifest, at 1
+    for every model that has no discounts, which is what 1 means.
+
+* **`read_model_from_hdf5()` reads a posterior block of one row as one row.**
+  hdf5r drops a dimension of size one, and `as.matrix()` then made a column of
+  what the file holds as a row, so such a block came back transposed: a single
+  draw over many columns read as many draws of one column. Nothing a sampler
+  writes has one draw, which is why this went unseen -- the discounted models'
+  `/posterior/loglik` and their one-column `/posterior/beta/coeffs` are exactly
+  that. A block with no `mcpar` attributes is now also read as the plain matrix
+  it is rather than labelled as a chain, because a closed form's columns are
+  periods and its rows are not draws.
+
+* **Vendored BayesTS core refreshed to BayesTS 0.3.0 plus one commit,
+  `6fe91d2`.** **Draws are unchanged** for every
   sampler here, and nothing this package compiles behaves differently: the four
   headers that changed -- `bayests/inputs.h`, `priors.h`, `results.h` and
   `spec.h` -- gain declarations and nothing else, and no vendored source reads
@@ -13,12 +81,22 @@
   the fix.
 
     What 0.3.0 adds is `VarTvpDiscount` and `VecTvpDiscount`, two models with a
-    closed-form posterior rather than a chain. **They are not vendored yet.**
-    They are this package's kind of model rather than a factor model, so unlike
-    everything else in that section of `VENDORED.md` they are held back only
-    until there is a binding to reach them, and their entries in the refresh
-    script's `skip` say so. Their inputs, priors and posteriors are declared
-    here regardless, in the four headers above, because every model shares those.
+    closed-form posterior rather than a chain, and **both are now vendored**:
+    `core/models/var_tvp_discount.cpp`, `core/models/vec_tvp_discount.cpp` and
+    the `core/models/discount_support.h` they share. An earlier refresh held
+    them back because nothing here could reach them; `src/VarTvpDiscount.cpp`
+    and `src/VecTvpDiscount.cpp` now can, so their entries are out of the
+    refresh script's `skip` and `src/core/VENDORED.md` describes them under a
+    section of their own rather than under *Not copied*.
+
+    The one commit past the release is a fix to `VarTvpDiscount`, found by
+    wiring its score up here: `predictive_log_density()` read the rows of
+    `/data/forecast/x` as they arrived, and the lagged endogenous blocks of a
+    horizon past the first hold a placeholder, which a forecast overwrites as it
+    simulates and that recursion does not. The first horizon was scored
+    correctly and every one after it came back as `NaN`. It now fills those
+    blocks from the realised values, as the eight sampling VARs beside it always
+    have. `VecTvpDiscount` was never affected.
 
     `src/core/VENDORED.md` now also records which upstream commit the copy is
     at, which it never has. Nothing but a reader enforces that paragraph -- the

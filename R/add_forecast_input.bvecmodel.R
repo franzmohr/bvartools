@@ -90,6 +90,10 @@ add_posterior_forecasts.bvecmodel <- function(object, forecast_states = NULL, ..
     stop("Element 'model$algorithm' is missing. Was the object produced by create_bvecmodel?")
   }
 
+  if (.is_discount(object)) {
+    return(.discount_forecasts(object))
+  }
+
   class_of_object <- class(object)
 
   object <- switch(algorithm,

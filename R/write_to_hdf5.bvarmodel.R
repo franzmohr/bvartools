@@ -184,10 +184,19 @@ write_to_hdf5.bvarmodel <- function(object, filename, group = "", ...) {
       .hdf5_write(group_data_train, i, series, .hdf5_series_attrs(series))
     }
   }
-  # Data without time series information
-  for (i in "z") {
-    if (!is.null(object[["data"]][["train"]][[i]])) {
-      .hdf5_write(group_data_train, i, object[["data"]][["train"]][[i]])
+  # Data without time series information.
+  #
+  # Not written for a discounted model. Its filter runs against one coefficient
+  # matrix per period rather than a SUR design, so it reads the compact
+  # /data/train/x above and refuses a file that carries nothing but `z`. The SUR
+  # matrix is k times the rows and k times the columns of the regressors it
+  # kroneckers up, and writing it would put that on disk once per model of a
+  # grid for a sampler to read that is never run.
+  if (!.is_discount(object)) {
+    for (i in "z") {
+      if (!is.null(object[["data"]][["train"]][[i]])) {
+        .hdf5_write(group_data_train, i, object[["data"]][["train"]][[i]])
+      }
     }
   }
 

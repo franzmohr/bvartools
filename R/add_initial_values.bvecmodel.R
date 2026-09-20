@@ -81,6 +81,13 @@ add_initial_values.bvecmodel <- function(object, method = "maxlik", ...){
     stop("Argument 'method' can be 'maxlik' or 'prior' for BVEC models.")
   }
   
+  # The discounted VEC has one starting value, and it is not a starting value:
+  # the cointegration matrix it conditions on. Nothing else is read from
+  # /initial, because nothing iterates.
+  if (.is_discount(object)) {
+    return(.add_initial_values_discount(object, method, ...))
+  }
+
   y <- object[["data"]][["train"]][["y"]]
   w <- object[["data"]][["train"]][["w"]]
   if (!is.null(object[["data"]][["train"]][["x"]])) {

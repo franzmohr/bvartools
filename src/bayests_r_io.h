@@ -182,6 +182,12 @@ inline bayests::VarSpec read_spec(const Rcpp::List &model, const char *covar_err
   // read rather than left alone: a model asked for the 0.8 quantile whose
   // spec never reaches the sampler estimates the median and says nothing.
   read_double_if_present(model, "quantile", spec.quantile);
+  // The two discount factors of VarTvpDiscount and VecTvpDiscount. One apiece
+  // is VarSpec's default and the model in which the quantity they govern does
+  // not move, so a specification that names neither is a constant coefficient
+  // model rather than an unspecified one. Every other algorithm ignores them.
+  read_double_if_present(model, "delta_beta", spec.delta_beta);
+  read_double_if_present(model, "delta_sigma", spec.delta_sigma);
   spec.varsel = bayests::var_selection_from_string(optional_string(model, "varsel", "none"));
   spec.structural = optional_bool(model, "structural", false);
   // Whether a time-varying model's forecast carries its random walks over the
@@ -203,6 +209,22 @@ inline bayests::NormalPrior read_normal_prior(const Rcpp::List &group)
   bayests::NormalPrior prior;
   read_vec_if_present(group, "mu", prior.mu);
   read_mat_if_present(group, "v_inv", prior.v_inv);
+  return prior;
+}
+
+/// The matrix normal prior of a discounted model: the n_design x k coefficient
+/// matrix and the n_design square regressor side of its covariance.
+///
+/// Deliberately not read from `mu` and `v_inv`, which is where a sampler keeps
+/// its normal prior over the vectorised coefficients. The two are different
+/// objects -- `cov` is a covariance in units of the error covariance, since the
+/// full prior covariance is Sigma kronecker cov -- and a model that silently
+/// took one for the other would run against a prior nobody stated.
+inline bayests::MatrixNormalPrior read_matrix_normal_prior(const Rcpp::List &group)
+{
+  bayests::MatrixNormalPrior prior;
+  read_mat_if_present(group, "mean", prior.mean);
+  read_mat_if_present(group, "cov", prior.cov);
   return prior;
 }
 

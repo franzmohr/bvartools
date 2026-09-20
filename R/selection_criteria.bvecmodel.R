@@ -49,6 +49,12 @@
 #' @method selection_criteria bvecmodel
 selection_criteria.bvecmodel <- function(object, ci = 0.95, ...){
   
+  # The discounted models are compared by the log marginal likelihood their file
+  # carries exactly, and by nothing else; see .selection_criteria_discount().
+  if (.is_discount(object)) {
+    return(.selection_criteria_discount(object, ci))
+  }
+  
   if (ci < 0 | ci > 1) {
     stop("Argument 'ci' is not within the permitted range of 0 and 1.")
   }

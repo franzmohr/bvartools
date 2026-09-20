@@ -45,6 +45,11 @@
 add_posterior_loglik.bvecmodel <- function(object, ...) {
   
   # Input checks
+  # One row rather than one per draw, and the parameters integrated out exactly,
+  # so there is no chain for the check below to look for and nothing to average.
+  if (.is_discount(object)) {
+    return(.discount_loglik(object))
+  }
   if (is.null(object[["posterior"]][["u_sigma_inv"]][["coeffs"]])) {
     stop("Object does not contain posterior draws in posterior$u_sigma_inv.")
   }

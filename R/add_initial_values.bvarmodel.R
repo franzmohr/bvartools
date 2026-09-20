@@ -88,6 +88,13 @@ add_initial_values.bvarmodel <- function(object, method = "ols", ...){
     stop("Argument 'method' can be 'ols' or 'prior' for BVAR models.")
   }
   
+  # The discounted VAR reads nothing from /initial: nothing iterates, so there
+  # is nowhere for a starting value to be the start of. The seed is still drawn,
+  # because a forecast takes i.i.d. draws from the closed form.
+  if (.is_discount(object)) {
+    return(.add_initial_values_discount(object, method, ...))
+  }
+
   y <- matrix(t(object[["data"]][["train"]][["y"]]))
   z <- object[["data"]][["train"]][["z"]]
   k <- object[["model"]][["k"]]

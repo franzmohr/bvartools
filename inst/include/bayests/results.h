@@ -13,9 +13,13 @@ namespace bayests
 /// Wishart prior on the error precision.
 ///
 /// Draws run along the columns, which is the layout the samplers accumulate in
-/// and the one that keeps a single draw contiguous. Hosts that want the
-/// convention their ecosystem expects -- draws in rows, for both the HDF5
-/// files and R -- transpose at the boundary.
+/// and the one that keeps a single draw contiguous. The model file keeps that
+/// orientation: in HDF5 dataspace terms every posterior dataset is one row per
+/// quantity and one column per draw, which is what h5py reports. R's readers
+/// reverse the dimension order, R being column-major where HDF5 is row-major,
+/// so an R session sees the transpose -- draws in rows, which is what `coda`
+/// expects of an `mcmc` object. A host whose ecosystem wants that convention
+/// transposes at the boundary; the file itself is not transposed.
 struct VarNormalWishartDraws
 {
     /// nparams x iterations. Empty when the model has no regressors.
@@ -221,9 +225,13 @@ struct VarTvpAldDraws
 /// Wishart prior on the error precision.
 ///
 /// Draws run along the columns, which is the layout the samplers accumulate in
-/// and the one that keeps a single draw contiguous. Hosts that want the
-/// convention their ecosystem expects -- draws in rows, for both the HDF5
-/// files and R -- transpose at the boundary.
+/// and the one that keeps a single draw contiguous. The model file keeps that
+/// orientation: in HDF5 dataspace terms every posterior dataset is one row per
+/// quantity and one column per draw, which is what h5py reports. R's readers
+/// reverse the dimension order, R being column-major where HDF5 is row-major,
+/// so an R session sees the transpose -- draws in rows, which is what `coda`
+/// expects of an `mcmc` object. A host whose ecosystem wants that convention
+/// transposes at the boundary; the file itself is not transposed.
 struct VecNormalWishartDraws
 {
     arma::mat a;          ///< nparams x iterations. Empty when the model has no regressors.

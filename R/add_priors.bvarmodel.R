@@ -194,6 +194,16 @@ add_priors.bvarmodel <- function(object,
                                  varsel = NULL,
                                  ...){
   
+  # The discounted model takes a different pair of objects; see
+  # .add_priors_discount() for which and why.
+  if (.is_discount(object)) {
+    if (!is.null(varsel)) {
+      stop("Variable selection is not available for the discounted models: ",
+           "they have no draws for an inclusion indicator to be drawn alongside.")
+    }
+    return(.add_priors_discount(object, coef, sigma))
+  }
+
   # Input checks
   ## Coefficient priors ----
   if (!is.null(coef)) {

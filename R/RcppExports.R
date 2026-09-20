@@ -65,6 +65,22 @@
     .Call(`_bvartools_VarTvpAldLogLik`, object)
 }
 
+.VarTvpDiscountCoefficients <- function(object) {
+    .Call(`_bvartools_VarTvpDiscountCoefficients`, object)
+}
+
+.VarTvpDiscountForecasts <- function(object) {
+    .Call(`_bvartools_VarTvpDiscountForecasts`, object)
+}
+
+.VarTvpDiscountLogLik <- function(object) {
+    .Call(`_bvartools_VarTvpDiscountLogLik`, object)
+}
+
+.VarTvpDiscountScore <- function(object) {
+    .Call(`_bvartools_VarTvpDiscountScore`, object)
+}
+
 .VarTvpGammaCoefficients <- function(object) {
     .Call(`_bvartools_VarTvpGammaCoefficients`, object)
 }
@@ -175,6 +191,22 @@
 
 .VecNormalWishartScore <- function(object) {
     .Call(`_bvartools_VecNormalWishartScore`, object)
+}
+
+.VecTvpDiscountCoefficients <- function(object) {
+    .Call(`_bvartools_VecTvpDiscountCoefficients`, object)
+}
+
+.VecTvpDiscountForecasts <- function(object) {
+    .Call(`_bvartools_VecTvpDiscountForecasts`, object)
+}
+
+.VecTvpDiscountLogLik <- function(object) {
+    .Call(`_bvartools_VecTvpDiscountLogLik`, object)
+}
+
+.VecTvpDiscountScore <- function(object) {
+    .Call(`_bvartools_VecTvpDiscountScore`, object)
 }
 
 .VecTvpGammaCoefficients <- function(object) {
@@ -1287,7 +1319,7 @@ stochvol_ksc_1998 <- function(y, h, sigma, h_init, constant) {
 #' Kim, S., Shephard, N., & Chib, S. (1998). Stochastic volatility. Likelihood inference and comparison
 #' with ARCH models. \emph{Review of Economic Studies 65}(3), 361--393. \doi{10.1111/1467-937X.00050}
 #'
-#' Omori, Y., Chib, S., Shephard, N., & Nakajima, J. (2007). Stochastic volatiltiy with leverage. Fast and efficient likelihood inference.
+#' Omori, Y., Chib, S., Shephard, N., & Nakajima, J. (2007). Stochastic volatility with leverage. Fast and efficient likelihood inference.
 #' \emph{Journal of Econometrics 140}(2), 425--449. \doi{10.1016/j.jeconom.2006.07.008}
 #'
 #' @examples

@@ -15,8 +15,8 @@ authors:
     email: franz.x.mohr@outlook.com
     orcid: "https://orcid.org/0009-0003-8890-7781"
     affiliation: "Austrian Financial Market Authority"
-version: 0.3.0
-date-released: "2026-09-11"
+version: 1.0.0
+date-released: "2026-09-20"
 doi: 10.5281/zenodo.22736604
 license: GPL-2.0-or-later
 repository-code: "https://github.com/franzmohr/bvartools"

@@ -1,4 +1,4 @@
-# bvartools (development version)
+# bvartools 1.0.0
 
 * **The two discounted models, `VarTvpDiscount` and `VecTvpDiscount`, can be set
   up, estimated, forecast, scored, written and read back.** They are reached

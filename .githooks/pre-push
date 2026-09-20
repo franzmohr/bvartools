@@ -1,0 +1,103 @@
+#!/usr/bin/env bash
+#
+# Refuse a push until the commit it would put on GitHub has passed, locally and
+# in Docker, the check that .github/workflows/R-CMD-check.yaml runs there.
+#
+# The check itself is not reimplemented here: it is the r-ci-docker runner,
+# which already reproduces the ubuntu-latest legs of that workflow for
+# bvartools, bgvars, dfmtools and fincond. This file is the same in all four,
+# so improve it in one place and copy it to the others. It is found at
+#
+#   $R_CI_DOCKER, or `git config r-ci.docker`, or ../r-ci-docker
+#
+# the middle one being how a package that does not sit beside it says where it
+# is.
+#
+# What is checked is an export of the commit being pushed, not the working
+# tree, so uncommitted edits and stray object files in src/ cannot make a push
+# look healthier -- or sicker -- than what GitHub will receive. bvartools is
+# resolved the way the workflow resolves it, from the Remotes: field, rather
+# than from the working copy next door.
+#
+# Installed once per clone with
+#
+#     git config core.hooksPath <this directory>
+#
+# What is remembered in .git is the tree a passing check ran on, not the
+# commit, so a tag pushed after its branch, or a merge that changes no file,
+# is not checked twice. `git push --no-verify` skips the hook altogether; the
+# point of it is that that should be a decision rather than the default.
+set -euo pipefail
+
+repo_root=$(git rev-parse --show-toplevel)
+git_dir=$(git rev-parse --absolute-git-dir)
+passed="${git_dir}/r-ci-docker-passed"   # trees that have passed
+
+pkg=$(sed -n 's/^Package:[[:space:]]*//p' "${repo_root}/DESCRIPTION" | head -1)
+
+runner_dir=${R_CI_DOCKER:-$(git config --get r-ci.docker || echo "${repo_root}/../r-ci-docker")}
+if [ -d "${runner_dir}" ]; then runner_dir=$(cd "${runner_dir}" && pwd); fi
+runner="${runner_dir}/rcheck.sh"
+
+# Docker Desktop needs a Windows path on the left of a -v mount; rcheck.sh
+# passes the package path straight through to one.
+host_path() {
+  if command -v cygpath >/dev/null 2>&1; then cygpath -m "$1"; else printf '%s' "$1"; fi
+}
+
+# The tip of every ref being pushed, skipping deletions and duplicates.
+shas=()
+while read -r _local_ref local_sha _remote_ref _remote_sha; do
+  [ -n "${local_sha:-}" ] || continue
+  case "${local_sha}" in
+    *[!0]*) ;;                                  # a deletion pushes no commit
+    *) continue ;;
+  esac
+  sha=$(git rev-parse --verify "${local_sha}^{commit}")
+  case " ${shas[*]-} " in
+    *" ${sha} "*) continue ;;
+  esac
+  shas+=("${sha}")
+done
+
+[ "${#shas[@]}" -gt 0 ] || exit 0
+
+if [ ! -f "${runner}" ]; then
+  echo "pre-push: no r-ci-docker runner at ${runner}." >&2
+  echo "pre-push: clone it beside this repository, or point 'git config r-ci.docker'" >&2
+  echo "pre-push: at it, so the GitHub check can be run here before the push." >&2
+  exit 1
+fi
+
+if ! docker info >/dev/null 2>&1; then
+  echo "pre-push: cannot talk to Docker -- is Docker Desktop running?" >&2
+  exit 1
+fi
+
+for sha in "${shas[@]}"; do
+  short=$(git rev-parse --short "${sha}")
+  tree=$(git rev-parse "${sha}^{tree}")
+
+  if [ -f "${passed}" ] && grep -qx "${tree}" "${passed}"; then
+    echo "pre-push: ${short} already passed the Docker check; not repeating it"
+    continue
+  fi
+
+  export_dir=$(mktemp -d)
+  trap 'rm -rf "${export_dir}"' EXIT
+  git -C "${repo_root}" archive --format=tar "${sha}" | tar -x -C "${export_dir}"
+
+  echo "pre-push: running the GitHub check on ${short} in Docker before it is pushed"
+  # The hook's stdin is the ref list, which the runner has no use for.
+  if NO_LOCAL_BVARTOOLS=1 bash "${runner}" "$(host_path "${export_dir}")" check </dev/null; then
+    echo "${tree}" >> "${passed}"
+  else
+    echo >&2
+    echo "pre-push: the check failed on ${short}, so the push was refused." >&2
+    echo "pre-push: the full output is under ${runner_dir}/results/${pkg}." >&2
+    exit 1
+  fi
+
+  rm -rf "${export_dir}"
+  trap - EXIT
+done

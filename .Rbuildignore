@@ -18,3 +18,4 @@ Rplots\.pdf$
 ^_pkgdown\.yml$
 ^docs$
 ^pkgdown$
+^\.githooks$

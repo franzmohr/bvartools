@@ -5,7 +5,8 @@
 #' @param object an object of class 'bvecmodel', usually, the result of a call to
 #' \code{\link{add_posterior_forecasts}}.
 #' @param test_sample a time-series object of the endogenous variables, in levels, that
-#' covers the forecast periods.
+#' covers the forecast periods. If \code{NULL} (default), the values in
+#' \code{data$test$y} of the object are used.
 #' @param ... further arguments passed to \code{\link{add_forecast_errors.bvarmodel}}.
 #'
 #' @details The forecasts of a VEC model are of the levels, so the errors are taken against
@@ -18,7 +19,7 @@
 #' @family model comparison
 #' @export
 #' @method add_forecast_errors bvecmodel
-add_forecast_errors.bvecmodel <- function(object, test_sample, ...){
+add_forecast_errors.bvecmodel <- function(object, test_sample = NULL, ...){
 
   if (is.null(.forecast_draws(object))) {
     stop("Object does not contain forecasts.")
@@ -32,6 +33,7 @@ add_forecast_errors.bvecmodel <- function(object, test_sample, ...){
   level <- add_forecast_errors(level, test_sample = test_sample, ...)
 
   object[["posterior"]][["forecast"]][["errors"]] <- level[["posterior"]][["forecast"]][["errors"]]
+  object[["data"]][["test"]][["y"]] <- level[["data"]][["test"]][["y"]]
 
   return(object)
 }

@@ -610,6 +610,40 @@ test_that("forecast errors survive the round trip", {
                ignore_attr = TRUE)
 })
 
+test_that("the values a model was scored against survive the round trip", {
+  object <- forecast_errors_fitted_h5()
+  expect_false(is.null(object[["data"]][["test"]][["y"]]))
+
+  path <- temp_h5_file()
+  write_to_hdf5(object, filename = path)
+
+  # /data/test/y, beside /data/train/y: what a forecast is scored against is
+  # input, like everything else under /data, and the errors taken against it are
+  # draws and live in the posterior.
+  h5 <- hdf5r::H5File$new(path, mode = "r")
+  expect_true("test" %in% names(h5[["data"]]))
+  expect_identical(h5[["data/test/y"]]$dims,
+                   c(4L, as.integer(object[["model"]][["k"]])))
+  h5$close_all()
+
+  restored <- read_model_from_hdf5(path)
+  expect_equal(restored[["data"]][["test"]][["y"]], object[["data"]][["test"]][["y"]],
+               ignore_attr = TRUE)
+})
+
+test_that("a restored model scores itself without a test sample", {
+  path <- temp_h5_file()
+  write_to_hdf5(forecast_errors_fitted_h5(), filename = path)
+  restored <- read_model_from_hdf5(path)
+
+  # Which is what the values are in the file for: a window of an expanding
+  # window exercise carries what it is to be judged by.
+  again <- add_forecast_errors(restored)
+  expect_equal(unclass(get_forecast_errors(again)),
+               unclass(get_forecast_errors(forecast_errors_fitted_h5())),
+               ignore_attr = TRUE)
+})
+
 test_that("a restored model still reports its forecast errors", {
   path <- temp_h5_file()
   write_to_hdf5(forecast_errors_fitted_h5(), filename = path)

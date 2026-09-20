@@ -3,7 +3,8 @@
 #' Calculates and adds forecast errors for a list of Bayesian models.
 #'
 #' @param object an object of class 'modellist'.
-#' @param test_sample a time-series object used as test data.
+#' @param test_sample a time-series object used as test data. If \code{NULL}
+#' (default), the values in \code{data$test$y} of the object are used.
 #' @param ... arguments passed forward to method.
 #' 
 #' @return The object in \code{object} with forecast errors added to each of its models, as
@@ -43,7 +44,7 @@
 #' model <- add_forecast_errors(model, test_sample = orig)
 #' 
 #' @export
-add_forecast_errors.modellist <- function(object, test_sample, ...){
+add_forecast_errors.modellist <- function(object, test_sample = NULL, ...){
   
   orig_class <- class(object)
   object <- lapply(object, add_forecast_errors, test_sample = test_sample, ...)

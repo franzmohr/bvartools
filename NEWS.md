@@ -1,5 +1,24 @@
 # bvartools (development version)
 
+* **A model carries what it was scored against, in `data$test$y`.**
+  `add_forecast_errors()` puts the periods of the horizon it took the errors
+  against into the model, and `write_to_hdf5()` writes them to `/data/test/y`,
+  beside `/data/train/y`. `test_sample` now defaults to `NULL`, in which case
+  those values are used, so a model read back from a file is scored without the
+  sample being supplied a second time.
+
+  This is what lets an expanding window exercise be scored a file at a time. A
+  window used to need its test data passed in from outside, which for a folder
+  of models means holding the series in the session and knowing which periods
+  belong to which window; now each file carries the periods it is to be judged
+  by. `vec_to_var()` takes them across with the forecast data, the levels being
+  what a VEC model is scored in either way.
+
+  BayesTS 0.3.0 reads the same dataset into every model's input, so `bayests
+  check` no longer reports it as one the model never reads, and the predictive
+  log-likelihood that will fill `posterior$forecast$loglik` has its observations
+  waiting for it. Nothing in BayesTS computes from it yet.
+
 * **The forecasts move to `posterior$forecast$forecasts`, with the forecast
   errors beside them at `posterior$forecast$errors`.** `posterior$forecast` is
   a group now rather than a matrix of draws, and `posterior$forecast_errors` is

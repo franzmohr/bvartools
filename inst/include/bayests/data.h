@@ -77,6 +77,26 @@ struct ForecastData
     arma::mat x;
 };
 
+/// What the forecast horizon turned out to be, where the file carries it.
+///
+/// The counterpart of TrainData::y over the periods a forecast covers: one row
+/// per period, one column per variable, in the same order. It is not a sample
+/// anything is estimated on -- no sampler reads it -- but the observations a
+/// forecast is scored against, and it lives in the model file so that a window
+/// of an expanding window exercise carries what it is to be judged by. Scoring
+/// a folder of them is then one file at a time, rather than the caller holding
+/// the next window in memory to supply the observation this one predicted.
+///
+/// Empty where the file has none, which is every file that is a forecast rather
+/// than a forecast being scored. Shorter than the horizon where the sample ran
+/// out before the horizon did: the last windows of an expanding window are
+/// exactly that, and the periods that are there are the ones that can be
+/// scored.
+struct TestData
+{
+    arma::mat y;
+};
+
 } // namespace bayests
 
 #endif // BAYESTS_DATA_H

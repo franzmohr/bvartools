@@ -135,6 +135,17 @@ read_model_from_hdf5 <- function(filename, group = "", draws = NULL) {
         result[["data"]][["forecast"]][["z"]] <- as.matrix(hdf5r::readDataSet(h5_root[["data"]][["forecast"]][["z"]]))
       }
     }
+
+    # The values the horizon realised, one row per period and one column per
+    # variable. Read under /data like the rest of what a model is given, and
+    # unlike the errors taken against them, which are draws and belong to the
+    # posterior.
+    if ("test" %in% names(h5_root[["data"]])) {
+      if ("y" %in% names(h5_root[["data"]][["test"]])) {
+        result[["data"]][["test"]] <- list(
+          "y" = as.matrix(hdf5r::readDataSet(h5_root[["data"]][["test"]][["y"]])))
+      }
+    }
   }
   
   

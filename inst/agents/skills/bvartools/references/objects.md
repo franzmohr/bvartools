@@ -19,6 +19,7 @@ added:
 | `initial` | `add_initial_values()` | Starting values of the sampler |
 | `posterior` | `add_posterior_coefficients()` and the later `add_posterior_*()` | The draws |
 | `model$h`, `data$forecast` | `add_forecast_input()` | The horizon and the regressors of the forecast periods |
+| `data$test$y` | `add_forecast_errors()` | What the horizon realised: one row per period and one column per variable, the periods of the horizon and nothing else. The only thing under `data` that no sampler reads |
 
 A vector for `p`, `s`, `r` or `quantile` gives a `'modellist'` of such objects,
 and `use_expanding_window()` an `'expandingwindow'`, one model per window. Every
@@ -47,7 +48,7 @@ With `K` endogenous variables, `T` training periods and `M` coefficients,
 | `u_scale$coeffs` | `K` | `"ald"`: the scales |
 | `beta$coeffs` | `k_beta*r`, or `T*k_beta*r` with time-varying cointegration | VEC models |
 | `forecast$forecasts` | `K*h` | after `add_posterior_forecasts()` |
-| `forecast$errors` | `K*h` | after `add_forecast_errors()` |
+| `forecast$errors` | `K*h` | after `add_forecast_errors()`, against `data$test$y` |
 | `loglik` | `T` | after `add_posterior_loglik()` |
 
 `loglik` is an `mcmc` matrix itself rather than a list with `coeffs`. `forecast`

@@ -30,6 +30,7 @@ struct VarNormalWishartInput
     VarSpec spec;
     TrainData train;
     ForecastData forecast; ///< `x` empty when no forecast was requested.
+    TestData test; ///< `y` empty unless the file carries realised values.
 
     NormalPrior a_prior;          ///< Unused when there are no regressors.
     WishartPrior u_sigma_prior;
@@ -65,6 +66,7 @@ struct VarNormalGammaInput
     VarSpec spec;
     TrainData train;
     ForecastData forecast; ///< `x` empty when no forecast was requested.
+    TestData test; ///< `y` empty unless the file carries realised values.
 
     NormalPrior a_prior;         ///< Unused when there are no regressors.
     VarSelPrior a_varsel_prior;  ///< Unused when spec.varsel is none.
@@ -108,6 +110,7 @@ struct VarNormalStochvolInput
     VarSpec spec;
     TrainData train;
     ForecastData forecast;
+    TestData test; ///< `y` empty unless the file carries realised values.
 
     NormalPrior a_prior;
     VarSelPrior a_varsel_prior;
@@ -174,6 +177,7 @@ struct VarNormalAldInput
     VarSpec spec;
     TrainData train;
     ForecastData forecast; ///< Always empty: this model does not forecast.
+    TestData test; ///< `y` empty unless the file carries realised values.
 
     NormalPrior a_prior;
     VarSelPrior a_varsel_prior;
@@ -214,6 +218,7 @@ struct VarTvpGammaInput
     VarSpec spec;
     TrainData train;
     ForecastData forecast;
+    TestData test; ///< `y` empty unless the file carries realised values.
 
     RandomWalkPrior a_prior;
     VarSelPrior a_varsel_prior;
@@ -259,6 +264,7 @@ struct VarTvpWishartInput
     VarSpec spec;
     TrainData train;
     ForecastData forecast;
+    TestData test; ///< `y` empty unless the file carries realised values.
 
     RandomWalkPrior a_prior;
     VarSelPrior a_varsel_prior;
@@ -306,6 +312,7 @@ struct VarTvpStochvolInput
     VarSpec spec;
     TrainData train;
     ForecastData forecast;
+    TestData test; ///< `y` empty unless the file carries realised values.
 
     RandomWalkPrior a_prior;
     VarSelPrior a_varsel_prior;
@@ -358,6 +365,7 @@ struct VarTvpAldInput
     VarSpec spec;
     TrainData train;
     ForecastData forecast; ///< Always empty: this model does not forecast.
+    TestData test; ///< `y` empty unless the file carries realised values.
 
     RandomWalkPrior a_prior;
     VarSelPrior a_varsel_prior;
@@ -425,6 +433,7 @@ struct DfmNormalGammaInput
 {
     VarSpec spec;
     TrainData train;
+    TestData test; ///< `y` empty unless the file carries realised values.
 
     NormalPrior lambda_prior;  ///< Over the free loadings, in the row-major order above.
     NormalPrior a_prior;       ///< Unused when the factors have no dynamics.
@@ -514,6 +523,7 @@ struct DfmNormalStochvolInput
 {
     VarSpec spec;
     TrainData train;
+    TestData test; ///< `y` empty unless the file carries realised values.
 
     NormalPrior lambda_prior;  ///< Over the free loadings, in the row-major order above.
     NormalPrior a_prior;       ///< Unused when the factors have no dynamics.
@@ -600,6 +610,7 @@ struct DfmTvpGammaInput
 {
     VarSpec spec;
     TrainData train;
+    TestData test; ///< `y` empty unless the file carries realised values.
 
     /// The state equation of the free loadings, in the row-major order above.
     RandomWalkPrior lambda_prior;
@@ -711,6 +722,7 @@ struct DfmTvpStochvolInput
 {
     VarSpec spec;
     TrainData train;
+    TestData test; ///< `y` empty unless the file carries realised values.
 
     /// The state equation of the free loadings, in the row-major order above.
     RandomWalkPrior lambda_prior;
@@ -830,6 +842,7 @@ struct FavarNormalWishartInput
 {
     VarSpec spec;
     TrainData train;
+    TestData test; ///< `y` empty unless the file carries realised values.
 
     NormalPrior lambda_prior;  ///< Over the free loadings, in the row-major order above.
     NormalPrior a_prior;       ///< Unused when the state has no dynamics.
@@ -871,6 +884,7 @@ struct VecNormalWishartInput
     VarSpec spec;
     TrainData train;
     ForecastData forecast; ///< `x` empty when no forecast was requested.
+    TestData test; ///< `y` empty unless the file carries realised values.
 
     NormalPrior a_prior;          ///< Unused when there are no regressors.
     VarSelPrior varsel_prior;     ///< Unused when spec.varsel is none.
@@ -914,6 +928,7 @@ struct VecKlgs2010Input
     VarSpec spec;
     TrainData train;
     ForecastData forecast; ///< `x` empty when no forecast was requested.
+    TestData test; ///< `y` empty unless the file carries realised values.
 
     NormalPrior a_prior;                ///< Unused when there are no regressors.
     ConstantCointSpacePrior beta_prior; ///< Unused when the rank is zero.
@@ -972,6 +987,7 @@ struct VecNormalGammaInput
     VarSpec spec;
     TrainData train;
     ForecastData forecast;
+    TestData test; ///< `y` empty unless the file carries realised values.
 
     NormalPrior a_prior;
     VarSelPrior varsel_prior;
@@ -1021,6 +1037,7 @@ struct VecNormalStochvolInput
     VarSpec spec;
     TrainData train;
     ForecastData forecast;
+    TestData test; ///< `y` empty unless the file carries realised values.
 
     NormalPrior a_prior;
     VarSelPrior varsel_prior;
@@ -1066,6 +1083,7 @@ struct VecTvpWishartInput
     VarSpec spec;
     TrainData train;
     ForecastData forecast;
+    TestData test; ///< `y` empty unless the file carries realised values.
 
     RandomWalkPrior a_prior;
     VarSelPrior a_varsel_prior;
@@ -1109,6 +1127,7 @@ struct VecTvpGammaInput
     VarSpec spec;
     TrainData train;
     ForecastData forecast;
+    TestData test; ///< `y` empty unless the file carries realised values.
 
     RandomWalkPrior a_prior;
     VarSelPrior a_varsel_prior;
@@ -1179,6 +1198,7 @@ struct VecTvpStochvolInput
     VarSpec spec;
     TrainData train;
     ForecastData forecast;
+    TestData test; ///< `y` empty unless the file carries realised values.
 
     RandomWalkPrior a_prior;
     VarSelPrior a_varsel_prior;

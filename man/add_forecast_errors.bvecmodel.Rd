@@ -4,14 +4,15 @@
 \alias{add_forecast_errors.bvecmodel}
 \title{Add Forecast Errors}
 \usage{
-\method{add_forecast_errors}{bvecmodel}(object, test_sample, ...)
+\method{add_forecast_errors}{bvecmodel}(object, test_sample = NULL, ...)
 }
 \arguments{
 \item{object}{an object of class 'bvecmodel', usually, the result of a call to
 \code{\link{add_posterior_forecasts}}.}
 
 \item{test_sample}{a time-series object of the endogenous variables, in levels, that
-covers the forecast periods.}
+covers the forecast periods. If \code{NULL} (default), the values in
+\code{data$test$y} of the object are used.}
 
 \item{...}{further arguments passed to \code{\link{add_forecast_errors.bvarmodel}}.}
 }

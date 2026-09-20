@@ -3,7 +3,8 @@
 #' Calculates forecast errors and adds them to an object of class 'bvarmodel'.
 #'
 #' @param object an object of class 'bvarmodel'.
-#' @param test_sample a time-series object used as test data.
+#' @param test_sample a time-series object used as test data. If \code{NULL}
+#' (default), the values in \code{data$test$y} of the object are used.
 #' @param ... arguments passed forward to method.
 #'
 #' @return The object in \code{object} with \code{posterior$forecast$errors} added, a
@@ -47,42 +48,34 @@
 #'
 #' @family model comparison
 #' @export
-add_forecast_errors.bvarmodel <- function(object, test_sample, ...){
-  
+add_forecast_errors.bvarmodel <- function(object, test_sample = NULL, ...){
+
   if (is.null(.forecast_draws(object))) {
     stop("Object does not contain forecasts.")
   }
-  k <- object[["model"]][["k"]]
-  draws <- nrow(.forecast_draws(object))
-  h <- object[["model"]][["h"]]
-  
-  if (k == 1) {
-    tsp_test_sample <- stats::tsp(test_sample)
-    test_sample <- stats::ts(as.matrix(test_sample), class = c("mts", "ts", "matrix"))
-    stats::tsp(test_sample) <- tsp_test_sample
+
+  realised <- if (is.null(test_sample)) {
+    .realised_values(object)
   } else {
-    test_sample <- test_sample[, object[["model"]][["endogen"]]]
+    .align_test_sample(object, test_sample)
   }
-  test_sample <- stats::na.omit(test_sample)
-  
-  # Determine when the forecasts start
-  tsp_train <- stats::tsp(object[["data"]][["train"]][["y"]])
-  forecast_starts_at <- tsp_train[2] + 1 / tsp_train[3]
-  
-  if (forecast_starts_at %in% stats::time(test_sample)) {
-    test_sample <- stats::window(test_sample, start = forecast_starts_at)
-    
-    if (nrow(test_sample) < h) {
-      h <- nrow(test_sample)
-    }
-    test_sample <- as.matrix(test_sample[1:h, ])
-    
-    mc_stats <- coda::mcpar(.forecast_draws(object))
-    
-    # Repeat the available test data and subtract corresponding forecasts without loop
-    object[["posterior"]][["forecast"]][["errors"]] <- coda::mcmc(t(matrix(t(test_sample), h * k, draws)) - .forecast_draws(object)[, 1:(h * k)],
-                                                             start = mc_stats[1], end = mc_stats[2], thin = mc_stats[3])
+  if (is.null(realised)) {
+    return(object)
   }
-  
+
+  k <- object[["model"]][["k"]]
+  h <- nrow(realised)
+  draws <- nrow(.forecast_draws(object))
+  mc_stats <- coda::mcpar(.forecast_draws(object))
+
+  # What a model was scored against travels with it, so that the same model read
+  # back from a file can be scored again without the sample being supplied a
+  # second time.
+  object[["data"]][["test"]][["y"]] <- realised
+
+  # Repeat the available test data and subtract corresponding forecasts without loop
+  object[["posterior"]][["forecast"]][["errors"]] <- coda::mcmc(t(matrix(t(realised), h * k, draws)) - .forecast_draws(object)[, 1:(h * k)],
+                                                               start = mc_stats[1], end = mc_stats[2], thin = mc_stats[3])
+
   return(object)
 }

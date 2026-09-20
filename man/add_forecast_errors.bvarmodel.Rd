@@ -4,12 +4,13 @@
 \alias{add_forecast_errors.bvarmodel}
 \title{Add Forecast Errors}
 \usage{
-\method{add_forecast_errors}{bvarmodel}(object, test_sample, ...)
+\method{add_forecast_errors}{bvarmodel}(object, test_sample = NULL, ...)
 }
 \arguments{
 \item{object}{an object of class 'bvarmodel'.}
 
-\item{test_sample}{a time-series object used as test data.}
+\item{test_sample}{a time-series object used as test data. If \code{NULL}
+(default), the values in \code{data$test$y} of the object are used.}
 
 \item{...}{arguments passed forward to method.}
 }

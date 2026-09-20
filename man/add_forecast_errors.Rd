@@ -4,12 +4,15 @@
 \alias{add_forecast_errors}
 \title{Add Forecast Errors}
 \usage{
-add_forecast_errors(object, test_sample, ...)
+add_forecast_errors(object, test_sample = NULL, ...)
 }
 \arguments{
 \item{object}{an object of a class, for which a method should be called.}
 
-\item{test_sample}{a time-series object used as test data.}
+\item{test_sample}{a time-series object used as test data. If \code{NULL}
+(default), the values in \code{data$test$y} of the object are used, which is
+what a model carries after it has been scored once and what a model read from
+a file was written with.}
 
 \item{...}{arguments passed forward to method.}
 }

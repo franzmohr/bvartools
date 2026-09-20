@@ -203,6 +203,14 @@ write_to_hdf5.bvarmodel <- function(object, filename, group = "", ...) {
     .hdf5_write(group_data_forecast, "z", object[["data"]][["forecast"]][["z"]])
   }
 
+  # What the horizon realised, where the model carries it. No sampler reads it;
+  # it is what a forecast is scored against, and it is in the file so that a
+  # window of an expanding window exercise can be scored from the file alone.
+  if (!is.null(object[["data"]][["test"]][["y"]])) {
+    group_data_test <- .hdf5_group(handles, group_data, "test")
+    .hdf5_write(group_data_test, "y", object[["data"]][["test"]][["y"]])
+  }
+
   # Priors ----
   # Nothing is written at all for a model that has not been through
   # add_priors(), because an empty group is worse than no group: the reader

@@ -330,6 +330,13 @@ vec_to_var.bvecmodel <- function(object, ...) {
     result[["model"]][["h"]] <- specs[["h"]]
   }
 
+  # And so are the values the horizon realised, which a VEC model forecasts in
+  # levels and is therefore scored against in levels: the same numbers the
+  # representation is scored against.
+  if (!is.null(object[["data"]][["test"]])) {
+    result[["data"]][["test"]] <- object[["data"]][["test"]]
+  }
+
   # Posterior draws ----
 
   if (!is.null(object[["posterior"]])) {

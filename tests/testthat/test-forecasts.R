@@ -120,6 +120,76 @@ test_that("forecast errors are computed against a test sample", {
   expect_true(length(errors) > 0)
 })
 
+# A model that has been scored once, for the tests of data$test$y below.
+scored_var_model <- function(n_ahead = 4) {
+  data <- var_data()
+  train <- stats::window(data, end = c(1997, 1))
+  model <- create_bvarmodel(train, p = 1, deterministic = "const",
+                            iterations = 10, burnin = 5)
+  model <- add_priors(model, coef = list(v_i = 0, v_i_det = 0),
+                      sigma = list(df = 1, scale = 0.0001))
+  set.seed(31)
+  model <- add_initial_values(model)
+  model <- add_posterior_coefficients(model)
+  model <- add_forecast_input(model, n_ahead = n_ahead)
+  model <- add_posterior_forecasts(model)
+  add_forecast_errors(model, test_sample = stats::window(data, start = c(1997, 2)))
+}
+
+test_that("a model keeps the values it was scored against", {
+  model <- scored_var_model()
+  realised <- model[["data"]][["test"]][["y"]]
+
+  expect_false(is.null(realised))
+  # One row per period of the horizon and one column per variable, which is the
+  # layout of data$train$y and of /data/test/y in the file.
+  expect_identical(dim(realised), c(4L, as.integer(model[["model"]][["k"]])))
+  expect_equal(as.numeric(realised),
+               as.numeric(stats::window(var_data(), start = c(1997, 2), end = c(1998, 1))))
+})
+
+test_that("a model that carries them is scored again without a test sample", {
+  model <- scored_var_model()
+  # The errors of a second scoring are the errors of the first: the same
+  # observations reach the same forecasts.
+  again <- add_forecast_errors(model)
+
+  expect_equal(unclass(get_forecast_errors(again)), unclass(get_forecast_errors(model)))
+  expect_equal(again[["data"]][["test"]][["y"]], model[["data"]][["test"]][["y"]])
+})
+
+test_that("scoring needs a test sample from somewhere", {
+  model <- scored_var_model()
+  model[["data"]][["test"]] <- NULL
+  expect_error(add_forecast_errors(model), "carries none in data", fixed = TRUE)
+})
+
+test_that("realised values of the wrong shape are refused", {
+  model <- scored_var_model()
+  y <- model[["data"]][["test"]][["y"]]
+
+  wide <- model
+  wide[["data"]][["test"]][["y"]] <- cbind(y, y[, 1])
+  expect_error(add_forecast_errors(wide), "columns, but the model has")
+
+  long <- model
+  long[["data"]][["test"]][["y"]] <- rbind(y, y)
+  expect_error(add_forecast_errors(long), "more than the 4 this model forecasts")
+})
+
+test_that("a sample that does not reach the forecast periods leaves the model alone", {
+  model <- scored_var_model()
+  model[["data"]][["test"]] <- NULL
+  model[["posterior"]][["forecast"]][["errors"]] <- NULL
+
+  # Every period of it is before the forecast starts.
+  early <- stats::window(var_data(), end = c(1996, 4))
+  unchanged <- add_forecast_errors(model, test_sample = early)
+
+  expect_null(unchanged[["data"]][["test"]][["y"]])
+  expect_null(get_forecast_errors(unchanged))
+})
+
 test_that("a time varying model simulates its states forward unless told to hold them", {
   for (error in c("sv", "gamma")) {
     fitted <- add_forecast_input(fx_var_tvp_fitted(error), n_ahead = 6)

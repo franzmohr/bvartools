@@ -111,6 +111,18 @@ their absolute and root squared values, one row per variable and horizon, with
 the columns `variable`, `h`, `mean`, `median`, `qlower` and `qupper`.
 `plot_forecast_errors_by_period()` plots them over the windows.
 
+`LPL`, the log predictive likelihood, is the out-of-sample criterion that is a
+density rather than a distance: how likely the observations were under the
+model, not how far the point forecast fell from them. It appears wherever the
+densities behind it do, and they come from two places. `add_predictive_loglik()`
+takes one per window of an expanding window exercise -- the criterion Koop,
+Leon-Gonzalez and Strachan (2011) compare time-varying cointegration ranks with,
+and the one to use where `WAIC` and `LOOIC` cannot separate models whose states
+have seen the observation they are scored on. A single model carries one per
+horizon of its forecast in `posterior$forecast$loglik`, written by BayesTS
+against `data$test$y`; `choose_best_model(sc, criterion = "LPL")` takes the
+maximum of either, `LPL` being a likelihood rather than a penalty.
+
 Several specifications are compared by building an expanding window for each,
 joining them with `combine_models()` before `add_posterior_coefficients()`, and
 calling `selection_criteria()` on the combined list.

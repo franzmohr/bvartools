@@ -406,6 +406,76 @@ add_predictive_loglik.modellist <- function(object, ...) {
   m + log(mean(exp(x - m)))
 }
 
+# The 'LPL' entry of a set of criteria, built from a sequence of one step ahead
+# predictive densities.
+#
+# 'densities' is a list of draws of the log predictive density, one element per
+# period, and 'periods' the times of the observations they score. The log of the
+# mean of exp() of each is that period's log predictive density, and their sum
+# is the log predictive likelihood.
+#
+# Both sources reach this. An expanding window exercise has one density per
+# window, taken by add_predictive_loglik() from the draws of that window; a
+# single model has one per horizon of its forecast, taken by BayesTS against the
+# values in data$test$y and read back from posterior$forecast$loglik. They are
+# the same quantity computed two ways, and going through one function is what
+# makes them agree by construction rather than by coincidence.
+#
+# The band treats the terms as independent, which they are not -- consecutive
+# windows share all but one observation, and consecutive horizons share a
+# forecast origin -- so it is a rough guide to how much of the total is sampling
+# noise rather than an interval to test with. The numerical standard error
+# beside it is a different thing: what the length of the chain contributes, which
+# more draws would shrink and more data would not.
+.lpl_entry <- function(densities, periods, ci_low, ci_high) {
+
+  terms <- data.frame(
+    period = as.numeric(periods),
+    lpd = vapply(densities, .log_mean_exp, numeric(1)),
+    nse = vapply(densities, .nse_log_mean_exp, numeric(1)))
+
+  n_terms <- nrow(terms)
+  lpl <- sum(terms[["lpd"]])
+  se <- if (n_terms > 1) sqrt(n_terms * stats::var(terms[["lpd"]])) else NA_real_
+  z <- stats::qnorm(ci_high)
+
+  entry <- data.frame(mean = lpl, median = NA_real_,
+                      qlower = lpl - z * se, qupper = lpl + z * se)
+  attr(entry, "terms") <- terms
+  attr(entry, "nse") <- sqrt(sum(terms[["nse"]]^2))
+
+  return(entry)
+}
+
+
+# The draws of the log predictive density a model carries, one element per
+# scored period, with the times of the periods they score. NULL where the model
+# has not been scored.
+#
+# posterior$forecast$loglik is draws by scored periods, written by BayesTS
+# against data$test$y. The periods are counted on from the end of the estimation
+# sample, and fall back on the horizon number where the sample carries no time.
+.model_predictive_densities <- function(object) {
+
+  score <- object[["posterior"]][["forecast"]][["loglik"]]
+  if (is.null(score)) {
+    return(NULL)
+  }
+
+  score <- as.matrix(score)
+  n <- ncol(score)
+  tsp_train <- stats::tsp(object[["data"]][["train"]][["y"]])
+  periods <- if (is.null(tsp_train)) {
+    seq_len(n)
+  } else {
+    tsp_train[2] + seq_len(n) / tsp_train[3]
+  }
+
+  return(list(densities = lapply(seq_len(n), function(i) score[, i]),
+              periods = periods))
+}
+
+
 .nse_log_mean_exp <- function(x, batches = 20) {
   batches <- min(batches, floor(length(x) / 2))
   if (batches < 2) {

@@ -114,18 +114,10 @@ selection_criteria.expandingwindow <- function(object, ci = 0.95, ...){
 
   # Log predictive likelihood
   if (use_lpl) {
-    terms <- data.frame(
-      period = vapply(predictive, function(p) as.numeric(p[["period"]]), numeric(1)),
-      lpd = vapply(predictive, function(p) .log_mean_exp(p[["loglik"]]), numeric(1)),
-      nse = vapply(predictive, function(p) .nse_log_mean_exp(p[["loglik"]]), numeric(1)))
-    n_terms <- nrow(terms)
-    lpl <- sum(terms[["lpd"]])
-    se <- if (n_terms > 1) sqrt(n_terms * stats::var(terms[["lpd"]])) else NA_real_
-    z <- stats::qnorm(ci_high)
-    result[["LPL"]] <- data.frame(mean = lpl, median = NA_real_,
-                                  qlower = lpl - z * se, qupper = lpl + z * se)
-    attr(result[["LPL"]], "terms") <- terms
-    attr(result[["LPL"]], "nse") <- sqrt(sum(terms[["nse"]]^2))
+    result[["LPL"]] <- .lpl_entry(
+      lapply(predictive, function(p) p[["loglik"]]),
+      vapply(predictive, function(p) as.numeric(p[["period"]]), numeric(1)),
+      ci_low, ci_high)
   }
 
   # In-sample

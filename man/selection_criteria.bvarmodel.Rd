@@ -23,7 +23,11 @@ element \code{model} and one data frame per criterion. If the model contains
 contains \code{posterior$forecast$errors}, these are \code{FE}, \code{AFE} and
 \code{RSFE}, the forecast errors and their absolute and root squared values, with the
 columns \code{variable}, \code{h}, \code{mean}, \code{median}, \code{qlower} and
-\code{qupper}.
+\code{qupper}. If it contains \code{posterior$forecast$loglik}, the score of its
+forecast against \code{data$test$y}, there is \code{LPL}, the log predictive
+likelihood: the log of the mean of the draws of each scored period's predictive
+density, summed over the periods. Attribute \code{"terms"} holds those per period
+and \code{"nse"} their numerical standard error.
 }
 \description{
 Calculates model selection criteria for an object of class 'bvarmodel'.

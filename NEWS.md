@@ -1,5 +1,21 @@
 # bvartools (development version)
 
+* **`selection_criteria()` reports the score of a forecast as `LPL`.** A model
+  that carries `posterior$forecast$loglik` -- the log predictive density of each
+  period its horizon realised, written by BayesTS against `data$test$y` -- now
+  gets the criterion `"LPL"`, the log of the mean of the draws of each period's
+  density, summed over the periods. `choose_best_model()` takes it as before and
+  `print()` shows it beside the in-sample criteria.
+
+  It is the criterion an expanding window exercise already reported, from the
+  densities of `add_predictive_loglik()`, and the two now go through one
+  function: the same densities give the same entry, band and numerical standard
+  error alike, so a comparison of a scored model with a scored window is a
+  comparison of the same quantity. A single model's densities are those of the
+  horizons of one forecast, each conditioning on the periods realised before it;
+  an expanding window's are one per window. Both are one step ahead and both sum
+  to the log predictive likelihood of the stretch they cover.
+
 * **A model carries what it was scored against, in `data$test$y`.**
   `add_forecast_errors()` puts the periods of the horizon it took the errors
   against into the model, and `write_to_hdf5()` writes them to `/data/test/y`,

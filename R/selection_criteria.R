@@ -77,11 +77,18 @@
 #' towards, and neither criterion separates models that differ in how much of
 #' that freedom they have, such as the cointegration ranks of a time varying
 #' VEC model. The criterion for those comparisons is \code{"LPL"}, the log
-#' predictive likelihood of an expanding window exercise
-#' (\code{\link{add_predictive_loglik}}), whose densities condition only on the
-#' data before the period they evaluate and carry the states forward with their
-#' state equations. Koop, León-González and Strachan (2011) choose between time
+#' predictive likelihood, whose densities condition only on the data before the
+#' period they evaluate. Koop, León-González and Strachan (2011) choose between time
 #' varying cointegration models with it.
+#'
+#' Two things produce those densities and both report them as \code{"LPL"}.
+#' \code{\link{add_predictive_loglik}} takes one per window of an expanding
+#' window exercise, carrying the states forward with their state equations, which
+#' is the form the comparison of ranks above is made in. A single model carries
+#' one per horizon of its forecast in \code{posterior$forecast$loglik}, written
+#' by BayesTS against the values in \code{data$test$y}, each conditioning on the
+#' periods realised before it. They are the same quantity computed two ways and
+#' are summarised by the same code, so the same densities give the same number.
 #'
 #' All criteria require that the models that are compared were estimated on the
 #' same observations. \code{\link{create_bvarmodel}} and

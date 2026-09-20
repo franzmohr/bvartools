@@ -389,3 +389,82 @@ test_that("a pointwise log-likelihood too variable for its correction is reporte
   }
   expect_output(print(selection_criteria(models)), "in model 2 \\(")
 })
+
+
+# --- the log predictive likelihood of a scored model -------------------------
+#
+# posterior$forecast$loglik is what BayesTS writes when it scores a forecast
+# against data$test$y: one row per draw, one column per scored period, each
+# column a one step ahead predictive density. selection_criteria() turns it into
+# the criterion "LPL", the same one an expanding window exercise reports.
+
+scored_model <- function(periods = 3, draws = 40) {
+  model <- fx_var_fitted()
+  model[["model"]][["h"]] <- periods
+  set.seed(19)
+  score <- matrix(stats::rnorm(draws * periods, mean = -4, sd = 0.5), draws, periods)
+  model[["posterior"]][["forecast"]] <- list(loglik = coda::mcmc(score))
+  model
+}
+
+test_that("a scored forecast becomes the criterion LPL", {
+  model <- scored_model()
+  criteria <- selection_criteria(model)
+  score <- unclass(model[["posterior"]][["forecast"]][["loglik"]])
+
+  expect_true("LPL" %in% names(criteria))
+  expect_named(criteria[["LPL"]], c("mean", "median", "qlower", "qupper"))
+
+  # The log of the mean of exp() per period, summed: the joint density of the
+  # realised stretch, factorised.
+  lpd <- apply(score, 2, function(column) {
+    top <- max(column)
+    top + log(mean(exp(column - top)))
+  })
+  expect_equal(criteria[["LPL"]][["mean"]], sum(lpd))
+  expect_equal(attr(criteria[["LPL"]], "terms")[["lpd"]], lpd)
+})
+
+test_that("the scored periods are counted on from the end of the sample", {
+  model <- scored_model(periods = 3)
+  terms <- attr(selection_criteria(model)[["LPL"]], "terms")
+  tsp_train <- stats::tsp(model[["data"]][["train"]][["y"]])
+
+  expect_identical(nrow(terms), 3L)
+  expect_equal(terms[["period"]], tsp_train[2] + (1:3) / tsp_train[3])
+})
+
+test_that("both sources of an LPL give the same entry for the same densities", {
+  # An expanding window takes one density per window and a scored model one per
+  # horizon. They are the same quantity computed two ways, and both go through
+  # .lpl_entry(), so the same draws have to give the same entry -- which is what
+  # keeps a comparison of the two honest.
+  model <- scored_model(periods = 3)
+  score <- unclass(model[["posterior"]][["forecast"]][["loglik"]])
+  periods <- attr(selection_criteria(model)[["LPL"]], "terms")[["period"]]
+
+  as_windows <- lapply(seq_len(ncol(score)), function(i) score[, i])
+  from_windows <- bvartools:::.lpl_entry(as_windows, periods, 0.025, 0.975)
+
+  expect_equal(unclass(selection_criteria(model)[["LPL"]]), unclass(from_windows))
+  expect_equal(attr(selection_criteria(model)[["LPL"]], "nse"), attr(from_windows, "nse"))
+})
+
+test_that("a scored model can be chosen on its LPL", {
+  models <- list(scored_model(), scored_model())
+  # The second model scores better everywhere.
+  models[[2]][["posterior"]][["forecast"]][["loglik"]] <-
+    models[[2]][["posterior"]][["forecast"]][["loglik"]] + 1
+
+  criteria <- lapply(models, selection_criteria)
+  class(criteria) <- c("selcritlist", "list")
+
+  expect_identical(choose_best_model(criteria, criterion = "LPL"), 2L)
+  expect_output(print(criteria[[1]]), "Log predictive likelihood|LPL")
+})
+
+test_that("a model with nothing to summarise is refused", {
+  model <- fx_var_fitted()
+  model[["posterior"]][["loglik"]] <- NULL
+  expect_error(selection_criteria(model), "a scored forecast")
+})

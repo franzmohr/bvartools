@@ -15,7 +15,11 @@
 #' contains \code{posterior$forecast$errors}, these are \code{FE}, \code{AFE} and
 #' \code{RSFE}, the forecast errors and their absolute and root squared values, with the
 #' columns \code{variable}, \code{h}, \code{mean}, \code{median}, \code{qlower} and
-#' \code{qupper}.
+#' \code{qupper}. If it contains \code{posterior$forecast$loglik}, the score of its
+#' forecast against \code{data$test$y}, there is \code{LPL}, the log predictive
+#' likelihood: the log of the mean of the draws of each scored period's predictive
+#' density, summed over the periods. Attribute \code{"terms"} holds those per period
+#' and \code{"nse"} their numerical standard error.
 #'
 #' @examples
 #' 
@@ -82,9 +86,17 @@ selection_criteria.bvarmodel <- function(object, ci = 0.95, ...){
   
   errors <- get_forecast_errors(object)
   use_fe <- !is.null(errors)
-  
-  if (!use_ll & !use_fe) {
-    stop("Model object must contain at least either posterior draws of the log-likelihood or forecast errors.")
+
+  # The score of the forecast against what the horizon realised, where the model
+  # carries one. Out of sample like the errors, and unlike them a density rather
+  # than a distance: it says how likely the observations were under the model,
+  # not how far the point forecast fell from them.
+  predictive <- .model_predictive_densities(object)
+  use_lpl <- !is.null(predictive)
+
+  if (!use_ll & !use_fe & !use_lpl) {
+    stop("Model object must contain at least either posterior draws of the log-likelihood, ",
+         "a scored forecast or forecast errors.")
   }
   
   result <- NULL
@@ -145,6 +157,12 @@ selection_criteria.bvarmodel <- function(object, ci = 0.95, ...){
 
   
   
+  # Log predictive likelihood
+  if (use_lpl) {
+    result[["LPL"]] <- .lpl_entry(predictive[["densities"]], predictive[["periods"]],
+                                  ci_low, ci_high)
+  }
+
   if (use_fe) {
     
     h <- ncol(errors) / k

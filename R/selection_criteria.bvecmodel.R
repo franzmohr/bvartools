@@ -90,9 +90,17 @@ selection_criteria.bvecmodel <- function(object, ci = 0.95, ...){
   
   errors <- get_forecast_errors(object)
   use_fe <- !is.null(errors)
-  
-  if (!use_ll & !use_fe) {
-    stop("Model object must contain at least either posterior draws of the log-likelihood or forecast errors.")
+
+  # The score of the forecast against what the horizon realised, where the model
+  # carries one. Out of sample like the errors, and unlike them a density rather
+  # than a distance: it says how likely the observations were under the model,
+  # not how far the point forecast fell from them.
+  predictive <- .model_predictive_densities(object)
+  use_lpl <- !is.null(predictive)
+
+  if (!use_ll & !use_fe & !use_lpl) {
+    stop("Model object must contain at least either posterior draws of the log-likelihood, ",
+         "a scored forecast or forecast errors.")
   }
   
   result <- NULL
@@ -153,6 +161,12 @@ selection_criteria.bvecmodel <- function(object, ci = 0.95, ...){
 
   
   
+  # Log predictive likelihood
+  if (use_lpl) {
+    result[["LPL"]] <- .lpl_entry(predictive[["densities"]], predictive[["periods"]],
+                                  ci_low, ci_high)
+  }
+
   if (use_fe) {
     
     h <- ncol(errors) / k

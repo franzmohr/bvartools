@@ -12,7 +12,8 @@ to \code{\link{selection_criteria}}.}
 
 \item{criterion}{the selection criterion that should be used. Available choices
 are \code{"LL"}, \code{"AIC"}, \code{"BIC"}, \code{"HQ"},
-\code{"WAIC"} (default), \code{"LOOIC"} and \code{"LPL"}.}
+\code{"WAIC"} (default), \code{"LOOIC"}, \code{"LPL"} and, for the
+discounted models, \code{"LML"}.}
 
 \item{...}{further arguments passed to or from other methods.}
 }
@@ -25,8 +26,8 @@ Chooses the best model according the selection criteria in an object of class
 'selcritlist'.
 }
 \details{
-If argument \code{criterion} is "LL" or "LPL", the model with the maximum value
-is chosen, otherwise, the model with the minimum value.
+If argument \code{criterion} is "LL", "LPL" or "LML", the model with the
+maximum value is chosen, otherwise, the model with the minimum value.
 
 Which criterion to use depends on the models that are compared. See
 \code{\link{selection_criteria}}, whose details set out what each of them
@@ -41,6 +42,13 @@ prior, which is the case they are derived for. \code{"LPL"}, the log
 predictive likelihood of an expanding window exercise with
 \code{\link{add_predictive_loglik}}, is the criterion for the rank of a VEC
 model whose coefficients or variances follow a state equation.
+
+\code{"LML"} is the one criterion of the discounted models and the only one
+they carry. It is the exact log marginal likelihood of the sample, read off
+the file rather than estimated, so a grid over the rank, the cointegration
+matrix, the lag order or the two discounts is compared by it directly. It is
+not comparable with \code{"LL"}, which conditions on the parameters where
+this integrates them out.
 }
 \examples{
 # Load data

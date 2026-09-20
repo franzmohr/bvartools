@@ -189,6 +189,13 @@ model_files <- function(x, models = NULL) {
     # A model that keeps every draw carries no 'thin', so that is one rather
     # than missing.
     thin = if (is.null(specs[["thin"]])) 1L else field("thin", "integer"),
+    # The discounted models only. One is the value at which the quantity a
+    # discount governs does not move, so a model that carries neither is
+    # reported as one rather than as missing -- and every other algorithm is a
+    # model whose coefficients and error covariance are what they are, which is
+    # what one says.
+    delta_beta = if (is.null(specs[["delta_beta"]])) 1 else field("delta_beta", "numeric"),
+    delta_sigma = if (is.null(specs[["delta_sigma"]])) 1 else field("delta_sigma", "numeric"),
     stringsAsFactors = FALSE
   )
 }

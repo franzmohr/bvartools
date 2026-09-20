@@ -187,15 +187,7 @@ read_model_from_hdf5 <- function(filename, group = "", draws = NULL) {
         # time varying model keeps beside its coefficients, was exactly that.
         for (j in names(element)) {
           dataset <- element[[j]]
-          block <- .read_draw_rows(dataset, draws)
-          result[["posterior"]][[i]][[j]] <- if (is.null(draws)) {
-            coda::mcmc(block,
-                       start = hdf5r::h5attr(dataset, "start"),
-                       end = hdf5r::h5attr(dataset, "end"),
-                       thin = hdf5r::h5attr(dataset, "thin"))
-          } else {
-            coda::mcmc(block)
-          }
+          result[["posterior"]][[i]][[j]] <- .read_posterior_block(dataset, draws)
         }
       } else {
         # The draws the writer keeps on their own rather than in a group,
@@ -203,7 +195,7 @@ read_model_from_hdf5 <- function(filename, group = "", draws = NULL) {
         # than by name, so that another one needs nothing here -- which is what
         # let the forecast become a group, read as posterior$forecast$forecasts
         # beside its errors, without a line of this changing.
-        result[["posterior"]][[i]] <- coda::mcmc(.read_draw_rows(element, draws))
+        result[["posterior"]][[i]] <- .read_posterior_block(element, draws)
       }
     }
   }
@@ -221,9 +213,11 @@ read_model_from_hdf5 <- function(filename, group = "", draws = NULL) {
       result_class <- c("bvarmodel", "list")
     }
     
+    bvarmodel <- c(bvarmodel, "VarTvpDiscount")
+
     bvecmodel <- c("VecNormalGamma", "VecNormalStochvol", "VecNormalWishart",
                    "VecTvpGamma", "VecTvpStochvol", "VecTvpWishart",
-                   "VecKlgs2010")
+                   "VecKlgs2010", "VecTvpDiscount")
     if (result[["model"]][["algorithm"]] %in% bvecmodel) {
       result_class <- c("bvecmodel", "list")
     } 
@@ -255,18 +249,52 @@ read_model_from_hdf5 <- function(filename, group = "", draws = NULL) {
   draws
 }
 
+# One block of a posterior, as a chain where it is one and as a matrix where it
+# is not.
+#
+# Everything a sampler writes carries coda's mcpar -- the start, the end and the
+# thinning interval of the chain it came from -- and is read back as an 'mcmc'
+# object. The discounted models write no such attributes, and correctly: their
+# posterior is one column per period of a closed form rather than one row per
+# draw of a chain, so there is no start, no end and nothing thinned. A block
+# without them is read as the plain matrix it is. Labelling it as a chain would
+# make a row of it look like a draw, and the rows are periods.
+.read_posterior_block <- function(dataset, draws) {
+
+  block <- .read_draw_rows(dataset, draws)
+
+  if (!"start" %in% hdf5r::h5attr_names(dataset)) {
+    return(block)
+  }
+  if (!is.null(draws)) {
+    return(coda::mcmc(block))
+  }
+
+  coda::mcmc(block,
+             start = hdf5r::h5attr(dataset, "start"),
+             end = hdf5r::h5attr(dataset, "end"),
+             thin = hdf5r::h5attr(dataset, "thin"))
+}
+
 # One block of a posterior, as a matrix of the draws asked for. Rows are read
 # from the file rather than read and then subset, which is what keeps a partial
 # read small.
 .read_draw_rows <- function(dataset, draws) {
 
-  if (is.null(draws)) {
-    return(as.matrix(hdf5r::readDataSet(dataset)))
-  }
-
   dims <- dataset$dims
   n_draws <- dims[1]
   n_columns <- if (length(dims) > 1) dims[2] else 1L
+
+  if (is.null(draws)) {
+    # Shaped from what the file says rather than from what hdf5r hands back.
+    # A dataset with one row comes back as a plain vector, dimensions dropped,
+    # and as.matrix() then makes a column of it -- so a block of one draw over
+    # many columns was read transposed, as many draws of one column. Nothing a
+    # sampler writes has one draw, which is why this went unseen until the
+    # discounted models, whose /posterior/loglik is exactly that: one row, the
+    # exact pointwise log marginal likelihood over the sample.
+    return(matrix(hdf5r::readDataSet(dataset), nrow = n_draws, ncol = n_columns))
+  }
 
   if (length(draws) == 0) {
     return(matrix(numeric(0), nrow = 0, ncol = n_columns))

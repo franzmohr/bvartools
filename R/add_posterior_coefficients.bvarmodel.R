@@ -95,6 +95,10 @@ add_posterior_coefficients.bvarmodel <- function(object, posterior_function = NU
   # does not.
   if (is.null(posterior_function)) {
 
+    if (.is_discount(object)) {
+      .refuse_discount_in_r(object, "estimation of the coefficients")
+    }
+
     # Check if the input is suitable for the posterior simulation functions
     .check_bvarpost_input(object)
 

@@ -16,6 +16,9 @@ create_bvarmodel(
   quantile = 0.5,
   tvp = FALSE,
   varsel = "none",
+  algorithm = NULL,
+  delta_beta = 1,
+  delta_sigma = 1,
   iterations = 20000,
   burnin = 2000,
   thin = 1
@@ -54,6 +57,16 @@ Defaults to \code{FALSE}.}
 
 \item{varsel}{character specifying the type of variable selection algorithm
 that should be employed. Default is \code{"none"}. See 'Details'.}
+
+\item{algorithm}{algorithm that should be used for posterior simulation. If
+\code{NULL} (default), the algorithm is named by \code{tvp} and \code{error}.
+The one non-standard option is \code{"discount"}. See 'Details'.}
+
+\item{delta_beta, delta_sigma}{numeric discount factors in \eqn{(0, 1]} of the
+discounted model, the first governing the coefficients and the second the
+error covariance. Both default to 1, at which the quantity they govern does
+not move. Ignored unless \code{algorithm = "discount"}, and a vector in
+either produces one model per value. See 'Details'.}
 
 \item{iterations}{an integer of MCMC draws excluding burn-in draws (defaults
 to 20000).}
@@ -167,6 +180,23 @@ Available specifications for argument \code{varsel} are:
  \item \code{"bvs"}: Bayesian variable selection as proposed in Korobilis (2013).
  \item \code{"ssvs"}: Stochastic search variable selection as proposed in George et al. (2008).
 }
+
+The one specification for argument \code{algorithm} is \code{"discount"}, the
+discounted time varying parameter model of West & Harrison (1997, ch. 16)
+with the discounted Wishart of Uhlig (1997), estimated by
+\code{VarTvpDiscount}. It is not a sampler: its posterior is closed form --
+one pass over the sample, no chain -- so \code{burnin} must be 0 and
+\code{thin} 1, and \code{iterations} says only how many i.i.d. draws a
+forecast takes from the answer. Its error covariance is the inverse Wishart
+whole, so \code{error} must be \code{"wishart"} and neither variable
+selection nor a structural model is available. What it buys is speed and an
+exact marginal likelihood: the sum of \code{/posterior/loglik} is the log
+marginal likelihood of the sample given the two discounts, so a grid over
+them can be compared without a chain being run for any of it.
+
+Estimation runs in BayesTS. \code{\link{add_posterior_coefficients}} refuses a
+discounted model, because there is no R implementation of the filter: write
+the model with \code{\link{write_to_hdf5}} and run the command line over it.
 }
 \examples{
 
@@ -196,6 +226,12 @@ Kozumi, H., & Kobayashi, G. (2011). Gibbs sampling methods for Bayesian quantile
 \doi{10.1080/00949655.2010.496117}
 
 Lütkepohl, H. (2006). \emph{New Introduction to Multiple Time Series Analysis} (2nd ed.). Berlin: Springer.
+
+Uhlig, H. (1997). Bayesian vector autoregressions with stochastic volatility.
+\emph{Econometrica, 65}(1), 59--73. \doi{10.2307/2171813}
+
+West, M., & Harrison, J. (1997). \emph{Bayesian forecasting and dynamic models}
+(2nd ed.). New York: Springer.
 }
 \seealso{
 \code{\link{bvartools_model}} describes the object this returns, element by element.

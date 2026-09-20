@@ -84,6 +84,7 @@ Collate:
     'create_bvecmodel.R'
     'create_external_forecast.R'
     'data.R'
+    'discount_models.R'
     'draw_error_bars.R'
     'external_forecast_methods.R'
     'fevd.R'

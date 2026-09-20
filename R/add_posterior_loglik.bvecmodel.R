@@ -45,6 +45,9 @@
 add_posterior_loglik.bvecmodel <- function(object, ...) {
   
   # Input checks
+  if (.is_discount(object)) {
+    .refuse_discount_in_r(object, "the log-likelihood")
+  }
   if (is.null(object[["posterior"]][["u_sigma_inv"]][["coeffs"]])) {
     stop("Object does not contain posterior draws in posterior$u_sigma_inv.")
   }

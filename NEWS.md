@@ -1,5 +1,64 @@
 # bvartools (development version)
 
+* **The two discounted models, `VarTvpDiscount` and `VecTvpDiscount`, can be set
+  up, written, scored and read back.** They are reached with
+  `algorithm = "discount"` of `create_bvarmodel()` and `create_bvecmodel()`, and
+  they are estimated by BayesTS on the file: there is no R implementation of the
+  filter, and `add_posterior_coefficients()` says so rather than falling through
+  to "algorithm not supported". No sampler here changes, and no model that does
+  not ask for the new algorithm is written differently.
+
+    They are not samplers. The posterior is the matrix normal dynamic linear
+    model of West & Harrison (1997, ch. 16) with the discounted Wishart of Uhlig
+    (1997), closed form in one pass over the sample, so `burnin` must be 0 and
+    `thin` 1 and `iterations` says only how many i.i.d. draws a forecast takes.
+    Two discounts govern it, `delta_beta` for the coefficients and
+    `delta_sigma` for the error covariance, both in `(0, 1]` and both a model in
+    their own right at 1, where the quantity they govern does not move. A vector
+    in either gives one model per value, as a vector in `p`, `s` or `r` does.
+
+    What they buy, besides the speed, is that the sum of `/posterior/loglik` is
+    the **exact** log marginal likelihood of the sample rather than an estimate
+    of it. `selection_criteria()` reports it as `LML`, and it is the one
+    criterion they carry: there is no chain to estimate an effective number of
+    parameters from, and the marginal likelihood has already paid for the
+    complexity a count of parameters would charge for. `choose_best_model()`
+    maximises it, so a grid over the rank, the lag order, the cointegration
+    matrix or the two discounts is compared without a chain being run for any of
+    it.
+
+    Three things about the file differ from every other model here, and each is
+    a different model rather than a spelling. The coefficient prior is a matrix
+    normal at `/priors/a/mean` and `/priors/a/cov` -- an n_design x k mean and
+    the n_design x n_design regressor side of a covariance -- and not the
+    `/priors/a/mu` and `/priors/a/v_inv` of a sampler, which a discounted model
+    reads as no prior at all. `add_priors()` therefore takes `coef$v_i`,
+    `coef$v_i_det`, `coef$v_i_alpha` and `coef$const`, refuses `coef$shape` and
+    `coef$rate`, which are the prior of state variances this model does not
+    have, and refuses `coef$v_i = 0`, a precision with no covariance to write.
+    The SUR matrix `/data/train/z` is not written, the filter running against
+    the compact `/data/train/x` instead. And a discounted VEC **conditions on a
+    fixed cointegration matrix** rather than drawing one:
+    `add_initial_values()` puts Johansen's estimate at `/initial/beta`, or the
+    space given in its new `beta` argument, and there is no cointegration space
+    prior to specify. What drifts is the adjustment to the long-run relations
+    and not the relations themselves, which is a different question from the one
+    `algorithm = "KLGS2010"` answers rather than a cheaper way of answering the
+    same one.
+
+    `open_models()` reports `delta_beta` and `delta_sigma` in the manifest, at 1
+    for every model that has no discounts, which is what 1 means.
+
+* **`read_model_from_hdf5()` reads a posterior block of one row as one row.**
+  hdf5r drops a dimension of size one, and `as.matrix()` then made a column of
+  what the file holds as a row, so such a block came back transposed: a single
+  draw over many columns read as many draws of one column. Nothing a sampler
+  writes has one draw, which is why this went unseen -- the discounted models'
+  `/posterior/loglik` and their one-column `/posterior/beta/coeffs` are exactly
+  that. A block with no `mcpar` attributes is now also read as the plain matrix
+  it is rather than labelled as a chain, because a closed form's columns are
+  periods and its rows are not draws.
+
 * **Vendored BayesTS core refreshed to upstream `7d7c6ca`, which is BayesTS
   0.3.0 and the fix that followed it.** **Draws are unchanged**, for every
   sampler here, and nothing this package compiles behaves differently: the four

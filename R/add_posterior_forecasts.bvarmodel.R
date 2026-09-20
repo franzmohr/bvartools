@@ -87,6 +87,12 @@ add_posterior_forecasts.bvarmodel <- function(object, forecast_states = NULL, ..
     stop("Model specification does not contain input data. Consider using function add_forecast_input().")
   }
   
+  # Drawn i.i.d. from the closed form rather than carried along a chain, so the
+  # paths come back unlabelled and return here.
+  if (.is_discount(object)) {
+    return(.discount_forecasts(object))
+  }
+
   if (algorithm %in% c("VarNormalGamma", "VarNormalStochvol", "VarNormalWishart",
                        "VarTvpGamma", "VarTvpStochvol", "VarTvpWishart")) {
     object <- switch(algorithm,

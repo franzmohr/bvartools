@@ -194,9 +194,16 @@ exact marginal likelihood: the sum of \code{/posterior/loglik} is the log
 marginal likelihood of the sample given the two discounts, so a grid over
 them can be compared without a chain being run for any of it.
 
-Estimation runs in BayesTS. \code{\link{add_posterior_coefficients}} refuses a
-discounted model, because there is no R implementation of the filter: write
-the model with \code{\link{write_to_hdf5}} and run the command line over it.
+\code{\link{add_posterior_coefficients}} estimates it like any other
+algorithm, the filter being part of the vendored BayesTS core. It consumes no
+random numbers, so two runs agree to the bit and a model estimated here and
+the same model estimated by the \code{bayests} command line over a file
+written with \code{\link{write_to_hdf5}} give the same numbers rather than
+merely the same distribution. What comes back is a posterior rather than a
+chain: one row per period under \code{posterior$a$mean},
+\code{posterior$a$cov}, \code{posterior$u_sigma$scale} and
+\code{posterior$df}, and no \code{coeffs} anywhere, because joining one
+draw per period would look like a sampled path and is not one.
 }
 \examples{
 

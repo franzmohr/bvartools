@@ -87,6 +87,12 @@ add_predictive_loglik.bvecmodel <- function(object, test_sample = NULL, ...) {
 
   object[["data"]][["test"]][["y"]] <- realised
 
+  if (.is_discount(object)) {
+    object <- .discount_score(object)
+    class(object) <- class_of_object
+    return(object)
+  }
+
   algorithm <- object[["model"]][["algorithm"]]
   object <- switch(algorithm,
                    VecKlgs2010 = .VecKlgs2010Score(object),

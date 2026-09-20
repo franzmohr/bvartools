@@ -1,11 +1,12 @@
 # The two discounted models, which are not samplers.
 #
-# What is checked here is the file the R side writes and the object it reads
-# back, not the filter: the filter is BayesTS's and runs on the file. So the
-# tests are about the layout -- the two /model attributes, the matrix normal
-# prior under its own names, the fixed cointegration matrix, the SUR matrix that
-# must not be there -- and about the refusals, each of which BayesTS would
-# otherwise raise against a file that had already been written.
+# What is checked here is the layout -- the two /model attributes, the matrix
+# normal prior under its own names, the fixed cointegration matrix, the SUR
+# matrix that must not be there -- the refusals, each of which BayesTS would
+# otherwise raise against a file that had already been written, and the shape of
+# what the filter returns. The filter itself is the vendored BayesTS core's and
+# is pinned upstream; what these tests own is the boundary, which is where the
+# closed form stops looking like a chain.
 
 discount_vec <- function(r = 1, ...) {
   data("e6", package = "bvartools", envir = environment())
@@ -215,13 +216,119 @@ test_that("a posterior of one row is read as one row", {
 })
 
 
-test_that("the steps that would estimate in R refuse a discounted model", {
+test_that("a discounted VAR is estimated in R, as a posterior and not a chain", {
 
-  model <- fitted_discount_vec(r = 1)
-  expect_error(add_posterior_coefficients(model), "BayesTS")
+  model <- add_initial_values(add_priors(discount_var(delta_beta = 0.99, delta_sigma = 0.98),
+                                         coef = list(v_i = 1, v_i_det = 1 / 10),
+                                         sigma = list(df = "k", scale = 1)))
 
-  model[["posterior"]] <- list(u_sigma_inv = list(coeffs = matrix(1)))
-  expect_error(add_posterior_loglik(model), "BayesTS")
+  fitted <- add_posterior_coefficients(model)
+
+  expect_s3_class(fitted, "bvarmodel")
+
+  tt <- nrow(fitted[["data"]][["train"]][["y"]])
+  k <- fitted[["model"]][["k"]]
+  n_x <- ncol(fitted[["data"]][["train"]][["x"]])
+
+  posterior <- fitted[["posterior"]]
+  expect_equal(dim(posterior[["a"]][["mean"]]), c(tt, n_x * k))
+  expect_equal(dim(posterior[["a"]][["scale"]]), c(tt, n_x * k))
+  expect_equal(dim(posterior[["a"]][["cov"]]), c(tt, n_x^2))
+  expect_equal(dim(posterior[["u_sigma"]][["scale"]]), c(tt, k^2))
+  expect_equal(dim(posterior[["df"]]), c(tt, 1L))
+  expect_true(all(is.finite(posterior[["a"]][["mean"]])))
+
+  # A period is not a draw, so none of it is labelled as one.
+  expect_null(posterior[["a"]][["coeffs"]])
+  expect_null(posterior[["u_sigma_inv"]])
+  expect_false(inherits(posterior[["a"]][["mean"]], "mcmc"))
+
+  # One row, the exact pointwise log marginal likelihood of each period.
+  scored <- add_posterior_loglik(fitted)
+  expect_equal(dim(scored[["posterior"]][["loglik"]]), c(1L, tt))
+  expect_true(all(is.finite(scored[["posterior"]][["loglik"]])))
+  expect_false(inherits(scored[["posterior"]][["loglik"]], "mcmc"))
+
+  # LML is that row summed, and it is the only criterion the model carries.
+  criteria <- selection_criteria(scored)
+  expect_equal(criteria[["LML"]][["mean"]], sum(scored[["posterior"]][["loglik"]]))
+  expect_null(criteria[["WAIC"]])
+})
+
+
+test_that("estimating a discounted model consumes no random numbers", {
+
+  model <- add_initial_values(add_priors(discount_var(delta_beta = 0.98),
+                                         coef = list(v_i = 1, v_i_det = 1 / 10),
+                                         sigma = list(df = "k", scale = 1)))
+
+  # Two runs from different states of the generator, which a sampler would not
+  # survive: the posterior is closed form, so it is the same arithmetic twice.
+  set.seed(1)
+  first <- add_posterior_coefficients(model)
+  set.seed(2)
+  second <- add_posterior_coefficients(model)
+
+  expect_identical(first[["posterior"]], second[["posterior"]])
+})
+
+
+test_that("a discounted VEC estimates against the space it conditions on", {
+
+  model <- fitted_discount_vec(r = 1, delta_beta = 0.98)
+  fitted <- add_posterior_coefficients(model)
+
+  expect_s3_class(fitted, "bvecmodel")
+
+  tt <- nrow(fitted[["data"]][["train"]][["y"]])
+  k <- fitted[["model"]][["k"]]
+  n_design <- fitted[["model"]][["rank"]] + ncol(fitted[["data"]][["train"]][["x"]])
+
+  posterior <- fitted[["posterior"]]
+  expect_equal(dim(posterior[["a"]][["mean"]]), c(tt, n_design * k))
+  expect_equal(dim(posterior[["a"]][["cov"]]), c(tt, n_design^2))
+
+  # The loadings mean nothing without the space they load on, so it travels
+  # with them -- one row, because it did not move and was not estimated.
+  expect_equal(as.vector(posterior[["beta"]][["coeffs"]]),
+               as.vector(fitted[["initial"]][["beta"]]))
+
+  expect_equal(dim(add_posterior_loglik(fitted)[["posterior"]][["loglik"]]), c(1L, tt))
+
+  # Rank zero is a VAR in differences, which the model accepts and which has no
+  # space to carry.
+  rank_zero <- add_posterior_coefficients(fitted_discount_vec(r = 0))
+  expect_null(rank_zero[["posterior"]][["beta"]])
+})
+
+
+test_that("a discounted model forecasts and scores what the horizon realised", {
+
+  data("e1", package = "bvartools", envir = environment())
+  series <- diff(log(e1)) * 100
+  train <- stats::window(series, end = stats::time(series)[nrow(series) - 4])
+
+  model <- add_initial_values(add_priors(
+    create_bvarmodel(train, p = 1, deterministic = "const", algorithm = "discount",
+                     delta_beta = 0.99, iterations = 15, burnin = 0, thin = 1),
+    coef = list(v_i = 1, v_i_det = 1 / 10),
+    sigma = list(df = "k", scale = 1)))
+
+  fitted <- add_forecast_input(add_posterior_coefficients(model), n_ahead = 4)
+  forecast <- add_posterior_forecasts(fitted)
+
+  k <- fitted[["model"]][["k"]]
+  # 'iterations' has lost its chain and kept its name: it is how many i.i.d.
+  # draws from the closed form a forecast takes.
+  expect_equal(dim(forecast[["posterior"]][["forecast"]][["forecasts"]]), c(15L, 4L * k))
+  expect_true(all(is.finite(forecast[["posterior"]][["forecast"]][["forecasts"]])))
+
+  scored <- add_predictive_loglik(forecast, test_sample = series)
+  loglik <- scored[["posterior"]][["forecast"]][["loglik"]]
+  # One row: the filter carries itself through the realised values, so there is
+  # nothing to average over.
+  expect_equal(nrow(loglik), 1L)
+  expect_true(all(is.finite(loglik)))
 })
 
 
@@ -316,4 +423,18 @@ test_that("BayesTS estimates a grid of ranks and scores it exactly", {
 
   # LML is that row summed, which is the exact log marginal likelihood.
   expect_equal(criteria[[6]][["LML"]][["mean"]], sum(posterior[["loglik"]]))
+})
+
+
+test_that("the two exported helpers say what a discounted model is", {
+
+  expect_true(is_discount_model(discount_vec()))
+  expect_true(is_discount_model(discount_vec()[["model"]]))
+  expect_true(is_discount_model("VarTvpDiscount"))
+  expect_false(is_discount_model("VecNormalWishart"))
+  expect_false(is_discount_model(NULL))
+
+  expect_null(check_discount_specification(k = 3, delta_sigma = 0.9))
+  expect_error(check_discount_specification(k = 3, error = "sv"), "wishart")
+  expect_error(check_discount_specification(k = 3, delta_sigma = 0.5), "too small")
 })

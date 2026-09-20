@@ -32,22 +32,74 @@
 # ask names it once.
 .discount_algorithms <- c("VarTvpDiscount", "VecTvpDiscount")
 
-# Whether a model, or a bare specification list, is one of them.
-#
-# Takes either, because the callers have either: a step of the workflow holds
-# the whole object, while the HDF5 reader has rebuilt `model` and nothing else.
-.is_discount <- function(x) {
+#' The Discounted Models
+#'
+#' Whether a model is one of the two discounted models, and what a discounted
+#' model cannot be. Both are exported for the packages that build a model of
+#' their own on this one and have to make the same distinction.
+#'
+#' @param x a model, a specification list -- the \code{model} element of one --
+#' or the name of an algorithm.
+#' @param k the number of endogenous variables.
+#' @param error,varsel,structural,burnin,thin the corresponding arguments of
+#' \code{\link{create_bvarmodel}} or \code{\link{create_bvecmodel}}.
+#' @param delta_beta,delta_sigma the two discount factors.
+#'
+#' @details
+#' \code{VarTvpDiscount} and \code{VecTvpDiscount} are the matrix normal
+#' dynamic linear model of West & Harrison (1997, ch. 16) with the discounted
+#' Wishart of Uhlig (1997). Their posterior is closed form -- one pass over the
+#' sample, no chain, no random numbers consumed -- which is what every refusal
+#' below follows from. See \code{\link{create_bvecmodel}} for what they are and
+#' how they are set up.
+#'
+#' \code{check_discount_specification} raises an error for a specification a
+#' discounted model cannot carry and returns nothing otherwise. Each refusal is
+#' one BayesTS would raise as well, against a file that had already been
+#' written; raising it here means one error for a grid of models rather than one
+#' per file.
+#'
+#' @return \code{is_discount_model} returns a single logical.
+#' \code{check_discount_specification} returns \code{NULL} invisibly.
+#'
+#' @references
+#'
+#' Uhlig, H. (1997). Bayesian vector autoregressions with stochastic volatility.
+#' \emph{Econometrica, 65}(1), 59--73. \doi{10.2307/2171813}
+#'
+#' West, M., & Harrison, J. (1997). \emph{Bayesian forecasting and dynamic models}
+#' (2nd ed.). New York: Springer.
+#'
+#' @examples
+#'
+#' data("e6")
+#' model <- create_bvecmodel(e6 * 100, p = 2, r = 1, const = "unrestricted",
+#'                           algorithm = "discount", delta_beta = 0.98,
+#'                           iterations = 10, burnin = 0, thin = 1)
+#' is_discount_model(model)
+#' is_discount_model("VecNormalWishart")
+#'
+#' @name discount_models
+#' @export
+is_discount_model <- function(x) {
 
   if (is.null(x)) {
     return(FALSE)
   }
   algorithm <- if (is.list(x) && !is.null(x[["model"]])) {
     x[["model"]][["algorithm"]]
-  } else {
+  } else if (is.list(x)) {
     x[["algorithm"]]
+  } else {
+    x
   }
 
   isTRUE(algorithm %in% .discount_algorithms)
+}
+
+# The short spelling the rest of the package uses.
+.is_discount <- function(x) {
+  is_discount_model(x)
 }
 
 # The two discounts, checked.
@@ -94,6 +146,19 @@
 # message arrives while the specification is still an argument rather than a
 # file, which for a grid of models is the difference between one error and one
 # per file.
+#' @rdname discount_models
+#' @export
+check_discount_specification <- function(k, error = "wishart", varsel = "none",
+                                         structural = FALSE, burnin = 0,
+                                         thin = 1, delta_beta = 1,
+                                         delta_sigma = 1) {
+
+  .check_discount_specification(error, varsel, structural, burnin, thin)
+  .check_discount_deltas(delta_beta, delta_sigma, k)
+
+  return(invisible(NULL))
+}
+
 .check_discount_specification <- function(error, varsel, structural, burnin, thin) {
 
   if (!identical(error, "wishart")) {
@@ -328,21 +393,77 @@
 }
 
 
-# What to say when a step that runs in R meets a discounted model.
+# The four stages of a discounted model, each of which runs the filter in the
+# vendored BayesTS core rather than a sampler.
 #
-# The filter is not implemented here and is not going to be: the division of
-# labour this package keeps is that R writes the model file and describes what
-# comes back, and BayesTS does the estimating. For every other algorithm that is
-# a preference, since the R samplers exist beside the C++ ones; for the
-# discounted models it is the whole story.
+# They are separate from the switch() of each step because the steps around them
+# do not apply. A sampler's posterior is a chain, so every step wraps what comes
+# back in coda's mcpar -- read off `u_sigma_inv`, which these do not have -- and
+# a discounted posterior is one column per period of a closed form, with no
+# start, no end and nothing thinned. Each step therefore hands the model over
+# here and returns what comes back, rather than falling through to machinery
+# that would label periods as draws.
 #
-# `what` names the step, so that the message says which one stopped.
-.refuse_discount_in_r <- function(object, what) {
+# Nothing in `.discount_coefficients()` or the VAR's log-likelihood consumes the
+# random number generator: the posterior is closed form, so two runs agree to
+# the bit and the seed has nothing to repeat. Forecasting does consume it, being
+# i.i.d. draws from that posterior, as does scoring a VEC forecast, and both are
+# therefore run under the model's seed like every sampler here.
 
-  stop("The discounted models have no implementation in R: ", what,
-       " runs in BayesTS. Write the model with write_to_hdf5() and run the ",
-       "command line over the file, `bayests posterior <file.h5>`, then read ",
-       "the result back with read_model_from_hdf5().")
+.discount_coefficients <- function(object) {
+
+  # The entry points replace the posterior of the object they were given rather
+  # than rebuilding it from named elements, as the samplers' do: a discounted
+  # model need not have an `initial` at all -- nothing iterates -- and naming an
+  # element that is absent is an error. What does not survive the round trip is
+  # the class, as it does not for any of the C++ entry points here, so it is put
+  # back by hand.
+  .with_discount_class(object, switch(object[["model"]][["algorithm"]],
+                                      VarTvpDiscount = .VarTvpDiscountCoefficients(object),
+                                      VecTvpDiscount = .VecTvpDiscountCoefficients(object)))
+}
+
+# The class of the model the C++ side was given, put back on what it returned.
+.with_discount_class <- function(object, result) {
+  class(result) <- class(object)
+  result
+}
+
+.discount_loglik <- function(object) {
+
+  if (is.null(object[["posterior"]][["a"]][["mean"]])) {
+    stop("Object does not contain an estimated posterior in posterior$a$mean. ",
+         "Use add_posterior_coefficients() first.")
+  }
+
+  # Not wrapped in an 'mcmc': one row, the exact pointwise log marginal
+  # likelihood of each period, rather than one row per draw.
+  .with_discount_class(object, switch(object[["model"]][["algorithm"]],
+                                      VarTvpDiscount = .VarTvpDiscountLogLik(object),
+                                      VecTvpDiscount = .VecTvpDiscountLogLik(object)))
+}
+
+.discount_forecasts <- function(object) {
+
+  if (is.null(object[["model"]][["h"]])) {
+    stop("Model specification does not contain forecast horizon 'h'. Consider using ",
+         "function add_forecast_input().")
+  }
+
+  .with_discount_class(object,
+                       .with_model_seed(object[["model"]][["seed"]],
+                                        switch(object[["model"]][["algorithm"]],
+                                               VarTvpDiscount = .VarTvpDiscountForecasts(object),
+                                               VecTvpDiscount = .VecTvpDiscountForecasts(object))))
+}
+
+.discount_score <- function(object) {
+
+  .with_discount_class(object,
+                       .with_model_seed(object[["model"]][["seed"]],
+                                        switch(object[["model"]][["algorithm"]],
+                                               VarTvpDiscount = .VarTvpDiscountScore(object),
+                                               VecTvpDiscount = .VecTvpDiscountScore(object))))
 }
 
 

@@ -189,7 +189,7 @@ add_predictive_loglik.modellist <- function(object, ...) {
                             "VarTvpGamma", "VarTvpStochvol", "VarTvpWishart",
                             "VecKlgs2010", "VecNormalGamma", "VecNormalStochvol",
                             "VecNormalWishart", "VecTvpGamma", "VecTvpStochvol",
-                            "VecTvpWishart")
+                            "VecTvpWishart", "VarTvpDiscount", "VecTvpDiscount")
 
 # Refuses a model whose algorithm the density is not the density of. 'i' names
 # the window it is, where the caller is working through an expanding window

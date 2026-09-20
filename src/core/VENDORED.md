@@ -7,14 +7,17 @@ project is here -- the core deliberately links neither HDF5 nor HighFive,
 prints nothing and reads no files, which is what makes it embeddable in an R
 package at all.
 
-The copy is **BayesTS 0.3.0 plus one commit**: `7d7c6ca`, which is the 0.3.0
-release -- the version in upstream's `CMakeLists.txt` and `CHANGELOG.md` -- and
-the fix to `factor_score.h` that followed it. That fix reaches nothing here:
-`factor_score.h` is one of the files *Not copied* below, because only a factor
-model's score runs that filter. 0.3.0 is not tagged or archived yet, so there is
-no version DOI to name; the concept DOI
+The copy is **BayesTS 0.3.0 plus one commit**: `6fe91d2`, which is the `v0.3.0`
+release -- the version in upstream's `CMakeLists.txt` and `CHANGELOG.md`, tagged
+on commit `18a86c2` -- and the fix to `core/models/var_tvp_discount.cpp` that
+followed it, which is upstream's `2dc9250`. That fix does reach this package:
+it is what makes `add_predictive_loglik()` score more than the first horizon of
+a discounted VAR, and it was found by wiring that path up here. The previous
+refresh sat one commit short of the release, at `7d7c6ca`; this one brings the
+release, the two discounted models and that fix. 0.3.0 is not archived yet, so
+there is no version DOI to name; the concept DOI
 <https://doi.org/10.5281/zenodo.22722531> resolves to the newest release
-whenever one is cut, and the last archived release is 0.2.0,
+whenever one is deposited, and the last archived release is 0.2.0,
 <https://doi.org/10.5281/zenodo.22765348>.
 
 Upstream commits that change nothing under `include/` or `src/core/` do not move
@@ -156,28 +159,6 @@ models are scored by `predictive_score.h` alone -- with realised history their
 regressors do not depend on the draw, so the score is the model's own pointwise
 log likelihood over the scored periods, and no filter is needed.
 
-**The two discounted models, for now.** `VarTvpDiscount` and `VecTvpDiscount`
-arrived with BayesTS 0.3.0: a matrix normal dynamic linear model with a
-discounted Wishart on the error precision, whose posterior is closed form rather
-than a chain. They are VAR and VEC samplers and so this package's business,
-which makes them the one entry in this section that is skipped for a reason that
-will expire. Nothing here calls them yet -- there is no `src/VarTvpDiscount.cpp`
-binding and no R entry point -- so copying them would put two samplers and
-`core/models/discount_support.h` in the shared object with no way to reach them,
-which is the dead weight the paragraph above declines. Delete their five entries
-from `skip` when the bindings are written and the next refresh brings them.
-
-As with the factor models, this does not take their type surface out:
-`VarTvpDiscountInput` and `VecTvpDiscountInput` are in `bayests/inputs.h`,
-`MatrixNormalPrior` in `bayests/priors.h`, both posteriors in
-`bayests/results.h`, and `delta_beta` and `delta_sigma` in `bayests/spec.h` --
-files every model shares and which are copied whole. Their validators are the
-exception to what the DFM paragraph says: upstream defines them in the sampler
-sources rather than in `core/inputs.cpp`, so here the two `validate()` methods
-are declared and not defined. That links because nothing calls them, and it
-stops linking the moment something does, which is the right place for the
-omission to surface.
-
 `core/algorithms/chan_jeliazkov_2009.cpp` is copied and now carries a second
 entry point, `chan_jeliazkov_2009_conditional`, which holds the trailing elements
 of every state column at observed values instead of drawing them. Nothing here
@@ -193,6 +174,50 @@ and are copied whole, so the DFMs' type surface and their input validation stay
 compiled in. What goes is the samplers that would act on them.
 `src/bayests_r_io.h` reads `n_factors` for the same reason: the field is there
 whether or not anything sets it.
+
+## The discounted models
+
+`core/models/var_tvp_discount.cpp`, `core/models/vec_tvp_discount.cpp` and the
+`core/models/discount_support.h` both of them share arrived with BayesTS 0.3.0
+and were left out of the previous refresh, under a *Not copied* entry that said
+to delete itself once something here could reach them. `src/VarTvpDiscount.cpp`
+and `src/VecTvpDiscount.cpp` are that something, so they are vendored like any
+other model and the entry is gone.
+
+**They are the one pair in the core that is not a sampler.** The posterior is
+the matrix normal dynamic linear model of West & Harrison (1997, ch. 16) with
+the discounted Wishart of Uhlig (1997), closed form in one pass over the sample,
+which is why the bindings look different from the eight beside them:
+
+* The entry point is `estimate()` returning a `Var/VecTvpDiscountPosterior`,
+  not `draw_coefficients()` returning draws. What crosses into R is one column
+  per period -- `a$mean`, `a$scale`, `a$cov`, `u_sigma$scale` and `df` -- and it
+  carries no `mcpar`, because there is no chain to have a start, an end or a
+  thinning interval. `draws_to_r()` still does the transposing, the orientation
+  being the same one a chain crosses in.
+* Estimation consumes no random numbers, so a model estimated here and the same
+  model estimated by the `bayests` command line agree to the bit rather than
+  merely in distribution. Forecasting does consume them, being i.i.d. draws from
+  the closed form, and runs under the model's seed like every sampler.
+* The log-likelihood entry point runs the filter again rather than reading the
+  stored posterior back. `log_likelihood()` returns `posterior.loglik`, which
+  `estimate()` fills on its way through and which is not among the blocks the
+  posterior is written as. Re-running costs one deterministic pass over the
+  sample and is the same arithmetic on the same input, not a second estimate of
+  it -- the same reasoning upstream's own file front-end gives.
+
+`VarSpec::delta_beta` and `VarSpec::delta_sigma` had to be added to
+`read_spec()` in `src/bayests_r_io.h`. Both default to one in the core, and one
+is a model rather than a neutral value -- the quantity the discount governs does
+not move -- so a specification whose discounts never reached the filter would
+have estimated a constant coefficient model and said nothing about it.
+
+The matrix normal prior is read by `read_matrix_normal_prior()` from `mean` and
+`cov`, deliberately not from the `mu` and `v_inv` a sampler's normal prior over
+the vectorised coefficients uses. The two are different objects: `cov` is the
+regressor side of a covariance in units of the error covariance, the full prior
+covariance being `Sigma` kronecker `cov`, which is what makes the posterior
+closed form.
 
 ## The simulation smoother
 

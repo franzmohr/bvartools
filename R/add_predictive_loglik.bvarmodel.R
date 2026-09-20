@@ -117,6 +117,12 @@ add_predictive_loglik.bvarmodel <- function(object, test_sample = NULL, ...) {
   # a model written to a file carries what /data/test/y holds.
   object[["data"]][["test"]][["y"]] <- realised
 
+  if (.is_discount(object)) {
+    object <- .discount_score(object)
+    class(object) <- class_of_object
+    return(object)
+  }
+
   algorithm <- object[["model"]][["algorithm"]]
   object <- switch(algorithm,
                    VarNormalGamma = .VarNormalGammaScore(object),

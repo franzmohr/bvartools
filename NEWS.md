@@ -1,12 +1,21 @@
 # bvartools (development version)
 
 * **The two discounted models, `VarTvpDiscount` and `VecTvpDiscount`, can be set
-  up, written, scored and read back.** They are reached with
-  `algorithm = "discount"` of `create_bvarmodel()` and `create_bvecmodel()`, and
-  they are estimated by BayesTS on the file: there is no R implementation of the
-  filter, and `add_posterior_coefficients()` says so rather than falling through
-  to "algorithm not supported". No sampler here changes, and no model that does
-  not ask for the new algorithm is written differently.
+  up, estimated, forecast, scored, written and read back.** They are reached
+  with `algorithm = "discount"` of `create_bvarmodel()` and
+  `create_bvecmodel()`, and `add_posterior_coefficients()` estimates them here
+  like any other algorithm: the filter is part of the vendored BayesTS core, as
+  every sampler in this package is. Estimating one consumes no random numbers,
+  so a model estimated in R and the same model estimated by the `bayests`
+  command line over a written file agree to the bit rather than merely in
+  distribution. No sampler here changes, and no model that does not ask for the
+  new algorithm is written differently.
+
+    What comes back is a posterior rather than a chain, and the steps that
+    follow know it: `posterior$a$mean`, `posterior$a$scale`, `posterior$a$cov`,
+    `posterior$u_sigma$scale` and `posterior$df` hold one row per period and
+    carry no `mcpar`, and there is no `coeffs` anywhere, because joining one
+    draw per period would look like a sampled path and is not one.
 
     They are not samplers. The posterior is the matrix normal dynamic linear
     model of West & Harrison (1997, ch. 16) with the discounted Wishart of Uhlig
@@ -59,8 +68,8 @@
   it is rather than labelled as a chain, because a closed form's columns are
   periods and its rows are not draws.
 
-* **Vendored BayesTS core refreshed to upstream `7d7c6ca`, which is BayesTS
-  0.3.0 and the fix that followed it.** **Draws are unchanged**, for every
+* **Vendored BayesTS core refreshed to BayesTS 0.3.0 plus one commit,
+  `6fe91d2`.** **Draws are unchanged** for every
   sampler here, and nothing this package compiles behaves differently: the four
   headers that changed -- `bayests/inputs.h`, `priors.h`, `results.h` and
   `spec.h` -- gain declarations and nothing else, and no vendored source reads
@@ -72,12 +81,22 @@
   the fix.
 
     What 0.3.0 adds is `VarTvpDiscount` and `VecTvpDiscount`, two models with a
-    closed-form posterior rather than a chain. **They are not vendored yet.**
-    They are this package's kind of model rather than a factor model, so unlike
-    everything else in that section of `VENDORED.md` they are held back only
-    until there is a binding to reach them, and their entries in the refresh
-    script's `skip` say so. Their inputs, priors and posteriors are declared
-    here regardless, in the four headers above, because every model shares those.
+    closed-form posterior rather than a chain, and **both are now vendored**:
+    `core/models/var_tvp_discount.cpp`, `core/models/vec_tvp_discount.cpp` and
+    the `core/models/discount_support.h` they share. An earlier refresh held
+    them back because nothing here could reach them; `src/VarTvpDiscount.cpp`
+    and `src/VecTvpDiscount.cpp` now can, so their entries are out of the
+    refresh script's `skip` and `src/core/VENDORED.md` describes them under a
+    section of their own rather than under *Not copied*.
+
+    The one commit past the release is a fix to `VarTvpDiscount`, found by
+    wiring its score up here: `predictive_log_density()` read the rows of
+    `/data/forecast/x` as they arrived, and the lagged endogenous blocks of a
+    horizon past the first hold a placeholder, which a forecast overwrites as it
+    simulates and that recursion does not. The first horizon was scored
+    correctly and every one after it came back as `NaN`. It now fills those
+    blocks from the realised values, as the eight sampling VARs beside it always
+    have. `VecTvpDiscount` was never affected.
 
     `src/core/VENDORED.md` now also records which upstream commit the copy is
     at, which it never has. Nothing but a reader enforces that paragraph -- the

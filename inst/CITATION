@@ -15,7 +15,7 @@ bibentry(bibtype = "Manual",
                 "). bvartools: Bayesian Inference of Vector Autoregressive and Error Correction Models. ",
                 note, ". doi:10.5281/zenodo.22736604"))
 
-bibentry(header = "To cite the algortihm of Koop et al. (2010) use:",
+bibentry(header = "To cite the algorithm of Koop et al. (2010) use:",
          bibtype = "article",
          title = "Efficient posterior simulation for cointegrated models with priors on the cointegration space",
          author = c(person("G.", "Koop"),
@@ -33,7 +33,7 @@ bibentry(header = "To cite the algortihm of Koop et al. (2010) use:",
                 "doi:10.1080/07474930903382208")
 )
 
-bibentry(header = "To cite the algortihm of Koop et al. (2011) use:",
+bibentry(header = "To cite the algorithm of Koop et al. (2011) use:",
          bibtype = "article",
          title = "Bayesian inference in a time varying cointegration model",
          author = c(person("G.", "Koop"),
@@ -52,7 +52,7 @@ bibentry(header = "To cite the algortihm of Koop et al. (2011) use:",
 )
 
 
-bibentry(header = "To cite the algortihm of Durbin & Koopman (2002) use:",
+bibentry(header = "To cite the algorithm of Durbin & Koopman (2002) use:",
          bibtype = "article",
          title = "A simple and efficient simulation smoother for state space time series analysis",
          author = c(person("J.", "Durbin"),
@@ -67,7 +67,7 @@ bibentry(header = "To cite the algortihm of Durbin & Koopman (2002) use:",
                 "Biometrika 89(3), 603--615.")
 )
 
-bibentry(header = "To cite the SSVS algortihm of George et al. (2008) use:",
+bibentry(header = "To cite the SSVS algorithm of George et al. (2008) use:",
          bibtype = "article",
          title = "Bayesian stochastic search for VAR model restrictions",
          author = c(person(c("E.", "I."), "George"),
@@ -85,7 +85,7 @@ bibentry(header = "To cite the SSVS algortihm of George et al. (2008) use:",
                 "doi:10.1016/j.jeconom.2007.08.017")
 )
 
-bibentry(header = "To cite the BVS algortihm of Korobilis (2013) use:",
+bibentry(header = "To cite the BVS algorithm of Korobilis (2013) use:",
          bibtype = "article",
          title = "VAR forecasting using Bayesian variable selection",
          author = person("D.", "Korobilis"),
@@ -101,7 +101,7 @@ bibentry(header = "To cite the BVS algortihm of Korobilis (2013) use:",
                 "doi:10.1002/jae.1271")
 )
 
-bibentry(header = "To cite the stochastic volatility algortihm of Kim et al. (1998) use:",
+bibentry(header = "To cite the stochastic volatility algorithm of Kim et al. (1998) use:",
          bibtype = "article",
          title = "Stochastic volatility. Likelihood inference and comparison with ARCH models",
          author = c(person("S.", "Kim"),
@@ -119,9 +119,9 @@ bibentry(header = "To cite the stochastic volatility algortihm of Kim et al. (19
                 "doi:10.1111/1467-937X.00050")
 )
 
-bibentry(header = "To cite the stochastic volatility algortihm of Omori et al. (2007) use:",
+bibentry(header = "To cite the stochastic volatility algorithm of Omori et al. (2007) use:",
          bibtype = "article",
-         title = "Stochastic volatiltiy with leverage. Fast and efficient likelihood inference",
+         title = "Stochastic volatility with leverage. Fast and efficient likelihood inference",
          author = c(person("Y.", "Omori"),
                     person("S.", "Chib"),
                     person("N.", "Shephard"),
@@ -133,7 +133,7 @@ bibentry(header = "To cite the stochastic volatility algortihm of Omori et al. (
          pages = "425--449",
          doi = "10.1016/j.jeconom.2006.07.008",
          textVersion = paste0("Y. Omori, S. Chib, N. Shephard, & J. Nakajima (2007). ",
-                "Stochastic volatiltiy with leverage. Fast and efficient likelihood inference ",
+                "Stochastic volatility with leverage. Fast and efficient likelihood inference ",
                 "Journal of Econometrics 140(2), 425-449. ",
                 "doi:10.1016/j.jeconom.2006.07.008")
 )

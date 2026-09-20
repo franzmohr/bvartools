@@ -1,5 +1,15 @@
 # bvartools (development version)
 
+* **Dynamic multipliers.** `multipliers()` returns the response of an endogenous
+  variable to a change in a weakly exogenous one, with methods for a
+  `bvarmodel` and a `bvecmodel`. The change is held from period zero on by
+  default, or confined to period zero with `type = "transitory"`. An error
+  correction model is put into its levels form with `vec_to_var()` first, so
+  the multipliers are statements about the levels and the long-run relations
+  enter them. What comes back has the class an impulse response has, so it
+  plots the same way. This is the quantity the country models of a global VAR
+  are read for, where the foreign block is weakly exogenous.
+
 * **`selection_criteria()` reports the score of a forecast as `LPL`.** A model
   that carries `posterior$forecast$loglik` -- the log predictive density of each
   period its horizon realised, written by BayesTS against `data$test$y` -- now

@@ -28,11 +28,11 @@ The `--as-cran` run reports three INFO lines rather than notes: the C++
 specification (`CXX17`, which `src/Makevars` sets for the vendored BayesTS
 core), GNU make as a `SystemRequirements`, and the installed size.
 
-The `--as-cran` run above reports an installed size of 87.9Mb, of which `R` is
-1.4Mb and `doc` 1.2Mb; the rest is `libs`. That is compiled C++ implementing
-the posterior simulators of twenty algorithms and the two discounted
-estimators, built unstripped. The figure on a machine that strips debug
-symbols, as CRAN's builders do, is a fraction of it.
+That size is 87.9Mb, of which `R` is 1.4Mb and `doc` 1.2Mb; the rest is
+`libs`. It is compiled C++ implementing the posterior simulators of twenty
+algorithms and the two discounted estimators, built unstripped. The figure on
+a machine that strips debug symbols, as CRAN's builders do, is a fraction of
+it.
 
 ## Reverse dependencies
 

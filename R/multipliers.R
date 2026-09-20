@@ -15,10 +15,10 @@
 #' followed.
 #'
 #' The quantity is central to models whose foreign block is weakly exogenous,
-#' such as the country models of a global VAR \citep{Pesaran.2004}, where the
-#' responses to a change in the foreign variables are what the country model
-#' has to say about the rest of the world without the rest of the world being
-#' solved.
+#' such as the country models of a global VAR (Pesaran, Schuermann and Weiner,
+#' 2004), where the responses to a change in the foreign variables are what
+#' the country model has to say about the rest of the world without the rest
+#' of the world being solved.
 #'
 #' @return The value returned by the method for the class of \code{x}, as
 #' described on the pages of the methods.

@@ -1,4 +1,4 @@
-#' Prior on the Cointegration Space
+#' Build the Prior on the Cointegration Space
 #'
 #' Checks the specification of the prior on the cointegration space of a VEC
 #' model and builds it, in the form in which \code{\link{add_priors}} stores it

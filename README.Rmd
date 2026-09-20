@@ -181,7 +181,7 @@ This example covers the estimation of a simple Bayesian VAR (BVAR) model. For fu
 
 To illustrate the estimation process the dataset E1 from Lütkepohl (2006) is used. It contains data on West German fixed investment, disposable income and consumption expenditures in billions of DM from 1960Q1 to 1982Q4. Like in the textbook only the first 73 observations of the log-differenced series are used.
 
-```{r data, fig.align='center', fig.height=5, fig.width=4.5}
+```{r data, fig.align='center', fig.height=5, fig.width=4.5, fig.alt="Three stacked time series panels showing the quarterly log-differences of West German fixed investment, disposable income and consumption expenditures from 1960 to 1978."}
 library(bvartools)
 
 # Load data
@@ -318,13 +318,13 @@ Note that the means of the posterior draws are very close to the results of the 
 
 Posterior draws can be visually inspected by using the `plot` function. By default, it produces a series of histograms of all estimated coefficients.
 
-```{r, message=FALSE, warning=FALSE, fig.align='center', fig.height=5, fig.width=10}
+```{r, message=FALSE, warning=FALSE, fig.align='center', fig.height=5, fig.width=10, fig.alt=c( "Grid of histograms of the posterior draws of the coefficients on the lagged endogenous variables, one row per equation and one column per regressor.", "Histograms of the posterior draws of the intercept of each of the three equations.", "Grid of histograms of the posterior draws of the elements of the covariance matrix of the error term.")}
 plot(bvar_est)
 ```
 
 Alternatively, the trace plot of the post-burnin draws can be drawn by adding the argument `type = "trace"`:
 
-```{r, message=FALSE, warning=FALSE, fig.align='center', fig.height=5, fig.width=10}
+```{r, message=FALSE, warning=FALSE, fig.align='center', fig.height=5, fig.width=10, fig.alt=c( "Grid of trace plots of the post-burnin draws of the coefficients on the lagged endogenous variables, one row per equation and one column per regressor.", "Trace plots of the post-burnin draws of the intercept of each of the three equations.", "Grid of trace plots of the post-burnin draws of the elements of the covariance matrix of the error term.")}
 plot(bvar_est, type = "trace")
 ```
 
@@ -348,7 +348,7 @@ bvar_est <- add_posterior_forecasts(bvar_est)
 
 Forecasts with credible bands can be extracted from the model using the `predict` function. The `n_ahead` argument can be used to set the given forecast horizon. However, the number of available forecast periods is limited to specification used in `add_forecast_input`.
 
-```{r forecasts, fig.width=5.5, fig.height=5.5}
+```{r forecasts, fig.width=5.5, fig.height=5.5, fig.alt=c( "Fixed investment from 1960 to 1978 with a five-period forecast and its credible band attached to the end of the series.", "Disposable income from 1960 to 1978 with a five-period forecast and its credible band attached to the end of the series.", "Consumption expenditures from 1960 to 1978 with a five-period forecast and its credible band attached to the end of the series.")}
 bvar_pred <- predict(bvar_est)
 
 plot(bvar_pred)
@@ -358,7 +358,7 @@ plot(bvar_pred)
 
 #### Forecast error impulse response
 
-```{r feir, fig.width=5.5, fig.height=4.5}
+```{r feir, fig.width=5.5, fig.height=4.5, fig.alt="Forecast error impulse response of consumption to a shock in income over eight periods, drawn as the posterior median with a credible band around it."}
 IR <- irf(bvar_est, impulse = "income", response = "cons", n_ahead = 8)
 
 plot(IR, main = "Forecast Error Impulse Response", xlab = "Period", ylab = "Response")
@@ -366,7 +366,7 @@ plot(IR, main = "Forecast Error Impulse Response", xlab = "Period", ylab = "Resp
 
 #### Orthogonalised impulse response
 
-```{r oir, fig.width=5.5, fig.height=4.5}
+```{r oir, fig.width=5.5, fig.height=4.5, fig.alt="Orthogonalised impulse response of consumption to a shock in income over eight periods, drawn as the posterior median with a credible band around it."}
 OIR <- irf(bvar_est, impulse = "income", response = "cons", n_ahead = 8, type = "oir")
 
 plot(OIR, main = "Orthogonalised Impulse Response", xlab = "Period", ylab = "Response")
@@ -374,7 +374,7 @@ plot(OIR, main = "Orthogonalised Impulse Response", xlab = "Period", ylab = "Res
 
 #### Generalised impulse response
 
-```{r gir, fig.width=5.5, fig.height=4.5}
+```{r gir, fig.width=5.5, fig.height=4.5, fig.alt="Generalised impulse response of consumption to a shock in income over eight periods, drawn as the posterior median with a credible band around it."}
 GIR <- irf(bvar_est, impulse = "income", response = "cons", n_ahead = 8, type = "gir")
 
 plot(GIR, main = "Generalised Impulse Response", xlab = "Period", ylab = "Response")
@@ -382,7 +382,7 @@ plot(GIR, main = "Generalised Impulse Response", xlab = "Period", ylab = "Respon
 
 ### Forecast error variance decomposition
 
-```{r fevd, fig.width=5.5, fig.height=4.5}
+```{r fevd, fig.width=5.5, fig.height=4.5, fig.alt="Stacked bar chart of the forecast error variance decomposition of consumption over six periods, with the share of the variance attributed to investment, income and consumption."}
 bvar_fevd <- fevd(bvar_est, response = "cons")
 
 plot(bvar_fevd, main = "FEVD of consumption")

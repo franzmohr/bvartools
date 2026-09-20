@@ -2,7 +2,7 @@
 % Please edit documentation in R/cointspace_prior.R
 \name{cointspace_prior}
 \alias{cointspace_prior}
-\title{Prior on the Cointegration Space}
+\title{Build the Prior on the Cointegration Space}
 \usage{
 cointspace_prior(object, coint)
 }

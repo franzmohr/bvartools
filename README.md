@@ -164,7 +164,7 @@ be changed there:
   `libwinpthread-1.dll`) into the same folder. Keep a copy of the
   original file. Replace only `Rblas.dll`, not `Rlapack.dll`, which R
   cannot load from OpenBLAS.
-- **Linux:** Install OpenBLAS, e.g. `sudo apt install libopenblas-dev`
+- **Linux:** Install OpenBLAS, e.g. `sudo apt install libopenblas-dev`
   on Debian and Ubuntu, and select it with
   `sudo update-alternatives --config libblas.so.3-x86_64-linux-gnu`.
   Distributions using FlexiBLAS, such as Fedora, select it through
@@ -191,8 +191,8 @@ stopCluster(cl)
 ```
 
 The script’s own session keeps all cores. To restrict it as well, set
-the variable before R starts, e.g.
-`OPENBLAS_NUM_THREADS=1 Rscript script.R`.
+the variable before R starts,
+e.g. `OPENBLAS_NUM_THREADS=1 Rscript script.R`.
 
 For lists of models none of this is needed:
 `add_posterior_coefficients()`, `add_posterior_forecasts()` and
@@ -247,7 +247,7 @@ e1 <- window(e1, end = c(1978, 4))
 plot(e1)
 ```
 
-<img src="man/figures/README-data-1.png" alt="" style="display: block; margin: auto;" />
+<img src="man/figures/README-data-1.png" alt="Three stacked time series panels showing the quarterly log-differences of West German fixed investment, disposable income and consumption expenditures from 1960 to 1978." style="display: block; margin: auto;" />
 
 ### Setting up a model
 
@@ -484,7 +484,7 @@ coefficients.
 plot(bvar_est)
 ```
 
-<img src="man/figures/README-unnamed-chunk-6-1.png" alt="" style="display: block; margin: auto;" /><img src="man/figures/README-unnamed-chunk-6-2.png" alt="" style="display: block; margin: auto;" /><img src="man/figures/README-unnamed-chunk-6-3.png" alt="" style="display: block; margin: auto;" />
+<img src="man/figures/README-unnamed-chunk-6-1.png" alt="Grid of histograms of the posterior draws of the coefficients on the lagged endogenous variables, one row per equation and one column per regressor." style="display: block; margin: auto;" /><img src="man/figures/README-unnamed-chunk-6-2.png" alt="Histograms of the posterior draws of the intercept of each of the three equations." style="display: block; margin: auto;" /><img src="man/figures/README-unnamed-chunk-6-3.png" alt="Grid of histograms of the posterior draws of the elements of the covariance matrix of the error term." style="display: block; margin: auto;" />
 
 Alternatively, the trace plot of the post-burnin draws can be drawn by
 adding the argument `type = "trace"`:
@@ -493,7 +493,7 @@ adding the argument `type = "trace"`:
 plot(bvar_est, type = "trace")
 ```
 
-<img src="man/figures/README-unnamed-chunk-7-1.png" alt="" style="display: block; margin: auto;" /><img src="man/figures/README-unnamed-chunk-7-2.png" alt="" style="display: block; margin: auto;" /><img src="man/figures/README-unnamed-chunk-7-3.png" alt="" style="display: block; margin: auto;" />
+<img src="man/figures/README-unnamed-chunk-7-1.png" alt="Grid of trace plots of the post-burnin draws of the coefficients on the lagged endogenous variables, one row per equation and one column per regressor." style="display: block; margin: auto;" /><img src="man/figures/README-unnamed-chunk-7-2.png" alt="Trace plots of the post-burnin draws of the intercept of each of the three equations." style="display: block; margin: auto;" /><img src="man/figures/README-unnamed-chunk-7-3.png" alt="Grid of trace plots of the post-burnin draws of the elements of the covariance matrix of the error term." style="display: block; margin: auto;" />
 
 ### Thin results
 
@@ -524,16 +524,11 @@ limited to specification used in `add_forecast_input`.
 
 ``` r
 bvar_pred <- predict(bvar_est)
-```
 
-    ## Warning in predict.bvarmodel(bvar_est): Argument 'n_ahead' is larger than the value in object$model$h.
-    ## Limiting the output to the latter.
-
-``` r
 plot(bvar_pred)
 ```
 
-![](man/figures/README-forecasts-1.png)<!-- -->![](man/figures/README-forecasts-2.png)<!-- -->![](man/figures/README-forecasts-3.png)<!-- -->
+<img src="man/figures/README-forecasts-1.png" alt="Fixed investment from 1960 to 1978 with a five-period forecast and its credible band attached to the end of the series."  /><img src="man/figures/README-forecasts-2.png" alt="Disposable income from 1960 to 1978 with a five-period forecast and its credible band attached to the end of the series."  /><img src="man/figures/README-forecasts-3.png" alt="Consumption expenditures from 1960 to 1978 with a five-period forecast and its credible band attached to the end of the series."  />
 
 ### Impulse response analysis
 
@@ -545,7 +540,7 @@ IR <- irf(bvar_est, impulse = "income", response = "cons", n_ahead = 8)
 plot(IR, main = "Forecast Error Impulse Response", xlab = "Period", ylab = "Response")
 ```
 
-![](man/figures/README-feir-1.png)<!-- -->
+<img src="man/figures/README-feir-1.png" alt="Forecast error impulse response of consumption to a shock in income over eight periods, drawn as the posterior median with a credible band around it."  />
 
 #### Orthogonalised impulse response
 
@@ -555,7 +550,7 @@ OIR <- irf(bvar_est, impulse = "income", response = "cons", n_ahead = 8, type = 
 plot(OIR, main = "Orthogonalised Impulse Response", xlab = "Period", ylab = "Response")
 ```
 
-![](man/figures/README-oir-1.png)<!-- -->
+<img src="man/figures/README-oir-1.png" alt="Orthogonalised impulse response of consumption to a shock in income over eight periods, drawn as the posterior median with a credible band around it."  />
 
 #### Generalised impulse response
 
@@ -565,7 +560,7 @@ GIR <- irf(bvar_est, impulse = "income", response = "cons", n_ahead = 8, type = 
 plot(GIR, main = "Generalised Impulse Response", xlab = "Period", ylab = "Response")
 ```
 
-![](man/figures/README-gir-1.png)<!-- -->
+<img src="man/figures/README-gir-1.png" alt="Generalised impulse response of consumption to a shock in income over eight periods, drawn as the posterior median with a credible band around it."  />
 
 ### Forecast error variance decomposition
 
@@ -575,7 +570,7 @@ bvar_fevd <- fevd(bvar_est, response = "cons")
 plot(bvar_fevd, main = "FEVD of consumption")
 ```
 
-![](man/figures/README-fevd-1.png)<!-- -->
+<img src="man/figures/README-fevd-1.png" alt="Stacked bar chart of the forecast error variance decomposition of consumption over six periods, with the share of the variance attributed to investment, income and consumption."  />
 
 ## References
 

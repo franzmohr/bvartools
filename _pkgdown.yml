@@ -13,6 +13,7 @@ home:
 reference:
 - title: Model set-up
   contents:
+  - bvartools_model
   - create_bvarmodel
   - create_bvecmodel
   - starts_with("use_expanding_window")
@@ -39,6 +40,7 @@ reference:
   - starts_with("add_posterior_coefficients")
   - starts_with("add_posterior_loglik")
   - bayests_posterior
+  - bayests_files
   - starts_with("thin.")
 
 - title: Forecasting and model evaluation
@@ -61,6 +63,7 @@ reference:
   - starts_with("irf")
   - starts_with("fevd")
   - starts_with("spillover")
+  - starts_with("multipliers")
   - starts_with("vec_to_var")
   - starts_with("scale_error_correction")
   - starts_with("rescale_error_correction")
@@ -78,6 +81,8 @@ reference:
   - read_models_from_folder
   - read_expanding_window_model_from_folder
   - list_models_in_hdf5
+  - map_models
+  - map_draws
 
 - title: Building blocks for custom samplers
   desc: >

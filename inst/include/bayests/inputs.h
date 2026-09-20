@@ -1225,6 +1225,89 @@ struct VecTvpStochvolInput
     void validate() const;
 };
 
+
+/// Everything a discounted time varying parameter VAR reads.
+///
+/// Shorter than its sampling siblings by exactly the fields a sampler needs and
+/// this does not: there are no starting values, because nothing is iterated,
+/// and no prior on a state innovation variance, because the drift is the
+/// discount factor in `spec` rather than a parameter.
+struct VarTvpDiscountInput
+{
+    VarSpec spec;
+    TrainData train;
+    ForecastData forecast;
+    TestData test; ///< `y` empty unless the file carries realised values.
+
+    MatrixNormalPrior a_prior;
+    WishartPrior u_sigma_prior;
+
+    /// Counted off the compact regressors rather than off `z`, which this model
+    /// does not read at all: validate() refuses a file that carries the SUR
+    /// matrix and nothing else, so TrainData::nparams() is zero on exactly the
+    /// inputs this is meant to say yes to.
+    bool use_a() const { return train.x.n_cols > 0; }
+
+    void validate() const;
+};
+
+/// Everything a discounted time varying parameter VEC reads.
+///
+/// The same fields as VarTvpDiscountInput plus the two a VEC needs: the error
+/// correction term `train.w`, and the cointegration matrix `beta` it is
+/// multiplied by. The design the filter runs against is
+///
+///     x_t = [ beta' w_t , the compact regressors of `train.x` ],
+///
+/// so `train.x` holds the short-run blocks alone -- the lagged differences, the
+/// unmodelled variables and the unrestricted deterministic terms, VarSpec::n_x_vec()
+/// of them -- exactly as it does for VecKlgs2010, and the `rank` error
+/// correction columns go in front of them.
+struct VecTvpDiscountInput
+{
+    VarSpec spec;
+    TrainData train;
+    ForecastData forecast; ///< In the level layout every VEC forecasts in.
+    TestData test;         ///< `y` empty unless the file carries realised levels.
+
+    MatrixNormalPrior a_prior; ///< Over the n_design x k coefficient matrix.
+    WishartPrior u_sigma_prior;
+
+    /// k_beta x rank: the cointegration space, **given rather than estimated**.
+    ///
+    /// This is what makes the model conjugate and it is the one assumption that
+    /// separates it from the three sampling VECs beside it. `beta' w_t` is a
+    /// parameter times data, so a VEC that draws beta has a design that moves
+    /// with the draw and no closed form at all; hold beta and the design is
+    /// data, every equation shares it, and the whole of VarTvpDiscount applies
+    /// unchanged. The loadings still drift, so what the model says is that the
+    /// *adjustment* to the long-run relations moves and the relations themselves
+    /// do not -- not that they are known to be right, only that this run
+    /// conditions on them.
+    ///
+    /// Where the value comes from is the host's business: a first-stage
+    /// estimate, a Johansen vector, a restriction from theory, or the posterior
+    /// mean of a constant-coefficient VEC. Since the filter returns the exact
+    /// marginal likelihood of the sample given it -- the sum of
+    /// VecTvpDiscountPosterior::loglik -- a grid over candidate spaces, over the
+    /// rank, or over the two discounts can be compared without a chain being run
+    /// for any of them.
+    ///
+    /// Empty at rank zero, which is a VAR in differences and a model this
+    /// accepts.
+    arma::mat beta;
+
+    /// Columns of the design: the `rank` error correction columns in front of
+    /// the compact regressors. Paired with VecKlgs2010Input::n_design(), which
+    /// counts the same thing.
+    int n_design() const { return spec.rank + spec.n_x_vec(); }
+
+    bool use_a() const { return n_design() > 0; }
+    bool use_beta() const { return spec.uses_coint(); }
+
+    void validate() const;
+};
+
 } // namespace bayests
 
 #endif // BAYESTS_INPUTS_H

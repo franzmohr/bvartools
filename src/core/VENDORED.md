@@ -7,6 +7,24 @@ project is here -- the core deliberately links neither HDF5 nor HighFive,
 prints nothing and reads no files, which is what makes it embeddable in an R
 package at all.
 
+The copy is **BayesTS 0.3.0 plus one commit**: `7d7c6ca`, which is the 0.3.0
+release -- the version in upstream's `CMakeLists.txt` and `CHANGELOG.md` -- and
+the fix to `factor_score.h` that followed it. That fix reaches nothing here:
+`factor_score.h` is one of the files *Not copied* below, because only a factor
+model's score runs that filter. 0.3.0 is not tagged or archived yet, so there is
+no version DOI to name; the concept DOI
+<https://doi.org/10.5281/zenodo.22722531> resolves to the newest release
+whenever one is cut, and the last archived release is 0.2.0,
+<https://doi.org/10.5281/zenodo.22765348>.
+
+Upstream commits that change nothing under `include/` or `src/core/` do not move
+the copy off that commit; a refresh that copies anything newer has to update this
+paragraph. Nothing enforces that -- the script compares the vendored *files* and
+`inst/COPYRIGHTS`, never this prose -- and the same paragraph in dfmtools, which
+vendors part of the same core, spent two refreshes naming a version it was no
+longer at. So check this one against the upstream `git log` on the way out, as
+part of the refresh rather than after it.
+
 Upstream layout is preserved, so a refresh is a copy of two directories plus
 the patch below -- which upstream has since made unnecessary, though the script
 still applies it. `tools/update-bayests-core.R` does both:
@@ -137,6 +155,28 @@ reading that list should not find one that nothing includes. The VAR and VEC
 models are scored by `predictive_score.h` alone -- with realised history their
 regressors do not depend on the draw, so the score is the model's own pointwise
 log likelihood over the scored periods, and no filter is needed.
+
+**The two discounted models, for now.** `VarTvpDiscount` and `VecTvpDiscount`
+arrived with BayesTS 0.3.0: a matrix normal dynamic linear model with a
+discounted Wishart on the error precision, whose posterior is closed form rather
+than a chain. They are VAR and VEC samplers and so this package's business,
+which makes them the one entry in this section that is skipped for a reason that
+will expire. Nothing here calls them yet -- there is no `src/VarTvpDiscount.cpp`
+binding and no R entry point -- so copying them would put two samplers and
+`core/models/discount_support.h` in the shared object with no way to reach them,
+which is the dead weight the paragraph above declines. Delete their five entries
+from `skip` when the bindings are written and the next refresh brings them.
+
+As with the factor models, this does not take their type surface out:
+`VarTvpDiscountInput` and `VecTvpDiscountInput` are in `bayests/inputs.h`,
+`MatrixNormalPrior` in `bayests/priors.h`, both posteriors in
+`bayests/results.h`, and `delta_beta` and `delta_sigma` in `bayests/spec.h` --
+files every model shares and which are copied whole. Their validators are the
+exception to what the DFM paragraph says: upstream defines them in the sampler
+sources rather than in `core/inputs.cpp`, so here the two `validate()` methods
+are declared and not defined. That links because nothing calls them, and it
+stops linking the moment something does, which is the right place for the
+omission to surface.
 
 `core/algorithms/chan_jeliazkov_2009.cpp` is copied and now carries a second
 entry point, `chan_jeliazkov_2009_conditional`, which holds the trailing elements

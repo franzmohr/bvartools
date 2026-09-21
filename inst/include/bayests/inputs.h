@@ -1029,9 +1029,10 @@ struct VecNormalStochvolInitial
 /// Only BVS reaches this model; SSVS is not implemented for it.
 ///
 /// The error precision moves with time and the cointegration space prior needs
-/// one to condition alpha on, so the prior takes the average over the sample --
-/// the `g_i` of bvartools' .bvecalg. Everything else is VecNormalWishart's
-/// coefficient blocks against a per-period precision.
+/// a G to scale alpha by, so G is fixed for the whole run -- `beta_prior.g_inv`
+/// when given, the precision the starting volatilities imply averaged over the
+/// sample otherwise; see ConstantCointSpacePrior::g_inv. Everything else is
+/// VecNormalWishart's coefficient blocks against a per-period precision.
 struct VecNormalStochvolInput
 {
     VarSpec spec;

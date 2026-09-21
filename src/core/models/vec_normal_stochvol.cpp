@@ -174,11 +174,18 @@ VecNormalStochvolDraws VecNormalStochvolSampler::draw_coefficients(
     u_omega_inv_diag.diag() = 1 / arma::exp(arma::vectorise(arma::trans(h)));
     arma::sp_mat u_sigma_inv_diag;
 
-    // The precision the cointegration space prior conditions alpha on. There is
-    // a different one in every period here, so the prior takes their average
-    // over the sample -- the `g_i` of bvartools' .bvecalg. It appears in exactly
-    // two places, alpha's prior precision and beta's, and nowhere else: the data
-    // terms of both blocks use the per-period precisions in full.
+    // G^-1, the precision the cointegration space prior scales alpha by. It
+    // appears in exactly two places, alpha's prior precision and beta's, and
+    // nowhere else: the data terms of both blocks use the per-period precisions
+    // in full.
+    //
+    // Fixed for the whole run, which is what makes the chain a Gibbs sampler.
+    // Koop, Leon-Gonzalez and Strachan (2010) allow G to be any fixed, known
+    // matrix; it used to be the average of the *current* per-period precisions,
+    // re-taken after every volatility draw, which made the loadings' prior a
+    // function of h that h's own draw ignored. So: the file's G^-1 when it gives
+    // one, and otherwise that same average taken once, at the starting values,
+    // below. See ConstantCointSpacePrior::g_inv.
     arma::mat g_i;
 
     // Called once before the loop as well as after every volatility draw, so the
@@ -206,7 +213,16 @@ VecNormalStochvolDraws VecNormalStochvolSampler::draw_coefficients(
             u_sigma_inv_diag = u_omega_inv_diag;
         }
 
-        if (use_beta)
+    };
+    refresh_precision();
+
+    if (use_beta)
+    {
+        if (!input.beta_prior.g_inv.is_empty())
+        {
+            g_i = input.beta_prior.g_inv;
+        }
+        else
         {
             g_i = arma::mat(u_sigma_inv_diag.submat(0, 0, k - 1, k - 1));
             for (int i = 1; i < tt; i++)
@@ -216,8 +232,7 @@ VecNormalStochvolDraws VecNormalStochvolSampler::draw_coefficients(
             }
             g_i /= tt;
         }
-    };
-    refresh_precision();
+    }
 
     out.u_omega_inv = arma::mat(k * tt, iterations);
     out.u_sigma_inv = arma::mat(kk * tt, iterations);
@@ -275,8 +290,8 @@ VecNormalStochvolDraws VecNormalStochvolSampler::draw_coefficients(
                          : y;
 
             // Reparameterise alpha, with auxiliary rows when k_beta > k: see
-            // augment_loadings(), which scales them by the averaged precision
-            // g_i the loadings' prior uses. Alpha is then the loadings' rows of
+            // augment_loadings(), which scales them by the fixed G^-1, g_i,
+            // the loadings' prior uses. Alpha is then the loadings' rows of
             // the semi-orthogonal factor rather than that factor itself.
             alpha = arma::reshape(a.subvec(0, n_alpha - 1), k, rank);
             const CointDrawLoadings loadings =

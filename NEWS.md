@@ -1,5 +1,29 @@
 # bvartools 1.0.0
 
+* **`VecNormalGamma` and `VecNormalStochvol` draw from the posterior of the
+  prior they state, and their draws change.** Both use the cointegration space
+  prior of Koop, Leon-Gonzalez and Strachan (2010), which scales the loadings'
+  prior by G. For `VecNormalGamma`, G is the error covariance, so the prior is
+  also a factor in the error precisions' posterior, and the vendored core left
+  it out. `VecNormalWishart` has always included it. For `VecNormalStochvol`,
+  G was re-averaged from the current volatilities after every draw, which made
+  the prior a function of them that their own draw never saw. It is now fixed
+  for the run, from the starting volatilities. *Draws change* for both models
+  with `rank > 0`, in every configuration. With one variable,
+  `VecNormalGamma` and `VecNormalWishart` given matching priors are the same
+  model, and upstream's test finds them within 0.07% of each other on the
+  posterior mean of the precision, against 2.6% before. `VecNormalWishart`
+  and `VecKlgs2010` draws are unchanged.
+
+* **The VEC models refuse a cointegration prior the sampler cannot honour.**
+  The prior on the loadings has to be centred at zero and independent of the
+  other coefficients, so a non-zero prior mean on the first `k * rank`
+  coefficients, or a prior precision coupling them to the rest, now stops with
+  a message naming the position. So do a negative `v_i` and a `p_tau_inv` that
+  is not positive definite while `v_i` is positive. `add_priors()` and
+  `cointspace_prior()` produce none of these, so only a prior edited by hand
+  reaches them.
+
 * **`bayests_files()` renames the exit status into place once it is written.**
   The script it runs wrote BayesTS's exit status straight into the file the
   session polls for, and a redirection creates that file before anything is in

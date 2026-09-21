@@ -27,16 +27,34 @@ struct NormalPrior
 /// The semi-orthogonal k_beta x rank matrix beta has the matrix angular central
 /// Gaussian density |beta' P_tau^-1 beta|^(-k_beta/2), uniform on the space when
 /// `p_tau_inv` is the identity, and the loadings are normal given it,
-/// alpha | beta ~ N(0, v^-1 (beta' P_tau^-1 beta)^-1 kron G), with G the error
-/// precision's inverse (VecNormalStochvol: its average over the sample). `v_inv`
-/// is v, zero for a flat prior on alpha and a uniform prior on the space whatever
-/// `p_tau_inv` is. The constant VECs sample exactly this for any k_beta, including
-/// a cointegration term with restricted deterministic terms or unmodelled
-/// variables; see augment_loadings() in src/core/models/vec_support.h.
+/// alpha | beta ~ N(0, v^-1 (beta' P_tau^-1 beta)^-1 kron G), centred at zero and
+/// independent of every other coefficient -- validate() refuses a file whose
+/// `/priors/a` says otherwise. `v_inv` is v, zero for a flat prior on alpha and a
+/// uniform prior on the space whatever `p_tau_inv` is; it may not be negative,
+/// and when it is positive `p_tau_inv` has to be positive definite. The constant
+/// VECs sample exactly this for any k_beta, including a cointegration term with
+/// restricted deterministic terms or unmodelled variables; see
+/// augment_loadings() in src/core/models/vec_support.h.
 struct ConstantCointSpacePrior
 {
     double v_inv;
     arma::mat p_tau_inv;
+
+    /// G^-1, k x k, for VecNormalStochvol alone; empty everywhere else, and the
+    /// others refuse one.
+    ///
+    /// The paper allows G to be the error covariance or any fixed, known
+    /// matrix (their p. 228 and eq. 7). The Wishart and gamma VECs take the
+    /// first, and pay for it with a term in the error precision's posterior.
+    /// VecNormalStochvol cannot: its covariance moves every period, and a G
+    /// built from the current volatilities -- which is what it used to do,
+    /// averaging them afresh every draw -- makes the loadings' prior a function
+    /// of h that h's own draw never sees, so the chain was a Gibbs sampler for
+    /// no prior at all. G is therefore fixed for the whole run: this matrix when
+    /// the file gives one (`/priors/beta/g_inv`), and otherwise the precision
+    /// the starting volatilities `/initial/h` imply, averaged over the sample
+    /// once, before the first draw.
+    arma::mat g_inv;
 };
 
 /// Uniform prior on the autoregression of a cointegration space that moves with

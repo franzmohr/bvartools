@@ -29,6 +29,16 @@
 * The vendored BayesTS core is refreshed to upstream `94f81de`, which brings
   the two items above.
 
+* **`generate_artificial_vec()` gains an argument `level`**, a vector with one
+  or `k` elements that shifts the generated series, so that cointegrated series
+  with high levels that follow a stochastic trend can be simulated. Without it
+  the series start at zero and wander around it. The shift moves the error
+  correction term by `-beta' level`, which the constant absorbs: the returned
+  restricted constant in `beta` or unrestricted constant in `c` include it, in
+  every period of a time varying model. A non-zero level with a cointegration
+  rank above zero therefore requires `const = "restricted"` or
+  `"unrestricted"`.
+
 * **New vignette `macroprojections`** races a BVAR, a BVAR with stochastic
   volatility and a TVP-SV VAR against the projections for Austria that the ECB,
   the European Commission, the IMF, the OeNB, WIFO and IHS published between 2015

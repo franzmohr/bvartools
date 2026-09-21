@@ -198,3 +198,54 @@ test_that("invalid arguments are rejected", {
   expect_error(generate_artificial_vec(range_alpha = c(1, 1), range_beta = c(1, 1)),
                "No coefficients of a process")
 })
+
+test_that("the level shifts the series and the constant absorbs it", {
+  level <- c(100, 50, 20)
+  for (const in c("restricted", "unrestricted")) {
+    set.seed(10)
+    base <- generate_artificial_vec(nobs = 50, k = 3, p = 2, r = 1, const = const)
+    set.seed(10)
+    shifted <- generate_artificial_vec(nobs = 50, k = 3, p = 2, r = 1, const = const, level = level)
+    y <- shifted[["data"]]
+    params <- shifted[["params"]]
+
+    expect_equal(unclass(y) - unclass(base[["data"]]), matrix(level, 50, 3, byrow = TRUE),
+                 ignore_attr = TRUE)
+
+    # The returned parameters generate the shifted series without errors beyond those of the base
+    det <- if (const == "restricted") c(y[2, ], 1) else y[2, ]
+    fit <- params[["pi"]] %*% det + params[["gamma"]] %*% (y[2, ] - y[1, ])
+    if (const == "unrestricted") {
+      fit <- fit + params[["c"]][, "const"]
+    }
+    det_base <- if (const == "restricted") c(base[["data"]][2, ], 1) else base[["data"]][2, ]
+    fit_base <- base[["params"]][["pi"]] %*% det_base +
+      base[["params"]][["gamma"]] %*% (base[["data"]][2, ] - base[["data"]][1, ])
+    if (const == "unrestricted") {
+      fit_base <- fit_base + base[["params"]][["c"]][, "const"]
+    }
+    expect_equal(fit, fit_base)
+    expect_equal(params[["alpha"]], base[["params"]][["alpha"]])
+  }
+
+  # Time varying parameters are shifted in every period
+  set.seed(11)
+  base <- generate_artificial_vec(nobs = 20, k = 2, p = 1, r = 1, const = "restricted", tvp = TRUE,
+                                  range_variance_state = c(0.001, 0.001))
+  set.seed(11)
+  shifted <- generate_artificial_vec(nobs = 20, k = 2, p = 1, r = 1, const = "restricted", tvp = TRUE,
+                                     range_variance_state = c(0.001, 0.001), level = 10)
+  b <- base[["params"]][["beta"]]
+  expect_equal(shifted[["params"]][["beta"]]["const", 1, ], b["const", 1, ] - 10 * colSums(b[1:2, 1, ]))
+  expect_equal(shifted[["params"]][["pi"]][, 1:2, ], base[["params"]][["pi"]][, 1:2, ])
+
+  # Without cointegration no constant is needed
+  set.seed(12)
+  expect_equal(unname(generate_artificial_vec(nobs = 5, k = 2, r = 0, level = 7)[["data"]]) -
+                 {set.seed(12); unname(generate_artificial_vec(nobs = 5, k = 2, r = 0)[["data"]])},
+               matrix(7, 5, 2), ignore_attr = TRUE)
+
+  expect_error(generate_artificial_vec(level = 100), "requires a constant term")
+  expect_error(generate_artificial_vec(level = c(1, 2)), "1 or 'k' finite elements")
+  expect_error(generate_artificial_vec(const = "restricted", level = NA), "1 or 'k' finite elements")
+})

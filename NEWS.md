@@ -97,7 +97,9 @@
   the European Commission, the IMF, the OeNB, WIFO and IHS published between 2015
   and 2025, as collected by the macroprojections repository. The projections are
   annual, so the vignette turns every draw of the quarterly forecasts into the
-  annual growth and average rates it implies before comparing them.
+  annual growth and average rates it implies with `aggregate_forecasts()` and
+  matches the publications to the estimation windows with
+  `create_external_forecast()`.
 
 * **The forecasts of a discounted model are `coda::mcmc` draws, and an
   estimated discounted model can be written to HDF5.** `add_posterior_forecasts()`
@@ -158,8 +160,8 @@
   refusal of `create_external_forecast()` now names the function. Perfect
   foresight of the transformed series gives zero annual forecast errors under
   every code and both targets, and the average of codes 1 and 5 matches the
-  aggregation the `macroprojections` vignette carries out by hand. No sampler
-  is touched: draws are unchanged.
+  aggregation the `macroprojections` vignette used to carry out by hand, which
+  now uses this function. No sampler is touched: draws are unchanged.
 
 * **`add_forecast_errors()` refuses a test sample at another frequency than
   the forecasts.** It matched the periods by their time alone, and 2020 is a

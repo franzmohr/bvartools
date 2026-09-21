@@ -7,6 +7,39 @@
   annual, so the vignette turns every draw of the quarterly forecasts into the
   annual growth and average rates it implies before comparing them.
 
+* **The forecasts of a discounted model are `coda::mcmc` draws, and an
+  estimated discounted model can be written to HDF5.** `add_posterior_forecasts()`
+  returned the i.i.d. forecast draws of `VarTvpDiscount` and `VecTvpDiscount` as
+  a plain matrix, without the start, end and thinning interval every step after
+  it reads, so `add_forecast_errors()` stopped with "non-numeric argument to
+  mathematical function" and `write_to_hdf5()` with "If a sample robj is not
+  provided, both dtype and space have to be given". They are now labelled as
+  draws 1 to `iterations`, unthinned, which is what BayesTS writes for them.
+  `write_to_hdf5()` also stopped on the per-period posterior itself, and would
+  have left out `posterior$u_sigma` and `posterior$df`; it now writes the
+  closed-form blocks without the chain attributes, as BayesTS does, and
+  `read_model_from_hdf5()` reads them back as the plain matrices they are.
+  `selection_criteria()` on an expanding window of discounted models reports
+  the last window's `LML`, which it dropped. The draws are unchanged: only
+  their labels are new.
+
+* **`plot()` draws the criteria of an expanding window.** `selection_criteria()`
+  on an `expandingwindow` or a single model returns a `selcrit` that keeps the
+  model's classes, and with no `plot.selcrit()` the call reached
+  `plot.bvarmodel()` and stopped with "dim(X) must have positive length". The
+  new method plots it as a `selcritlist` of one. `plot()` of either also
+  accepts `criterion = "LML"`.
+
+* **`create_external_forecast()` refuses forecasts at another frequency than
+  the data.** Periods were rounded to the frequency of the models, so annual
+  forecasts for 2020 and 2021 given to a quarterly model became forecasts of
+  2020Q1 and 2021Q1, and an annual growth rate was scored as a quarterly one.
+  The frequency is read off the spacing of the periods within a publication:
+  periods further apart than one period of the data, or several that fall into
+  the same period, now stop with a message saying which frequency they appear
+  to be. Where every publication forecasts a single period, periods that all
+  sit at the same position within the year are refused as well.
+
 * **`VecNormalGamma` and `VecNormalStochvol` draw from the posterior of the
   prior they state, and their draws change.** Both use the cointegration space
   prior of Koop, Leon-Gonzalez and Strachan (2010), which scales the loadings'

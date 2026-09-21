@@ -2,17 +2,21 @@
 % Please edit documentation in R/plot.selcritlist.R
 \name{plot.selcritlist}
 \alias{plot.selcritlist}
+\alias{plot.selcrit}
 \title{Plotting Selection Criteria}
 \usage{
 \method{plot}{selcritlist}(x, criterion = "WAIC", ...)
+
+\method{plot}{selcrit}(x, criterion = "WAIC", ...)
 }
 \arguments{
-\item{x}{an object of class 'selcritlist', usually, a result of a call
-to \code{\link{selection_criteria}}.}
+\item{x}{an object of class 'selcritlist' or 'selcrit', usually, a result of a
+call to \code{\link{selection_criteria}}.}
 
 \item{criterion}{the selection criterion that should be plotted. Available choices
 are the in-sample criteria \code{"LL"}, \code{"AIC"}, \code{"BIC"},
-\code{"HQ"}, \code{"WAIC"} (default), \code{"LOOIC"} and the out-of-sample
+\code{"HQ"}, \code{"WAIC"} (default), \code{"LOOIC"}, the log marginal
+likelihood \code{"LML"} of a discounted model and the out-of-sample
 statistics \code{"FE"}, \code{"AFE"} and \code{"RSFE"}.}
 
 \item{...}{further graphical parameters.}
@@ -22,7 +26,7 @@ statistics \code{"FE"}, \code{"AFE"} and \code{"RSFE"}.}
 plot.
 }
 \description{
-A plot function for objects of class 'selcritlist'.
+A plot function for objects of class 'selcritlist' and 'selcrit'.
 }
 \details{
 For in-sample criteria each model is represented by a horizontal error
@@ -30,7 +34,7 @@ bar, which is marked by the value of the criterion. The log-likelihood has a
 posterior distribution, so its bar covers the credible band and is marked by the
 median as well as the mean of its draws. \code{"WAIC"} and \code{"LOOIC"} are
 point estimates whose bars cover a normal interval built from their standard
-error. \code{"AIC"}, \code{"BIC"} and \code{"HQ"} are point estimates without a
+error. \code{"AIC"}, \code{"BIC"}, \code{"HQ"} and \code{"LML"} are point estimates without a
 standard error, so they are drawn as a single point. The default is
 \code{"WAIC"}, for the reasons given in \code{\link{selection_criteria}}.
 The criterion is measured on
@@ -59,4 +63,8 @@ For both types of criteria arguments \code{col}, \code{pch}, \code{cex},
 \code{lwd}, \code{main} and \code{xlab} can be used to change the appearance of
 the plot, where \code{col} and \code{lwd} are recycled over the models in
 \code{x}.
+
+A 'selcrit' -- the criteria of one model, or those of the windows of an
+'expandingwindow' pooled into one -- is drawn as a 'selcritlist' of that one
+model.
 }

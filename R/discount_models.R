@@ -402,7 +402,8 @@ check_discount_specification <- function(k, error = "wishart", varsel = "none",
 # a discounted posterior is one column per period of a closed form, with no
 # start, no end and nothing thinned. Each step therefore hands the model over
 # here and returns what comes back, rather than falling through to machinery
-# that would label periods as draws.
+# that would label periods as draws. The forecasts are the exception: they are
+# draws, and `.discount_forecasts()` labels them as such itself.
 #
 # Nothing in `.discount_coefficients()` or the VAR's log-likelihood consumes the
 # random number generator: the posterior is closed form, so two runs agree to
@@ -450,11 +451,25 @@ check_discount_specification <- function(k, error = "wishart", varsel = "none",
          "function add_forecast_input().")
   }
 
-  .with_discount_class(object,
-                       .with_model_seed(object[["model"]][["seed"]],
-                                        switch(object[["model"]][["algorithm"]],
-                                               VarTvpDiscount = .VarTvpDiscountForecasts(object),
-                                               VecTvpDiscount = .VecTvpDiscountForecasts(object))))
+  object <- .with_discount_class(object,
+                                 .with_model_seed(object[["model"]][["seed"]],
+                                                  switch(object[["model"]][["algorithm"]],
+                                                         VarTvpDiscount = .VarTvpDiscountForecasts(object),
+                                                         VecTvpDiscount = .VecTvpDiscountForecasts(object))))
+
+  # The one part of a discounted posterior that is draws, and so the one part
+  # labelled as them: i.i.d. from the closed form, one row each. Everything
+  # downstream of a forecast -- add_forecast_errors(), the writer's
+  # start/end/thin, predict() -- reads coda's mcpar off it, as it does off a
+  # sampler's, and a plain matrix has none. There being no chain, the draws are
+  # numbered one to S and nothing is thinned, which is what BayesTS writes for
+  # them too.
+  forecasts <- object[["posterior"]][["forecast"]][["forecasts"]]
+  object[["posterior"]][["forecast"]][["forecasts"]] <- coda::mcmc(forecasts, start = 1,
+                                                                  end = nrow(forecasts),
+                                                                  thin = 1)
+
+  object
 }
 
 .discount_score <- function(object) {

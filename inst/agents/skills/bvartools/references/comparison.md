@@ -135,7 +135,14 @@ stopifnot(inherits(oos, "selcrit"),
 The out-of-sample criteria are `FE`, `AFE` and `RSFE`: the forecast errors and
 their absolute and root squared values, one row per variable and horizon, with
 the columns `variable`, `h`, `mean`, `median`, `qlower` and `qupper`.
-`plot_forecast_errors_by_period()` plots them over the windows.
+`plot_forecast_errors_by_period()` plots them over the windows, and
+`plot(oos, criterion = "RSFE")` plots one of them by horizon, as it does for a
+list of such results.
+
+An expanding window of discounted models runs the same way. Their forecasts are
+`coda::mcmc` draws like a sampler's, so `add_forecast_errors()` and
+`write_to_hdf5()` take them, and `selection_criteria()` reports the forecast
+error criteria beside the last window's `LML`.
 
 `LPL`, the log predictive likelihood, is the out-of-sample criterion that is a
 density rather than a distance: how likely the observations were under the
@@ -154,6 +161,8 @@ joining them with `combine_models()` before `add_posterior_coefficients()`, and
 calling `selection_criteria()` on the combined list.
 `vignette("horse-races", package = "bvartools")` runs such a comparison, and adds
 forecasts published by institutions through `create_external_forecast()`.
+Those have to be at the frequency of the data: annual forecasts for a quarterly
+model are refused rather than read as forecasts of each year's first quarter.
 `vignette("macroprojections", package = "bvartools")` compares models with
 published **annual** projections from quarterly data: `create_external_forecast()`
 matches forecasts at the frequency of the models, so there the quarterly forecast

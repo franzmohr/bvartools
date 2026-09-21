@@ -332,6 +332,127 @@ test_that("a discounted model forecasts and scores what the horizon realised", {
 })
 
 
+test_that("the forecasts of a discounted model are draws, labelled as a chain would be", {
+
+  # Everything after a forecast reads coda's mcpar off it -- add_forecast_errors()
+  # and the writer's start, end and thin -- and a plain matrix has none, so the
+  # forecasts of a discounted model stopped both.
+  fitted <- add_posterior_coefficients(add_initial_values(add_priors(
+    discount_var(delta_beta = 0.99),
+    coef = list(v_i = 1, v_i_det = 1 / 10), sigma = list(df = "k", scale = 1))))
+  forecast <- add_posterior_forecasts(add_forecast_input(fitted, n_ahead = 2))
+  draws <- forecast[["posterior"]][["forecast"]][["forecasts"]]
+  expect_s3_class(draws, "mcmc")
+  expect_equal(coda::mcpar(draws), c(1, 10, 1))
+  # The closed form stays one column per period and is not labelled.
+  expect_false(inherits(forecast[["posterior"]][["a"]][["mean"]], "mcmc"))
+
+  vec <- add_posterior_coefficients(fitted_discount_vec(r = 1, delta_beta = 0.98))
+  vec_forecast <- add_posterior_forecasts(add_forecast_input(vec, n_ahead = 3))
+  vec_draws <- vec_forecast[["posterior"]][["forecast"]][["forecasts"]]
+  expect_s3_class(vec_draws, "mcmc")
+  expect_equal(coda::mcpar(vec_draws), c(1, 10, 1))
+  expect_s3_class(vec_forecast, "bvecmodel")
+})
+
+
+test_that("an expanding window of discounted models runs a horse race", {
+
+  data("e1", package = "bvartools", envir = environment())
+  series <- diff(log(e1)) * 100
+  train <- stats::window(series, end = c(1980, 4))
+
+  model <- create_bvarmodel(train, p = 1, deterministic = "const", algorithm = "discount",
+                            delta_beta = 0.99, iterations = 15, burnin = 0, thin = 1)
+  windows <- use_expanding_window(model, start = c(1980, 2))
+  windows <- add_priors(windows, coef = list(v_i = 1, v_i_det = 1 / 10),
+                        sigma = list(df = "k", scale = 1))
+  windows <- add_posterior_coefficients(add_initial_values(windows))
+  windows <- add_posterior_forecasts(add_forecast_input(windows, n_ahead = 2))
+  windows <- add_forecast_errors(windows, test_sample = series)
+  windows <- add_posterior_loglik(windows)
+
+  # 1980Q1 to 1980Q4
+  expect_length(windows, 4L)
+  for (window in windows) {
+    errors <- window[["posterior"]][["forecast"]][["errors"]]
+    expect_s3_class(errors, "mcmc")
+    expect_equal(dim(errors), c(15L, 6L))
+  }
+
+  criteria <- selection_criteria(windows)
+  expect_s3_class(criteria, "selcrit")
+  # The in-sample criterion is the last window's marginal likelihood, and the
+  # forecast errors are pooled over all of them.
+  expect_equal(criteria[["LML"]][["mean"]],
+               sum(windows[[4]][["posterior"]][["loglik"]]))
+  expect_equal(nrow(criteria[["RSFE"]]), 6L)
+  expect_true(all(is.finite(criteria[["RSFE"]][["mean"]])))
+  for (criterion in c("RSFE", "AFE", "LML")) {
+    expect_plots(plot(criteria, criterion = criterion))
+  }
+
+  # Written window by window and read back as it was.
+  folder <- file.path(tempdir(), "bvartools-discount-window")
+  unlink(folder, recursive = TRUE)
+  dir.create(folder, recursive = TRUE)
+  on.exit(unlink(folder, recursive = TRUE), add = TRUE)
+  paths <- write_to_hdf5(windows, folder = folder)
+  stored <- read_expanding_window_model_from_folder(dirname(paths[1]))
+  expect_length(stored, 4L)
+
+  for (i in seq_along(windows)) {
+    written <- windows[[i]][["posterior"]]
+    read <- stored[[i]][["posterior"]]
+
+    # The draws come back as a chain, with the mcpar they went out with.
+    for (j in c("forecasts", "errors")) {
+      expect_s3_class(read[["forecast"]][[j]], "mcmc")
+      expect_equal(coda::mcpar(read[["forecast"]][[j]]), coda::mcpar(written[["forecast"]][[j]]))
+      expect_equal(unclass(read[["forecast"]][[j]]), unclass(written[["forecast"]][[j]]),
+                   ignore_attr = TRUE)
+    }
+
+    # The closed form comes back as the plain matrices it is, all of it: the
+    # scale of the Wishart and its degrees of freedom were not written before.
+    for (j in c("mean", "scale", "cov")) {
+      expect_false(inherits(read[["a"]][[j]], "mcmc"))
+      expect_equal(read[["a"]][[j]], written[["a"]][[j]], ignore_attr = TRUE)
+    }
+    expect_equal(read[["u_sigma"]][["scale"]], written[["u_sigma"]][["scale"]],
+                 ignore_attr = TRUE)
+    expect_equal(read[["df"]], written[["df"]], ignore_attr = TRUE)
+    expect_equal(read[["loglik"]], written[["loglik"]], ignore_attr = TRUE)
+    expect_false(inherits(read[["loglik"]], "mcmc"))
+  }
+
+  expect_equal(selection_criteria(stored)[["LML"]], criteria[["LML"]])
+  expect_equal(selection_criteria(stored)[["RSFE"]], criteria[["RSFE"]])
+})
+
+
+test_that("a discounted VEC is written and read back whole", {
+
+  fitted <- add_posterior_coefficients(fitted_discount_vec(r = 1, delta_beta = 0.98))
+  fitted <- add_posterior_loglik(add_posterior_forecasts(add_forecast_input(fitted, n_ahead = 2)))
+
+  path <- tempfile(fileext = ".h5")
+  on.exit(unlink(path), add = TRUE)
+  write_to_hdf5(fitted, filename = path)
+  read <- read_model_from_hdf5(path)
+
+  expect_s3_class(read, "bvecmodel")
+  expect_equal(read[["posterior"]][["a"]][["mean"]], fitted[["posterior"]][["a"]][["mean"]],
+               ignore_attr = TRUE)
+  expect_equal(read[["posterior"]][["u_sigma"]][["scale"]],
+               fitted[["posterior"]][["u_sigma"]][["scale"]], ignore_attr = TRUE)
+  expect_equal(read[["posterior"]][["df"]], fitted[["posterior"]][["df"]], ignore_attr = TRUE)
+  expect_equal(read[["posterior"]][["beta"]][["coeffs"]],
+               fitted[["posterior"]][["beta"]][["coeffs"]], ignore_attr = TRUE)
+  expect_equal(coda::mcpar(read[["posterior"]][["forecast"]][["forecasts"]]), c(1, 10, 1))
+})
+
+
 test_that("the criterion of a discounted model is its marginal likelihood", {
 
   model <- fitted_discount_vec(r = 1)

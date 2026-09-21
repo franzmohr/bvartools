@@ -261,6 +261,13 @@
 # The attributes that make stored draws a chain again on the way back.
 .hdf5_draws_attrs <- function(x) {
   mcpar <- coda::mcpar(x)
+  # A block that is not a chain -- the per-period posterior of a discounted
+  # model, its one-row log likelihood -- has no mcpar and is written without
+  # the three attributes, which is how .read_posterior_block() tells it apart
+  # on the way back and how BayesTS writes the same blocks.
+  if (is.null(mcpar)) {
+    return(NULL)
+  }
   list("start" = mcpar[1], "end" = mcpar[2], "thin" = mcpar[3])
 }
 

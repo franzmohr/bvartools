@@ -240,6 +240,54 @@ test_that("stable = FALSE allows integrated series", {
                "No stable coefficient matrix")
 })
 
+test_that("the level shifts the series and the intercept absorbs it", {
+  level <- c(100, 50, 20)
+  set.seed(18)
+  base <- generate_artificial_var(nobs = 50, k = 3, p = 2, deterministic = "both")
+  set.seed(18)
+  shifted <- generate_artificial_var(nobs = 50, k = 3, p = 2, deterministic = "both", level = level)
+  a <- base[["params"]][["a_coef"]]
+  a_shifted <- shifted[["params"]][["a_coef"]]
+
+  expect_equal(unclass(shifted[["data"]]) - unclass(base[["data"]]), matrix(level, 50, 3, byrow = TRUE),
+               ignore_attr = TRUE)
+  expect_equal(a_shifted[, 1:6], a[, 1:6])
+  expect_equal(a_shifted[, "trend"], a[, "trend"])
+  expect_equal(a_shifted[, "const"], a[, "const"] + (diag(3) - a[, 1:3] - a[, 4:6]) %*% level,
+               ignore_attr = TRUE)
+
+  # The returned parameters give the fitted values of the shifted series
+  y <- shifted[["data"]]
+  x <- c(y[2, ], y[1, ], 1, 1)
+  x_base <- c(base[["data"]][2, ], base[["data"]][1, ], 1, 1)
+  expect_equal(a_shifted %*% x - level, a %*% x_base)
+
+  # Structural models with time varying parameters are shifted in every period
+  set.seed(19)
+  base <- generate_artificial_var(nobs = 20, k = 2, p = 1, deterministic = "const", structural = TRUE,
+                                  tvp = TRUE, range_variance_state = c(0.001, 0.001))
+  set.seed(19)
+  shifted <- generate_artificial_var(nobs = 20, k = 2, p = 1, deterministic = "const", structural = TRUE,
+                                     tvp = TRUE, range_variance_state = c(0.001, 0.001), level = 10)
+  for (t in c(1, 20)) {
+    a <- base[["params"]][["a_coef"]][, , t]
+    a0 <- base[["params"]][["a0_coef"]][, , t]
+    expect_equal(shifted[["params"]][["a_coef"]][, "const", t],
+                 a[, "const"] + as.numeric((a0 - a[, 1:2]) %*% rep(10, 2)))
+  }
+
+  # Without lags the intercept is the mean
+  set.seed(20)
+  shifted <- generate_artificial_var(nobs = 5, k = 2, p = 0, deterministic = "const",
+                                     range_const = c(1, 1), level = c(7, 8))
+  expect_equal(unname(shifted[["params"]][["a_coef"]][, "const"]), c(8, 9))
+
+  expect_error(generate_artificial_var(level = 100), "requires an intercept")
+  expect_error(generate_artificial_var(deterministic = "trend", level = 100), "requires an intercept")
+  expect_error(generate_artificial_var(deterministic = "const", level = c(1, 2)), "1 or 'k' finite elements")
+  expect_error(generate_artificial_var(deterministic = "const", level = Inf), "1 or 'k' finite elements")
+})
+
 test_that("invalid arguments are rejected", {
   expect_error(generate_artificial_var(a_zeros = 1.5), "between 0 and 1")
   expect_error(generate_artificial_var(a_zeros = -1), "between 0 and 1")

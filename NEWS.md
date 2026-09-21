@@ -25,11 +25,29 @@
   raised where it arose: `Rf_warning()` may longjmp out of a running sampler.
   *Draws are unchanged.*
 
-* The vendored BayesTS core is refreshed to upstream `4a64082`. Besides the two
-  items above, it brings a non-centred parameterisation of `VarTvpStochvol`'s
-  random walks, `omega_v` in place of `shape`/`rate`, which is not yet reachable
-  from R: nothing here sets `omega_v`, so every model is drawn as before --
-  upstream's fingerprint recording is identical for every file without it.
+* The vendored BayesTS core is refreshed to upstream `4a64082`, which brings
+  the two items above and the one below. *Draws are unchanged* for every model
+  that does not use the new prior: upstream's fingerprint recording is
+  identical for every file without it.
+
+* **A test for time variation in TVP-VARs with stochastic volatility.**
+  `add_priors()` takes `coef$omega_v` and `sigma$omega_v` in place of
+  `shape`/`rate` for a model with `tvp = TRUE` and `error = "sv"` or
+  `"sv+covar"`. Each puts a normal prior `N(0, omega_v)` on the signed standard
+  deviation of a random walk's innovations -- the coefficients and the
+  covariance coefficients for `coef`, the log-volatilities for `sigma` -- which
+  is the non-centred parameterisation of Frühwirth-Schnatter and Wagner (2010).
+  A coefficient or volatility that does not move is then a point inside the
+  prior, so the Bayes factor for time variation is a Savage-Dickey density ratio
+  that one run estimates (Chan 2018). Each block of the posterior drawn this way
+  holds, beside `sigma` (still the state variance, now `omega^2`), the draws of
+  `omega` and the log densities at zero `omega_log_zero`, per state, and
+  `omega_log_zero_joint`, for the block; `?add_priors.bvarmodel` gives the
+  formula. The blocks choose their prior one by one, `omega_v` is refused
+  beside `shape`/`rate` and on every other model, and `write_to_hdf5()` and
+  `read_model_from_hdf5()` carry the prior and the draws. `VarTvpStochvol` now
+  also returns the core's warnings, which `add_posterior_coefficients()`
+  raises.
 
 * **`transform_variables()` returns a vector series for a vector series**, where
   it returned a one-column matrix, and a single series takes a named or an

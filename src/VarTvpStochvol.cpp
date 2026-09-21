@@ -60,6 +60,9 @@ bayests::VarTvpStochvolInput read_input(const Rcpp::List &object) {
     // coefficients may drift, and where they start.
     input.a_prior.sigma = read_gamma_prior(prior_a);
     input.a_prior.initial_state = read_normal_prior(prior_a);
+    // The non-centred parameterisation, in place of shape and rate; validate()
+    // refuses a block that carries both.
+    read_vec_if_present(prior_a, "omega_v", input.a_prior.omega_v);
     if (bvs) {
       input.a_varsel_prior = read_varsel_prior(prior_a, input.spec.varsel);
     }
@@ -69,6 +72,7 @@ bayests::VarTvpStochvolInput read_input(const Rcpp::List &object) {
     const Rcpp::List prior_psi = priors["psi"];
     input.psi_prior.sigma = read_gamma_prior(prior_psi);
     input.psi_prior.initial_state = read_normal_prior(prior_psi);
+    read_vec_if_present(prior_psi, "omega_v", input.psi_prior.omega_v);
 
     // Selection for the covariance block is declared in its own group, so it
     // can differ from the model's.
@@ -85,6 +89,7 @@ bayests::VarTvpStochvolInput read_input(const Rcpp::List &object) {
     read_vec_if_present(prior_u_sigma, "offset", input.u_sigma_prior.offset);
     read_vec_if_present(prior_u_sigma, "shape", input.u_sigma_prior.state.sigma.shape);
     read_vec_if_present(prior_u_sigma, "rate", input.u_sigma_prior.state.sigma.rate);
+    read_vec_if_present(prior_u_sigma, "omega_v", input.u_sigma_prior.state.omega_v);
     read_vec_if_present(prior_u_sigma, "mu", input.u_sigma_prior.state.initial_state.mu);
     read_mat_if_present(prior_u_sigma, "v_inv", input.u_sigma_prior.state.initial_state.v_inv);
     // A state the sampler redraws every iteration, even though R keeps it next
@@ -185,6 +190,19 @@ bayests::VarTvpStochvolDraws read_draws_for_loglik(const Rcpp::List &object,
   return draws;
 }
 
+/// A block's draws with what the non-centred parameterisation adds beside its
+/// `sigma`: the signed standard deviation and the log ordinates at zero the
+/// Savage-Dickey test for time variation is built from. Unchanged for a
+/// centred block.
+Rcpp::List with_noncentred(Rcpp::List block, const bayests::NoncentredStateDraws &nc) {
+  if (!nc.empty()) {
+    block["omega"] = draws_to_r(nc.omega);
+    block["omega_log_zero"] = draws_to_r(nc.log_zero);
+    block["omega_log_zero_joint"] = draws_to_r(nc.log_zero_joint);
+  }
+  return block;
+}
+
 Rcpp::List write_draws(const bayests::VarTvpStochvolDraws &draws) {
 
   Rcpp::List posteriors = Rcpp::List::create(Rcpp::Named("a") = R_NilValue,
@@ -200,6 +218,7 @@ Rcpp::List write_draws(const bayests::VarTvpStochvolDraws &draws) {
       posteriors["a"] = Rcpp::List::create(Rcpp::Named("coeffs") = draws_to_r(draws.a),
                                            Rcpp::Named("sigma") = draws_to_r(draws.a_sigma));
     }
+    posteriors["a"] = with_noncentred(posteriors["a"], draws.a_noncentred);
   }
 
   if (draws.has_psi()) {
@@ -211,13 +230,16 @@ Rcpp::List write_draws(const bayests::VarTvpStochvolDraws &draws) {
       posteriors["psi"] = Rcpp::List::create(Rcpp::Named("coeffs") = draws_to_r(draws.psi),
                                              Rcpp::Named("sigma") = draws_to_r(draws.psi_sigma));
     }
+    posteriors["psi"] = with_noncentred(posteriors["psi"], draws.psi_noncentred);
   }
 
   posteriors["u_omega_inv"] = Rcpp::List::create(Rcpp::Named("coeffs") = draws_to_r(draws.u_omega_inv));
   // `sigma` is the variance of the log-volatility innovations, which a forecast
   // simulates the volatility forward by.
-  posteriors["u_sigma_inv"] = Rcpp::List::create(Rcpp::Named("coeffs") = draws_to_r(draws.u_sigma_inv),
-                                                 Rcpp::Named("sigma") = draws_to_r(draws.h_sigma));
+  posteriors["u_sigma_inv"] = with_noncentred(
+    Rcpp::List::create(Rcpp::Named("coeffs") = draws_to_r(draws.u_sigma_inv),
+                       Rcpp::Named("sigma") = draws_to_r(draws.h_sigma)),
+    draws.h_noncentred);
 
   return posteriors;
 }
@@ -238,7 +260,8 @@ Rcpp::List VarTvpStochvolCoefficients(Rcpp::List object) {
                             Rcpp::Named("model") = object["model"],
                             Rcpp::Named("initial") = object["initial"],
                             Rcpp::Named("priors") = object["priors"],
-                            Rcpp::Named("posterior") = write_draws(draws));
+                            Rcpp::Named("posterior") = write_draws(draws),
+                            Rcpp::Named("warnings") = reporter.warnings());
 }
 
 // [[Rcpp::export(.VarTvpStochvolForecasts)]]

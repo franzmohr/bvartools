@@ -34,10 +34,45 @@
   }
 }
 
+# Whether the model's sampler reads the non-centred prior 'omega_v'. Only
+# VarTvpStochvol does so far; anywhere else it would be written into the priors
+# and silently left unread, so the checks below refuse it instead.
+.add_priors_noncentred_allowed <- function(object) {
+  inherits(object, "bvarmodel") && isTRUE(object[["model"]][["tvp"]]) &&
+    isTRUE(object[["model"]][["error"]] %in% c("sv", "sv+covar"))
+}
+
+# 'omega_v' replaces 'shape' and 'rate' rather than joining them: a block reads
+# one prior on how far its random walk moves, and the core refuses both.
+.add_priors_check_omega_v <- function(object, spec, arg, alternatives, lengths) {
+  if (is.null(spec[["omega_v"]])) {
+    return(invisible(NULL))
+  }
+  if (!.add_priors_noncentred_allowed(object)) {
+    stop("Argument '", arg, "$omega_v' is only available for VAR models with time varying ",
+         "parameters and stochastic volatility (tvp = TRUE and error = \"sv\" or \"sv+covar\").",
+         call. = FALSE)
+  }
+  given <- intersect(alternatives, names(spec))
+  if (length(given) > 0) {
+    stop("Argument '", arg, "' gives both 'omega_v' and ",
+         paste0("'", given, "'", collapse = ", "),
+         ". Use 'omega_v' for the non-centred prior or 'shape' and 'rate' for the gamma prior, ",
+         "not both.", call. = FALSE)
+  }
+  omega_v <- spec[["omega_v"]]
+  if (!is.numeric(omega_v) || !length(omega_v) %in% lengths ||
+      any(!is.finite(omega_v)) || any(omega_v <= 0)) {
+    stop("Argument '", arg, "$omega_v' must be a finite positive numeric of length ",
+         paste(unique(lengths), collapse = " or "), ".", call. = FALSE)
+  }
+  invisible(NULL)
+}
+
 .add_priors_check_coef <- function(object, coef) {
-  
+
   allowed_coef_arguments <- c("v_i", "v_i_det", "const", "minnesota",
-                              "max_var", "shape", "rate", "rate_det")
+                              "max_var", "shape", "rate", "rate_det", "omega_v")
   # Only the Minnesota prior of a VAR model can centre the first own lag on one.
   if (inherits(object, "bvarmodel")) {
     allowed_coef_arguments <- c(allowed_coef_arguments, "coint_var")
@@ -66,15 +101,21 @@
     }
   }
   
+  # One value for every coefficient: the same prior for every state variance,
+  # as 'shape' and 'rate' give it.
+  .add_priors_check_omega_v(object, coef, "coef", c("shape", "rate", "rate_det"), 1)
+
   # Tests for specifications used in TVP models
   if (!is.null(object[["model"]][["tvp"]])) {
-    if (object[["model"]][["tvp"]]) {
+    if (object[["model"]][["tvp"]] && is.null(coef[["omega_v"]])) {
       if (!"shape" %in% names(coef)) {
         stop("Argument 'coef$shape' must be specified for TVP models.")
       }
       if (!"rate" %in% names(coef)) {
         stop("Argument 'coef$rate' must be specified for TVP models.")
       }
+    }
+    if (object[["model"]][["tvp"]]) {
       
       if (!is.null(coef[["const"]])) {
         if ("character" %in% class(coef[["const"]])) {
@@ -115,7 +156,7 @@
   }
 
   allowed_sigma_arguments <- c("df", "scale", "shape", "rate", "mu", "v_i",
-                               "state_variance", "offset")
+                               "state_variance", "offset", "omega_v")
   for (i in names(sigma)) {
     if (!i %in% allowed_sigma_arguments) {
       stop(paste0("Element '", i, "' in argument 'sigma' is not recognised."))
@@ -143,7 +184,10 @@
     }
     
     if (object$model$error %in% c("sv", "sv+covar")) {
-      if (any(!c("mu", "v_i", "shape", "rate", "state_variance", "offset") %in% names(sigma))) {
+      .add_priors_check_omega_v(object, sigma, "sigma", c("shape", "rate"),
+                                c(1, object$model$k))
+      state_prior <- if (is.null(sigma[["omega_v"]])) c("shape", "rate") else "omega_v"
+      if (any(!c("mu", "v_i", state_prior, "state_variance", "offset") %in% names(sigma))) {
         stop("Missing prior specifications for stochastic volatility prior.")
       }
       error_prior <- "sv"

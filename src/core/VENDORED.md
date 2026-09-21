@@ -16,7 +16,8 @@ the flat-prior warning for `bvs` (`fa6dd89`, `f2abd4e`), which adds
 R through `RcppReporter::warnings()` and `.raise_core_warnings()`; the three
 SSVS refusals in `validate()` (`a85abe2`); and the non-centred random walks of
 `VarTvpStochvol` (`59c495f`), which bring `core/models/noncentred_support.h`
-and are not yet reachable from R. The previous refresh sat at `6fe91d2`, 0.3.0
+and reach R through `omega_v` in `add_priors()` and the `omega*` draws
+`src/VarTvpStochvol.cpp` returns. The previous refresh sat at `6fe91d2`, 0.3.0
 plus the discount fix. 0.3.0 is not archived yet, so
 there is no version DOI to name; the concept DOI
 <https://doi.org/10.5281/zenodo.22722531> resolves to the newest release

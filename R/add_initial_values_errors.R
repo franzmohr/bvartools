@@ -153,6 +153,18 @@
   # mean is shape / rate. The draw used to be from Gamma(shape / 2, rate / 2),
   # which has the same mean and twice the variance.
   state_precision <- function(prior) {
+    # The non-centred prior puts N(0, omega_v) on the signed standard
+    # deviation, so the variance has prior mean omega_v, and a draw from the
+    # prior is the square of a normal one.
+    if (!is.null(prior[["omega_v"]])) {
+      omega_v <- as.numeric(prior[["omega_v"]])
+      variance <- if (method == "prior") {
+        stats::rnorm(length(omega_v), sd = sqrt(omega_v))^2
+      } else {
+        omega_v
+      }
+      return(diag(1 / variance, length(omega_v)))
+    }
     shape <- as.numeric(prior[["shape"]])
     rate <- as.numeric(prior[["rate"]])
     n <- length(shape)

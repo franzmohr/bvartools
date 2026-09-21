@@ -256,11 +256,49 @@ test_that("a TVP VEC with stochastic volatility takes omega_v and reports its te
 })
 
 test_that("a VEC refuses omega_v where no sampler reads it", {
+  wishart <- create_bvecmodel(at_data(), p = 2, r = 1, const = "unrestricted", tvp = TRUE,
+                              error = "wishart", iterations = 10, burnin = 10)
+  expect_error(suppressWarnings(
+    add_priors(wishart, coef = list(v_i = 1, omega_v = 0.001),
+               coint = list(rho = 0.99, p_tau_i = "ml", weight = 0.1),
+               sigma = list(df = "k", scale = 1))),
+    "only available for VEC")
+
+  # A gamma error term has no log-volatility random walk to put it on.
   gamma <- create_bvecmodel(at_data(), p = 2, r = 1, const = "unrestricted", tvp = TRUE,
                             error = "gamma", iterations = 10, burnin = 10)
   expect_error(suppressWarnings(
     add_priors(gamma, coef = list(v_i = 1, omega_v = 0.001),
                coint = list(rho = 0.99, p_tau_i = "ml", weight = 0.1),
-               sigma = list(shape = 3, rate = 0.01))),
+               sigma = list(shape = 3, rate = 0.01, omega_v = 0.1))),
     "only available for VEC")
+})
+
+test_that("a TVP VEC with gamma errors takes coef$omega_v and reports its test", {
+  model <- create_bvecmodel(at_data(), p = 2, r = 1, const = "unrestricted", tvp = TRUE,
+                            error = "gamma+covar", iterations = fx_iterations,
+                            burnin = fx_burnin)
+  model <- suppressWarnings(
+    add_priors(model, coef = list(v_i = 1, v_i_det = 0.1, omega_v = 0.001),
+               coint = list(rho = 0.99, rho_min = 0.9, rho_max = 0.999,
+                            p_tau_i = "ml", weight = 0.1),
+               sigma = list(shape = 3, rate = 0.01)))
+  k <- model[["model"]][["k"]]
+  n_a <- nrow(model[["priors"]][["a"]][["mu"]])
+  n_psi <- k * (k - 1) / 2
+  expect_equal(as.numeric(model[["priors"]][["psi"]][["omega_v"]]), rep(0.001, n_psi))
+  expect_equal(as.numeric(model[["priors"]][["u_sigma"]][["shape"]]), rep(3, k))
+
+  model <- add_initial_values(model)
+  model <- add_posterior_coefficients(add_seed(model, 218))
+  for (block in c("a", "psi")) {
+    draws <- model[["posterior"]][[block]]
+    expect_s3_class(draws[["omega_log_zero"]], "mcmc")
+    expect_equal(as.numeric(draws[["sigma"]]), as.numeric(draws[["omega"]])^2)
+  }
+
+  res <- time_variation_test(model)
+  expect_equal(unique(res[["block"]]), c("coefficients", "covariances"))
+  expect_equal(nrow(res), n_a + n_psi + 2)
+  expect_true(all(is.finite(res[["log_bf"]])))
 })

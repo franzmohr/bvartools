@@ -63,7 +63,7 @@
   raised where it arose: `Rf_warning()` may longjmp out of a running sampler.
   *Draws are unchanged.*
 
-* The vendored BayesTS core is refreshed to upstream `0e75842`, which brings
+* The vendored BayesTS core is refreshed to upstream `cea124b`, which brings
   the two items above and the one below. *Draws are unchanged* for every model
   that does not use the new prior: upstream's fingerprint recording is
   identical for every file without it.
@@ -110,7 +110,10 @@
   `shape`/`rate`, and `time_variation_test()` has a `bvecmodel` method, which
   labels the loadings by the error correction term they load on. The
   cointegration space keeps its state equation, whose variance is fixed to pin
-  down the scale of beta, so it has no prior to test against.
+  down the scale of beta, so it has no prior to test against. The same
+  `coef$omega_v` works for TVP-VEC models with `error = "gamma"` or
+  `"gamma+covar"`, whose coefficients and covariance coefficients are tested
+  as those of the stochastic volatility model are.
 
 * **`transform_variables()` returns a vector series for a vector series**, where
   it returned a one-column matrix, and a single series takes a named or an

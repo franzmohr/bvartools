@@ -170,7 +170,8 @@ struct RandomWalkPrior
     /// constant model a point in the interior of the prior, which the
     /// Savage-Dickey test for time variation of Chan (2018) needs; see
     /// src/core/models/noncentred_support.h. Only the models that say so read
-    /// it -- VarTvpStochvol, VarTvpGamma and VecTvpStochvol, so far.
+    /// it -- the four time-varying VARs and VECs with a gamma or stochastic
+    /// volatility error term.
     arma::vec omega_v;
 
     /// Normal on the state of the period before the sample.

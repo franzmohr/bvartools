@@ -7,7 +7,7 @@ project is here -- the core deliberately links neither HDF5 nor HighFive,
 prints nothing and reads no files, which is what makes it embeddable in an R
 package at all.
 
-The copy is **BayesTS `b8d6c2c`**, upstream after the `v0.3.0` release
+The copy is **BayesTS `cea124b`**, upstream after the `v0.3.0` release
 (tagged on `18a86c2`). Past the release it carries the fix to
 `core/models/var_tvp_discount.cpp` (`2dc9250`), which is what makes
 `add_predictive_loglik()` score more than the first horizon of a discounted VAR;
@@ -15,11 +15,13 @@ the flat-prior warning for `bvs` (`fa6dd89`, `f2abd4e`), which adds
 `flat_selection_prior()` and `flat_selection_message()` to `priors.h` and reaches
 R through `RcppReporter::warnings()` and `.raise_core_warnings()`; the three
 SSVS refusals in `validate()` (`a85abe2`); and the non-centred random walks of
-`VarTvpStochvol` (`59c495f`), `VarTvpGamma` (`0a2a0c0`) and `VecTvpStochvol` (`95bacdb`),
+`VarTvpStochvol` (`59c495f`), `VarTvpGamma` (`0a2a0c0`), `VecTvpStochvol` (`95bacdb`)
+and `VecTvpGamma` (`3c1e32a`),
 which bring
 `core/models/noncentred_support.h` and reach R through `omega_v` in
 `add_priors()` and the `omega*` draws `src/VarTvpStochvol.cpp`,
-`src/VarTvpGamma.cpp` and `src/VecTvpStochvol.cpp` return, through `with_noncentred()` in `bayests_r_io.h`;
+`src/VarTvpGamma.cpp`, `src/VecTvpStochvol.cpp` and `src/VecTvpGamma.cpp`
+return, through `with_noncentred()` in `bayests_r_io.h`;
 and the constant VECs brought in line with Koop, Leon-Gonzalez and Strachan
 (2010) (`b8d6c2c`): `VecNormalGamma` now pays the cointegration space prior's
 term in its error precision through `coint_prior_pseudo_errors()` in

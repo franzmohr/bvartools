@@ -35,9 +35,8 @@ time_variation_test.default <- function(object, ...) {
 #'
 #' @param object an object of class \code{"bvarmodel"} with \code{tvp = TRUE} and
 #' \code{error = "sv"}, \code{"sv+covar"}, \code{"gamma"} or \code{"gamma+covar"}, or
-#' of class \code{"bvecmodel"} with \code{tvp = TRUE} and \code{error = "sv"} or
-#' \code{"sv+covar"}, whose priors were set with \code{coef$omega_v} or, under
-#' stochastic volatility, \code{sigma$omega_v} in \code{\link{add_priors}} and whose
+#' of class \code{"bvecmodel"} with the same, whose priors were set with
+#' \code{coef$omega_v} or, under stochastic volatility, \code{sigma$omega_v} in \code{\link{add_priors}} and whose
 #' posterior was drawn by \code{\link{add_posterior_coefficients}}.
 #' @param joint logical. Should the Bayes factor for the time variation of every
 #' state of a block at once be reported as well? Default is \code{TRUE}.

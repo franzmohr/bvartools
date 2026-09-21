@@ -678,11 +678,10 @@ ForecastDraws VarTvpGammaSampler::forecast(const VarTvpGammaInput &input,
                 {
                     step_random_walk(psi_state, psi_sigma, psi_mask);
 
-                    // Psi' Omega^-1 Psi, as the sampler forms it.
+                    // The root of (Psi' Omega^-1 Psi)^-1, from Psi and Omega directly.
                     arma::mat Psi = diag_k;
                     fill_strict_lower_triangle(Psi, psi_state);
-                    error_root = covariance_root(
-                        arma::trans(Psi) * arma::diagmat(coefficients.u_omega_inv.col(draw)) * Psi);
+                    error_root = covariance_root(Psi, 1.0 / coefficients.u_omega_inv.col(draw));
                 }
             }
 

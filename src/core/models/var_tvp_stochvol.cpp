@@ -692,15 +692,13 @@ ForecastDraws VarTvpStochvolSampler::forecast(const VarTvpStochvolInput &input,
                 }
                 step_random_walk(h_state, h_sigma, arma::vec());
 
-                // Psi' Omega^-1 Psi, as the sampler forms it period by period.
-                arma::mat u_sigma_inv = arma::diagmat(arma::exp(-h_state));
+                // The root of (Psi' Omega^-1 Psi)^-1, from Psi and Omega directly.
+                arma::mat Psi = diag_k;
                 if (use_psi)
                 {
-                    arma::mat Psi = diag_k;
                     fill_strict_lower_triangle(Psi, psi_state);
-                    u_sigma_inv = arma::trans(Psi) * u_sigma_inv * Psi;
                 }
-                error_root = covariance_root(u_sigma_inv);
+                error_root = covariance_root(Psi, arma::exp(h_state));
             }
 
             if (use_a)

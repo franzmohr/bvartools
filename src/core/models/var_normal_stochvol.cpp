@@ -426,14 +426,10 @@ ForecastDraws VarNormalStochvolSampler::forecast(const VarNormalStochvolInput &i
                 // The step comes before the observation it generates.
                 step_random_walk(h_state, h_sigma, arma::vec());
 
-                // Psi' Omega^-1 Psi, as the sampler forms it.
-                arma::mat u_sigma_inv = arma::diagmat(arma::exp(-h_state));
-                if (use_psi)
-                {
-                    const arma::mat Psi = arma::reshape(coefficients.psi.col(draw), k, k);
-                    u_sigma_inv = arma::trans(Psi) * u_sigma_inv * Psi;
-                }
-                error_root = covariance_root(u_sigma_inv);
+                // The root of (Psi' Omega^-1 Psi)^-1, from Psi and Omega directly.
+                error_root = covariance_root(
+                    use_psi ? arma::mat(arma::reshape(coefficients.psi.col(draw), k, k)) : diag_k,
+                    arma::exp(h_state));
             }
 
             if (use_a)

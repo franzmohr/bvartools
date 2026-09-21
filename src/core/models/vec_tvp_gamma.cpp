@@ -725,13 +725,13 @@ struct VecTvpGammaWalk
         {
             step_random_walk(psi_state, psi_sigma, psi_mask);
 
-            // Psi' Omega^-1 Psi, as the sampler forms it.
+            // Psi' Omega^-1 Psi, as the sampler forms it, and the root of its
+            // inverse from Psi and Omega directly.
             arma::mat Psi = diag_k;
             core::fill_strict_lower_triangle(Psi, psi_state);
-            const arma::mat precision =
-                arma::trans(Psi) * arma::diagmat(coefficients.u_omega_inv.col(draw)) * Psi;
-            out.period.u_sigma_inv = arma::vectorise(precision);
-            out.error_root = covariance_root(precision);
+            out.period.u_sigma_inv = arma::vectorise(
+                arma::trans(Psi) * arma::diagmat(coefficients.u_omega_inv.col(draw)) * Psi);
+            out.error_root = covariance_root(Psi, 1.0 / coefficients.u_omega_inv.col(draw));
         }
     }
 };

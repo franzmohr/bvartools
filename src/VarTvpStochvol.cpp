@@ -190,19 +190,6 @@ bayests::VarTvpStochvolDraws read_draws_for_loglik(const Rcpp::List &object,
   return draws;
 }
 
-/// A block's draws with what the non-centred parameterisation adds beside its
-/// `sigma`: the signed standard deviation and the log ordinates at zero the
-/// Savage-Dickey test for time variation is built from. Unchanged for a
-/// centred block.
-Rcpp::List with_noncentred(Rcpp::List block, const bayests::NoncentredStateDraws &nc) {
-  if (!nc.empty()) {
-    block["omega"] = draws_to_r(nc.omega);
-    block["omega_log_zero"] = draws_to_r(nc.log_zero);
-    block["omega_log_zero_joint"] = draws_to_r(nc.log_zero_joint);
-  }
-  return block;
-}
-
 Rcpp::List write_draws(const bayests::VarTvpStochvolDraws &draws) {
 
   Rcpp::List posteriors = Rcpp::List::create(Rcpp::Named("a") = R_NilValue,

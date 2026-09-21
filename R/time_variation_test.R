@@ -20,22 +20,22 @@ time_variation_test <- function(object, ...) {
 #' @export
 time_variation_test.default <- function(object, ...) {
   stop("time_variation_test() is available for 'bvarmodel' objects with time varying ",
-       "parameters and stochastic volatility, estimated with the prior 'omega_v' in ",
-       "add_priors().", call. = FALSE)
+       "parameters, estimated with the prior 'omega_v' in add_priors().", call. = FALSE)
 }
 
 
 #' Test for Time Variation in a VAR Model
 #'
 #' Computes the Bayes factors of Chan (2018) for time variation in each
-#' coefficient, each covariance coefficient and each log-volatility of a VAR
-#' model with time varying parameters and stochastic volatility, from the draws
-#' of a single estimation of that model.
+#' coefficient, each covariance coefficient and, under stochastic volatility,
+#' each log-volatility of a VAR model with time varying parameters, from the
+#' draws of a single estimation of that model.
 #'
 #' @param object an object of class \code{"bvarmodel"} with \code{tvp = TRUE} and
-#' \code{error = "sv"} or \code{"sv+covar"}, whose priors were set with
-#' \code{coef$omega_v} or \code{sigma$omega_v} in \code{\link{add_priors}} and
-#' whose posterior was drawn by \code{\link{add_posterior_coefficients}}.
+#' \code{error = "sv"}, \code{"sv+covar"}, \code{"gamma"} or \code{"gamma+covar"},
+#' whose priors were set with \code{coef$omega_v} or, under stochastic volatility,
+#' \code{sigma$omega_v} in \code{\link{add_priors}} and whose posterior was drawn by
+#' \code{\link{add_posterior_coefficients}}.
 #' @param joint logical. Should the Bayes factor for the time variation of every
 #' state of a block at once be reported as well? Default is \code{TRUE}.
 #' @param batches integer. The number of batches the draws are split into for
@@ -207,9 +207,9 @@ time_variation_test.bvarmodel <- function(object, joint = TRUE, batches = 20, ..
 
   if (is.null(result)) {
     stop("No block of the model was estimated under the non-centred prior. Set ",
-         "'coef$omega_v' or 'sigma$omega_v' in add_priors() for a model with ",
-         "tvp = TRUE and error = \"sv\" or \"sv+covar\", and draw the posterior again.",
-         call. = FALSE)
+         "'coef$omega_v' in add_priors() for a model with tvp = TRUE and a gamma or ",
+         "stochastic volatility error term, or 'sigma$omega_v' for one with stochastic ",
+         "volatility, and draw the posterior again.", call. = FALSE)
   }
 
   rownames(result) <- NULL

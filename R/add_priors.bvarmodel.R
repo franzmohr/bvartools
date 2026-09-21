@@ -68,8 +68,8 @@
 #'   Frühwirth-Schnatter and Wagner (2010), which makes a constant coefficient an interior point
 #'   of the prior and lets the posterior carry the Savage-Dickey test for time variation of
 #'   Chan (2018); see Details. It applies to the covariance coefficients as well. Only for
-#'   models with time varying parameters and stochastic volatility, \code{tvp = TRUE} with
-#'   \code{error = "sv"} or \code{"sv+covar"}.}
+#'   models with time varying parameters, \code{tvp = TRUE}, and \code{error = "sv"},
+#'   \code{"sv+covar"}, \code{"gamma"} or \code{"gamma+covar"}.}
 #' }
 #' 
 #' Argument \code{sigma} must contain the elements that belong to the

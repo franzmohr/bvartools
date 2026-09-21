@@ -214,8 +214,9 @@ inline void allocate_noncentred(NoncentredStateDraws &out, const arma::uword n,
 /// @param y r x T responses, one period per column.
 /// @param z rT x n regressors, the T blocks \f$Z_t\f$ stacked, already masked
 ///   by any selection the caller performs.
-/// @param covariance_blocks rT x r error covariances, one block per period.
-/// @param precision_blocks rT x r their inverses.
+/// @param covariance_blocks rT x r error covariances, one block per period, or
+///   one r x r block for every period, as the simulation smoother takes them.
+/// @param precision_blocks their inverses, in the same layout.
 /// @param prior the block's prior; `omega_v` must be set.
 /// @param x0 n; updated.
 /// @param omega n; updated.
@@ -246,7 +247,9 @@ inline NoncentredCoefficients draw_noncentred_path(const arma::mat &y, const arm
                                          arma::zeros<arma::vec>(n), identity)
                   .cols(0, tt - 1);
 
-    // Where it starts and how far it moves, given the standardised path.
+    // Where it starts and how far it moves, given the standardised path. A
+    // single block serves every period; tt >= 2 keeps the two layouts apart.
+    const arma::uword p_stride = precision_blocks.n_rows == r ? 0 : r;
     arma::mat data_precision = arma::zeros<arma::mat>(2 * n, 2 * n);
     arma::vec data_rhs = arma::zeros<arma::vec>(2 * n);
     arma::mat x_t(r, 2 * n);
@@ -255,7 +258,7 @@ inline NoncentredCoefficients draw_noncentred_path(const arma::mat &y, const arm
         const arma::mat z_t = z.rows(t * r, (t + 1) * r - 1);
         x_t.cols(0, n - 1) = z_t;
         x_t.cols(n, 2 * n - 1) = z_t.each_row() % arma::trans(x_tilde.col(t));
-        const arma::mat sx = precision_blocks.rows(t * r, (t + 1) * r - 1) * x_t;
+        const arma::mat sx = precision_blocks.rows(t * p_stride, t * p_stride + r - 1) * x_t;
         data_precision += arma::trans(x_t) * sx;
         data_rhs += arma::trans(sx) * y.col(t);
     }

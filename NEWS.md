@@ -1,5 +1,12 @@
 # bvartools 1.0.0
 
+* `Depends` requires `R (>= 4.0.0)` rather than `(>= 3.5)`. `src/Makevars` has
+  set `CXX_STD = CXX17` since the C++ core arrived, and 3.5 predates R's own
+  requirement of a C++11 compiler, let alone a toolchain that honours a request
+  for C++17 -- so the old floor was a claim nothing tested, the check matrix
+  reaching back only to `oldrel-1`. dfmtools and fincond, which carry the same
+  mismatch or depend on this one, move with it.
+
 * **The two discounted models, `VarTvpDiscount` and `VecTvpDiscount`, can be set
   up, estimated, forecast, scored, written and read back.** They are reached
   with `algorithm = "discount"` of `create_bvarmodel()` and

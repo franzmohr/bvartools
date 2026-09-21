@@ -30,7 +30,7 @@ The object in \code{object} with the element \code{priors} added, a list with
   prior means \code{mu} and the \eqn{M \times M} prior precision matrix
   \code{v_inv}, where \eqn{M} is the number of coefficients. With variable selection
   also \code{inprior} and \code{include}, for SSVS \code{tau0} and \code{tau1}, and
-  for TVP models \code{shape} and \code{rate} of the state variances.}
+  for TVP models \code{shape} and \code{rate} of the state variances, or \code{omega_v}.}
   \item{\code{psi}}{for \code{error = "gamma+covar"} or \code{"sv+covar"}, the prior of
   the error covariance coefficients with \code{type}, \code{mu}, \code{v_inv} and
   \code{varsel}, and the variable selection and state variance elements as for
@@ -38,7 +38,7 @@ The object in \code{object} with the element \code{priors} added, a list with
   \item{\code{u_sigma}}{the prior of the error variances with its \code{type}:
   \code{"wishart"} with \code{df} and \code{scale}, \code{"gamma"} with \code{shape}
   and \code{rate}, or \code{"sv"} with \code{mu}, \code{v_inv}, \code{shape},
-  \code{rate}, \code{sigma} and \code{offset}. With a Minnesota prior it also holds
+  \code{rate} (or \code{omega_v}), \code{sigma} and \code{offset}. With a Minnesota prior it also holds
   \code{u_sigma_inv}, the inverse error covariance matrix the prior was scaled with.
   Not present for \code{error = "ald"}.}
   \item{\code{u_scale}}{for \code{error = "ald"}, the prior of the scales of the
@@ -90,12 +90,21 @@ Argument \code{coef} can contain the following elements:
   are set to this value. Only used if \code{minnesota} is given.}
   \item{\code{shape}}{a numeric specifying the shape of the gamma prior on the precisions, the
   inverse error variances, of the state equation, whose mean is \code{shape / rate}. Required for
-  models with time varying parameters and not used otherwise.}
+  models with time varying parameters unless \code{omega_v} is given, and not used otherwise.}
   \item{\code{rate}}{a numeric specifying the rate of the gamma prior on the precisions of the
-  state equation. Required for models with time varying parameters and not used otherwise.}
+  state equation. Required together with \code{shape}.}
   \item{\code{rate_det}}{a numeric specifying the prior rate parameter of the error variances of the
   state equation for coefficients, which correspond to deterministic terms. If it is not given,
   \code{rate} is used. Only used for models with time varying parameters.}
+  \item{\code{omega_v}}{a positive numeric, in place of \code{shape} and \code{rate}: the
+  variance of a normal prior on the signed standard deviation \eqn{\omega} of the state
+  innovations, \eqn{\omega \sim N(0, V_\omega)}, which is also the prior mean of the state
+  variance \eqn{\omega^2}. This is the non-centred parameterisation of
+  Frühwirth-Schnatter and Wagner (2010), which makes a constant coefficient an interior point
+  of the prior and lets the posterior carry the Savage-Dickey test for time variation of
+  Chan (2018); see Details. It applies to the covariance coefficients as well. Only for
+  models with time varying parameters and stochastic volatility, \code{tvp = TRUE} with
+  \code{error = "sv"} or \code{"sv+covar"}.}
 }
 
 Argument \code{sigma} must contain the elements that belong to the
@@ -104,7 +113,8 @@ Argument \code{sigma} must contain the elements that belong to the
   \item \code{"wishart"}: \code{df} and \code{scale}. Not available for structural models.
   \item \code{"gamma"} and \code{"gamma+covar"}: \code{shape} and \code{rate}.
   \item \code{"sv"} and \code{"sv+covar"}: \code{mu}, \code{v_i}, \code{shape}, \code{rate},
-  \code{state_variance} and \code{offset}.
+  \code{state_variance} and \code{offset}; with \code{tvp = TRUE}, \code{omega_v} may take the
+  place of \code{shape} and \code{rate}.
   \item \code{"ald"}: \code{shape} and \code{rate}.
 }
 The elements are
@@ -132,7 +142,25 @@ The elements are
   Only used for models with time varying volatility.}
   \item{\code{offset}}{numeric of the constant, which is added before taking the log of the squared errors.
   Only used for models with time varying volatility.}
+  \item{\code{omega_v}}{a positive numeric, in place of \code{shape} and \code{rate}: the variance
+  of a normal prior on the signed standard deviation of the log-volatility innovations, as
+  \code{coef$omega_v} is for the coefficients. Only for models with time varying parameters and
+  stochastic volatility.}
 }
+
+Under \code{omega_v} a random walk \eqn{x_t = x_{t-1} + v_t}, \eqn{v_t \sim N(0, \omega^2)},
+is estimated as \eqn{x_t = x_0 + \omega \tilde{x}_t} with \eqn{\tilde{x}_t} a standard random
+walk. The hypothesis that \eqn{x_t} does not move is then \eqn{\omega = 0}, a point inside the
+prior, and its Bayes factor is the Savage-Dickey density ratio
+\eqn{p(\omega = 0) / p(\omega = 0 | y)}, which a single run of the time varying model estimates
+(Chan 2018). Each block of the posterior estimated this way holds, beside \code{sigma}, the
+draws of \eqn{\omega} in \code{omega}, and the log density at zero of its conditional
+posterior, per state in \code{omega_log_zero} and for the whole block in
+\code{omega_log_zero_joint}. The log Bayes factor in favour of time variation in state
+\eqn{i} is \eqn{\log N(0; 0, V_{\omega, i})} less the log of the average over the draws of
+\code{exp(omega_log_zero[, i])}. The joint one compares "every state of the block moves" with
+"none does" rather than "at least one moves". Each block chooses its prior for itself, so the
+volatilities can be tested while the coefficients keep \code{shape} and \code{rate}.
 For structural models only a gamma prior or stochastic volatility specification is allowed.
 
 Argument \code{varsel} can contain the following elements:
@@ -187,8 +215,15 @@ model <- add_priors(model,
 
 }
 \references{
+Chan, J. C. C. (2018). Specification tests for time-varying parameter models with stochastic
+volatility. \emph{Econometric Reviews, 37}(8), 807--823. \doi{10.1080/07474938.2016.1167948}
+
 Chan, J., Koop, G., Poirier, D. J., & Tobias J. L. (2019). \emph{Bayesian econometric methods}
 (2nd ed.). Cambridge: Cambridge University Press.
+
+Frühwirth-Schnatter, S., & Wagner, H. (2010). Stochastic model specification search for
+Gaussian and partial non-Gaussian state space models. \emph{Journal of Econometrics, 154}(1),
+85--100. \doi{10.1016/j.jeconom.2009.07.003}
 
 George, E. I., Sun, D., & Ni, S. (2008). Bayesian stochastic search for VAR model
 restrictions. \emph{Journal of Econometrics, 142}(1), 553--580.

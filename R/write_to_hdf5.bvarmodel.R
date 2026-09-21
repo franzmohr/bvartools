@@ -248,7 +248,7 @@ write_to_hdf5.bvarmodel <- function(object, filename, group = "", ...) {
                              "gamma" = ,
                              "gamma+covar" = c("type", "shape", "rate"),
                              "sv" = ,
-                             "sv+covar" = c("type", "mu", "v_inv", "shape", "rate", "sigma", "offset"),
+                             "sv+covar" = c("type", "mu", "v_inv", "shape", "rate", "omega_v", "sigma", "offset"),
                              # An ald model carries its shape and rate under
                              # u_scale, written above, and has nothing here.
                              "ald" = "type",

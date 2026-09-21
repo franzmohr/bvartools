@@ -49,6 +49,14 @@
   also returns the core's warnings, which `add_posterior_coefficients()`
   raises.
 
+* **`time_variation_test()` turns those draws into Bayes factors.** For a
+  `bvarmodel` estimated under `omega_v` it reports, for every coefficient,
+  covariance coefficient and log-volatility, the log Bayes factor in favour of
+  time variation against a constant state, and one for each block jointly,
+  each with a numerical standard error from batch means. The joint Bayes factor
+  compares "every state of the block moves" with "none does", not "at least one
+  moves", and `?time_variation_test.bvarmodel` says why the two can disagree.
+
 * **`transform_variables()` returns a vector series for a vector series**, where
   it returned a one-column matrix, and a single series takes a named or an
   unnamed code alike: a named code on a series without a column name used to

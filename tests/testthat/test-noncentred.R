@@ -107,3 +107,56 @@ test_that("a non-centred posterior is scored like any other", {
   model <- add_posterior_loglik(model)
   expect_true(all(is.finite(model[["posterior"]][["loglik"]])))
 })
+
+test_that("time_variation_test() reports every state and block of the prior", {
+  model <- add_initial_values(nc_model())
+  model <- add_posterior_coefficients(add_seed(model, 213))
+  k <- model[["model"]][["k"]]
+  n_a <- nrow(model[["priors"]][["a"]][["mu"]])
+  n_psi <- k * (k - 1) / 2
+
+  res <- time_variation_test(model)
+  expect_s3_class(res, "bvartimevar")
+  expect_equal(nrow(res), n_a + n_psi + k + 3)
+  expect_equal(as.vector(table(res[["block"]])[c("coefficients", "covariances", "volatilities")]),
+               c(n_a + 1, n_psi + 1, k + 1))
+  expect_true(all(is.finite(res[["log_bf"]])))
+  expect_true(all(res[["nse"]] >= 0))
+
+  # The coefficients are vec(A): the equation cycles fastest.
+  coefs <- res[res[["block"]] == "coefficients" & res[["term"]] != "(joint)", ]
+  expect_equal(coefs[["equation"]][seq_len(k)], model[["model"]][["endogen"]])
+  expect_equal(unique(coefs[["term"]][seq_len(k)]), coefs[["term"]][1])
+  # Psi row by row: (2,1), (3,1), (3,2).
+  y <- model[["model"]][["endogen"]]
+  covs <- res[res[["block"]] == "covariances" & res[["term"]] != "(joint)", ]
+  expect_equal(covs[["equation"]], y[c(2, 3, 3)])
+  expect_equal(covs[["term"]], y[c(1, 1, 2)])
+
+  # The Savage-Dickey ratio, spelled out for one log-volatility.
+  lz <- as.numeric(model[["posterior"]][["u_sigma_inv"]][["omega_log_zero"]][, 2])
+  expected <- dnorm(0, 0, sqrt(0.1), log = TRUE) - log(mean(exp(lz)))
+  vol <- res[res[["block"]] == "volatilities" & res[["term"]] != "(joint)", ]
+  expect_equal(vol[["log_bf"]][2], expected)
+
+  expect_equal(nrow(time_variation_test(model, joint = FALSE)), n_a + n_psi + k)
+  expect_output(print(res), "Volatilities")
+
+  # Thinning keeps the draws of the test with the rest of the posterior.
+  thinned <- thin(model, thin = 2)
+  expect_equal(nrow(thinned[["posterior"]][["a"]][["omega_log_zero"]]),
+               nrow(thinned[["posterior"]][["a"]][["coeffs"]]))
+})
+
+test_that("time_variation_test() reports only the blocks drawn under omega_v", {
+  model <- add_initial_values(nc_model(coef = list(v_i = 1, shape = 3, rate = 0.01)))
+  model <- add_posterior_coefficients(add_seed(model, 214))
+  res <- time_variation_test(model)
+  expect_equal(unique(res[["block"]]), "volatilities")
+
+  centred <- add_initial_values(nc_model(coef = list(v_i = 1, shape = 3, rate = 0.01),
+                                         sigma = tvp_sigma_prior("sv")))
+  centred <- add_posterior_coefficients(add_seed(centred, 215))
+  expect_error(time_variation_test(centred), "non-centred prior")
+  expect_error(time_variation_test(list()), "bvarmodel")
+})

@@ -178,6 +178,7 @@ Collate:
     'thin.bvecmodel.R'
     'thin.expandingwindow.R'
     'thin.modellist.R'
+    'time_variation_test.R'
     'transform_variables.R'
     'use_expanding_window.R'
     'use_expanding_window.bvarmodel.R'

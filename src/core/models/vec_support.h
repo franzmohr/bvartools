@@ -276,6 +276,48 @@ inline CointDrawLoadings augment_loadings(const arma::mat &alpha, const arma::ma
     return out;
 }
 
+/// The cointegration space prior's claim on the error precision, written as
+/// `rank` pseudo-observations: the k x rank matrix L with
+///
+///     L L' = v alpha (beta' P_tau^-1 beta) alpha'.
+///
+/// The prior makes alpha | beta, Sigma ~ N(0, v^-1 (beta' P^-1 beta)^-1 kron
+/// Sigma), whose density carries |Sigma^-1|^(r/2) exp(-tr(Sigma^-1 L L') / 2) --
+/// exactly what r further periods with errors L would contribute to the
+/// likelihood of Sigma. So a sampler whose Sigma is not a Wishart can pay the
+/// term back without deriving it: append L to the k x tt errors and draw every
+/// part of Sigma as it already does. VecNormalWishart adds the same thing as
+/// L L' on the scale and r on the degrees of freedom, which is Koop,
+/// Leon-Gonzalez and Strachan's (2010) eq. (8); VecNormalGamma appends L, and
+/// with Sigma^-1 = Psi' Omega Psi that puts r/2 on each shape, (Psi L L'
+/// Psi')_ii / 2 on each rate, and a quadratic in psi on the covariance block --
+/// all three conjugate, because they are the same algebra as data.
+///
+/// With v = 0 L is zero, and the r columns still count as periods: the flat
+/// prior on alpha is the limit v -> 0 of the one above, and |Sigma^-1|^(r/2)
+/// survives it, as it does in eq. (8). An empty `p_tau_inv` is the identity.
+inline arma::mat coint_prior_pseudo_errors(const arma::mat &alpha, const arma::mat &beta,
+                                           const double v_inv, const arma::mat &p_tau_inv)
+{
+    const arma::uword rank = alpha.n_cols;
+    if (v_inv <= 0.0)
+    {
+        return arma::zeros<arma::mat>(alpha.n_rows, rank);
+    }
+
+    const arma::mat p_inv = p_tau_inv.is_empty()
+                                ? arma::mat(arma::eye<arma::mat>(beta.n_rows, beta.n_rows))
+                                : p_tau_inv;
+    arma::mat chol_upper;
+    if (!arma::chol(chol_upper, arma::mat(arma::symmatu(arma::trans(beta) * p_inv * beta))))
+    {
+        throw std::runtime_error("the cointegration space prior is not positive definite along the "
+                                 "cointegration matrix beta");
+    }
+    // beta' P^-1 beta = R' R, so alpha R' (alpha R')' = alpha (beta' P^-1 beta) alpha'.
+    return std::sqrt(v_inv) * alpha * arma::trans(chol_upper);
+}
+
 /// The transition of the cointegration state equation with rho taken out,
 /// I_r kron P_tau: the same P_tau for each of the rank relations, which `beta`
 /// stacks as vec of a k_beta x rank matrix. An empty `p_tau` is the identity. See

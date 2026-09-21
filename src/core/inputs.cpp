@@ -1124,6 +1124,81 @@ void validate_constant_coint_block(const VarSpec &spec, const TrainData &train,
     // part of P_tau^-1 and whose off-diagonal sees the whole of it. So an
     // asymmetric one was not even the same prior in the two blocks.
     require_symmetric(prior.p_tau_inv, "prior precision of the cointegration space");
+
+    // v scales the prior precision of the loadings, so a negative one is a
+    // negative precision -- a prior that is not a density, which the draws
+    // nonetheless run on. Zero is the flat prior on alpha and the uniform one on
+    // the space, and is fine.
+    if (!std::isfinite(prior.v_inv) || prior.v_inv < 0.0)
+    {
+        throw std::invalid_argument("the shrinkage v of the cointegration space prior, "
+                                    "/priors/beta/v_inv, must be finite and at least zero, got " +
+                                    number(prior.v_inv));
+    }
+
+    // P_tau^-1 has to be the inverse of something: the matrix angular central
+    // Gaussian is defined for a positive definite P_tau, and tau = 0 -- the
+    // dogmatic prior that puts the space exactly on sp(H) -- has no inverse to
+    // give. Only read when v > 0; at v = 0 the space is uniform whatever it is.
+    if (prior.v_inv > 0.0)
+    {
+        require_positive_definite(prior.p_tau_inv, "prior precision of the cointegration space");
+    }
+}
+
+/// What Koop, Leon-Gonzalez and Strachan's (2010) collapsed sampler assumes of
+/// the loadings' prior and cannot check for itself. Their Proposition 1 -- that
+/// B is normal given A -- and the term the prior adds to Sigma's posterior in
+/// their eq. (8) both rest on alpha | beta ~ N(0, v^-1 (beta' P^-1 beta)^-1
+/// kron G), independent of every other coefficient. The samplers rebuild that
+/// prior's precision block every draw, so the file's values inside it are never
+/// read; what the file does get to say is the mean of alpha and its prior
+/// correlation with the rest of `a`, and either one non-zero makes the three
+/// Gibbs blocks the conditionals of three different priors. Nothing fails. The
+/// chain just targets none of them.
+void validate_coint_loadings_prior(const VarSpec &spec, const NormalPrior &a_prior)
+{
+    const arma::uword n_alpha = static_cast<arma::uword>(spec.n_alpha());
+    const arma::uword n_a = a_prior.mu.n_elem;
+
+    for (arma::uword i = 0; i < n_alpha; i++)
+    {
+        if (a_prior.mu(i) != 0.0)
+        {
+            throw std::invalid_argument(
+                "the cointegration space prior centres the loadings at zero, so the first " +
+                std::to_string(n_alpha) + " elements of /priors/a/mu -- the loadings alpha -- "
+                "must be zero, but element " + std::to_string(i + 1) + " is " +
+                number(a_prior.mu(i)));
+        }
+        for (arma::uword j = n_alpha; j < n_a; j++)
+        {
+            if (a_prior.v_inv(i, j) != 0.0)
+            {
+                throw std::invalid_argument(
+                    "the cointegration space prior makes the loadings independent of the other "
+                    "coefficients, so /priors/a/v_inv must be zero between the first " +
+                    std::to_string(n_alpha) + " positions and the rest, but it couples position " +
+                    std::to_string(i + 1) + " to position " + std::to_string(j + 1) + " with " +
+                    number(a_prior.v_inv(i, j)));
+            }
+        }
+    }
+}
+
+/// G, the matrix the loadings' prior is scaled by, is the error covariance in
+/// every constant VEC but VecNormalStochvol, where there is a different one in
+/// every period and the file supplies G instead. A G given to one of the others
+/// would be ignored, so it is refused.
+void refuse_coint_g(const ConstantCointSpacePrior &prior)
+{
+    if (!prior.g_inv.is_empty())
+    {
+        throw std::invalid_argument(
+            "/priors/beta/g_inv is read by VecNormalStochvol alone: every other constant VEC "
+            "scales the loadings' prior by its error covariance, which is what Koop, "
+            "Leon-Gonzalez and Strachan's eq. (8) needs, so a G given here would never be used");
+    }
 }
 
 /// The time-varying cointegration block: a path, where it starts, the error
@@ -1249,6 +1324,8 @@ void VecNormalWishartInput::validate() const
     if (use_beta())
     {
         validate_constant_coint_block(spec, train, beta_prior, initial.beta, tt, use_a());
+        validate_coint_loadings_prior(spec, a_prior);
+        refuse_coint_g(beta_prior);
     }
 
     validate_wishart_block(u_sigma_prior, initial.u_sigma_inv, k);
@@ -1616,6 +1693,8 @@ void VecKlgs2010Input::validate() const
     if (use_beta())
     {
         validate_constant_coint_block(spec, train, beta_prior, initial.beta, tt, use_a());
+        validate_coint_loadings_prior(spec, a_prior);
+        refuse_coint_g(beta_prior);
     }
 
     validate_wishart_block(u_sigma_prior, initial.u_sigma_inv, k);
@@ -1643,6 +1722,8 @@ void VecNormalGammaInput::validate() const
     if (use_beta())
     {
         validate_constant_coint_block(spec, train, beta_prior, initial.beta, tt, use_a());
+        validate_coint_loadings_prior(spec, a_prior);
+        refuse_coint_g(beta_prior);
     }
 
     if (use_psi())
@@ -1691,6 +1772,16 @@ void VecNormalStochvolInput::validate() const
     if (use_beta())
     {
         validate_constant_coint_block(spec, train, beta_prior, initial.beta, tt, use_a());
+        validate_coint_loadings_prior(spec, a_prior);
+
+        // The G the loadings' prior is scaled by, when the file fixes it. See
+        // ConstantCointSpacePrior::g_inv.
+        if (!beta_prior.g_inv.is_empty())
+        {
+            require_square(beta_prior.g_inv, k, "G^-1 of the cointegration space prior");
+            require_symmetric(beta_prior.g_inv, "G^-1 of the cointegration space prior");
+            require_positive_definite(beta_prior.g_inv, "G^-1 of the cointegration space prior");
+        }
     }
 
     if (use_psi())

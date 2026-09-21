@@ -135,12 +135,21 @@ VecNormalGammaDraws VecNormalGammaSampler::draw_coefficients(const VecNormalGamm
     std::optional<BvsBlock> psi_bvs;
     arma::mat psi_z_bvs;
 
+    // The cointegration space prior conditions alpha on the error precision and
+    // pays that back as `rank` further columns of errors, appended after the
+    // sample: see coint_prior_pseudo_errors(). Both the covariance block and the
+    // error precisions are drawn over tt + n_pseudo periods.
+    const int n_pseudo = use_beta ? rank : 0;
+    const int tt_error = tt + n_pseudo;
+    arma::sp_mat diag_tt_error;
+
     if (use_psi)
     {
         psi_prior_mu = input.psi_prior.mu;
         psi_prior_vinv = input.psi_prior.v_inv;
         psi = input.initial.psi;
-        psi_z = arma::zeros<arma::mat>(tt * (k - 1), n_psi);
+        psi_z = arma::zeros<arma::mat>(tt_error * (k - 1), n_psi);
+        diag_tt_error = arma::speye<arma::sp_mat>(tt_error, tt_error);
         Psi = arma::eye<arma::mat>(k, k);
         Psi_lambda = arma::eye<arma::mat>(k, k);
         fill_strict_lower_triangle(Psi, psi);
@@ -165,7 +174,7 @@ VecNormalGammaDraws VecNormalGammaSampler::draw_coefficients(const VecNormalGamm
     }
 
     // Error term
-    const arma::vec u_sigma_post_shape = input.u_sigma_prior.shape + tt * 0.5;
+    const arma::vec u_sigma_post_shape = input.u_sigma_prior.shape + tt_error * 0.5;
     const arma::vec &u_sigma_prior_rate = input.u_sigma_prior.rate;
     // The chain starts from Psi' Omega^-1 Psi, with Psi unpacked above from the
     // k(k-1)/2 free elements /initial/psi carries -- the file stores the vector,
@@ -277,6 +286,11 @@ VecNormalGammaDraws VecNormalGammaSampler::draw_coefficients(const VecNormalGamm
 
             fill_z_alpha_constant(z, beta_mat, w_t, n_alpha, diag_k);
             u = arma::reshape(y - z * a, k, tt);
+
+            // The prior's pseudo-observations, from the alpha and beta just
+            // drawn. Every block below reads u, so this is all it takes.
+            u = arma::join_rows(
+                u, core::coint_prior_pseudo_errors(alpha, beta_mat, coint_v_inv, coint_p_tau_inv));
         }
         else
         {
@@ -304,7 +318,7 @@ VecNormalGammaDraws VecNormalGammaSampler::draw_coefficients(const VecNormalGamm
             // carries k - 1 rows per period rather than k, and its precision is
             // the corresponding corner of u_omega_inv.
             psi_u_omega_inv = u_omega_inv.submat(1, 1, k - 1, k - 1);
-            psi_u_omega_inv_diag = arma::kron(diag_tt, arma::sp_mat(psi_u_omega_inv));
+            psi_u_omega_inv_diag = arma::kron(diag_tt_error, arma::sp_mat(psi_u_omega_inv));
             dpsi_z = psi_u_omega_inv_diag * psi_z;
             psi_post_v = psi_prior_vinv + arma::trans(dpsi_z) * psi_z;
             psi = draw_normal_precision(psi_post_v,
@@ -319,7 +333,7 @@ VecNormalGammaDraws VecNormalGammaSampler::draw_coefficients(const VecNormalGamm
             {
                 psi_z = psi_z_bvs;
                 bvs_sweep(*psi_bvs, psi, BvsScope::element, [&](const arma::vec &theta) {
-                    const arma::mat res = arma::reshape(psi_y - psi_z * theta, k - 1, tt);
+                    const arma::mat res = arma::reshape(psi_y - psi_z * theta, k - 1, tt_error);
                     return -arma::accu((psi_u_omega_inv * res) % res) / 2;
                 });
             }
@@ -335,14 +349,13 @@ VecNormalGammaDraws VecNormalGammaSampler::draw_coefficients(const VecNormalGamm
 
         // Block 4: Draw the error precisions ----
         //
-        // No cointegration term is added, unlike VecNormalWishart, whose scale
-        // picks up v^-1 alpha (beta' P_tau^-1 beta) alpha' and whose degrees of
-        // freedom pick up the rank that goes with it. The prior conditions alpha
-        // on the error precision either way, so a term is owed back; independent
-        // gammas have no conjugate form for it, and bvartools' .bvecalg adds
-        // none. Leaving it out is therefore the documented behaviour rather than
-        // an oversight, but it does mean the two VECs treat the same prior
-        // slightly differently.
+        // Over tt_error periods: the cointegration space prior conditions alpha
+        // on the error precision, so its pseudo-observations are in u and in the
+        // shape, as VecNormalWishart puts the same term on its scale and degrees
+        // of freedom. This used to be left out, on the grounds that independent
+        // gammas had no conjugate form for it; given Psi they do, and without it
+        // the chain drew Omega and psi from a posterior that lacked a factor of
+        // the prior it stated.
         sse = u * u.t();
         for (int i = 0; i < k; i++)
         {

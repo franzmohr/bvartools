@@ -4,21 +4,31 @@
 \alias{aggregate_forecasts}
 \title{Aggregate Forecasts to Annual Figures}
 \usage{
-aggregate_forecasts(object, type, scale = 100)
+aggregate_forecasts(object, code, target = "average", levels = NULL, scale = 1)
 }
 \arguments{
 \item{object}{an object of class 'bvarmodel', 'bvecmodel', 'expandingwindow' or
 'modellist', whose models contain forecasts, i.e. \code{\link{add_posterior_forecasts}}
 was already applied to them.}
 
-\item{type}{a named character vector, which specifies how each variable is
-aggregated. The names are endogenous variables of the models and the elements
-one of \code{"growth"}, \code{"loglevel"} or \code{"level"}. See 'Details'.
-Endogenous variables, which are not named, are dropped from the comparison.}
+\item{code}{a named integer vector of the transformation codes of FRED-MD and
+FRED-QD, \code{1:7}, which were applied to the variables of the models -- see
+\code{\link{transform_variables}} and 'Details'. The names are endogenous
+variables of the models. Endogenous variables, which are not named, are
+dropped from the comparison.}
 
-\item{scale}{the factor, by which the logarithms of variables of type
-\code{"growth"} and \code{"loglevel"} are multiplied in the data. The default
-of 100 corresponds to log levels and log differences in percent.}
+\item{target}{either \code{"average"} (default) or \code{"q4q4"}, the annual
+figure that is compared. See 'Details'.}
+
+\item{levels}{an optional time-series object with the untransformed series, to
+which \code{code} was applied, i.e. the argument \code{x} of
+\code{\link{transform_variables}}. Its columns are named after the variables.
+Required for codes 2, 3, 6 and 7. See 'Details'.}
+
+\item{scale}{the factor, by which the transformed series of codes 4 to 7 were
+multiplied before they were passed to the models, such as 100 for log
+differences in percent. The default of 1 corresponds to the result of
+\code{\link{transform_variables}}.}
 }
 \value{
 An object of the same class as \code{object}, whose models contain the
@@ -31,46 +41,59 @@ annual forecasts, such as the projections of international institutions, on the
 same annual basis.
 }
 \details{
-The three types describe how a variable is measured in the models and determine
-how its annual figure is obtained:
+Every draw of a forecast is turned back into a path of the untransformed
+series by reversing the transformation of its code, and continued from the
+periods, which were observed at the end of the training sample. The periods of
+a year, which were already observed, are thus taken from the data and the
+remaining periods from the draw, so that every draw of the forecast becomes a
+draw of the annual figure.
+
+The codes determine the annual figure. The multiplicative codes 4 to 7 --
+logarithms, their differences and differences of growth rates -- describe a
+series such as GDP or a price index, whose annual figure is a growth rate in
+percent. The additive codes 1 to 3 describe a series such as an unemployment
+rate or an interest rate, whose annual figure is a level. Argument
+\code{target} determines, which growth rate and which level:
 \describe{
-  \item{\code{"growth"}}{the change of a log level from one period to the next,
-  such as \code{100 * diff(log(gdp))}. The changes are cumulated to log levels.}
-  \item{\code{"loglevel"}}{a log level, such as \code{100 * log(gdp)} in a VEC
-  model.}
-  \item{\code{"level"}}{a variable, whose annual figure is its average over the
-  year, such as an unemployment rate or an interest rate.}
+  \item{\code{"average"}}{the growth of the annual average of the levels over
+  the annual average of the year before for codes 4 to 7, and the annual
+  average for codes 1 to 3. This is the convention of, e.g., the World
+  Economic Outlook of the IMF. The growth of the annual average is also the
+  growth of the annual sum, since both years have the same number of periods,
+  so it serves flows such as GDP and averages such as prices alike.}
+  \item{\code{"q4q4"}}{the growth of the level of the last period of the year
+  over the last period of the year before, i.e. the fourth quarter over the
+  fourth quarter or December over December, for codes 4 to 7, and the level of
+  the last period of the year for codes 1 to 3. This is the convention of,
+  e.g., the Summary of Economic Projections of the Federal Reserve.}
 }
-For the first two the annual figure is the growth rate in percent of the annual
-average of the levels, \code{100 * (mean(exp(cur / scale)) / mean(exp(prev / scale)) - 1)},
-where \code{cur} and \code{prev} are the log levels of the periods of the year
-and of the year before. This is also the growth rate of the annual sum of the
-levels, since both years have the same number of periods, so it serves flows
-such as GDP, whose annual figure is a sum, and prices, whose annual figure is an
-average, alike. For \code{"level"} the annual figure is the average of the
-periods of the year.
 
-The periods of a year, which were already observed at the end of the training
-sample of a model, are taken from its data, and the remaining periods from each
-draw of its forecast, so that every draw of the forecast becomes a draw of the
-annual figure. Horizon 1 is the year of the forecast origin, i.e. the year of the
-first period after the training sample, and horizon 2 the year after it. The
-number of annual horizons is the number of years that the forecast horizon
-covers from every origin, \code{floor(n_ahead / frequency)}, so that a
-quarterly model, which forecasts eight quarters, provides the current and the
-next year.
+Reversing a difference requires the level, from which it starts. For codes 2,
+3, 6 and 7 it is taken from argument \code{levels}, which is therefore
+required for them. Codes 1, 4 and 5 can be reversed from the data of the
+models, because the unknown level of a logarithm cancels from a growth rate.
+If \code{levels} is provided, it must reproduce the data of the models under
+\code{code} and \code{scale}, which guards against a wrong \code{scale}, and
+it also provides the realised annual figures.
 
-The data of the models are aggregated in the same way and replace their data,
-so that the realised annual values, against which the aggregated forecasts are
-scored, are in \code{data$test$y}. \code{\link{add_forecast_errors}} uses them,
-if its argument \code{test_sample} is omitted. Otherwise, \code{test_sample}
-must be an annual time series, for example of official annual figures.
+Horizon 1 is the year of the forecast origin, i.e. the year of the first
+period after the training sample, and horizon 2 the year after it. The number
+of annual horizons is the number of years that the forecast horizon covers
+from every origin, \code{floor(n_ahead / frequency)}, so that a quarterly
+model, which forecasts eight quarters, provides the current and the next year.
+
+The realised annual figures, against which the aggregated forecasts are
+scored, are obtained from \code{levels} or, without it, from the data of the
+models in the same way, and are put in \code{data$test$y}.
+\code{\link{add_forecast_errors}} uses them, if its argument
+\code{test_sample} is omitted. Otherwise, \code{test_sample} must be an annual
+time series, for example of official annual figures.
 
 The result can be passed as argument \code{object} to
 \code{\link{create_external_forecast}}, which then reads the periods of the
 external forecasts as years, but matches their publications to the training
 samples of the models at the frequency of the data. The external forecasts are
-scored against the same realised annual values as the models.
+scored against the same realised annual figures as the models.
 
 The aggregated models only contain the forecasts and the data, which are
 required to evaluate them. Therefore, aggregation is the last step before
@@ -82,7 +105,7 @@ objects of class 'bvarmodel', because their forecasts are those of the levels.
 
 data("us_macrodata")
 
-# Create model
+# Inflation and the interest rate enter the model as they are
 model <- create_bvarmodel(data = us_macrodata, p = 1, deterministic = "const",
                           iterations = 10, burnin = 2)
 # Chosen number of iterations and burn-in draws should be much higher.
@@ -96,7 +119,7 @@ model <- add_forecast_input(model, n_ahead = 8)
 model <- add_posterior_forecasts(model)
 
 # Annual averages of inflation and the interest rate
-annual <- aggregate_forecasts(model, type = c(Dp = "level", r = "level"))
+annual <- aggregate_forecasts(model, code = c(Dp = 1, r = 1))
 
 # Artificial annual forecasts of the current and the next year, published in
 # the middle of each quarter
@@ -111,6 +134,11 @@ ext <- create_external_forecast(fcst, annual, data_lag = 1)
 models <- add_forecast_errors(combine_models(annual, ext))
 selection_criteria(models)
 
+}
+\references{
+McCracken, M. W., & Ng, S. (2021). FRED-QD: A quarterly database for
+macroeconomic research. \emph{Federal Reserve Bank of St. Louis Review,
+103}(1), 1--44.
 }
 \seealso{
 Other model comparison:

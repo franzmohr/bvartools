@@ -8,9 +8,10 @@
 }
 \arguments{
 \item{object}{an object of class \code{"bvarmodel"} with \code{tvp = TRUE} and
-\code{error = "sv"} or \code{"sv+covar"}, whose priors were set with
-\code{coef$omega_v} or \code{sigma$omega_v} in \code{\link{add_priors}} and
-whose posterior was drawn by \code{\link{add_posterior_coefficients}}.}
+\code{error = "sv"}, \code{"sv+covar"}, \code{"gamma"} or \code{"gamma+covar"},
+whose priors were set with \code{coef$omega_v} or, under stochastic volatility,
+\code{sigma$omega_v} in \code{\link{add_priors}} and whose posterior was drawn by
+\code{\link{add_posterior_coefficients}}.}
 
 \item{joint}{logical. Should the Bayes factor for the time variation of every
 state of a block at once be reported as well? Default is \code{TRUE}.}
@@ -37,9 +38,9 @@ if \code{joint = TRUE}, one per block, and the columns
 }
 \description{
 Computes the Bayes factors of Chan (2018) for time variation in each
-coefficient, each covariance coefficient and each log-volatility of a VAR
-model with time varying parameters and stochastic volatility, from the draws
-of a single estimation of that model.
+coefficient, each covariance coefficient and, under stochastic volatility,
+each log-volatility of a VAR model with time varying parameters, from the
+draws of a single estimation of that model.
 }
 \details{
 Under the prior \code{omega_v} a random walk

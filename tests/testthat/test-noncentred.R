@@ -57,16 +57,63 @@ test_that("omega_v is refused where no sampler reads it, and beside shape and ra
   expect_error(nc_model(coef = list(v_i = 1, omega_v = -1)), "finite positive")
   expect_error(nc_model(coef = list(v_i = 1, omega_v = c(0.1, 0.2))), "finite positive")
 
+  # A gamma error term has no log-volatility random walk to put it on.
   gamma <- create_bvarmodel(at_data_var(), p = 1, deterministic = "const", tvp = TRUE,
                             error = "gamma", iterations = 10, burnin = 10)
   expect_error(add_priors(gamma, coef = list(v_i = 1, omega_v = 0.001),
-                          sigma = list(shape = 3, rate = 0.01)),
+                          sigma = list(shape = 3, rate = 0.01, omega_v = 0.1)),
                "only available")
 
   constant <- create_bvarmodel(at_data_var(), p = 1, deterministic = "const", tvp = FALSE,
                                error = "sv", iterations = 10, burnin = 10)
   expect_error(add_priors(constant, coef = list(v_i = 1), sigma = nc_sigma_prior),
                "only available")
+  expect_error(add_priors(constant, coef = list(v_i = 1, omega_v = 0.001),
+                          sigma = tvp_sigma_prior("sv")),
+               "only available")
+
+  wishart <- create_bvarmodel(at_data_var(), p = 1, deterministic = "const", tvp = TRUE,
+                              error = "wishart", iterations = 10, burnin = 10)
+  expect_error(add_priors(wishart, coef = list(v_i = 1, omega_v = 0.001),
+                          sigma = list(df = "k", scale = 1)),
+               "only available")
+})
+
+test_that("a TVP VAR with gamma errors takes coef$omega_v and reports its test", {
+  model <- create_bvarmodel(at_data_var(), p = 1, deterministic = "const", tvp = TRUE,
+                            error = "gamma+covar", iterations = fx_iterations,
+                            burnin = fx_burnin)
+  model <- add_priors(model, coef = list(v_i = 1, v_i_det = 0.1, omega_v = 0.001),
+                      sigma = list(shape = 3, rate = 0.01))
+  k <- model[["model"]][["k"]]
+  n_a <- nrow(model[["priors"]][["a"]][["mu"]])
+  n_psi <- k * (k - 1) / 2
+  expect_equal(as.numeric(model[["priors"]][["psi"]][["omega_v"]]), rep(0.001, n_psi))
+  # The error term keeps its gamma prior: there is no random walk in it.
+  expect_equal(as.numeric(model[["priors"]][["u_sigma"]][["shape"]]), rep(3, k))
+
+  model <- add_initial_values(model)
+  model <- add_posterior_coefficients(add_seed(model, 216))
+  for (block in c("a", "psi")) {
+    draws <- model[["posterior"]][[block]]
+    expect_s3_class(draws[["omega_log_zero"]], "mcmc")
+    expect_equal(as.numeric(draws[["sigma"]]), as.numeric(draws[["omega"]])^2)
+  }
+  expect_null(model[["posterior"]][["u_sigma_inv"]][["omega"]])
+
+  res <- time_variation_test(model)
+  expect_equal(unique(res[["block"]]), c("coefficients", "covariances"))
+  expect_equal(nrow(res), n_a + n_psi + 2)
+  expect_true(all(is.finite(res[["log_bf"]])))
+
+  file <- tempfile(fileext = ".h5")
+  on.exit(unlink(file))
+  write_to_hdf5(model, file)
+  back <- read_model_from_hdf5(file)
+  expect_equal(as.numeric(back[["priors"]][["a"]][["omega_v"]]), rep(0.001, n_a))
+  expect_equal(as.matrix(back[["posterior"]][["psi"]][["omega_log_zero_joint"]]),
+               as.matrix(model[["posterior"]][["psi"]][["omega_log_zero_joint"]]),
+               ignore_attr = TRUE)
 })
 
 test_that("the draws of the test come back beside sigma and survive a file", {

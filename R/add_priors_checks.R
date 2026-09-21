@@ -34,12 +34,18 @@
   }
 }
 
-# Whether the model's sampler reads the non-centred prior 'omega_v'. Only
-# VarTvpStochvol does so far; anywhere else it would be written into the priors
+# Whether the model's sampler reads the non-centred prior 'omega_v' for the
+# random walks of 'arg': the coefficients and covariance coefficients of
+# VarTvpStochvol and VarTvpGamma for 'coef', the log-volatilities of
+# VarTvpStochvol for 'sigma'. Anywhere else it would be written into the priors
 # and silently left unread, so the checks below refuse it instead.
-.add_priors_noncentred_allowed <- function(object) {
+.add_priors_noncentred_errors <- function(arg) {
+  if (arg == "sigma") c("sv", "sv+covar") else c("sv", "sv+covar", "gamma", "gamma+covar")
+}
+
+.add_priors_noncentred_allowed <- function(object, arg) {
   inherits(object, "bvarmodel") && isTRUE(object[["model"]][["tvp"]]) &&
-    isTRUE(object[["model"]][["error"]] %in% c("sv", "sv+covar"))
+    isTRUE(object[["model"]][["error"]] %in% .add_priors_noncentred_errors(arg))
 }
 
 # 'omega_v' replaces 'shape' and 'rate' rather than joining them: a block reads
@@ -48,9 +54,10 @@
   if (is.null(spec[["omega_v"]])) {
     return(invisible(NULL))
   }
-  if (!.add_priors_noncentred_allowed(object)) {
+  if (!.add_priors_noncentred_allowed(object, arg)) {
+    errors <- .add_priors_noncentred_errors(arg)
     stop("Argument '", arg, "$omega_v' is only available for VAR models with time varying ",
-         "parameters and stochastic volatility (tvp = TRUE and error = \"sv\" or \"sv+covar\").",
+         "parameters and error = ", paste0("\"", errors, "\"", collapse = ", "), ".",
          call. = FALSE)
   }
   given <- intersect(alternatives, names(spec))
@@ -167,7 +174,12 @@
     stop("Argument 'sigma' must be at least of length 2.")
   } else {
     error_prior <- NULL
-    
+
+    # Checked for every error term rather than for the one that reads it, since
+    # anywhere else 'omega_v' would be a recognised name that nothing uses.
+    .add_priors_check_omega_v(object, sigma, "sigma", c("shape", "rate"),
+                              c(1, object$model$k))
+
     if (object$model$error %in% c("gamma", "gamma+covar")) {
       if (all(c("shape", "rate") %in% names(sigma))) {
         error_prior <- "gamma"
@@ -184,8 +196,6 @@
     }
     
     if (object$model$error %in% c("sv", "sv+covar")) {
-      .add_priors_check_omega_v(object, sigma, "sigma", c("shape", "rate"),
-                                c(1, object$model$k))
       state_prior <- if (is.null(sigma[["omega_v"]])) c("shape", "rate") else "omega_v"
       if (any(!c("mu", "v_i", state_prior, "state_variance", "offset") %in% names(sigma))) {
         stop("Missing prior specifications for stochastic volatility prior.")

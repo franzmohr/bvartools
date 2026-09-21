@@ -25,7 +25,7 @@
   raised where it arose: `Rf_warning()` may longjmp out of a running sampler.
   *Draws are unchanged.*
 
-* The vendored BayesTS core is refreshed to upstream `4a64082`, which brings
+* The vendored BayesTS core is refreshed to upstream `0e4847e`, which brings
   the two items above and the one below. *Draws are unchanged* for every model
   that does not use the new prior: upstream's fingerprint recording is
   identical for every file without it.
@@ -56,6 +56,14 @@
   each with a numerical standard error from batch means. The joint Bayes factor
   compares "every state of the block moves" with "none does", not "at least one
   moves", and `?time_variation_test.bvarmodel` says why the two can disagree.
+
+* **The test covers TVP-VARs with a gamma error term too.** `coef$omega_v` is
+  accepted for `tvp = TRUE` with `error = "gamma"` or `"gamma+covar"` as well,
+  for the coefficients and the covariance coefficients, whose draws and
+  `time_variation_test()` rows are those of the stochastic volatility model.
+  The error precision of these models does not move, so `sigma$omega_v`
+  remains for stochastic volatility, and is now refused on every other error
+  term rather than accepted as a name and left unread.
 
 * **`transform_variables()` returns a vector series for a vector series**, where
   it returned a one-column matrix, and a single series takes a named or an

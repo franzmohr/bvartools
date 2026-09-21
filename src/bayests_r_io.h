@@ -4,6 +4,7 @@
 #include <RcppArmadillo.h>
 
 #include "bayests/priors.h"
+#include "bayests/results.h"
 #include "bayests/spec.h"
 
 #include <string>
@@ -122,6 +123,20 @@ inline void read_draws_if_present(const Rcpp::List &list, const char *name, arma
 inline arma::mat draws_to_r(const arma::mat &draws)
 {
   return arma::trans(draws);
+}
+
+/// A block's draws with what the non-centred parameterisation adds beside its
+/// `sigma`: the signed standard deviation and the log ordinates at zero the
+/// Savage-Dickey test for time variation is built from. Unchanged for a
+/// centred block. Shared by the bindings of the models that offer `omega_v`.
+inline Rcpp::List with_noncentred(Rcpp::List block, const bayests::NoncentredStateDraws &nc)
+{
+  if (!nc.empty()) {
+    block["omega"] = draws_to_r(nc.omega);
+    block["omega_log_zero"] = draws_to_r(nc.log_zero);
+    block["omega_log_zero_joint"] = draws_to_r(nc.log_zero_joint);
+  }
+  return block;
 }
 
 /// A time-varying starting value. R stores the whole path flat; the core wants

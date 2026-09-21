@@ -7,7 +7,7 @@ project is here -- the core deliberately links neither HDF5 nor HighFive,
 prints nothing and reads no files, which is what makes it embeddable in an R
 package at all.
 
-The copy is **BayesTS `4a64082`**, upstream `main` after the `v0.3.0` release
+The copy is **BayesTS `0e4847e`**, upstream `main` after the `v0.3.0` release
 (tagged on `18a86c2`). Past the release it carries the fix to
 `core/models/var_tvp_discount.cpp` (`2dc9250`), which is what makes
 `add_predictive_loglik()` score more than the first horizon of a discounted VAR;
@@ -15,9 +15,11 @@ the flat-prior warning for `bvs` (`fa6dd89`, `f2abd4e`), which adds
 `flat_selection_prior()` and `flat_selection_message()` to `priors.h` and reaches
 R through `RcppReporter::warnings()` and `.raise_core_warnings()`; the three
 SSVS refusals in `validate()` (`a85abe2`); and the non-centred random walks of
-`VarTvpStochvol` (`59c495f`), which bring `core/models/noncentred_support.h`
-and reach R through `omega_v` in `add_priors()` and the `omega*` draws
-`src/VarTvpStochvol.cpp` returns. The previous refresh sat at `6fe91d2`, 0.3.0
+`VarTvpStochvol` (`59c495f`) and `VarTvpGamma` (`0a2a0c0`), which bring
+`core/models/noncentred_support.h` and reach R through `omega_v` in
+`add_priors()` and the `omega*` draws `src/VarTvpStochvol.cpp` and
+`src/VarTvpGamma.cpp` return, through `with_noncentred()` in `bayests_r_io.h`.
+The refresh before sat at `4a64082`, the one before that at `6fe91d2`, 0.3.0
 plus the discount fix. 0.3.0 is not archived yet, so
 there is no version DOI to name; the concept DOI
 <https://doi.org/10.5281/zenodo.22722531> resolves to the newest release

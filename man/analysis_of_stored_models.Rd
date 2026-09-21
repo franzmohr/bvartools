@@ -69,6 +69,7 @@ Other model comparison:
 \code{\link[=add_predictive_loglik]{add_predictive_loglik()}},
 \code{\link[=add_predictive_loglik.bvarmodel]{add_predictive_loglik.bvarmodel()}},
 \code{\link[=add_predictive_loglik.bvecmodel]{add_predictive_loglik.bvecmodel()}},
+\code{\link[=aggregate_forecasts]{aggregate_forecasts()}},
 \code{\link[=align_model_obs.modellist]{align_model_obs.modellist()}},
 \code{\link[=choose_best_model.selcritlist]{choose_best_model.selcritlist()}},
 \code{\link[=create_external_forecast]{create_external_forecast()}},

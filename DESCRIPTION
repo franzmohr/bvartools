@@ -64,6 +64,7 @@ Collate:
     'add_sign_restrictions.bvarmodel.R'
     'add_sign_restrictions.expandingwindow.R'
     'add_sign_restrictions.modellist.R'
+    'aggregate_forecasts.R'
     'align_model_obs.R'
     'align_model_obs.modellist.R'
     'bayests_files.R'

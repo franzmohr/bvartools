@@ -163,7 +163,86 @@ calling `selection_criteria()` on the combined list.
 forecasts published by institutions through `create_external_forecast()`.
 Those have to be at the frequency of the data: annual forecasts for a quarterly
 model are refused rather than read as forecasts of each year's first quarter.
-`vignette("macroprojections", package = "bvartools")` compares models with
-published **annual** projections from quarterly data: `create_external_forecast()`
-matches forecasts at the frequency of the models, so there the quarterly forecast
-draws from `predict()` are aggregated to annual growth rates and averages first.
+
+## Annual forecasts against a quarterly model
+
+Published projections -- the IMF's WEO, the ECB's, a central bank's -- are
+usually **annual**: growth of annual GDP, the annual average rate of inflation,
+the annual average unemployment rate. To race a quarterly model against them,
+turn the model's forecasts into annual figures with `aggregate_forecasts()`
+**after** `add_posterior_forecasts()`, then pass the result to
+`create_external_forecast()` in place of the quarterly models.
+
+`type` says, per variable, what the model sees:
+
+- `"growth"`: quarterly log changes in percent, `100 * diff(log(x))`. The draws
+  are cumulated to log levels.
+- `"loglevel"`: log levels in percent, `100 * log(x)`, as in a VEC model.
+- `"level"`: a rate averaged over the year, such as unemployment.
+
+For the first two the annual figure is the growth, in percent, of the annual
+average of the levels, which is also the growth of the annual sum, so GDP (a
+flow) and a price index (an average) take the same type. Pass `scale = 1` if the
+logs are not multiplied by 100. The quarters of a year that were observed at the
+end of a window come from the data, the rest from each draw, so every draw
+becomes a draw of the annual figure. Variables left out of `type` are dropped.
+
+The forecast horizon must cover whole years from every origin: eight quarters
+give **two** annual horizons. Horizon 1 is the year of the forecast origin, the
+year of the first quarter after the training sample; horizon 2 the year after.
+An external forecast is matched to the quarterly window as before -- `data_lag`
+still counts quarters -- so a projection for the year of its publication is
+horizon 1 whichever quarter it was published in.
+
+```r
+aw <- create_bvarmodel(us_macrodata, p = 1, deterministic = "const",
+                       iterations = 100, burnin = 50)
+aw <- use_expanding_window(aw, start = 2005)
+aw <- add_priors(aw,
+                 coef = list(v_i = 0.1, v_i_det = 0.01),
+                 sigma = list(df = "k", scale = 1))
+aw <- add_initial_values(aw)
+aw <- add_posterior_coefficients(aw)
+aw <- add_forecast_input(aw, n_ahead = 8)
+aw <- add_posterior_forecasts(aw)
+
+annual <- aggregate_forecasts(aw, type = c(Dp = "level", r = "level"))
+stopifnot(inherits(annual, "expandingwindow"),
+          annual[[1]]$model$h == 2,
+          identical(colnames(annual[[1]]$posterior$forecast$forecasts),
+                    c("Dp_1", "r_1", "Dp_2", "r_2")))
+
+# Annual projections for the current and the next year, one publication a
+# quarter, in long format: 'period' is the year the projection is for
+proj <- expand.grid(origin = 2005 + (0:7) / 4 + 0.1, ahead = 0:1,
+                    variable = c("Dp", "r"), stringsAsFactors = FALSE)
+proj$period <- floor(proj$origin) + proj$ahead
+proj$value <- 2
+
+ext <- create_external_forecast(proj, annual, data_lag = 1)
+
+# No test_sample: both are scored against the annual figures of the model's data
+race <- add_forecast_errors(combine_models(annual, ext))
+sc <- selection_criteria(race)
+stopifnot(length(sc) == 2,
+          identical(sc[[1]]$RSFE[, c("variable", "h")], sc[[2]]$RSFE[, c("variable", "h")]),
+          all(sc[[1]]$RSFE$h %in% 1:2))
+```
+
+The realised annual values come from the model's own data, aggregated the same
+way, and sit in `data$test$y` of every window of both objects, so
+`add_forecast_errors()` needs no `test_sample`; the windows whose years the data
+do not cover yet are left without errors. To score against official annual
+figures instead, pass an **annual** `ts` as `test_sample`; a quarterly one is
+refused. Things that go wrong:
+
+- Passing the quarterly models with annual forecasts stops, naming
+  `aggregate_forecasts()`.
+- A `modellist` with aggregated and non-aggregated models stops: aggregate all.
+- Aggregated models hold only forecasts and data, and a VEC comes back as a
+  `bvarmodel` (its forecasts are the levels'). Aggregate last; there is nothing
+  left to estimate, and `selection_criteria()` reports only `FE`, `AFE` and
+  `RSFE` for them.
+
+`vignette("macroprojections", package = "bvartools")` races models against the
+published projections for Austria, aggregating the draws of `predict()` by hand.

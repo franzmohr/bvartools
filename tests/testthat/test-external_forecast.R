@@ -152,6 +152,33 @@ test_that("annual forecasts of the publication year are one-step ahead forecasts
   expect_equal(as.numeric(external[[2]][["posterior"]][["forecast"]][["forecasts"]]), c(3, NA))
 })
 
+test_that("a publication on the first day of a quarter belongs to that quarter", {
+  quarterly <- stats::ts(matrix(seq_len(40) / 10, 40, 1, dimnames = list(NULL, "gdp")),
+                         start = c(2010, 1), frequency = 4)
+  model <- create_bvarmodel(quarterly, p = 1, deterministic = "const",
+                            iterations = 10, burnin = 5)
+  model <- use_expanding_window(model, start = c(2018, 1))
+
+  # 1 April is day 91 of 365. As a share of the year it fell short of 0.25 and
+  # counted as the first quarter, so with one quarter of data lag it was matched
+  # to the window ending in the fourth quarter of the year before, like 31 March.
+  forecasts <- data.frame(origin = as.Date(c("2019-03-31", "2019-04-01")),
+                          period = c(2019.25, 2019.5), variable = "gdp", value = c(1, 2))
+  external <- create_external_forecast(forecasts, model, n_ahead = 2, data_lag = 1)
+
+  expect_length(external, 2)
+  expect_equal(stats::tsp(external[[1]][["data"]][["train"]][["y"]])[2], 2018.75)
+  expect_equal(stats::tsp(external[[2]][["data"]][["train"]][["y"]])[2], 2019)
+
+  # As character strings a date is read as the first of its month, which put
+  # every publication in April, July or October in the quarter before.
+  forecasts <- data.frame(origin = c("2019-07-20", "2019-10-20"),
+                          period = c(2019.5, 2019.75), variable = "gdp", value = c(1, 2))
+  external <- create_external_forecast(forecasts, model, n_ahead = 2, data_lag = 1)
+  expect_equal(unname(sapply(external, function(x) stats::tsp(x[["data"]][["train"]][["y"]])[2])),
+               c(2019.25, 2019.5))
+})
+
 test_that("forecasts at another frequency than the data are refused", {
   # The reference model is quarterly. Annual periods used to be rounded to the
   # first quarter of each year, and an annual growth rate scored as a quarterly

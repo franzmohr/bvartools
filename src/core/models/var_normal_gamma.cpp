@@ -29,6 +29,7 @@ using core::stacked_response;
 using core::structural_inverse;
 using core::require_forecast_regressors;
 using core::update_forecast_lags;
+using core::report_flat_selection_prior;
 
 VarNormalGammaDraws VarNormalGammaSampler::draw_coefficients(const VarNormalGammaInput &input,
                                                              Reporter &reporter) const
@@ -93,6 +94,8 @@ VarNormalGammaDraws VarNormalGammaSampler::draw_coefficients(const VarNormalGamm
             {
                 z_bvs = z;
                 a_bvs.emplace(input.initial.a_lambda, input.a_varsel_prior);
+                report_flat_selection_prior(reporter, input.spec.varsel, "a", input.a_varsel_prior,
+                                            input.a_prior.v_inv);
             }
         }
     }
@@ -131,6 +134,8 @@ VarNormalGammaDraws VarNormalGammaSampler::draw_coefficients(const VarNormalGamm
             if (use_bvs)
             {
                 psi_bvs.emplace(input.initial.psi_lambda, input.psi_varsel_prior);
+                report_flat_selection_prior(reporter, input.spec.varsel, "psi", input.psi_varsel_prior,
+                                            input.psi_prior.v_inv);
             }
         }
     }

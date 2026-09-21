@@ -24,6 +24,7 @@ using core::draw_ald_scale;
 using core::draw_ald_weights;
 using core::draw_normal_precision;
 using core::stacked_response;
+using core::report_flat_selection_prior;
 
 VarNormalAldDraws VarNormalAldSampler::draw_coefficients(const VarNormalAldInput &input,
                                                         Reporter &reporter) const
@@ -75,6 +76,8 @@ VarNormalAldDraws VarNormalAldSampler::draw_coefficients(const VarNormalAldInput
             {
                 z_bvs = z;
                 a_bvs.emplace(input.initial.a_lambda, input.a_varsel_prior);
+                report_flat_selection_prior(reporter, input.spec.varsel, "a", input.a_varsel_prior,
+                                            input.a_prior.v_inv);
             }
         }
     }

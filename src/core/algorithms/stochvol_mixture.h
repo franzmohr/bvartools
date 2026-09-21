@@ -392,6 +392,114 @@ inline arma::mat stochvol_mixture_draw(const char *algorithm, const NormalMixtur
     return draw;
 }
 
+/**
+ * @brief Draws the standardised log-volatility of the non-centred stochastic
+ *   volatility model of Kastner and Frühwirth-Schnatter (2014).
+ *
+ * The same model as `stochvol_mixture_draw`, with the random walk written as
+ * \f$h_{it} = h_{i0} + \omega_i \tilde h_{it}\f$, \f$\tilde h_{it} = \tilde
+ * h_{i,t-1} + e_{it}\f$, \f$e_{it} \sim N(0, 1)\f$ and \f$\tilde h_{i0} = 0\f$. The
+ * mixture indicators are drawn given the current \f$h\f$, exactly as there; the
+ * path drawn is then \f$\tilde h\f$ given \f$(h_{i0}, \omega_i)\f$, whose
+ * posterior precision is \f$D'D + \omega_i^2 \operatorname{diag}(1 / v_{s_t})\f$ --
+ * tridiagonal again, with the same constant off-diagonal, so the banded draw
+ * serves it unchanged.
+ *
+ * Nothing is divided by \f$\omega_i\f$, so zero and either sign are admissible:
+ * at zero the path is drawn from its prior, which is what the data say about a
+ * state that does not reach them.
+ *
+ * What the caller needs next is the regression of the linearised observations
+ * on \f$(h_{i0}, \omega_i)\f$, so the two halves of it this draw has already
+ * formed are handed back rather than recomputed.
+ *
+ * @param y T x K error terms, as for `stochvol_mixture_draw`.
+ * @param h T x K current log-volatility, the conditioning value of the
+ *   indicators.
+ * @param h_init K-vector of \f$h_{i0}\f$.
+ * @param omega K-vector of \f$\omega_i\f$.
+ * @param constant K-vector of offsets.
+ * @param y_centred filled with the T x K linearised observations less the mean
+ *   of each period's component, \f$\log(y_{it}^2 + c_i) - m_{s_{it}}\f$.
+ * @param precision filled with the T x K precisions of those components,
+ *   \f$1 / v_{s_{it}}\f$.
+ * @return T x K matrix of the drawn \f$\tilde h\f$.
+ */
+inline arma::mat stochvol_mixture_draw_noncentred(const char *algorithm,
+                                                  const NormalMixture &mixture,
+                                                  const arma::mat &y, const arma::mat &h,
+                                                  const arma::vec &h_init, const arma::vec &omega,
+                                                  const arma::vec &constant, arma::mat &y_centred,
+                                                  arma::mat &precision)
+{
+    using namespace stochvol_detail;
+
+    require(algorithm, y.n_rows == h.n_rows && y.n_cols == h.n_cols,
+            "'h' must have the dimensions of 'y' (" + dims(y) + "), got " + dims(h));
+    require(algorithm, y.n_cols > 0, "'y' must have at least one column");
+    require(algorithm, y.n_rows > 1,
+            "a stochastic volatility model needs at least two periods, got " +
+                std::to_string(y.n_rows));
+    require(algorithm, all_finite(y), "'y' contains NaN or infinite values");
+    require(algorithm, all_finite(h), "'h' contains NaN or infinite values");
+
+    const arma::uword k = y.n_cols;
+    const arma::uword tt = y.n_rows;
+
+    require_length(algorithm, h_init, k, "'h_init'");
+    require_length(algorithm, omega, k, "'omega'");
+    require_length(algorithm, constant, k, "'constant'");
+    require_positive(algorithm, constant, "'constant'");
+    require(algorithm, all_finite(h_init), "'h_init' contains NaN or infinite values");
+    require(algorithm, all_finite(omega), "'omega' contains NaN or infinite values");
+
+    // D'D of the unit random walk, as in stochvol_mixture_draw(). The state
+    // before the sample is zero, so nothing is added to the first period's rhs.
+    arma::vec hh_diag(tt);
+    hh_diag.fill(2.0);
+    hh_diag(tt - 1) = 1.0;
+    const double hh_off_diag = -1.0;
+
+    arma::mat h_tilde(tt, k);
+    y_centred.set_size(tt, k);
+    precision.set_size(tt, k);
+
+    for (arma::uword i = 0; i < k; i++)
+    {
+        const std::string variable = "variable " + std::to_string(i + 1);
+
+        const arma::vec y_star = arma::log(arma::square(y.col(i)) + constant(i));
+        const arma::uvec s = draw_mixture_states(y_star, h.col(i), mixture);
+
+        precision.col(i) = 1.0 / mixture.variance.elem(s);
+        y_centred.col(i) = y_star - mixture.mean.elem(s);
+
+        const double w = omega(i);
+        const arma::vec post_diag = hh_diag + w * w * precision.col(i);
+        const arma::vec rhs = w * precision.col(i) % (y_centred.col(i) - h_init(i));
+
+        arma::vec h_i;
+        if (!draw_tridiagonal_normal(h_i, post_diag, hh_off_diag, rhs,
+                                     arma::randn<arma::vec>(tt)))
+        {
+            throw std::runtime_error(std::string(algorithm) +
+                                     ": the posterior precision of the standardised "
+                                     "log-volatility of " +
+                                     variable + " is not positive definite");
+        }
+        if (!all_finite(h_i))
+        {
+            throw std::runtime_error(std::string(algorithm) +
+                                     ": the drawn standardised log-volatility of " + variable +
+                                     " is not finite");
+        }
+
+        h_tilde.col(i) = h_i;
+    }
+
+    return h_tilde;
+}
+
 } // namespace bayests::core
 
 #endif // BAYESTS_CORE_ALGORITHMS_STOCHVOL_MIXTURE_H

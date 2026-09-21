@@ -121,6 +121,7 @@ add_posterior_coefficients.bvarmodel <- function(object, posterior_function = NU
     } else {
       stop("Algorithm '", algorithm, "' not supported.")
     }
+    object <- .raise_core_warnings(object)
 
     for (i in c("a", "psi", "u_sigma_inv", "u_omega_inv", "u_scale")) {
       if (!is.null(object[["posterior"]][[i]][["coeffs"]])) {

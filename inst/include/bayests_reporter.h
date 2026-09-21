@@ -7,6 +7,7 @@
 #include "bayests/reporter.h"
 
 #include <string>
+#include <vector>
 
 namespace bvartools
 {
@@ -31,13 +32,32 @@ public:
     {
     }
 
+    /// A line the core marks `"warning: "` is kept, verbose or not, for the
+    /// binding to hand back to R once the sampler has returned -- see
+    /// `warnings()`. Everything else is status and printed only when verbose.
+    ///
+    /// Not raised here with `Rcpp::warning()`: that is `Rf_warning()`, which
+    /// longjmps out under `options(warn = 2)` or a `tryCatch(warning = )`, and a
+    /// longjmp out of the middle of a sampler skips the destructors of every
+    /// Armadillo matrix it holds.
     void message(const std::string &text) override
     {
+        static const std::string prefix = "warning: ";
+        if (text.compare(0, prefix.size(), prefix) == 0)
+        {
+            warnings_.push_back(text.substr(prefix.size()));
+            return;
+        }
         if (verbose_)
         {
             Rcpp::Rcout << text << std::endl;
         }
     }
+
+    /// The warnings the run raised, without their prefix, in the order it
+    /// raised them. A binding returns these as the `warnings` element of its
+    /// result and `.raise_core_warnings()` turns each into an R warning.
+    const std::vector<std::string> &warnings() const { return warnings_; }
 
     /// Reports at most once per percent, and only when asked to be verbose.
     void progress(long long done, long long total) override
@@ -86,6 +106,7 @@ private:
     long long interrupt_every_;
     long long calls_ = 0;
     int last_percent_ = -1;
+    std::vector<std::string> warnings_;
 };
 
 } // namespace bvartools

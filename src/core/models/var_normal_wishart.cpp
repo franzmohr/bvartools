@@ -27,6 +27,7 @@ using core::stacked_response;
 using core::structural_inverse;
 using core::require_forecast_regressors;
 using core::update_forecast_lags;
+using core::report_flat_selection_prior;
 
 VarNormalWishartDraws VarNormalWishartSampler::draw_coefficients(const VarNormalWishartInput &input,
                                                                  Reporter &reporter) const
@@ -87,6 +88,8 @@ VarNormalWishartDraws VarNormalWishartSampler::draw_coefficients(const VarNormal
             {
                 z_bvs = z;
                 a_bvs.emplace(input.initial.a_lambda, input.varsel_prior);
+                report_flat_selection_prior(reporter, input.spec.varsel, "a", input.varsel_prior,
+                                            input.a_prior.v_inv);
             }
         }
     }

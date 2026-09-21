@@ -38,6 +38,7 @@ using core::augment_loadings;
 using core::CointDrawLoadings;
 using core::normalise_beta;
 using core::stacked_response;
+using core::report_flat_selection_prior;
 
 VecNormalStochvolDraws VecNormalStochvolSampler::draw_coefficients(
     const VecNormalStochvolInput &input, Reporter &reporter) const
@@ -97,6 +98,8 @@ VecNormalStochvolDraws VecNormalStochvolSampler::draw_coefficients(
             {
                 z_bvs = z;
                 a_bvs.emplace(input.initial.a_lambda, input.varsel_prior);
+                report_flat_selection_prior(reporter, input.spec.varsel, "a", input.varsel_prior,
+                                            input.a_prior.v_inv);
             }
         }
     }
@@ -144,6 +147,8 @@ VecNormalStochvolDraws VecNormalStochvolSampler::draw_coefficients(
             if (use_bvs)
             {
                 psi_bvs.emplace(input.initial.psi_lambda, input.psi_varsel_prior);
+                report_flat_selection_prior(reporter, input.spec.varsel, "psi", input.psi_varsel_prior,
+                                            input.psi_prior.v_inv);
             }
         }
     }

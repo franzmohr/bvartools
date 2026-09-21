@@ -110,6 +110,21 @@ test_that("forecast errors are plotted period by period and by horizon", {
 })
 
 
+test_that("the criteria of one expanding window are plotted as a list of one", {
+
+  # A 'selcrit' keeps its model's classes for get_model_specifications(), and
+  # without a method of its own plot() reached plot.bvarmodel() through them.
+  sc <- selection_criteria(add_posterior_loglik(fx_expanding_forecast()))
+  expect_s3_class(sc, "selcrit")
+  expect_s3_class(sc, "bvarmodel")
+
+  for (criterion in c("FE", "AFE", "RSFE", "WAIC")) {
+    expect_plots(expect_identical(plot(sc, criterion = criterion), sc))
+  }
+  expect_error(plot(sc, criterion = "LPL"), "not contained")
+})
+
+
 test_that("RSFE's bands are AFE's up to interpolation, and never below them", {
 
   sc <- selection_criteria(fx_expanding_forecast())

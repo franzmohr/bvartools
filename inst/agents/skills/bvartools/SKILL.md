@@ -125,7 +125,8 @@ coefficients and error covariance under two discount factors, `delta_beta` and
 `delta_sigma` in `(0, 1]` (one means the quantity does not move), with a
 **closed-form posterior** rather than a chain. `iterations` only says how many
 i.i.d. draws a forecast takes. The posterior is one row per period in
-`posterior$a$mean`, `$a$cov`, `$u_sigma$scale` and `$df`, with no `coeffs`,
+`posterior$a$mean`, `$a$cov`, `$u_sigma$scale` and `$df`, with no `coeffs`
+(plain matrices, not `coda::mcmc`; the forecasts, being draws, are `mcmc`),
 and the sum of `posterior$loglik` is the exact log marginal likelihood,
 reported as `LML`. `coef` takes `v_i` (which must be positive), `v_i_det`,
 `v_i_alpha` and `const`; a discounted VEC takes no `coint` prior, because it

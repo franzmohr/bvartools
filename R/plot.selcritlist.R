@@ -1,12 +1,13 @@
 #' Plotting Selection Criteria
 #' 
-#' A plot function for objects of class 'selcritlist'.
+#' A plot function for objects of class 'selcritlist' and 'selcrit'.
 #' 
-#' @param x an object of class 'selcritlist', usually, a result of a call
-#' to \code{\link{selection_criteria}}.
+#' @param x an object of class 'selcritlist' or 'selcrit', usually, a result of a
+#' call to \code{\link{selection_criteria}}.
 #' @param criterion the selection criterion that should be plotted. Available choices
 #' are the in-sample criteria \code{"LL"}, \code{"AIC"}, \code{"BIC"},
-#' \code{"HQ"}, \code{"WAIC"} (default), \code{"LOOIC"} and the out-of-sample
+#' \code{"HQ"}, \code{"WAIC"} (default), \code{"LOOIC"}, the log marginal
+#' likelihood \code{"LML"} of a discounted model and the out-of-sample
 #' statistics \code{"FE"}, \code{"AFE"} and \code{"RSFE"}.
 #' @param ... further graphical parameters.
 #'
@@ -15,7 +16,7 @@
 #' posterior distribution, so its bar covers the credible band and is marked by the
 #' median as well as the mean of its draws. \code{"WAIC"} and \code{"LOOIC"} are
 #' point estimates whose bars cover a normal interval built from their standard
-#' error. \code{"AIC"}, \code{"BIC"} and \code{"HQ"} are point estimates without a
+#' error. \code{"AIC"}, \code{"BIC"}, \code{"HQ"} and \code{"LML"} are point estimates without a
 #' standard error, so they are drawn as a single point. The default is
 #' \code{"WAIC"}, for the reasons given in \code{\link{selection_criteria}}.
 #' The criterion is measured on
@@ -45,13 +46,17 @@
 #' the plot, where \code{col} and \code{lwd} are recycled over the models in
 #' \code{x}.
 #'
+#' A 'selcrit' -- the criteria of one model, or those of the windows of an
+#' 'expandingwindow' pooled into one -- is drawn as a 'selcritlist' of that one
+#' model.
+#'
 #' @return \code{x}, invisibly. The function is called for its side effect, the
 #' plot.
 #'
 #' @export
 plot.selcritlist <- function(x, criterion = "WAIC", ...) {
 
-  in_sample <- c("LL", "AIC", "BIC", "HQ", "WAIC", "LOOIC")
+  in_sample <- c("LL", "LML", "AIC", "BIC", "HQ", "WAIC", "LOOIC")
   out_of_sample <- c("FE", "AFE", "RSFE")
 
   avail_statistics <- unique(unlist(lapply(x, function(y) {names(y)})))
@@ -226,6 +231,23 @@ plot.selcritlist <- function(x, criterion = "WAIC", ...) {
     graphics::mtext(main, side = 3, line = .5, cex = cex_main,
                     font = graphics::par("font.main"))
   }
+
+  return(invisible(x))
+}
+
+
+#' @rdname plot.selcritlist
+#' @export
+plot.selcrit <- function(x, criterion = "WAIC", ...) {
+
+  # A 'selcrit' keeps the classes of its model after its own, so that
+  # get_model_specifications() finds the model's method. Without a method of its
+  # own, plot() found the model's too, and plot.bvarmodel() drew a 'selcrit' as
+  # if it were draws. One model is a list of one, which is what the list's
+  # method already draws.
+  models <- list(x)
+  class(models) <- c("selcritlist", "list")
+  plot.selcritlist(models, criterion = criterion, ...)
 
   return(invisible(x))
 }

@@ -290,7 +290,11 @@ write_to_hdf5.bvarmodel <- function(object, filename, group = "", ...) {
     # test sample. It is the layout BayesTS writes, and the members are named
     # after what they hold rather than one of them being 'draws', since all of
     # them are draws.
-    for (i in c("a", "psi", "u_omega_inv", "u_sigma_inv", "u_scale", "q", "forecast")) {
+    #
+    # 'u_sigma' is a discounted model's: the scale of its Wishart, one column
+    # per period, which the samplers' 'u_sigma_inv' has no counterpart for.
+    for (i in c("a", "psi", "u_omega_inv", "u_sigma_inv", "u_scale", "q", "forecast",
+                "u_sigma")) {
       if (i %in% names(object[["posterior"]])) {
         group_draws <- .hdf5_group(handles, group_posterior, i)
         for (j in names(object[["posterior"]][[i]])) {
@@ -302,11 +306,12 @@ write_to_hdf5.bvarmodel <- function(object, filename, group = "", ...) {
 
     ## Draws kept on their own ----
     #
-    # The in-sample pointwise log-likelihood is the only one left. It is not a
-    # member of the forecast group and is not the same statistic as the score
-    # that will go in there: it evaluates each observation of the sample under
-    # states that have already seen it.
-    for (i in c("loglik")) {
+    # The in-sample pointwise log-likelihood, and a discounted model's degrees
+    # of freedom per period. The log-likelihood is not a member of the forecast
+    # group and is not the same statistic as the score that will go in there:
+    # it evaluates each observation of the sample under states that have
+    # already seen it.
+    for (i in c("loglik", "df")) {
       if (i %in% names(object[["posterior"]])) {
         draws <- object[["posterior"]][[i]]
         .hdf5_write(group_posterior, i, draws, .hdf5_draws_attrs(draws))

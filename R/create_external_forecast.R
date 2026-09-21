@@ -41,6 +41,16 @@
 #' for the second quarter of 2007. The periods, for which a forecast was made, are
 #' rounded to the frequency of the data of the models in \code{object}.
 #'
+#' Rounding places a forecast in the period of the data it falls into; it does
+#' not convert between frequencies. Forecasts made at a frequency other than that
+#' of the data are therefore refused: annual forecasts of a quarterly model,
+#' whose periods such as 2020 and 2021 would otherwise be read as the first
+#' quarters of those years and an annual growth rate scored as a quarterly one,
+#' or monthly forecasts of a quarterly model, of which three would fall into the
+#' same quarter. The frequency of the forecasts is read off the spacing of the
+#' periods within a publication and, where every publication forecasts a single
+#' period, off the position of the periods within the year.
+#'
 #' In contrast to a model, an external forecast does not have a training sample.
 #' Therefore, each publication is matched to the training sample, which ends closest
 #' before the publication of the forecast, so that a model and an external forecaster
@@ -174,6 +184,8 @@ create_external_forecast <- function(forecasts, object, n_ahead = NULL,
     stop("Argument 'forecasts' does not contain any usable forecast.")
   }
 
+  check_forecast_frequency(fcst, groups, freq)
+
   group_names <- unique(groups)
 
   # Forecasters without a usable publication produce an empty element, which must
@@ -203,6 +215,87 @@ create_external_forecast <- function(forecasts, object, n_ahead = NULL,
   class(result) <- c("modellist", "list")
 
   return(result)
+}
+
+#' Refuses Forecasts at Another Frequency Than the Data
+#'
+#' Rounding puts a forecast into the period of the data it falls into, which is
+#' what lets a calendar date stand for a quarter. It is not a conversion between
+#' frequencies, and a forecast at another frequency went through it without a
+#' word: an annual forecast of 2021 became a forecast of 2021Q1 of a quarterly
+#' model, and an annual growth rate was scored as a quarterly one.
+#'
+#' A single period cannot give that away -- 2021 is also a first quarter -- so
+#' the frequency is read off the forecasts together. Within one publication of
+#' one variable, periods that are further apart than one period of the data are
+#' of a lower frequency, and two that round to the same period are of a higher
+#' one. Where every publication forecasts a single period, periods that all sit
+#' at the same position within the year, over more than one year, are of a lower
+#' frequency too.
+#'
+#' @param fcst the data frame of \code{create_external_forecast}, with the
+#' periods already rounded to the frequency of the data.
+#' @param groups the forecaster of each row of \code{fcst}.
+#' @param freq the frequency of the data of the models.
+#'
+#' @return \code{NULL}, invisibly. Called for the error.
+#'
+#' @noRd
+check_forecast_frequency <- function(fcst, groups, freq) {
+
+  # Whole periods of the data, so that the comparisons below are exact
+  index <- round(fcst[, "period"] * freq)
+  publication <- list(groups, fcst[, "origin"], fcst[, "variable"])
+
+  steps <- unlist(lapply(split(index, publication, drop = TRUE), function(x) {
+    diff(sort(x))
+  }), use.names = FALSE)
+
+  if (any(steps == 0)) {
+    stop("Argument 'forecasts' contains several forecasts of the same variable in one ",
+         "publication that fall into the same period of the data, which is ",
+         frequency_name(freq), ". Forecasts at a higher frequency than the data ",
+         "are not aggregated; supply them at the frequency of the data.")
+  }
+
+  if (length(steps) > 0) {
+    step <- min(steps)
+  } else if (freq > 1) {
+    # One period per publication. Periods that never leave one position within
+    # the year, over several years, are of a frequency of once a year.
+    position <- index %% freq
+    years <- unique(index %/% freq)
+    step <- if (length(unique(position)) == 1 && length(years) > 1) freq else 1
+  } else {
+    step <- 1
+  }
+
+  if (step > 1) {
+    stop("The periods in argument 'forecasts' are ", step, " periods of the data ",
+         "apart and the data are ", frequency_name(freq), ", so they appear to be ",
+         frequency_name(freq / step), " forecasts. Periods are only rounded to the ",
+         "frequency of the data, not converted to it: a forecast of a year would be ",
+         "compared with the first period of that year. Supply forecasts at the ",
+         "frequency of the data.")
+  }
+
+  invisible(NULL)
+}
+
+#' The Name of a Frequency
+#'
+#' @param freq a number of periods per year.
+#'
+#' @return A character string.
+#'
+#' @noRd
+frequency_name <- function(freq) {
+  names <- c("1" = "annual", "2" = "semi-annual", "4" = "quarterly", "12" = "monthly")
+  name <- names[as.character(freq)]
+  if (is.na(name)) {
+    return(paste(format(freq), "periods per year"))
+  }
+  unname(name)
 }
 
 #' Reference Periods of a Model Object

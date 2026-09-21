@@ -152,6 +152,45 @@ test_that("annual forecasts of the publication year are one-step ahead forecasts
   expect_equal(as.numeric(external[[2]][["posterior"]][["forecast"]][["forecasts"]]), c(3, NA))
 })
 
+test_that("forecasts at another frequency than the data are refused", {
+  # The reference model is quarterly. Annual periods used to be rounded to the
+  # first quarter of each year, and an annual growth rate scored as a quarterly
+  # one.
+  annual <- expand.grid(origin = c(1996.3, 1996.55, 1996.8, 1997.05, 1997.3),
+                        period = 1997:1998, variable = dimnames(var_data())[[2]],
+                        stringsAsFactors = FALSE)
+  annual[["value"]] <- 1
+  expect_error(create_external_forecast(annual, ext_reference(), n_ahead = 8),
+               "appear to be annual forecasts")
+
+  # As calendar dates, which are rounded rather than read as numbers
+  annual_dates <- annual
+  annual_dates[["period"]] <- paste0(annual_dates[["period"]], "-12-31")
+  expect_error(create_external_forecast(annual_dates, ext_reference(), n_ahead = 8),
+               "appear to be annual forecasts")
+
+  # One period per publication gives no spacing to read, so the position within
+  # the year does: every period is a first quarter.
+  single <- annual[annual[["period"]] == floor(annual[["origin"]]) + 1, ]
+  expect_error(create_external_forecast(single, ext_reference(), n_ahead = 8),
+               "appear to be annual forecasts")
+
+  # Monthly forecasts, three of which fall into the same quarter
+  monthly <- expand.grid(origin = 1996.3, period = 1996.5 + (0:5) / 12,
+                         variable = "y", stringsAsFactors = FALSE)
+  monthly[["value"]] <- 1
+  expect_error(create_external_forecast(monthly, ext_reference(), n_ahead = 4),
+               "same period of the data, which is quarterly")
+
+  # Quarterly forecasts of one period each, one publication per quarter, are
+  # at the frequency of the data.
+  quarterly <- ext_forecasts(value = 1)
+  quarterly <- quarterly[abs(quarterly[["period"]] - quarterly[["origin"]] + 0.05) < 1e-8, ]
+  expect_equal(nrow(quarterly), length(ext_ends()) * ncol(var_data()))
+  expect_s3_class(create_external_forecast(quarterly, ext_reference(), n_ahead = 2),
+                  "externalforecast")
+})
+
 test_that("the functions of the estimation workflow leave external forecasts unchanged", {
   external <- create_external_forecast(ext_forecasts(value = 1), ext_reference(),
                                        n_ahead = 2, data_lag = 1)

@@ -121,6 +121,16 @@ numerics, which follow the convention of \code{\link[stats]{time}}, i.e. 2007.25
 for the second quarter of 2007. The periods, for which a forecast was made, are
 rounded to the frequency of the data of the models in \code{object}.
 
+Rounding places a forecast in the period of the data it falls into; it does
+not convert between frequencies. Forecasts made at a frequency other than that
+of the data are therefore refused: annual forecasts of a quarterly model,
+whose periods such as 2020 and 2021 would otherwise be read as the first
+quarters of those years and an annual growth rate scored as a quarterly one,
+or monthly forecasts of a quarterly model, of which three would fall into the
+same quarter. The frequency of the forecasts is read off the spacing of the
+periods within a publication and, where every publication forecasts a single
+period, off the position of the periods within the year.
+
 In contrast to a model, an external forecast does not have a training sample.
 Therefore, each publication is matched to the training sample, which ends closest
 before the publication of the forecast, so that a model and an external forecaster

@@ -14,6 +14,10 @@
 
 \item{...}{further arguments passed to or from other methods.}
 }
+\value{
+The paths of the written files, invisibly, one per window, in the
+subfolder of \code{folder} created for the exercise.
+}
 \description{
 Exports the content of an object of class 'expandingwindow' to multiple HDF5 file.
 }

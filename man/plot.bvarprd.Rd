@@ -17,6 +17,10 @@ all available observations will be plotted.}
 \item{...}{further graphical parameters. Arguments \code{main}, \code{ylab},
 \code{lty} and \code{plot.type} overwrite the defaults of the function.}
 }
+\value{
+\code{x}, invisibly. The function is called for its side effect, the
+plot.
+}
 \description{
 A plot function for objects of class 'bvarprd'.
 }

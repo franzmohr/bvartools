@@ -23,7 +23,13 @@ element \code{model} and one data frame per criterion. If the model contains
 contains \code{posterior$forecast$errors}, these are \code{FE}, \code{AFE} and
 \code{RSFE}, the forecast errors and their absolute and root squared values, with the
 columns \code{variable}, \code{h}, \code{mean}, \code{median}, \code{qlower} and
-\code{qupper}. If it contains \code{posterior$forecast$loglik}, the score of its
+\code{qupper}. For \code{RSFE} only \code{mean} is a statistic of its own, the root
+of the mean squared error. Its median and quantiles are those of the squared
+errors, rooted, and so differ from \code{AFE}'s only by the interpolation
+between neighbouring draws that \code{\link[stats]{quantile}} and
+\code{\link[stats]{median}} do -- which, the root of an average of squares
+being at least the average of the roots, can only raise them. They add
+nothing to \code{AFE}'s. If it contains \code{posterior$forecast$loglik}, the score of its
 forecast against \code{data$test$y}, there is \code{LPL}, the log predictive
 likelihood: the log of the mean of the draws of each scored period's predictive
 density, summed over the periods. Attribute \code{"terms"} holds those per period

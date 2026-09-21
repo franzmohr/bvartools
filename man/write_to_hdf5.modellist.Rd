@@ -14,6 +14,10 @@
 
 \item{...}{further arguments passed to or from other methods.}
 }
+\value{
+The paths of the written files, invisibly, one per model and, for a
+member that is itself a collection, one per model in it.
+}
 \description{
 Exports the content of an object of class 'modellist' to multiple HDF5 file.
 }

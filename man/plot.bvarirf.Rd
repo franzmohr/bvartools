@@ -11,6 +11,10 @@
 
 \item{...}{further graphical parameters.}
 }
+\value{
+\code{x}, invisibly. The function is called for its side effect, the
+plot.
+}
 \description{
 A plot function for objects of class "bvarirf".
 }

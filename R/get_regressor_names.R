@@ -188,13 +188,3 @@
   return(blocks)
 }
 
-
-# Extracts the names of the regressors from a 'bvecmodel' object
-# add_block adds the name of the block of cointegration, endogenous, exogenous,
-# deterministic and structural coefficients
-
-.get_regressor_names_bvecmodel <- function(object, add_block = FALSE) {
-
-  .flatten_regressor_blocks(.get_regressor_blocks_bvecmodel(object),
-                            add_block = add_block)
-}

@@ -9,7 +9,10 @@
 //' @details The log-likelihood is calculated for each vector in period \eqn{t} as
 //' \deqn{-\frac{K}{2} \ln 2\pi - \frac{1}{2} \ln |\Sigma_t| -\frac{1}{2} u_t^\prime \Sigma_t^{-1} u_t},
 //' where \eqn{u_t = y_t - \mu_t}.
-//' 
+//'
+//' @return A numeric vector of length \eqn{T}, the log-likelihood of each period.
+//' Sum it for the log-likelihood of the sample.
+//'
 //' @examples
 //' 
 //' # Load data

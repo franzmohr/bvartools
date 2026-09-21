@@ -125,7 +125,7 @@
 #' monetary policy. \emph{The Review of Economic Studies, 72}(3), 821--852.
 #' \doi{10.1111/j.1467-937X.2005.00353.x}
 #'
-#' @returns A list with the elements
+#' @return A list with the elements
 #' \describe{
 #'   \item{\code{data}}{a \eqn{T \times K} time-series object of the artificial
 #'   series, named \code{var1}, \code{var2} etc.}

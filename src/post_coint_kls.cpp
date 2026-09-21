@@ -62,7 +62,10 @@
 //' \item{alpha}{a draw of the \eqn{K \times r} loading matrix.}
 //' \item{beta}{a draw of the \eqn{M \times r} cointegration matrix.}
 //' \item{Pi}{a draw of the \eqn{K \times M} cointegration matrix \eqn{\Pi = \alpha \beta^{\prime}}.}
-//' \item{Gamma}{a draw of the \eqn{K \times N} coefficient matrix for non-cointegration parameters.}
+//' \item{Gamma}{a draw of the coefficients of the non-cointegration regressors
+//' in \code{x}, as the \eqn{KN \times 1} vector \eqn{vec(\Gamma)} of the
+//' \eqn{K \times N} matrix; \code{matrix(Gamma, K)} restores the matrix. Empty
+//' if \code{x} is \code{NULL}.}
 //' 
 //' @examples
 //'  

@@ -45,6 +45,9 @@
 #' the plot, where \code{col} and \code{lwd} are recycled over the models in
 #' \code{x}.
 #'
+#' @return \code{x}, invisibly. The function is called for its side effect, the
+#' plot.
+#'
 #' @export
 plot.selcritlist <- function(x, criterion = "WAIC", ...) {
 

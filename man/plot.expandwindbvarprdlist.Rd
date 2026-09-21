@@ -18,6 +18,10 @@ If \code{NULL} (default), all available observations will be plotted.}
 \item{...}{further graphical parameters, which are passed on to
 \code{\link[stats]{plot.ts}}.}
 }
+\value{
+\code{x}, invisibly. The function is called for its side effect, the
+plot of the forecasts.
+}
 \description{
 A plot function for objects of class 'expandwindbvarprdlist'.
 }

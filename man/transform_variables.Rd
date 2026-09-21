@@ -11,10 +11,12 @@ transform_variables(x, code)
 
 \item{code}{a named integer vector of transformation codes, one of
 \code{1:7} -- see 'Details'. Names must match columns of \code{x}; a column
-with no entry is left untransformed (code \code{1}).}
+with no entry is left untransformed (code \code{1}). For a single series
+\code{code} may also be one unnamed code.}
 }
 \value{
-A time-series object of the same shape as \code{x}.
+A time-series object of the same shape as \code{x}: a vector series
+for a vector series, and a matrix of series with the same columns otherwise.
 }
 \description{
 Transforms the columns of a time-series object using the seven
@@ -34,9 +36,11 @@ The seven codes, applied column by column, are
 }
 Codes \code{4:6} need a strictly positive series.
 
-A difference drops as many leading observations as its order -- one for
-codes \code{2}, \code{5} and \code{7}, two for \code{3} and \code{6} --
-rather than shortening the series: those leading periods become \code{NA},
+A transformation loses as many leading observations as it reaches back --
+one for codes \code{2} and \code{5}, two for \code{3}, \code{6} and
+\code{7}, the last being the difference of a growth rate that is itself
+taken over one period -- rather than shortening the series: those leading
+periods become \code{NA},
 so every column keeps the time index of \code{x} and can still be combined
 with \code{\link[stats]{ts.intersect}} or passed to
 \code{\link{create_bvarmodel}}.

@@ -10,6 +10,9 @@
 #' @param ... further graphical parameters, which are passed on to
 #' \code{\link[stats]{plot.ts}}.
 #' 
+#' @return \code{x}, invisibly. The function is called for its side effect, the
+#' plot of the forecasts.
+#'
 #' @export 
 #' @method plot expandwindbvarprdlist
 plot.expandwindbvarprdlist <- function(x, n_pre = NULL, ci = 0.95, ...) {

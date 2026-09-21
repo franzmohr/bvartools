@@ -34,6 +34,9 @@
 #' # Plot IR
 #' plot(ir)
 #' 
+#' @return \code{x}, invisibly. The function is called for its side effect, the
+#' plot.
+#'
 #' @export
 plot.bvarirf <- function(x, ...) {
   if (ncol(x) != 3) {
@@ -49,4 +52,6 @@ plot.bvarirf <- function(x, ...) {
   args <- args[!(names(args) %in% names(dots))]
 
   do.call(stats::plot.ts, c(list(x), args, dots))
+
+  invisible(x)
 }

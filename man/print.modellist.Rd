@@ -13,6 +13,11 @@
 
 \item{...}{further arguments passed to or from other methods.}
 }
+\value{
+A data frame with one row per model, as printed, invisibly: the
+specifications of \code{\link{get_model_specifications}}, without the
+columns in which every model agrees.
+}
 \description{
 print method for objects of class 'modellist'.
 }

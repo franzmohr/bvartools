@@ -18,6 +18,15 @@ single model puts it. See 'Details'.}
 of the posterior, and \code{integer(0)} reads none of them, which gives the
 model, its data and its priors without the draws. See 'Details'.}
 }
+\value{
+An object of class 'bvarmodel' or 'bvecmodel', depending on the
+algorithm recorded in the file, with the elements that file holds:
+\code{model}, \code{data}, \code{priors}, \code{initial} and, where the
+model has been estimated, \code{posterior}. The draws of a sampler are
+\code{\link[coda]{mcmc}} objects; the per-period posterior of a discounted
+model is a plain matrix, since its rows are periods rather than draws.
+\code{\link{bvartools_model}} describes the elements one by one.
+}
 \description{
 Imports model information and posterior draws from an HDF5 file.
 }

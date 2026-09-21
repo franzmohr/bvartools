@@ -133,7 +133,7 @@ is_discount_model <- function(x) {
   if (any(too_small)) {
     stop("Argument 'delta_sigma' is too small for ", k, " endogenous variables: ",
          "the degrees of freedom of the discounted Wishart settle at ",
-         "1 / (1 - delta_sigma), which must exceed the number of variables. ",
+         "1 / (1 - delta_sigma), which must be at least the number of variables. ",
          "The smallest value this model admits is ", signif(1 - 1 / k, 3), ".")
   }
 

@@ -96,6 +96,9 @@ not missing features, and the error says why:
   time-varying parameters.
 - `error = "ald"`, a quantile VAR, estimates no covariances and does not forecast:
   `add_posterior_forecasts()` refuses it. Its selection scheme is `"bvs"` only.
+- `algorithm = "discount"` needs `error = "wishart"`, `burnin = 0` and
+  `thin = 1`, and takes neither variable selection nor a structural model:
+  there is no chain to burn in, thin or draw an indicator along.
 
 **9. `gen_var()` and `gen_vec()` no longer exist.** Older tutorials and answers
 use them, together with `$data$Y` and `$data$SUR`. Use `create_bvarmodel()` and
@@ -111,10 +114,23 @@ Fixed in `create_bvarmodel()` or `create_bvecmodel()`, then given priors in
 | --- | --- |
 | `error` | `"wishart"`, `"gamma"`, `"gamma+covar"`, `"sv"`, `"sv+covar"`, and `"ald"` with `quantile` for a VAR |
 | `tvp` | `TRUE` for time-varying coefficients |
+| `algorithm` | `NULL` (default) picks the sampler from `error` and `tvp`; `"discount"` for the closed-form discounted models (see below); `"KLGS2010"` for the VEC of Koop, Leon-Gonzalez and Strachan (2010) |
 | `structural` | `TRUE` for contemporaneous coefficients (an A-model) |
 | `varsel` | `"ssvs"` (George et al. 2008) or `"bvs"` (Korobilis 2013), with a `varsel` list in `add_priors()` |
 | `deterministic` (VAR) | `"none"`, `"const"`, `"trend"`, `"both"` |
 | `const`, `trend`, `seasonal` (VEC) | `"restricted"` to the cointegration space, or `"unrestricted"` |
+
+`algorithm = "discount"` gives `VarTvpDiscount` or `VecTvpDiscount`: drifting
+coefficients and error covariance under two discount factors, `delta_beta` and
+`delta_sigma` in `(0, 1]` (one means the quantity does not move), with a
+**closed-form posterior** rather than a chain. `iterations` only says how many
+i.i.d. draws a forecast takes. The posterior is one row per period in
+`posterior$a$mean`, `$a$cov`, `$u_sigma$scale` and `$df`, with no `coeffs`,
+and the sum of `posterior$loglik` is the exact log marginal likelihood,
+reported as `LML`. `coef` takes `v_i` (which must be positive), `v_i_det`,
+`v_i_alpha` and `const`; a discounted VEC takes no `coint` prior, because it
+conditions on a fixed cointegration matrix -- Johansen's by default, or the
+`beta` argument of `add_initial_values()`.
 
 For a VEC, `p` is the lag order **of the VAR in levels**, so the VEC itself has
 `p - 1` lagged differences. `r` is the cointegration rank. The cointegration
@@ -151,7 +167,7 @@ suite, so the shapes they assert are what the installed version produces.
 
 | File | Contents |
 | --- | --- |
-| `references/recipes.md` | Complete examples: a VAR, a VEC forecast in levels, a TVP-SV model, lag order comparison, a quantile VAR, and an HDF5 round trip |
+| `references/recipes.md` | Complete examples: a VAR, a VEC forecast in levels, a TVP-SV model, lag order comparison, a quantile VAR, a discounted VEC, and an HDF5 round trip |
 | `references/priors.md` | Every element of `coef`, `sigma`, `coint` and `varsel`, what each model type requires, the Minnesota prior, and what `add_priors()` refuses |
 | `references/objects.md` | The layout of a model object, the columns of every block of draws by model type, reading coefficients and covariances, forecast stacking |
 | `references/analysis.md` | Forecasts with exogenous variables, the `irf()` and `fevd()` identification types, sign restrictions, spillovers |

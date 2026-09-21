@@ -6,7 +6,8 @@
 #' @param x a time-series object.
 #' @param code a named integer vector of transformation codes, one of
 #' \code{1:7} -- see 'Details'. Names must match columns of \code{x}; a column
-#' with no entry is left untransformed (code \code{1}).
+#' with no entry is left untransformed (code \code{1}). For a single series
+#' \code{code} may also be one unnamed code.
 #'
 #' @details The seven codes, applied column by column, are
 #' \describe{
@@ -21,14 +22,17 @@
 #' }
 #' Codes \code{4:6} need a strictly positive series.
 #'
-#' A difference drops as many leading observations as its order -- one for
-#' codes \code{2}, \code{5} and \code{7}, two for \code{3} and \code{6} --
-#' rather than shortening the series: those leading periods become \code{NA},
+#' A transformation loses as many leading observations as it reaches back --
+#' one for codes \code{2} and \code{5}, two for \code{3}, \code{6} and
+#' \code{7}, the last being the difference of a growth rate that is itself
+#' taken over one period -- rather than shortening the series: those leading
+#' periods become \code{NA},
 #' so every column keeps the time index of \code{x} and can still be combined
 #' with \code{\link[stats]{ts.intersect}} or passed to
 #' \code{\link{create_bvarmodel}}.
 #'
-#' @return A time-series object of the same shape as \code{x}.
+#' @return A time-series object of the same shape as \code{x}: a vector series
+#' for a vector series, and a matrix of series with the same columns otherwise.
 #'
 #' @examples
 #'
@@ -76,7 +80,15 @@ transform_variables <- function(x, code) {
          "'Details'.")
   }
   code_names <- names(code)
-  if (NCOL(mat) > 1) {
+  if (NCOL(mat) == 1 && (is.null(code_names) || is.na(names_x))) {
+    # One series and nothing to match a name against, on one side or the
+    # other: the code is the code of that series.
+    if (length(code) != 1) {
+      stop("Argument 'code' must be a single code when 'x' is a single series ",
+           "without a column name.")
+    }
+    code_names <- NULL
+  } else {
     if (is.null(code_names) || any(code_names == "")) {
       stop("Argument 'code' must be named after the columns of 'x'.")
     }
@@ -96,12 +108,18 @@ transform_variables <- function(x, code) {
   tsp_x <- stats::tsp(x)
   result <- mat
   for (j in seq_len(NCOL(mat))) {
-    code_j <- if (NCOL(mat) == 1) {
-      if (is.null(code_names)) code[[1]] else code[[names_x[j]]]
+    code_j <- if (is.null(code_names)) {
+      code[[1]]
+    } else if (names_x[j] %in% code_names) {
+      code[[names_x[j]]]
     } else {
-      if (names_x[j] %in% code_names) code[[names_x[j]]] else 1L
+      1L
     }
     result[, j] <- .transform_variables_code(result[, j], code_j)
+  }
+
+  if (is.null(dim(x))) {
+    return(stats::ts(result[, 1], start = tsp_x[1], frequency = tsp_x[3]))
   }
 
   result <- stats::ts(result, start = tsp_x[1], frequency = tsp_x[3])

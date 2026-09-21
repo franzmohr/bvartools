@@ -165,6 +165,37 @@ refused <- tryCatch(add_posterior_forecasts(add_forecast_input(qvar, n_ahead = 2
 stopifnot(identical(refused, "refused"))
 ```
 
+## A discounted VEC, in closed form
+
+`algorithm = "discount"` estimates without a chain, so `burnin` is 0 and
+`iterations` is the number of forecast draws. The loadings drift under
+`delta_beta`; the cointegration matrix is held at Johansen's estimate, which
+`add_initial_values()` puts in `initial$beta`:
+
+```r
+dvec <- create_bvecmodel(e6, p = 2, r = 1, const = "unrestricted",
+                         algorithm = "discount", delta_beta = 0.98,
+                         iterations = 100, burnin = 0, thin = 1)
+dvec <- add_priors(dvec,
+                   coef = list(v_i = 1, v_i_det = 1 / 10),
+                   sigma = list(df = "k", scale = 1))
+dvec <- add_initial_values(dvec)
+dvec <- add_posterior_coefficients(dvec)
+dvec <- add_posterior_loglik(dvec)
+
+tt <- nrow(dvec$data$train$y)
+n_design <- dvec$model$rank + ncol(dvec$data$train$x)
+
+# One row per period, not per draw, and no coeffs anywhere
+stopifnot(all(dim(dvec$posterior$a$mean) == c(tt, n_design * 2)),
+          is.null(dvec$posterior$a$coeffs),
+          all(dim(dvec$posterior$loglik) == c(1, tt)))
+
+# The space the run conditioned on travels with the loadings
+stopifnot(isTRUE(all.equal(as.vector(dvec$posterior$beta$coeffs),
+                           as.vector(dvec$initial$beta))))
+```
+
 ## Moving a model through HDF5
 
 `write_to_hdf5()` refuses a file that already exists. Pass `group` to put

@@ -38,6 +38,9 @@
 #' write_to_hdf5(model, folder = path_to_target_directory)
 #' 
 #' 
+#' @return The paths of the written files, invisibly, one per window, in the
+#' subfolder of \code{folder} created for the exercise.
+#'
 #' @export
 write_to_hdf5.expandingwindow <- function(object, folder, ...){
   
@@ -75,6 +78,7 @@ write_to_hdf5.expandingwindow <- function(object, folder, ...){
     num_digits <- nchar(as.character(n_models))
     model_id <- sprintf(paste0("%0", num_digits, "d"), 1:n_models)
     
+    paths <- character(n_models)
     for (i in 1:n_models) {
         # Which collection a model belongs to is a property of the model, not of
         # the directory it lands in. Recorded here so that a reader can restore
@@ -85,9 +89,11 @@ write_to_hdf5.expandingwindow <- function(object, folder, ...){
         member <- object[[i]]
         member[["model"]][["rclass_collection"]] <- class(object)
 
-        write_to_hdf5(member, filename = file.path(folder, paste0("Window-", model_id[i], ".h5")), ...)
+        paths[i] <- write_to_hdf5(member, filename = file.path(folder, paste0("Window-", model_id[i], ".h5")), ...)
     }
-    
+
+    return(invisible(paths))
+
   } else {
     stop("Specified 'folder' does not exist.")
   }

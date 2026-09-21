@@ -6,6 +6,10 @@
 #' @param digits the number of significant digits to use when printing.
 #' @param ... further arguments passed to or from other methods.
 #'
+#' @return A data frame with one row per model, as printed, invisibly: the
+#' specifications of \code{\link{get_model_specifications}}, without the
+#' columns in which every model agrees.
+#'
 #' @export
 print.modellist <- function(x, digits = max(3L, getOption("digits") - 3L), ...){
   

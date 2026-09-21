@@ -65,6 +65,32 @@ Which criterion to use depends on the models:
 - LOOIC reports the periods whose Pareto shape is too large for its importance
   sampling to be reliable; prefer WAIC when many are flagged.
 
+The discounted models (`algorithm = "discount"`) carry one criterion, `LML`:
+the sum of `posterior$loglik`, which for them is the **exact** log marginal
+likelihood of the sample rather than an estimate. There is no chain, so no
+WAIC, LOOIC or information criterion; `choose_best_model()` maximises `LML`. A
+vector in `delta_beta` or `delta_sigma` makes one model per value, like `p`:
+
+```r
+dm <- create_bvarmodel(e1, p = 1, deterministic = "const", algorithm = "discount",
+                       delta_beta = c(0.95, 0.99, 1),
+                       iterations = 50, burnin = 0, thin = 1)
+dm <- add_priors(dm,
+                 coef = list(v_i = 1, v_i_det = 1 / 10),
+                 sigma = list(df = "k", scale = 1))
+dm <- add_initial_values(dm)
+dm <- add_posterior_coefficients(dm)
+dm <- add_posterior_loglik(dm)
+
+dsc <- selection_criteria(dm)
+lml <- sapply(dsc, function(x) x$LML$mean)
+stopifnot(length(lml) == 3, all(is.finite(lml)), is.null(dsc[[1]]$WAIC),
+          choose_best_model(dsc, criterion = "LML") == which.max(lml))
+```
+
+`LML` is not comparable with `LL`, which conditions on the parameters where
+`LML` integrates them out; it compares discounted models with each other.
+
 All criteria need the models to be estimated on the **same observations**. A
 vector for `p` ensures that. Models created separately, with different lag orders
 or data, are put on their common sample with `combine_models()` and then

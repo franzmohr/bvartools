@@ -17,6 +17,10 @@ segment named \code{"Other"}, so that the legend does not become too large. Defa
 
 \item{...}{further graphical parameters.}
 }
+\value{
+\code{x}, invisibly. The function is called for its side effect, the
+plot.
+}
 \description{
 A plot function for objects of class "bvarfevd".
 }

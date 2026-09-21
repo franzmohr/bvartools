@@ -24,7 +24,10 @@ plot_forecast_errors_by_period(
 
 \item{criterion}{the statistic that should be plotted. Available choices are
 \code{"FE"} for forecast errors, \code{"AFE"} (default) for absolute forecast
-errors and \code{"RSFE"} for root squared forecast errors.}
+errors and \code{"RSFE"} for root squared forecast errors.
+The mean of \code{"RSFE"} is the root mean squared error; its median and band
+are those of \code{"AFE"} up to the interpolation between neighbouring draws,
+because the square root does not reorder them.}
 
 \item{ci}{a numeric between 0 and 1 specifying the probability of the credible
 band. Defaults to 0.95.}
@@ -43,6 +46,10 @@ band. Defaults to 0.95.}
 
 \item{...}{further graphical parameters, which are passed on to
 \code{\link[graphics]{plot}}.}
+}
+\value{
+\code{x}, invisibly. The function is called for its side effect, the
+plot.
 }
 \description{
 Plots the forecast errors of a list of Bayesian models as error bars for each

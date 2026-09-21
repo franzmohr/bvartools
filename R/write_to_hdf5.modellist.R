@@ -35,12 +35,17 @@
 #' write_to_hdf5(model, folder = path_to_target_directory)
 #' 
 #' 
+#' @return The paths of the written files, invisibly, one per model and, for a
+#' member that is itself a collection, one per model in it.
+#'
 #' @export
 write_to_hdf5.modellist <- function(object, folder, ...){
   
   if (dir.exists(folder)) {
-    
-    for (i in 1:length(object)) {
+
+    paths <- vector("list", length(object))
+
+    for (i in seq_along(object)) {
       
       if (any(class(object[[i]]) %in% c("bvarmodel", "bvecmodel"))) {
         
@@ -76,13 +81,15 @@ write_to_hdf5.modellist <- function(object, folder, ...){
         }
         file_name <- file.path(folder, candidate_name)
         
-        write_to_hdf5(object[[i]], filename = file_name, ...)
-        
+        paths[[i]] <- write_to_hdf5(object[[i]], filename = file_name, ...)
+
       } else {
-        write_to_hdf5(object[[i]], folder = folder, ...)
+        paths[[i]] <- write_to_hdf5(object[[i]], folder = folder, ...)
       }
     }
-    
+
+    return(invisible(unlist(paths)))
+
   } else {
     stop("Specified 'folder' does not exist.")
   }

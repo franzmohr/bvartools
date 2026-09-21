@@ -97,6 +97,16 @@ arma::mat kalman_durbin_koopman_2002(const arma::mat &y, const arma::mat &z,
   const arma::uword v_stride = (sigma_v.n_rows == nvars) ? 0 : nvars;
   const arma::uword b_stride = (B.n_rows == nvars) ? 0 : nvars;
 
+  // A random walk's transition is the identity, and every time varying
+  // coefficient block is one. Multiplying by it is then pure cost -- two full
+  // M x M products per period in the filter, a matrix-vector product in each of
+  // the other two passes, and a copy of B every period -- so the identity is
+  // spotted once and the products are left out. Nothing moves: a product with
+  // an exact identity is exact, and the one product that is regrouped by
+  // leaving B out, `B P Z' F^-1`, is one Armadillo already evaluates as
+  // `B ((P Z') F^-1)`.
+  const bool identity_b = b_stride == 0 && B.is_diagmat() && arma::all(B.diag() == 1.0);
+
   arma::mat yplus = y * 0;
   arma::mat aplus = arma::zeros<arma::mat>(nvars, t + 1);
 
@@ -120,8 +130,12 @@ arma::mat kalman_durbin_koopman_2002(const arma::mat &y, const arma::mat &z,
     yplus.col(i) = z.rows(p1, p2) * aplus.col(i) + A_u * arma::randn<arma::vec>(k);
 
     if (v_stride != 0) { A_v = symmetric_sqrt(sigma_v.rows(vp, vp + nvars - 1)); }
-    aplus.col(i + 1) = B.rows(bp, bp + nvars - 1) * aplus.col(i) +
-                       A_v * arma::randn<arma::vec>(nvars);
+    if (identity_b) {
+      aplus.col(i + 1) = aplus.col(i) + A_v * arma::randn<arma::vec>(nvars);
+    } else {
+      aplus.col(i + 1) = B.rows(bp, bp + nvars - 1) * aplus.col(i) +
+                         A_v * arma::randn<arma::vec>(nvars);
+    }
   }
 
   // Kalman filtering
@@ -142,15 +156,22 @@ arma::mat kalman_durbin_koopman_2002(const arma::mat &y, const arma::mat &z,
     const arma::uword vp = i * v_stride;
     const arma::uword bp = i * b_stride;
 
-    const arma::mat B_i = B.rows(bp, bp + nvars - 1);
-
     v.col(i) = ystar.col(i) - z.rows(p1, p2) * a.col(i);
     Fi.rows(p1, p2) = arma::inv(z.rows(p1, p2) * P * arma::trans(z.rows(p1, p2)) +
                                 sigma_u.rows(up, up + k - 1));
-    K.rows(pA1, pA2) = B_i * P * arma::trans(z.rows(p1, p2)) * Fi.rows(p1, p2);
-    L.rows(pA1, pA2) = B_i - K.rows(pA1, pA2) * z.rows(p1, p2);
-    a.col(i + 1) = B_i * a.col(i) + K.rows(pA1, pA2) * v.col(i);
-    P = B_i * P * arma::trans(L.rows(pA1, pA2)) + sigma_v.rows(vp, vp + nvars - 1);
+    if (identity_b) {
+      K.rows(pA1, pA2) = P * arma::trans(z.rows(p1, p2)) * Fi.rows(p1, p2);
+      L.rows(pA1, pA2) = -K.rows(pA1, pA2) * z.rows(p1, p2);
+      L.rows(pA1, pA2).diag() += 1.0;
+      a.col(i + 1) = a.col(i) + K.rows(pA1, pA2) * v.col(i);
+      P = P * arma::trans(L.rows(pA1, pA2)) + sigma_v.rows(vp, vp + nvars - 1);
+    } else {
+      const arma::mat B_i = B.rows(bp, bp + nvars - 1);
+      K.rows(pA1, pA2) = B_i * P * arma::trans(z.rows(p1, p2)) * Fi.rows(p1, p2);
+      L.rows(pA1, pA2) = B_i - K.rows(pA1, pA2) * z.rows(p1, p2);
+      a.col(i + 1) = B_i * a.col(i) + K.rows(pA1, pA2) * v.col(i);
+      P = B_i * P * arma::trans(L.rows(pA1, pA2)) + sigma_v.rows(vp, vp + nvars - 1);
+    }
   }
 
   // Backward smoothing
@@ -163,8 +184,12 @@ arma::mat kalman_durbin_koopman_2002(const arma::mat &y, const arma::mat &z,
   a.col(0) = a_init + P_init * r0;
   for (int i = 0; i < t; i++){
     const arma::uword vp = i * v_stride;
-    a.col(i + 1) = B.rows(i * b_stride, i * b_stride + nvars - 1) * a.col(i) +
-                   sigma_v.rows(vp, vp + nvars - 1) * r.col(i);
+    if (identity_b) {
+      a.col(i + 1) = a.col(i) + sigma_v.rows(vp, vp + nvars - 1) * r.col(i);
+    } else {
+      a.col(i + 1) = B.rows(i * b_stride, i * b_stride + nvars - 1) * a.col(i) +
+                     sigma_v.rows(vp, vp + nvars - 1) * r.col(i);
+    }
   }
 
   // Step 3

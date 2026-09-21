@@ -1,5 +1,34 @@
 # bvartools 1.0.0
 
+* **A simulated forecast no longer turns NaN when a log-volatility drifts
+  far.** With `forecast_states = "simulate"`, the default, the forecast error
+  at each horizon was drawn through the inverse of the precision
+  `Psi' diag(exp(-h)) Psi`. Once the simulated log-volatilities had drifted
+  far apart that inverse was ill-conditioned, Armadillo warned
+  `eig_sym(): given matrix is not symmetric`, and an eigenvalue a rounding
+  error below zero put NaN into every variable of that draw from that horizon
+  on -- seen in one draw in 2000 of a four-variable TVP-VAR with `"sv+covar"`.
+  The error is now drawn through the same square root built from `Psi` and the
+  variances directly, which cannot fail that way. It affects the forecasts of
+  the VAR and VEC models with `error = "sv"` or `"sv+covar"`, constant or
+  time varying, and of the time varying ones with `"gamma+covar"`.
+  *Forecast draws change by a rounding error*: upstream's fingerprints move
+  only in `/posterior/forecast/forecasts`, by at most 1.4e-15 relatively, and
+  no estimated draw, log likelihood or `forecast_states = "hold"` forecast
+  moves. On a badly conditioned model the draws that were finite before can
+  move by more (up to 1.6e-6 relatively on the file that showed the fault),
+  which is the accuracy the old route was losing there.
+
+* **The simulation smoother behind every time varying model is faster.** The
+  coefficients are random walks, so their transition is the identity, and the
+  smoother no longer multiplies by it: one call takes 25% to 38% less time at
+  60 to 120 coefficients, and it is most of an iteration of every TVP sampler.
+  *Draws are unchanged*: a product with an exact identity is exact, and
+  upstream's fingerprints of all 120 fixtures match before and after.
+
+* The vendored BayesTS core is refreshed to upstream `94f81de`, which brings
+  the two items above.
+
 * **New vignette `macroprojections`** races a BVAR, a BVAR with stochastic
   volatility and a TVP-SV VAR against the projections for Austria that the ECB,
   the European Commission, the IMF, the OeNB, WIFO and IHS published between 2015

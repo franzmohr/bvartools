@@ -500,15 +500,13 @@ struct VecNormalStochvolWalk
 
         step_random_walk(h_state, h_sigma, arma::vec());
 
-        // Psi' Omega^-1 Psi, as the sampler forms it.
-        arma::mat precision = arma::diagmat(arma::exp(-h_state));
-        if (use_psi)
-        {
-            const arma::mat Psi = arma::reshape(coefficients.psi.col(draw), k, k);
-            precision = arma::trans(Psi) * precision * Psi;
-        }
-        out.period.u_sigma_inv = arma::vectorise(precision);
-        out.error_root = covariance_root(precision);
+        // Psi' Omega^-1 Psi, as the sampler forms it, and the root of its
+        // inverse from Psi and Omega directly.
+        const arma::mat Psi = use_psi ? arma::mat(arma::reshape(coefficients.psi.col(draw), k, k))
+                                      : arma::eye<arma::mat>(k, k);
+        out.period.u_sigma_inv =
+            arma::vectorise(arma::trans(Psi) * arma::diagmat(arma::exp(-h_state)) * Psi);
+        out.error_root = covariance_root(Psi, arma::exp(h_state));
     }
 };
 

@@ -778,16 +778,16 @@ struct VecTvpStochvolWalk
         }
         step_random_walk(h_state, h_sigma, arma::vec());
 
-        // Psi' Omega^-1 Psi, as the sampler forms it period by period.
-        arma::mat precision = arma::diagmat(arma::exp(-h_state));
+        // Psi' Omega^-1 Psi, as the sampler forms it period by period, and the
+        // root of its inverse from Psi and Omega directly.
+        arma::mat Psi = diag_k;
         if (use_psi)
         {
-            arma::mat Psi = diag_k;
             core::fill_strict_lower_triangle(Psi, psi_state);
-            precision = arma::trans(Psi) * precision * Psi;
         }
-        out.period.u_sigma_inv = arma::vectorise(precision);
-        out.error_root = covariance_root(precision);
+        out.period.u_sigma_inv =
+            arma::vectorise(arma::trans(Psi) * arma::diagmat(arma::exp(-h_state)) * Psi);
+        out.error_root = covariance_root(Psi, arma::exp(h_state));
     }
 };
 

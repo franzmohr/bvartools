@@ -125,15 +125,63 @@ inline arma::vec pack_strict_lower_triangle(const arma::mat &matrix)
 
 /// The symmetric square root of the covariance whose precision is
 /// `precision`, which is what a forecast error is drawn through: root * N(0, I).
-/// The same factorisation every forecast here uses, for a precision that is
-/// rebuilt at each horizon because something in it drifts.
+/// For a precision that has no cheaper factorisation at hand -- a Wishart draw,
+/// or a covariance block that is not there -- and so has to be inverted.
+///
+/// Two guards, neither of which moves a draw the unguarded version got right.
+/// The inverse of an ill-conditioned precision comes back slightly asymmetric,
+/// and eig_sym() reads only its upper triangle anyway, so that triangle is made
+/// the whole of it explicitly. And it can come back with an eigenvalue a
+/// rounding error below zero, whose square root is a NaN that the forecast then
+/// carries into every variable from that horizon on; such an eigenvalue is zero.
 inline arma::mat covariance_root(const arma::mat &precision)
 {
     arma::vec eigval;
     arma::mat eigvec;
-    arma::eig_sym(eigval, eigvec,
-                  arma::solve(precision, arma::eye<arma::mat>(precision.n_rows, precision.n_rows)));
-    return eigvec * arma::diagmat(arma::sqrt(eigval)) * arma::trans(eigvec);
+    const arma::mat covariance =
+        arma::solve(precision, arma::eye<arma::mat>(precision.n_rows, precision.n_rows));
+    if (!arma::eig_sym(eigval, eigvec, arma::symmatu(covariance)))
+    {
+        throw std::runtime_error("a drawn precision has no symmetric square root; the chain has "
+                                 "degenerated");
+    }
+    return eigvec * arma::diagmat(arma::sqrt(arma::clamp(eigval, 0.0, arma::datum::inf))) *
+           arma::trans(eigvec);
+}
+
+/// The symmetric square root of the covariance whose precision is
+/// Psi' diag(variances)^-1 Psi, for Psi unit lower triangular -- the covariance
+/// block of the gamma and stochastic volatility models, whose variances are
+/// 1 / u_omega_inv or exp(h).
+///
+/// Built from the factorisation rather than from the precision it multiplies
+/// out to. The covariance is B B' with B = Psi^-1 diag(variances)^1/2, a
+/// triangular solve that no volatility can make ill-conditioned, and its
+/// symmetric root is U S U' for B = U S V', whose singular values are never
+/// negative. The route through the precision inverts Psi' diag(exp(-h)) Psi
+/// instead: once a simulated log-volatility has drifted far over the horizon
+/// that inverse is ill-conditioned, and an eigenvalue of it a rounding error
+/// below zero puts a NaN into every variable from that horizon on. It is the
+/// same matrix either way, so the draws differ only by rounding.
+inline arma::mat covariance_root(const arma::mat &psi, const arma::vec &variances)
+{
+    const arma::mat factor =
+        arma::solve(arma::trimatl(psi), arma::mat(arma::diagmat(arma::sqrt(variances))));
+    if (!factor.is_finite())
+    {
+        // A variance past the largest double: the error is infinite however it
+        // is drawn, and saying so beats failing every other draw's forecast.
+        return factor;
+    }
+    arma::mat left;
+    arma::mat right;
+    arma::vec singular;
+    if (!arma::svd(left, singular, right, factor))
+    {
+        throw std::runtime_error("a drawn covariance block or volatility has no symmetric square "
+                                 "root; the chain has degenerated");
+    }
+    return left * arma::diagmat(singular) * arma::trans(left);
 }
 
 } // namespace bayests::core

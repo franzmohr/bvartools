@@ -9,6 +9,9 @@
 #' @param criterion the statistic that should be plotted. Available choices are
 #' \code{"FE"} for forecast errors, \code{"AFE"} (default) for absolute forecast
 #' errors and \code{"RSFE"} for root squared forecast errors.
+#' The mean of \code{"RSFE"} is the root mean squared error; its median and band
+#' are those of \code{"AFE"} up to the interpolation between neighbouring draws,
+#' because the square root does not reorder them.
 #' @param ci a numeric between 0 and 1 specifying the probability of the credible
 #' band. Defaults to 0.95.
 #' @param col a vector of colours, which is recycled over the models in \code{x}.
@@ -76,6 +79,9 @@
 #' plot_forecast_errors_by_period(model)
 #'
 #' @family model comparison
+#' @return \code{x}, invisibly. The function is called for its side effect, the
+#' plot.
+#'
 #' @export
 plot_forecast_errors_by_period <- function(x, criterion = "AFE", ci = .95,
                                            col = "black", pch = 20, cex = 1, lwd = 1,
@@ -94,6 +100,9 @@ plot_forecast_errors_by_period <- function(x, criterion = "AFE", ci = .95,
   if (!any(c("bvarmodel", "bvecmodel", "expandingwindow", "modellist") %in% class(x))) {
     stop("Argument 'x' must be an object of class 'bvarmodel', 'bvecmodel', 'expandingwindow' or 'modellist'.")
   }
+
+  # Returned as given, whatever it is wrapped into below
+  object <- x
 
   # Objects, which are not a list of models, contain a single model
   if (!"modellist" %in% class(x)) {
@@ -354,4 +363,6 @@ plot_forecast_errors_by_period <- function(x, criterion = "AFE", ci = .95,
                     cex = graphics::par("cex.main") / graphics::par("cex"),
                     font = graphics::par("font.main"))
   }
+
+  invisible(object)
 }

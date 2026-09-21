@@ -6,6 +6,11 @@
 #' @param digits the number of significant digits to use when printing.
 #' @param ... further arguments passed to or from other methods.
 #'
+#' @return A data frame of the model's specification, as printed, invisibly. It
+#' is the result of \code{\link{get_model_specifications}} with the columns
+#' renamed for display and, where the model has no unmodelled variables, the
+#' columns \code{m} and \code{s} dropped.
+#'
 #' @export
 print.bvarmodel <- function(x, digits = max(3L, getOption("digits") - 3L), ...){
   

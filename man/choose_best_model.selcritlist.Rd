@@ -19,7 +19,8 @@ discounted models, \code{"LML"}.}
 }
 \value{
 An integer giving the position of the best model in the list provided
-in argument \code{object}.
+in argument \code{object}. Where several models attain the best value
+exactly, the positions of all of them, in increasing order.
 }
 \description{
 Chooses the best model according the selection criteria in an object of class

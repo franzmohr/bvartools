@@ -44,6 +44,9 @@
 #' # Plot forecasts
 #' plot(pred)
 #' 
+#' @return \code{x}, invisibly. The function is called for its side effect, the
+#' plot.
+#'
 #' @export
 plot.bvarprd <- function(x, n_pre = NULL, ci = 0.95, ...) {
   
@@ -58,4 +61,6 @@ plot.bvarprd <- function(x, n_pre = NULL, ci = 0.95, ...) {
 
     do.call(stats::plot.ts, c(list(series[[i]]), args, dots))
   }
+
+  invisible(x)
 }

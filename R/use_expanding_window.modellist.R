@@ -9,7 +9,7 @@
 #' expanding window approach.
 #' @param ... arguments passed forward to method.
 #' 
-#' @returns A list of class 'modellist', which consists of objects of class
+#' @return A list of class 'modellist', which consists of objects of class
 #' 'expandingwindow'.
 #' 
 #' @examples

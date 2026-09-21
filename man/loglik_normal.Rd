@@ -11,6 +11,10 @@ loglik_normal(u, sigma)
 
 \item{sigma}{a \eqn{K \times K} or \eqn{KT \times K} variance-covariance matrix.}
 }
+\value{
+A numeric vector of length \eqn{T}, the log-likelihood of each period.
+Sum it for the log-likelihood of the sample.
+}
 \description{
 Calculates the log-likelihood of a multivariate normal distribution.
 }

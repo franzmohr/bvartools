@@ -53,7 +53,9 @@ A named list containing the following elements:
 \item{alpha}{a draw of the \eqn{K \times r} loading matrix.}
 \item{beta}{a draw of the \eqn{M \times r} cointegration matrix.}
 \item{Pi}{a draw of the \eqn{K \times M} cointegration matrix \eqn{\Pi = \alpha \beta^{\prime}}.}
-\item{Gamma}{a draw of the \eqn{K \times N} coefficient matrix for non-cointegration parameters.}
+\item{Gamma}{a draw of the coefficients of the non-cointegration regressors
+in \code{x}, as a column vector with one element per column of \code{x}.
+Empty if \code{x} is \code{NULL}.}
 }
 \description{
 Produces a draw of coefficients for cointegration models in SUR form with a prior on

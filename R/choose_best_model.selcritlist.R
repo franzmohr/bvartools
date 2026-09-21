@@ -36,8 +36,9 @@
 #' not comparable with \code{"LL"}, which conditions on the parameters where
 #' this integrates them out.
 #'
-#' @returns An integer giving the position of the best model in the list provided
-#' in argument \code{object}.
+#' @return An integer giving the position of the best model in the list provided
+#' in argument \code{object}. Where several models attain the best value
+#' exactly, the positions of all of them, in increasing order.
 #' 
 #' @examples
 #' # Load data

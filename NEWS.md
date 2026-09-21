@@ -1,5 +1,27 @@
 # bvartools 1.0.0
 
+* **`transform_variables()` returns a vector series for a vector series**, where
+  it returned a one-column matrix, and a single series takes a named or an
+  unnamed code alike: a named code on a series without a column name used to
+  stop with "subscript out of bounds". Its documentation said code 7 loses one
+  leading observation; it loses two, being the difference of a growth rate, and
+  always did.
+
+* **Every plot method returns its input invisibly**, which `plot.bvarfevd()`,
+  `plot.bvarirf()`, `plot.bvarprd()`, `plot.modellist()` and
+  `plot_forecast_errors_by_period()` did not: they returned whatever their last
+  drawing call did. **`write_to_hdf5()` on a 'modellist' or an
+  'expandingwindow' returns the paths it wrote**, invisibly, as it already did
+  for a single model.
+
+* Every exported function documents its value. The help of `post_coint_kls()`
+  and `post_coint_kls_sur()` said `Gamma` is a K x N matrix; it is a column
+  vector, `vec(Gamma)` for the first, which is how `bvec()`'s example and the
+  VEC vignette have always used it. `selection_criteria()` says what the median
+  and the band of `RSFE` are -- the ones of `AFE` up to the interpolation
+  between draws -- and the agent skill in `inst/agents` covers the discounted
+  models and `LML`.
+
 * `Depends` requires `R (>= 4.0.0)` rather than `(>= 3.5)`. `src/Makevars` has
   set `CXX_STD = CXX17` since the C++ core arrived, and 3.5 predates R's own
   requirement of a C++11 compiler, let alone a toolchain that honours a request

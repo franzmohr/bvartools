@@ -31,6 +31,8 @@
 #' # Thinning
 #' model <- thin(model, 2)
 #' 
+#' @return An object of class 'bvecmodel' with every block of draws thinned.
+#'
 #' @export
 #' @method thin bvecmodel
 thin.bvecmodel <- function(x, thin = 10, ...) {

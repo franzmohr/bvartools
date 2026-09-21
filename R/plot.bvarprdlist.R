@@ -13,6 +13,9 @@
 #' @details The forecasts of the models in \code{x} are plotted on a grid, where
 #' each column corresponds to a model and each row to an endogenous variable.
 #'
+#' @return \code{x}, invisibly. The function is called for its side effect, the
+#' plot of the forecasts.
+#'
 #' @export
 #' @method plot bvarprdlist
 plot.bvarprdlist <- function(x, n_pre = NULL, ci = 0.95, ...) {

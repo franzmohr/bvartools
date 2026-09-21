@@ -13,6 +13,9 @@
 
 \item{...}{further arguments passed to or from other methods.}
 }
+\value{
+An object of class 'bvecmodel' with every block of draws thinned.
+}
 \description{
 Thins the MCMC posterior draws in an object of class 'bvecmodel'.
 }

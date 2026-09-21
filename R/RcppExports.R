@@ -580,7 +580,10 @@ kalman_durbin_koopman_2002 <- function(y, z, sigma_u, sigma_v, B, a_init, P_init
 #' @details The log-likelihood is calculated for each vector in period \eqn{t} as
 #' \deqn{-\frac{K}{2} \ln 2\pi - \frac{1}{2} \ln |\Sigma_t| -\frac{1}{2} u_t^\prime \Sigma_t^{-1} u_t},
 #' where \eqn{u_t = y_t - \mu_t}.
-#' 
+#'
+#' @return A numeric vector of length \eqn{T}, the log-likelihood of each period.
+#' Sum it for the log-likelihood of the sample.
+#'
 #' @examples
 #' 
 #' # Load data
@@ -749,7 +752,10 @@ post_bvs <- function(y, z, a, k, m, lambda, sigma_i, prob_prior, include = NULL)
 #' \item{alpha}{a draw of the \eqn{K \times r} loading matrix.}
 #' \item{beta}{a draw of the \eqn{M \times r} cointegration matrix.}
 #' \item{Pi}{a draw of the \eqn{K \times M} cointegration matrix \eqn{\Pi = \alpha \beta^{\prime}}.}
-#' \item{Gamma}{a draw of the \eqn{K \times N} coefficient matrix for non-cointegration parameters.}
+#' \item{Gamma}{a draw of the coefficients of the non-cointegration regressors
+#' in \code{x}, as the \eqn{KN \times 1} vector \eqn{vec(\Gamma)} of the
+#' \eqn{K \times N} matrix; \code{matrix(Gamma, K)} restores the matrix. Empty
+#' if \code{x} is \code{NULL}.}
 #' 
 #' @examples
 #'  
@@ -864,7 +870,9 @@ post_coint_kls <- function(y, beta, w, sigma_i, v_i, p_tau_i, g_i, x = NULL, gam
 #' \item{alpha}{a draw of the \eqn{K \times r} loading matrix.}
 #' \item{beta}{a draw of the \eqn{M \times r} cointegration matrix.}
 #' \item{Pi}{a draw of the \eqn{K \times M} cointegration matrix \eqn{\Pi = \alpha \beta^{\prime}}.}
-#' \item{Gamma}{a draw of the \eqn{K \times N} coefficient matrix for non-cointegration parameters.}
+#' \item{Gamma}{a draw of the coefficients of the non-cointegration regressors
+#' in \code{x}, as a column vector with one element per column of \code{x}.
+#' Empty if \code{x} is \code{NULL}.}
 #' 
 #' @examples
 #' 

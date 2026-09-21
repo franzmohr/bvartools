@@ -30,7 +30,15 @@
 #' A partial read cannot describe the chain it came from, so the blocks it
 #' returns are labelled as a chain of their own, from one to the number of draws
 #' read. A full read keeps the labels the file carries.
-#' 
+#'
+#' @return An object of class 'bvarmodel' or 'bvecmodel', depending on the
+#' algorithm recorded in the file, with the elements that file holds:
+#' \code{model}, \code{data}, \code{priors}, \code{initial} and, where the
+#' model has been estimated, \code{posterior}. The draws of a sampler are
+#' \code{\link[coda]{mcmc}} objects; the per-period posterior of a discounted
+#' model is a plain matrix, since its rows are periods rather than draws.
+#' \code{\link{bvartools_model}} describes the elements one by one.
+#'
 #' @export
 read_model_from_hdf5 <- function(filename, group = "", draws = NULL) {
   

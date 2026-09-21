@@ -39,6 +39,9 @@
 #' # Plot
 #' plot(vd)
 #' 
+#' @return \code{x}, invisibly. The function is called for its side effect, the
+#' plot.
+#'
 #' @export
 plot.bvarfevd <- function(x, max_groups = NULL, ...) {
   # Only save and restore 'mar'. Restoring all parameters would also reset
@@ -89,4 +92,6 @@ plot.bvarfevd <- function(x, max_groups = NULL, ...) {
   graphics::legend(x = usr[2] + .02 * (usr[2] - usr[1]), y = mean(usr[3:4]),
                    xjust = 0, yjust = .5, xpd = TRUE, cex = legend_cex,
                    legend = legend_names, fill = grDevices::gray.colors(ncol(shares)))
+
+  invisible(x)
 }

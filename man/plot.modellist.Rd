@@ -11,6 +11,10 @@
 
 \item{...}{arguments passed forward to other methods.}
 }
+\value{
+\code{x}, invisibly. The function is called for its side effect, one
+plot per model in the list, drawn by the plot method of that model.
+}
 \description{
 A plot function for objects of class 'modellist'.
 }

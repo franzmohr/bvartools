@@ -9,6 +9,11 @@ read_expanding_window_model_from_folder(folder)
 \arguments{
 \item{folder}{Path to a folder with HDF5 files containing model data.}
 }
+\value{
+A list of class 'expandingwindow' with one model per file in
+\code{folder}, each read by \code{\link{read_model_from_hdf5}}, in the order
+\code{\link{list.files}} returns the files.
+}
 \description{
 Imports model information and posterior draws from an HDF5 file.
 }

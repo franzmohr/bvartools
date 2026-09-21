@@ -119,7 +119,7 @@
 #'
 #' Lütkepohl, H. (2006). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
 #'
-#' @returns A list with the elements
+#' @return A list with the elements
 #' \describe{
 #'   \item{\code{data}}{a \eqn{T \times K} time-series object of the artificial
 #'   series in levels, named \code{var1}, \code{var2} etc.}

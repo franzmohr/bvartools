@@ -434,6 +434,7 @@ struct VecTvpStochvolDraws
     arma::mat a;
     arma::mat a_sigma;
     arma::mat a_lambda;
+    NoncentredStateDraws a_noncentred;
 
     /// (n_beta * tt) x iterations. Empty when the model has no cointegration
     /// relation. `a` carries only the loadings on it, so this is the half
@@ -448,6 +449,7 @@ struct VecTvpStochvolDraws
     arma::mat psi;
     arma::mat psi_sigma;
     arma::mat psi_lambda;
+    NoncentredStateDraws psi_noncentred;
 
     /// (k * tt) x iterations: the diagonal of the precision, period by period.
     arma::mat u_omega_inv;
@@ -459,6 +461,7 @@ struct VecTvpStochvolDraws
     /// k x iterations: the variance of the log-volatility innovations, as in
     /// VecNormalStochvolDraws.
     arma::mat h_sigma;
+    NoncentredStateDraws h_noncentred;
 
     arma::uword iterations() const { return u_sigma_inv.n_cols; }
     bool has_a() const { return a.n_elem > 0; }

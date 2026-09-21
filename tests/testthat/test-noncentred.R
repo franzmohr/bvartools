@@ -207,3 +207,60 @@ test_that("time_variation_test() reports only the blocks drawn under omega_v", {
   expect_error(time_variation_test(centred), "non-centred prior")
   expect_error(time_variation_test(list()), "bvarmodel")
 })
+
+test_that("a TVP VEC with stochastic volatility takes omega_v and reports its test", {
+  model <- create_bvecmodel(at_data(), p = 2, r = 1, const = "unrestricted", tvp = TRUE,
+                            error = "sv+covar", iterations = fx_iterations,
+                            burnin = fx_burnin)
+  # The ML prior may be floored by rho, which is not what this test is about.
+  model <- suppressWarnings(
+    add_priors(model, coef = list(v_i = 1, v_i_det = 0.1, omega_v = 0.001),
+               coint = list(rho = 0.99, rho_min = 0.9, rho_max = 0.999,
+                            p_tau_i = "ml", weight = 0.1),
+               sigma = nc_sigma_prior))
+  k <- model[["model"]][["k"]]
+  n_a <- nrow(model[["priors"]][["a"]][["mu"]])
+  n_psi <- k * (k - 1) / 2
+  expect_equal(as.numeric(model[["priors"]][["a"]][["omega_v"]]), rep(0.001, n_a))
+  expect_equal(as.numeric(model[["priors"]][["psi"]][["omega_v"]]), rep(0.001, n_psi))
+  expect_equal(as.numeric(model[["priors"]][["u_sigma"]][["omega_v"]]), rep(0.1, k))
+  expect_null(model[["priors"]][["a"]][["rate"]])
+
+  model <- add_initial_values(model)
+  model <- add_posterior_coefficients(add_seed(model, 217))
+  for (block in c("a", "psi", "u_sigma_inv")) {
+    draws <- model[["posterior"]][[block]]
+    expect_s3_class(draws[["omega_log_zero"]], "mcmc")
+    expect_equal(as.numeric(draws[["sigma"]]), as.numeric(draws[["omega"]])^2)
+  }
+  # The cointegration space keeps its state equation and has nothing to test.
+  expect_null(model[["posterior"]][["beta"]][["omega"]])
+
+  res <- time_variation_test(model)
+  expect_equal(unique(res[["block"]]), c("coefficients", "covariances", "volatilities"))
+  expect_equal(nrow(res), n_a + n_psi + k + 3)
+  coefs <- res[res[["block"]] == "coefficients" & res[["term"]] != "(joint)", ]
+  # The loadings lead, one per equation, labelled by the term they load on.
+  expect_equal(coefs[["term"]][seq_len(k)], rep("ect1", k))
+  expect_equal(coefs[["equation"]][seq_len(k)], model[["model"]][["endogen"]])
+  expect_true(all(is.finite(res[["log_bf"]])))
+
+  file <- tempfile(fileext = ".h5")
+  on.exit(unlink(file))
+  write_to_hdf5(model, file)
+  back <- read_model_from_hdf5(file)
+  expect_equal(as.numeric(back[["priors"]][["u_sigma"]][["omega_v"]]), rep(0.1, k))
+  expect_equal(as.matrix(back[["posterior"]][["a"]][["omega_log_zero_joint"]]),
+               as.matrix(model[["posterior"]][["a"]][["omega_log_zero_joint"]]),
+               ignore_attr = TRUE)
+})
+
+test_that("a VEC refuses omega_v where no sampler reads it", {
+  gamma <- create_bvecmodel(at_data(), p = 2, r = 1, const = "unrestricted", tvp = TRUE,
+                            error = "gamma", iterations = 10, burnin = 10)
+  expect_error(suppressWarnings(
+    add_priors(gamma, coef = list(v_i = 1, omega_v = 0.001),
+               coint = list(rho = 0.99, p_tau_i = "ml", weight = 0.1),
+               sigma = list(shape = 3, rate = 0.01))),
+    "only available for VEC")
+})

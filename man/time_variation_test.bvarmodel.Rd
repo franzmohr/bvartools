@@ -2,16 +2,20 @@
 % Please edit documentation in R/time_variation_test.R
 \name{time_variation_test.bvarmodel}
 \alias{time_variation_test.bvarmodel}
-\title{Test for Time Variation in a VAR Model}
+\alias{time_variation_test.bvecmodel}
+\title{Test for Time Variation in a VAR or VEC Model}
 \usage{
 \method{time_variation_test}{bvarmodel}(object, joint = TRUE, batches = 20, ...)
+
+\method{time_variation_test}{bvecmodel}(object, joint = TRUE, batches = 20, ...)
 }
 \arguments{
 \item{object}{an object of class \code{"bvarmodel"} with \code{tvp = TRUE} and
-\code{error = "sv"}, \code{"sv+covar"}, \code{"gamma"} or \code{"gamma+covar"},
-whose priors were set with \code{coef$omega_v} or, under stochastic volatility,
-\code{sigma$omega_v} in \code{\link{add_priors}} and whose posterior was drawn by
-\code{\link{add_posterior_coefficients}}.}
+\code{error = "sv"}, \code{"sv+covar"}, \code{"gamma"} or \code{"gamma+covar"}, or
+of class \code{"bvecmodel"} with \code{tvp = TRUE} and \code{error = "sv"} or
+\code{"sv+covar"}, whose priors were set with \code{coef$omega_v} or, under
+stochastic volatility, \code{sigma$omega_v} in \code{\link{add_priors}} and whose
+posterior was drawn by \code{\link{add_posterior_coefficients}}.}
 
 \item{joint}{logical. Should the Bayes factor for the time variation of every
 state of a block at once be reported as well? Default is \code{TRUE}.}
@@ -39,8 +43,8 @@ if \code{joint = TRUE}, one per block, and the columns
 \description{
 Computes the Bayes factors of Chan (2018) for time variation in each
 coefficient, each covariance coefficient and, under stochastic volatility,
-each log-volatility of a VAR model with time varying parameters, from the
-draws of a single estimation of that model.
+each log-volatility of a VAR or VEC model with time varying parameters, from
+the draws of a single estimation of that model.
 }
 \details{
 Under the prior \code{omega_v} a random walk
@@ -82,6 +86,12 @@ read as more than its sign.
 
 Each block chooses its prior separately in \code{\link{add_priors}}, and only
 the blocks estimated under \code{omega_v} are reported.
+
+For a VEC model the coefficients are the loadings, labelled by the error
+correction term they load on (\code{ect1}, \code{ect2}, ...), followed by the
+other coefficients. The cointegration space itself follows a state equation
+with a fixed variance, which has no prior to test against and is not
+reported.
 }
 \examples{
 # Load data

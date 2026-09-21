@@ -20,5 +20,6 @@ Generic function used to compute Bayes factors for time variation in the
 coefficients and volatilities of a model with time varying parameters.
 }
 \seealso{
-Methods: \code{\link{time_variation_test.bvarmodel}}.
+Methods: \code{\link{time_variation_test.bvarmodel}},
+\code{\link{time_variation_test.bvecmodel}}.
 }

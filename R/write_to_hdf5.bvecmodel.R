@@ -219,7 +219,7 @@ write_to_hdf5.bvecmodel <- function(object, filename, group = "", ...) {
                              "gamma" = ,
                              "gamma+covar" = c("type", "shape", "rate"),
                              "sv" = ,
-                             "sv+covar" = c("type", "mu", "v_inv", "shape", "rate", "sigma", "offset"),
+                             "sv+covar" = c("type", "mu", "v_inv", "shape", "rate", "omega_v", "sigma", "offset"),
                              stop("Error specification not implemented"))
     # Created only once there is something to put in it, for the same reason the
     # priors group is. Single-bracket indexing is what makes the subset safe when

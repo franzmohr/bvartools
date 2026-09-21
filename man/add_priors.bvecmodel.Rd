@@ -98,6 +98,14 @@ Argument \code{coef} can contain the following elements:
   \code{rate} keeps their drift from absorbing the residuals while the other coefficients vary.
   It does not reach the steps of the cointegration vectors, which can absorb the residuals as
   well; see section 'Prior on the cointegration space'.}
+  \item{\code{omega_v}}{a positive numeric, in place of \code{shape}, \code{rate},
+  \code{rate_det} and \code{rate_alpha}: the variance of a normal prior on the signed standard
+  deviation of the state innovations of the coefficients, loadings included, and of the
+  covariance coefficients -- the non-centred parameterisation that lets the posterior carry
+  the test for time variation of \code{\link{time_variation_test}}; see
+  \code{\link{add_priors.bvarmodel}} for the model and the draws it adds. The cointegration
+  space keeps its state equation. Only for models with time varying parameters and
+  stochastic volatility, \code{tvp = TRUE} with \code{error = "sv"} or \code{"sv+covar"}.}
 }
 
 Argument \code{coint} specifies the prior on the cointegration space. Its
@@ -110,7 +118,8 @@ Argument \code{sigma} must contain the elements that belong to the
   \item \code{"wishart"}: \code{df} and \code{scale}. Not available for structural models.
   \item \code{"gamma"} and \code{"gamma+covar"}: \code{shape} and \code{rate}.
   \item \code{"sv"} and \code{"sv+covar"}: \code{mu}, \code{v_i}, \code{shape}, \code{rate},
-  \code{state_variance} and \code{offset}.
+  \code{state_variance} and \code{offset}; with \code{tvp = TRUE}, \code{omega_v} may take the
+  place of \code{shape} and \code{rate}, as \code{coef$omega_v} does for the coefficients.
 }
 The elements are
 \describe{

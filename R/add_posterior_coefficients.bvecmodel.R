@@ -146,6 +146,13 @@ add_posterior_coefficients.bvecmodel <- function(object, posterior_function = NU
       if (!is.null(object[["posterior"]][[i]][["sigma"]])) {
         object[["posterior"]][[i]][["sigma"]] <- .mcmc_draws(object[["model"]], object[["posterior"]][[i]][["sigma"]])
       }
+      # What a block drawn under the non-centred prior 'omega_v' adds beside
+      # 'sigma'. Chains like the others, and the HDF5 writer reads their mcpar.
+      for (j in c("omega", "omega_log_zero", "omega_log_zero_joint")) {
+        if (!is.null(object[["posterior"]][[i]][[j]])) {
+          object[["posterior"]][[i]][[j]] <- .mcmc_draws(object[["model"]], object[["posterior"]][[i]][[j]])
+        }
+      }
     }
 
     # The C++ side names every block a model can have and leaves the ones this

@@ -25,7 +25,7 @@
   raised where it arose: `Rf_warning()` may longjmp out of a running sampler.
   *Draws are unchanged.*
 
-* The vendored BayesTS core is refreshed to upstream `0e4847e`, which brings
+* The vendored BayesTS core is refreshed to upstream `0e75842`, which brings
   the two items above and the one below. *Draws are unchanged* for every model
   that does not use the new prior: upstream's fingerprint recording is
   identical for every file without it.
@@ -64,6 +64,15 @@
   The error precision of these models does not move, so `sigma$omega_v`
   remains for stochastic volatility, and is now refused on every other error
   term rather than accepted as a name and left unread.
+
+* **And TVP-VEC models with stochastic volatility.** `add_priors()` on a
+  `bvecmodel` with `tvp = TRUE` and `error = "sv"` or `"sv+covar"` takes
+  `coef$omega_v` (the loadings, the other coefficients and the covariance
+  coefficients) and `sigma$omega_v` (the log-volatilities) in place of
+  `shape`/`rate`, and `time_variation_test()` has a `bvecmodel` method, which
+  labels the loadings by the error correction term they load on. The
+  cointegration space keeps its state equation, whose variance is fixed to pin
+  down the scale of beta, so it has no prior to test against.
 
 * **`transform_variables()` returns a vector series for a vector series**, where
   it returned a one-column matrix, and a single series takes a named or an

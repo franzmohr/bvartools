@@ -56,6 +56,9 @@
 #' \code{TRUE}. See 'Details'.
 #' @param presample numeric specifying the number of observations, which are
 #' generated before the first returned observation and then discarded. Defaults to 100.
+#' @param level numeric vector with one or \code{k} elements, which are added to
+#' the generated series to shift their levels. Defaults to 0. A non-zero level
+#' requires a constant term if \code{r > 0}. See 'Details'.
 #'
 #' @details The function produces artificial observations for a vector
 #' error correction (VEC) model:
@@ -108,6 +111,18 @@
 #' \code{tvp = TRUE} this holds in every period: an innovation, which violates it, is
 #' drawn again, and if no admissible innovation is found in 100 attempts, the
 #' coefficients keep the values of the previous period.
+#'
+#' The series start at zero before the presample. Argument \code{level} shifts them
+#' by a vector \eqn{m}, which gives series with high levels that follow a stochastic
+#' trend. The dynamics of the differences are unchanged, but the error correction
+#' term becomes \eqn{\alpha_t \beta_t^{\prime} (y_{t-1} - m)}, so that the constant
+#' term absorbs \eqn{-\beta_t^{\prime} m}: the returned row of a restricted constant
+#' in \eqn{\beta_t} is \eqn{\beta^{c}_t - \beta_t^{\prime} m} and the returned
+#' unrestricted constant is \eqn{c_t - \alpha_t \beta_t^{\prime} m}, where
+#' \eqn{\beta^{c}_t} and \eqn{c_t} are drawn from \code{range_const} and
+#' \eqn{\beta_t} here denotes the rows of the endogenous variables. Without a
+#' constant this term would not be part of the model, so that a non-zero level with
+#' \code{r > 0} requires \code{const = "restricted"} or \code{"unrestricted"}.
 #'
 #' @references
 #' Johansen, S. (1995). \emph{Likelihood-based inference in cointegrated vector
@@ -162,6 +177,11 @@
 #' # Path of the cointegration coefficient of the second variable
 #' plot(dt[["params"]][["beta"]][2, 1, ], type = "l")
 #'
+#' # Cointegrated series with high levels around 100, 50 and 20
+#' dt <- generate_artificial_vec(nobs = 200, k = 3, p = 2, r = 1, const = "restricted",
+#'                               level = c(100, 50, 20))
+#' dt[["params"]][["beta"]]
+#'
 #' # Structural model with an unrestricted constant
 #' dt <- generate_artificial_vec(nobs = 200, k = 3, p = 2, r = 1, const = "unrestricted",
 #'                               structural = TRUE)
@@ -186,7 +206,8 @@ generate_artificial_vec <- function(nobs = 100, k = 3, p = 2, r = 1,
                                     range_variance_state = c(0.0001, 0.0001),
                                     range_variance_sv = c(0.01, 0.01),
                                     stable = TRUE,
-                                    presample = 100) {
+                                    presample = 100,
+                                    level = 0) {
 
   # Basic checks
   .artificial_count(nobs, "nobs", 1)
@@ -215,6 +236,10 @@ generate_artificial_vec <- function(nobs = 100, k = 3, p = 2, r = 1,
   range_psi <- .artificial_range(range_psi, "range_psi")
   range_variance_state <- .artificial_range(range_variance_state, "range_variance_state", non_negative = TRUE)
   range_variance_sv <- .artificial_range(range_variance_sv, "range_variance_sv", non_negative = TRUE)
+  if (!is.numeric(level) || !length(level) %in% c(1, k) || any(!is.finite(level))) {
+    stop("Argument 'level' must be a numeric vector with 1 or 'k' finite elements.")
+  }
+  level <- rep_len(level, k)
   if (structural & any(range_psi != 0)) {
     stop("Argument 'range_psi' must be c(0, 0) for structural models, whose errors are uncorrelated.")
   }
@@ -227,6 +252,9 @@ generate_artificial_vec <- function(nobs = 100, k = 3, p = 2, r = 1,
   names_det_ur <- c(if (const_ur) "const", if (trend_ur) "trend")
   if (r == 0 & length(names_det_r) > 0) {
     stop("Restricted deterministic terms require a cointegration rank 'r' of at least 1.")
+  }
+  if (r > 0 & is.null(const) & any(level != 0)) {
+    stop("A non-zero 'level' requires a constant term, if the cointegration rank 'r' is at least 1.")
   }
   names_series <- paste0("var", 1:k)
 
@@ -358,7 +386,27 @@ generate_artificial_vec <- function(nobs = 100, k = 3, p = 2, r = 1,
     y[, p + t] <- y[, p + t - 1] + dy
   }
 
-  y <- y[, p + presample + 1:nobs, drop = FALSE]
+  y <- y[, p + presample + 1:nobs, drop = FALSE] + level
+
+  # The constant absorbs the shift of the error correction term by the level
+  shift_const <- function(x) {
+    shift <- crossprod(x[["beta"]][1:k, , drop = FALSE], level)
+    if (const_r) {
+      x[["beta"]]["const", ] <- x[["beta"]]["const", ] - shift
+    }
+    if (const_ur) {
+      x[["c"]][, "const"] <- x[["c"]][, "const"] - x[["alpha"]] %*% shift
+    }
+    return(x)
+  }
+  if (r > 0 & any(level != 0)) {
+    shifted <- shift_const(list(alpha = alpha, beta = beta, c = c_det))
+    beta <- shifted[["beta"]]
+    c_det <- shifted[["c"]]
+    if (tvp | sv) {
+      hist <- lapply(hist, shift_const)
+    }
+  }
 
   # Collect true parameters
   errors <- .artificial_error_params(err, hist)

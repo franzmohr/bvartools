@@ -26,7 +26,8 @@ generate_artificial_vec(
   range_variance_state = c(1e-04, 1e-04),
   range_variance_sv = c(0.01, 0.01),
   stable = TRUE,
-  presample = 100
+  presample = 100,
+  level = 0
 )
 }
 \arguments{
@@ -103,6 +104,10 @@ that is integrated of order one with cointegration rank \code{r}. Defaults to
 
 \item{presample}{numeric specifying the number of observations, which are
 generated before the first returned observation and then discarded. Defaults to 100.}
+
+\item{level}{numeric vector with one or \code{k} elements, which are added to
+the generated series to shift their levels. Defaults to 0. A non-zero level
+requires a constant term if \code{r > 0}. See 'Details'.}
 }
 \value{
 A list with the elements
@@ -189,6 +194,18 @@ integrated but not cointegrated, with \code{r = k} they are stationary. For
 \code{tvp = TRUE} this holds in every period: an innovation, which violates it, is
 drawn again, and if no admissible innovation is found in 100 attempts, the
 coefficients keep the values of the previous period.
+
+The series start at zero before the presample. Argument \code{level} shifts them
+by a vector \eqn{m}, which gives series with high levels that follow a stochastic
+trend. The dynamics of the differences are unchanged, but the error correction
+term becomes \eqn{\alpha_t \beta_t^{\prime} (y_{t-1} - m)}, so that the constant
+term absorbs \eqn{-\beta_t^{\prime} m}: the returned row of a restricted constant
+in \eqn{\beta_t} is \eqn{\beta^{c}_t - \beta_t^{\prime} m} and the returned
+unrestricted constant is \eqn{c_t - \alpha_t \beta_t^{\prime} m}, where
+\eqn{\beta^{c}_t} and \eqn{c_t} are drawn from \code{range_const} and
+\eqn{\beta_t} here denotes the rows of the endogenous variables. Without a
+constant this term would not be part of the model, so that a non-zero level with
+\code{r > 0} requires \code{const = "restricted"} or \code{"unrestricted"}.
 }
 \examples{
 
@@ -205,6 +222,11 @@ dt <- generate_artificial_vec(nobs = 200, k = 2, p = 1, r = 1, const = "restrict
 
 # Path of the cointegration coefficient of the second variable
 plot(dt[["params"]][["beta"]][2, 1, ], type = "l")
+
+# Cointegrated series with high levels around 100, 50 and 20
+dt <- generate_artificial_vec(nobs = 200, k = 3, p = 2, r = 1, const = "restricted",
+                              level = c(100, 50, 20))
+dt[["params"]][["beta"]]
 
 # Structural model with an unrestricted constant
 dt <- generate_artificial_vec(nobs = 200, k = 3, p = 2, r = 1, const = "unrestricted",

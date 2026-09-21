@@ -102,7 +102,7 @@ or \code{r}, a list of class 'modellist' with one such object per specification.
   \eqn{T \times K} time-series object of the differenced endogenous variables,
   \code{w}, the lagged levels that enter the cointegration term, \code{x}, the
   remaining regressors, and \code{z}, the corresponding \eqn{TK} row matrix of
-  regressors in SUR form.}
+  regressors in SUR form, which is absent for the discounted model.}
   \item{\code{model}}{a list of the specification with the same elements as that of
   a 'bvarmodel', where \code{type} is \code{"VEC"} and \code{p} is the lag order of
   the VAR in levels, and additionally \code{rank}, the cointegration rank,

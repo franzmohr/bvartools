@@ -142,7 +142,7 @@
 #'   \eqn{T \times K} time-series object of the differenced endogenous variables,
 #'   \code{w}, the lagged levels that enter the cointegration term, \code{x}, the
 #'   remaining regressors, and \code{z}, the corresponding \eqn{TK} row matrix of
-#'   regressors in SUR form.}
+#'   regressors in SUR form, which is absent for the discounted model.}
 #'   \item{\code{model}}{a list of the specification with the same elements as that of
 #'   a 'bvarmodel', where \code{type} is \code{"VEC"} and \code{p} is the lag order of
 #'   the VAR in levels, and additionally \code{rank}, the cointegration rank,
@@ -662,6 +662,17 @@ create_bvecmodel <- function(data, p, exogen = NULL, s = NULL, r = NULL,
           z <- cbind(z, y_A0)
         }
         dimnames(z) <- NULL
+
+        # Not kept for a discounted model. Its filter runs against one
+        # coefficient matrix per period and reads the compact regressors, so
+        # BayesTS refuses the SUR matrix and write_to_hdf5() does not write it.
+        # It is also k times the rows and k times the columns of what it
+        # kroneckers up -- nine tenths of a model's size -- which for a grid of
+        # hundreds of models is the difference between holding it in memory
+        # and not.
+        if (use_discount) {
+          z <- NULL
+        }
         
         result_i <- list("model" = model_i,
                          "data" = list("original" = .drop_null(list("endogen" = data,

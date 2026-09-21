@@ -438,3 +438,21 @@ test_that("the two exported helpers say what a discounted model is", {
   expect_error(check_discount_specification(k = 3, error = "sv"), "wishart")
   expect_error(check_discount_specification(k = 3, delta_sigma = 0.5), "too small")
 })
+
+
+test_that("a discounted model carries no SUR matrix", {
+
+  # BayesTS reads the compact regressors and refuses the SUR matrix, and the
+  # SUR matrix is most of a model's size.
+  expect_null(discount_vec(r = 1)[["data"]][["train"]][["z"]])
+  expect_null(discount_var()[["data"]][["train"]][["z"]])
+  expect_false(is.null(discount_vec(r = 1)[["data"]][["train"]][["x"]]))
+
+  # The rest of the workflow does not need it.
+  model <- fitted_discount_vec(r = 1)
+  expect_equal(length(model[["initial"]][["beta"]]),
+               ncol(model[["data"]][["train"]][["w"]]))
+  path <- tempfile(fileext = ".h5")
+  on.exit(unlink(path), add = TRUE)
+  expect_silent(write_to_hdf5(model, filename = path))
+})

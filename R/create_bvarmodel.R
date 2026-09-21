@@ -149,7 +149,7 @@
 #'   \code{train}, which holds the estimation sample: \code{y}, a \eqn{T \times K}
 #'   time-series object of the endogenous variables, \code{x}, a time-series object of
 #'   the regressors, and \code{z}, the corresponding \eqn{TK} row matrix of regressors
-#'   in SUR form.}
+#'   in SUR form, which is absent for the discounted model.}
 #'   \item{\code{model}}{a list of the specification, including \code{type}
 #'   (\code{"VAR"}), \code{algorithm}, the name of the posterior simulation algorithm,
 #'   \code{k}, \code{p}, \code{m}, \code{s} and \code{n}, the numbers of endogenous
@@ -582,6 +582,12 @@ create_bvarmodel <- function(data, p = 2,
         z <- cbind(z, y_A0)
       }
       dimnames(z) <- NULL
+
+      # Not kept for a discounted model, which reads the compact regressors;
+      # see create_bvecmodel().
+      if (use_discount) {
+        z <- NULL
+      }
       
       # Create individual model
       result_i <- list("model" = model_i,

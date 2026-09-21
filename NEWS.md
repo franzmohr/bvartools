@@ -1,5 +1,18 @@
 # bvartools 1.0.0
 
+* **Forecasts from an error covariance that does not move cannot turn NaN
+  either.** The forecasts of the constant-coefficient VAR and VEC models, and
+  of the time varying ones under `forecast_states = "hold"`, drew their errors
+  through a square root of the inverse of the error precision that was not
+  guarded against a rounding error: a badly conditioned draw of the precision
+  could give it a negative eigenvalue and put NaN into that draw's forecast.
+  They now go through the same guarded square root as the simulated forecasts
+  further down, whose NaN fix this completes. *Forecast draws change by a
+  rounding error*: upstream's fingerprints move only in
+  `/posterior/forecast/forecasts`, by at most 5.9e-16 relatively, and no
+  estimated draw or log likelihood moves. The vendored BayesTS core is
+  refreshed to upstream `d8c8f80` for it.
+
 * **Simulated forecasts of time varying VECs warn when the error correction
   term is far from zero, and refuse after rescaling.** A step of the
   cointegration vectors moves the term by about the level of its series, so for

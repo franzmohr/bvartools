@@ -6,6 +6,7 @@
 #include "core/algorithms/bvs.h"
 #include "core/algorithms/ssvs.h"
 #include "core/algorithms/wishart.h"
+#include "core/models/forecast_states.h"
 #include "core/models/model_support.h"
 #include "core/models/predictive_score.h"
 
@@ -19,6 +20,7 @@ namespace bayests
 using core::BvsBlock;
 using core::BvsScope;
 using core::bvs_sweep;
+using core::covariance_root;
 using core::draw_normal_precision;
 using core::SsvsBlock;
 using core::ssvs_sweep;
@@ -240,8 +242,7 @@ ForecastDraws VarNormalWishartSampler::forecast(const VarNormalWishartInput &inp
 
     arma::mat fcst = arma::zeros<arma::mat>(h * k, draws);
     const arma::mat diag_k = arma::eye<arma::mat>(k, k);
-    arma::vec eigval;
-    arma::mat eigvec;
+    arma::mat error_root;
 
     // Calculate forecasts
     for (arma::uword draw = 0; draw < draws; draw++)
@@ -261,7 +262,7 @@ ForecastDraws VarNormalWishartSampler::forecast(const VarNormalWishartInput &inp
         // The error covariance factorised once per draw rather than once per
         // horizon: the precision is the same at every horizon, and the
         // factorisation draws nothing, so where it sits does not move a draw.
-        arma::eig_sym(eigval, eigvec, arma::solve(arma::reshape(coefficients.u_sigma_inv.col(draw), k, k), diag_k));
+        error_root = covariance_root(arma::reshape(coefficients.u_sigma_inv.col(draw), k, k));
 
         for (int i = 0; i < h; i++)
         {
@@ -277,7 +278,8 @@ ForecastDraws VarNormalWishartSampler::forecast(const VarNormalWishartInput &inp
             }
 
             // Add error
-            fcst.submat(i * k, draw, (i + 1) * k - 1, draw) = fcst.submat(i * k, draw, (i + 1) * k - 1, draw) + eigvec * arma::diagmat(arma::sqrt(eigval)) * arma::trans(eigvec) * arma::randn(k);
+            fcst.submat(i * k, draw, (i + 1) * k - 1, draw) =
+                fcst.submat(i * k, draw, (i + 1) * k - 1, draw) + error_root * arma::randn(k);
 
             // A_0 y_t = A_1 y_{t-1} + ... + u_t, so the inverse applies to the
             // whole right-hand side, signal and error alike.

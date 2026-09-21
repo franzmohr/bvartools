@@ -602,8 +602,6 @@ ForecastDraws VarTvpGammaSampler::forecast(const VarTvpGammaInput &input,
 
     arma::mat fcst = arma::zeros<arma::mat>(h * k, draws);
     const arma::mat diag_k = arma::eye<arma::mat>(k, k);
-    arma::vec eigval;
-    arma::mat eigvec;
 
     // What a simulated forecast carries from one horizon to the next.
     arma::vec a_state, a_sigma, a_mask, psi_state, psi_sigma, psi_mask;
@@ -653,7 +651,7 @@ ForecastDraws VarTvpGammaSampler::forecast(const VarTvpGammaInput &input,
             // The error covariance factorised once per draw rather than once per
             // horizon: the precision is the same at every horizon, and the
             // factorisation draws nothing, so where it sits does not move a draw.
-            arma::eig_sym(eigval, eigvec, arma::solve(arma::reshape(coefficients.u_sigma_inv.col(draw), k, k), diag_k));
+            error_root = covariance_root(arma::reshape(coefficients.u_sigma_inv.col(draw), k, k));
         }
 
         for (int i = 0; i < h; i++)
@@ -697,15 +695,8 @@ ForecastDraws VarTvpGammaSampler::forecast(const VarTvpGammaInput &input,
             }
 
             // Add error
-            if (precision_moves)
-            {
-                fcst.submat(i * k, draw, (i + 1) * k - 1, draw) =
-                    fcst.submat(i * k, draw, (i + 1) * k - 1, draw) + error_root * arma::randn(k);
-            }
-            else
-            {
-                fcst.submat(i * k, draw, (i + 1) * k - 1, draw) = fcst.submat(i * k, draw, (i + 1) * k - 1, draw) + eigvec * arma::diagmat(arma::sqrt(eigval)) * arma::trans(eigvec) * arma::randn(k);
-            }
+            fcst.submat(i * k, draw, (i + 1) * k - 1, draw) =
+                fcst.submat(i * k, draw, (i + 1) * k - 1, draw) + error_root * arma::randn(k);
 
             if (structural)
             {

@@ -67,7 +67,9 @@ are matched. For the methods of the estimation workflow an object of class
 
 \item{n_ahead}{the maximum forecast horizon that is considered. If \code{NULL}
 (default), the forecast horizon of the models in \code{object} is used, which
-requires that \code{\link{add_forecast_input}} was already applied to them.}
+requires that \code{\link{add_forecast_input}} was already applied to them. For
+models whose forecasts were aggregated with \code{\link{aggregate_forecasts}}
+it is a number of years.}
 
 \item{period}{name of the column of \code{forecasts}, which contains the period,
 for which a forecast was made.}
@@ -130,6 +132,20 @@ or monthly forecasts of a quarterly model, of which three would fall into the
 same quarter. The frequency of the forecasts is read off the spacing of the
 periods within a publication and, where every publication forecasts a single
 period, off the position of the periods within the year.
+
+Annual forecasts are compared with models estimated on quarterly or monthly
+data by aggregating the forecasts of the models to annual figures with
+\code{\link{aggregate_forecasts}} first and passing the result as argument
+\code{object}. The periods of the forecasts are then read as years, while
+publications are still matched to the training samples at the frequency of the
+data, and \code{data_lag} still counts periods of the data. Horizon 1 is the
+year of the first period after the training sample, so that a forecast for the
+year of its publication is a forecast of horizon 1 and one for the year after
+it of horizon 2, whichever quarter it was published in. The realised values,
+against which the forecasts are scored, are the annual figures of the data of
+the models, which the aggregated forecasts of the models are scored against,
+too, so that \code{\link{add_forecast_errors}} does not need argument
+\code{test_sample}.
 
 In contrast to a model, an external forecast does not have a training sample.
 Therefore, each publication is matched to the training sample, which ends closest
@@ -201,6 +217,7 @@ Other model comparison:
 \code{\link[=add_predictive_loglik]{add_predictive_loglik()}},
 \code{\link[=add_predictive_loglik.bvarmodel]{add_predictive_loglik.bvarmodel()}},
 \code{\link[=add_predictive_loglik.bvecmodel]{add_predictive_loglik.bvecmodel()}},
+\code{\link[=aggregate_forecasts]{aggregate_forecasts()}},
 \code{\link[=align_model_obs.modellist]{align_model_obs.modellist()}},
 \code{\link{analysis_of_stored_models}},
 \code{\link[=choose_best_model.selcritlist]{choose_best_model.selcritlist()}},

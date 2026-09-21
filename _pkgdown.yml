@@ -54,6 +54,7 @@ reference:
   - get_forecast_errors
   - plot_forecast_errors_by_period
   - create_external_forecast
+  - aggregate_forecasts
   - starts_with("selection_criteria")
   - starts_with("time_variation_test")
   - starts_with("choose_best_model")

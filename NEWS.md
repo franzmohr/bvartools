@@ -40,6 +40,31 @@
   to be. Where every publication forecasts a single period, periods that all
   sit at the same position within the year are refused as well.
 
+* **New function `aggregate_forecasts()` compares annual forecasts with a
+  quarterly or monthly model.** It turns every draw of each window's forecast
+  into a draw of the annual figures it implies, taking the quarters of the year
+  that were already observed from the data: the growth of the annual average
+  of the levels for variables given as log changes (`"growth"`) or log levels
+  (`"loglevel"`) -- which is also the growth of the annual sum, so GDP and a
+  price index are treated alike -- and the annual average for `"level"`
+  variables such as the unemployment rate. Horizon 1 is the year of the
+  forecast origin. Passed to `create_external_forecast()` in place of the
+  quarterly models, the result makes it read the periods of the external
+  forecasts as years while still matching publications to the quarterly
+  training samples, so IMF WEO projections of `NGDP_RPCH`, `PCPIPCH` and `LUR`
+  for the current and the next year can be raced against eight-quarter
+  forecasts. Both are scored against the same realised annual figures, those
+  of the models' data, which travel in `data$test$y`, so `add_forecast_errors()`
+  needs no test sample; an annual `test_sample` of official figures overrides
+  them. The frequency refusal of `create_external_forecast()` now names the
+  function. The aggregation is the one the `macroprojections` vignette carries
+  out by hand on the draws of `predict()`. No sampler is touched: draws are
+  unchanged.
+
+* **`add_forecast_errors()` refuses a test sample at another frequency than
+  the forecasts.** It matched the periods by their time alone, and 2020 is a
+  year and the first quarter of 2020 alike.
+
 * **`VecNormalGamma` and `VecNormalStochvol` draw from the posterior of the
   prior they state, and their draws change.** Both use the cointegration space
   prior of Koop, Leon-Gonzalez and Strachan (2010), which scales the loadings'

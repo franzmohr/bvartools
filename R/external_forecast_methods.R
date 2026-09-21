@@ -86,6 +86,10 @@ print.externalforecast <- function(x, digits = max(3L, getOption("digits") - 3L)
 
   cat("Variables: ", paste0(x[[1]][["model"]][["endogen"]], collapse = ", "), "\n", sep = "")
   cat("Forecast horizon: ", x[[1]][["model"]][["h"]], "\n", sep = "")
+  if (!is.null(x[[1]][["model"]][["aggregation"]])) {
+    cat("Annual forecasts of models estimated on ",
+        frequency_name(x[[1]][["model"]][["aggregation"]][["frequency"]]), " data\n", sep = "")
+  }
   cat("Publications: ", length(x), "\n\n", sep = "")
 
   # The periods are formatted as characters, because 'print' would otherwise round
@@ -93,8 +97,14 @@ print.externalforecast <- function(x, digits = max(3L, getOption("digits") - 3L)
   result <- data.frame("Publication" = format(unlist(lapply(x, function(y) {
                          y[["model"]][["origin"]]
                        })), trim = TRUE),
+                       # Annual forecasts are matched by the end of the data of
+                       # the models, not by the last complete year
                        "Training sample ends" = format(unlist(lapply(x, function(y) {
-                         stats::tsp(y[["data"]][["train"]][["y"]])[2]
+                         end <- y[["model"]][["aggregation"]][["end"]]
+                         if (is.null(end)) {
+                           end <- stats::tsp(y[["data"]][["train"]][["y"]])[2]
+                         }
+                         end
                        })), trim = TRUE),
                        check.names = FALSE, stringsAsFactors = FALSE)
   print(result, digits = digits, row.names = FALSE, ...)

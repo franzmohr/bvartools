@@ -40,6 +40,13 @@ add_forecast_errors <- function (object, test_sample = NULL, ...) {
 
   # Determine when the forecasts start
   tsp_train <- stats::tsp(object[["data"]][["train"]][["y"]])
+
+  # A period of the test sample at another frequency would be matched by its
+  # time alone: 2020 is a year and the first quarter of 2020 alike
+  if (!isTRUE(all.equal(stats::tsp(test_sample)[3], tsp_train[3]))) {
+    stop("Argument 'test_sample' has ", frequency_name(stats::tsp(test_sample)[3]),
+         " data, but the forecasts of the model are ", frequency_name(tsp_train[3]), ".")
+  }
   forecast_starts_at <- tsp_train[2] + 1 / tsp_train[3]
 
   if (!(forecast_starts_at %in% stats::time(test_sample))) {
@@ -59,6 +66,11 @@ add_forecast_errors <- function (object, test_sample = NULL, ...) {
 .realised_values <- function(object) {
 
   y <- object[["data"]][["test"]][["y"]]
+  # Forecasts aggregated to annual figures carry the realised values from the
+  # start, and a window without them forecasts years the data do not cover yet
+  if (is.null(y) && !is.null(object[["model"]][["aggregation"]])) {
+    return(NULL)
+  }
   if (is.null(y)) {
     stop("No test sample was given and the object carries none in data$test$y. ",
          "Pass 'test_sample', or score a model that was written to a file after ",

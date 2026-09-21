@@ -13,7 +13,9 @@
 #' 'externalforecast'.
 #' @param n_ahead the maximum forecast horizon that is considered. If \code{NULL}
 #' (default), the forecast horizon of the models in \code{object} is used, which
-#' requires that \code{\link{add_forecast_input}} was already applied to them.
+#' requires that \code{\link{add_forecast_input}} was already applied to them. For
+#' models whose forecasts were aggregated with \code{\link{aggregate_forecasts}}
+#' it is a number of years.
 #' @param period name of the column of \code{forecasts}, which contains the period,
 #' for which a forecast was made.
 #' @param origin name of the column of \code{forecasts}, which contains the period,
@@ -50,6 +52,20 @@
 #' same quarter. The frequency of the forecasts is read off the spacing of the
 #' periods within a publication and, where every publication forecasts a single
 #' period, off the position of the periods within the year.
+#'
+#' Annual forecasts are compared with models estimated on quarterly or monthly
+#' data by aggregating the forecasts of the models to annual figures with
+#' \code{\link{aggregate_forecasts}} first and passing the result as argument
+#' \code{object}. The periods of the forecasts are then read as years, while
+#' publications are still matched to the training samples at the frequency of the
+#' data, and \code{data_lag} still counts periods of the data. Horizon 1 is the
+#' year of the first period after the training sample, so that a forecast for the
+#' year of its publication is a forecast of horizon 1 and one for the year after
+#' it of horizon 2, whichever quarter it was published in. The realised values,
+#' against which the forecasts are scored, are the annual figures of the data of
+#' the models, which the aggregated forecasts of the models are scored against,
+#' too, so that \code{\link{add_forecast_errors}} does not need argument
+#' \code{test_sample}.
 #'
 #' In contrast to a model, an external forecast does not have a training sample.
 #' Therefore, each publication is matched to the training sample, which ends closest
@@ -151,10 +167,14 @@ create_external_forecast <- function(forecasts, object, n_ahead = NULL,
 
   freq <- ref[["frequency"]]
   endogen <- ref[["endogen"]]
+  # Annual, if the forecasts of the models were aggregated, and the frequency of
+  # the data otherwise
+  period_freq <- ref[["period_frequency"]]
 
-  # The periods of the forecasts are rounded to the frequency of the data, whereas
-  # the publications are not, so that publications within a period can be ordered
-  fcst <- data.frame(period = to_model_time(forecasts[[period]], freq, round = TRUE),
+  # The periods of the forecasts are rounded to the frequency of the forecasts,
+  # whereas the publications are not, so that publications within a period can
+  # be ordered
+  fcst <- data.frame(period = to_model_time(forecasts[[period]], period_freq, round = TRUE),
                      origin = to_model_time(forecasts[[origin]], freq, round = FALSE),
                      variable = as.character(forecasts[[variable]]),
                      value = as.numeric(forecasts[[value]]),
@@ -184,7 +204,7 @@ create_external_forecast <- function(forecasts, object, n_ahead = NULL,
     stop("Argument 'forecasts' does not contain any usable forecast.")
   }
 
-  check_forecast_frequency(fcst, groups, freq)
+  check_forecast_frequency(fcst, groups, period_freq)
 
   group_names <- unique(groups)
 
@@ -271,12 +291,19 @@ check_forecast_frequency <- function(fcst, groups, freq) {
   }
 
   if (step > 1) {
+    # Annual forecasts can be compared with the annual figures that the
+    # forecasts of the models imply
+    remedy <- "."
+    if (isTRUE(all.equal(freq / step, 1))) {
+      remedy <- paste0(", or aggregate the forecasts of the models to annual figures ",
+                       "with 'aggregate_forecasts' and pass the result as argument 'object'.")
+    }
     stop("The periods in argument 'forecasts' are ", step, " periods of the data ",
          "apart and the data are ", frequency_name(freq), ", so they appear to be ",
          frequency_name(freq / step), " forecasts. Periods are only rounded to the ",
          "frequency of the data, not converted to it: a forecast of a year would be ",
          "compared with the first period of that year. Supply forecasts at the ",
-         "frequency of the data.")
+         "frequency of the data", remedy)
   }
 
   invisible(NULL)
@@ -307,8 +334,10 @@ frequency_name <- function(freq) {
 #' 'modellist'.
 #'
 #' @return A list with the ends of the training samples, the frequency of the data,
-#' the forecast horizon, the names of the endogenous variables and the data of the
-#' endogenous variables.
+#' the frequency of the forecasts -- annual for models whose forecasts were
+#' aggregated with \code{aggregate_forecasts}, the frequency of the data otherwise
+#' --, the forecast horizon in periods of the forecasts, the names of the
+#' endogenous variables and their data at the frequency of the forecasts.
 #'
 #' @noRd
 get_reference_periods <- function(object) {
@@ -320,6 +349,10 @@ get_reference_periods <- function(object) {
     freq <- unique(unlist(lapply(temp, function(x) {x[["frequency"]]})))
     if (length(freq) > 1) {
       stop("The models in argument 'object' do not have the same frequency.")
+    }
+    period_freq <- unique(unlist(lapply(temp, function(x) {x[["period_frequency"]]})))
+    if (length(period_freq) > 1) {
+      stop("The forecasts of some models in argument 'object' are aggregated to annual\nfigures and those of others are not. Use 'aggregate_forecasts' on all of them.")
     }
 
     h <- unlist(lapply(temp, function(x) {x[["h"]]}))
@@ -336,6 +369,7 @@ get_reference_periods <- function(object) {
 
     return(list(ends = sort(unique(unlist(ends))),
                 frequency = freq,
+                period_frequency = period_freq,
                 h = h,
                 endogen = temp[[pos]][["endogen"]],
                 y = temp[[pos]][["y"]]))
@@ -363,8 +397,22 @@ get_reference_periods <- function(object) {
     orig <- y
   }
 
+  # A model whose forecasts were aggregated to annual figures is matched to
+  # publications by the end of the data it was estimated on, while its data are
+  # the annual figures
+  aggregation <- object[["model"]][["aggregation"]]
+  if (!is.null(aggregation)) {
+    return(list(ends = aggregation[["end"]],
+                frequency = aggregation[["frequency"]],
+                period_frequency = tsp_y[3],
+                h = object[["model"]][["h"]],
+                endogen = endogen,
+                y = orig))
+  }
+
   return(list(ends = tsp_y[2],
               frequency = tsp_y[3],
+              period_frequency = tsp_y[3],
               h = object[["model"]][["h"]],
               endogen = endogen,
               y = orig))
@@ -457,6 +505,8 @@ build_external_forecast <- function(fcst, ref, n_ahead, data_lag, select) {
 
   ends <- ref[["ends"]]
   freq <- ref[["frequency"]]
+  period_freq <- ref[["period_frequency"]]
+  aggregated <- period_freq != freq
   endogen <- ref[["endogen"]]
   k <- length(endogen)
   tol <- 1e-8
@@ -488,8 +538,16 @@ build_external_forecast <- function(fcst, ref, n_ahead, data_lag, select) {
     end_i <- ends[windows[i]]
     temp <- fcst[fcst[, "origin"] == sel[i], ]
 
+    # The last period of the forecasts that the data cover completely. For
+    # annual forecasts and quarterly data that is the last complete year, so
+    # that horizon 1 is the year of the forecast origin.
+    end_period <- end_i
+    if (aggregated) {
+      end_period <- (round(end_i * freq) + 1) %/% freq - 1
+    }
+
     # Forecast horizon of the periods of the publication
-    h_i <- (temp[, "period"] - end_i) * freq
+    h_i <- (temp[, "period"] - end_period) * period_freq
     valid <- abs(h_i - round(h_i)) < 1e-6
     h_i <- round(h_i)
     valid <- valid & h_i >= 1 & h_i <= n_ahead
@@ -523,8 +581,18 @@ build_external_forecast <- function(fcst, ref, n_ahead, data_lag, select) {
 
     result_i <- list("model" = model_i,
                      "data" = list("original" = list("endogen" = ref[["y"]]),
-                                   "train" = list("y" = stats::window(ref[["y"]], end = end_i))),
+                                   "train" = list("y" = stats::window(ref[["y"]], end = end_period))),
                      "posterior" = list("forecast" = list("forecasts" = coda::mcmc(fcst_i))))
+
+    # Annual forecasts are scored against the annual figures of the data, as
+    # the aggregated forecasts of the models are
+    if (aggregated) {
+      result_i[["model"]][["aggregation"]] <- list(frequency = freq, end = end_i)
+      realised <- .realised_years(ref[["y"]], end_period + 1:n_ahead)
+      if (!is.null(realised)) {
+        result_i[["data"]][["test"]] <- list("y" = realised)
+      }
+    }
 
     class(result_i) <- c("externalwindow", "bvarmodel", "list")
 

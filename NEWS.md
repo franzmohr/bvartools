@@ -29,6 +29,13 @@
 * The vendored BayesTS core is refreshed to upstream `94f81de`, which brings
   the two items above.
 
+* **`generate_artificial_var()` gains the same argument `level`**, which
+  shifts the generated series to high levels without changing their
+  dynamics. The intercept absorbs the shift
+  `(A_0 - A_1 - ... - A_p) level`, so a non-zero level requires
+  `deterministic = "const"` or `"both"`, and the returned `a_coef` includes it,
+  in every period of a time varying model.
+
 * **`generate_artificial_vec()` gains an argument `level`**, a vector with one
   or `k` elements that shifts the generated series, so that cointegrated series
   with high levels that follow a stochastic trend can be simulated. Without it

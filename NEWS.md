@@ -1,5 +1,19 @@
 # bvartools 1.0.0
 
+* **`bayests_files()` renames the exit status into place once it is written.**
+  The script it runs wrote BayesTS's exit status straight into the file the
+  session polls for, and a redirection creates that file before anything is in
+  it, so a poll could find it empty and report a run that had succeeded as
+  failed with "exit status NA". It happened once, on 21 September 2026, to two
+  directories of a pass of `bayests loglik` that mostly skipped files that
+  already had their log-likelihood, which finish well inside the polling
+  interval. It did not happen again in 20 repetitions of that pass or in 180
+  runs polled every 10 ms, so it is rare; the status now goes to a file of its
+  own and is renamed into place, and a status that still cannot be read is read
+  again for a quarter of a second before it counts, in case something else held
+  the file open for a moment. A run that fails is still reported, with the
+  status it exited with.
+
 * **SSVS refuses three priors it could not honour.** The vendored core now
   checks, at every coefficient SSVS selects over, that the prior mean is zero,
   that the prior precision couples it to nothing else, and that `tau0` is

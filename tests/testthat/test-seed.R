@@ -306,6 +306,20 @@ test_that("BayesTS runs several paths at once and reports the ones that fail", {
   writeLines("not a model", file.path(empty, "model.h5"))
   expect_error(run(c(folders[1], empty), command = "check", jobs = 2),
                "BayesTS failed on 1 path")
+  # With the status BayesTS exited with, rather than one that could not be read.
+  failure <- tryCatch(run(empty, command = "check"), error = conditionMessage)
+  expect_match(failure, "exit status [0-9]+")
+  expect_false(grepl("exit status NA", failure))
+
+  # Runs that finish well inside the polling interval -- BayesTS checking a
+  # model, or skipping one that already has what it was asked for -- are the
+  # ones a status file read before it was written would have reported as
+  # failed. The status is renamed into place once written, so none is.
+  for (i in 1:10) {
+    expect_invisible(run(folders, command = "check", jobs = 3, poll = 0.01))
+  }
+  # And nothing is left behind in the session's temporary directory.
+  expect_length(list.files(tempdir(), pattern = "^bayests_.*[.](status|done|log|bat|sh)$"), 0)
 
   unlink(root, recursive = TRUE)
 })

@@ -157,8 +157,8 @@ stopifnot(length(txt) > 0)
 `?bvartools` has the workflow and a list of common mistakes. The vignettes
 (`browseVignettes("bvartools")`) work through the Minnesota prior, SSVS,
 TVP-SV VAR and VEC models, quantile VARs, sign restrictions, model comparison
-and forecast horse races. The copy of this skill that matches the installed
-version is at `system.file("agents", package = "bvartools")`.
+and forecast horse races, including one against published annual projections.
+The copy of this skill that matches the installed version is at `system.file("agents", package = "bvartools")`.
 
 ## Reference files
 

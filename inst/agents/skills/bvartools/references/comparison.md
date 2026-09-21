@@ -154,3 +154,7 @@ joining them with `combine_models()` before `add_posterior_coefficients()`, and
 calling `selection_criteria()` on the combined list.
 `vignette("horse-races", package = "bvartools")` runs such a comparison, and adds
 forecasts published by institutions through `create_external_forecast()`.
+`vignette("macroprojections", package = "bvartools")` compares models with
+published **annual** projections from quarterly data: `create_external_forecast()`
+matches forecasts at the frequency of the models, so there the quarterly forecast
+draws from `predict()` are aggregated to annual growth rates and averages first.

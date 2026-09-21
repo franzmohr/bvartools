@@ -1,5 +1,12 @@
 # bvartools 1.0.0
 
+* **New vignette `macroprojections`** races a BVAR, a BVAR with stochastic
+  volatility and a TVP-SV VAR against the projections for Austria that the ECB,
+  the European Commission, the IMF, the OeNB, WIFO and IHS published between 2015
+  and 2025, as collected by the macroprojections repository. The projections are
+  annual, so the vignette turns every draw of the quarterly forecasts into the
+  annual growth and average rates it implies before comparing them.
+
 * **`VecNormalGamma` and `VecNormalStochvol` draw from the posterior of the
   prior they state, and their draws change.** Both use the cointegration space
   prior of Koop, Leon-Gonzalez and Strachan (2010), which scales the loadings'

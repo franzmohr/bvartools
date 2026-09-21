@@ -63,7 +63,8 @@ if (length(vignettes) == 0) {
     "tvp-sv-var",
     "tvp-sv-vec",
     "model-comparison",
-    "horse-races"
+    "horse-races",
+    "macroprojections"
   )
 }
 

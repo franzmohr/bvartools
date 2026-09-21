@@ -12,7 +12,6 @@ src/core/*/*.o
 inst/doc
 # pkgdown site, built and deployed to gh-pages by .github/workflows/pkgdown.yaml
 docs
-tools
 # Written by the plot tests when the suite is run outside R CMD check,
 # which has no graphics device open.
 Rplots.pdf

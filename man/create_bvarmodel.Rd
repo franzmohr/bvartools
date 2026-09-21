@@ -91,7 +91,7 @@ specification. A 'bvarmodel' is a list with the elements
   \code{train}, which holds the estimation sample: \code{y}, a \eqn{T \times K}
   time-series object of the endogenous variables, \code{x}, a time-series object of
   the regressors, and \code{z}, the corresponding \eqn{TK} row matrix of regressors
-  in SUR form.}
+  in SUR form, which is absent for the discounted model.}
   \item{\code{model}}{a list of the specification, including \code{type}
   (\code{"VAR"}), \code{algorithm}, the name of the posterior simulation algorithm,
   \code{k}, \code{p}, \code{m}, \code{s} and \code{n}, the numbers of endogenous

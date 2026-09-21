@@ -73,10 +73,91 @@
     object$attr_delete(name)
   }
 
-  attribute <- object$create_attr(name, robj = value)
+  attribute <- object$create_attr(name, robj = value,
+                                  dtype = .hdf5_dtype(value),
+                                  space = .hdf5_attr_space(value))
   attribute$close()
 
   return(invisible(NULL))
+}
+
+# The HDF5 type and dataspace of a value, built once rather than per write.
+#
+# hdf5r guesses both whenever it is not told them, and the guess is most of what
+# a write costs: creating the attributes of one model -- some forty of them,
+# the specification and the labels of every series -- took 84 per cent of
+# write_to_hdf5(), almost all of it in guess_dtype(), the type factory it calls,
+# and building a fresh dataspace. For a grid of thousands of models that was
+# the whole of the run.
+#
+# What is cached is exactly what hdf5r would have guessed, so no file changes:
+# guess_dtype() with the string length create_attr() and create_dataset() pass,
+# Inf, gives a variable length C string for a character vector, H5T_LOGICAL with
+# NA for a logical one, and the native int and double for the rest; and
+# guess_space() for an attribute is a simple dataspace of the value's
+# dimensions with maximum dimensions equal to them -- simple even for a single
+# value, never scalar, which is what BayesTS has always been given. Anything
+# else -- a factor, a list, a 64-bit integer, a complex number -- gets NULL, and
+# hdf5r guesses as it always did.
+#
+# HDF5 identifiers belong to the process that made them, so the cache is
+# emptied when the process id changes: a forked worker builds its own rather
+# than use its parent's.
+.hdf5_type_cache <- new.env(parent = emptyenv())
+
+.hdf5_cache <- function() {
+  if (!identical(.hdf5_type_cache[["pid"]], Sys.getpid())) {
+    rm(list = ls(.hdf5_type_cache, all.names = TRUE), envir = .hdf5_type_cache)
+    .hdf5_type_cache[["pid"]] <- Sys.getpid()
+    .hdf5_type_cache[["types"]] <- new.env(parent = emptyenv())
+    .hdf5_type_cache[["spaces"]] <- new.env(parent = emptyenv())
+  }
+  .hdf5_type_cache
+}
+
+.hdf5_dtype <- function(value) {
+
+  if (is.factor(value) || is.list(value) || inherits(value, "integer64")) {
+    return(NULL)
+  }
+  kind <- if (is.character(value)) {
+    "character"
+  } else if (is.logical(value)) {
+    "logical"
+  } else if (is.integer(value)) {
+    "integer"
+  } else if (is.double(value)) {
+    "double"
+  } else {
+    return(NULL)
+  }
+
+  types <- .hdf5_cache()[["types"]]
+  if (is.null(types[[kind]])) {
+    types[[kind]] <- switch(kind,
+                            character = hdf5r::H5T_STRING$new(type = "c", size = Inf),
+                            logical = hdf5r::H5T_LOGICAL$new(include_NA = TRUE),
+                            integer = hdf5r::h5types$H5T_NATIVE_INT,
+                            double = hdf5r::h5types$H5T_NATIVE_DOUBLE)
+  }
+  types[[kind]]
+}
+
+.hdf5_attr_space <- function(value) {
+
+  # Only for the values .hdf5_dtype() has a type for: for anything else hdf5r
+  # guesses the type, and the space has to be guessed with it.
+  if (is.null(.hdf5_dtype(value))) {
+    return(NULL)
+  }
+
+  dims <- if (is.null(dim(value))) length(value) else dim(value)
+  key <- paste(dims, collapse = "x")
+  spaces <- .hdf5_cache()[["spaces"]]
+  if (is.null(spaces[[key]])) {
+    spaces[[key]] <- hdf5r::H5S$new(type = "simple", dims = dims, maxdims = dims)
+  }
+  spaces[[key]]
 }
 
 # Writes the selection scheme of the covariance block where BayesTS reads it.
@@ -130,7 +211,10 @@
     return(invisible(NULL))
   }
 
-  dataset <- group$create_dataset(name, value)
+  # The type is given rather than guessed, for the reason .hdf5_dtype() gives.
+  # The dataspace is still hdf5r's, because a dataset is chunked and its space
+  # has unlimited maximum dimensions, which .hdf5_attr_space() does not build.
+  dataset <- group$create_dataset(name, value, dtype = .hdf5_dtype(value))
 
   # HDF5 hands every dataset back as an array, so a scalar hyperparameter, the
   # type of a prior or a vector of shapes came back as a matrix, and a round

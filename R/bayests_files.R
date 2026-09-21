@@ -109,9 +109,28 @@ bayests_files <- function(executable = NULL, library_path = NULL) {
     queue <- seq_along(full)
     failures <- character(0)
 
+    read_status <- function(file) {
+      tryCatch(as.integer(trimws(readLines(file, warn = FALSE)[1])),
+               warning = function(w) NA_integer_,
+               error = function(e) NA_integer_)
+    }
+
     collect <- function(job) {
-      status <- tryCatch(as.integer(trimws(readLines(job[["done"]], warn = FALSE)[1])),
-                         warning = function(w) NA_integer_)
+      # A status that cannot be read is read again before it counts as a
+      # failure. The script renames the status into place only once it is
+      # written, so an empty file should not be seen; but on 21 September 2026
+      # two directories of a run whose BayesTS processes had all finished were
+      # reported with a status of NA, and a file held open for a moment by
+      # something else -- a virus scanner, say -- would read that way too. A run
+      # that really failed still fails, a quarter of a second later.
+      status <- read_status(job[["done"]])
+      for (attempt in seq_len(5)) {
+        if (!is.na(status)) {
+          break
+        }
+        Sys.sleep(0.05)
+        status <- read_status(job[["done"]])
+      }
       unlink(job[["script"]])
       if (identical(status, 0L)) {
         unlink(c(job[["log"]], job[["done"]]))
@@ -126,7 +145,7 @@ bayests_files <- function(executable = NULL, library_path = NULL) {
 
     on.exit({
       for (job in jobs_running) {
-        unlink(c(job[["script"]], job[["log"]], job[["done"]]))
+        unlink(c(job[["script"]], job[["log"]], job[["done"]], job[["status"]]))
       }
     }, add = TRUE)
 
@@ -170,6 +189,14 @@ bayests_files <- function(executable = NULL, library_path = NULL) {
   stem <- tempfile(pattern = "bayests_")
   log <- paste0(stem, ".log")
   done <- paste0(stem, ".done")
+  # The exit status is written here first and then renamed to 'done'. A
+  # redirection creates its file before anything is written into it, so a
+  # caller polling for 'done' could find it empty and read a status of NA for a
+  # run that had succeeded. It did, on a folder of models BayesTS only checked
+  # and skipped, which finish in a fraction of the polling interval. A rename
+  # within one directory is atomic, so 'done' now appears only once it holds
+  # the status.
+  status <- paste0(stem, ".status")
 
   windows <- .Platform$OS.type == "windows"
   script <- paste0(stem, if (windows) ".bat" else ".sh")
@@ -187,7 +214,8 @@ bayests_files <- function(executable = NULL, library_path = NULL) {
                        paste0("> \"", back(log), "\" 2>&1")), collapse = " "),
                # In parentheses, because "echo 0> file" is read as a
                # redirection of stream 0 rather than as an echo of "0".
-               paste0("(echo %ERRORLEVEL%)> \"", back(done), "\""))
+               paste0("(echo %ERRORLEVEL%)> \"", back(status), "\""),
+               paste0("move /y \"", back(status), "\" \"", back(done), "\" > nul"))
     writeLines(lines, script)
     system2("cmd", c("/c", shQuote(script, type = "cmd")), wait = FALSE,
             stdout = NULL, stderr = NULL)
@@ -200,11 +228,12 @@ bayests_files <- function(executable = NULL, library_path = NULL) {
     lines <- c(lines,
                paste(c(shQuote(executable), command, shQuote(path), args,
                        ">", shQuote(log), "2>&1"), collapse = " "),
-               paste("echo $? >", shQuote(done)))
+               paste("echo $? >", shQuote(status)),
+               paste("mv", shQuote(status), shQuote(done)))
     writeLines(lines, script)
     Sys.chmod(script, "0755")
     system2(script, wait = FALSE, stdout = NULL, stderr = NULL)
   }
 
-  list(path = path, script = script, log = log, done = done)
+  list(path = path, script = script, log = log, done = done, status = status)
 }

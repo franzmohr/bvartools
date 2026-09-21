@@ -93,6 +93,8 @@ add_predictive_loglik.bvecmodel <- function(object, test_sample = NULL, ...) {
     return(object)
   }
 
+  .check_simulated_coint_states(object)
+
   algorithm <- object[["model"]][["algorithm"]]
   object <- switch(algorithm,
                    VecKlgs2010 = .VecKlgs2010Score(object),

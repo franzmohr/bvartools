@@ -99,7 +99,11 @@ stopifnot(all(dim(vec$posterior$beta$coeffs) == c(500, 3)))
 `bvecmodel` directly. The forecast is of the levels, one row per draw and
 `n_ahead * K` columns stacked by period. A VEC with time-varying coefficients or
 stochastic volatility simulates its loadings, cointegration vectors and
-volatility forward unless `forecast_states = "hold"`:
+volatility forward unless `forecast_states = "hold"`. A step of the cointegration
+vectors moves the error correction term by about the level of its series, so on
+series far from zero (log levels times 100) the simulated forecast is mostly
+that drift, and a warning says so. A time-varying VEC estimated after
+`scale_error_correction()` forecasts only with `forecast_states = "hold"`:
 
 ```r
 vec <- add_forecast_input(vec, n_ahead = 8)

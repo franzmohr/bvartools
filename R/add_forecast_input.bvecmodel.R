@@ -59,6 +59,25 @@ add_forecast_input.bvecmodel <- function(object, n_ahead = 10, deterministic = N
 #' holds its coefficients at the last period, while this method steps the states of the VEC
 #' model and converts them to levels anew in every forecast period.
 #'
+#' Simulating the cointegration vectors forward depends on the units of the data. A step
+#' \eqn{\eta_t} of their state equation moves the error correction term by
+#' \eqn{\eta_t^{\prime} w_t}, which for series far from zero -- log levels times 100,
+#' say -- is of the order of their levels rather than of their variation: the random
+#' walk intercept described in section 'Prior on the cointegration space' of
+#' \code{\link{cointspace_prior}}, carried forward with nothing in the data to restrain
+#' it. The forecast is then mostly that drift, and its intervals widen accordingly.
+#' A warning names the series in the error correction term that are more than 50
+#' times their standard deviation per period away from zero at the end of the sample;
+#' \code{forecast_states = "hold"} is the alternative. Series near zero, such as
+#' interest rates and inflation in percent, do not draw it.
+#'
+#' A time varying model estimated on series that \code{\link{scale_error_correction}}
+#' centred or scaled cannot be simulated forward and stops with an error unless
+#' \code{forecast_states = "hold"}: the state equation of its cointegration vectors
+#' belongs to the transformed series, while \code{\link{rescale_error_correction}}
+#' has put the vectors back on the scale of the data and moved the means into the
+#' constant of the last sample period only.
+#'
 #' Simulating the volatility forward needs \code{posterior$u_sigma_inv$sigma}, the variance
 #' of the log-volatility innovations, which \code{\link{add_posterior_coefficients}}
 #' stores. A model with stochastic volatility estimated with an earlier version of the
@@ -93,6 +112,8 @@ add_posterior_forecasts.bvecmodel <- function(object, forecast_states = NULL, ..
   if (.is_discount(object)) {
     return(.discount_forecasts(object))
   }
+
+  .check_simulated_coint_states(object)
 
   class_of_object <- class(object)
 
@@ -160,6 +181,84 @@ predict.bvecmodel <- function(object, n_ahead = NULL, ...){
 .vec_level_form <- function(object) {
   object[["posterior"]] <- NULL
   vec_to_var(object)
+}
+
+
+
+# How far from zero, in multiples of their typical change per period, the series
+# in the error correction term of a time varying VEC model may be before
+# simulating its cointegration vectors over the forecast horizon draws a
+# warning. Interest rates and inflation in percent sit near one, log levels
+# times 100 in the hundreds.
+.coint_level_ratio_limit <- 50
+
+# Under forecast_states = "simulate" a time varying VEC model steps its
+# cointegration vectors through their state equation in every forecast period.
+# A step eta moves the error correction term by eta' w, which for series far
+# from zero is of the order of their levels rather than of their variation: the
+# random walk intercept of 'Prior on the cointegration space' in
+# ?cointspace_prior, now carried forward with nothing in the data to restrain
+# it. The forecast is then the model's, but mostly that drift. It is said once,
+# as a warning, and the forecast goes ahead.
+#
+# A model estimated on series that scale_error_correction() centred or scaled is
+# refused instead. Its state equation belongs to the transformed series, while
+# rescale_error_correction() has put beta back on the scale of the data and moved
+# the means into the constant of the last period only, so stepping beta from
+# there simulates a different model from the one that was estimated.
+.check_simulated_coint_states <- function(object) {
+
+  if (!object[["model"]][["algorithm"]] %in% c("VecTvpWishart", "VecTvpGamma", "VecTvpStochvol")) {
+    return(invisible(NULL))
+  }
+  r <- object[["model"]][["rank"]]
+  if (is.null(r) || r == 0) {
+    return(invisible(NULL))
+  }
+  states <- object[["model"]][["forecast_states"]]
+  if (!is.null(states) && states != "simulate") {
+    return(invisible(NULL))
+  }
+
+  if (isTRUE(as.logical(object[["model"]][["ect_rescaled"]]))) {
+    stop("This time varying VEC model was estimated on series that ",
+         "'scale_error_correction' centred or scaled, so its cointegration vectors ",
+         "cannot be simulated over the forecast horizon: their state equation belongs ",
+         "to the transformed series, and the constant that took up the means holds ",
+         "for the last period of the sample only. Use forecast_states = \"hold\".",
+         call. = FALSE)
+  }
+
+  w <- object[["data"]][["train"]][["w"]]
+  n_restricted <- object[["model"]][["n_restricted"]]
+  if (is.null(n_restricted)) {
+    n_restricted <- 0
+  }
+  stochastic <- seq_len(ncol(w) - n_restricted)
+  values <- matrix(as.numeric(w), nrow(w))[, stochastic, drop = FALSE]
+  ratio <- apply(values, 2, function(x) {
+    s <- stats::sd(diff(x))
+    if (!is.finite(s) || s == 0) NA_real_ else abs(x[length(x)]) / s
+  })
+  far <- which(ratio > .coint_level_ratio_limit)
+
+  if (length(far) > 0) {
+    names_w <- colnames(w)[stochastic]
+    if (is.null(names_w)) {
+      names_w <- paste0("w", stochastic)
+    }
+    warning("The cointegration vectors of this time varying VEC model are simulated ",
+            "over the forecast horizon, and ",
+            paste0(names_w[far], " (", round(ratio[far]), ")", collapse = ", "),
+            " in its error correction term ", if (length(far) == 1) "is" else "are",
+            " that many times ", if (length(far) == 1) "its" else "their",
+            " typical change per period away from zero. A step of the vectors moves ",
+            "the term by about the level of the series, so the forecasts mostly show ",
+            "that drift. forecast_states = \"hold\" keeps the states at the last ",
+            "period of the sample.", call. = FALSE)
+  }
+
+  invisible(NULL)
 }
 
 

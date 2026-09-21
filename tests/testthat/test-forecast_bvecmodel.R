@@ -83,3 +83,65 @@ test_that("VEC models over an expanding window are forecast and evaluated direct
   criteria <- selection_criteria(windows)
   expect_true(all(c("FE", "AFE", "RSFE") %in% names(criteria)))
 })
+
+# A time varying VEC model on log levels times 100, whose error correction term
+# is hundreds of times its typical change per period away from zero.
+fx_vec_tvp_levels <- function(scaled = FALSE) {
+  levels <- stats::window(at_domestic()[, c("y", "lr")], end = c(2005, 4)) * 100
+  model <- create_bvecmodel(levels, p = 2, r = 1, const = "unrestricted", tvp = TRUE,
+                            iterations = fx_iterations, burnin = fx_burnin)
+  if (scaled) {
+    model <- scale_error_correction(model, centre = TRUE)
+  }
+  model <- add_priors(model, coef = list(v_i = 1, v_i_det = 0.1, shape = 3, rate = 1e-4),
+                      coint = list(rho = 0.999), sigma = list(df = "k", scale = 1))
+  model <- add_posterior_coefficients(add_seed(add_initial_values(model), 16180))
+  if (scaled) {
+    model <- rescale_error_correction(model)
+  }
+  add_forecast_input(model, n_ahead = 2)
+}
+
+test_that("simulating the cointegration vectors of series far from zero draws a warning", {
+  vec <- fx_vec_tvp_levels()
+
+  expect_warning(simulated <- add_posterior_forecasts(vec), "error correction term")
+  expect_true(all(is.finite(simulated[["posterior"]][["forecast"]][["forecasts"]])))
+  expect_no_warning(add_posterior_forecasts(vec, forecast_states = "hold"))
+
+  # Interest rates and inflation in percent sit near zero and do not draw it.
+  expect_no_warning(add_posterior_forecasts(add_forecast_input(fx_vec_tvp_fitted("gamma"), n_ahead = 2)))
+})
+
+test_that("a time varying VEC model estimated on centred series forecasts only with held states", {
+  vec <- fx_vec_tvp_levels(scaled = TRUE)
+  expect_true(vec[["model"]][["ect_rescaled"]])
+
+  expect_error(add_posterior_forecasts(vec), "scale_error_correction")
+  held <- add_posterior_forecasts(vec, forecast_states = "hold")
+  expect_true(all(is.finite(held[["posterior"]][["forecast"]][["forecasts"]])))
+
+  realised <- stats::window(at_domestic()[, c("y", "lr")], start = c(2006, 1), end = c(2006, 2)) * 100
+  expect_no_error(add_predictive_loglik(held, test_sample = realised))
+  simulate <- held
+  simulate[["model"]][["forecast_states"]] <- "simulate"
+  expect_error(add_predictive_loglik(simulate, test_sample = realised), "scale_error_correction")
+
+  # The flag travels with the model through a file.
+  path <- temp_h5_file()
+  write_to_hdf5(vec, path)
+  back <- read_model_from_hdf5(path)
+  expect_error(add_posterior_forecasts(back), "scale_error_correction")
+})
+
+test_that("rescaling a constant VEC model leaves its forecasts free", {
+  levels <- stats::window(at_domestic()[, c("y", "lr")], end = c(2005, 4)) * 100
+  model <- create_bvecmodel(levels, p = 2, r = 1, const = "unrestricted",
+                            iterations = fx_iterations, burnin = fx_burnin)
+  model <- scale_error_correction(model, centre = TRUE)
+  model <- add_priors(model, coef = list(v_i = 0, v_i_det = 0), coint = list(v_i = 0, p_tau_i = 1),
+                      sigma = list(df = "k", scale = 1))
+  model <- rescale_error_correction(add_posterior_coefficients(add_seed(add_initial_values(model), 16180)))
+  expect_null(model[["model"]][["ect_rescaled"]])
+  expect_no_warning(add_posterior_forecasts(add_forecast_input(model, n_ahead = 2)))
+})

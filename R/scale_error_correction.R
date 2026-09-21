@@ -59,7 +59,11 @@ scale_error_correction <- function (object, ...) {
 #' section 'Prior on the cointegration space' of \code{\link{cointspace_prior}}.
 #' On centred series the same step moves the term by
 #' \eqn{\eta_t^{\prime} (w_t - m)}, and the intercept is left to the constant
-#' and its own prior.
+#' and its own prior. That holds for the estimation. The forecast of such a
+#' model, which needs \code{\link{rescale_error_correction}} first, can only hold
+#' the cointegration vectors at their last value (\code{forecast_states = "hold"}
+#' in \code{\link{add_posterior_forecasts.bvecmodel}}), since after rescaling a
+#' step of them acts on the series as they are.
 #'
 #' Starting values of the constant in \code{object$initial} are shifted by
 #' \eqn{\Pi m}, computed from the starting values of the loadings and of

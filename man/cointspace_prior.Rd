@@ -19,7 +19,8 @@ determining the cointegration space. It has no default. See section
 \code{NULL} for a model without cointegration, \code{model$rank = 0},
 whose \code{coint} is checked all the same. Otherwise a list with
 \code{type = "cointspace"} and, for constant cointegration parameters,
-\code{v_inv} and \code{p_tau_inv}, or, for time varying ones, \code{rho},
+\code{v_inv} and \code{p_tau_inv}, and \code{g_inv} if \code{g_i} was given,
+or, for time varying ones, \code{rho},
 \code{mu} and \code{v_inv} of the state equation, together with
 \code{rho_min} and \code{rho_max} for a uniform prior on \eqn{\rho} and the
 transition \code{p_tau} added by \code{p_tau_i = "ml"}.
@@ -73,6 +74,12 @@ the second. Any other element raises an error.
   satisfy \eqn{0 < }\code{rho_min}\eqn{ < }\code{rho_max}\eqn{ \le 1}.
   Koop et al. (2011) use \eqn{(0.999, 1)}.
   Only used for models with time varying cointegration parameters.}
+  \item{\code{g_i}}{the inverse of the matrix \eqn{G} that scales the prior of the
+  loadings, for models with constant cointegration parameters and stochastic volatility,
+  \code{error = "sv"} or \code{"sv+covar"}, and refused for every other model. Either a
+  numeric of its diagonal elements, a full symmetric positive definite matrix with one row
+  and column per endogenous variable, or \code{"ml"} for the inverse of the maximum
+  likelihood estimate of the error covariance. Optional. See below.}
 }
 For a model with constant cointegration parameters the prior is that of
 Koop et al. (2010). The sampler uses \code{v_i} and \code{p_tau_i} only through
@@ -81,6 +88,18 @@ uniform whatever \code{p_tau_i} is. An informative prior on the space
 therefore needs a positive \code{v_i}, which also shrinks the loadings: for
 \eqn{\beta} close to the centre of the space they have prior
 \eqn{N(0, \Sigma / v)}.
+
+In Koop et al. (2010) the loadings' prior is scaled by a matrix \eqn{G}, which
+may be the error covariance \eqn{\Sigma} or any fixed, known matrix. The models
+with a constant error covariance take \eqn{G = \Sigma}. With stochastic
+volatility the covariance differs from period to period, so \eqn{G} is fixed
+for the whole run instead: \eqn{G^{-1}} is \code{g_i} if it is given, and
+otherwise the error precision implied by the starting values of the
+log-volatilities, averaged over the sample once before the first draw. That
+fallback depends on \code{\link{add_initial_values}}, so giving \code{g_i}
+makes the prior independent of how the chain is started. \code{g_i = "ml"}
+uses Johansen's (1995) estimate of the error covariance, the same one
+\code{v_i = "ml"} is based on.
 
 With \code{p_tau_i = "ml"} the prior is centred on the space spanned by
 Johansen's (1995) maximum likelihood estimate \eqn{\hat{\beta}}, computed from

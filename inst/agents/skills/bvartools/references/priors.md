@@ -177,6 +177,7 @@ Refused, each with a message saying why:
 | `weight` | `p_tau_i = "ml"` | Weight of the estimate, in units of the information in the sample. Defaults to 1 |
 | `rho` | time-varying cointegration | Autocorrelation of the state equation, below one. Required |
 | `rho_min`, `rho_max` | time-varying cointegration | Support of a uniform prior on `rho`, both or neither |
+| `g_i` | constant cointegration with `error = "sv"` or `"sv+covar"` | Inverse of the fixed `G` that scales the loadings' prior: diagonal elements, a full matrix, or `"ml"` for Johansen's error covariance. Optional; left out, `G` comes from the starting log-volatilities. Refused for every other model |
 
 ```r
 data("e6")

@@ -248,6 +248,10 @@ inline bayests::ConstantCointSpacePrior read_coint_space_prior_constant(const Rc
   bayests::ConstantCointSpacePrior prior;
   read_double_if_present(group, "v_inv", prior.v_inv);
   read_mat_if_present(group, "p_tau_inv", prior.p_tau_inv);
+  // G^-1, which only VecNormalStochvol reads; validate() refuses one anywhere
+  // else, as cointspace_prior() already does. Absent, the core fixes G from
+  // the starting volatilities.
+  read_mat_if_present(group, "g_inv", prior.g_inv);
   return prior;
 }
 

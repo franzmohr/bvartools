@@ -54,6 +54,12 @@
 #'   satisfy \eqn{0 < }\code{rho_min}\eqn{ < }\code{rho_max}\eqn{ \le 1}.
 #'   Koop et al. (2011) use \eqn{(0.999, 1)}.
 #'   Only used for models with time varying cointegration parameters.}
+#'   \item{\code{g_i}}{the inverse of the matrix \eqn{G} that scales the prior of the
+#'   loadings, for models with constant cointegration parameters and stochastic volatility,
+#'   \code{error = "sv"} or \code{"sv+covar"}, and refused for every other model. Either a
+#'   numeric of its diagonal elements, a full symmetric positive definite matrix with one row
+#'   and column per endogenous variable, or \code{"ml"} for the inverse of the maximum
+#'   likelihood estimate of the error covariance. Optional. See below.}
 #' }
 #' For a model with constant cointegration parameters the prior is that of
 #' Koop et al. (2010). The sampler uses \code{v_i} and \code{p_tau_i} only through
@@ -62,6 +68,18 @@
 #' therefore needs a positive \code{v_i}, which also shrinks the loadings: for
 #' \eqn{\beta} close to the centre of the space they have prior
 #' \eqn{N(0, \Sigma / v)}.
+#'
+#' In Koop et al. (2010) the loadings' prior is scaled by a matrix \eqn{G}, which
+#' may be the error covariance \eqn{\Sigma} or any fixed, known matrix. The models
+#' with a constant error covariance take \eqn{G = \Sigma}. With stochastic
+#' volatility the covariance differs from period to period, so \eqn{G} is fixed
+#' for the whole run instead: \eqn{G^{-1}} is \code{g_i} if it is given, and
+#' otherwise the error precision implied by the starting values of the
+#' log-volatilities, averaged over the sample once before the first draw. That
+#' fallback depends on \code{\link{add_initial_values}}, so giving \code{g_i}
+#' makes the prior independent of how the chain is started. \code{g_i = "ml"}
+#' uses Johansen's (1995) estimate of the error covariance, the same one
+#' \code{v_i = "ml"} is based on.
 #'
 #' With \code{p_tau_i = "ml"} the prior is centred on the space spanned by
 #' Johansen's (1995) maximum likelihood estimate \eqn{\hat{\beta}}, computed from
@@ -218,7 +236,8 @@
 #' @return \code{NULL} for a model without cointegration, \code{model$rank = 0},
 #' whose \code{coint} is checked all the same. Otherwise a list with
 #' \code{type = "cointspace"} and, for constant cointegration parameters,
-#' \code{v_inv} and \code{p_tau_inv}, or, for time varying ones, \code{rho},
+#' \code{v_inv} and \code{p_tau_inv}, and \code{g_inv} if \code{g_i} was given,
+#' or, for time varying ones, \code{rho},
 #' \code{mu} and \code{v_inv} of the state equation, together with
 #' \code{rho_min} and \code{rho_max} for a uniform prior on \eqn{\rho} and the
 #' transition \code{p_tau} added by \code{p_tau_i = "ml"}.
@@ -257,10 +276,26 @@ cointspace_prior <- function(object, coint) {
 
   # Checks ----
 
-  allowed_coint_arguments <- c("v_i", "p_tau_i", "weight", "rho", "rho_min", "rho_max")
+  allowed_coint_arguments <- c("v_i", "p_tau_i", "weight", "rho", "rho_min", "rho_max", "g_i")
   for (i in names(coint)) {
     if (!i %in% allowed_coint_arguments) {
       stop(paste0("Element '", i, "' in argument 'coint' is not recognised."))
+    }
+  }
+
+  # G is the error covariance in every other model, so only the constant VEC
+  # with stochastic volatility has a G to give. The core refuses one anywhere
+  # else as well; refusing it here says so in the terms of this function.
+  coint_g_ml <- identical(coint[["g_i"]], "ml")
+  if (!is.null(coint[["g_i"]])) {
+    if (isTRUE(object[["model"]][["tvp"]]) ||
+        !isTRUE(object[["model"]][["error"]] %in% c("sv", "sv+covar"))) {
+      stop("Argument 'coint$g_i' is only used for VEC models with constant cointegration ",
+           "parameters and stochastic volatility, error = \"sv\" or \"sv+covar\". Every ",
+           "other model scales the prior of the loadings by its error covariance.")
+    }
+    if (!coint_g_ml && !is.numeric(coint[["g_i"]])) {
+      stop("Argument 'coint$g_i' must be numeric or \"ml\".")
     }
   }
 
@@ -479,11 +514,12 @@ cointspace_prior <- function(object, coint) {
 
     coint_v_inv <- coint[["v_i"]]
 
-    if (coint_v_ml | coint_p_tau_ml) {
+    if (coint_v_ml | coint_p_tau_ml | coint_g_ml) {
       if (NROW(object[["data"]][["train"]][["y"]]) <=
           NCOL(object[["data"]][["train"]][["x"]]) + k_beta) {
         stop("Not enough observations for the maximum likelihood estimate that ",
-             "'coint$v_i = \"ml\"' or 'coint$p_tau_i = \"ml\"' is based on.")
+             "'coint$v_i = \"ml\"', 'coint$p_tau_i = \"ml\"' or 'coint$g_i = \"ml\"' ",
+             "is based on.")
       }
 
       # Johansen's estimate, re-expressed for the orthonormal basis H of the
@@ -543,6 +579,35 @@ cointspace_prior <- function(object, coint) {
     prior <- list("type" = "cointspace",
                   "v_inv" = coint_v_inv,
                   "p_tau_inv" = p_tau_inv)
+
+    # G^-1, which the stochastic volatility VEC scales the loadings' prior by
+    # for the whole run. Left out, the core takes the precision the starting
+    # log-volatilities imply, averaged over the sample.
+    if (!is.null(coint[["g_i"]])) {
+      if (coint_g_ml) {
+        g_inv <- solve(ml[["omega"]])
+      } else if (is.matrix(coint[["g_i"]])) {
+        g_inv <- coint[["g_i"]]
+        if (!all(dim(g_inv) == k)) {
+          stop("Argument 'coint$g_i' must be a ", k, " x ", k,
+               " matrix, one row and column per endogenous variable.")
+        }
+        if (!isSymmetric(unname(g_inv))) {
+          stop("Argument 'coint$g_i' must be a symmetric matrix.")
+        }
+      } else {
+        if (!length(coint[["g_i"]]) %in% c(1, k)) {
+          stop("Argument 'coint$g_i' must have one element or one per endogenous variable.")
+        }
+        g_inv <- diag(coint[["g_i"]], k)
+      }
+      g_inv <- (g_inv + t(g_inv)) / 2
+      if (any(!is.finite(g_inv)) ||
+          min(eigen(g_inv, symmetric = TRUE, only.values = TRUE)$values) <= 0) {
+        stop("Argument 'coint$g_i' must be positive definite.")
+      }
+      prior[["g_inv"]] <- g_inv
+    }
   }
 
   return(prior)

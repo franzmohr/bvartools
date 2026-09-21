@@ -15,6 +15,15 @@
   posterior mean of the precision, against 2.6% before. `VecNormalWishart`
   and `VecKlgs2010` draws are unchanged.
 
+* **`coint$g_i` sets the G of `VecNormalStochvol`.** `add_priors()` and
+  `cointspace_prior()` take the inverse of G, the matrix the loadings' prior is
+  scaled by, as diagonal elements, a full matrix or `"ml"` for the inverse of
+  Johansen's error covariance, and store it as `priors$beta$g_inv`, the name
+  a BayesTS model file uses. Left out, G still comes from the starting
+  log-volatilities, so the prior depends on `add_initial_values()`; given, it
+  does not. It is refused for every other model, which scales the loadings'
+  prior by its error covariance.
+
 * **The VEC models refuse a cointegration prior the sampler cannot honour.**
   The prior on the loadings has to be centred at zero and independent of the
   other coefficients, so a non-zero prior mean on the first `k * rank`

@@ -34,6 +34,7 @@ using core::stacked_response;
 using core::structural_inverse;
 using core::require_forecast_regressors;
 using core::update_forecast_lags;
+using core::report_flat_selection_prior;
 
 VarNormalStochvolDraws VarNormalStochvolSampler::draw_coefficients(
     const VarNormalStochvolInput &input, Reporter &reporter) const
@@ -83,6 +84,8 @@ VarNormalStochvolDraws VarNormalStochvolSampler::draw_coefficients(
             {
                 z_bvs = z;
                 a_bvs.emplace(input.initial.a_lambda, input.a_varsel_prior);
+                report_flat_selection_prior(reporter, input.spec.varsel, "a", input.a_varsel_prior,
+                                            input.a_prior.v_inv);
             }
         }
     }
@@ -115,6 +118,8 @@ VarNormalStochvolDraws VarNormalStochvolSampler::draw_coefficients(
             if (use_bvs)
             {
                 psi_bvs.emplace(input.initial.psi_lambda, input.psi_varsel_prior);
+                report_flat_selection_prior(reporter, input.spec.varsel, "psi", input.psi_varsel_prior,
+                                            input.psi_prior.v_inv);
             }
         }
     }

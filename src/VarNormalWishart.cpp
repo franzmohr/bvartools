@@ -141,7 +141,8 @@ Rcpp::List VarNormalWishartCoefficients(Rcpp::List object) {
                             Rcpp::Named("model") = object["model"],
                             Rcpp::Named("initial") = object["initial"],
                             Rcpp::Named("priors") = object["priors"],
-                            Rcpp::Named("posterior") = write_draws(draws));
+                            Rcpp::Named("posterior") = write_draws(draws),
+                            Rcpp::Named("warnings") = reporter.warnings());
 }
 
 // [[Rcpp::export(.VarNormalWishartForecasts)]]

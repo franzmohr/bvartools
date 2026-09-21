@@ -25,6 +25,7 @@ namespace bayests
     using core::CointDrawLoadings;
     using core::draw_normal_precision;
     using core::normalise_beta;
+    using core::report_flat_selection_prior;
     using core::ssvs_sweep;
     using core::SsvsBlock;
     using core::stacked_response;
@@ -111,6 +112,8 @@ namespace bayests
                 {
                     z_bvs = z;
                     a_bvs.emplace(input.initial.a_lambda, input.varsel_prior);
+                    report_flat_selection_prior(reporter, input.spec.varsel, "a", input.varsel_prior,
+                                                input.a_prior.v_inv);
                 }
             }
         }

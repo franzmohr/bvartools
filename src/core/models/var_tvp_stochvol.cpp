@@ -8,6 +8,7 @@
 #include "core/algorithms/stochvol_ocsn_2007.h"
 #include "core/models/forecast_states.h"
 #include "core/models/model_support.h"
+#include "core/models/noncentred_support.h"
 #include "core/models/predictive_score.h"
 
 #include <cmath>
@@ -66,6 +67,12 @@ VarTvpStochvolDraws VarTvpStochvolSampler::draw_coefficients(const VarTvpStochvo
     const bool use_varsel = use_bvs;
     const bool use_varsel_psi = use_psi && input.psi_varsel == VarSelection::bvs;
 
+    // Which random walks are drawn non-centred: each block for itself, by
+    // whether its prior names omega_v. See core/models/noncentred_support.h.
+    const bool a_noncentred = use_a && input.a_prior.noncentred();
+    const bool psi_noncentred = use_psi && input.psi_prior.noncentred();
+    const bool h_noncentred = input.u_sigma_prior.state.noncentred();
+
     VarTvpStochvolDraws out;
 
     // Coefficients
@@ -73,6 +80,12 @@ VarTvpStochvolDraws VarTvpStochvolSampler::draw_coefficients(const VarTvpStochvo
     arma::vec a_sigma_post_shape, a_sigma_post_scale;
     arma::vec a0, a0_post_mu;
     arma::mat a0_post_v, a0_sigma_inv, a0_prior_v;
+
+    // Non-centred: the signed standard deviations, the standardised path, and
+    // the latest draw's ordinates at zero.
+    arma::vec a_omega;
+    arma::mat a_tilde;
+    core::NoncentredCoefficients a_nc;
 
     // Variable selection
     std::optional<BvsBlock> a_bvs;
@@ -102,6 +115,15 @@ VarTvpStochvolDraws VarTvpStochvolSampler::draw_coefficients(const VarTvpStochvo
         a0_sigma_inv = a_sigma;
         a0_sigma_inv.diag() = 1 / a_sigma.diag();
 
+        if (a_noncentred)
+        {
+            // The chain starts on the positive branch; the sign switch reaches
+            // the other within a draw.
+            a_omega = arma::sqrt(arma::vec(a_sigma.diag()));
+            core::allocate_noncentred(out.a_noncentred, static_cast<arma::uword>(nparams),
+                                      static_cast<arma::uword>(iterations));
+        }
+
         if (use_varsel)
         {
             out.a_lambda = arma::mat(nparams, iterations);
@@ -120,6 +142,10 @@ VarTvpStochvolDraws VarTvpStochvolSampler::draw_coefficients(const VarTvpStochvo
     arma::vec psi_sigma_post_shape, psi_sigma_post_scale;
     arma::vec psi0, psi0_post_mu;
     arma::mat psi0_post_v, psi0_sigma_inv, psi0_prior_v;
+
+    arma::vec psi_omega;
+    arma::mat psi_tilde, psi_u_omega_inv;
+    core::NoncentredCoefficients psi_nc;
 
     std::optional<BvsBlock> psi_bvs;
     arma::vec psi_theta_res;
@@ -149,6 +175,14 @@ VarTvpStochvolDraws VarTvpStochvolSampler::draw_coefficients(const VarTvpStochvo
         psi0_sigma_inv = psi_sigma;
         psi0_sigma_inv.diag() = 1 / psi_sigma.diag();
 
+        if (psi_noncentred)
+        {
+            psi_omega = arma::sqrt(arma::vec(psi_sigma.diag()));
+            psi_u_omega_inv = arma::zeros<arma::mat>((k - 1) * tt, k - 1);
+            core::allocate_noncentred(out.psi_noncentred, static_cast<arma::uword>(n_psi),
+                                      static_cast<arma::uword>(iterations));
+        }
+
         if (use_varsel_psi)
         {
             out.psi_lambda = arma::mat(kk, iterations);
@@ -174,6 +208,16 @@ VarTvpStochvolDraws VarTvpStochvolSampler::draw_coefficients(const VarTvpStochvo
     const arma::vec &h0_prior_mu = input.u_sigma_prior.state.initial_state.mu;
     const arma::mat &h0_prior_v_inv = input.u_sigma_prior.state.initial_state.v_inv;
     arma::mat h0_post_v, h0_sigma_inv;
+
+    arma::vec h_omega;
+    arma::mat h_tilde;
+    core::NoncentredCoefficients h_nc;
+    if (h_noncentred)
+    {
+        h_omega = arma::sqrt(h_sigma);
+        core::allocate_noncentred(out.h_noncentred, static_cast<arma::uword>(k),
+                                  static_cast<arma::uword>(iterations));
+    }
 
     // Two per-period precisions: that of each orthogonalised error, tt x k like
     // h, and the error precision itself, one k x k block per period stacked
@@ -227,27 +271,38 @@ VarTvpStochvolDraws VarTvpStochvolSampler::draw_coefficients(const VarTvpStochvo
                 z = z_bvs * a_bvs->lambda_diag;
             }
 
-            // Update a, with a0 integrated out of the prior of the first period.
-            // See initial_state_variance().
-            a = kalman_durbin_koopman_2002(const_cast<arma::mat &>(ymat), z, u_sigma, a_sigma,
-                                           a_B, a0_prior_mu, a0_prior_v + a_sigma)
-                    .cols(0, tt - 1);
-
-            // Draw a0, given the path it was integrated out of and before a_sigma
-            // conditions on it
-            a0_sigma_inv.diag() = 1 / a_sigma.diag();
-            a0_post_v = a0_prior_v_inv + a0_sigma_inv;
-            a0 = draw_normal_precision(a0_post_v, a0_prior_v_inv * a0_prior_mu + a0_sigma_inv * a.col(0));
-
-            // Draw a_sigma
-            a_lag.col(0) = a0;
-            a_lag.cols(1, tt - 1) = a.cols(0, tt - 2);
-            a_lag = a - a_lag;
-            a_sigma_post_scale = 1 / (a_sigma_prior_rate + arma::sum(arma::pow(a_lag, 2), 1) * 0.5);
-            for (int i = 0; i < nparams; i++)
+            if (a_noncentred)
             {
-                a_sigma(i, i) = 1 / arma::randg<double>(
-                                        arma::distr_param(a_sigma_post_shape(i), a_sigma_post_scale(i)));
+                // The standardised path, then a0 and omega jointly, then the
+                // signs; a is rebuilt from the three.
+                a_nc = core::draw_noncentred_path(ymat, z, u_sigma, u_sigma_inv_blocks,
+                                                  input.a_prior, a0, a_omega, a_tilde, a);
+                a_sigma.diag() = arma::square(a_omega);
+            }
+            else
+            {
+                // Update a, with a0 integrated out of the prior of the first period.
+                // See initial_state_variance().
+                a = kalman_durbin_koopman_2002(const_cast<arma::mat &>(ymat), z, u_sigma, a_sigma,
+                                               a_B, a0_prior_mu, a0_prior_v + a_sigma)
+                        .cols(0, tt - 1);
+
+                // Draw a0, given the path it was integrated out of and before a_sigma
+                // conditions on it
+                a0_sigma_inv.diag() = 1 / a_sigma.diag();
+                a0_post_v = a0_prior_v_inv + a0_sigma_inv;
+                a0 = draw_normal_precision(a0_post_v, a0_prior_v_inv * a0_prior_mu + a0_sigma_inv * a.col(0));
+
+                // Draw a_sigma
+                a_lag.col(0) = a0;
+                a_lag.cols(1, tt - 1) = a.cols(0, tt - 2);
+                a_lag = a - a_lag;
+                a_sigma_post_scale = 1 / (a_sigma_prior_rate + arma::sum(arma::pow(a_lag, 2), 1) * 0.5);
+                for (int i = 0; i < nparams; i++)
+                {
+                    a_sigma(i, i) = 1 / arma::randg<double>(
+                                            arma::distr_param(a_sigma_post_shape(i), a_sigma_post_scale(i)));
+                }
             }
 
             if (a_bvs)
@@ -295,28 +350,43 @@ VarTvpStochvolDraws VarTvpStochvolSampler::draw_coefficients(const VarTvpStochvo
                 psi_z = psi_z * psi_bvs->lambda_diag;
             }
 
-            // With psi0 integrated out of the prior of the first period, as for a
-            psi = kalman_durbin_koopman_2002(psi_y, psi_z, psi_u_omega, psi_sigma, psi_B,
-                                             input.psi_prior.initial_state.mu,
-                                             psi0_prior_v + psi_sigma)
-                      .cols(0, tt - 1);
-
-            // Draw psi0, given the path and before psi_sigma conditions on it
-            psi0_sigma_inv.diag() = 1 / psi_sigma.diag();
-            psi0_post_v = input.psi_prior.initial_state.v_inv + psi0_sigma_inv;
-            psi0 = draw_normal_precision(psi0_post_v,
-                                         input.psi_prior.initial_state.v_inv * input.psi_prior.initial_state.mu + psi0_sigma_inv * psi.col(0));
-
-            // Draw psi_sigma
-            psi_lag.col(0) = psi0;
-            psi_lag.cols(1, tt - 1) = psi.cols(0, tt - 2);
-            psi_lag = psi - psi_lag;
-            psi_sigma_post_scale =
-                1 / (input.psi_prior.sigma.rate + arma::sum(arma::pow(psi_lag, 2), 1) * 0.5);
-            for (int i = 0; i < n_psi; i++)
+            if (psi_noncentred)
             {
-                psi_sigma(i, i) = 1 / arma::randg<double>(arma::distr_param(
-                                          psi_sigma_post_shape(i), psi_sigma_post_scale(i)));
+                for (int j = 0; j < tt; j++)
+                {
+                    psi_u_omega_inv.rows(j * (k - 1), (j + 1) * (k - 1) - 1) =
+                        arma::diagmat(u_omega_inv.submat(j, 1, j, k - 1));
+                }
+                psi_nc = core::draw_noncentred_path(psi_y, psi_z, psi_u_omega, psi_u_omega_inv,
+                                                    input.psi_prior, psi0, psi_omega, psi_tilde,
+                                                    psi);
+                psi_sigma.diag() = arma::square(psi_omega);
+            }
+            else
+            {
+                // With psi0 integrated out of the prior of the first period, as for a
+                psi = kalman_durbin_koopman_2002(psi_y, psi_z, psi_u_omega, psi_sigma, psi_B,
+                                                 input.psi_prior.initial_state.mu,
+                                                 psi0_prior_v + psi_sigma)
+                          .cols(0, tt - 1);
+
+                // Draw psi0, given the path and before psi_sigma conditions on it
+                psi0_sigma_inv.diag() = 1 / psi_sigma.diag();
+                psi0_post_v = input.psi_prior.initial_state.v_inv + psi0_sigma_inv;
+                psi0 = draw_normal_precision(psi0_post_v,
+                                             input.psi_prior.initial_state.v_inv * input.psi_prior.initial_state.mu + psi0_sigma_inv * psi.col(0));
+
+                // Draw psi_sigma
+                psi_lag.col(0) = psi0;
+                psi_lag.cols(1, tt - 1) = psi.cols(0, tt - 2);
+                psi_lag = psi - psi_lag;
+                psi_sigma_post_scale =
+                    1 / (input.psi_prior.sigma.rate + arma::sum(arma::pow(psi_lag, 2), 1) * 0.5);
+                for (int i = 0; i < n_psi; i++)
+                {
+                    psi_sigma(i, i) = 1 / arma::randg<double>(arma::distr_param(
+                                              psi_sigma_post_shape(i), psi_sigma_post_scale(i)));
+                }
             }
 
             if (psi_bvs)
@@ -349,27 +419,38 @@ VarTvpStochvolDraws VarTvpStochvolSampler::draw_coefficients(const VarTvpStochvo
             }
         }
 
-        // Update u_omega_inv: the ten-component mixture of Omori et al. (2007),
-        // one column of log-volatility per variable.
-        h = stochvol_ocsn_2007(arma::trans(u), h, h_sigma, h_init, h_y_offset);
-
-        // Draw h_sigma
-        h_lag.row(0) = arma::trans(h_init);
-        h_lag.rows(1, tt - 1) = h.rows(0, tt - 2);
-        h_lag = h - h_lag;
-        h_sigma_post_scale =
-            1 / (h_sigma_prior_rate + arma::trans(arma::sum(arma::pow(h_lag, 2))) * 0.5);
-        for (int i = 0; i < k; i++)
+        if (h_noncentred)
         {
-            h_sigma(i) = 1 / arma::randg<double>(
-                                 arma::distr_param(h_sigma_post_shape(i), h_sigma_post_scale(i)));
+            // The same mixture, with the standardised log-volatility drawn and
+            // h_init and omega regressed on it; h is rebuilt from the three.
+            h_nc = core::draw_noncentred_log_volatility(arma::trans(u), input.u_sigma_prior.state,
+                                                        h_y_offset, h, h_init, h_omega, h_tilde);
+            h_sigma = arma::square(h_omega);
         }
+        else
+        {
+            // Update u_omega_inv: the ten-component mixture of Omori et al. (2007),
+            // one column of log-volatility per variable.
+            h = stochvol_ocsn_2007(arma::trans(u), h, h_sigma, h_init, h_y_offset);
 
-        // Draw h_init
-        h0_sigma_inv = arma::diagmat(1 / h_sigma);
-        h0_post_v = h0_prior_v_inv + h0_sigma_inv;
-        h_init = draw_normal_precision(h0_post_v,
-                                       h0_prior_v_inv * h0_prior_mu + h0_sigma_inv * arma::trans(h.row(0)));
+            // Draw h_sigma
+            h_lag.row(0) = arma::trans(h_init);
+            h_lag.rows(1, tt - 1) = h.rows(0, tt - 2);
+            h_lag = h - h_lag;
+            h_sigma_post_scale =
+                1 / (h_sigma_prior_rate + arma::trans(arma::sum(arma::pow(h_lag, 2))) * 0.5);
+            for (int i = 0; i < k; i++)
+            {
+                h_sigma(i) = 1 / arma::randg<double>(
+                                     arma::distr_param(h_sigma_post_shape(i), h_sigma_post_scale(i)));
+            }
+
+            // Draw h_init
+            h0_sigma_inv = arma::diagmat(1 / h_sigma);
+            h0_post_v = h0_prior_v_inv + h0_sigma_inv;
+            h_init = draw_normal_precision(h0_post_v,
+                                           h0_prior_v_inv * h0_prior_mu + h0_sigma_inv * arma::trans(h.row(0)));
+        }
 
         u_omega_inv = 1 / arma::exp(h);
 
@@ -385,6 +466,11 @@ VarTvpStochvolDraws VarTvpStochvolSampler::draw_coefficients(const VarTvpStochvo
             {
                 out.a.col(draw_pos) = arma::vectorise(a);
                 out.a_sigma.col(draw_pos) = arma::vectorise(a_sigma.diag());
+                if (a_noncentred)
+                {
+                    core::store_noncentred(out.a_noncentred, static_cast<arma::uword>(draw_pos),
+                                           a_omega, a_nc);
+                }
                 if (use_varsel)
                 {
                     out.a_lambda.col(draw_pos) = a_bvs->lambda;
@@ -400,6 +486,11 @@ VarTvpStochvolDraws VarTvpStochvolSampler::draw_coefficients(const VarTvpStochvo
                 }
 
                 out.psi_sigma.col(draw_pos) = arma::vectorise(psi_sigma.diag());
+                if (psi_noncentred)
+                {
+                    core::store_noncentred(out.psi_noncentred, static_cast<arma::uword>(draw_pos),
+                                           psi_omega, psi_nc);
+                }
 
                 if (use_varsel_psi)
                 {
@@ -418,6 +509,11 @@ VarTvpStochvolDraws VarTvpStochvolSampler::draw_coefficients(const VarTvpStochvo
             }
 
             out.h_sigma.col(draw_pos) = h_sigma;
+            if (h_noncentred)
+            {
+                core::store_noncentred(out.h_noncentred, static_cast<arma::uword>(draw_pos),
+                                       h_omega, h_nc);
+            }
         }
     }
 

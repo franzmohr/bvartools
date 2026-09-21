@@ -342,6 +342,21 @@
 }
 
 
+# Raises, as R warnings, what the vendored core warned about while it ran, and
+# takes them off the object. The core cannot raise an R condition itself --
+# RcppReporter collects its "warning: " lines instead, since Rf_warning() may
+# longjmp out of the sampler -- so a binding returns them as `warnings` and this
+# is where they surface, after the draws exist and nothing is left to unwind.
+# One today: bvs selecting against a prior too flat to select against.
+.raise_core_warnings <- function(object) {
+  for (w in object[["warnings"]]) {
+    warning(w, call. = FALSE)
+  }
+  object[["warnings"]] <- NULL
+  return(object)
+}
+
+
 # The thinning interval, which has to be a positive integer that leaves at least
 # one draw. A larger one used to stop inside seq() with "wrong sign in 'by'
 # argument", and a fractional one was used as it was.

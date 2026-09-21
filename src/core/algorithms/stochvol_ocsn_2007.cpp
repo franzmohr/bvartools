@@ -70,3 +70,19 @@ arma::mat stochvol_ocsn_2007(const arma::mat &y, const arma::mat &h, const arma:
   return bayests::core::stochvol_mixture_draw("stochvol_ocsn_2007", kMixture, y, h, sigma, h_init,
                                               constant);
 }
+
+/**
+ * @brief The non-centred draw of the standardised log-volatility, with the
+ *   ten-component mixture of Omori, Chib, Shephard and Nakajima (2007).
+ *
+ * See `bayests::core::stochvol_mixture_draw_noncentred`.
+ */
+arma::mat stochvol_ocsn_2007_noncentred(const arma::mat &y, const arma::mat &h,
+                                        const arma::vec &h_init, const arma::vec &omega,
+                                        const arma::vec &constant, arma::mat &y_centred,
+                                        arma::mat &precision)
+{
+  return bayests::core::stochvol_mixture_draw_noncentred("stochvol_ocsn_2007", kMixture, y, h,
+                                                         h_init, omega, constant, y_centred,
+                                                         precision);
+}

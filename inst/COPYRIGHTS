@@ -74,6 +74,7 @@ BSD 3-Clause portion
     src/core/models/discount_support.h
     src/core/models/forecast_states.h
     src/core/models/model_support.h
+    src/core/models/noncentred_support.h
     src/core/models/predictive_score.h
     src/core/models/var_normal_ald.cpp
     src/core/models/var_normal_gamma.cpp

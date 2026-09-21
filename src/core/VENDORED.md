@@ -7,14 +7,17 @@ project is here -- the core deliberately links neither HDF5 nor HighFive,
 prints nothing and reads no files, which is what makes it embeddable in an R
 package at all.
 
-The copy is **BayesTS 0.3.0 plus one commit**: `6fe91d2`, which is the `v0.3.0`
-release -- the version in upstream's `CMakeLists.txt` and `CHANGELOG.md`, tagged
-on commit `18a86c2` -- and the fix to `core/models/var_tvp_discount.cpp` that
-followed it, which is upstream's `2dc9250`. That fix does reach this package:
-it is what makes `add_predictive_loglik()` score more than the first horizon of
-a discounted VAR, and it was found by wiring that path up here. The previous
-refresh sat one commit short of the release, at `7d7c6ca`; this one brings the
-release, the two discounted models and that fix. 0.3.0 is not archived yet, so
+The copy is **BayesTS `4a64082`**, upstream `main` after the `v0.3.0` release
+(tagged on `18a86c2`). Past the release it carries the fix to
+`core/models/var_tvp_discount.cpp` (`2dc9250`), which is what makes
+`add_predictive_loglik()` score more than the first horizon of a discounted VAR;
+the flat-prior warning for `bvs` (`fa6dd89`, `f2abd4e`), which adds
+`flat_selection_prior()` and `flat_selection_message()` to `priors.h` and reaches
+R through `RcppReporter::warnings()` and `.raise_core_warnings()`; the three
+SSVS refusals in `validate()` (`a85abe2`); and the non-centred random walks of
+`VarTvpStochvol` (`59c495f`), which bring `core/models/noncentred_support.h`
+and are not yet reachable from R. The previous refresh sat at `6fe91d2`, 0.3.0
+plus the discount fix. 0.3.0 is not archived yet, so
 there is no version DOI to name; the concept DOI
 <https://doi.org/10.5281/zenodo.22722531> resolves to the newest release
 whenever one is deposited, and the last archived release is 0.2.0,

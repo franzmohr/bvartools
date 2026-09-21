@@ -6,6 +6,7 @@
 
 #include "bayests/data.h"
 #include "bayests/priors.h"
+#include "bayests/reporter.h"
 #include "bayests/spec.h"
 // Both unit lower triangular matrices a model carries are unpacked there, and
 // the two are packed in different orders -- read that file before reaching for
@@ -17,6 +18,36 @@
 
 namespace bayests::core
 {
+
+/// Tell the host, before the first draw, when BVS is about to select against a
+/// prior it cannot select against.
+///
+/// `bayests check` reports the same thing from the same two functions, and a
+/// run that is never checked would otherwise reach the end with inclusion
+/// probabilities that describe the prior and nothing saying so. The Reporter is
+/// how anything in here reaches a console: this file cannot print, and an R
+/// package is not allowed to.
+///
+/// Called once per block, at the point the sweep's state is built, so a model
+/// with a covariance block says it twice at most and a model selecting nothing
+/// says nothing. Silent for every scheme but `bvs`, and for a prior tight
+/// enough -- see bayests::flat_selection_prior(), which also says why only the
+/// constant-coefficient models call this.
+inline void report_flat_selection_prior(Reporter &reporter, const VarSelection scheme,
+                                        const std::string &block, const VarSelPrior &prior,
+                                        const arma::mat &v_inv)
+{
+    if (scheme != VarSelection::bvs)
+    {
+        return;
+    }
+
+    const FlatSelectionPrior report = flat_selection_prior(prior, v_inv);
+    if (report.flat > 0)
+    {
+        reporter.message("warning: " + flat_selection_message(report, block));
+    }
+}
 
 /// Rejects a forecast that was given no regressors by a model whose dimensions
 /// say it has coefficients to apply to them.

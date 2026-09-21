@@ -3,9 +3,12 @@
 
 #include "bayests/inputs.h"
 
+#include <algorithm>
+#include <cmath>
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
+#include <limits>
 #include <stdexcept>
 #include <string>
 
@@ -276,6 +279,66 @@ void validate_varsel(const VarSelPrior &prior, const arma::vec &initial_lambda,
         require_length(prior.ssvs.tau1, n, (what + " SSVS tau1").c_str());
         require_above(prior.ssvs.tau0, 0.0, true, what + " SSVS tau0");
         require_above(prior.ssvs.tau1, 0.0, true, what + " SSVS tau1");
+
+        // The spike has to be the narrower component. Swapped, the sampler runs
+        // exactly as before and every indicator it writes means the opposite of
+        // what the file says it means: lambda = 1 would be the tight component.
+        // Only the selected positions are read, so only those are held to it.
+        for (const arma::uword pos : prior.include)
+        {
+            if (!(prior.ssvs.tau0(pos) < prior.ssvs.tau1(pos)))
+            {
+                throw std::invalid_argument(
+                    what + " SSVS tau0 must be smaller than tau1 at every selected position, "
+                    "the spike being the excluded component and the slab the included one, "
+                    "but at position " + std::to_string(pos + 1) + " tau0 is " +
+                    number(prior.ssvs.tau0(pos)) + " and tau1 " + number(prior.ssvs.tau1(pos)));
+            }
+        }
+    }
+}
+
+/// What SSVS assumes of the normal prior it replaces at the selected positions,
+/// and which the sweep cannot check for itself. George, Sun and Ni (2008,
+/// eq. 12) centre both mixture components at zero with R = I, and that is what
+/// ssvs_sweep() scores against: N(0, tau0^2) against N(0, tau1^2), one position
+/// at a time. The coefficient draw, though, reads the prior as the file gives
+/// it -- `mu`, and every off-diagonal of `v_inv` -- so where the file departs
+/// from the paper the two halves of the Gibbs step are the conditionals of two
+/// different models and the chain targets neither. Nothing fails; the
+/// inclusion probabilities are simply not the posterior of anything.
+///
+/// Called after validate_normal_block(), which has checked the sizes.
+void validate_ssvs_normal_prior(const VarSelPrior &prior, const NormalPrior &normal,
+                                const char *block)
+{
+    const std::string what(block);
+
+    for (const arma::uword pos : prior.include)
+    {
+        if (normal.mu(pos) != 0.0)
+        {
+            throw std::invalid_argument(
+                "SSVS centres both components of its prior at zero, so the prior mean of " +
+                what + " must be zero at every selected position, but at position " +
+                std::to_string(pos + 1) + " it is " + number(normal.mu(pos)) +
+                ". A non-zero mean is a prior to shrink towards, not a coefficient to select: "
+                "leave that position out of `include`, or use bvs");
+        }
+
+        for (arma::uword other = 0; other < normal.v_inv.n_cols; other++)
+        {
+            if (other != pos && normal.v_inv(pos, other) != 0.0)
+            {
+                throw std::invalid_argument(
+                    "SSVS draws each inclusion indicator from its own coefficient alone, which "
+                    "holds only when the prior makes the selected coefficients independent of "
+                    "everything else, but the prior precision of " + what + " couples position " +
+                    std::to_string(pos + 1) + " to position " + std::to_string(other + 1) +
+                    " with " + number(normal.v_inv(pos, other)) +
+                    ". Make the rows and columns of the selected positions zero off the diagonal");
+            }
+        }
     }
 }
 
@@ -299,6 +362,36 @@ void validate_normal_block(const NormalPrior &prior, const arma::vec &initial,
 /// in -- ("coefficient", "a") and ("psi", "psi") are the two in use. Two labels
 /// rather than one because the messages read better that way and because these
 /// are the exact strings the models have always produced.
+/// The prior on how far a random walk moves, under whichever parameterisation
+/// the file chose: an inverse gamma on the variance, or -- with `omega_v` set --
+/// a normal on the signed standard deviation. Both at once is refused rather
+/// than resolved, since either reading would ignore half of what the file says.
+void validate_state_variance_prior(const RandomWalkPrior &prior, arma::uword n,
+                                   const std::string &thing)
+{
+    if (prior.noncentred())
+    {
+        if (prior.sigma.shape.n_elem > 0 || prior.sigma.rate.n_elem > 0)
+        {
+            throw std::invalid_argument(
+                "the " + thing + " innovations have both an inverse gamma prior on their "
+                "variance (shape, rate) and a normal prior on their standard deviation (omega_v); "
+                "give one: omega_v for the non-centred parameterisation, shape and rate for the "
+                "centred one");
+        }
+        require_length(prior.omega_v, n,
+                       ("prior variance of the standard deviation of the " + thing + " innovations")
+                           .c_str());
+        require_above(prior.omega_v, 0.0, true,
+                      "prior variance of the standard deviation of the " + thing + " innovations");
+        return;
+    }
+
+    require_length(prior.sigma.shape, n, ("prior shape of the " + thing + " innovations").c_str());
+    require_length(prior.sigma.rate, n, ("prior rate of the " + thing + " innovations").c_str());
+    require_gamma_values(prior.sigma, "the " + thing + " innovations");
+}
+
 void validate_tvp_block(const RandomWalkPrior &prior, const arma::mat &path,
                         const arma::mat &sigma_inv, const arma::vec &init, arma::uword n,
                         arma::uword tt, const char *noun, const char *name)
@@ -311,9 +404,15 @@ void validate_tvp_block(const RandomWalkPrior &prior, const arma::mat &path,
     require_diagonal(sigma_inv, "initial precision of the " + thing + " innovations");
     require_length(init, n, ("initial value of " + vec + " before the sample").c_str());
 
-    require_length(prior.sigma.shape, n, ("prior shape of the " + thing + " innovations").c_str());
-    require_length(prior.sigma.rate, n, ("prior rate of the " + thing + " innovations").c_str());
-    require_gamma_values(prior.sigma, "the " + thing + " innovations");
+    // The non-centred chain starts its standard deviations at the square root
+    // of the variance this inverts, so a zero would start it at infinity.
+    if (prior.noncentred())
+    {
+        require_above(arma::vec(sigma_inv.diag()), 0.0, true,
+                      "initial precision of the " + thing + " innovations");
+    }
+
+    validate_state_variance_prior(prior, n, thing);
     require_length(prior.initial_state.mu, n, ("prior mean of " + vec + " before the sample").c_str());
     require_square(prior.initial_state.v_inv, n,
                    ("prior precision of " + vec + " before the sample").c_str());
@@ -559,6 +658,63 @@ void validate_tvp_coint_rho(const TvpCointSpacePrior &prior)
 }
 
 } // namespace
+
+/// The selected positions a BVS sweep would be scoring against a prior draw
+/// rather than against the data. See the declaration in priors.h for why the
+/// diagonal is what to read, and why this is a report and not a refusal.
+FlatSelectionPrior flat_selection_prior(const VarSelPrior &prior, const arma::mat &v_inv,
+                                        const double variance_threshold)
+{
+    FlatSelectionPrior report;
+    report.selected = prior.include.n_elem;
+
+    const arma::uword side = std::min(v_inv.n_rows, v_inv.n_cols);
+    for (const arma::uword pos : prior.include)
+    {
+        // validate_varsel() refuses a position past the end of the block, but
+        // this is a diagnostic and may be called before or instead of it.
+        if (pos >= side)
+        {
+            continue;
+        }
+
+        const double precision = v_inv(pos, pos);
+        const double variance = precision > 0.0 ? 1.0 / precision
+                                                : std::numeric_limits<double>::infinity();
+        if (variance < variance_threshold)
+        {
+            continue;
+        }
+
+        report.flat++;
+        if (report.flat == 1 || variance > report.worst_variance)
+        {
+            report.worst_variance = variance;
+            report.worst_position = pos;
+        }
+    }
+
+    return report;
+}
+
+std::string flat_selection_message(const FlatSelectionPrior &report, const std::string &block)
+{
+    const std::string variance = std::isinf(report.worst_variance)
+                                     ? std::string("infinity -- no prior precision at all")
+                                     : number(report.worst_variance);
+
+    return "bvs is selecting over " + std::to_string(report.selected) + " position(s) of " +
+           block + ", and " + std::to_string(report.flat) +
+           " of them have a prior too flat to select against: /priors/" + block +
+           "/v_inv leaves position " + std::to_string(report.worst_position + 1) +
+           " -- one-based, as `include` counts -- a conditional prior variance of " + variance +
+           ". An excluded coefficient is drawn from that prior before it is scored against the "
+           "data, so the wider that prior, the harder it is for anything to get back in once it "
+           "is out. Expect inclusion probabilities pinned near zero that say more about the "
+           "prior than about the data. Korobilis (2013) puts the usable range at a prior "
+           "variance of 0.25 to 25";
+}
+
 } // namespace bayests
 
 namespace bayests
@@ -580,6 +736,10 @@ void VarNormalWishartInput::validate() const
         if (spec.uses_varsel())
         {
             validate_varsel(varsel_prior, initial.a_lambda, nparams, spec.varsel, "a");
+        }
+        if (spec.varsel == VarSelection::ssvs)
+        {
+            validate_ssvs_normal_prior(varsel_prior, a_prior, "a");
         }
     }
 
@@ -609,6 +769,10 @@ void VarNormalGammaInput::validate() const
         {
             validate_varsel(a_varsel_prior, initial.a_lambda, nparams, spec.varsel, "a");
         }
+        if (spec.varsel == VarSelection::ssvs)
+        {
+            validate_ssvs_normal_prior(a_varsel_prior, a_prior, "a");
+        }
     }
 
     if (use_psi())
@@ -619,6 +783,10 @@ void VarNormalGammaInput::validate() const
         if (spec.uses_varsel())
         {
             validate_varsel(psi_varsel_prior, initial.psi_lambda, n_psi, spec.varsel, "psi");
+        }
+        if (spec.varsel == VarSelection::ssvs)
+        {
+            validate_ssvs_normal_prior(psi_varsel_prior, psi_prior, "psi");
         }
     }
 
@@ -891,14 +1059,12 @@ void VarTvpStochvolInput::validate() const
     }
 
     require_length(u_sigma_prior.offset, k, "offset of the log-volatility measurement equation");
-    require_length(u_sigma_prior.state.sigma.shape, k, "prior shape of the log-volatility innovations");
-    require_length(u_sigma_prior.state.sigma.rate, k, "prior rate of the log-volatility innovations");
+    validate_state_variance_prior(u_sigma_prior.state, k, "log-volatility");
     require_length(u_sigma_prior.state.initial_state.mu, k, "prior mean of the log-volatility before the sample");
     require_square(u_sigma_prior.state.initial_state.v_inv, k, "prior precision of the log-volatility before the sample");
 
     require_above(u_sigma_prior.offset, 0.0, true,
                   "offset of the log-volatility measurement equation");
-    require_gamma_values(u_sigma_prior.state.sigma, "the log-volatility innovations");
     require_symmetric(u_sigma_prior.state.initial_state.v_inv,
                       "prior precision of the log-volatility before the sample");
 
@@ -1076,6 +1242,10 @@ void VecNormalWishartInput::validate() const
         validate_vec_coefficients(spec, train, varsel_prior, initial.a_lambda, tt, k, n_a,
                                   use_beta());
         validate_normal_block(a_prior, initial.a, n_a, "a");
+        if (spec.varsel == VarSelection::ssvs)
+        {
+            validate_ssvs_normal_prior(varsel_prior, a_prior, "a");
+        }
     }
 
     if (use_beta())
@@ -1466,6 +1636,10 @@ void VecNormalGammaInput::validate() const
         validate_vec_coefficients(spec, train, varsel_prior, initial.a_lambda, tt, k, n_a,
                                   use_beta());
         validate_normal_block(a_prior, initial.a, n_a, "a");
+        if (spec.varsel == VarSelection::ssvs)
+        {
+            validate_ssvs_normal_prior(varsel_prior, a_prior, "a");
+        }
     }
 
     if (use_beta())
@@ -1481,6 +1655,10 @@ void VecNormalGammaInput::validate() const
         if (spec.uses_varsel())
         {
             validate_varsel(psi_varsel_prior, initial.psi_lambda, n_psi, spec.varsel, "psi");
+        }
+        if (spec.varsel == VarSelection::ssvs)
+        {
+            validate_ssvs_normal_prior(psi_varsel_prior, psi_prior, "psi");
         }
     }
 

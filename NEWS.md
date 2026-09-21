@@ -1,5 +1,36 @@
 # bvartools 1.0.0
 
+* **SSVS refuses three priors it could not honour.** The vendored core now
+  checks, at every coefficient SSVS selects over, that the prior mean is zero,
+  that the prior precision couples it to nothing else, and that `tau0` is
+  smaller than `tau1`. Each of those files used to run: the coefficients were
+  drawn under the prior as given while the inclusion indicators were scored as
+  if both mixture components sat at zero, so the chain targeted neither model
+  (George, Sun and Ni 2008, eq. 12). `add_priors()` produces a diagonal
+  precision and `tau0 < tau1` from its defaults, so what reaches this is a
+  non-zero mean: **`coef$const` together with SSVS and
+  `varsel$exclude_det = FALSE`, the default, now stops** with a message naming
+  the position, as does `coef$coint_var = TRUE` with SSVS over the first own
+  lags it puts a mean of one on. Setting `varsel$exclude_det = TRUE` keeps the intercept out of the
+  selection and runs. *Draws are unchanged* for every model still accepted.
+
+* **`bvs` warns when its coefficient prior is too flat to select against.** An
+  excluded coefficient is drawn from its prior and then scored against the
+  data, so the flatter the prior the harder it is for anything to get back in,
+  and inclusion probabilities pinned near zero describe the prior rather than
+  the data (Korobilis 2013, section 3.1). The core reports a selected position
+  whose conditional prior variance is 100 or more, and
+  `add_posterior_coefficients()` raises it as an R warning for the seven
+  constant-coefficient models that offer `bvs`. It was collected rather than
+  raised where it arose: `Rf_warning()` may longjmp out of a running sampler.
+  *Draws are unchanged.*
+
+* The vendored BayesTS core is refreshed to upstream `4a64082`. Besides the two
+  items above, it brings a non-centred parameterisation of `VarTvpStochvol`'s
+  random walks, `omega_v` in place of `shape`/`rate`, which is not yet reachable
+  from R: nothing here sets `omega_v`, so every model is drawn as before --
+  upstream's fingerprint recording is identical for every file without it.
+
 * **`transform_variables()` returns a vector series for a vector series**, where
   it returned a one-column matrix, and a single series takes a named or an
   unnamed code alike: a named code on a series without a column name used to

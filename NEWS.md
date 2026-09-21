@@ -1,5 +1,23 @@
 # bvartools 1.0.0
 
+* **Simulated forecasts of time varying VECs warn when the error correction
+  term is far from zero, and refuse after rescaling.** A step of the
+  cointegration vectors moves the term by about the level of its series, so for
+  log levels times 100 the forecast under `forecast_states = "simulate"` is
+  mostly that drift: on Austrian GDP, prices, unemployment and a short rate, the
+  spread of next year's GDP growth was 5 to 11 percentage points against about
+  1.5 with `"hold"`. `add_posterior_forecasts()` and `add_predictive_loglik()`
+  now warn when a series in the term is more than 50 times its standard
+  deviation per period away from zero; interest rates and inflation in percent
+  stay far below that. A time varying VEC estimated on series that
+  `scale_error_correction()` centred or scaled stops unless
+  `forecast_states = "hold"`: after `rescale_error_correction()` a step of the
+  cointegration vectors acts on the series as they are, and the constant takes
+  up the means of the last period only, so the simulation would not be that of
+  the estimated model. `rescale_error_correction()` records this in
+  `model$ect_rescaled`. The default stays `"simulate"`, and *draws are
+  unchanged* wherever a forecast is still made.
+
 * **A simulated forecast no longer turns NaN when a log-volatility drifts
   far.** With `forecast_states = "simulate"`, the default, the forecast error
   at each horizon was drawn through the inverse of the precision

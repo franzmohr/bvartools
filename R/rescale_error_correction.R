@@ -51,6 +51,16 @@ rescale_error_correction <- function (object, ...) {
 #' constant are carried over as they are, so they describe the constant of the
 #' centred series.
 #'
+#' What is unchanged is the sample. Beyond it, a model with time varying
+#' cointegration vectors cannot be carried on from the rescaled draws: the state
+#' equation of \eqn{\beta_t} was estimated for the transformed series, and the
+#' constant absorbs \eqn{\alpha_t \beta_t^{\prime} D^{-1} m} of the last period
+#' only, so a step of \eqn{\beta_t} would reintroduce the intercept the centring
+#' removed. The function therefore sets \code{object$model$ect_rescaled} for such a
+#' model, and \code{\link{add_posterior_forecasts.bvecmodel}} and
+#' \code{\link{add_predictive_loglik.bvecmodel}} accept it only with
+#' \code{forecast_states = "hold"}.
+#'
 #' @return An object of class 'bvecmodel'.
 #'
 #' @export
@@ -127,6 +137,14 @@ rescale_error_correction.bvecmodel <- function(object, ...) {
   # silently transforming the model a second time.
   attr(object[["data"]][["train"]][["w"]], "scale") <- NULL
   attr(object[["data"]][["train"]][["w"]], "centre") <- NULL
+
+  # What the attributes said has to outlive them for one purpose: a time varying
+  # model estimated on the transformed series cannot have its cointegration
+  # vectors simulated forward on the scale of the data, and the forecast has to
+  # be able to tell. See .check_simulated_coint_states().
+  if (r > 0 && object[["model"]][["algorithm"]] %in% c("VecTvpWishart", "VecTvpGamma", "VecTvpStochvol")) {
+    object[["model"]][["ect_rescaled"]] <- TRUE
+  }
 
   return(object)
 }

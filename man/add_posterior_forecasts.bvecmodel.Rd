@@ -40,6 +40,25 @@ coefficients they are not: its VAR representation has no state equation of its o
 holds its coefficients at the last period, while this method steps the states of the VEC
 model and converts them to levels anew in every forecast period.
 
+Simulating the cointegration vectors forward depends on the units of the data. A step
+\eqn{\eta_t} of their state equation moves the error correction term by
+\eqn{\eta_t^{\prime} w_t}, which for series far from zero -- log levels times 100,
+say -- is of the order of their levels rather than of their variation: the random
+walk intercept described in section 'Prior on the cointegration space' of
+\code{\link{cointspace_prior}}, carried forward with nothing in the data to restrain
+it. The forecast is then mostly that drift, and its intervals widen accordingly.
+A warning names the series in the error correction term that are more than 50
+times their standard deviation per period away from zero at the end of the sample;
+\code{forecast_states = "hold"} is the alternative. Series near zero, such as
+interest rates and inflation in percent, do not draw it.
+
+A time varying model estimated on series that \code{\link{scale_error_correction}}
+centred or scaled cannot be simulated forward and stops with an error unless
+\code{forecast_states = "hold"}: the state equation of its cointegration vectors
+belongs to the transformed series, while \code{\link{rescale_error_correction}}
+has put the vectors back on the scale of the data and moved the means into the
+constant of the last sample period only.
+
 Simulating the volatility forward needs \code{posterior$u_sigma_inv$sigma}, the variance
 of the log-volatility innovations, which \code{\link{add_posterior_coefficients}}
 stores. A model with stochastic volatility estimated with an earlier version of the

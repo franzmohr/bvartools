@@ -9,7 +9,8 @@
 #' @return The value returned by the method for the class of \code{object},
 #' as described on the pages of the methods.
 #'
-#' @seealso Methods: \code{\link{time_variation_test.bvarmodel}}.
+#' @seealso Methods: \code{\link{time_variation_test.bvarmodel}},
+#' \code{\link{time_variation_test.bvecmodel}}.
 #'
 #' @export
 time_variation_test <- function(object, ...) {
@@ -19,23 +20,25 @@ time_variation_test <- function(object, ...) {
 
 #' @export
 time_variation_test.default <- function(object, ...) {
-  stop("time_variation_test() is available for 'bvarmodel' objects with time varying ",
-       "parameters, estimated with the prior 'omega_v' in add_priors().", call. = FALSE)
+  stop("time_variation_test() is available for 'bvarmodel' and 'bvecmodel' objects with ",
+       "time varying parameters, estimated with the prior 'omega_v' in add_priors().",
+       call. = FALSE)
 }
 
 
-#' Test for Time Variation in a VAR Model
+#' Test for Time Variation in a VAR or VEC Model
 #'
 #' Computes the Bayes factors of Chan (2018) for time variation in each
 #' coefficient, each covariance coefficient and, under stochastic volatility,
-#' each log-volatility of a VAR model with time varying parameters, from the
-#' draws of a single estimation of that model.
+#' each log-volatility of a VAR or VEC model with time varying parameters, from
+#' the draws of a single estimation of that model.
 #'
 #' @param object an object of class \code{"bvarmodel"} with \code{tvp = TRUE} and
-#' \code{error = "sv"}, \code{"sv+covar"}, \code{"gamma"} or \code{"gamma+covar"},
-#' whose priors were set with \code{coef$omega_v} or, under stochastic volatility,
-#' \code{sigma$omega_v} in \code{\link{add_priors}} and whose posterior was drawn by
-#' \code{\link{add_posterior_coefficients}}.
+#' \code{error = "sv"}, \code{"sv+covar"}, \code{"gamma"} or \code{"gamma+covar"}, or
+#' of class \code{"bvecmodel"} with \code{tvp = TRUE} and \code{error = "sv"} or
+#' \code{"sv+covar"}, whose priors were set with \code{coef$omega_v} or, under
+#' stochastic volatility, \code{sigma$omega_v} in \code{\link{add_priors}} and whose
+#' posterior was drawn by \code{\link{add_posterior_coefficients}}.
 #' @param joint logical. Should the Bayes factor for the time variation of every
 #' state of a block at once be reported as well? Default is \code{TRUE}.
 #' @param batches integer. The number of batches the draws are split into for
@@ -81,6 +84,12 @@ time_variation_test.default <- function(object, ...) {
 #'
 #' Each block chooses its prior separately in \code{\link{add_priors}}, and only
 #' the blocks estimated under \code{omega_v} are reported.
+#'
+#' For a VEC model the coefficients are the loadings, labelled by the error
+#' correction term they load on (\code{ect1}, \code{ect2}, ...), followed by the
+#' other coefficients. The cointegration space itself follows a state equation
+#' with a fixed variance, which has no prior to test against and is not
+#' reported.
 #'
 #' @return A data frame of class \code{"bvartimevar"} with one row per state and,
 #' if \code{joint = TRUE}, one per block, and the columns
@@ -133,6 +142,20 @@ time_variation_test.default <- function(object, ...) {
 #' @export
 #' @rdname time_variation_test.bvarmodel
 time_variation_test.bvarmodel <- function(object, joint = TRUE, batches = 20, ...) {
+  .time_variation_test(object, joint, batches)
+}
+
+
+#' @export
+#' @rdname time_variation_test.bvarmodel
+time_variation_test.bvecmodel <- function(object, joint = TRUE, batches = 20, ...) {
+  .time_variation_test(object, joint, batches)
+}
+
+
+# The work of both methods. Only the labels of the coefficients differ between
+# a VAR and a VEC model, and .time_variation_labels_a() tells them apart.
+.time_variation_test <- function(object, joint, batches) {
 
   if (!is.logical(joint) || length(joint) != 1 || is.na(joint)) {
     stop("Argument 'joint' must be TRUE or FALSE.", call. = FALSE)
@@ -220,7 +243,10 @@ time_variation_test.bvarmodel <- function(object, joint = TRUE, batches = 20, ..
 
 # The equation and the regressor of every coefficient, in the order of the
 # draws: vec(A) with A of dimension k x n_x, then for a structural model the free
-# elements of A_0 column by column, as summary.bvarmodel() reads them.
+# elements of A_0 column by column, as summary.bvarmodel() reads them. For a VEC
+# model A is (alpha, Gamma, ...), so the loadings lead, one column per error
+# correction term, and the regressor blocks other than the cointegration space
+# follow in the order the summary methods list them.
 .time_variation_labels_a <- function(object, y_names) {
 
   k <- object[["model"]][["k"]]
@@ -231,7 +257,15 @@ time_variation_test.bvarmodel <- function(object, joint = TRUE, batches = 20, ..
 
   n_structural <- if (isTRUE(object[["model"]][["structural"]])) k * (k - 1) / 2 else 0
   n_non_structural <- n_a - n_structural
-  x_names <- .get_regressor_names_bvarmodel(object, add_block = FALSE)
+  if (inherits(object, "bvecmodel")) {
+    blocks <- .get_regressor_blocks_bvecmodel(object)
+    blocks[["Pi"]] <- NULL
+    rank <- object[["model"]][["rank"]]
+    x_names <- c(if (rank > 0) paste0("ect", seq_len(rank)),
+                 .flatten_regressor_blocks(blocks))
+  } else {
+    x_names <- .get_regressor_names_bvarmodel(object, add_block = FALSE)
+  }
   n_x <- n_non_structural / k
   if (is.null(x_names) || length(x_names) < n_x) {
     x_names <- paste0("x", seq_len(n_x))

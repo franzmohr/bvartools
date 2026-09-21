@@ -11,6 +11,13 @@
 # 
 # @export
 .check_bvecpost_input <- function(object){
+
+  # The prior on how far a random walk moves: 'shape' and 'rate', or the
+  # non-centred 'omega_v' in their place.
+  state_prior <- function(prior) {
+    if (is.null(prior[["omega_v"]])) c("shape", "rate") else "omega_v"
+  }
+
   
   # Coefficients ----
   if (!is.null(object[["data"]][["train"]][["z"]])) {
@@ -25,7 +32,7 @@
       }
     } 
     if (object[["model"]][["tvp"]]) {
-      for (i in c("shape", "rate")) {
+      for (i in state_prior(object[["priors"]][["a"]])) {
         if (is.null(object[["priors"]][["a"]][[i]])) {
           stop(paste0("Missing element 'object$priors$a$", i, "'."))
         }
@@ -58,7 +65,7 @@
       }
     } 
     if (object[["model"]][["tvp"]]) {
-      for (i in c("shape", "rate")) {
+      for (i in state_prior(object[["priors"]][["psi"]])) {
         if (is.null(object[["priors"]][["psi"]][[i]])) {
           stop(paste0("Missing element 'object$priors$psi$", i, "'."))
         }
@@ -106,7 +113,7 @@
   
   # Stochastic volatility
   if (object[["model"]][["error"]] %in% c("sv", "sv+covar")) {
-    for (i in c("mu", "v_inv", "shape", "rate")) {
+    for (i in c("mu", "v_inv", state_prior(object[["priors"]][["u_sigma"]]))) {
       if (is.null(object[["priors"]][["u_sigma"]][[i]])) {
         stop(paste0("Missing element 'object$priors$u_sigma$", i, "'."))
       }

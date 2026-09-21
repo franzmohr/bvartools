@@ -36,16 +36,21 @@
 
 # Whether the model's sampler reads the non-centred prior 'omega_v' for the
 # random walks of 'arg': the coefficients and covariance coefficients of
-# VarTvpStochvol and VarTvpGamma for 'coef', the log-volatilities of
-# VarTvpStochvol for 'sigma'. Anywhere else it would be written into the priors
-# and silently left unread, so the checks below refuse it instead.
-.add_priors_noncentred_errors <- function(arg) {
-  if (arg == "sigma") c("sv", "sv+covar") else c("sv", "sv+covar", "gamma", "gamma+covar")
+# VarTvpStochvol, VarTvpGamma and VecTvpStochvol for 'coef', the
+# log-volatilities of VarTvpStochvol and VecTvpStochvol for 'sigma'. Anywhere
+# else it would be written into the priors and silently left unread, so the
+# checks below refuse it instead.
+.add_priors_noncentred_errors <- function(object, arg) {
+  if (arg == "sigma" || inherits(object, "bvecmodel")) {
+    c("sv", "sv+covar")
+  } else {
+    c("sv", "sv+covar", "gamma", "gamma+covar")
+  }
 }
 
 .add_priors_noncentred_allowed <- function(object, arg) {
-  inherits(object, "bvarmodel") && isTRUE(object[["model"]][["tvp"]]) &&
-    isTRUE(object[["model"]][["error"]] %in% .add_priors_noncentred_errors(arg))
+  inherits(object, c("bvarmodel", "bvecmodel")) && isTRUE(object[["model"]][["tvp"]]) &&
+    isTRUE(object[["model"]][["error"]] %in% .add_priors_noncentred_errors(object, arg))
 }
 
 # 'omega_v' replaces 'shape' and 'rate' rather than joining them: a block reads
@@ -55,10 +60,11 @@
     return(invisible(NULL))
   }
   if (!.add_priors_noncentred_allowed(object, arg)) {
-    errors <- .add_priors_noncentred_errors(arg)
-    stop("Argument '", arg, "$omega_v' is only available for VAR models with time varying ",
-         "parameters and error = ", paste0("\"", errors, "\"", collapse = ", "), ".",
-         call. = FALSE)
+    errors <- .add_priors_noncentred_errors(object, arg)
+    model <- if (inherits(object, "bvecmodel")) "VEC" else "VAR"
+    stop("Argument '", arg, "$omega_v' is only available for ", model, " models with time ",
+         "varying parameters and error = ", paste0("\"", errors, "\"", collapse = ", "),
+         ".", call. = FALSE)
   }
   given <- intersect(alternatives, names(spec))
   if (length(given) > 0) {
@@ -110,7 +116,7 @@
   
   # One value for every coefficient: the same prior for every state variance,
   # as 'shape' and 'rate' give it.
-  .add_priors_check_omega_v(object, coef, "coef", c("shape", "rate", "rate_det"), 1)
+  .add_priors_check_omega_v(object, coef, "coef", c("shape", "rate", "rate_det", "rate_alpha"), 1)
 
   # Tests for specifications used in TVP models
   if (!is.null(object[["model"]][["tvp"]])) {

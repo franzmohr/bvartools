@@ -70,6 +70,14 @@
 #'   \code{rate} keeps their drift from absorbing the residuals while the other coefficients vary.
 #'   It does not reach the steps of the cointegration vectors, which can absorb the residuals as
 #'   well; see section 'Prior on the cointegration space'.}
+#'   \item{\code{omega_v}}{a positive numeric, in place of \code{shape}, \code{rate},
+#'   \code{rate_det} and \code{rate_alpha}: the variance of a normal prior on the signed standard
+#'   deviation of the state innovations of the coefficients, loadings included, and of the
+#'   covariance coefficients -- the non-centred parameterisation that lets the posterior carry
+#'   the test for time variation of \code{\link{time_variation_test}}; see
+#'   \code{\link{add_priors.bvarmodel}} for the model and the draws it adds. The cointegration
+#'   space keeps its state equation. Only for models with time varying parameters and
+#'   stochastic volatility, \code{tvp = TRUE} with \code{error = "sv"} or \code{"sv+covar"}.}
 #' }
 #' 
 #' Argument \code{coint} specifies the prior on the cointegration space. Its
@@ -82,7 +90,8 @@
 #'   \item \code{"wishart"}: \code{df} and \code{scale}. Not available for structural models.
 #'   \item \code{"gamma"} and \code{"gamma+covar"}: \code{shape} and \code{rate}.
 #'   \item \code{"sv"} and \code{"sv+covar"}: \code{mu}, \code{v_i}, \code{shape}, \code{rate},
-#'   \code{state_variance} and \code{offset}.
+#'   \code{state_variance} and \code{offset}; with \code{tvp = TRUE}, \code{omega_v} may take the
+#'   place of \code{shape} and \code{rate}, as \code{coef$omega_v} does for the coefficients.
 #' }
 #' The elements are
 #' \describe{
@@ -524,14 +533,21 @@ add_priors.bvecmodel <- function(object,
         if (n_det > 0 & !is.null(coef[["v_i_det"]])) {
           diag(v_i)[tot_par - n_struct - n_det + 1:n_det] <- coef[["v_i_det"]]
         }
-        object[["priors"]][["a"]][["shape"]] <- matrix(coef[["shape"]], tot_par)
-        object[["priors"]][["a"]][["rate"]] <- matrix(coef[["rate"]], tot_par)
-        if (n_det > 0 & !is.null(coef[["rate_det"]])) {
-          object[["priors"]][["a"]][["rate"]][tot_par - n_struct - n_det + 1:n_det, ] <- coef[["rate_det"]]
-        }
-        # The loadings come first among the coefficients.
-        if (r > 0 & !is.null(coef[["rate_alpha"]])) {
-          object[["priors"]][["a"]][["rate"]][1:n_alpha, ] <- coef[["rate_alpha"]]
+        if (!is.null(coef[["omega_v"]])) {
+          # The non-centred parameterisation: a normal prior on the signed
+          # standard deviation of the state innovations instead of the gamma
+          # one on their precision.
+          object[["priors"]][["a"]][["omega_v"]] <- matrix(coef[["omega_v"]], tot_par)
+        } else {
+          object[["priors"]][["a"]][["shape"]] <- matrix(coef[["shape"]], tot_par)
+          object[["priors"]][["a"]][["rate"]] <- matrix(coef[["rate"]], tot_par)
+          if (n_det > 0 & !is.null(coef[["rate_det"]])) {
+            object[["priors"]][["a"]][["rate"]][tot_par - n_struct - n_det + 1:n_det, ] <- coef[["rate_det"]]
+          }
+          # The loadings come first among the coefficients.
+          if (r > 0 & !is.null(coef[["rate_alpha"]])) {
+            object[["priors"]][["a"]][["rate"]][1:n_alpha, ] <- coef[["rate_alpha"]]
+          }
         }
       } else {
         v_i <- diag(coef[["v_i"]], tot_par)
@@ -565,8 +581,12 @@ add_priors.bvecmodel <- function(object,
     object[["priors"]][["psi"]][["mu"]] <- matrix(0, n_covar)
     object[["priors"]][["psi"]][["v_inv"]] <- diag(coef[["v_i"]], n_covar)
     if (object[["model"]][["tvp"]]) {
-      object[["priors"]][["psi"]][["shape"]] <- matrix(coef[["shape"]], n_covar)
-      object[["priors"]][["psi"]][["rate"]] <- matrix(coef[["rate"]], n_covar) 
+      if (!is.null(coef[["omega_v"]])) {
+        object[["priors"]][["psi"]][["omega_v"]] <- matrix(coef[["omega_v"]], n_covar)
+      } else {
+        object[["priors"]][["psi"]][["shape"]] <- matrix(coef[["shape"]], n_covar)
+        object[["priors"]][["psi"]][["rate"]] <- matrix(coef[["rate"]], n_covar)
+      }
     }
     
     # Variable selection

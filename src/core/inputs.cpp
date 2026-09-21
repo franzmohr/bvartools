@@ -1196,15 +1196,13 @@ void validate_stochvol_block(const StochvolPrior &prior, const arma::vec &h_sigm
                              arma::uword tt)
 {
     require_length(prior.offset, k, "offset of the log-volatility measurement equation");
-    require_length(prior.state.sigma.shape, k, "prior shape of the log-volatility innovations");
-    require_length(prior.state.sigma.rate, k, "prior rate of the log-volatility innovations");
+    validate_state_variance_prior(prior.state, k, "log-volatility");
     require_length(prior.state.initial_state.mu, k,
                    "prior mean of the log-volatility before the sample");
     require_square(prior.state.initial_state.v_inv, k,
                    "prior precision of the log-volatility before the sample");
 
     require_above(prior.offset, 0.0, true, "offset of the log-volatility measurement equation");
-    require_gamma_values(prior.state.sigma, "the log-volatility innovations");
     require_symmetric(prior.state.initial_state.v_inv,
                       "prior precision of the log-volatility before the sample");
 

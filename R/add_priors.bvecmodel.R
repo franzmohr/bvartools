@@ -76,8 +76,9 @@
 #'   covariance coefficients -- the non-centred parameterisation that lets the posterior carry
 #'   the test for time variation of \code{\link{time_variation_test}}; see
 #'   \code{\link{add_priors.bvarmodel}} for the model and the draws it adds. The cointegration
-#'   space keeps its state equation. Only for models with time varying parameters and
-#'   stochastic volatility, \code{tvp = TRUE} with \code{error = "sv"} or \code{"sv+covar"}.}
+#'   space keeps its state equation. Only for models with time varying parameters,
+#'   \code{tvp = TRUE}, and \code{error = "sv"}, \code{"sv+covar"}, \code{"gamma"} or
+#'   \code{"gamma+covar"}.}
 #' }
 #' 
 #' Argument \code{coint} specifies the prior on the cointegration space. Its

@@ -400,6 +400,7 @@ struct VecTvpGammaDraws
     arma::mat a;
     arma::mat a_sigma;
     arma::mat a_lambda;
+    NoncentredStateDraws a_noncentred;
 
     arma::mat beta;
 
@@ -411,6 +412,7 @@ struct VecTvpGammaDraws
     arma::mat psi;
     arma::mat psi_sigma;
     arma::mat psi_lambda;
+    NoncentredStateDraws psi_noncentred;
 
     arma::mat u_omega_inv; ///< k x iterations.
     arma::mat u_sigma_inv;

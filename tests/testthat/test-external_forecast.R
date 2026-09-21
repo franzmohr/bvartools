@@ -292,7 +292,13 @@ ann_windows <- function() {
   })
 }
 
-ann_type <- c(y = "growth", Dp = "level")
+# Output growth in percent, the log change of a level times 100, and inflation
+# as it is
+ann_code <- c(y = 5, Dp = 1)
+ann_kind <- c(y = "growth", Dp = "level")
+ann_aggregate <- function(object, ...) {
+  aggregate_forecasts(object, code = ann_code, scale = 100, ...)
+}
 
 # The annual figure of a year from quarterly values in the units of the model:
 # the growth of the annual average of the levels, whose log levels in percent
@@ -308,7 +314,7 @@ ann_by_hand <- function(time, values, year, type) {
 
 test_that("each draw of a quarterly forecast becomes a draw of the annual figures", {
   windows <- ann_windows()
-  annual <- aggregate_forecasts(windows, type = ann_type)
+  annual <- ann_aggregate(windows)
 
   expect_s3_class(annual, "expandingwindow")
   expect_length(annual, length(windows))
@@ -329,35 +335,125 @@ test_that("each draw of a quarterly forecast becomes a draw of the annual figure
     first_year <- floor(end + 0.25 + 1e-8)
     time <- c(stats::time(observed), end + (1:8) / 4)
     for (s in c(1, nrow(draws))) {
-      for (v in names(ann_type)) {
+      for (v in names(ann_code)) {
         values <- c(observed[, v], draws[s, (0:7) * 3 + match(v, dimnames(observed)[[2]])])
         for (h in 1:2) {
           expect_equal(unname(result[s, paste0(v, "_", h)]),
-                       ann_by_hand(time, values, first_year + h - 1, ann_type[[v]]))
+                       ann_by_hand(time, values, first_year + h - 1, ann_kind[[v]]))
         }
       }
     }
   }
 })
 
-test_that("growth rates and log levels give the same annual figure", {
-  changes <- matrix(c(0.5, -0.2, 1.1, 0.3, 0.8, 0.1, -0.4, 0.6, 0.2), ncol = 1)
-  period <- 7999 + seq_along(changes)
-  levels <- 1000 + cumsum(changes)
+# Seven untransformed quarterly series from 1990 to 2001, one per transformation
+# code of FRED-QD: the positive levels of a growing series for the
+# multiplicative codes and a wandering rate for the additive ones.
+ann_levels <- function() {
+  set.seed(1990)
+  n <- 48
+  growing <- function() 100 * exp(cumsum(0.005 + 0.01 * stats::rnorm(n)))
+  wandering <- function() 5 + cumsum(0.2 * stats::rnorm(n))
+  x <- cbind(c1 = wandering(), c2 = wandering(), c3 = wandering(), c4 = growing(),
+             c5 = growing(), c6 = growing(), c7 = growing())
+  stats::ts(x, start = 1990, frequency = 4)
+}
+ann_codes <- c(c1 = 1, c2 = 2, c3 = 3, c4 = 4, c5 = 5, c6 = 6, c7 = 7)
 
-  growth <- .annual_values(changes, period, 2001, "growth", 100, 4)
-  loglevel <- .annual_values(matrix(levels, ncol = 1), period, 2001, "loglevel", 100, 4)
-  expect_equal(growth, loglevel)
-  expect_equal(as.numeric(growth),
-               100 * (mean(exp(levels[5:8] / 100)) / mean(exp(levels[1:4] / 100)) - 1))
+# An expanding window over the transformed series, whose training samples end in
+# 1997Q4 to 1999Q4, and whose forecast draws are all replaced by the transformed
+# values that followed, eight quarters of them. The data of the models end in
+# 1999Q4, the levels in 2001Q4.
+ann_foresight <- function(scale = 1) {
+  data <- transform_variables(ann_levels(), ann_codes)
+  data[, 4:7] <- data[, 4:7] * scale
+  data <- stats::window(data, start = c(1990, 3))
+  model <- create_bvarmodel(stats::window(data, end = c(1999, 4)), p = 1,
+                            deterministic = "const", iterations = 10, burnin = 5)
+  model <- add_priors(model, coef = list(v_i = 0.1, v_i_det = 0.01),
+                      sigma = list(df = "k", scale = 1))
+  windows <- use_expanding_window(model, start = c(1998, 1))
+  windows <- add_initial_values(windows)
+  windows <- add_posterior_coefficients(add_seed(windows, 1990))
+  windows <- add_forecast_input(windows, n_ahead = 8)
+  windows <- add_posterior_forecasts(windows)
+  for (i in seq_along(windows)) {
+    end <- stats::tsp(windows[[i]][["data"]][["train"]][["y"]])[2]
+    future <- stats::window(data, start = end + 0.25, end = end + 2)
+    draws <- windows[[i]][["posterior"]][["forecast"]][["forecasts"]]
+    draws[] <- rep(as.numeric(t(future)), each = nrow(draws))
+    windows[[i]][["posterior"]][["forecast"]][["forecasts"]] <- draws
+  }
+  windows
+}
 
-  # The logarithms of the data need not be in percent
-  unscaled <- .annual_values(matrix(levels / 100, ncol = 1), period, 2001, "loglevel", 1, 4)
-  expect_equal(unscaled, loglevel)
+test_that("perfect foresight of the transformed series is perfect foresight of the annual figures", {
+  for (scale in c(1, 100)) {
+    windows <- ann_foresight(scale)
+    for (target in c("average", "q4q4")) {
+      # Reversing the transformation of every code and aggregating the result
+      # recovers the annual figures of the untransformed series
+      annual <- aggregate_forecasts(windows, code = ann_codes, target = target,
+                                    levels = ann_levels(), scale = scale)
+      annual <- add_forecast_errors(annual)
+      errors <- unlist(lapply(annual, get_forecast_errors))
+      # Every window forecasts two years, which the levels cover
+      expect_true(all(sapply(annual, function(x) ncol(get_forecast_errors(x))) ==
+                        2 * length(ann_codes)))
+      expect_equal(errors, rep(0, length(errors)), ignore_attr = TRUE)
+
+      # Codes 1, 4 and 5 are reversed from the data of the models alone
+      from_data <- aggregate_forecasts(windows, code = ann_codes[c(1, 4, 5)],
+                                       target = target, scale = scale)
+      with_levels <- aggregate_forecasts(windows, code = ann_codes[c(1, 4, 5)],
+                                         target = target, levels = ann_levels(),
+                                         scale = scale)
+      for (i in seq_along(windows)) {
+        expect_equal(from_data[[i]][["posterior"]][["forecast"]][["forecasts"]],
+                     with_levels[[i]][["posterior"]][["forecast"]][["forecasts"]])
+      }
+      # Their realised values end with the data of the models, which is where
+      # the levels reach further
+      expect_equal(stats::tsp(from_data[[1]][["data"]][["original"]][["endogen"]])[2], 1999)
+      expect_equal(stats::tsp(with_levels[[1]][["data"]][["original"]][["endogen"]])[2], 2001)
+    }
+  }
+})
+
+test_that("the two targets are the annual average and the fourth quarter", {
+  x <- ann_levels()
+  in_year <- function(v, year) as.numeric(stats::window(x[, v], start = year, end = year + 0.75))
+  average <- aggregate_forecasts(ann_foresight(), code = ann_codes, levels = x)
+  q4q4 <- aggregate_forecasts(ann_foresight(), code = ann_codes, levels = x,
+                              target = "q4q4")
+
+  # The first window ends in 1997Q4, so horizon 2 is 1999
+  average <- average[[1]][["posterior"]][["forecast"]][["forecasts"]][1, ]
+  q4q4 <- q4q4[[1]][["posterior"]][["forecast"]][["forecasts"]][1, ]
+  expect_equal(unname(average["c2_2"]), mean(in_year("c2", 1999)))
+  expect_equal(unname(average["c6_2"]),
+               100 * (mean(in_year("c6", 1999)) / mean(in_year("c6", 1998)) - 1))
+  expect_equal(unname(q4q4["c2_2"]), in_year("c2", 1999)[4])
+  expect_equal(unname(q4q4["c6_2"]), 100 * (in_year("c6", 1999)[4] / in_year("c6", 1998)[4] - 1))
+})
+
+test_that("levels must reproduce the data of the models", {
+  windows <- ann_foresight(scale = 100)
+  # The data are in percent, the default scale is 1
+  expect_error(aggregate_forecasts(windows, code = ann_codes, levels = ann_levels()),
+               "does not reproduce the data of variable 'c4' under code 4 and scale 1")
+  expect_error(aggregate_forecasts(windows, code = ann_codes, scale = 100),
+               "'c2', 'c3', 'c6', 'c7'")
+  expect_error(aggregate_forecasts(windows, code = ann_codes, scale = 100,
+                                   levels = ann_levels()[, 1:6]),
+               "'c7'")
+  expect_error(aggregate_forecasts(windows, code = ann_codes, scale = 100,
+                                   levels = as.data.frame(ann_levels())),
+               "class 'ts'")
 })
 
 test_that("aggregated models carry the realised annual figures they are scored against", {
-  annual <- aggregate_forecasts(ann_windows(), type = ann_type)
+  annual <- ann_aggregate(ann_windows())
   full <- var_data()
 
   # The first window ends in 1995Q1: horizon 1 is 1995, horizon 2 is 1996
@@ -391,12 +487,12 @@ test_that("aggregated models carry the realised annual figures they are scored a
 })
 
 test_that("annual external forecasts are matched to the quarterly training samples", {
-  annual <- aggregate_forecasts(ann_windows(), type = ann_type)
+  annual <- ann_aggregate(ann_windows())
 
   # Publications in the second and the fourth quarter of 1995 for the current
   # and the next year, which see the data up to the quarter before
   forecasts <- expand.grid(origin = c(1995.3, 1995.8), year = 0:1,
-                           variable = names(ann_type), stringsAsFactors = FALSE)
+                           variable = names(ann_code), stringsAsFactors = FALSE)
   forecasts[["period"]] <- 1995 + forecasts[["year"]]
   forecasts[["value"]] <- forecasts[["origin"]] + forecasts[["year"]]
 
@@ -418,11 +514,11 @@ test_that("annual external forecasts are matched to the quarterly training sampl
 })
 
 test_that("annual external forecasts are scored against the annual figures of the models", {
-  annual <- aggregate_forecasts(ann_windows(), type = ann_type)
+  annual <- ann_aggregate(ann_windows())
   realised <- annual[[1]][["data"]][["original"]][["endogen"]]
 
   forecasts <- expand.grid(origin = 1995.3 + (0:8) / 4, year = 0:1,
-                           variable = names(ann_type), stringsAsFactors = FALSE)
+                           variable = names(ann_code), stringsAsFactors = FALSE)
   forecasts[["period"]] <- floor(forecasts[["origin"]]) + forecasts[["year"]]
   forecasts[["value"]] <- mapply(function(period, variable) {
     value <- realised[round(stats::time(realised)) == period, variable]
@@ -448,7 +544,7 @@ test_that("annual external forecasts are scored against the annual figures of th
 
 test_that("the forecasts of a VEC model are aggregated from its levels", {
   vec <- add_posterior_forecasts(add_forecast_input(fx_vec_fitted(), n_ahead = 4))
-  annual <- aggregate_forecasts(vec, type = c(lr = "level"))
+  annual <- aggregate_forecasts(vec, code = c(lr = 1))
 
   expect_s3_class(annual, "bvarmodel")
   expect_false(inherits(annual, "bvecmodel"))
@@ -466,21 +562,21 @@ test_that("the forecasts of a VEC model are aggregated from its levels", {
 test_that("annual aggregation refuses what it cannot aggregate", {
   windows <- ann_windows()
 
-  expect_error(aggregate_forecasts(windows, type = c("growth", "level")), "named")
-  expect_error(aggregate_forecasts(windows, type = c(y = "sum")), "'sum'")
-  expect_error(aggregate_forecasts(windows, type = c(gdp = "growth")), "'gdp'")
-  expect_error(aggregate_forecasts(windows, type = ann_type, scale = 0), "positive")
-  expect_error(aggregate_forecasts(fx_expanding_forecast(), type = ann_type),
-               "does not cover a whole year")
-  expect_error(aggregate_forecasts(fx_var_fitted(), type = ann_type),
-               "add_posterior_forecasts")
+  expect_error(aggregate_forecasts(windows, code = c(5, 1)), "named")
+  expect_error(aggregate_forecasts(windows, code = c(y = "growth")), "named numeric")
+  expect_error(aggregate_forecasts(windows, code = c(y = 8)), "1 to 7")
+  expect_error(aggregate_forecasts(windows, code = c(gdp = 5)), "'gdp'")
+  expect_error(ann_aggregate(windows, target = "q1q1"), "'average' or 'q4q4'")
+  expect_error(aggregate_forecasts(windows, code = ann_code, scale = 0), "positive")
+  expect_error(ann_aggregate(fx_expanding_forecast()), "does not cover a whole year")
+  expect_error(ann_aggregate(fx_var_fitted()), "add_posterior_forecasts")
 
-  annual <- aggregate_forecasts(windows, type = ann_type)
-  expect_error(aggregate_forecasts(annual, type = ann_type), "already aggregated")
+  annual <- ann_aggregate(windows)
+  expect_error(ann_aggregate(annual), "already aggregated")
 
   external <- create_external_forecast(ext_forecasts(value = 1), ext_reference(),
                                        n_ahead = 2, data_lag = 1)
-  expect_error(aggregate_forecasts(external, type = ann_type), "external forecasts")
+  expect_error(ann_aggregate(external), "external forecasts")
 
   forecasts <- data.frame(origin = 1995.3, period = 1995, variable = "y", value = 1)
   expect_error(create_external_forecast(forecasts, combine_models(annual, windows)),

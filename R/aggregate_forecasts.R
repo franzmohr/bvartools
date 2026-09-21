@@ -8,55 +8,76 @@
 #' @param object an object of class 'bvarmodel', 'bvecmodel', 'expandingwindow' or
 #' 'modellist', whose models contain forecasts, i.e. \code{\link{add_posterior_forecasts}}
 #' was already applied to them.
-#' @param type a named character vector, which specifies how each variable is
-#' aggregated. The names are endogenous variables of the models and the elements
-#' one of \code{"growth"}, \code{"loglevel"} or \code{"level"}. See 'Details'.
-#' Endogenous variables, which are not named, are dropped from the comparison.
-#' @param scale the factor, by which the logarithms of variables of type
-#' \code{"growth"} and \code{"loglevel"} are multiplied in the data. The default
-#' of 100 corresponds to log levels and log differences in percent.
+#' @param code a named integer vector of the transformation codes of FRED-MD and
+#' FRED-QD, \code{1:7}, which were applied to the variables of the models -- see
+#' \code{\link{transform_variables}} and 'Details'. The names are endogenous
+#' variables of the models. Endogenous variables, which are not named, are
+#' dropped from the comparison.
+#' @param target either \code{"average"} (default) or \code{"q4q4"}, the annual
+#' figure that is compared. See 'Details'.
+#' @param levels an optional time-series object with the untransformed series, to
+#' which \code{code} was applied, i.e. the argument \code{x} of
+#' \code{\link{transform_variables}}. Its columns are named after the variables.
+#' Required for codes 2, 3, 6 and 7. See 'Details'.
+#' @param scale the factor, by which the transformed series of codes 4 to 7 were
+#' multiplied before they were passed to the models, such as 100 for log
+#' differences in percent. The default of 1 corresponds to the result of
+#' \code{\link{transform_variables}}.
 #'
 #' @details
-#' The three types describe how a variable is measured in the models and determine
-#' how its annual figure is obtained:
+#' Every draw of a forecast is turned back into a path of the untransformed
+#' series by reversing the transformation of its code, and continued from the
+#' periods, which were observed at the end of the training sample. The periods of
+#' a year, which were already observed, are thus taken from the data and the
+#' remaining periods from the draw, so that every draw of the forecast becomes a
+#' draw of the annual figure.
+#'
+#' The codes determine the annual figure. The multiplicative codes 4 to 7 --
+#' logarithms, their differences and differences of growth rates -- describe a
+#' series such as GDP or a price index, whose annual figure is a growth rate in
+#' percent. The additive codes 1 to 3 describe a series such as an unemployment
+#' rate or an interest rate, whose annual figure is a level. Argument
+#' \code{target} determines, which growth rate and which level:
 #' \describe{
-#'   \item{\code{"growth"}}{the change of a log level from one period to the next,
-#'   such as \code{100 * diff(log(gdp))}. The changes are cumulated to log levels.}
-#'   \item{\code{"loglevel"}}{a log level, such as \code{100 * log(gdp)} in a VEC
-#'   model.}
-#'   \item{\code{"level"}}{a variable, whose annual figure is its average over the
-#'   year, such as an unemployment rate or an interest rate.}
+#'   \item{\code{"average"}}{the growth of the annual average of the levels over
+#'   the annual average of the year before for codes 4 to 7, and the annual
+#'   average for codes 1 to 3. This is the convention of, e.g., the World
+#'   Economic Outlook of the IMF. The growth of the annual average is also the
+#'   growth of the annual sum, since both years have the same number of periods,
+#'   so it serves flows such as GDP and averages such as prices alike.}
+#'   \item{\code{"q4q4"}}{the growth of the level of the last period of the year
+#'   over the last period of the year before, i.e. the fourth quarter over the
+#'   fourth quarter or December over December, for codes 4 to 7, and the level of
+#'   the last period of the year for codes 1 to 3. This is the convention of,
+#'   e.g., the Summary of Economic Projections of the Federal Reserve.}
 #' }
-#' For the first two the annual figure is the growth rate in percent of the annual
-#' average of the levels, \code{100 * (mean(exp(cur / scale)) / mean(exp(prev / scale)) - 1)},
-#' where \code{cur} and \code{prev} are the log levels of the periods of the year
-#' and of the year before. This is also the growth rate of the annual sum of the
-#' levels, since both years have the same number of periods, so it serves flows
-#' such as GDP, whose annual figure is a sum, and prices, whose annual figure is an
-#' average, alike. For \code{"level"} the annual figure is the average of the
-#' periods of the year.
 #'
-#' The periods of a year, which were already observed at the end of the training
-#' sample of a model, are taken from its data, and the remaining periods from each
-#' draw of its forecast, so that every draw of the forecast becomes a draw of the
-#' annual figure. Horizon 1 is the year of the forecast origin, i.e. the year of the
-#' first period after the training sample, and horizon 2 the year after it. The
-#' number of annual horizons is the number of years that the forecast horizon
-#' covers from every origin, \code{floor(n_ahead / frequency)}, so that a
-#' quarterly model, which forecasts eight quarters, provides the current and the
-#' next year.
+#' Reversing a difference requires the level, from which it starts. For codes 2,
+#' 3, 6 and 7 it is taken from argument \code{levels}, which is therefore
+#' required for them. Codes 1, 4 and 5 can be reversed from the data of the
+#' models, because the unknown level of a logarithm cancels from a growth rate.
+#' If \code{levels} is provided, it must reproduce the data of the models under
+#' \code{code} and \code{scale}, which guards against a wrong \code{scale}, and
+#' it also provides the realised annual figures.
 #'
-#' The data of the models are aggregated in the same way and replace their data,
-#' so that the realised annual values, against which the aggregated forecasts are
-#' scored, are in \code{data$test$y}. \code{\link{add_forecast_errors}} uses them,
-#' if its argument \code{test_sample} is omitted. Otherwise, \code{test_sample}
-#' must be an annual time series, for example of official annual figures.
+#' Horizon 1 is the year of the forecast origin, i.e. the year of the first
+#' period after the training sample, and horizon 2 the year after it. The number
+#' of annual horizons is the number of years that the forecast horizon covers
+#' from every origin, \code{floor(n_ahead / frequency)}, so that a quarterly
+#' model, which forecasts eight quarters, provides the current and the next year.
+#'
+#' The realised annual figures, against which the aggregated forecasts are
+#' scored, are obtained from \code{levels} or, without it, from the data of the
+#' models in the same way, and are put in \code{data$test$y}.
+#' \code{\link{add_forecast_errors}} uses them, if its argument
+#' \code{test_sample} is omitted. Otherwise, \code{test_sample} must be an annual
+#' time series, for example of official annual figures.
 #'
 #' The result can be passed as argument \code{object} to
 #' \code{\link{create_external_forecast}}, which then reads the periods of the
 #' external forecasts as years, but matches their publications to the training
 #' samples of the models at the frequency of the data. The external forecasts are
-#' scored against the same realised annual values as the models.
+#' scored against the same realised annual figures as the models.
 #'
 #' The aggregated models only contain the forecasts and the data, which are
 #' required to evaluate them. Therefore, aggregation is the last step before
@@ -71,7 +92,7 @@
 #'
 #' data("us_macrodata")
 #'
-#' # Create model
+#' # Inflation and the interest rate enter the model as they are
 #' model <- create_bvarmodel(data = us_macrodata, p = 1, deterministic = "const",
 #'                           iterations = 10, burnin = 2)
 #' # Chosen number of iterations and burn-in draws should be much higher.
@@ -85,7 +106,7 @@
 #' model <- add_posterior_forecasts(model)
 #'
 #' # Annual averages of inflation and the interest rate
-#' annual <- aggregate_forecasts(model, type = c(Dp = "level", r = "level"))
+#' annual <- aggregate_forecasts(model, code = c(Dp = 1, r = 1))
 #'
 #' # Artificial annual forecasts of the current and the next year, published in
 #' # the middle of each quarter
@@ -100,32 +121,63 @@
 #' models <- add_forecast_errors(combine_models(annual, ext))
 #' selection_criteria(models)
 #'
+#' @references
+#'
+#' McCracken, M. W., & Ng, S. (2021). FRED-QD: A quarterly database for
+#' macroeconomic research. \emph{Federal Reserve Bank of St. Louis Review,
+#' 103}(1), 1--44.
+#'
 #' @family model comparison
 #' @export
-aggregate_forecasts <- function(object, type, scale = 100) {
+aggregate_forecasts <- function(object, code, target = "average", levels = NULL,
+                                scale = 1) {
 
-  if (is.list(type)) {
-    type <- unlist(type)
+  if (is.list(code)) {
+    code <- unlist(code)
   }
-  if (!is.character(type) || length(type) == 0 || is.null(names(type)) ||
-      any(is.na(names(type)) | names(type) == "") || anyDuplicated(names(type)) > 0) {
-    stop("Argument 'type' must be a named character vector with one element per variable,\nsuch as c(dy = \"growth\", u = \"level\").")
+  if (!is.numeric(code) || length(code) == 0 || is.null(names(code)) ||
+      any(is.na(names(code)) | names(code) == "") || anyDuplicated(names(code)) > 0) {
+    stop("Argument 'code' must be a named numeric vector of transformation codes with one\nelement per variable, such as c(gdp = 5, unrate = 1).")
   }
-  unknown <- !type %in% c("growth", "loglevel", "level")
-  if (any(unknown)) {
-    stop("The elements of argument 'type' must be 'growth', 'loglevel' or 'level', not ",
-         paste0("'", unique(type[unknown]), "'", collapse = ", "), ".")
+  if (any(is.na(code)) || any(!code %in% 1:7)) {
+    stop("Argument 'code' must only contain the transformation codes 1 to 7. See\n'transform_variables'.")
   }
+  code <- stats::setNames(as.integer(code), names(code))
+
+  if (length(target) != 1 || !target %in% c("average", "q4q4")) {
+    stop("Argument 'target' must be either 'average' or 'q4q4'.")
+  }
+
   if (length(scale) != 1 || !is.numeric(scale) || !is.finite(scale) || scale <= 0) {
     stop("Argument 'scale' must be a single positive number.")
   }
 
-  return(.aggregate_forecasts(object, type, scale))
+  if (is.null(levels)) {
+    need <- code %in% c(2, 3, 6, 7)
+    if (any(need)) {
+      stop("Codes 2, 3, 6 and 7 are differences, which are reversed from the level they\nstart from. Argument 'levels' must provide the untransformed series of ",
+           paste0("'", names(code)[need], "'", collapse = ", "), ".")
+    }
+  } else {
+    if (!"ts" %in% class(levels)) {
+      stop("Argument 'levels' must be an object of class 'ts'.")
+    }
+    levels <- .as_named_mts(levels, names(code)[1])
+    missing_vars <- !names(code) %in% dimnames(levels)[[2]]
+    if (any(missing_vars)) {
+      stop("Argument 'levels' does not contain the variable(s) ",
+           paste0("'", names(code)[missing_vars], "'", collapse = ", "), ".")
+    }
+  }
+
+  spec <- list(code = code, target = target, levels = levels, scale = scale)
+
+  return(.aggregate_forecasts(object, spec))
 }
 
 # Walks a model object down to its models, the windows of an expanding window
 # and the elements of a list of models, and aggregates each.
-.aggregate_forecasts <- function(object, type, scale) {
+.aggregate_forecasts <- function(object, spec) {
 
   if ("externalforecast" %in% class(object)) {
     stop("Argument 'object' contains external forecasts, which are not aggregated. Aggregate\nthe forecasts of the models and pass the annual external forecasts to\n'create_external_forecast' together with them.")
@@ -133,7 +185,7 @@ aggregate_forecasts <- function(object, type, scale = 100) {
 
   if (any(c("modellist", "expandingwindow") %in% class(object))) {
     for (i in seq_along(object)) {
-      object[[i]] <- .aggregate_forecasts(object[[i]], type, scale)
+      object[[i]] <- .aggregate_forecasts(object[[i]], spec)
     }
     return(object)
   }
@@ -142,11 +194,15 @@ aggregate_forecasts <- function(object, type, scale = 100) {
     stop("Argument 'object' must be an object of class 'bvarmodel', 'bvecmodel',\n'expandingwindow' or 'modellist'.")
   }
 
-  return(.aggregate_window(object, type, scale))
+  return(.aggregate_window(object, spec))
 }
 
 # The annual forecasts of one model.
-.aggregate_window <- function(object, type, scale) {
+.aggregate_window <- function(object, spec) {
+
+  code <- spec[["code"]]
+  scale <- spec[["scale"]]
+  levels <- spec[["levels"]]
 
   if (!is.null(object[["model"]][["aggregation"]])) {
     stop("The forecasts of the models in argument 'object' are already aggregated.")
@@ -176,10 +232,10 @@ aggregate_forecasts <- function(object, type, scale = 100) {
   if (is.null(endogen)) {
     endogen <- dimnames(y)[[2]]
   }
-  missing_vars <- !names(type) %in% endogen
+  missing_vars <- !names(code) %in% endogen
   if (any(missing_vars)) {
-    stop("Argument 'type' names the variable(s) ",
-         paste0("'", names(type)[missing_vars], "'", collapse = ", "),
+    stop("Argument 'code' names the variable(s) ",
+         paste0("'", names(code)[missing_vars], "'", collapse = ", "),
          ", which are not endogenous variables of the models in argument 'object'.")
   }
 
@@ -199,120 +255,253 @@ aggregate_forecasts <- function(object, type, scale = 100) {
   end <- round(tsp_y[2] * freq)
   first_year <- (end + 1) %/% freq
   years <- first_year + 0:(n_years - 1)
+  # The year before the forecast origin, which the growth rates of its year
+  # require, and the period before the end of the sample, from which a second
+  # difference is reversed
+  start <- min((first_year - 1) * freq, end - 1)
 
   original <- source[["data"]][["original"]][["endogen"]]
   if (is.null(original)) {
     original <- y
   }
   original <- .as_named_mts(original, endogen)
-  period <- round(stats::time(original) * freq)
 
-  # The year before the forecast origin is required for growth rates, from
-  # its first period on
-  observed <- period <= end & period >= (first_year - 1) * freq 
-  n_draws <- nrow(draws)
-  result <- matrix(NA_real_, n_draws, n_years * length(type))
-  for (j in seq_along(type)) {
-    var <- names(type)[j]
-    pos <- which(endogen == var)
-    past <- matrix(as.numeric(original[observed, var]), sum(observed), n_draws)
-    future <- t(matrix(as.numeric(draws[, (0:(h - 1)) * k + pos]), n_draws, h))
-    annual <- .annual_values(rbind(past, future), c(period[observed], end + 1:h),
-                             years, type[j], scale, freq)
-    if (anyNA(annual)) {
-      stop("The data of variable '", var, "' do not cover the periods of the year ",
-           "before the\nforecast origin ", .format_period(end + 1, freq), ", which the annual figures require.")
-    }
-    result[, (0:(n_years - 1)) * length(type) + j] <- t(annual)
+  if (!is.null(levels)) {
+    .check_levels(levels, original, code, scale, freq)
   }
-  dimnames(result) <- list(NULL, paste0(rep(names(type), n_years), "_",
-                                        rep(1:n_years, each = length(type))))
+
+  n_draws <- nrow(draws)
+  result <- matrix(NA_real_, n_draws, n_years * length(code))
+  for (j in seq_along(code)) {
+    var <- names(code)[j]
+    pos <- which(endogen == var)
+    past <- .past_levels(var, code[[j]], original, levels, start, end, scale, freq)
+    if (is.null(past)) {
+      stop("The data of variable '", var, "' do not cover the periods from ",
+           .format_period(start, freq), " to ", .format_period(end, freq),
+           ", which the\nannual figures of the forecast origin ",
+           .format_period(end + 1, freq), " require.")
+    }
+    future <- t(matrix(as.numeric(draws[, (0:(h - 1)) * k + pos]), n_draws, h))
+    if (code[[j]] >= 4) {
+      future <- future / scale
+    }
+    path <- .continue_levels(code[[j]], past[["x"]], future, past[["log_offset"]])
+    annual <- .annual_figures(path, start:(end + h), years, code[[j]] >= 4,
+                              spec[["target"]], freq)
+    result[, (0:(n_years - 1)) * length(code) + j] <- t(annual)
+  }
+  dimnames(result) <- list(NULL, paste0(rep(names(code), n_years), "_",
+                                        rep(1:n_years, each = length(code))))
   mc_stats <- coda::mcpar(draws)
   result <- coda::mcmc(result, start = mc_stats[1], end = mc_stats[2], thin = mc_stats[3])
 
-  # The data, from which the realised values are taken, in the same annual terms
-  annual_data <- .annual_data(original, type, scale, freq)
+  # The realised values, in the same annual terms
+  annual_data <- .annual_data(original, levels, code, spec[["target"]], scale, freq)
 
   object <- source
-  object[["model"]][["k"]] <- length(type)
-  object[["model"]][["endogen"]] <- names(type)
+  object[["model"]][["k"]] <- length(code)
+  object[["model"]][["endogen"]] <- names(code)
   object[["model"]][["h"]] <- n_years
-  object[["model"]][["aggregation"]] <- list(type = type, scale = scale,
-                                             frequency = freq, end = tsp_y[2])
+  object[["model"]][["aggregation"]] <- list(code = code, target = spec[["target"]],
+                                             scale = scale, frequency = freq,
+                                             end = tsp_y[2])
   object[["data"]] <- list(original = list(endogen = annual_data),
-                           train = list(y = stats::window(annual_data, end = first_year - 1)),
-                           test = list(y = .realised_years(annual_data, years)))
-  object[["posterior"]] <- list(forecast = list(forecasts = result))
-  if (is.null(object[["data"]][["test"]][["y"]])) {
-    object[["data"]][["test"]] <- NULL
+                           train = list(y = stats::window(annual_data, end = first_year - 1)))
+  realised <- .realised_years(annual_data, years)
+  if (!is.null(realised)) {
+    object[["data"]][["test"]] <- list(y = realised)
   }
+  object[["posterior"]] <- list(forecast = list(forecasts = result))
   class(object) <- c("bvarmodel", "list")
 
   return(object)
 }
 
-# Annual figures from the values of consecutive periods, one column per draw.
+# The untransformed series up to the end of a training sample, from which its
+# forecasts are continued, over the periods start to end. Taken from the levels
+# where they are given. Without them the codes 1, 4 and 5 are reversed from the
+# data of the model: code 1 is the level itself, and codes 4 and 5 give the
+# level up to a factor, which cancels from a growth rate, and which is chosen
+# so that the last level is one. For code 4, 'log_offset' is the logarithm of
+# that factor, by which the log levels of the forecasts are shifted in turn.
 #
-# values: periods x draws, the variable as the models see it
-# period: the whole period of each row
-# years:  the years whose figures are required
+# Returns NULL, if a required period is missing.
+.past_levels <- function(var, code, original, levels, start, end, scale, freq) {
+
+  periods <- start:end
+  if (!is.null(levels)) {
+    x <- .values_at(levels[, var], periods, freq)
+    if (anyNA(x)) {
+      return(NULL)
+    }
+    return(list(x = x, log_offset = 0))
+  }
+
+  z <- .values_at(original[, var], periods, freq)
+  if (code == 1) {
+    x <- z
+    log_offset <- 0
+  } else if (code == 4) {
+    log_offset <- z[length(z)] / scale
+    x <- exp(z / scale - log_offset)
+  } else {
+    # Code 5: the first change is the one into the first period, which is not
+    # needed and may be missing
+    z[1] <- 0
+    x <- exp(cumsum(z / scale) - sum(z / scale))
+    log_offset <- 0
+  }
+  if (anyNA(x)) {
+    return(NULL)
+  }
+
+  return(list(x = x, log_offset = log_offset))
+}
+
+# The values of a time series in the given whole periods, NA where it has none.
+.values_at <- function(x, periods, freq) {
+  as.numeric(x)[match(periods, round(stats::time(x) * freq))]
+}
+
+# The untransformed paths of the draws of a forecast: the past levels followed
+# by the forecast of each draw, with the transformation of its code reversed.
+#
+# past:       the levels up to the end of the training sample
+# z:          periods x draws, the transformed forecasts, divided by the scale
+#             for codes 4 to 7
+# log_offset: for code 4, the logarithm of the factor that 'past' was divided by
+#
+# Returns (length(past) + nrow(z)) x draws.
+.continue_levels <- function(code, past, z, log_offset = 0) {
+
+  n <- length(past)
+  x_t <- past[n]
+  x_s <- past[n - 1]
+
+  cumulate <- function(m) {
+    m <- matrix(m, nrow(z), ncol(z))
+    for (i in seq_len(nrow(m))[-1]) {
+      m[i, ] <- m[i, ] + m[i - 1, ]
+    }
+    m
+  }
+
+  path <- switch(as.character(code),
+                 "1" = z,
+                 "2" = x_t + cumulate(z),
+                 "3" = x_t + cumulate(x_t - x_s + cumulate(z)),
+                 "4" = exp(z - log_offset),
+                 "5" = x_t * exp(cumulate(z)),
+                 "6" = x_t * exp(cumulate(log(x_t / x_s) + cumulate(z))),
+                 "7" = {
+                   growth <- 1 + x_t / x_s - 1 + cumulate(z)
+                   for (i in seq_len(nrow(growth))[-1]) {
+                     growth[i, ] <- growth[i, ] * growth[i - 1, ]
+                   }
+                   x_t * growth
+                 })
+
+  return(rbind(matrix(past, n, ncol(z)), matrix(path, nrow(z), ncol(z))))
+}
+
+# Annual figures from the levels of consecutive periods, one column per draw.
+#
+# values:         periods x draws, the untransformed series
+# period:         the whole period of each row
+# years:          the years whose figures are required
+# multiplicative: TRUE for a growth rate in percent, FALSE for a level
+# target:         "average" or "q4q4"
 #
 # Returns years x draws, NA where a period that a figure requires is missing.
-.annual_values <- function(values, period, years, type, scale, freq) {
+.annual_figures <- function(values, period, years, multiplicative, target, freq) {
 
   result <- matrix(NA_real_, length(years), ncol(values))
   for (i in seq_along(years)) {
     current <- years[i] * freq + 0:(freq - 1)
-    if (type == "level") {
-      rows <- match(current, period)
-      if (anyNA(rows)) {
-        next
-      }
-      result[i, ] <- colMeans(values[rows, , drop = FALSE])
+    if (target == "q4q4") {
+      current <- current[freq]
+    }
+    rows <- match(current, period)
+    if (anyNA(rows)) {
       next
     }
-
-    if (type == "growth") {
-      # The changes from the first period of the previous year on, cumulated
-      # onto an arbitrary log level of that period, which cancels in the ratio
-      rows <- match(current[1] - freq + 1:(2 * freq - 1), period)
-      if (anyNA(rows)) {
-        next
-      }
-      levels <- rbind(0, apply(values[rows, , drop = FALSE], 2, cumsum))
-    } else {
-      rows <- match(current[1] - freq + 0:(2 * freq - 1), period)
-      if (anyNA(rows)) {
-        next
-      }
-      # Relative to the first period, which keeps exp() within range
-      levels <- sweep(values[rows, , drop = FALSE], 2, values[rows[1], ])
+    level <- colMeans(values[rows, , drop = FALSE])
+    if (!multiplicative) {
+      result[i, ] <- level
+      next
     }
-    levels <- exp(levels / scale)
-    result[i, ] <- 100 * (colMeans(levels[freq + 1:freq, , drop = FALSE]) /
-                            colMeans(levels[1:freq, , drop = FALSE]) - 1)
+    rows <- match(current - freq, period)
+    if (anyNA(rows)) {
+      next
+    }
+    result[i, ] <- 100 * (level / colMeans(values[rows, , drop = FALSE]) - 1)
   }
 
   return(result)
 }
 
 # The annual figures of the data, one column per variable, from the year before
-# the first period of the data to the last year the data cover completely.
-.annual_data <- function(original, type, scale, freq) {
+# the first period of the data to the last year the data cover completely. From
+# the levels where they are given, which reach as far as they do, and from the
+# data of the models otherwise.
+.annual_data <- function(original, levels, code, target, scale, freq) {
 
-  period <- round(stats::time(original) * freq)
+  source <- if (is.null(levels)) original else levels
+  period <- round(stats::time(source) * freq)
   years <- (period[1] %/% freq - 1):((period[length(period)] + 1) %/% freq - 1)
 
-  result <- matrix(NA_real_, length(years), length(type))
-  for (j in seq_along(type)) {
-    values <- as.numeric(original[, names(type)[j]])
-    avail <- !is.na(values)
-    result[, j] <- .annual_values(matrix(values[avail], ncol = 1), period[avail],
-                                  years, type[j], scale, freq)
+  result <- matrix(NA_real_, length(years), length(code))
+  for (j in seq_along(code)) {
+    x <- as.numeric(source[, names(code)[j]])
+    if (is.null(levels) && code[[j]] >= 4) {
+      # The level up to a factor, over the periods the data cover without a gap
+      z <- x / scale
+      avail <- which(!is.na(z))
+      run <- avail[1]:(avail[1] + which(c(diff(avail), 2) != 1)[1] - 1)
+      x <- rep(NA_real_, length(z))
+      if (code[[j]] == 4) {
+        x[run] <- exp(z[run] - z[run[1]])
+      } else {
+        # The first change is the one out of the period before the run
+        x[run] <- exp(cumsum(z[run]))
+        if (run[1] > 1) {
+          x[run[1] - 1] <- 1
+        }
+      }
+    }
+    result[, j] <- .annual_figures(matrix(x, ncol = 1), period, years, code[[j]] >= 4,
+                                   target, freq)
   }
-  dimnames(result) <- list(NULL, names(type))
+  dimnames(result) <- list(NULL, names(code))
 
   return(stats::ts(result, start = years[1], frequency = 1))
+}
+
+# Refuses levels, which do not reproduce the data of the models under the codes
+# and the scale, over the periods both cover. A scale of 1 for data in percent,
+# or levels of another vintage, would otherwise continue the wrong series.
+.check_levels <- function(levels, original, code, scale, freq) {
+
+  for (j in seq_along(code)) {
+    var <- names(code)[j]
+    z <- .transform_variables_code(as.numeric(levels[, var]), code[[j]])
+    if (code[[j]] >= 4) {
+      z <- z * scale
+    }
+    data <- .values_at(original[, var], round(stats::time(levels) * freq), freq)
+    both <- !is.na(z) & !is.na(data)
+    if (!any(both)) {
+      stop("Argument 'levels' does not overlap with the data of variable '", var, "'.")
+    }
+    if (!isTRUE(all.equal(z[both], data[both], tolerance = 1e-6))) {
+      stop("Argument 'levels' does not reproduce the data of variable '", var,
+           "' under code ", code[[j]], if (code[[j]] >= 4) paste0(" and scale ", scale),
+           ". Check\narguments 'code' and 'scale'.")
+    }
+  }
+
+  invisible(NULL)
 }
 
 # The realised values of the years of a forecast, one row per year. Only the

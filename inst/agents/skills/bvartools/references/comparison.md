@@ -173,19 +173,42 @@ turn the model's forecasts into annual figures with `aggregate_forecasts()`
 **after** `add_posterior_forecasts()`, then pass the result to
 `create_external_forecast()` in place of the quarterly models.
 
-`type` says, per variable, what the model sees:
+`code` says, per variable, how the model's data were made from the untransformed
+series: the seven transformation codes of FRED-MD and FRED-QD, the ones
+`transform_variables()` applies. Variables left out of `code` are dropped.
 
-- `"growth"`: quarterly log changes in percent, `100 * diff(log(x))`. The draws
-  are cumulated to log levels.
-- `"loglevel"`: log levels in percent, `100 * log(x)`, as in a VEC model.
-- `"level"`: a rate averaged over the year, such as unemployment.
+| Code | Model sees | Annual figure |
+| --- | --- | --- |
+| 1 | `x` | a level |
+| 2 | `diff(x)` | a level |
+| 3 | `diff(x, differences = 2)` | a level |
+| 4 | `log(x)` | a growth rate in percent |
+| 5 | `diff(log(x))` | a growth rate in percent |
+| 6 | `diff(log(x), differences = 2)` | a growth rate in percent |
+| 7 | `diff(x / lag(x) - 1)` | a growth rate in percent |
 
-For the first two the annual figure is the growth, in percent, of the annual
-average of the levels, which is also the growth of the annual sum, so GDP (a
-flow) and a price index (an average) take the same type. Pass `scale = 1` if the
-logs are not multiplied by 100. The quarters of a year that were observed at the
-end of a window come from the data, the rest from each draw, so every draw
-becomes a draw of the annual figure. Variables left out of `type` are dropped.
+Each draw is turned back into a path of `x`: the quarters of a year observed at
+the end of a window come from the data, the rest from the draw, so every draw
+becomes a draw of the annual figure. `target` picks which figure:
+
+- `"average"` (default): growth of the annual average of `x` over the year
+  before, or the annual average of a level. The WEO's convention. The growth of
+  the average is also the growth of the annual sum, so GDP (a flow) and a price
+  index (an average) take the same code.
+- `"q4q4"`: growth of the fourth quarter over the fourth quarter of the year
+  before (December over December for monthly data), or the fourth quarter's
+  level. The Fed SEP's convention.
+
+`scale` is what the output of codes 4 to 7 was multiplied by before the model
+saw it: 1, the default, is `transform_variables()`'s output, 100 is log changes
+in percent. Getting it wrong is silent unless `levels` is given.
+
+`levels` is the untransformed series, `transform_variables()`'s argument `x`.
+Undoing a difference needs the level it starts from, so codes **2, 3, 6 and 7
+require it**; codes 1, 4 and 5 can be undone from the model's data alone, since
+an unknown log level cancels from a growth rate. When given, `levels` must
+reproduce the model's data under `code` and `scale` -- a wrong `scale` stops
+here -- and it supplies the realised figures, as far as it reaches.
 
 The forecast horizon must cover whole years from every origin: eight quarters
 give **two** annual horizons. Horizon 1 is the year of the forecast origin, the
@@ -195,7 +218,12 @@ still counts quarters -- so a projection for the year of its publication is
 horizon 1 whichever quarter it was published in.
 
 ```r
-aw <- create_bvarmodel(us_macrodata, p = 1, deterministic = "const",
+# The interest rate enters in first differences, inflation and unemployment as
+# they are
+us_data <- transform_variables(us_macrodata, c(r = 2))
+us_data <- window(us_data, start = c(1959, 3))
+
+aw <- create_bvarmodel(us_data, p = 1, deterministic = "const",
                        iterations = 100, burnin = 50)
 aw <- use_expanding_window(aw, start = 2005)
 aw <- add_priors(aw,
@@ -206,11 +234,17 @@ aw <- add_posterior_coefficients(aw)
 aw <- add_forecast_input(aw, n_ahead = 8)
 aw <- add_posterior_forecasts(aw)
 
-annual <- aggregate_forecasts(aw, type = c(Dp = "level", r = "level"))
+# Code 2 is a difference, so the levels are required
+annual <- aggregate_forecasts(aw, code = c(Dp = 1, r = 2), levels = us_macrodata)
 stopifnot(inherits(annual, "expandingwindow"),
           annual[[1]]$model$h == 2,
           identical(colnames(annual[[1]]$posterior$forecast$forecasts),
                     c("Dp_1", "r_1", "Dp_2", "r_2")))
+
+# The fourth quarter instead of the annual average
+q4 <- aggregate_forecasts(aw, code = c(Dp = 1, r = 2), target = "q4q4",
+                          levels = us_macrodata)
+stopifnot(q4[[1]]$model$aggregation$target == "q4q4")
 
 # Annual projections for the current and the next year, one publication a
 # quarter, in long format: 'period' is the year the projection is for
@@ -221,7 +255,7 @@ proj$value <- 2
 
 ext <- create_external_forecast(proj, annual, data_lag = 1)
 
-# No test_sample: both are scored against the annual figures of the model's data
+# No test_sample: both are scored against the annual figures of the levels
 race <- add_forecast_errors(combine_models(annual, ext))
 sc <- selection_criteria(race)
 stopifnot(length(sc) == 2,
@@ -229,8 +263,9 @@ stopifnot(length(sc) == 2,
           all(sc[[1]]$RSFE$h %in% 1:2))
 ```
 
-The realised annual values come from the model's own data, aggregated the same
-way, and sit in `data$test$y` of every window of both objects, so
+The realised annual values come from `levels` (without it, from the model's
+data), aggregated the same way as the forecasts, and sit in `data$test$y` of
+every window of both objects, so
 `add_forecast_errors()` needs no `test_sample`; the windows whose years the data
 do not cover yet are left without errors. To score against official annual
 figures instead, pass an **annual** `ts` as `test_sample`; a quarterly one is
@@ -239,6 +274,8 @@ refused. Things that go wrong:
 - Passing the quarterly models with annual forecasts stops, naming
   `aggregate_forecasts()`.
 - A `modellist` with aggregated and non-aggregated models stops: aggregate all.
+- Codes 2, 3, 6 or 7 without `levels` stop, and so do `levels` that do not
+  reproduce the model's data -- usually `scale` 1 for data in percent.
 - Aggregated models hold only forecasts and data, and a VEC comes back as a
   `bvarmodel` (its forecasts are the levels'). Aggregate last; there is nothing
   left to estimate, and `selection_criteria()` reports only `FE`, `AFE` and

@@ -354,14 +354,6 @@ void validate_normal_block(const NormalPrior &prior, const arma::vec &initial,
     require_length(initial, n, ("initial value of " + what).c_str());
 }
 
-/// The random walk state equation plus starting values that every time-varying
-/// block carries: a path, the precision of its innovations, the state before
-/// the sample, and the prior on both halves.
-///
-/// `noun` names the thing that drifts and `name` names the vector it is stored
-/// in -- ("coefficient", "a") and ("psi", "psi") are the two in use. Two labels
-/// rather than one because the messages read better that way and because these
-/// are the exact strings the models have always produced.
 /// The prior on how far a random walk moves, under whichever parameterisation
 /// the file chose: an inverse gamma on the variance, or -- with `omega_v` set --
 /// a normal on the signed standard deviation. Both at once is refused rather
@@ -392,6 +384,14 @@ void validate_state_variance_prior(const RandomWalkPrior &prior, arma::uword n,
     require_gamma_values(prior.sigma, "the " + thing + " innovations");
 }
 
+/// The random walk state equation plus starting values that every time-varying
+/// block carries: a path, the precision of its innovations, the state before
+/// the sample, and the prior on both halves.
+///
+/// `noun` names the thing that drifts and `name` names the vector it is stored
+/// in -- ("coefficient", "a") and ("psi", "psi") are the two in use. Two labels
+/// rather than one because the messages read better that way and because these
+/// are the exact strings the models have always produced.
 void validate_tvp_block(const RandomWalkPrior &prior, const arma::mat &path,
                         const arma::mat &sigma_inv, const arma::vec &init, arma::uword n,
                         arma::uword tt, const char *noun, const char *name)

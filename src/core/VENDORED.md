@@ -7,7 +7,7 @@ project is here -- the core deliberately links neither HDF5 nor HighFive,
 prints nothing and reads no files, which is what makes it embeddable in an R
 package at all.
 
-The copy is **BayesTS `cea124b`**, upstream after the `v0.3.0` release
+The copy is **BayesTS `f8b42a1`**, upstream after the `v0.3.0` release
 (tagged on `18a86c2`). Past the release it carries the fix to
 `core/models/var_tvp_discount.cpp` (`2dc9250`), which is what makes
 `add_predictive_loglik()` score more than the first horizon of a discounted VAR;
@@ -28,8 +28,15 @@ term in its error precision through `coint_prior_pseudo_errors()` in
 `core/models/vec_support.h`, `VecNormalStochvol` fixes the G its loadings' prior
 is scaled by -- which reaches R as `coint$g_i` of `cointspace_prior()`, stored
 as `priors$beta$g_inv` and read by `read_coint_space_prior_constant()` in
-`bayests_r_io.h` --, and `validate()` refuses a loadings prior the sampler cannot honour.
-The refreshes before sat at `0e75842`, `0e4847e` and `4a64082`, the one before that at `6fe91d2`, 0.3.0
+`bayests_r_io.h` --, and `validate()` refuses a loadings prior the sampler cannot honour;
+the simulation smoother skipping the identity transition (`4736936`), faster and
+with unchanged draws; forecast errors drawn through the guarded
+`core::covariance_root()` in `core/models/forecast_states.h`, from the
+factorisation under `forecast_states = "simulate"` (`62bc455`) and from the
+precision when it is held (`439ca6e`), which keeps a badly conditioned draw from
+turning a forecast NaN and moves forecast draws by a rounding error only; and a
+doc comment moved back into place in `core/inputs.cpp` (`ca1c322`).
+The refreshes before sat at `d8c8f80`, `94f81de`, `cea124b`, `0e75842`, `0e4847e` and `4a64082`, the one before that at `6fe91d2`, 0.3.0
 plus the discount fix. 0.3.0 is not archived yet, so
 there is no version DOI to name; the concept DOI
 <https://doi.org/10.5281/zenodo.22722531> resolves to the newest release

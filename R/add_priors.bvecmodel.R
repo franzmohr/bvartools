@@ -161,7 +161,7 @@
 #' \describe{
 #'   \item{\code{beta}}{the prior of the cointegration space with \code{type}
 #'   \code{"cointspace"}: \code{v_inv} and \code{p_tau_inv} for constant cointegration
-#'   parameters, or \code{rho}, \code{mu} and \code{v_inv} of the state equation for time
+#'   parameters, with \code{g_inv} if \code{coint$g_i} was given, or \code{rho}, \code{mu} and \code{v_inv} of the state equation for time
 #'   varying ones, together with the elements added by \code{p_tau_i = "ml"} or a
 #'   uniform prior on \eqn{\rho}.}
 #'   \item{\code{a}}{the prior of the loadings and the remaining coefficients, with the

@@ -26,7 +26,9 @@ and the constant VECs brought in line with Koop, Leon-Gonzalez and Strachan
 (2010) (`b8d6c2c`): `VecNormalGamma` now pays the cointegration space prior's
 term in its error precision through `coint_prior_pseudo_errors()` in
 `core/models/vec_support.h`, `VecNormalStochvol` fixes the G its loadings' prior
-is scaled by, and `validate()` refuses a loadings prior the sampler cannot honour.
+is scaled by -- which reaches R as `coint$g_i` of `cointspace_prior()`, stored
+as `priors$beta$g_inv` and read by `read_coint_space_prior_constant()` in
+`bayests_r_io.h` --, and `validate()` refuses a loadings prior the sampler cannot honour.
 The refreshes before sat at `0e75842`, `0e4847e` and `4a64082`, the one before that at `6fe91d2`, 0.3.0
 plus the discount fix. 0.3.0 is not archived yet, so
 there is no version DOI to name; the concept DOI

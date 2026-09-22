@@ -92,7 +92,7 @@
   }
   # Only an error correction model has loadings to give a rate of their own.
   if (inherits(object, "bvecmodel")) {
-    allowed_coef_arguments <- c(allowed_coef_arguments, "rate_alpha")
+    allowed_coef_arguments <- c(allowed_coef_arguments, "rate_alpha", "omega_v_alpha")
   }
   for (i in names(coef)) {
     if (!i %in% allowed_coef_arguments) {
@@ -117,6 +117,21 @@
   # One value for every coefficient: the same prior for every state variance,
   # as 'shape' and 'rate' give it.
   .add_priors_check_omega_v(object, coef, "coef", c("shape", "rate", "rate_det", "rate_alpha"), 1)
+
+  # The loadings' own omega_v, as rate_alpha is their own rate: it belongs to the
+  # non-centred prior and to nothing else.
+  if (!is.null(coef[["omega_v_alpha"]])) {
+    if (is.null(coef[["omega_v"]])) {
+      stop("Argument 'coef$omega_v_alpha' is the loadings' part of the non-centred prior ",
+           "and needs 'coef$omega_v' for the other coefficients. With 'shape' and 'rate', ",
+           "'coef$rate_alpha' sets the loadings' prior.")
+    }
+    omega_v_alpha <- coef[["omega_v_alpha"]]
+    if (!is.numeric(omega_v_alpha) || length(omega_v_alpha) != 1 ||
+        !is.finite(omega_v_alpha) || omega_v_alpha <= 0) {
+      stop("Argument 'coef$omega_v_alpha' must be a single finite positive numeric.")
+    }
+  }
 
   # Tests for specifications used in TVP models
   if (!is.null(object[["model"]][["tvp"]])) {

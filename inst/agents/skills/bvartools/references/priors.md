@@ -38,6 +38,9 @@ The page to read for the full list is the method's, not the generic's:
 | `max_var` | Cap on the Minnesota prior variances of the non-deterministic coefficients |
 | `shape`, `rate` | Required for `tvp = TRUE`: the gamma prior of the state variances |
 | `rate_det` | Rate for the state variances of deterministic terms. Falls back to `rate` |
+| `rate_alpha` | VEC only. Rate for the state variances of the loadings, which multiply levels. Falls back to `rate` |
+| `omega_v` | In place of `shape` and `rate` for `tvp = TRUE` with a gamma or SV error: the variance of the normal prior on the signed standard deviation of the state innovations (non-centred), which `time_variation_test()` needs |
+| `omega_v_alpha` | VEC only, with `omega_v`: the loadings' own `omega_v`. Falls back to `omega_v` |
 
 The coefficient vector holds all lag coefficients first, then the exogenous
 ones, then the deterministic ones, so `v_i_det` lands at the end:

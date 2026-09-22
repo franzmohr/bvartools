@@ -100,13 +100,22 @@ Argument \code{coef} can contain the following elements:
   well; see section 'Prior on the cointegration space'.}
   \item{\code{omega_v}}{a positive numeric, in place of \code{shape}, \code{rate},
   \code{rate_det} and \code{rate_alpha}: the variance of a normal prior on the signed standard
-  deviation of the state innovations of the coefficients, loadings included, and of the
+  deviation of the state innovations of the coefficients, loadings included unless
+  \code{omega_v_alpha} is given, and of the
   covariance coefficients -- the non-centred parameterisation that lets the posterior carry
   the test for time variation of \code{\link{time_variation_test}}; see
   \code{\link{add_priors.bvarmodel}} for the model and the draws it adds. The cointegration
   space keeps its state equation. Only for models with time varying parameters,
   \code{tvp = TRUE}, and \code{error = "sv"}, \code{"sv+covar"}, \code{"gamma"} or
   \code{"gamma+covar"}.}
+  \item{\code{omega_v_alpha}}{a positive numeric, the \code{omega_v} of the loadings, as
+  \code{rate_alpha} is their rate under the centred prior. If it is not given,
+  \code{omega_v} is used. The loadings multiply the levels in the error correction term, so
+  a standard deviation of their innovations that is small for a coefficient on a differenced
+  regressor moves the fitted value by much more, and the test for time variation of
+  \code{\link{time_variation_test}} compares each loading's posterior at zero with its own
+  prior: a prior on the wrong scale makes the Bayes factor of a loading say more about the
+  prior than about the loading. Only used with \code{omega_v} and a positive rank.}
 }
 
 Argument \code{coint} specifies the prior on the cointegration space. Its

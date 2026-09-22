@@ -302,3 +302,48 @@ test_that("a TVP VEC with gamma errors takes coef$omega_v and reports its test",
   expect_equal(nrow(res), n_a + n_psi + 2)
   expect_true(all(is.finite(res[["log_bf"]])))
 })
+
+test_that("a TVP VEC gives its loadings an omega_v of their own", {
+  model <- create_bvecmodel(at_data(), p = 2, r = 1, const = "unrestricted", tvp = TRUE,
+                            error = "gamma+covar", iterations = fx_iterations,
+                            burnin = fx_burnin)
+  priors <- function(coef) {
+    suppressWarnings(add_priors(model, coef = coef,
+                                coint = list(rho = 0.99, rho_min = 0.9, rho_max = 0.999,
+                                             p_tau_i = "ml", weight = 0.1),
+                                sigma = list(shape = 3, rate = 0.01)))
+  }
+  fitted <- priors(list(v_i = 1, v_i_det = 0.1, omega_v = 0.001, omega_v_alpha = 1e-6))
+  k <- fitted[["model"]][["k"]]
+  n_a <- nrow(fitted[["priors"]][["a"]][["mu"]])
+  n_psi <- k * (k - 1) / 2
+  # The loadings lead, k of them at rank one; the covariances keep omega_v.
+  expect_equal(as.numeric(fitted[["priors"]][["a"]][["omega_v"]]),
+               c(rep(1e-6, k), rep(0.001, n_a - k)))
+  expect_equal(as.numeric(fitted[["priors"]][["psi"]][["omega_v"]]), rep(0.001, n_psi))
+
+  # The test compares each loading with its own prior.
+  fitted <- add_posterior_coefficients(add_seed(add_initial_values(fitted), 219))
+  res <- time_variation_test(fitted)
+  loadings <- res[res[["block"]] == "coefficients" & res[["term"]] == "ect1", ]
+  expect_equal(nrow(loadings), k)
+  expect_true(all(is.finite(res[["log_bf"]])))
+  log_zero <- as.matrix(fitted[["posterior"]][["a"]][["omega_log_zero"]])[, 1]
+  expect_equal(loadings[["log_bf"]][1],
+               stats::dnorm(0, 0, sqrt(1e-6), log = TRUE) -
+                 (max(log_zero) + log(mean(exp(log_zero - max(log_zero))))))
+
+  expect_error(priors(list(v_i = 1, shape = 3, rate = 1e-4, omega_v_alpha = 1e-6)),
+               "needs .coef.omega_v.")
+  expect_error(priors(list(v_i = 1, omega_v = 0.001, omega_v_alpha = 0)),
+               "single finite positive")
+  expect_error(priors(list(v_i = 1, omega_v = 0.001, omega_v_alpha = c(1, 2))),
+               "single finite positive")
+
+  # A VAR has no loadings.
+  var <- create_bvarmodel(at_data(), p = 1, tvp = TRUE, error = "gamma",
+                          iterations = 10, burnin = 10)
+  expect_error(add_priors(var, coef = list(v_i = 1, omega_v = 0.001, omega_v_alpha = 1e-6),
+                          sigma = list(shape = 3, rate = 0.01)),
+               "not recognised")
+})

@@ -1,5 +1,20 @@
 # bvartools 1.0.0
 
+* **`coef$omega_v_alpha` gives the loadings of a time varying VEC a non-centred
+  prior of their own.** The centred prior has `rate_alpha` for the loadings,
+  because they multiply the levels in the error correction term, but
+  `omega_v` was one value for every coefficient, the loadings included, so
+  the test of `time_variation_test()` compared each loading's posterior at zero
+  with a prior on the scale of the other coefficients. `omega_v_alpha` sets
+  the first `k * r` elements of `priors$a$omega_v` and falls back to
+  `omega_v`; it needs `omega_v` and is ignored at rank zero. BayesTS already
+  reads one `omega_v` per coefficient, so no sampler changes and *draws are
+  unchanged* for every model that does not use it. On Austrian log levels of
+  GDP and prices, the unemployment rate and a short rate, a tighter prior for
+  the loadings (1e-6 and 1e-8 against 1e-3) moved the Bayes factors of the
+  loadings of prices, unemployment and the rate towards zero but left that of
+  GDP decisive, so what the test found there was not the prior's scale.
+
 * **`create_external_forecast()` places publication dates in the quarter they
   fall in.** A publication date was placed at its day of the
   year divided by the length of the year, and quarters are not equal shares of

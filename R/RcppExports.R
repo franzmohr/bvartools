@@ -572,8 +572,10 @@ kalman_durbin_koopman_2002 <- function(y, z, sigma_u, sigma_v, B, a_init, P_init
     .Call(`_bvartools_kalman_durbin_koopman_2002_export`, y, z, sigma_u, sigma_v, B, a_init, P_init)
 }
 
+#' Log-Likelihood of a Multivariate Normal Distribution
+#'
 #' Calculates the log-likelihood of a multivariate normal distribution.
-#' 
+#'
 #' @param u a \eqn{K \times T} matrix of residuals.
 #' @param sigma a \eqn{K \times K} or \eqn{KT \times K} variance-covariance matrix.
 #' 
@@ -919,7 +921,7 @@ post_coint_kls_sur <- function(y, beta, w, sigma_i, v_i, p_tau_i, g_i, x = NULL,
 #' @param shape_prior a \eqn{K \times 1} vector of prior shape parameters.
 #' @param rate_prior a \eqn{K \times 1} vector of prior rate parameters.
 #' @param inverse logical. If \code{TRUE}, the function returns the precision matrix,
-#' i.e. the inverse of the variance matrix. Defaults to \code{FALSE}.
+#' i.e. the inverse of the variance matrix, and otherwise the variance matrix.
 #' 
 #' @details For a model with measurement equation
 #' \deqn{y_t = Z_{t} a_t + u_t}
@@ -965,7 +967,7 @@ post_gamma_measurement_variance <- function(u, shape_prior, rate_prior, inverse)
 #' @param shape_prior a \eqn{K \times 1} vector of prior shape parameters.
 #' @param rate_prior a \eqn{K \times 1} vector of prior rate parameters.
 #' @param inverse logical. If \code{TRUE}, the function returns the precision matrix,
-#' i.e. the inverse of the variance matrix. Defaults to \code{FALSE}.
+#' i.e. the inverse of the variance matrix, and otherwise the variance matrix.
 #' 
 #' @details For the state space model with state equation
 #' \deqn{a_t = a_{t-1} + v_t}

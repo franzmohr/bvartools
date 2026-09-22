@@ -79,10 +79,10 @@ not move. Ignored unless \code{algorithm = "discount"}, and a vector in
 either produces one model per value. See 'Details'.}
 
 \item{iterations}{an integer of MCMC draws excluding burn-in draws (defaults
-to 50000).}
+to 20000).}
 
 \item{burnin}{an integer of MCMC draws used to initialize the sampler
-(defaults to 5000). These draws do not enter the computation of posterior
+(defaults to 2000). These draws do not enter the computation of posterior
 moments, forecasts etc.}
 
 \item{thin}{an integer thinning interval of the sampler (defaults to 1). After

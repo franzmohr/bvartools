@@ -4,7 +4,7 @@
 #' an object of class 'expandingwindow'.
 #'
 #' @param object an object of class 'expandingwindow' containing objects that can
-#' be forward to their respective `add_forecast_input` method.
+#' be passed on to their respective \code{add_forecast_input} method.
 #' @param ... arguments passed forward to method.
 #' 
 #' @return The object in \code{object} with forecast input added to each of its models, as

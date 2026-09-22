@@ -1,14 +1,16 @@
 ## Submission
 
-This is the major update 0.3.0 announced. The package has been reorganised
-around model objects: a model is built by `create_bvarmodel()` or
-`create_bvecmodel()`, given priors and starting values, and then simulated,
-forecast, scored and compared through methods on that object. `NEWS.md` lists
-the user-visible differences, and the section *Moving from 0.3.0 to 1.0.0* in
-it names every function that changed or went.
+This is 1.0.0, the major update that 0.3.0, the version on CRAN, announced.
+The package has been reorganised around model objects: a model is built by
+`create_bvarmodel()` or `create_bvecmodel()`, given priors and starting
+values, and then simulated, forecast, scored and compared through methods on
+that object. `NEWS.md` lists the user-visible differences, and the section
+*Moving from 0.3.0 to 1.0.0* at its top names every function that changed or
+went.
 
-The functions 0.3.0 deprecated still exist and still emit their transition
-message; nothing that worked in 0.3.0 stops working without saying so first.
+The functions 0.3.0 deprecated are removed in this version, as 0.3.0 said they
+would be: for one release each of them emitted a message naming its successor
+or saying it had none.
 
 ## Test environments
 
@@ -48,7 +50,3 @@ to it would no longer dispatch either. `post_normal()` is unchanged.
 
 <!-- TODO before submitting: state here that FAVAR's maintainer was notified,
      with the date. -->
-
-<!-- TODO before submitting: confirm the version currently on CRAN. This file
-     says 0.3.0, on the strength of the tag that recorded the state that went
-     there; check the CRAN page rather than the tag. -->

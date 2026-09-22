@@ -23,8 +23,8 @@ If \code{NULL} (default), internal functions are used.}
 \code{object$model$chains} is used, and one chain when there is none. Each chain is the
 same simulation with a seed of its own -- the first with the seed of the model, so that one
 chain draws what it always has -- and the chains are pooled, one after the other, in the
-draws of \code{posterior}, so that every later step uses all of them. Their number is
-stored in \code{model$chains}, and \code{\link{chain_diagnostics}} compares them. A
+draws of \code{posterior}, so that every later step uses all of them. Their number, when
+above one, is stored in \code{object$model$chains}, and \code{\link{chain_diagnostics}} compares them. A
 \code{posterior_function} is called once per chain. Not available for discounted models,
 whose posterior is not a chain.}
 

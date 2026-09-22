@@ -8,7 +8,7 @@
 }
 \arguments{
 \item{object}{an object of class 'modellist' containing objects that can
-be forward to their respective `add_forecast_input` method.}
+be passed on to their respective \code{add_forecast_input} method.}
 
 \item{...}{arguments passed forward to method.}
 }

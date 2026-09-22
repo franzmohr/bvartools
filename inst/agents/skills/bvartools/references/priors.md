@@ -98,7 +98,7 @@ stopifnot(all(second_lag < first_lag))
 | --- | --- | --- |
 | `"wishart"` (default) | `df`, `scale` | Inverse Wishart on the covariance matrix |
 | `"gamma"`, `"gamma+covar"` | `shape`, `rate` | Gamma on the error precisions |
-| `"sv"`, `"sv+covar"` | `mu`, `v_i`, `shape`, `rate`, `state_variance`, `offset` | Stochastic volatility |
+| `"sv"`, `"sv+covar"` | `mu`, `v_i`, `shape`, `rate`, `state_variance`, `offset`; with `tvp = TRUE`, `omega_v` in place of `shape` and `rate` | Stochastic volatility |
 | `"ald"` (VAR only) | `shape`, `rate` | Scales of the asymmetric Laplace distribution |
 
 - `df` and a gamma `shape` accept a number or an expression in `k`, the number

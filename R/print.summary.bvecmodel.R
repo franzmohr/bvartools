@@ -162,6 +162,8 @@ print.summary.bvecmodel <- function(x, digits = max(3L, getOption("digits") - 3L
     print(temp, ...)
   }
 
+  .print_chains_summary(x[["chains"]])
+
   cat("\n")
   invisible(x)
 }

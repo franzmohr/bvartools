@@ -1,5 +1,24 @@
 # bvartools 1.0.0
 
+* **Several chains, and a diagnostic that compares them.**
+  `add_posterior_coefficients()` takes `chains`: the simulation is run once per
+  chain, each with a seed of its own, and the chains are pooled one after the
+  other in the draws every later step reads, so forecasts, log-likelihoods,
+  impulse responses and files use all of them. The first chain uses the
+  model's seed, so `chains = 1`, the default, draws exactly what it always has;
+  the others are spread far from the seeds `add_seed()` gives neighbouring
+  models of a list. New function `chain_diagnostics()` reports the split
+  R-hat of Gelman et al. (2013) and the effective sample size of every
+  parameter, and `summary()` states the largest R-hat and how many parameters
+  exceed 1.01. A single chain can look converged and not be: on Austrian log
+  levels of GDP and prices, unemployment and a short rate, four chains of a
+  non-centred `VecTvpStochvol` reached a split R-hat of 10.3, with 4,829 of
+  5,181 parameters above 1.01, where each chain on its own had healthy
+  effective sample sizes. The number of chains is stored in `model$chains`
+  and travels through HDF5; lists of models take `chains` too, on any number
+  of workers. Discounted models, whose posterior is not a chain, refuse
+  `chains` above one. *Draws are unchanged* with one chain.
+
 * **`coef$omega_v_alpha` gives the loadings of a time varying VEC a non-centred
   prior of their own.** The centred prior has `rate_alpha` for the loadings,
   because they multiply the levels in the error correction term, but

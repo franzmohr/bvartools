@@ -38,6 +38,13 @@ as well: the sampler then runs `burnin + iterations * t` draws, keeps the last o
 every `t`, and labels them `t`, `2t`, ... in `coda::mcpar()`. `thin()` thins draws
 that were already kept.
 
+`add_posterior_coefficients(model, chains = n)` runs the chain `n` times with
+different seeds and stacks them, chain after chain, in the same matrices: then
+there are `n * iterations` rows, `model$chains` is `n`, and every later step
+uses all of them. `chain_diagnostics(model)` gives the split R-hat of every
+parameter; above 1.01 the chains disagree. Thin only by a factor that divides
+`iterations`, or the chains can no longer be told apart.
+
 With `K` endogenous variables, `T` training periods and `M` coefficients,
 `M = K * (K*p + m*(s + 1) + n)`, plus `K(K-1)/2` for a structural model:
 

@@ -335,6 +335,8 @@ summary.bvecmodel <- function(object, ci = .95, period = NULL, ...){
   result[["model"]][["ci"]] <- paste(c(ci_low, ci_high) * 100, "%", sep = "")
   result[["model"]][["period"]] <- period
   
+  result[["chains"]] <- .chains_summary(object)
+
   class(result) <- list("summary.bvecmodel", "list")
   return(result)
 }

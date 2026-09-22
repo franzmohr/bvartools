@@ -249,6 +249,8 @@ summary.bvarmodel <- function(object, ci = .95, period = NULL, ...){
     result[["model"]][["sign_restrictions"]][["accepted"]] <- sum(!is.na(rotations[, 1]))
   }
   
+  result[["chains"]] <- .chains_summary(object)
+
   class(result) <- list("summary.bvarmodel", "list")
   return(result)
 }

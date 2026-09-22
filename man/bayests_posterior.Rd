@@ -63,6 +63,7 @@ Other posterior simulation:
 \code{\link[=bayests_files]{bayests_files()}},
 \code{\link[=bvar]{bvar()}},
 \code{\link[=bvec]{bvec()}},
+\code{\link[=chain_diagnostics]{chain_diagnostics()}},
 \code{\link[=predict.bvecmodel]{predict.bvecmodel()}}
 }
 \concept{posterior simulation}

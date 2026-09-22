@@ -7,6 +7,14 @@
 #' \code{\link{add_priors}} and \code{\link{add_initial_values}}.
 #' @param posterior_function the function to be applied to the model in argument \code{object}.
 #' If \code{NULL} (default), internalal functions are used.
+#' @param chains the number of chains to simulate. If \code{NULL} (default), the value in
+#' \code{object$model$chains} is used, and one chain when there is none. Each chain is the
+#' same simulation with a seed of its own -- the first with the seed of the model, so that one
+#' chain draws what it always has -- and the chains are pooled, one after the other, in the
+#' draws of \code{posterior}, so that every later step uses all of them. Their number is
+#' stored in \code{model$chains}, and \code{\link{chain_diagnostics}} compares them. A
+#' \code{posterior_function} is called once per chain. Not available for discounted models,
+#' whose posterior is not a chain.
 #' @param ... further arguments passed to or from other methods.
 #' 
 #' @details Unless \code{posterior_function} is specified, the function forwards
@@ -73,7 +81,16 @@
 #' @seealso \code{\link{bvartools_model}} describes the object this returns, element by element.
 #' @family posterior simulation
 #' @export
-add_posterior_coefficients.bvarmodel <- function(object, posterior_function = NULL, ...){
+add_posterior_coefficients.bvarmodel <- function(object, posterior_function = NULL, chains = NULL, ...){
+
+  # Several chains are the same simulation run once per chain, each with a seed
+  # of its own, and pooled: see chain_diagnostics().
+  chains <- .check_chains(object, chains)
+  if (chains > 1) {
+    return(.run_chains(object, chains, function(single) {
+      add_posterior_coefficients.bvarmodel(single, posterior_function = posterior_function, chains = 1, ...)
+    }))
+  }
   
   # This  allows to employ the method with other compatible classes
   class_of_object <- class(object)

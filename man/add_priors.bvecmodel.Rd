@@ -4,7 +4,7 @@
 \alias{add_priors.bvecmodel}
 \title{Add Priors to Bayesian Models}
 \usage{
-\method{add_priors}{bvecmodel}(object, coef, coint, sigma, varsel = NULL, ...)
+\method{add_priors}{bvecmodel}(object, coef, coint = NULL, sigma, varsel = NULL, ...)
 }
 \arguments{
 \item{object}{a list of class 'bvecmodel'.}
@@ -15,7 +15,10 @@ determine the cointegration space. It has no default and must contain at least
 inverses of the variances. See 'Details'.}
 
 \item{coint}{a named list of prior specifications for coefficients determining the
-cointegration space of VEC models. It has no default. See 'Details'.}
+cointegration space of VEC models. It has no default and is required for a positive
+cointegration rank. A model of rank zero has no cointegration space and needs none; one
+that is given is checked and ignored, so that a list of models over several ranks can
+share the same arguments. See 'Details'.}
 
 \item{sigma}{a named list of prior specifications for the error term. It has
 no default, and the elements it must contain depend on argument \code{error}

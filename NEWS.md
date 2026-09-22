@@ -1,5 +1,17 @@
 # bvartools 1.0.0
 
+* **A VEC model of rank zero needs no `coint` prior, and the draws of the
+  cointegration vectors have names.** `add_priors()` insisted on `coint` for
+  every VEC model, although one of rank zero has no cointegration space; it is
+  now required only for a positive rank, with a message saying so, and one
+  given at rank zero is checked and ignored, so that `r = 0:2` still shares
+  one set of priors. `posterior$beta$coeffs` had no column names, so
+  summaries of it printed `var1`, `var2`, ...; its columns are now named
+  after the error correction term and the series each element weights,
+  `ect1.l.R`, `ect1.l.Dp`, ..., with `.t1`, `.t2`, ... where the vectors move
+  with time, after sampling and when a model is read from HDF5. *Draws are
+  unchanged.*
+
 * **Several chains, and a diagnostic that compares them.**
   `add_posterior_coefficients()` takes `chains`: the simulation is run once per
   chain, each with a seed of its own, and the chains are pooled one after the

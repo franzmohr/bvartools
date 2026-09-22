@@ -57,7 +57,7 @@ With `K` endogenous variables, `T` training periods and `M` coefficients,
 | `u_omega_inv$coeffs` | `K`, or `T*K` for stochastic volatility and `"ald"` | every error but `"wishart"`: the diagonal precisions |
 | `psi$coeffs` | `K^2` | `"gamma+covar"` and `"sv+covar"`: the whole triangular matrix, not only its free elements |
 | `u_scale$coeffs` | `K` | `"ald"`: the scales |
-| `beta$coeffs` | `k_beta*r`, or `T*k_beta*r` with time-varying cointegration | VEC models |
+| `beta$coeffs` | `k_beta*r`, or `T*k_beta*r` with time-varying cointegration | VEC models. Columns named `ect1.<series>`, ..., in the order of vec(beta), with `.t1`, `.t2`, ... when they vary with time |
 | `forecast$forecasts` | `K*h` | after `add_posterior_forecasts()` |
 | `forecast$errors` | `K*h` | after `add_forecast_errors()`, against `data$test$y` |
 | `loglik` | `T` | after `add_posterior_loglik()` |

@@ -234,6 +234,9 @@ read_model_from_hdf5 <- function(filename, group = "", draws = NULL) {
   # Read to decide the class, and not an element of the specification.
   result[["model"]][["rclass"]] <- NULL
   class(result) <- result_class
+  if ("bvecmodel" %in% result_class) {
+    result <- .name_beta_draws(result)
+  }
   
   return(result)
 }

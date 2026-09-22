@@ -1,5 +1,20 @@
 # bvartools 1.0.0
 
+* **`create_external_forecast()` places publication dates in the quarter they
+  fall in.** A publication date was placed at its day of the
+  year divided by the length of the year, and quarters are not equal shares of
+  a year: 1 April is day 91 of 365, short of a quarter, so a publication on
+  that day counted as one of the first quarter and, with `data_lag = 1`, was
+  matched to the window ending in the fourth quarter of the year before. A
+  date is now placed inside the period it falls in by the share of that
+  period's days that have passed, for every frequency that divides the year
+  into months. Dates given as character strings, which are read as the first
+  of their month, were affected most: every publication in April, July or
+  October went to the quarter before (1 July is day 182 of 365, a share of
+  0.496). As class `Date` it took the first days of those months, such as the
+  OeNB release of 1 April 2022 among the Austrian projections of the
+  `macroprojections` vignette.
+
 * **Forecasts from an error covariance that does not move cannot turn NaN
   either.** The forecasts of the constant-coefficient VAR and VEC models, and
   of the time varying ones under `forecast_states = "hold"`, drew their errors
@@ -82,7 +97,9 @@
   the European Commission, the IMF, the OeNB, WIFO and IHS published between 2015
   and 2025, as collected by the macroprojections repository. The projections are
   annual, so the vignette turns every draw of the quarterly forecasts into the
-  annual growth and average rates it implies before comparing them.
+  annual growth and average rates it implies with `aggregate_forecasts()` and
+  matches the publications to the estimation windows with
+  `create_external_forecast()`.
 
 * **The forecasts of a discounted model are `coda::mcmc` draws, and an
   estimated discounted model can be written to HDF5.** `add_posterior_forecasts()`
@@ -143,8 +160,8 @@
   refusal of `create_external_forecast()` now names the function. Perfect
   foresight of the transformed series gives zero annual forecast errors under
   every code and both targets, and the average of codes 1 and 5 matches the
-  aggregation the `macroprojections` vignette carries out by hand. No sampler
-  is touched: draws are unchanged.
+  aggregation the `macroprojections` vignette used to carry out by hand, which
+  now uses this function. No sampler is touched: draws are unchanged.
 
 * **`add_forecast_errors()` refuses a test sample at another frequency than
   the forecasts.** It matched the periods by their time alone, and 2020 is a

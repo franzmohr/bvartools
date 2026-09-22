@@ -469,8 +469,24 @@ to_model_time <- function(x, frequency, round = TRUE) {
     if (round) {
       month <- as.numeric(format(x, "%m"))
       result[avail] <- year + floor((month - 1) * frequency / 12) / frequency
+    } else if (frequency >= 1 && abs(12 / frequency - round(12 / frequency)) < 1e-8) {
+      # A date is placed inside the period it falls in, by the share of that
+      # period's days that have passed. The share of the year's days would put it
+      # in the wrong period near the boundaries, since periods of months are not
+      # equally long: 1 April is day 91 of 365, a share of 0.247 of the year, and
+      # would count as the first quarter.
+      month <- as.numeric(format(x, "%m"))
+      months <- round(12 / frequency)
+      period <- floor((month - 1) / months)
+      first <- year * 12 + period * months
+      start <- as.Date(sprintf("%04d-%02d-01", first %/% 12, first %% 12 + 1))
+      after <- first + months
+      end <- as.Date(sprintf("%04d-%02d-01", after %/% 12, after %% 12 + 1))
+      share <- as.numeric(x - start) / as.numeric(end - start)
+      result[avail] <- year + (period + share) / frequency
     } else {
-      # Within a period publications are ordered by their day of the year
+      # Frequencies that do not divide the year into months: publications are
+      # ordered by their day of the year
       day <- as.numeric(format(x, "%j")) - 1
       len <- as.numeric(format(as.Date(paste0(year, "-12-31")), "%j"))
       result[avail] <- year + day / len

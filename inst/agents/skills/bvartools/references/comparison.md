@@ -282,4 +282,6 @@ refused. Things that go wrong:
   `RSFE` for them.
 
 `vignette("macroprojections", package = "bvartools")` races models against the
-published projections for Austria, aggregating the draws of `predict()` by hand.
+published projections for Austria with `aggregate_forecasts()` and
+`create_external_forecast()`, and compares each forecaster with the models on the
+publications it made.

@@ -9,6 +9,7 @@
 #include "bayests/spec.h"
 
 #include "core/algorithms/triangular_packing.h"
+#include "core/models/model_support.h"
 #include "core/models/forecast_states.h"
 
 #include <stdexcept>
@@ -44,6 +45,10 @@ namespace bayests::core
 /// than a file's.
 inline arma::uword scored_horizons(const arma::mat &realised, const VarSpec &spec)
 {
+    // Scoring is a stage of its own, run from draws a previous stage wrote, so
+    // validate() has not seen these; a NaN here comes back as a NaN score from
+    // a run that otherwise succeeds.
+    require_finite(realised, "the realised observations /data/test/y");
     if (realised.n_rows == 0)
     {
         throw std::invalid_argument(

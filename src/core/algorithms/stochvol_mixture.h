@@ -413,6 +413,8 @@ inline arma::mat stochvol_mixture_draw(const char *algorithm, const NormalMixtur
  * on \f$(h_{i0}, \omega_i)\f$, so the two halves of it this draw has already
  * formed are handed back rather than recomputed.
  *
+ * @param algorithm the name the caller is known by, used to prefix a message.
+ * @param mixture the normal mixture standing in for the log chi-squared error.
  * @param y T x K error terms, as for `stochvol_mixture_draw`.
  * @param h T x K current log-volatility, the conditioning value of the
  *   indicators.

@@ -156,6 +156,7 @@ inline arma::mat draw_ald_weights(const arma::mat &u, const arma::vec &u_scale,
 ///
 /// @param u k x tt residuals, one column per period.
 /// @param w tt x k latent scales, one column per equation.
+/// @param shape the two constants the quantile enters through, theta and tau2.
 /// @param post_shape the already updated shape, shape_0 + 3 T / 2.
 /// @param prior_rate rate_0, one per equation.
 inline arma::vec draw_ald_scale(const arma::mat &u, const arma::mat &w, const AldShape &shape,

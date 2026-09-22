@@ -12,6 +12,17 @@ test_that("add_forecast_input prepares the regressors of the forecast periods", 
                    ncol(model[["data"]][["train"]][["z"]]))
 })
 
+test_that("the forecast regressors are finite, lags past the sample included", {
+  # The lags the sample does not reach are filled in by the recursion, but the
+  # core refuses a NaN anywhere in x, those cells included.
+  model <- fx_var_fitted()
+  k <- model[["model"]][["k"]]
+  p <- model[["model"]][["p"]]
+  x <- prepare_forecast_input(model, n_ahead = p + 3)[["x"]]
+  expect_true(all(is.finite(x)))
+  expect_true(all(x[p + 1:3, 1:(k * p)] == 0))
+})
+
 test_that("prepare_forecast_input returns the horizon and its regressors", {
   input <- prepare_forecast_input(fx_var_fitted(), n_ahead = 3)
 

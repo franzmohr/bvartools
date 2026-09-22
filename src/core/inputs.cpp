@@ -3,6 +3,8 @@
 
 #include "bayests/inputs.h"
 
+#include "core/models/model_support.h"
+
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
@@ -29,6 +31,11 @@ std::string number(double x)
     return buffer;
 }
 
+// require_square(), require_length() and require_shape() also refuse a NaN or
+// an infinity. Every prior and every starting value a validate() looks at is
+// sized by one of the three, so this is the one place that reaches them all;
+// test/check_nonfinite.py puts a NaN in each input dataset of every algorithm
+// and fails on any the three do not stop.
 void require_square(const arma::mat &m, arma::uword side, const char *what)
 {
     if (m.n_rows != side || m.n_cols != side)
@@ -36,6 +43,7 @@ void require_square(const arma::mat &m, arma::uword side, const char *what)
         throw std::invalid_argument(std::string(what) + " must be " + std::to_string(side) +
                                     "x" + std::to_string(side) + ", got " + dims(m));
     }
+    bayests::core::require_finite(m, what);
 }
 
 /// How far a matrix may be from its transpose and still count as symmetric: the
@@ -117,6 +125,7 @@ void require_length(const arma::vec &v, arma::uword n, const char *what)
         throw std::invalid_argument(std::string(what) + " must have " + std::to_string(n) +
                                     " elements, got " + std::to_string(v.n_elem));
     }
+    bayests::core::require_finite(v, what);
 }
 
 void require_shape(const arma::mat &m, arma::uword rows, arma::uword cols, const char *what)
@@ -126,6 +135,7 @@ void require_shape(const arma::mat &m, arma::uword rows, arma::uword cols, const
         throw std::invalid_argument(std::string(what) + " must be " + std::to_string(rows) + "x" +
                                     std::to_string(cols) + ", got " + dims(m));
     }
+    bayests::core::require_finite(m, what);
 }
 
 /// True if the value is a finite number, read off the exponent bits.
@@ -722,6 +732,10 @@ namespace bayests
 
 void VarNormalWishartInput::validate() const
 {
+    // Before anything that would read a value: a NaN or an infinity here would
+    // otherwise surface as a failed factorisation, or as NaN in the output.
+    core::require_finite_observations(train, forecast, test);
+
     const arma::uword k = static_cast<arma::uword>(spec.k);
     const arma::uword tt = checked_periods(spec, train);
     const arma::uword nparams = train.nparams();
@@ -754,6 +768,10 @@ void VarNormalWishartInput::validate() const
 
 void VarNormalGammaInput::validate() const
 {
+    // Before anything that would read a value: a NaN or an infinity here would
+    // otherwise surface as a failed factorisation, or as NaN in the output.
+    core::require_finite_observations(train, forecast, test);
+
     const arma::uword k = static_cast<arma::uword>(spec.k);
     const arma::uword tt = checked_periods(spec, train);
     const arma::uword nparams = train.nparams();
@@ -799,6 +817,10 @@ void VarNormalGammaInput::validate() const
 
 void VarNormalStochvolInput::validate() const
 {
+    // Before anything that would read a value: a NaN or an infinity here would
+    // otherwise surface as a failed factorisation, or as NaN in the output.
+    core::require_finite_observations(train, forecast, test);
+
     const arma::uword k = static_cast<arma::uword>(spec.k);
     const arma::uword tt = checked_periods(spec, train);
     const arma::uword nparams = train.nparams();
@@ -860,6 +882,10 @@ void VarNormalStochvolInput::validate() const
 
 void VarNormalAldInput::validate() const
 {
+    // Before anything that would read a value: a NaN or an infinity here would
+    // otherwise surface as a failed factorisation, or as NaN in the output.
+    core::require_finite_observations(train, forecast, test);
+
     const arma::uword k = static_cast<arma::uword>(spec.k);
     const arma::uword tt = checked_periods(spec, train);
     const arma::uword nparams = train.nparams();
@@ -886,6 +912,10 @@ void VarNormalAldInput::validate() const
 
 void VarTvpAldInput::validate() const
 {
+    // Before anything that would read a value: a NaN or an infinity here would
+    // otherwise surface as a failed factorisation, or as NaN in the output.
+    core::require_finite_observations(train, forecast, test);
+
     const arma::uword k = static_cast<arma::uword>(spec.k);
     const arma::uword tt = checked_periods(spec, train);
     const arma::uword nparams = train.nparams();
@@ -917,6 +947,10 @@ void VarTvpAldInput::validate() const
 
 void VarTvpGammaInput::validate() const
 {
+    // Before anything that would read a value: a NaN or an infinity here would
+    // otherwise surface as a failed factorisation, or as NaN in the output.
+    core::require_finite_observations(train, forecast, test);
+
     const arma::uword k = static_cast<arma::uword>(spec.k);
     const arma::uword tt = checked_periods(spec, train);
     const arma::uword nparams = train.nparams();
@@ -969,6 +1003,10 @@ void VarTvpGammaInput::validate() const
 
 void VarTvpWishartInput::validate() const
 {
+    // Before anything that would read a value: a NaN or an infinity here would
+    // otherwise surface as a failed factorisation, or as NaN in the output.
+    core::require_finite_observations(train, forecast, test);
+
     const arma::uword k = static_cast<arma::uword>(spec.k);
     const arma::uword tt = checked_periods(spec, train);
     const arma::uword nparams = train.nparams();
@@ -1015,6 +1053,10 @@ void VarTvpWishartInput::validate() const
 
 void VarTvpStochvolInput::validate() const
 {
+    // Before anything that would read a value: a NaN or an infinity here would
+    // otherwise surface as a failed factorisation, or as NaN in the output.
+    core::require_finite_observations(train, forecast, test);
+
     const arma::uword k = static_cast<arma::uword>(spec.k);
     const arma::uword tt = checked_periods(spec, train);
     const arma::uword nparams = train.nparams();
@@ -1304,6 +1346,10 @@ void validate_wishart_block(const WishartPrior &prior, const arma::mat &initial,
 
 void VecNormalWishartInput::validate() const
 {
+    // Before anything that would read a value: a NaN or an infinity here would
+    // otherwise surface as a failed factorisation, or as NaN in the output.
+    core::require_finite_observations(train, forecast, test);
+
     const arma::uword k = static_cast<arma::uword>(spec.k);
     const arma::uword tt = checked_periods(spec, train);
     const arma::uword n_a = train.nparams();
@@ -1477,6 +1523,10 @@ void validate_dfm_stochvol_block(const StochvolPrior &prior, const arma::mat &h,
 
 void DfmNormalGammaInput::validate() const
 {
+    // Before anything that would read a value: a NaN or an infinity here would
+    // otherwise surface as a failed factorisation, or as NaN in the output.
+    core::require_finite_observations(train, test);
+
     const arma::uword k = static_cast<arma::uword>(spec.k);
     const arma::uword tt = checked_periods(spec, train);
     const arma::uword n = static_cast<arma::uword>(spec.n_factors);
@@ -1489,6 +1539,10 @@ void DfmNormalGammaInput::validate() const
 
 void DfmTvpGammaInput::validate() const
 {
+    // Before anything that would read a value: a NaN or an infinity here would
+    // otherwise surface as a failed factorisation, or as NaN in the output.
+    core::require_finite_observations(train, test);
+
     const arma::uword k = static_cast<arma::uword>(spec.k);
     const arma::uword tt = checked_periods(spec, train);
     const arma::uword n = static_cast<arma::uword>(spec.n_factors);
@@ -1526,6 +1580,10 @@ void DfmTvpGammaInput::validate() const
 
 void DfmTvpStochvolInput::validate() const
 {
+    // Before anything that would read a value: a NaN or an infinity here would
+    // otherwise surface as a failed factorisation, or as NaN in the output.
+    core::require_finite_observations(train, test);
+
     const arma::uword k = static_cast<arma::uword>(spec.k);
     const arma::uword tt = checked_periods(spec, train);
     const arma::uword n = static_cast<arma::uword>(spec.n_factors);
@@ -1562,6 +1620,10 @@ void DfmTvpStochvolInput::validate() const
 
 void DfmNormalStochvolInput::validate() const
 {
+    // Before anything that would read a value: a NaN or an infinity here would
+    // otherwise surface as a failed factorisation, or as NaN in the output.
+    core::require_finite_observations(train, test);
+
     const arma::uword k = static_cast<arma::uword>(spec.k);
     const arma::uword tt = checked_periods(spec, train);
     const arma::uword n = static_cast<arma::uword>(spec.n_factors);
@@ -1587,6 +1649,10 @@ void DfmNormalStochvolInput::validate() const
 
 void FavarNormalWishartInput::validate() const
 {
+    // Before anything that would read a value: a NaN or an infinity here would
+    // otherwise surface as a failed factorisation, or as NaN in the output.
+    core::require_finite_observations(train, test);
+
     const arma::uword k = static_cast<arma::uword>(spec.k);
     const arma::uword tt = checked_periods(spec, train);
     const arma::uword n_obs = static_cast<arma::uword>(spec.n_obs_factors);
@@ -1656,6 +1722,10 @@ void FavarNormalWishartInput::validate() const
 
 void VecKlgs2010Input::validate() const
 {
+    // Before anything that would read a value: a NaN or an infinity here would
+    // otherwise surface as a failed factorisation, or as NaN in the output.
+    core::require_finite_observations(train, forecast, test);
+
     const arma::uword k = static_cast<arma::uword>(spec.k);
     const arma::uword tt = checked_periods(spec, train);
 
@@ -1702,6 +1772,10 @@ void VecKlgs2010Input::validate() const
 
 void VecNormalGammaInput::validate() const
 {
+    // Before anything that would read a value: a NaN or an infinity here would
+    // otherwise surface as a failed factorisation, or as NaN in the output.
+    core::require_finite_observations(train, forecast, test);
+
     const arma::uword k = static_cast<arma::uword>(spec.k);
     const arma::uword tt = checked_periods(spec, train);
     const arma::uword n_a = train.nparams();
@@ -1750,6 +1824,10 @@ void VecNormalGammaInput::validate() const
 
 void VecNormalStochvolInput::validate() const
 {
+    // Before anything that would read a value: a NaN or an infinity here would
+    // otherwise surface as a failed factorisation, or as NaN in the output.
+    core::require_finite_observations(train, forecast, test);
+
     const arma::uword k = static_cast<arma::uword>(spec.k);
     const arma::uword tt = checked_periods(spec, train);
     const arma::uword n_a = train.nparams();
@@ -1807,6 +1885,10 @@ void VecNormalStochvolInput::validate() const
 
 void VecTvpWishartInput::validate() const
 {
+    // Before anything that would read a value: a NaN or an infinity here would
+    // otherwise surface as a failed factorisation, or as NaN in the output.
+    core::require_finite_observations(train, forecast, test);
+
     const arma::uword k = static_cast<arma::uword>(spec.k);
     const arma::uword tt = checked_periods(spec, train);
     const arma::uword n_a = train.nparams();
@@ -1837,6 +1919,10 @@ void VecTvpWishartInput::validate() const
 
 void VecTvpGammaInput::validate() const
 {
+    // Before anything that would read a value: a NaN or an infinity here would
+    // otherwise surface as a failed factorisation, or as NaN in the output.
+    core::require_finite_observations(train, forecast, test);
+
     const arma::uword k = static_cast<arma::uword>(spec.k);
     const arma::uword tt = checked_periods(spec, train);
     const arma::uword n_a = train.nparams();
@@ -1880,6 +1966,10 @@ void VecTvpGammaInput::validate() const
 
 void VecTvpStochvolInput::validate() const
 {
+    // Before anything that would read a value: a NaN or an infinity here would
+    // otherwise surface as a failed factorisation, or as NaN in the output.
+    core::require_finite_observations(train, forecast, test);
+
     const arma::uword k = static_cast<arma::uword>(spec.k);
     const arma::uword tt = checked_periods(spec, train);
     const arma::uword n_a = train.nparams();

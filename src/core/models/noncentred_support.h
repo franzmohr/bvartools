@@ -42,7 +42,7 @@
  * zero of \f$\omega\f$'s conditional posterior given the standardised path. That
  * conditional is normal, so the ordinate is exact and each draw contributes one
  * number. The numerator is the prior's and needs no draws. The implied prior
- * on \f$\sigma = \omega^2\f$ is Gamma(1/2, 1 / (2 V_\omega)), which puts more mass
+ * on \f$\sigma = \omega^2\f$ is \f$\mathrm{Gamma}(1/2, 1 / (2 V_\omega))\f$, which puts more mass
  * near zero than the usual inverse gamma does.
  *
  * The sign of \f$\omega\f$ is not identified -- flipping it together with the

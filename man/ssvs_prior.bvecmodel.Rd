@@ -23,7 +23,10 @@ multiplied to obtain the prior standard errors of restricted (\eqn{\tau_0}) and 
 }
 \value{
 A list containing the vectors of prior standard deviations for restricted
-and unrestricted variables, respectively.
+and unrestricted variables, respectively. The first \eqn{K r} elements, those of the
+loadings, are one: the loadings are not selected over, and their prior is the one the
+cointegration space prior implies, which the samplers form themselves every draw, so
+these entries are placeholders that are never read.
 }
 \description{
 Calculates the priors for a Bayesian VAR model, which employs stochastic search variable selection (SSVS).

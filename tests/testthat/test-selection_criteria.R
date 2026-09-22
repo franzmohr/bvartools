@@ -544,3 +544,12 @@ test_that("a scored model of an unknown class can be chosen on its LPL", {
 
   expect_identical(choose_best_model(criteria, criterion = "LPL"), 2L)
 })
+
+test_that("choose_best_model refuses a criterion that names no single model", {
+  # FE, AFE and RSFE hold a value per variable and horizon, and which() on
+  # them returned a position in a matrix rather than a model.
+  criteria <- list(list(RSFE = matrix(1:6, 3, 2, dimnames = list(NULL, c("mean", "median")))),
+                   list(RSFE = matrix(6:1, 3, 2, dimnames = list(NULL, c("mean", "median")))))
+  class(criteria) <- c("selcritlist", "list")
+  expect_error(choose_best_model(criteria, criterion = "RSFE"), "must be one of")
+})

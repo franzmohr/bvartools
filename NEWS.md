@@ -28,6 +28,38 @@ take the new model objects. `add_priors()` no longer has defaults for `coef` and
 
 ## Changes
 
+* **The remaining findings of the audit.**
+  - `irf()` of a quantile VAR (`error = "ald"`) takes only `type = "feir"` or
+    `"custom"`, and `fevd()` and `spillover()` refuse one. Its `u_sigma_inv`
+    holds the latent precisions of the asymmetric Laplace errors, period by
+    period, which the other types factorised as if they were an error
+    covariance. *Results that were returned before are no longer.*
+  - The trend of a VAR is one in the first period estimated on, whatever
+    period `exogen` starts in. It counted the rows of the data and `exogen`
+    together, so an exogenous series that reached further back shifted the
+    trend, and under `deterministic = "both"` the meaning of the intercept.
+    *Results change* for such models only.
+  - `scale_error_correction()` refuses a model whose constant cointegration
+    prior has a positive `v_i`, numeric or `"ml"`: it sets the prior of the
+    loadings given beta, which scaling rescales. It no longer fails on an
+    error correction term of one series.
+  - `thin()` thins every chain of a model with several on its own, where it
+    thinned the pooled draws as one sequence, and says that a discounted model
+    has nothing to thin.
+  - Refused rather than accepted: a negative `coef$v_i_det`; a `coint$rho` of
+    -1 or below; a `p` in `create_bvarmodel()` that is not a non-negative whole
+    number; Wishart degrees of freedom that are not a whole number, which the
+    VAR method cut off and the VEC method passed on; a Minnesota prior without
+    `kappa3` for a model with exogenous variables, as documented; and a
+    forecast error criterion in `choose_best_model()`, which returned a
+    position in a matrix rather than a model.
+  - Least squares starting values need more periods than regressors, not as
+    many, and for a VEC the count includes every series of the error
+    correction term.
+  - `fevd()` of a model stored in a file weights each chunk by its identified
+    draws under `type = "sign"`.
+  - `ssvs_prior()` for a VEC refuses `"sv+covar"`, which a typo let through.
+
 * **Seven places where a result could be silently wrong, found in an audit.**
   - `window()` now cuts the `psi` path of a time varying covariance. It
     expected k(k-1)/2 columns per period where the samplers store k², so the

@@ -37,12 +37,10 @@
 #' @method thin bvecmodel
 thin.bvecmodel <- function(x, thin = 10, ...) {
 
-  draws <- nrow(x[["posterior"]][["u_sigma_inv"]][["coeffs"]])
-  .check_thin(thin, draws)
-  pos_thin <- seq(from = thin, to = draws, by = thin)
-  # The helper is the VAR method's; see .thin_draws() for why it names no
-  # elements.
-  x[["posterior"]] <- .thin_draws(x[["posterior"]], pos_thin, draws, thin)
+  # The helpers are the VAR method's; see .thin_draws() for why it names no
+  # elements, and .thin_positions() for the chains.
+  kept <- .thin_positions(x, thin)
+  x[["posterior"]] <- .thin_draws(x[["posterior"]], kept[["positions"]], kept[["draws"]], thin)
 
   return(x)
 }

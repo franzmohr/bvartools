@@ -143,6 +143,8 @@
 spillover.bvarmodel <- function(object, n_ahead = 10, type = "gir", ci = .95,
                                 keep_draws = FALSE, period = NULL, impact = NULL, ...) {
 
+  .refuse_quantile_covariance(object, "Spillover measures")
+
   if (is.null(object[["posterior"]][["u_sigma_inv"]][["coeffs"]])) {
     stop("Argument 'object' must include draws of the variance-covariance matrix Sigma.")
   }

@@ -14,7 +14,10 @@
 #' @param ... arguments passed forward to method.
 #' 
 #' @return A list containing the vectors of prior standard deviations for restricted
-#' and unrestricted variables, respectively.
+#' and unrestricted variables, respectively. The first \eqn{K r} elements, those of the
+#' loadings, are one: the loadings are not selected over, and their prior is the one the
+#' cointegration space prior implies, which the samplers form themselves every draw, so
+#' these entries are placeholders that are never read.
 #' 
 #' @references
 #' 
@@ -36,7 +39,7 @@
 #' @export
 ssvs_prior.bvecmodel <- function(object, tau = c(0.05, 10), semiautomatic = NULL, ...) {
   
-  if (object[["model"]][["error"]] %in% c("sv", "sv-covar")) {
+  if (object[["model"]][["error"]] %in% c("sv", "sv+covar")) {
     stop("SSVS cannot be used with models with stochastic volatility.")
   }
   

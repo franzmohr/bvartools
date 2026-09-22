@@ -132,3 +132,25 @@ test_that("an invalid lag order of exogenous variables is rejected", {
                  "Argument 's' must contain non-negative integers")
   }
 })
+
+test_that("the trend does not depend on where the exogenous series starts", {
+  # The trend counted rows of the data and 'exogen' together, so an exogenous
+  # series reaching further back shifted it.
+  endogen <- stats::window(at_macrodata[["domestic"]][, c("y", "Dp")], start = c(1998, 1)) * 100
+  foreign <- at_macrodata[["foreign"]][, "Dp.s", drop = FALSE] * 100
+  short <- stats::window(foreign, start = c(1998, 1))
+
+  x_trend <- function(exogen) {
+    model <- create_bvarmodel(endogen, p = 1, exogen = exogen, s = 1,
+                              deterministic = "both", iterations = 10, burnin = 5)
+    as.numeric(model[["data"]][["train"]][["x"]][, "trend"])
+  }
+  expect_identical(x_trend(foreign), x_trend(short))
+  expect_identical(x_trend(short)[1], 1)
+})
+
+test_that("the lag order is validated", {
+  expect_error(create_bvarmodel(var_data(), p = 1.5), "non-negative whole numbers")
+  expect_error(create_bvarmodel(var_data(), p = -1), "non-negative whole numbers")
+  expect_error(create_bvarmodel(var_data(), p = NA), "non-negative whole numbers")
+})

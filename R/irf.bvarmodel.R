@@ -127,6 +127,11 @@ irf.bvarmodel <- function(x, impulse = NULL, response = NULL, n_ahead = 5, ci = 
     stop("Impulse responses of type \"custom\" need an impact matrix in argument 'impact'.")
   }
 
+  # Forecast error responses and a given impact matrix need no covariance.
+  if (!type %in% c("feir", "custom")) {
+    .refuse_quantile_covariance(x, paste0("Impulse responses of type \"", type, "\""))
+  }
+
   # A sign restricted identification is a custom one whose impact matrices the
   # model is already carrying, so it is assembled here and travels the same
   # path. `type` keeps its own name until then, so that the checks below and

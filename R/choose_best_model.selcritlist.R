@@ -80,16 +80,29 @@
 #' @export
 #' @method choose_best_model selcritlist
 choose_best_model.selcritlist <- function(object, criterion = "WAIC", ...) {
-  
+
+  # One number per model. The forecast error criteria -- FE, AFE, RSFE -- hold
+  # one per variable and horizon, which stacked into a matrix made which()
+  # below return a position in that matrix rather than a model.
+  allowed <- c("LL", "AIC", "BIC", "HQ", "WAIC", "LOOIC", "LPL", "LML")
+  if (!is.character(criterion) || length(criterion) != 1 || !criterion %in% allowed) {
+    stop("Argument 'criterion' must be one of ", paste0("\"", allowed, "\"", collapse = ", "),
+         ". Forecast error criteria hold a value per variable and horizon and name no ",
+         "single best model.")
+  }
+
   # Models, which do not contain the criterion, cannot be chosen, but their
   # positions in 'object' are maintained
-  res <- lapply(object, function(y, criterion) {
+  res <- vapply(object, function(y) {
     if (is.null(y[[criterion]])) {
       return(NA_real_)
     }
-    y[[criterion]][, "mean"]
-  }, criterion = criterion)
-  res <- do.call("rbind", res)
+    value <- y[[criterion]][, "mean"]
+    if (length(value) != 1) {
+      stop("Criterion '", criterion, "' holds more than one value per model.", call. = FALSE)
+    }
+    as.numeric(value)
+  }, numeric(1), USE.NAMES = FALSE)
 
   if (all(is.na(res))) {
     stop("None of the models in argument 'object' contains criterion '", criterion, "'.")

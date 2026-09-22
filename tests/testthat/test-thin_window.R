@@ -260,3 +260,29 @@ test_that("window() cuts the posterior of a discounted model to its periods", {
                  info = what)
   }
 })
+
+test_that("pooled chains are thinned one chain at a time", {
+  # Thinned as one sequence, the second chain kept different positions than
+  # the first whenever a chain's length was not a multiple of 'thin'.
+  model <- create_bvarmodel(var_data(), p = 1, deterministic = "const",
+                            iterations = 17, burnin = 5)
+  model <- add_priors(model, coef = list(v_i = 1, v_i_det = 0.1),
+                      sigma = list(df = "k", scale = 1))
+  model <- add_posterior_coefficients(add_initial_values(model), chains = 2)
+  a <- as.matrix(model[["posterior"]][["a"]][["coeffs"]])
+
+  thinned <- thin(model, thin = 4)
+  kept <- as.matrix(thinned[["posterior"]][["a"]][["coeffs"]])
+  expect_identical(nrow(kept), 8L)
+  expect_equal(unname(kept), unname(a[c(4, 8, 12, 16, 21, 25, 29, 33), ]))
+  expect_no_error(chain_diagnostics(thinned))
+})
+
+test_that("a discounted model says there is nothing to thin", {
+  model <- create_bvarmodel(var_data(), p = 1, deterministic = "const",
+                            algorithm = "discount", iterations = 10, burnin = 0)
+  model <- add_priors(model, coef = list(v_i = 1, v_i_det = 1 / 10),
+                      sigma = list(df = "k", scale = 1))
+  model <- add_posterior_coefficients(add_initial_values(model))
+  expect_error(thin(model, thin = 2), "nothing to thin")
+})

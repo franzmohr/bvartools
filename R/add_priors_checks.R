@@ -100,10 +100,16 @@
     }
   }
 
+  # A negative precision is not a prior, and the vendored core takes one
+  # without complaint for the deterministic terms, so it is refused here.
+  if (!is.null(coef[["v_i_det"]]) && any(coef[["v_i_det"]] < 0)) {
+    stop("Argument 'v_i_det' must be at least 0.")
+  }
+
   if (!is.null(coef[["v_i"]])) {
     if (coef[["v_i"]] < 0) {
       stop("Argument 'v_i' must be at least 0.")
-    } 
+    }
     # Define "v_i_det" if not specified (needed for a check later)
     if (is.null(coef[["v_i_det"]])) {
       coef[["v_i_det"]] <- coef[["v_i"]]
@@ -169,6 +175,11 @@
     }
     if (!all(c("kappa1", "kappa2", "kappa4") %in% names(coef[["minnesota"]]))) {
       stop("Argument coeff$minnesota must contain at least the elements 'kappa1', 'kappa2' and 'kappa4'.")
+    }
+    # As documented: without it the exogenous variables quietly got the
+    # formula of the deterministic terms.
+    if (isTRUE(object[["model"]][["m"]] > 0) && is.null(coef[["minnesota"]][["kappa3"]])) {
+      stop("Argument coef$minnesota must contain 'kappa3' for a model with exogenous variables.")
     }
     if (object[["model"]][["error"]] %in% c("gamma+covar", "sv+covar") & is.null(coef[["v_i"]])) {
       stop("If error covarances should be estimated, argument coef$v_i must be provided also when the Minnesota prior is used.")

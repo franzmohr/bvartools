@@ -113,7 +113,7 @@ add_initial_values.bvarmodel <- function(object, method = "ols", ...){
       n <- object[["model"]][["n"]]
       nparams <- k * p + m * (s + 1) + n
       
-      if (tt >= nparams) {
+      if (tt > nparams) {
         ols <- solve(crossprod(z)) %*% crossprod(z, y)
         
         if (object[["model"]][["tvp"]]) {

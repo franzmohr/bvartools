@@ -37,12 +37,43 @@
 #' @method thin bvarmodel
 thin.bvarmodel <- function(x, thin = 10, ...) {
 
-  draws <- nrow(x[["posterior"]][["u_sigma_inv"]][["coeffs"]])
-  .check_thin(thin, draws)
-  pos_thin <- seq(from = thin, to = draws, by = thin)
-  x[["posterior"]] <- .thin_draws(x[["posterior"]], pos_thin, draws, thin)
+  kept <- .thin_positions(x, thin)
+  x[["posterior"]] <- .thin_draws(x[["posterior"]], kept[["positions"]], kept[["draws"]], thin)
 
   return(x)
+}
+
+
+# Which rows of the pooled draws thinning keeps. Every chain is thinned on its
+# own: they are stacked one after the other, and thinning the stack as one
+# sequence kept draws 4, 8, ... of the first chain and 3, 7, ... of the next
+# whenever a chain's length was not a multiple of 'thin', and left chains of
+# unequal length otherwise. A discounted model has no draws at all.
+.thin_positions <- function(x, thin) {
+
+  if (.is_discount(x)) {
+    stop("A discounted model has a closed-form posterior rather than draws, so there is ",
+         "nothing to thin.", call. = FALSE)
+  }
+
+  draws <- nrow(x[["posterior"]][["u_sigma_inv"]][["coeffs"]])
+  if (is.null(draws)) {
+    stop("Argument 'x' has no posterior draws to thin.", call. = FALSE)
+  }
+
+  chains <- x[["model"]][["chains"]]
+  chains <- if (is.null(chains)) 1L else as.integer(chains)
+  if (draws %% chains != 0) {
+    stop("The ", draws, " draws do not divide into ", chains, " chains of equal length.",
+         call. = FALSE)
+  }
+  n <- draws %/% chains
+  .check_thin(thin, n)
+
+  within <- seq(from = thin, to = n, by = thin)
+  positions <- as.vector(outer(within, (seq_len(chains) - 1) * n, "+"))
+
+  list("positions" = positions, "draws" = draws)
 }
 
 
@@ -74,9 +105,13 @@ thin.bvarmodel <- function(x, thin = 10, ...) {
       if (is.null(mcpar)) {
         mcpar <- c(1, draws, 1)
       }
+      # The end is counted from the number of draws kept rather than read off
+      # the last position: kept per chain, the positions are not evenly spaced
+      # across the pooled rows, and coda wants labels that are.
+      start <- mcpar[1] + (pos_thin[1] - 1) * mcpar[3]
       posterior[[i]] <- coda::mcmc(.draws_matrix(element)[pos_thin, , drop = FALSE],
-                                   start = mcpar[1] + (pos_thin[1] - 1) * mcpar[3],
-                                   end = mcpar[1] + (pos_thin[length(pos_thin)] - 1) * mcpar[3],
+                                   start = start,
+                                   end = start + (length(pos_thin) - 1) * thin * mcpar[3],
                                    thin = thin * mcpar[3])
     }
   }

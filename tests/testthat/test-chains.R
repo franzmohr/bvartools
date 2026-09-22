@@ -100,9 +100,10 @@ test_that("chains are refused where they cannot be compared", {
                                             sigma = list(df = "k", scale = 1)))
   expect_error(add_posterior_coefficients(discount, chains = 2), "closed-form")
 
-  # Thinning by a factor the length of a chain is not a multiple of mixes chains.
+  # Thinning by a factor the length of a chain is not a multiple of used to mix
+  # the chains. Each is thinned on its own now, so they stay comparable.
   model <- add_posterior_coefficients(chains_var(), chains = 2)
-  expect_error(chain_diagnostics(thin(model, thin = 7)), "equal length")
+  expect_no_error(chain_diagnostics(thin(model, thin = 7)))
 })
 
 test_that("a VEC model and a list of models take chains as well", {

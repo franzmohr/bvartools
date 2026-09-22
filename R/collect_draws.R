@@ -115,6 +115,20 @@
   }
 }
 
+# A quantile VAR has no error covariance to identify shocks from. What its
+# posterior keeps in u_sigma_inv are the per-period precisions of the latent
+# mixture that makes the asymmetric Laplace likelihood conditionally normal:
+# diagonal, redrawn every period, and not a covariance of anything. Everything
+# that factorises or decomposes Sigma is therefore refused, as forecasting and
+# add_sign_restrictions() already refuse the model.
+.refuse_quantile_covariance <- function(x, caller) {
+  if (identical(x[["model"]][["error"]], "ald")) {
+    stop(caller, " need the error covariance of the model, which a quantile VAR ",
+         "(error = \"ald\") does not estimate: its u_sigma_inv holds the latent precisions ",
+         "of the asymmetric Laplace errors, period by period.", call. = FALSE)
+  }
+}
+
 # The period a sign restricted identification is used at.
 #
 # Each rotation was found against the covariance of its draw in the period

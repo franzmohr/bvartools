@@ -21,6 +21,14 @@
 #' another -- which sub-model of a global model it is, say -- and a nesting
 #' whose depth depended on where the caller pointed could not provide them.
 #'
+#' The one exception is an expanding window: the windows that
+#' \code{\link{write_to_hdf5}} wrote to one directory come back as one element
+#' of class 'expandingwindow', named after that directory, so that the windows of
+#' different specifications are not pooled. A folder that holds a single
+#' expanding window is returned as that expanding window. A model list written
+#' by \code{\link{write_to_hdf5}} comes back in the order it was written in,
+#' which the files record; other models are in the order of their names.
+#'
 #' The class of each model comes from the \code{rclass} attribute the writer
 #' records, not from its file name.
 #'
@@ -69,6 +77,7 @@ read_models_from_folder <- function(folder, draws = NULL) {
 
   result <- list()
   result_names <- character()
+  result_files <- character()
 
   for (i in relative_paths) {
 
@@ -85,6 +94,7 @@ read_models_from_folder <- function(folder, draws = NULL) {
                                                            draws = draws)
       result_names <- c(result_names,
                         if (group == "") stem else paste0(stem, ":", group))
+      result_files <- c(result_files, i)
     }
   }
 
@@ -94,22 +104,65 @@ read_models_from_folder <- function(folder, draws = NULL) {
 
   names(result) <- result_names
 
-  # The kind of collection these models form is read off the models themselves.
-  # It used to be guessed by looking for "ExpWind" in the first file's path,
-  # which made the class of the result depend on the name of a directory -- and
-  # on the names of every directory above it, since the match was against the
-  # full path. Files written before the attribute existed still carry the name,
-  # so that is kept as a fallback.
-  collection <- unique(unlist(lapply(result, function(x) x[["model"]][["rclass_collection"]])))
-  if (is.null(collection) && any(grepl("ExpWind", relative_paths, fixed = TRUE))) {
-    collection <- c("expandingwindow", "list")
+  # Which models belong together is read off the models themselves: the
+  # windows of an expanding window carry the class of their collection, which
+  # write_to_hdf5() stores. It used to be guessed from "ExpWind" in the first
+  # file's path, which made the class depend on the name of a directory; files
+  # written before the attribute existed still carry the name, so it is kept as
+  # a fallback. Where a model list was written, every model also carries the
+  # position of its element in that list.
+  directories <- dirname(result_files)
+  in_window <- vapply(seq_along(result), function(i) {
+    collection <- result[[i]][["model"]][["rclass_collection"]]
+    if (is.null(collection)) {
+      grepl("ExpWind", result_files[i], fixed = TRUE)
+    } else {
+      "expandingwindow" %in% collection
+    }
+  }, logical(1))
+  index <- vapply(result, function(x) {
+    i <- x[["model"]][["rindex_collection"]]
+    if (is.null(i)) NA_real_ else as.numeric(i)[1]
+  }, numeric(1))
+
+  for (i in seq_along(result)) {
+    result[[i]][["model"]][["rclass_collection"]] <- NULL
+    result[[i]][["model"]][["rindex_collection"]] <- NULL
   }
 
-  if (is.null(collection)) {
-    class(result) <- c("modellist", "list")
-  } else {
-    class(result) <- collection
+  # Every directory of windows becomes one expanding window, in the place of
+  # its first window; every other model stays an element of its own. The
+  # windows of different specifications were once returned as one long
+  # expanding window, which pooled them.
+  key <- ifelse(in_window, paste0("window:", directories), paste0("model:", seq_along(result)))
+  groups <- unique(key)
+  elements <- lapply(groups, function(g) {
+    members <- which(key == g)
+    if (startsWith(g, "window:")) {
+      windows <- result[members]
+      class(windows) <- c("expandingwindow", "list")
+      windows
+    } else {
+      result[[members]]
+    }
+  })
+  names(elements) <- vapply(groups, function(g) {
+    members <- which(key == g)
+    if (startsWith(g, "window:")) directories[members[1]] else result_names[members]
+  }, character(1))
+  element_index <- vapply(groups, function(g) index[which(key == g)[1]], numeric(1))
+
+  # The order of the list that was written, where the files say what it was;
+  # the order of the file names otherwise. order() keeps ties, and the
+  # elements without an index, in the order they were read.
+  elements <- elements[order(element_index, na.last = TRUE)]
+
+  # A folder that holds one expanding window is that expanding window, however
+  # deep it sits below 'folder'.
+  if (length(elements) == 1 && inherits(elements[[1]], "expandingwindow")) {
+    return(elements[[1]])
   }
 
-  return(result)
+  class(elements) <- c("modellist", "list")
+  return(elements)
 }

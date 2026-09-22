@@ -26,7 +26,8 @@
 #' the median and the credible intervals of the posterior draws are returned.
 #' @param period integer. Index of the period, for which the IR should be generated.
 #' Only used for TVP or SV models. Default is \code{NULL}, so that the posterior draws of the last time period
-#' are used.
+#' are used. With \code{type = "sign"} the default is the period the restrictions were imposed in,
+#' and another period is refused, since the rotations do not identify it.
 #' @param impact the impact matrix of a \code{"custom"} impulse response, either a single
 #' \eqn{K \times K} matrix that identifies every posterior draw the same way, or a list of
 #' such matrices with one entry per draw. Ignored for every other value of \code{type}.
@@ -132,6 +133,7 @@ irf.bvarmodel <- function(x, impulse = NULL, response = NULL, n_ahead = 5, ci = 
   # any message they produce speak of what was asked for.
   if (type == "sign") {
     impact <- .sign_impact(x, "Impulse responses")
+    period <- .sign_period(x, period, "Impulse responses")
   }
   
   # A horizon of zero is the impact period on its own, which is well defined:

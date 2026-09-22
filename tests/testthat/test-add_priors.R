@@ -512,3 +512,33 @@ test_that("a gamma error prior can be given one value per equation", {
                           sigma = list(shape = 3, rate = c(1, -2, 3))),
                "larger than 0")
 })
+
+test_that("a time varying VEC with a Minnesota prior keeps its state equation", {
+  # Its shape and rate, or omega_v, were set only in the branch without a
+  # Minnesota prior, so add_initial_values() then failed.
+  model <- create_bvecmodel(vec_data(), p = 2, r = 1, const = "unrestricted", tvp = TRUE,
+                            error = "gamma", iterations = 10, burnin = 5)
+  minnesota <- list(kappa1 = 2, kappa2 = 0.5, kappa4 = 5)
+  prior <- function(coef) {
+    add_priors(model, coef = coef, coint = list(rho = 0.999),
+               sigma = list(shape = 3, rate = 0.01))
+  }
+  centred <- prior(list(minnesota = minnesota, shape = 3, rate = 1e-4))
+  n <- nrow(centred[["priors"]][["a"]][["v_inv"]])
+  expect_identical(dim(centred[["priors"]][["a"]][["shape"]]), c(n, 1L))
+  expect_identical(dim(centred[["priors"]][["a"]][["rate"]]), c(n, 1L))
+  expect_no_error(add_initial_values(centred))
+
+  noncentred <- prior(list(minnesota = minnesota, omega_v = 1e-4))
+  expect_identical(dim(noncentred[["priors"]][["a"]][["omega_v"]]), c(n, 1L))
+
+  # The loadings get the same compensating scale as under a plain prior.
+  n_alpha <- model[["model"]][["k"]] * model[["model"]][["rank"]]
+  constant <- add_priors(create_bvecmodel(vec_data(), p = 2, r = 1, const = "unrestricted",
+                                          iterations = 10, burnin = 5),
+                         coef = list(minnesota = minnesota),
+                         coint = list(v_i = 0, p_tau_i = 1),
+                         sigma = list(df = "k", scale = 1))
+  expect_equal(diag(centred[["priors"]][["a"]][["v_inv"]])[1:n_alpha],
+               diag(constant[["priors"]][["a"]][["v_inv"]])[1:n_alpha] / (1 - 0.999^2))
+})

@@ -543,27 +543,6 @@ add_priors.bvecmodel <- function(object,
         if (n_det > 0 & !is.null(coef[["v_i_det"]])) {
           diag(v_i)[tot_par - n_struct - n_det + 1:n_det] <- coef[["v_i_det"]]
         }
-        if (!is.null(coef[["omega_v"]])) {
-          # The non-centred parameterisation: a normal prior on the signed
-          # standard deviation of the state innovations instead of the gamma
-          # one on their precision.
-          object[["priors"]][["a"]][["omega_v"]] <- matrix(coef[["omega_v"]], tot_par)
-          # The loadings come first among the coefficients, and multiply levels,
-          # so they can have a scale of their own, as with rate_alpha below.
-          if (r > 0 & !is.null(coef[["omega_v_alpha"]])) {
-            object[["priors"]][["a"]][["omega_v"]][1:n_alpha, ] <- coef[["omega_v_alpha"]]
-          }
-        } else {
-          object[["priors"]][["a"]][["shape"]] <- matrix(coef[["shape"]], tot_par)
-          object[["priors"]][["a"]][["rate"]] <- matrix(coef[["rate"]], tot_par)
-          if (n_det > 0 & !is.null(coef[["rate_det"]])) {
-            object[["priors"]][["a"]][["rate"]][tot_par - n_struct - n_det + 1:n_det, ] <- coef[["rate_det"]]
-          }
-          # The loadings come first among the coefficients.
-          if (r > 0 & !is.null(coef[["rate_alpha"]])) {
-            object[["priors"]][["a"]][["rate"]][1:n_alpha, ] <- coef[["rate_alpha"]]
-          }
-        }
       } else {
         v_i <- diag(coef[["v_i"]], tot_par)
         # Add priors for deterministic terms if they were specified
@@ -573,7 +552,44 @@ add_priors.bvecmodel <- function(object,
       }
       object[["priors"]][["a"]][["v_inv"]] <- v_i
     }
-    
+
+    # TVP prior ----
+    # The state equation, whichever prior the state before the sample has. It
+    # used to be set inside the branch above only, so a time varying model with
+    # a Minnesota prior was left without it and failed in add_initial_values().
+    if (object[["model"]][["tvp"]]) {
+
+      # The loadings' compensating scale, as in the branch above, for a
+      # Minnesota precision as well: without it the product alpha beta' of a
+      # model with a Minnesota prior sat 1 / (1 - rho^2) times further out.
+      if (minnesota & r > 0) {
+        diag(object[["priors"]][["a"]][["v_inv"]])[1:n_alpha] <-
+          diag(object[["priors"]][["a"]][["v_inv"]])[1:n_alpha] / (1 - coint[["rho"]] * coint[["rho"]])
+      }
+
+      if (!is.null(coef[["omega_v"]])) {
+        # The non-centred parameterisation: a normal prior on the signed
+        # standard deviation of the state innovations instead of the gamma
+        # one on their precision.
+        object[["priors"]][["a"]][["omega_v"]] <- matrix(coef[["omega_v"]], tot_par)
+        # The loadings come first among the coefficients, and multiply levels,
+        # so they can have a scale of their own, as with rate_alpha below.
+        if (r > 0 & !is.null(coef[["omega_v_alpha"]])) {
+          object[["priors"]][["a"]][["omega_v"]][1:n_alpha, ] <- coef[["omega_v_alpha"]]
+        }
+      } else {
+        object[["priors"]][["a"]][["shape"]] <- matrix(coef[["shape"]], tot_par)
+        object[["priors"]][["a"]][["rate"]] <- matrix(coef[["rate"]], tot_par)
+        if (n_det > 0 & !is.null(coef[["rate_det"]])) {
+          object[["priors"]][["a"]][["rate"]][tot_par - n_struct - n_det + 1:n_det, ] <- coef[["rate_det"]]
+        }
+        # The loadings come first among the coefficients.
+        if (r > 0 & !is.null(coef[["rate_alpha"]])) {
+          object[["priors"]][["a"]][["rate"]][1:n_alpha, ] <- coef[["rate_alpha"]]
+        }
+      }
+    }
+
     if (use_bvs) {
       temp <- inclusion_prior(object, prob = varsel[["inprior"]], exclude_deterministics = varsel[["exclude_det"]],
                               minnesota_like = !is.null(varsel[["minnesota"]]),

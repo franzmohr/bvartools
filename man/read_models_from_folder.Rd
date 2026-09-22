@@ -33,6 +33,14 @@ the root of its file. Names are what a caller needs to tell one model from
 another -- which sub-model of a global model it is, say -- and a nesting
 whose depth depended on where the caller pointed could not provide them.
 
+The one exception is an expanding window: the windows that
+\code{\link{write_to_hdf5}} wrote to one directory come back as one element
+of class 'expandingwindow', named after that directory, so that the windows of
+different specifications are not pooled. A folder that holds a single
+expanding window is returned as that expanding window. A model list written
+by \code{\link{write_to_hdf5}} comes back in the order it was written in,
+which the files record; other models are in the order of their names.
+
 The class of each model comes from the \code{rclass} attribute the writer
 records, not from its file name.
 

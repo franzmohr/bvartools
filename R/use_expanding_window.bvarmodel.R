@@ -10,7 +10,9 @@
 #' 
 #' @return A list of class 'expandingwindow' with one object of class 'bvarmodel' per
 #' window. The training sample of the first ends in the period before \code{start}, and
-#' each further window adds one period.
+#' each further window adds one period. Posterior draws, starting values and forecast input
+#' that \code{object} already carries belong to the whole sample and are not copied into
+#' the windows; a warning says so.
 #'
 #' @examples
 #' 
@@ -47,10 +49,12 @@ use_expanding_window.bvarmodel <- function(object, start, ...) {
   nobs_train_max <- length(time_y)
   pos_end <- nobs_train_min:nobs_train_max
   
+  object <- .clear_for_windows(object)
+
   # Produce individual models with incrementally increasing estimation horizons
   result <- list()
   for (i in 1:length(pos_end)) {
-    
+
     temp <- object
     
     # Trim data
@@ -75,4 +79,38 @@ use_expanding_window.bvarmodel <- function(object, start, ...) {
   class(result) <- append("expandingwindow", class(result))
   
   return(result)
+}
+
+
+# What a model carries that was estimated on, or built for, the whole sample,
+# removed before the model is copied into its windows. The posterior is the one
+# that matters most: a window that kept it would forecast and be scored with
+# draws that had seen the periods it is evaluated on, and nothing downstream
+# could tell. The starting values can be paths as long as the whole sample, and
+# the forecast input continues the whole sample rather than a window. Priors
+# are kept -- setting them before splitting the sample is how they are meant to
+# be given once for every window.
+.clear_for_windows <- function(object) {
+  dropped <- character(0)
+  if (!is.null(object[["posterior"]])) {
+    object[["posterior"]] <- NULL
+    dropped <- c(dropped, "the posterior draws")
+  }
+  if (!is.null(object[["initial"]])) {
+    object[["initial"]] <- NULL
+    dropped <- c(dropped, "the starting values")
+  }
+  if (!is.null(object[["data"]][["forecast"]]) || !is.null(object[["data"]][["test"]])) {
+    object[["data"]][["forecast"]] <- NULL
+    object[["data"]][["test"]] <- NULL
+    object[["model"]][["h"]] <- NULL
+    dropped <- c(dropped, "the forecast input and test sample")
+  }
+  if (length(dropped) > 0) {
+    warning("Argument 'object' already carries ", paste(dropped, collapse = ", "),
+            ", which belong to the whole sample and were not copied into the windows. ",
+            "Add them to the result instead, for example with add_initial_values(), ",
+            "add_posterior_coefficients() and add_forecast_input().", call. = FALSE)
+  }
+  object
 }

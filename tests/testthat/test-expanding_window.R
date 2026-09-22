@@ -147,3 +147,24 @@ test_that("the forecasts of every window start from the last period of that wind
     expect_equal(as.numeric(w[["data"]][["forecast"]][["x"]][1, 1:3]), as.numeric(y[nrow(y), ]))
   }
 })
+
+test_that("the windows of an estimated model do not inherit its posterior", {
+  # Each window used to be a copy of the whole object, draws included, so that
+  # add_predictive_loglik() scored every window with draws that had seen the
+  # period it was evaluated on.
+  model <- add_forecast_input(fx_var_fitted(), n_ahead = 1)
+  y <- model[["data"]][["train"]][["y"]]
+  expect_warning(windows <- use_expanding_window(model, start = stats::time(y)[nrow(y) - 1]),
+                 "posterior draws, the starting values, the forecast input")
+  for (w in windows) {
+    expect_null(w[["posterior"]])
+    expect_null(w[["initial"]])
+    expect_null(w[["data"]][["forecast"]])
+    # The priors, set once for every window, are kept.
+    expect_identical(w[["priors"]], model[["priors"]])
+  }
+  expect_error(add_predictive_loglik(windows))
+
+  # A model with priors only is split without a word.
+  expect_no_warning(use_expanding_window(fx_var_priors(), start = stats::time(y)[nrow(y) - 1]))
+})

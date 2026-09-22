@@ -250,3 +250,32 @@ test_that("an unidentified model is refused by the analysis functions", {
   expect_error(spillover(object, type = "sign"),
                "add_sign_restrictions")
 })
+
+test_that("a sign identification is used in the period it was found in", {
+  # Each rotation satisfies the restrictions against the covariance of its draw
+  # in that period. Used in another period of a model whose covariance moves, it
+  # need not, which used to happen by default.
+  model <- fx_var_tvp_fitted("gamma+covar")
+  set.seed(1)
+  object <- add_sign_restrictions(model, fx_sign_restrictions(), period = 10)
+  tt <- nrow(model[["data"]][["train"]][["y"]])
+
+  default <- irf(object, impulse = "y", response = "r", n_ahead = 0, type = "sign",
+                 keep_draws = TRUE)
+  at_ten <- irf(object, impulse = "y", response = "r", n_ahead = 0, type = "sign",
+                keep_draws = TRUE, period = 10)
+  expect_equal(default, at_ten)
+
+  expect_error(irf(object, impulse = "y", response = "r", type = "sign", period = tt),
+               "period 10")
+  expect_error(fevd(object, response = "r", type = "sign", period = tt), "period 10")
+  expect_error(spillover(object, type = "sign", period = tt), "period 10")
+
+  # window() moves the period with the sample, and drops an identification
+  # whose period it cuts away.
+  y <- model[["data"]][["train"]][["y"]]
+  moved <- window(object, start = stats::time(y)[3])
+  expect_identical(moved[["model"]][["sign_restrictions"]][["period"]], 8L)
+  expect_warning(cut <- window(object, start = stats::time(y)[11]), "dropped")
+  expect_null(cut[["posterior"]][["q"]])
+})

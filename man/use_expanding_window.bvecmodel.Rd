@@ -18,7 +18,9 @@ expanding window approach.}
 \value{
 A list of class 'expandingwindow' with one object of class 'bvecmodel' per
 window. The training sample of the first ends in the period before \code{start}, and
-each further window adds one period.
+each further window adds one period. Posterior draws, starting values and forecast input
+that \code{object} already carries belong to the whole sample and are not copied into
+the windows; a warning says so.
 }
 \description{
 Creates objects for expanding window posterior simulation.

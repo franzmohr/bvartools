@@ -14,7 +14,8 @@
 #' @param normalise_gir logical. Should the GIR-based FEVD be normalised?
 #' @param period integer. Index of the period, for which the variance decomposition should be generated.
 #' Only used for TVP or SV models. Default is \code{NULL}, so that the posterior draws of the last time period
-#' are used.
+#' are used. With \code{type = "sign"} the default is the period the restrictions were imposed in,
+#' and another period is refused, since the rotations do not identify it.
 #' @param max_groups integer. Maximum number of variables the decomposition should contain.
 #' The \code{max_groups - 1} variables with the largest contributions across the whole horizon
 #' are kept and the contributions of the remaining variables are added up in a further column
@@ -144,6 +145,7 @@ fevd.bvarmodel <- function(x, response = NULL, n_ahead = 5, type = "oir", normal
   # model is already carrying.
   if (type == "sign") {
     impact <- .sign_impact(x, "Variance decompositions")
+    period <- .sign_period(x, period, "Variance decompositions")
   }
   
   if(is.null(response)) {

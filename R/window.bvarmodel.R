@@ -13,7 +13,11 @@
 #' same observations as the data. These are the coefficients of a model with
 #' time varying parameters, the draws of the error term that vary by period --
 #' as under stochastic volatility -- and the pointwise log-likelihood. Draws that
-#' do not vary by period are left as they are.
+#' do not vary by period are left as they are. The posterior of a discounted
+#' model, which holds the moments of every period rather than draws, is cut to
+#' the same periods. In either case the draws or moments that remain were
+#' estimated from the whole sample; re-estimate the model to condition on the
+#' window alone.
 #'
 #' @return An object of class 'bvarmodel'.
 #'
@@ -41,7 +45,25 @@ window.bvarmodel <- function(x, start = NULL, end = NULL, ...) {
 
   if (!is.null(x[["posterior"]])) {
     x[["posterior"]] <- .window_posterior(x[["posterior"]], periods, length(orig_time),
-                                          .path_widths(x, k))
+                                          .path_widths(x, k), .is_discount(x))
+  }
+
+  # A sign restricted identification holds for the period it was found in,
+  # which is an index into the sample and so moves with it. The last period is
+  # what no stored period means, and it is not the last period of the window.
+  sign <- x[["model"]][["sign_restrictions"]]
+  if (!is.null(sign)) {
+    stored <- if (is.null(sign[["period"]])) length(orig_time) else sign[["period"]]
+    moved <- match(stored, periods)
+    if (is.na(moved)) {
+      x[["model"]][["sign_restrictions"]] <- NULL
+      x[["posterior"]][["q"]] <- NULL
+      warning("The sign restrictions were imposed in a period the window leaves out, so ",
+              "the identification was dropped. Run add_sign_restrictions() again.",
+              call. = FALSE)
+    } else {
+      x[["model"]][["sign_restrictions"]][["period"]] <- as.integer(moved)
+    }
   }
 
   return(x)
@@ -57,7 +79,10 @@ window.bvarmodel <- function(x, start = NULL, end = NULL, ...) {
 # a number of columns that is a multiple of the periods without being a path.
 .path_widths <- function(x, k) {
   widths <- list("a$coeffs" = NCOL(x[["data"]][["train"]][["z"]]),
-                 "psi$coeffs" = k * (k - 1) / 2,
+                 # The samplers store the whole lower triangular Psi per
+                 # period, not its k(k - 1)/2 free elements, which is only
+                 # what initial$psi holds.
+                 "psi$coeffs" = k * k,
                  "u_sigma_inv$coeffs" = k * k,
                  "u_omega_inv$coeffs" = k,
                  "u_scale$coeffs" = k,
@@ -74,9 +99,23 @@ window.bvarmodel <- function(x, start = NULL, end = NULL, ...) {
 # missing entirely: window() cut the data and left every path at the length of
 # the original sample, so that a summary of the last period of the window
 # silently reported a period of the original sample instead.
-.window_posterior <- function(posterior, periods, tt, widths) {
+.window_posterior <- function(posterior, periods, tt, widths, discount = FALSE) {
 
   if (tt < 2) {
+    return(posterior)
+  }
+
+  # A discounted model has no draws but its posterior itself, one row per
+  # period: the smoothed moments of every period of the sample. They are cut to
+  # the periods that remain, as a path of draws is below.
+  if (discount) {
+    for (path in list(c("a", "mean"), c("a", "scale"), c("a", "cov"),
+                      c("u_sigma", "scale"), "df")) {
+      block <- tryCatch(posterior[[path]], error = function(e) NULL)
+      if (!is.null(block) && NROW(block) == tt) {
+        posterior[[path]] <- block[periods, , drop = FALSE]
+      }
+    }
     return(posterior)
   }
 

@@ -34,7 +34,8 @@ are available; the other four require a non-structural model. See 'Details'.}
 
 \item{period}{integer. Index of the period, for which the variance decomposition should be generated.
 Only used for TVP or SV models. Default is \code{NULL}, so that the posterior draws of the last time period
-are used.}
+are used. With \code{type = "sign"} the default is the period the restrictions were imposed in,
+and another period is refused, since the rotations do not identify it.}
 
 \item{max_groups}{integer. Maximum number of variables the decomposition should contain.
 The \code{max_groups - 1} variables with the largest contributions across the whole horizon

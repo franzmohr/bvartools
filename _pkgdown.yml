@@ -39,6 +39,7 @@ reference:
   - starts_with("add_seed")
   - starts_with("add_posterior_coefficients")
   - starts_with("add_posterior_loglik")
+  - chain_diagnostics
   - bayests_posterior
   - bayests_files
   - starts_with("thin.")

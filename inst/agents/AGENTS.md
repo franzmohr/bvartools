@@ -37,6 +37,9 @@ context at all times.
 9. **Keep `set.seed()`**: it reaches the C++ samplers, so a seeded run
    reproduces. If two seeds give different summaries, the chain is too short:
    create the model with `thin` to run it longer without storing more draws.
+   `add_posterior_coefficients(model, chains = 4)` runs that comparison for you,
+   and `chain_diagnostics()` reports its split R-hat; a single chain cannot show
+   that it is stuck in one mode.
 10. **Read the method's help page**, e.g. `?add_priors.bvarmodel` against
     `?add_priors.bvecmodel`, rather than guessing a list element.
 

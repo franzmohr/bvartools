@@ -182,7 +182,9 @@ print.summary.bvarmodel <- function(x, digits = max(3L, getOption("digits") - 3L
     names(temp)[length(names(temp))] <- ""
     print(temp, ...)
   }
-  
+
+  .print_chains_summary(x[["chains"]])
+
   cat("\n")
   invisible(x)
 }

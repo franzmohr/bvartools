@@ -4,7 +4,12 @@
 \alias{add_posterior_coefficients.bvecmodel}
 \title{Posterior Simulation of Model Coefficients}
 \usage{
-\method{add_posterior_coefficients}{bvecmodel}(object, posterior_function = NULL, ...)
+\method{add_posterior_coefficients}{bvecmodel}(
+  object,
+  posterior_function = NULL,
+  chains = NULL,
+  ...
+)
 }
 \arguments{
 \item{object}{an object of class 'bvecmodel', usually, a result of a
@@ -13,6 +18,15 @@ call to \code{\link{create_bvecmodel}} in combination with
 
 \item{posterior_function}{the function to be applied to the model in argument \code{object}.
 If \code{NULL} (default), internal functions are used.}
+
+\item{chains}{the number of chains to simulate. If \code{NULL} (default), the value in
+\code{object$model$chains} is used, and one chain when there is none. Each chain is the
+same simulation with a seed of its own -- the first with the seed of the model, so that one
+chain draws what it always has -- and the chains are pooled, one after the other, in the
+draws of \code{posterior}, so that every later step uses all of them. Their number is
+stored in \code{model$chains}, and \code{\link{chain_diagnostics}} compares them. A
+\code{posterior_function} is called once per chain. Not available for discounted models,
+whose posterior is not a chain.}
 
 \item{...}{further arguments passed to or from other methods.}
 }
@@ -116,6 +130,7 @@ Other posterior simulation:
 \code{\link[=bayests_posterior]{bayests_posterior()}},
 \code{\link[=bvar]{bvar()}},
 \code{\link[=bvec]{bvec()}},
+\code{\link[=chain_diagnostics]{chain_diagnostics()}},
 \code{\link[=predict.bvecmodel]{predict.bvecmodel()}}
 }
 \concept{posterior simulation}

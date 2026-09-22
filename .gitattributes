@@ -1,3 +1,0 @@
-# The hooks are run by Git Bash, whose bash refuses a script whose shebang line
-# ends in CR. core.autocrlf would hand it exactly that on checkout.
-.githooks/* text eol=lf

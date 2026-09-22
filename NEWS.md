@@ -1,5 +1,40 @@
 # bvartools 1.0.0
 
+* **Seven places where a result could be silently wrong, found in an audit.**
+  - `window()` now cuts the `psi` path of a time varying covariance. It
+    expected k(k-1)/2 columns per period where the samplers store k², so the
+    path kept the whole sample, and a forecast or `add_predictive_loglik()`
+    from the window read Psi from a period of the original sample.
+    `VarTvpGamma`, `VarTvpStochvol`, `VecTvpGamma` and `VecTvpStochvol` with a
+    covariance block were affected.
+  - `window()` now also cuts the posterior of a discounted model, one row per
+    period, which it left at the whole sample.
+  - `use_expanding_window()` no longer copies the posterior draws, starting
+    values or forecast input of the model it is given into every window, and
+    warns when it drops them. Windows cut from an estimated model used to keep
+    the draws of the whole sample, so `add_predictive_loglik()` scored every
+    window with draws that had seen the period it was evaluated on. Priors are
+    still copied.
+  - `read_model_from_hdf5()` keeps the shape of a matrix with one row. A
+    one-step forecast input, or the one realised period of the last but one
+    expanding window, came back transposed and could not be used. The
+    realised values also get their column names back.
+  - `read_models_from_folder()` returns a list of expanding windows as one
+    expanding window per specification, where it used to merge them all into
+    one and so pooled the specifications. A model list comes back in the
+    order `write_to_hdf5()` wrote it in, which the files now record.
+  - `irf()`, `fevd()` and `spillover()` with `type = "sign"` use the period
+    `add_sign_restrictions()` found the rotations in, and refuse another one
+    for a model whose covariance moves: the rotations only satisfy the
+    restrictions in that period. They used to default to the last period, where
+    a share of the accepted draws broke the restrictions. `window()` moves the
+    stored period with the sample, and drops the identification if it cuts
+    that period away.
+  - A time varying VEC with a Minnesota prior keeps the prior of its state
+    equation. `shape` and `rate`, or `omega_v`, and the compensating scale of
+    the loadings were only set without a Minnesota prior, so
+    `add_initial_values()` failed.
+
 * **An `NA`, `NaN` or infinite value in the input stops with its name.** The
   vendored BayesTS core now checks the estimation data, the forecast
   regressors, the realised values a forecast is scored against, and every

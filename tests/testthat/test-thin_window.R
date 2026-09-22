@@ -218,3 +218,45 @@ test_that("thin() on a thinned chain counts from the chain's own labels", {
   expect_identical(c(as.matrix(draws)),
                    c(as.matrix(model[["posterior"]][["a"]][["coeffs"]])[seq(2, 10, 2), ]))
 })
+
+test_that("window() cuts the Psi path of a time varying covariance", {
+  # The samplers store the whole k x k Psi per period. window() used to expect
+  # its k(k - 1)/2 free elements, so the path was left at the full sample and a
+  # forecast or score from the window read Psi from a period of the original.
+  model <- fx_var_tvp_fitted("gamma+covar")
+  k <- model[["model"]][["k"]]
+  y <- model[["data"]][["train"]][["y"]]
+  tt <- nrow(y)
+  w <- window(model, start = stats::time(y)[11])
+
+  expect_identical(ncol(w[["posterior"]][["psi"]][["coeffs"]]), as.integer(k * k * (tt - 10)))
+  expect_identical(ncol(w[["posterior"]][["u_sigma_inv"]][["coeffs"]]), as.integer(k * k * (tt - 10)))
+  # Cutting from the start leaves the last period where it was.
+  last <- function(x, n) {
+    x <- as.matrix(x)
+    x[, ncol(x) - n + seq_len(n), drop = FALSE]
+  }
+  expect_equal(last(w[["posterior"]][["psi"]][["coeffs"]], k * k),
+               last(model[["posterior"]][["psi"]][["coeffs"]], k * k), ignore_attr = TRUE)
+})
+
+test_that("window() cuts the posterior of a discounted model to its periods", {
+  model <- create_bvarmodel(var_data(), p = 1, deterministic = "const",
+                            algorithm = "discount", delta_beta = 0.99, delta_sigma = 0.98,
+                            iterations = 10, burnin = 0)
+  model <- add_priors(model, coef = list(v_i = 1, v_i_det = 1 / 10),
+                      sigma = list(df = "k", scale = 1))
+  model <- add_posterior_coefficients(add_initial_values(model))
+  y <- model[["data"]][["train"]][["y"]]
+  keep <- nrow(y) - 5L
+  w <- window(model, end = stats::time(y)[keep])
+
+  for (block in list(c("a", "mean"), c("a", "scale"), c("a", "cov"),
+                     c("u_sigma", "scale"), "df")) {
+    what <- paste(block, collapse = "$")
+    expect_identical(NROW(w[["posterior"]][[block]]), keep, info = what)
+    expect_equal(unname(as.matrix(w[["posterior"]][[block]])),
+                 unname(as.matrix(model[["posterior"]][[block]])[seq_len(keep), , drop = FALSE]),
+                 info = what)
+  }
+})

@@ -276,11 +276,27 @@
 # else, and anything from a file written elsewhere, as a matrix.
 .hdf5_read_value <- function(dataset) {
 
-  value <- hdf5r::readDataSet(dataset)
-
   if ("rshape" %in% hdf5r::h5attr_names(dataset) &&
       identical(hdf5r::h5attr(dataset, "rshape"), "vector")) {
-    return(as.vector(value))
+    return(as.vector(hdf5r::readDataSet(dataset)))
+  }
+
+  return(.hdf5_read_matrix(dataset))
+}
+
+# A two-dimensional dataset as a matrix of the shape the file stores. hdf5r
+# drops the dimensions of a dataset with one row, and as.matrix() then makes a
+# column of it, so a matrix of one row came back transposed: a one-step
+# forecast input, or the one realised period of the last-but-one expanding
+# window. The shape is taken from the dataset instead, which hdf5r reports in
+# R's order.
+.hdf5_read_matrix <- function(dataset) {
+
+  value <- hdf5r::readDataSet(dataset)
+  dims <- dataset$dims
+
+  if (length(dims) == 2) {
+    return(matrix(value, nrow = dims[1], ncol = dims[2]))
   }
 
   return(as.matrix(value))

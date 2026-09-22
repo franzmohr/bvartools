@@ -810,3 +810,58 @@ test_that("the writer's explicit types are the ones hdf5r would guess", {
   expect_null(.hdf5_dtype(list(1)))
   expect_null(.hdf5_attr_space(list(1)))
 })
+
+test_that("a matrix of one row keeps its shape through a file", {
+  # hdf5r returns a one-row dataset as a vector, which the reader made a column.
+  model <- add_forecast_input(fx_var_fitted(), n_ahead = 1)
+  path <- temp_h5_file()
+  write_to_hdf5(model, filename = path)
+  restored <- read_model_from_hdf5(path)
+  expect_identical(dim(restored[["data"]][["forecast"]][["x"]]),
+                   dim(model[["data"]][["forecast"]][["x"]]))
+  expect_no_error(add_posterior_forecasts(restored))
+
+  # One realised period, and its names.
+  model[["data"]][["test"]] <- list("y" = model[["data"]][["train"]][["y"]][1, , drop = FALSE])
+  path <- temp_h5_file()
+  write_to_hdf5(model, filename = path)
+  restored <- read_model_from_hdf5(path)
+  expect_identical(dim(restored[["data"]][["test"]][["y"]]),
+                   c(1L, as.integer(model[["model"]][["k"]])))
+  expect_identical(colnames(restored[["data"]][["test"]][["y"]]),
+                   colnames(model[["data"]][["train"]][["y"]]))
+})
+
+test_that("a list of expanding windows comes back as one per specification, in order", {
+  models <- create_bvarmodel(var_data(), p = 2:1, deterministic = "const",
+                             iterations = 10, burnin = 5)
+  y <- models[[1]][["data"]][["train"]][["y"]]
+  windows <- use_expanding_window(models, start = stats::time(y)[nrow(y) - 2])
+  folder <- temp_model_dir()
+  write_to_hdf5(windows, folder = folder)
+
+  restored <- read_models_from_folder(folder)
+  expect_s3_class(restored, "modellist")
+  expect_length(restored, 2)
+  for (i in 1:2) {
+    expect_s3_class(restored[[i]], "expandingwindow")
+    expect_length(restored[[i]], length(windows[[i]]))
+    p <- vapply(restored[[i]], function(m) as.numeric(m[["model"]][["p"]]), numeric(1))
+    expect_true(all(p == windows[[i]][[1]][["model"]][["p"]]))
+  }
+  # The bookkeeping the writer adds is not left in the models.
+  expect_null(restored[[1]][[1]][["model"]][["rclass_collection"]])
+  expect_null(restored[[1]][[1]][["model"]][["rindex_collection"]])
+})
+
+test_that("a model list comes back in the order it was written in", {
+  models <- list(create_bvarmodel(var_data(), p = 1, tvp = TRUE, iterations = 10, burnin = 5),
+                 create_bvarmodel(var_data(), p = 1, iterations = 10, burnin = 5))
+  class(models) <- c("modellist", "list")
+  folder <- temp_model_dir()
+  write_to_hdf5(models, folder = folder)
+
+  restored <- read_models_from_folder(folder)
+  expect_identical(unname(vapply(restored, function(m) m[["model"]][["algorithm"]], character(1))),
+                   c("VarTvpWishart", "VarNormalWishart"))
+})

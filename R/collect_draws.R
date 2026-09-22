@@ -115,6 +115,37 @@
   }
 }
 
+# The period a sign restricted identification is used at.
+#
+# Each rotation was found against the covariance of its draw in the period
+# add_sign_restrictions() was given, and satisfies the restrictions there. Used
+# with the covariance of another period of a model whose covariance moves, it
+# no longer does -- a share of the accepted draws then violate the very signs
+# they were accepted for, and nothing says so. So the stored period is the
+# default, and another one is refused where it would differ.
+.sign_period <- function(x, period, caller) {
+
+  stored <- x[["model"]][["sign_restrictions"]][["period"]]
+  if (is.null(period)) {
+    return(stored)
+  }
+
+  varies <- isTRUE(x[["model"]][["tvp"]]) ||
+    isTRUE(x[["model"]][["error"]] %in% c("sv", "sv+covar"))
+  if (!varies) {
+    return(period)
+  }
+
+  tt <- .train_periods(x, x[["model"]][["k"]])
+  if (.check_period(period, tt) != (if (is.null(stored)) tt else stored)) {
+    stop(caller, " of type \"sign\" use the rotations add_sign_restrictions() found in period ",
+         if (is.null(stored)) tt else stored, ", and the covariance of this model differs ",
+         "from period to period, so they do not identify period ", period, ". Leave ",
+         "'period' out, or run add_sign_restrictions() with that period.", call. = FALSE)
+  }
+  period
+}
+
 .collect_draws <- function(x, period = NULL, need_A0 = FALSE, need_Sigma = TRUE,
                            impact = NULL) {
 

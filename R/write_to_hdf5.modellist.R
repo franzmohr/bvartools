@@ -81,10 +81,19 @@ write_to_hdf5.modellist <- function(object, folder, ...){
         }
         file_name <- file.path(folder, candidate_name)
         
-        paths[[i]] <- write_to_hdf5(object[[i]], filename = file_name, ...)
+        paths[[i]] <- write_to_hdf5(.with_collection_index(object[[i]], i),
+                                    filename = file_name, ...)
 
       } else {
-        paths[[i]] <- write_to_hdf5(object[[i]], folder = folder, ...)
+        # A collection of its own, such as the windows of one specification.
+        # Each of its models carries the position of the collection in this
+        # list, which is what read_models_from_folder() restores the order
+        # from: the file and directory names above sort by algorithm instead.
+        member <- object[[i]]
+        for (j in seq_along(member)) {
+          member[[j]] <- .with_collection_index(member[[j]], i)
+        }
+        paths[[i]] <- write_to_hdf5(member, folder = folder, ...)
       }
     }
 
@@ -94,4 +103,13 @@ write_to_hdf5.modellist <- function(object, folder, ...){
     stop("Specified 'folder' does not exist.")
   }
   
+}
+
+# A model with its position in the list being written. Stored like
+# 'rclass_collection', as an element of 'model' that the per-model writer turns
+# into an attribute of the /model group, and removed again by
+# read_models_from_folder().
+.with_collection_index <- function(model, i) {
+  model[["model"]][["rindex_collection"]] <- as.integer(i)
+  model
 }

@@ -10,7 +10,9 @@
 #' 
 #' @return A list of class 'expandingwindow' with one object of class 'bvecmodel' per
 #' window. The training sample of the first ends in the period before \code{start}, and
-#' each further window adds one period.
+#' each further window adds one period. Posterior draws, starting values and forecast input
+#' that \code{object} already carries belong to the whole sample and are not copied into
+#' the windows; a warning says so.
 #'
 #' @examples
 #' 
@@ -40,10 +42,12 @@ use_expanding_window.bvecmodel <- function(object, start, ...) {
   nobs_train_max <- length(time_y)
   pos_end <- nobs_train_min:nobs_train_max
   
+  object <- .clear_for_windows(object)
+
   # Produce individual models with incrementally increasing estimation horizons
   result <- list()
   for (i in 1:length(pos_end)) {
-    
+
     temp <- object
     
     temp[["data"]][["train"]][["y"]] <- stats::window(temp[["data"]][["train"]][["y"]], end = time_y[pos_end[i]])

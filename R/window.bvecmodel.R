@@ -49,7 +49,7 @@ window.bvecmodel <- function(x, start = NULL, end = NULL, ...) {
   # their own, and .path_widths() knows their width from the rank.
   if (!is.null(x[["posterior"]])) {
     x[["posterior"]] <- .window_posterior(x[["posterior"]], periods, length(orig_time),
-                                          .path_widths(x, k))
+                                          .path_widths(x, k), .is_discount(x))
   }
   
   return(x)

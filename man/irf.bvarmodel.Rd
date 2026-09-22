@@ -53,7 +53,8 @@ the median and the credible intervals of the posterior draws are returned.}
 
 \item{period}{integer. Index of the period, for which the IR should be generated.
 Only used for TVP or SV models. Default is \code{NULL}, so that the posterior draws of the last time period
-are used.}
+are used. With \code{type = "sign"} the default is the period the restrictions were imposed in,
+and another period is refused, since the rotations do not identify it.}
 
 \item{impact}{the impact matrix of a \code{"custom"} impulse response, either a single
 \eqn{K \times K} matrix that identifies every posterior draw the same way, or a list of

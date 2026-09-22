@@ -65,7 +65,7 @@ read_model_from_hdf5 <- function(filename, group = "", draws = NULL) {
     if ("sign_restrictions" %in% names(h5_root[["model"]])) {
       group_sign <- h5_root[["model"]][["sign_restrictions"]]
       dataset <- group_sign[["restrictions"]]
-      restrictions <- as.matrix(hdf5r::readDataSet(dataset))
+      restrictions <- .hdf5_read_matrix(dataset)
       colnames(restrictions) <- hdf5r::h5attr(dataset, "columns")
 
       period <- NULL
@@ -93,7 +93,7 @@ read_model_from_hdf5 <- function(filename, group = "", draws = NULL) {
       for (i in c("endogen", "exogen", "deterministic")) {
         if (i %in% names(h5_root[["data"]][["original"]])) {
           dataset <- h5_root[["data"]][["original"]][[i]]
-          result[["data"]][["original"]][[i]] <- stats::ts(as.matrix(hdf5r::readDataSet(dataset)), class = c("mts", "ts", "matrix"))
+          result[["data"]][["original"]][[i]] <- stats::ts(.hdf5_read_matrix(dataset), class = c("mts", "ts", "matrix"))
           dimnames(result[["data"]][["original"]][[i]]) <- list(NULL, hdf5r::h5attr(dataset, "variables"))
           stats::tsp(result[["data"]][["original"]][[i]]) <- hdf5r::h5attr(dataset, "tsp")
           result[["data"]][["original"]][[i]] <- .hdf5_restore_class(result[["data"]][["original"]][[i]], dataset)
@@ -107,7 +107,7 @@ read_model_from_hdf5 <- function(filename, group = "", draws = NULL) {
         if (i %in% names(h5_root[["data"]][["train"]])) {
           dataset <- h5_root[["data"]][["train"]][[i]]
           variables <- hdf5r::h5attr(dataset, "variables")
-          result[["data"]][["train"]][[i]] <- stats::ts(as.matrix(hdf5r::readDataSet(dataset)))
+          result[["data"]][["train"]][[i]] <- stats::ts(.hdf5_read_matrix(dataset))
           dimnames(result[["data"]][["train"]][[i]]) <- list(NULL, variables)
           stats::tsp(result[["data"]][["train"]][[i]]) <- hdf5r::h5attr(dataset, "tsp")
           result[["data"]][["train"]][[i]] <- .hdf5_restore_class(result[["data"]][["train"]][[i]], dataset)
@@ -127,7 +127,7 @@ read_model_from_hdf5 <- function(filename, group = "", draws = NULL) {
       }
       for (i in c("z")) {
         if (i %in% names(h5_root[["data"]][["train"]])) {
-          result[["data"]][["train"]][[i]] <- as.matrix(hdf5r::readDataSet(h5_root[["data"]][["train"]][[i]]))
+          result[["data"]][["train"]][[i]] <- .hdf5_read_matrix(h5_root[["data"]][["train"]][[i]])
         }
       }
     }
@@ -137,10 +137,10 @@ read_model_from_hdf5 <- function(filename, group = "", draws = NULL) {
       # `x` is the compact layout, `z` the SUR one written before it. Both are
       # read under their own name; the C++ side takes either.
       if ("x" %in% names(h5_root[["data"]][["forecast"]])) {
-        result[["data"]][["forecast"]][["x"]] <- as.matrix(hdf5r::readDataSet(h5_root[["data"]][["forecast"]][["x"]]))
+        result[["data"]][["forecast"]][["x"]] <- .hdf5_read_matrix(h5_root[["data"]][["forecast"]][["x"]])
       }
       if ("z" %in% names(h5_root[["data"]][["forecast"]])) {
-        result[["data"]][["forecast"]][["z"]] <- as.matrix(hdf5r::readDataSet(h5_root[["data"]][["forecast"]][["z"]]))
+        result[["data"]][["forecast"]][["z"]] <- .hdf5_read_matrix(h5_root[["data"]][["forecast"]][["z"]])
       }
     }
 
@@ -151,7 +151,13 @@ read_model_from_hdf5 <- function(filename, group = "", draws = NULL) {
     if ("test" %in% names(h5_root[["data"]])) {
       if ("y" %in% names(h5_root[["data"]][["test"]])) {
         result[["data"]][["test"]] <- list(
-          "y" = as.matrix(hdf5r::readDataSet(h5_root[["data"]][["test"]][["y"]])))
+          "y" = .hdf5_read_matrix(h5_root[["data"]][["test"]][["y"]]))
+        # Written without names, since they are the training sample's: one
+        # column per endogenous variable, in the same order.
+        train_names <- colnames(result[["data"]][["train"]][["y"]])
+        if (length(train_names) == ncol(result[["data"]][["test"]][["y"]])) {
+          colnames(result[["data"]][["test"]][["y"]]) <- train_names
+        }
       }
     }
   }

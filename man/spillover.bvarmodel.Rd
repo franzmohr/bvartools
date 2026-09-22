@@ -38,7 +38,9 @@ the indices. Defaults to \code{FALSE}, so that the credible intervals are return
 
 \item{period}{integer. Index of the period, for which the measures should be generated.
 Only used for TVP or SV models. Default is \code{NULL}, so that the posterior draws of
-the last time period are used.}
+the last time period are used. With \code{type = "sign"} the default is the period the
+restrictions were imposed in, and another period is refused, since the rotations do not
+identify it.}
 
 \item{impact}{the impact matrix of a \code{custom} decomposition, either a single
 \eqn{K \times K} matrix that identifies every posterior draw the same way, or a list

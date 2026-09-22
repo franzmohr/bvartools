@@ -138,7 +138,8 @@ test_that("the summary reports the quantile and the applications still work", {
   expect_output(print(summary(object)), "q = 0.25")
   expect_s3_class(irf(object, impulse = "Dp", response = "r", n_ahead = 3),
                   "bvarirf")
-  expect_s3_class(fevd(object, response = "r", n_ahead = 3), "bvarfevd")
+  # A decomposition needs the error covariance, which this model does not have.
+  expect_error(fevd(object, response = "r", n_ahead = 3), "quantile VAR")
 })
 
 test_that("what a quantile model does not do is refused with a reason", {
@@ -159,4 +160,16 @@ test_that("what a quantile model does not do is refused with a reason", {
                           sigma = list(shape = 3, rate = 0.01),
                           varsel = list(inprior = 0.5, tau = c(0.05, 10))),
                "SSVS is not available")
+})
+
+test_that("a quantile VAR is refused where its covariance would be decomposed", {
+  # Its u_sigma_inv holds the latent precisions of the asymmetric Laplace
+  # errors, period by period, which are not an error covariance.
+  object <- ald_fitted()
+  expect_error(irf(object, impulse = "y", response = "r", type = "oir"), "quantile VAR")
+  expect_error(irf(object, impulse = "y", response = "r", type = "gir"), "quantile VAR")
+  expect_error(fevd(object, response = "r"), "quantile VAR")
+  expect_error(spillover(object), "quantile VAR")
+  # Forecast error responses need no covariance.
+  expect_no_error(irf(object, impulse = "y", response = "r", type = "feir"))
 })

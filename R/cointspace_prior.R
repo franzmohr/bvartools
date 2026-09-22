@@ -303,8 +303,12 @@ cointspace_prior <- function(object, coint) {
     if (!"rho" %in% names(coint)) {
       stop("Argument 'coint$rho' must be specified for VEC models with time varying cointegration parameters.")
     }
-    if (coint[["rho"]] >= 1) {
-      stop("Argument 'coint$rho' must be smaller than 1.")
+    # The stationary distribution of the state, which is the prior of the state
+    # before the sample, has variance 1 / (1 - rho^2): below -1 that is
+    # negative, and the sampler was handed a prior that is not one.
+    if (!is.numeric(coint[["rho"]]) || length(coint[["rho"]]) != 1 || is.na(coint[["rho"]]) ||
+        coint[["rho"]] >= 1 || coint[["rho"]] <= -1) {
+      stop("Argument 'coint$rho' must be a number larger than -1 and smaller than 1.")
     }
     if (coint[["rho"]] < .8) {
       warning("Value of argument 'coint$rho' appears rather small.")

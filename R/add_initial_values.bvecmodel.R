@@ -126,7 +126,10 @@ add_initial_values.bvecmodel <- function(object, method = "maxlik", ...){
   if (method == "maxlik") {
     
     ## Coefficients ----
-    if (tt >= r + k * (p - 1) + m * s + n) {
+    # Johansen's step regresses all k_ect series of the error correction term
+    # on the short-run regressors, not r of them, and a fit with no residual
+    # degrees of freedom is exact and gives precisions of order 1e20.
+    if (tt > (if (r > 0) k_ect else 0) + k * (p - 1) + m * s + n) {
 
       # Outside the rank block below, because the least squares fit further down
       # stacks 'y' with matrix(y) whether or not there is a cointegration term

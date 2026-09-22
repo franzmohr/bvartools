@@ -677,6 +677,11 @@ add_priors.bvecmodel <- function(object,
     if (error_prior == "wishart" && any(help_df <= 0)) {
       stop("Current specification implies non-positive prior degrees of freedom of the error term. 'sigma$df' must be positive.")
     }
+    # The samplers take whole degrees of freedom; see the VAR method.
+    if (error_prior == "wishart" && any(help_df != round(help_df))) {
+      stop("Current specification implies prior degrees of freedom of ", help_df,
+           " for the error term. 'sigma$df' must give a whole number.")
+    }
     if (any(help_df < 0)) {
       stop("Current specification implies a negative prior shape parameter of the error term.")
     }

@@ -127,8 +127,9 @@
 #' @export
 fevd.bvarmodel <- function(x, response = NULL, n_ahead = 5, type = "oir", normalise_gir = FALSE, period = NULL,
                            max_groups = NULL, impact = NULL, ...) {
-  
-  
+
+  .refuse_quantile_covariance(x, "Variance decompositions")
+
   if (is.null(x[["posterior"]][["u_sigma_inv"]][["coeffs"]])) {
     stop("Argument 'object' must include draws of the variance-covariance matrix Sigma.")
   }

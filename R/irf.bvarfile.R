@@ -98,10 +98,20 @@ fevd.bvarfile <- function(x, ..., chunk = 100) {
   # contributes its own mean and its weight. Normalising or collapsing groups
   # first would average quantities that are no longer shares of the same thing,
   # so both are left to the end.
+  # The weight of a piece is the number of draws its mean is over. Under a sign
+  # identification those are the draws that were identified, which differ from
+  # chunk to chunk; weighting by all of them over-weighted a chunk with a low
+  # acceptance rate.
+  sign <- identical(arguments[["type"]], "sign")
   pieces <- map_draws(x, function(model) {
     shares <- do.call(fevd, c(list(model), arguments,
                               list(normalise_gir = FALSE, max_groups = NULL)))
-    list(shares = unclass(shares), draws = nrow(model[["posterior"]][["u_sigma_inv"]][["coeffs"]]))
+    draws <- if (sign) {
+      sum(!is.na(as.matrix(model[["posterior"]][["q"]][["coeffs"]])[, 1]))
+    } else {
+      nrow(model[["posterior"]][["u_sigma_inv"]][["coeffs"]])
+    }
+    list(shares = unclass(shares), draws = draws)
   }, chunk = chunk)
 
   weights <- vapply(pieces, function(piece) piece[["draws"]], numeric(1))

@@ -95,7 +95,9 @@ not missing features, and the error says why:
 - SSVS with stochastic volatility, refused by `add_priors()`, and SSVS with
   time-varying parameters.
 - `error = "ald"`, a quantile VAR, estimates no covariances and does not forecast:
-  `add_posterior_forecasts()` refuses it. Its selection scheme is `"bvs"` only.
+  `add_posterior_forecasts()` refuses it, `irf()` takes only `type = "feir"` or
+  `"custom"`, and `fevd()` and `spillover()` refuse it. Its selection scheme is
+  `"bvs"` only.
 - `algorithm = "discount"` needs `error = "wishart"`, `burnin = 0` and
   `thin = 1`, and takes neither variable selection nor a structural model:
   there is no chain to burn in, thin or draw an indicator along.

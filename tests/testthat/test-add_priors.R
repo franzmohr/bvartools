@@ -107,11 +107,18 @@ test_that("add_priors rejects non-positive Wishart degrees of freedom", {
                sigma = list(df = "k - k", scale = 0.0001)),
     msg, fixed = TRUE
   )
-  # A VAR stores df as an integer, so a fraction below one truncates to zero.
+  # The samplers take whole degrees of freedom, so a fraction is refused
+  # rather than truncated -- to zero, for one below one.
   expect_error(
     add_priors(fx_var_model(), coef = list(v_i = 0, v_i_det = 0),
                sigma = list(df = 0.5, scale = 0.0001)),
-    msg, fixed = TRUE
+    "whole number"
+  )
+  expect_error(
+    add_priors(fx_vec_model(), coef = list(v_i = 1, v_i_det = 1 / 10),
+               coint = list(v_i = 0, p_tau_i = 1),
+               sigma = list(df = 3.7, scale = 1)),
+    "whole number"
   )
   expect_error(
     add_priors(fx_vec_model(), coef = list(v_i = 1, v_i_det = 1 / 10),
@@ -541,4 +548,51 @@ test_that("a time varying VEC with a Minnesota prior keeps its state equation", 
                          sigma = list(df = "k", scale = 1))
   expect_equal(diag(centred[["priors"]][["a"]][["v_inv"]])[1:n_alpha],
                diag(constant[["priors"]][["a"]][["v_inv"]])[1:n_alpha] / (1 - 0.999^2))
+})
+
+test_that("priors that are not priors are refused", {
+  # A negative precision on the deterministic terms ran to the end.
+  expect_error(add_priors(fx_var_model(), coef = list(v_i = 1, v_i_det = -5),
+                          sigma = list(df = "k", scale = 1)),
+               "v_i_det")
+
+  # So did a rho below -1, whose stationary variance is negative, until a
+  # misleading error about the regressors.
+  model <- create_bvecmodel(vec_data(), p = 2, r = 1, const = "unrestricted", tvp = TRUE,
+                            error = "gamma", iterations = 10, burnin = 5)
+  expect_error(add_priors(model, coef = list(v_i = 1, shape = 3, rate = 1e-4),
+                          coint = list(rho = -1.5), sigma = list(shape = 3, rate = 0.01)),
+               "larger than -1")
+})
+
+test_that("a Minnesota prior of a model with exogenous variables needs kappa3", {
+  endogen <- stats::window(at_macrodata[["domestic"]][, c("y", "Dp")], start = c(1998, 1)) * 100
+  exogen <- stats::window(at_macrodata[["foreign"]][, "Dp.s", drop = FALSE], start = c(1998, 1)) * 100
+  model <- create_bvarmodel(endogen, p = 1, exogen = exogen, s = 0,
+                            deterministic = "const", iterations = 10, burnin = 5)
+  minnesota <- list(kappa1 = 0.2, kappa2 = 0.5, kappa4 = 100)
+  expect_error(add_priors(model, coef = list(minnesota = minnesota),
+                          sigma = list(df = "k", scale = 1)),
+               "kappa3")
+  expect_no_error(add_priors(model, coef = list(minnesota = c(minnesota, kappa3 = 1)),
+                             sigma = list(df = "k", scale = 1)))
+})
+
+test_that("scaling after an informative cointegration prior is refused", {
+  # v_i sets the prior of alpha given beta, and scaling rescales beta, so the
+  # same v_i means a different prior afterwards -- numeric or "ml".
+  for (v_i in list(0.5, "ml")) {
+    model <- add_priors(fx_vec_model(), coef = list(v_i = 1, v_i_det = 1 / 10),
+                        coint = list(v_i = v_i, p_tau_i = 1),
+                        sigma = list(df = "k", scale = 1))
+    expect_error(scale_error_correction(model), "before 'add_priors'", info = format(v_i))
+  }
+})
+
+test_that("an error correction term of one series can be scaled", {
+  data <- at_macrodata[["domestic"]][, "lr", drop = FALSE] * 100
+  model <- create_bvecmodel(data, p = 2, r = 1, const = "restricted",
+                            iterations = 10, burnin = 5)
+  scaled <- scale_error_correction(model)
+  expect_length(attr(scaled[["data"]][["train"]][["w"]], "scale"), 2)
 })

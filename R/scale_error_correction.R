@@ -114,8 +114,16 @@ scale_error_correction.bvecmodel <- function(object, scale = TRUE, centre = FALS
     has_direction <- function(m) {
       !is.null(m) && !isTRUE(all.equal(m, diag(m[1, 1], nrow(m)), check.attributes = FALSE))
     }
-    if (has_direction(object[["priors"]][["beta"]][["p_tau_inv"]]) ||
-        has_direction(object[["priors"]][["beta"]][["p_tau"]])) {
+    # The shrinkage of a constant model's prior is not free of the scale
+    # either, whatever P_tau is: it sets the prior of alpha given beta, and
+    # rescaling 'w' rescales beta, so the same v_inv then means a different
+    # prior on alpha beta'. For coint$v_i = "ml" it was also computed from the
+    # series as they were. Only v_inv = 0, the uniform prior, is untouched.
+    beta_prior <- object[["priors"]][["beta"]]
+    informative <- is.null(beta_prior[["rho"]]) &&
+      length(beta_prior[["v_inv"]]) == 1 && isTRUE(beta_prior[["v_inv"]] > 0)
+    if (informative || has_direction(beta_prior[["p_tau_inv"]]) ||
+        has_direction(beta_prior[["p_tau"]])) {
       stop("The model already has a cointegration space prior that depends on the ",
            "scale of the error correction term. Call 'scale_error_correction' ",
            "before 'add_priors'.")
@@ -157,7 +165,7 @@ scale_error_correction.bvecmodel <- function(object, scale = TRUE, centre = FALS
 
     rescale_factors <- rep(1, ncol(w))
     pos_non_trend <- which(!dimnames(w)[[2]] %in% c("const", "trend"))
-    rescale_factors[pos_non_trend] <- apply(diff(w[, pos_non_trend]), 2, sd)
+    rescale_factors[pos_non_trend] <- apply(diff(w[, pos_non_trend, drop = FALSE]), 2, sd)
 
     if ("trend" %in% dimnames(w)[[2]]) {
       pos_trend <- which(dimnames(w)[[2]] == "trend")

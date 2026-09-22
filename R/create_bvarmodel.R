@@ -307,6 +307,12 @@ create_bvarmodel <- function(data, p = 2,
          "regression model. Consider using 'bvs' instead.")
   }
   
+  # A lag order of 1.5 failed with "subscript out of bounds" and one of -1 was
+  # taken as zero.
+  if (!is.numeric(p) || length(p) == 0 || anyNA(p) || any(p != round(p)) || any(p < 0)) {
+    stop("Argument 'p' must be a vector of non-negative whole numbers.")
+  }
+
   data_name <- dimnames(data)[[2]]
   k <- NCOL(data)
   p_max <- max(p)
@@ -428,7 +434,13 @@ create_bvarmodel <- function(data, p = 2,
   
   # Add linear trend
   if (deterministic %in% c("trend", "both")) {
-    temp <- cbind(temp, 1:tt - max(p_max, s_max))
+    # One in the first period that is estimated on, which is the first row with
+    # every lag available. It used to be the row after max(p, s), which is that
+    # period only when the data and the exogenous series start together:
+    # 'temp' spans both, so an 'exogen' reaching further back shifted the trend
+    # -- and with "both" the meaning of the intercept -- by as many periods.
+    first <- which(stats::complete.cases(temp))[1]
+    temp <- cbind(temp, seq_len(tt) - first + 1)
     temp_name <- c(temp_name, "trend")
     det_name <- c(det_name, "trend")
   }

@@ -1,8 +1,10 @@
 #include <RcppArmadillo.h>
 // [[Rcpp::depends(RcppArmadillo)]]
 
+//' Log-Likelihood of a Multivariate Normal Distribution
+//'
 //' Calculates the log-likelihood of a multivariate normal distribution.
-//' 
+//'
 //' @param u a \eqn{K \times T} matrix of residuals.
 //' @param sigma a \eqn{K \times K} or \eqn{KT \times K} variance-covariance matrix.
 //' 

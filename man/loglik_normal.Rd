@@ -2,7 +2,7 @@
 % Please edit documentation in R/RcppExports.R
 \name{loglik_normal}
 \alias{loglik_normal}
-\title{Calculates the log-likelihood of a multivariate normal distribution.}
+\title{Log-Likelihood of a Multivariate Normal Distribution}
 \usage{
 loglik_normal(u, sigma)
 }

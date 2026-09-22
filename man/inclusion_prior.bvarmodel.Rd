@@ -37,9 +37,7 @@ of endogenous variables, which do not correspond to own lags.
 Only used if \code{minnesota_like = TRUE}. See 'Details'.}
 
 \item{kappa3}{a numeric specifying the size of the prior inclusion probabilities
-of non-deterministic exogenous variables. Default is \code{NULL}, which indicates that the formula
-for the calculation of the prior inclusion probabilities of deterministic terms
-is used for all exogenous variables.
+of non-deterministic exogenous variables, between 0 and 1. Default is 0.5.
 Only used if \code{minnesota_like = TRUE}. See 'Details'.}
 
 \item{kappa4}{a numeric specifying the size of the prior inclusion probabilities

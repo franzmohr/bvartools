@@ -16,6 +16,7 @@ reference:
   - bvartools_model
   - create_bvarmodel
   - create_bvecmodel
+  - discount_models
   - starts_with("use_expanding_window")
   - combine_models
   - starts_with("align_model_obs")
@@ -84,6 +85,10 @@ reference:
   - read_models_from_folder
   - read_expanding_window_model_from_folder
   - list_models_in_hdf5
+  - open_model
+  - open_models
+  - folder_steps
+  - analysis_of_stored_models
   - map_models
   - map_draws
 

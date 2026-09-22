@@ -18,7 +18,7 @@ added:
 | --- | --- | --- |
 | `data$original` | `create_*model()` | The time-series objects as given: `endogen`, `exogen`, `deterministic` |
 | `data$train` | `create_*model()` | The estimation sample: `y`, `x`, and `z` in SUR form; for a VEC also `w`, the lagged levels in the cointegration term |
-| `model` | `create_*model()` | The specification: `k`, `p`, `m`, `s`, `n`, `endogen`, `error`, `varsel`, `tvp`, `structural`, `iterations`, `burnin`, `algorithm`; `thin` only if above 1; for a VEC also `rank`, `k_beta` |
+| `model` | `create_*model()` | The specification: `type`, `k`, `p`, `m`, `s`, `n`, `endogen`, `error`, `varsel`, `tvp`, `structural`, `iterations`, `burnin`, `algorithm`; `thin` only if above 1; for a VAR also `deterministic`; for a VEC also `rank`, `k_beta`, `n_restricted`, `deterministic_restricted` |
 | `priors` | `add_priors()` | See `priors.md` |
 | `initial` | `add_initial_values()` | Starting values of the sampler |
 | `posterior` | `add_posterior_coefficients()` and the later `add_posterior_*()` | The draws |
@@ -40,7 +40,7 @@ that were already kept.
 
 `add_posterior_coefficients(model, chains = n)` runs the chain `n` times with
 different seeds and stacks them, chain after chain, in the same matrices: then
-there are `n * iterations` rows, `model$chains` is `n`, and every later step
+there are `n * iterations` rows, `model$model$chains` is `n`, and every later step
 uses all of them. `chain_diagnostics(model)` gives the split R-hat of every
 parameter; above 1.01 the chains disagree. Thin only by a factor that divides
 `iterations`, or the chains can no longer be told apart.

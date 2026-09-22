@@ -125,11 +125,11 @@ selcrit
 #> Log-likelihood
 #> 
 #>            Mean Median Quantile (2.5%) Quantile (97.5%)
-#>  Model 1 -458.4 -458.1          -463.5           -455.3
-#>  Model 2 -133.1 -132.8          -140.0           -128.1
-#>  Model 3 -121.4 -121.1          -129.4           -115.1
-#>  Model 4 -118.9 -118.5          -128.3           -111.6
-#>  Model 5 -115.7 -115.3          -126.4           -107.0
+#>  Model 1 -458.5 -458.2          -463.5           -455.3
+#>  Model 2 -133.3 -132.9          -140.4           -128.2
+#>  Model 3 -121.4 -121.0          -129.6           -115.2
+#>  Model 4 -118.8 -118.4          -128.3           -111.2
+#>  Model 5 -115.6 -115.2          -126.0           -107.1
 #> 
 #> 
 #> Akaike Information Criterion (AIC)
@@ -137,7 +137,7 @@ selcrit
 #>           Mean Median Quantile (2.5%) Quantile (97.5%)
 #>  Model 1 926.0  926.0                                 
 #>  Model 2 284.3  284.3                                 
-#>  Model 3 269.8  269.8                                 
+#>  Model 3 269.7  269.7                                 
 #>  Model 4 273.5  273.5                                 
 #>  Model 5 275.8  275.8                                 
 #> 
@@ -147,8 +147,8 @@ selcrit
 #>           Mean Median Quantile (2.5%) Quantile (97.5%)
 #>  Model 1 953.5  953.5                                 
 #>  Model 2 339.4  339.4                                 
-#>  Model 3 352.5  352.5                                 
-#>  Model 4 383.8  383.8                                 
+#>  Model 3 352.4  352.4                                 
+#>  Model 4 383.7  383.7                                 
 #>  Model 5 413.6  413.6                                 
 #> 
 #> 
@@ -158,32 +158,32 @@ selcrit
 #>  Model 1 937.2  937.2                                 
 #>  Model 2 306.7  306.7                                 
 #>  Model 3 303.3  303.3                                 
-#>  Model 4 318.3  318.3                                 
+#>  Model 4 318.2  318.2                                 
 #>  Model 5 331.7  331.7                                 
 #> 
 #> 
 #> Widely Applicable Information Criterion (WAIC)
 #> 
 #>           Mean Median Quantile (2.5%) Quantile (97.5%)
-#>  Model 1 928.9  928.9           842.0           1015.7
-#>  Model 2 292.2  292.2           193.3            391.1
-#>  Model 3 281.9  281.9           182.9            380.9
-#>  Model 4 290.4  290.4           184.9            395.9
-#>  Model 5 298.5  298.5           189.1            408.0
+#>  Model 1 929.0  929.0           842.2           1015.9
+#>  Model 2 293.3  293.3           194.0            392.6
+#>  Model 3 281.8  281.8           182.6            380.9
+#>  Model 4 289.8  289.8           184.3            395.3
+#>  Model 5 297.9  297.9           188.9            406.8
 #> 
-#> Periods with a pointwise log-likelihood variance above 0.4, which makes the correction of WAIC unreliable, in models 1 (7), 2 (14), 3 (22), 4 (32), 5 (35).
+#> Periods with a pointwise log-likelihood variance above 0.4, which makes the correction of WAIC unreliable, in models 1 (7), 2 (14), 3 (22), 4 (32), 5 (36).
 #> 
 #> 
 #> Leave-One-Out Information Criterion (LOOIC)
 #> 
 #>           Mean Median Quantile (2.5%) Quantile (97.5%)
-#>  Model 1 928.9  928.9           842.0           1015.8
-#>  Model 2 292.5  292.5           193.5            391.5
-#>  Model 3 282.9  282.9           183.7            382.1
-#>  Model 4 292.0  292.0           186.0            398.1
-#>  Model 5 301.0  301.0           191.0            411.1
+#>  Model 1 929.1  929.1           842.2           1016.0
+#>  Model 2 293.8  293.8           194.4            393.2
+#>  Model 3 282.7  282.7           183.2            382.1
+#>  Model 4 291.6  291.6           185.6            397.6
+#>  Model 5 300.3  300.3           190.8            409.8
 #> 
-#> Influential periods, whose importance sampling is unreliable, in models 3 (1), 4 (1), 5 (2), counted as a Pareto k above 0.7.
+#> Influential periods, whose importance sampling is unreliable, in models 3 (1), 4 (1), 5 (4), counted as a Pareto k above 0.7.
 ```
 
 Method `plot.selcritlist` plots the criteria of the models against each other. The log-likelihood is drawn with the credible band of its draws, WAIC and LOOIC with an interval built from their standard errors, and the criteria that count parameters as single values.

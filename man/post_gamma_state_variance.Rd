@@ -16,7 +16,7 @@ post_gamma_state_variance(a, a_init, shape_prior, rate_prior, inverse)
 \item{rate_prior}{a \eqn{K \times 1} vector of prior rate parameters.}
 
 \item{inverse}{logical. If \code{TRUE}, the function returns the precision matrix,
-i.e. the inverse of the variance matrix. Defaults to \code{FALSE}.}
+i.e. the inverse of the variance matrix, and otherwise the variance matrix.}
 }
 \value{
 A matrix.

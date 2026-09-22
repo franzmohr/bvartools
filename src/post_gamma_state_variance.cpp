@@ -11,7 +11,7 @@
 //' @param shape_prior a \eqn{K \times 1} vector of prior shape parameters.
 //' @param rate_prior a \eqn{K \times 1} vector of prior rate parameters.
 //' @param inverse logical. If \code{TRUE}, the function returns the precision matrix,
-//' i.e. the inverse of the variance matrix. Defaults to \code{FALSE}.
+//' i.e. the inverse of the variance matrix, and otherwise the variance matrix.
 //' 
 //' @details For the state space model with state equation
 //' \deqn{a_t = a_{t-1} + v_t}

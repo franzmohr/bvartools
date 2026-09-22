@@ -1,5 +1,33 @@
 # bvartools 1.0.0
 
+## Moving from 0.3.0 to 1.0.0
+
+A model is now an object: `create_bvarmodel()` or `create_bvecmodel()` builds
+it, `add_priors()` and `add_initial_values()` complete it, and
+`add_posterior_coefficients()` estimates it. Forecasts, log-likelihoods and
+model comparison are further `add_*()` steps on the same object. The functions
+0.3.0 marked for removal are gone:
+
+| 0.3.0 | 1.0.0 |
+| --- | --- |
+| `gen_var()`, `gen_vec()` | `create_bvarmodel()`, `create_bvecmodel()` |
+| `draw_posterior()`, `bvarpost()`, `bvecpost()` | `add_posterior_coefficients()`, with `add_posterior_forecasts()` and `add_posterior_loglik()` |
+| `bvec_to_bvar()` | `vec_to_var()` |
+| `kalman_dk()` | `kalman_durbin_koopman_2002()` |
+| `stochvol_ksc1998()`, `stoch_vol()` | `stochvol_ksc_1998()` |
+| `stochvol_ocsn2007()` | `stochvol_ocsn_2007()` |
+| `bvs()` | `post_bvs()` |
+| `post_normal_covar_const()`, `post_normal_covar_tvp()` | none; the samplers draw the covariance block themselves |
+| `dfm()`, `dfmpost()`, `gen_dfm()`, `bem_dfmdata` | none here; dynamic factor models are in [dfmtools](https://github.com/franzmohr/dfmtools) |
+
+The classes `bvar`, `bvec` and `bvarlist` are now `bvarmodel`, `bvecmodel` and
+`modellist`. `add_priors()`, `bvar()`, `bvec()`, `irf()`, `fevd()`,
+`inclusion_prior()`, `minnesota_prior()` and `ssvs_prior()` keep their names but
+take the new model objects. `add_priors()` no longer has defaults for `coef` and
+`sigma`. The entries below give the details.
+
+## Changes
+
 * **Seven places where a result could be silently wrong, found in an audit.**
   - `window()` now cuts the `psi` path of a time varying covariance. It
     expected k(k-1)/2 columns per period where the samplers store k², so the
@@ -57,7 +85,7 @@
   chain, each with a seed of its own, and the chains are pooled one after the
   other in the draws every later step reads, so forecasts, log-likelihoods,
   impulse responses and files use all of them. The first chain uses the
-  model's seed, so `chains = 1`, the default, draws exactly what it always has;
+  model's seed, so one chain, the default, draws exactly what it always has;
   the others are spread far from the seeds `add_seed()` gives neighbouring
   models of a list. New function `chain_diagnostics()` reports the split
   R-hat of Gelman et al. (2013) and the effective sample size of every
@@ -66,8 +94,8 @@
   levels of GDP and prices, unemployment and a short rate, four chains of a
   non-centred `VecTvpStochvol` reached a split R-hat of 10.3, with 4,829 of
   5,181 parameters above 1.01, where each chain on its own had healthy
-  effective sample sizes. The number of chains is stored in `model$chains`
-  and travels through HDF5; lists of models take `chains` too, on any number
+  effective sample sizes. The number of chains is stored in the element
+  `chains` of the object's `model`, and travels through HDF5; lists of models take `chains` too, on any number
   of workers. Discounted models, whose posterior is not a chain, refuse
   `chains` above one. *Draws are unchanged* with one chain.
 
@@ -1512,7 +1540,7 @@
   `AGENTS.md`, and a skill covering:
   - the workflow and the rules that prevent that: assigning each step back,
     priors given as precisions with no defaults, draws in rows, and
-    `vec_to_var()` before forecasting a VEC;
+    `vec_to_var()` before the impulse responses of a VEC;
   - the combinations the samplers refuse, and why;
   - complete examples of a VAR, a VEC, a TVP-SV model, a quantile VAR, lag
     order comparison and an HDF5 round trip;
@@ -1744,8 +1772,10 @@
   it is now an argument, and the recursions need not learn about a scheme to
   carry it. The types that were already there are unchanged, and the matrix
   that reproduces one of them is not always the obvious one -- `irf()`
-  normalises the Choleski factor to a unit shock under `"oir"` while `fevd()`
-  does not, and the custom path normalises nothing at all. Under `"custom"`
+  normalised the Choleski factor to a unit shock under `"oir"` while `fevd()`
+  did not, and the custom path normalises nothing at all. (A later entry above
+  removed that normalisation, so the Choleski factor now reproduces `"oir"` in
+  both.) Under `"custom"`
   the two decompositions keep `Sigma` as the forecast error covariance, so
   their shares add up across shocks exactly when `P P'` equals `Sigma`, as it
   does for a rotation of the Choleski factor. This is groundwork for sign
@@ -2322,7 +2352,9 @@
   `bgvars::gfevd()` carries the same line. Correcting it would move existing
   `fevd()` and `gfevd()` numbers, so it is left for a deliberate decision;
   `test-spillover.R` pins the current behaviour in both directions so that a
-  change to it fails loudly.
+  change to it fails loudly. *Since corrected: see the `fevd(type = "gir")`
+  entry above, which divides by the variance of the shock as Pesaran and Shin
+  do.*
 
 * **Vendored BayesTS core refreshed.** **Draws are unchanged**, for every VAR and
   VEC model this package samples. Upstream's own fingerprint comparison was run
@@ -2464,24 +2496,17 @@
 * Fixed the same random number stream rewind in `post_bvs`, which called `bvartools::sur_const_to_tvp` for time varying parameters, and in the VEC sampler, which called `bvartools::stochvol_ocsn2007_internal` for stochastic volatility. Both now call the function directly. Draws of the affected models change. The `bvartools::sur_const_to_tvp` wrapper itself is unchanged and remains available to other packages; `bvartools::stochvol_ocsn2007_internal` has since been removed, see the next entry.
 * The stochastic volatility draw of Omori, Chib, Shephard and Nakajima (2007) now also comes from the vendored core layer, as `stochvol_ocsn_2007()`, and replaces `src/stochvol_ocsn2007_internal.cpp`. It validates its arguments instead of indexing them on trust, and draws the mixture indicator in logs, so an observation far out in the tails of all ten mixture components no longer normalises to `NaN` and selects a component that does not exist. The C++ entry point `bvartools::stochvol_ocsn2007_internal` no longer exists; it was never available from R. Draws of the VEC sampler with stochastic volatility change by a rounding error, because the posterior mean is now formed from the same Cholesky factor as the draw rather than by a separate LU solve.
 * The exported R function `stochvol_ocsn2007` is a separate implementation and received the same three fixes. It validates `y`, `h`, `sigma`, `h_init` and `constant` rather than reporting a bad argument as a failed matrix factorisation or, for `h_init`, not at all; it draws the mixture indicator in logs, which stops an observation far out in the tails of all ten components from returning a matrix of `NA`; and it reuses one Cholesky factor for the posterior mean and the draw. Draws from a given seed are unchanged up to a rounding error. The documentation of the mixture, previously described as having seven components, now says ten.
-* Fixed missing transformations for structural modesl in `irf.bvar` and `fevd.bvar`.
+* Fixed missing transformations for structural models in `irf()` and `fevd()`.
 * Added function `choose_best_model`.
-* Added function `create_first_difference_matrix`.
-* Added function `create_second_difference_matrix`.
-* Added functions `create_bvarmodel`, `create_bvecmodel` and `create_dfmodel` to replace `gen_var`, `gen_vec` and `gen_dfm`, respectively, in the future.
+* Added functions `create_bvarmodel` and `create_bvecmodel`, which replace `gen_var` and `gen_vec`.
 * Added `generate_lower_block_diagonal` for faster simulation of autocorrelated TVP coefficients.
-* Updated functions for dynamic factor models to the revised design pattern.
-* Added a warning message that the functionality for dynamic factor models will be exported to a separate package with package in the future.
-* Add a generic function `mean_absolute_forecast_error` for MAFE calculation.
-* Add a generic function `prediction_matrix` which helps with forecast generation.
 * Add a generic function `selection_criteria` to calculate information criteria for model selection.
-* Add a generic function `forecast_errors` to generate forecast errors.
+* Add generic functions `add_forecast_errors` and `get_forecast_errors` to generate forecast errors.
 * Add a generic function `add_initial_values` to separate initial value generation from prior specification.
-* Added `gen_artificial_vec` to generate artificial data sets for algorithm and model testing.
-* Added `gen_artificial_var` to generate artificial data sets for algorithm and model testing.
+* Added `generate_artificial_var` and `generate_artificial_vec` to generate artificial data sets for algorithm and model testing.
 * Added `coint_kls2010_reparameterise_two` for more convenient data transformation.
 * Added `coint_prepare_sur_data` for more convenient input data preparation for cointegration simulation.
-* `plot.bvar` and `plot.bvec` allow to specify whether a horizontal line should be added or not.
+* The `plot` methods allow to specify whether a horizontal line should be added or not.
 
 # bvartools 0.3.0
 
@@ -2513,8 +2538,8 @@ working.
   renamed, to `bvarmodel`, `bvecmodel` and `modellist`. So are the functions
   that keep their name in 1.0.0 but take the reorganised model object:
   `add_priors`, `bvar`, `bvec`, `irf`, `fevd`, `inclusion_prior`,
-  `minnesota_prior` and `ssvs_prior`. The new vignette, *Moving from bvartools
-  0.3.0 to 1.0.0*, lists all of it.
+  `minnesota_prior` and `ssvs_prior`. The section *Moving from 0.3.0 to
+  1.0.0* at the top of the 1.0.0 entry lists all of it.
 
 * **Fixed: `stochvol_ksc1998` and `stochvol_ocsn2007` failed on an observation
   far out in the tails of every mixture component.** Both sampled the mixture

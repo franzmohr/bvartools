@@ -104,9 +104,7 @@ estimate and forecast as usual, and add the forecast errors against the full dat
 
 `selection_criteria()` on an expanding window returns the out-of-sample criteria,
 and, if the windows carry the log likelihood, the in-sample criteria of the last
-window, the one estimated on the most data. Add the log likelihood as well:
-some versions of the package stop without it, because the last window's forecasts
-reach past the end of the data and leave it with no forecast errors.
+window, the one estimated on the most data.
 
 ```r
 data("us_macrodata")

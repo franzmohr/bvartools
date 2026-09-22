@@ -31,8 +31,8 @@ pred <- predict(model, n_ahead = 8)
 ```
 
 `iterations = 500` keeps examples quick. A real analysis needs thousands of
-draws: the defaults are 20000 kept after 2000 burn-in for a VAR, and 50000 after
-5000 for a VEC. `create_*model(thin = t)` runs the chain `t` times as long and
+draws: the defaults are 20000 kept after 2000 burn-in, for a VAR and a VEC
+alike. `create_*model(thin = t)` runs the chain `t` times as long and
 keeps the last of every `t` draws, so a slowly mixing chain can run long while
 the posterior still holds `iterations` draws; see `references/objects.md`.
 
@@ -52,7 +52,7 @@ elements are required depends on `error` in `create_bvarmodel()`:
 | --- | --- |
 | `"wishart"` (default) | `df`, `scale` |
 | `"gamma"`, `"gamma+covar"` | `shape`, `rate` |
-| `"sv"`, `"sv+covar"` | `mu`, `v_i`, `shape`, `rate`, `state_variance`, `offset` |
+| `"sv"`, `"sv+covar"` | `mu`, `v_i`, `shape`, `rate`, `state_variance`, `offset`; with `tvp = TRUE`, `omega_v` in place of `shape` and `rate` |
 | `"ald"` | `shape`, `rate` |
 
 Prior variances are given as **precisions**: `v_i = 0` is uninformative, and a

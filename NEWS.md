@@ -1,5 +1,22 @@
 # bvartools 1.0.0
 
+* **An `NA`, `NaN` or infinite value in the input stops with its name.** The
+  vendored BayesTS core now checks the estimation data, the forecast
+  regressors, the realised values a forecast is scored against, and every
+  prior and starting value. Such a value used to fail deep inside the sampler
+  with a message about a singular matrix or bad distribution parameters. An
+  `NA` in the forecast regressors or in the test sample did not fail at all:
+  it came back as a NaN forecast or a NaN score. *Draws are unchanged* for
+  every input that is accepted.
+
+  `prepare_forecast_input()`, and so `add_forecast_input()`, used to leave the
+  lags of the endogenous variables that the estimation sample does not reach
+  as `NA`. The forecast writes its own earlier horizons into those cells, so
+  nothing read them, but the check covers them all the same; they are zero
+  now, and forecasts are unchanged. A model given its forecast input before
+  this, whether kept in R or written to a file with `write_to_hdf5()`, still
+  carries the `NA`s and is refused: call `add_forecast_input()` on it again.
+
 * **Several chains, and a diagnostic that compares them.**
   `add_posterior_coefficients()` takes `chains`: the simulation is run once per
   chain, each with a seed of its own, and the chains are pooled one after the

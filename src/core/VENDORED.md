@@ -7,7 +7,7 @@ project is here -- the core deliberately links neither HDF5 nor HighFive,
 prints nothing and reads no files, which is what makes it embeddable in an R
 package at all.
 
-The copy is **BayesTS `f8b42a1`**, upstream after the `v0.3.0` release
+The copy is **BayesTS `d92e581`**, upstream after the `v0.3.0` release
 (tagged on `18a86c2`). Past the release it carries the fix to
 `core/models/var_tvp_discount.cpp` (`2dc9250`), which is what makes
 `add_predictive_loglik()` score more than the first horizon of a discounted VAR;
@@ -34,9 +34,16 @@ with unchanged draws; forecast errors drawn through the guarded
 `core::covariance_root()` in `core/models/forecast_states.h`, from the
 factorisation under `forecast_states = "simulate"` (`62bc455`) and from the
 precision when it is held (`439ca6e`), which keeps a badly conditioned draw from
-turning a forecast NaN and moves forecast draws by a rounding error only; and a
-doc comment moved back into place in `core/inputs.cpp` (`ca1c322`).
-The refreshes before sat at `d8c8f80`, `94f81de`, `cea124b`, `0e75842`, `0e4847e` and `4a64082`, the one before that at `6fe91d2`, 0.3.0
+turning a forecast NaN and moves forecast draws by a rounding error only; a
+doc comment moved back into place in `core/inputs.cpp` (`ca1c322`); `validate()`
+refusing a NaN or an infinity anywhere in the input by name, with forecasting and
+scoring from stored draws checking their own inputs (`31735c8`), which moves no
+draw -- R's `NA` is a NaN, so an `NA` that reaches a binding now stops naming the
+element instead of failing deep in the numerics or coming back as a NaN forecast
+or score. The check covers the lag cells of `/data/forecast/x` that the forecast
+overwrites as well, which `prepare_forecast_input()` used to leave `NA` and now
+fills with zeros; and comment-only changes to five core files (`fd7ece5`).
+The refreshes before sat at `f8b42a1`, `d8c8f80`, `94f81de`, `cea124b`, `0e75842`, `0e4847e` and `4a64082`, the one before that at `6fe91d2`, 0.3.0
 plus the discount fix. 0.3.0 is not archived yet, so
 there is no version DOI to name; the concept DOI
 <https://doi.org/10.5281/zenodo.22722531> resolves to the newest release

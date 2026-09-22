@@ -13,6 +13,8 @@
 // either. Included here so that a model needs one header, not two.
 #include "core/algorithms/triangular_packing.h"
 
+#include <cstdint>
+#include <cstring>
 #include <stdexcept>
 #include <string>
 
@@ -49,6 +51,74 @@ inline void report_flat_selection_prior(Reporter &reporter, const VarSelection s
     }
 }
 
+/// Refuses a NaN or an infinity anywhere in `values`, naming `what`.
+///
+/// BayesTS has no treatment of missing values, and a non-finite input does not
+/// fail where it enters: it travels into a cross-product or a Cholesky factor
+/// and surfaces as "inv_sympd(): matrix is singular" or "randg(): incorrect
+/// distribution parameters", which names neither the dataset nor the value --
+/// or, in a forecast or a score, it does not fail at all and comes back as a
+/// NaN in the output of a run that reported success. Checked where the values
+/// enter instead, so `bayests check` refuses the file the run would have.
+///
+/// The count rather than a position: an element's row and column read the
+/// other way round in HDF5 dataspace terms than in Armadillo's, and a message
+/// that names the wrong one is worse than one that names neither.
+///
+/// Read off the exponent bits, not std::isfinite(), for the reason all_finite()
+/// in stochvol_mixture.h gives: a host compiling these sources with
+/// -ffast-math is licensed to fold std::isfinite() to true, which would remove
+/// exactly this check without a word.
+inline void require_finite(const arma::mat &values, const std::string &what)
+{
+    static_assert(sizeof(double) == sizeof(std::uint64_t), "expected IEEE-754 binary64");
+
+    arma::uword bad = 0;
+    for (arma::uword i = 0; i < values.n_elem; ++i)
+    {
+        const double value = values[i];
+        std::uint64_t bits;
+        std::memcpy(&bits, &value, sizeof(bits));
+        if ((bits & 0x7ff0000000000000ULL) == 0x7ff0000000000000ULL)
+        {
+            ++bad;
+        }
+    }
+    if (bad > 0)
+    {
+        throw std::invalid_argument(
+            what + " must be finite, but " + std::to_string(bad) + " of its " +
+            std::to_string(values.n_elem) + " values " + (bad == 1 ? "is" : "are") +
+            " NaN or infinite; missing values are not supported");
+    }
+}
+
+/// The observations every model is given, checked with require_finite(): the
+/// training sample and the realised values a forecast is scored against. Empty
+/// members pass, so a model that reads only some of them needs no list of which.
+///
+/// Called from every input's validate(), and again where the score reads the
+/// realised values -- scoring runs as a stage of its own, from draws a previous
+/// run wrote, without validate() in between. The overload below adds the
+/// forecast regressors, which the five factor models do not have: they
+/// forecast from the factor transition alone.
+inline void require_finite_observations(const TrainData &train, const TestData &test)
+{
+    require_finite(train.y, "the training observations /data/train/y");
+    require_finite(train.z, "the regressors /data/train/z");
+    require_finite(train.x, "the regressors /data/train/x");
+    require_finite(train.w, "the cointegration regressors /data/train/w");
+    require_finite(train.f_obs, "the observed factors /data/train/f_obs");
+    require_finite(test.y, "the realised observations /data/test/y");
+}
+
+inline void require_finite_observations(const TrainData &train, const ForecastData &forecast,
+                                        const TestData &test)
+{
+    require_finite_observations(train, test);
+    require_finite(forecast.x, "the forecast regressors /data/forecast/x");
+}
+
 /// Rejects a forecast that was given no regressors by a model whose dimensions
 /// say it has coefficients to apply to them.
 ///
@@ -83,8 +153,16 @@ inline void require_forecast_regressors(const VarSpec &spec, const arma::mat &x)
 ///
 /// An empty `x` passes: require_forecast_regressors() decides whether a model
 /// with no regressors may forecast without them.
+///
+/// Finiteness is checked here as well, since this is where every VAR's and
+/// VEC's forecast takes `x` and a forecast is a stage of its own that does not
+/// go through validate(). The whole matrix, including the lag cells past the
+/// first row that the forecast overwrites: a file is either free of missing
+/// values or it is not, and a rule that depended on which cells a model reads
+/// would be one more thing to get wrong.
 inline void require_forecast_horizons(const arma::mat &x, const int h)
 {
+    require_finite(x, "the forecast regressors /data/forecast/x");
     if (x.n_elem > 0 && static_cast<arma::uword>(h) != x.n_rows)
     {
         throw std::invalid_argument("forecast regressors must have " + std::to_string(h) +

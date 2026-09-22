@@ -27,6 +27,10 @@
 #' per regressor. That is the compact layout, the same one a coefficient matrix
 #' is \code{k} by; the SUR layout this used to return spread every regressor
 #' over \code{k} columns and was \code{k^2} the size for no extra content.
+#' The lags of the endogenous variables that the estimation sample does not
+#' reach are the forecasts of earlier periods, which the forecast fills in as it
+#' goes; they are zero here, since the samplers refuse a missing value anywhere
+#' in \code{x}.
 #' 
 #' @examples
 #' 
@@ -149,9 +153,18 @@ prepare_forecast_input.bvarmodel <- function(object, n_ahead = 10, deterministic
       temp_p <- temp_p[nrow(temp_p),]
       for (i in 1:p) {
         if (i <= n_ahead) {
-          x[i, ((i - 1) * k + 1):(p * k)] <- temp_p[1:((p - i + 1) * k)] 
+          x[i, ((i - 1) * k + 1):(p * k)] <- temp_p[1:((p - i + 1) * k)]
         }
       }
+
+      # The lags the sample does not reach are forecasts of earlier horizons,
+      # which the recursion writes in as it goes; nothing reads the value here.
+      # It has to be finite all the same: the core refuses a NaN anywhere in
+      # the forecast regressors, overwritten cells included, and so does
+      # BayesTS for the model file write_to_hdf5() makes of this.
+      lags <- x[, 1:(k * p), drop = FALSE]
+      lags[is.na(lags)] <- 0
+      x[, 1:(k * p)] <- lags
     }
     
     if (m > 0) {

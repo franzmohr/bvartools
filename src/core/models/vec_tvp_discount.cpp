@@ -143,6 +143,10 @@ struct VecTvpDiscountWalk
 
 void VecTvpDiscountInput::validate() const
 {
+    // Before anything that would read a value: a NaN or an infinity here would
+    // otherwise surface as a failed factorisation, or as NaN in the output.
+    core::require_finite_observations(train, forecast, test);
+
     const arma::uword k = static_cast<arma::uword>(spec.k);
     if (k == 0)
     {
@@ -197,10 +201,7 @@ void VecTvpDiscountInput::validate() const
                 "k_beta x rank, that is " + std::to_string(k_beta) + " x " + std::to_string(rank) +
                 ", got " + std::to_string(beta.n_rows) + " x " + std::to_string(beta.n_cols));
         }
-        if (!beta.is_finite())
-        {
-            throw std::invalid_argument("the cointegration matrix holds a value that is not finite");
-        }
+        core::require_finite(beta, "the cointegration space /initial/beta");
     }
 
     // Both discounts are models in their own right at one, so the range is
@@ -266,6 +267,12 @@ void VecTvpDiscountInput::validate() const
     {
         throw std::invalid_argument("the error covariance prior scale must be k x k");
     }
+
+    // The prior's values, now that its shapes are known: this model does not
+    // size them through the helpers in inputs.cpp that check finiteness.
+    core::require_finite(a_prior.mean, "the coefficient prior mean /priors/a/mean");
+    core::require_finite(a_prior.cov, "the coefficient prior covariance /priors/a/cov");
+    core::require_finite(u_sigma_prior.scale, "the Wishart prior scale /priors/u_sigma/scale");
 
     // The degrees of freedom settle at 1 / (1 - delta_sigma) whatever the prior
     // says, so a short memory cannot carry a wide system. Refused rather than

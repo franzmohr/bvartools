@@ -636,6 +636,19 @@ arma::mat chan_jeliazkov_2009(const arma::mat &y, const arma::mat &z,
  * \f$\Lambda^{f\prime}\Sigma_u^{-1}(y_t - \Lambda^y y^{obs}_t)\f$ on the right
  * hand side. Doing it by hand as well would subtract it twice.
  *
+ * @param y as for `chan_jeliazkov_2009`: K x T observations, one period per
+ *   column.
+ * @param z as for `chan_jeliazkov_2009`, for the whole M-element state: one
+ *   K x M matrix, or a KT x M stack of one per period.
+ * @param sigma_u as for `chan_jeliazkov_2009`: one K x K error covariance, or a
+ *   KT x K stack.
+ * @param sigma_v as for `chan_jeliazkov_2009`, for the whole state: one M x M
+ *   innovation covariance, or an MT x M stack.
+ * @param B as for `chan_jeliazkov_2009`: the transition of the whole state,
+ *   M x pM or an MT x pM stack.
+ * @param a_init as for `chan_jeliazkov_2009`: the pM-vector prior mean of the
+ *   first p states.
+ * @param P_init as for `chan_jeliazkov_2009`: their pM x pM prior covariance.
  * @param known R x T, the observed trailing R elements of every state column,
  *   one period per column. R must be smaller than the state; R = 0 is allowed
  *   and asks for nothing to be conditioned on.

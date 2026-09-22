@@ -32,6 +32,10 @@ the out-of-sample regressors: \code{h} rows, one per period, by one column
 per regressor. That is the compact layout, the same one a coefficient matrix
 is \code{k} by; the SUR layout this used to return spread every regressor
 over \code{k} columns and was \code{k^2} the size for no extra content.
+The lags of the endogenous variables that the estimation sample does not
+reach are the forecasts of earlier periods, which the forecast fills in as it
+goes; they are zero here, since the samplers refuse a missing value anywhere
+in \code{x}.
 }
 \description{
 Generates data matrices serving as input for forecasting simulation for objects

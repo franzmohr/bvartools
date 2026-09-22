@@ -9,7 +9,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -96,7 +96,11 @@ sample are cut to the periods that remain, so that they still refer to the
 same observations as the data. These are the coefficients of a model with
 time varying parameters, the draws of the error term that vary by period –
 as under stochastic volatility – and the pointwise log-likelihood. Draws that
-do not vary by period are left as they are.</p>
+do not vary by period are left as they are. The posterior of a discounted
+model, which holds the moments of every period rather than draws, is cut to
+the same periods. In either case the draws or moments that remain were
+estimated from the whole sample; re-estimate the model to condition on the
+window alone.</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

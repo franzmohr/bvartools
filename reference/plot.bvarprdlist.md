@@ -30,6 +30,11 @@ plot(x, n_pre = NULL, ci = 0.95, ...)
   further graphical parameters, which are passed on to
   [`plot.ts`](https://rdrr.io/r/stats/plot.ts.html).
 
+## Value
+
+`x`, invisibly. The function is called for its side effect, the plot of
+the forecasts.
+
 ## Details
 
 The forecasts of the models in `x` are plotted on a grid, where each

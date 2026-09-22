@@ -84,9 +84,11 @@ Other posterior simulation:
 [`add_posterior_forecasts.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/add_posterior_forecasts.bvecmodel.md),
 [`add_posterior_loglik.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/add_posterior_loglik.bvarmodel.md),
 [`add_posterior_loglik.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/add_posterior_loglik.bvecmodel.md),
+[`bayests_files()`](https://franzmohr.github.io/bvartools/reference/bayests_files.md),
 [`bayests_posterior()`](https://franzmohr.github.io/bvartools/reference/bayests_posterior.md),
 [`bvar()`](https://franzmohr.github.io/bvartools/reference/bvar.md),
 [`bvec()`](https://franzmohr.github.io/bvartools/reference/bvec.md),
+[`chain_diagnostics()`](https://franzmohr.github.io/bvartools/reference/chain_diagnostics.md),
 [`predict.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/predict.bvecmodel.md)
 
 ## Examples

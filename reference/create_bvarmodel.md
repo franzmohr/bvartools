@@ -18,6 +18,9 @@ create_bvarmodel(
   quantile = 0.5,
   tvp = FALSE,
   varsel = "none",
+  algorithm = NULL,
+  delta_beta = 1,
+  delta_sigma = 1,
   iterations = 20000,
   burnin = 2000,
   thin = 1
@@ -85,6 +88,20 @@ create_bvarmodel(
   character specifying the type of variable selection algorithm that
   should be employed. Default is `"none"`. See 'Details'.
 
+- algorithm:
+
+  algorithm that should be used for posterior simulation. If `NULL`
+  (default), the algorithm is named by `tvp` and `error`. The one
+  non-standard option is `"discount"`. See 'Details'.
+
+- delta_beta, delta_sigma:
+
+  numeric discount factors in \\(0, 1\]\\ of the discounted model, the
+  first governing the coefficients and the second the error covariance.
+  Both default to 1, at which the quantity they govern does not move.
+  Ignored unless `algorithm = "discount"`, and a vector in either
+  produces one model per value. See 'Details'.
+
 - iterations:
 
   an integer of MCMC draws excluding burn-in draws (defaults to 20000).
@@ -118,7 +135,7 @@ specification. A 'bvarmodel' is a list with the elements
   holds the estimation sample: `y`, a \\T \times K\\ time-series object
   of the endogenous variables, `x`, a time-series object of the
   regressors, and `z`, the corresponding \\TK\\ row matrix of regressors
-  in SUR form.
+  in SUR form, which is absent for the discounted model.
 
 - `model`:
 
@@ -222,6 +239,31 @@ Available specifications for argument `varsel` are:
 - `"ssvs"`: Stochastic search variable selection as proposed in George
   et al. (2008).
 
+The one specification for argument `algorithm` is `"discount"`, the
+discounted time varying parameter model of West & Harrison (1997, ch.
+16) with the discounted Wishart of Uhlig (1997), estimated by
+`VarTvpDiscount`. It is not a sampler: its posterior is closed form –
+one pass over the sample, no chain – so `burnin` must be 0 and `thin` 1,
+and `iterations` says only how many i.i.d. draws a forecast takes from
+the answer. Its error covariance is the inverse Wishart whole, so
+`error` must be `"wishart"` and neither variable selection nor a
+structural model is available. What it buys is speed and an exact
+marginal likelihood: the sum of `/posterior/loglik` is the log marginal
+likelihood of the sample given the two discounts, so a grid over them
+can be compared without a chain being run for any of it.
+
+[`add_posterior_coefficients`](https://franzmohr.github.io/bvartools/reference/add_posterior_coefficients.md)
+estimates it like any other algorithm, the filter being part of the
+vendored BayesTS core. It consumes no random numbers, so two runs agree
+to the bit and a model estimated here and the same model estimated by
+the `bayests` command line over a file written with
+[`write_to_hdf5`](https://franzmohr.github.io/bvartools/reference/write_to_hdf5.md)
+give the same numbers rather than merely the same distribution. What
+comes back is a posterior rather than a chain: one row per period under
+`posterior$a$mean`, `posterior$a$cov`, `posterior$u_sigma$scale` and
+`posterior$df`, and no `coeffs` anywhere, because joining one draw per
+period would look like a sampled path and is not one.
+
 ## References
 
 Chan, J., Koop, G., Poirier, D. J., & Tobias, J. L. (2019). *Bayesian
@@ -243,7 +285,17 @@ quantile regression. *Journal of Statistical Computation and Simulation,
 Lütkepohl, H. (2006). *New Introduction to Multiple Time Series
 Analysis* (2nd ed.). Berlin: Springer.
 
+Uhlig, H. (1997). Bayesian vector autoregressions with stochastic
+volatility. *Econometrica, 65*(1), 59–73.
+[doi:10.2307/2171813](https://doi.org/10.2307/2171813)
+
+West, M., & Harrison, J. (1997). *Bayesian forecasting and dynamic
+models* (2nd ed.). New York: Springer.
+
 ## See also
+
+[`bvartools_model`](https://franzmohr.github.io/bvartools/reference/bvartools_model.md)
+describes the object this returns, element by element.
 
 Other model set-up:
 [`add_initial_values.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/add_initial_values.bvarmodel.md),

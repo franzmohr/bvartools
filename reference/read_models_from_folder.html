@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -58,7 +58,7 @@
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">read_models_from_folder</span><span class="op">(</span><span class="va">folder</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">read_models_from_folder</span><span class="op">(</span><span class="va">folder</span>, draws <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -67,6 +67,13 @@
 
 <dl><dt id="arg-folder">folder<a class="anchor" aria-label="anchor" href="#arg-folder"></a></dt>
 <dd><p>Path to a folder containing model data.</p></dd>
+
+
+<dt id="arg-draws">draws<a class="anchor" aria-label="anchor" href="#arg-draws"></a></dt>
+<dd><p>the draws to read of every model, as
+<code><a href="read_model_from_hdf5.html">read_model_from_hdf5</a></code> takes them: <code>NULL</code>, the default, for
+the whole chain, a vector of positions for those draws, or
+<code>integer(0)</code> for none of them.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -85,8 +92,20 @@ without its extension, followed by the group where a model does not sit at
 the root of its file. Names are what a caller needs to tell one model from
 another – which sub-model of a global model it is, say – and a nesting
 whose depth depended on where the caller pointed could not provide them.</p>
+<p>The one exception is an expanding window: the windows that
+<code><a href="write_to_hdf5.html">write_to_hdf5</a></code> wrote to one directory come back as one element
+of class 'expandingwindow', named after that directory, so that the windows of
+different specifications are not pooled. A folder that holds a single
+expanding window is returned as that expanding window. A model list written
+by <code><a href="write_to_hdf5.html">write_to_hdf5</a></code> comes back in the order it was written in,
+which the files record; other models are in the order of their names.</p>
 <p>The class of each model comes from the <code>rclass</code> attribute the writer
 records, not from its file name.</p>
+<p><code>draws</code> is what makes a folder larger than the session readable: with
+<code>integer(0)</code> the models come back with their specification, their data
+and their priors and no draws, and with a vector of positions the chain is
+read a piece at a time. For working on the models rather than reading them,
+<code><a href="open_models.html">open_models</a></code> hands them over one at a time instead.</p>
     </div>
 
     <div class="section level2">

@@ -9,7 +9,7 @@ term of an object of class 'bvecmodel'."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -120,7 +120,11 @@ walk intercept that no prior on the deterministic terms controls; see
 section 'Prior on the cointegration space' of <code><a href="cointspace_prior.html">cointspace_prior</a></code>.
 On centred series the same step moves the term by
 \(\eta_t^{\prime} (w_t - m)\), and the intercept is left to the constant
-and its own prior.</p>
+and its own prior. That holds for the estimation. The forecast of such a
+model, which needs <code><a href="rescale_error_correction.html">rescale_error_correction</a></code> first, can only hold
+the cointegration vectors at their last value (<code>forecast_states = "hold"</code>
+in <code><a href="add_posterior_forecasts.bvecmodel.html">add_posterior_forecasts.bvecmodel</a></code>), since after rescaling a
+step of them acts on the series as they are.</p>
 <p>Starting values of the constant in <code>object$initial</code> are shifted by
 \(\Pi m\), computed from the starting values of the loadings and of
 \(\beta\), so that the chain starts from the model it simulates.</p>

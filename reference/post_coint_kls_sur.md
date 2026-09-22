@@ -100,8 +100,9 @@ A named list containing the following elements:
 
 - Gamma:
 
-  a draw of the \\K \times N\\ coefficient matrix for non-cointegration
-  parameters.
+  a draw of the coefficients of the non-cointegration regressors in `x`,
+  as a column vector with one element per column of `x`. Empty if `x` is
+  `NULL`.
 
 ## Details
 

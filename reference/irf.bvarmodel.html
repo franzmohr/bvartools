@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -131,7 +131,8 @@ the median and the credible intervals of the posterior draws are returned.</p></
 <dt id="arg-period">period<a class="anchor" aria-label="anchor" href="#arg-period"></a></dt>
 <dd><p>integer. Index of the period, for which the IR should be generated.
 Only used for TVP or SV models. Default is <code>NULL</code>, so that the posterior draws of the last time period
-are used.</p></dd>
+are used. With <code>type = "sign"</code> the default is the period the restrictions were imposed in,
+and another period is refused, since the rotations do not identify it.</p></dd>
 
 
 <dt id="arg-impact">impact<a class="anchor" aria-label="anchor" href="#arg-impact"></a></dt>
@@ -200,6 +201,9 @@ therefore the responses to a shock of one standard deviation (Pesaran and Shin, 
 <code><a href="fevd.bvarmodel.html">fevd.bvarmodel()</a></code>,
 <code><a href="fevd.bvecmodel.html">fevd.bvecmodel()</a></code>,
 <code><a href="irf.bvecmodel.html">irf.bvecmodel()</a></code>,
+<code><a href="multipliers.html">multipliers()</a></code>,
+<code><a href="multipliers.bvarmodel.html">multipliers.bvarmodel()</a></code>,
+<code><a href="multipliers.bvecmodel.html">multipliers.bvecmodel()</a></code>,
 <code><a href="predict.bvarmodel.html">predict.bvarmodel()</a></code>,
 <code><a href="spillover.bvarmodel.html">spillover.bvarmodel()</a></code>,
 <code><a href="spillover.bvecmodel.html">spillover.bvecmodel()</a></code>,

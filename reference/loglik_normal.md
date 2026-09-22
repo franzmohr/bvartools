@@ -1,4 +1,4 @@
-# Calculates the log-likelihood of a multivariate normal distribution.
+# Log-Likelihood of a Multivariate Normal Distribution
 
 Calculates the log-likelihood of a multivariate normal distribution.
 
@@ -17,6 +17,11 @@ loglik_normal(u, sigma)
 - sigma:
 
   a \\K \times K\\ or \\KT \times K\\ variance-covariance matrix.
+
+## Value
+
+A numeric vector of length \\T\\, the log-likelihood of each period. Sum
+it for the log-likelihood of the sample.
 
 ## Details
 

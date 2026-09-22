@@ -24,6 +24,10 @@ thin(x, thin = 10, ...)
 
   further arguments passed to or from other methods.
 
+## Value
+
+An object of class 'bvecmodel' with every block of draws thinned.
+
 ## Examples
 
 ``` r

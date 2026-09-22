@@ -6,7 +6,7 @@ Calculates and adds forecast errors for a list of Bayesian models.
 
 ``` r
 # S3 method for class 'expandingwindow'
-add_forecast_errors(object, test_sample, ...)
+add_forecast_errors(object, test_sample = NULL, ...)
 ```
 
 ## Arguments
@@ -17,7 +17,8 @@ add_forecast_errors(object, test_sample, ...)
 
 - test_sample:
 
-  a time-series object used as test data.
+  a time-series object used as test data. If `NULL` (default), the
+  values in `data$test$y` of the object are used.
 
 - ...:
 

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -86,10 +86,20 @@ element <code>model</code> and one data frame per criterion. If the model contai
 <code>posterior$loglik</code>, these are <code>LL</code>, <code>AIC</code>, <code>BIC</code>, <code>HQ</code>,
 <code>WAIC</code> and <code>LOOIC</code>, each with the columns <code>mean</code>, <code>median</code>,
 <code>qlower</code> and <code>qupper</code>, where bands that do not apply are <code>NA</code>. If it
-contains <code>posterior$forecast_errors</code>, these are <code>FE</code>, <code>AFE</code> and
+contains <code>posterior$forecast$errors</code>, these are <code>FE</code>, <code>AFE</code> and
 <code>RSFE</code>, the forecast errors and their absolute and root squared values, with the
 columns <code>variable</code>, <code>h</code>, <code>mean</code>, <code>median</code>, <code>qlower</code> and
-<code>qupper</code>.</p>
+<code>qupper</code>. For <code>RSFE</code> only <code>mean</code> is a statistic of its own, the root
+of the mean squared error. Its median and quantiles are those of the squared
+errors, rooted, and so differ from <code>AFE</code>'s only by the interpolation
+between neighbouring draws that <code><a href="https://rdrr.io/r/stats/quantile.html" class="external-link">quantile</a></code> and
+<code><a href="https://rdrr.io/r/stats/median.html" class="external-link">median</a></code> do – which, the root of an average of squares
+being at least the average of the roots, can only raise them. They add
+nothing to <code>AFE</code>'s. If it contains <code>posterior$forecast$loglik</code>, the score of its
+forecast against <code>data$test$y</code>, there is <code>LPL</code>, the log predictive
+likelihood: the log of the mean of the draws of each scored period's predictive
+density, summed over the periods. Attribute <code>"terms"</code> holds those per period
+and <code>"nse"</code> their numerical standard error.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -97,11 +107,21 @@ columns <code>variable</code>, <code>h</code>, <code>mean</code>, <code>median</
 <code><a href="add_forecast_errors.bvarmodel.html">add_forecast_errors.bvarmodel()</a></code>,
 <code><a href="add_forecast_errors.bvecmodel.html">add_forecast_errors.bvecmodel()</a></code>,
 <code><a href="add_predictive_loglik.html">add_predictive_loglik()</a></code>,
+<code><a href="add_predictive_loglik.bvarmodel.html">add_predictive_loglik.bvarmodel()</a></code>,
+<code><a href="add_predictive_loglik.bvecmodel.html">add_predictive_loglik.bvecmodel()</a></code>,
+<code><a href="aggregate_forecasts.html">aggregate_forecasts()</a></code>,
 <code><a href="align_model_obs.modellist.html">align_model_obs.modellist()</a></code>,
+<code><a href="analysis_of_stored_models.html">analysis_of_stored_models</a></code>,
 <code><a href="choose_best_model.selcritlist.html">choose_best_model.selcritlist()</a></code>,
 <code><a href="create_external_forecast.html">create_external_forecast()</a></code>,
+<code><a href="folder_steps.html">folder_steps</a></code>,
+<code><a href="map_draws.html">map_draws()</a></code>,
+<code><a href="map_models.html">map_models()</a></code>,
+<code><a href="open_model.html">open_model()</a></code>,
+<code><a href="open_models.html">open_models()</a></code>,
 <code><a href="plot_forecast_errors_by_period.html">plot_forecast_errors_by_period()</a></code>,
 <code><a href="selection_criteria.bvecmodel.html">selection_criteria.bvecmodel()</a></code>,
+<code><a href="selection_criteria.default.html">selection_criteria.default()</a></code>,
 <code><a href="selection_criteria.modellist.html">selection_criteria.modellist()</a></code></p></div>
     </div>
 

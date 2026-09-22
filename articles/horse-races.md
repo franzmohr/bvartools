@@ -591,6 +591,11 @@ Accordingly, their credible bands are degenerate and in-sample criteria
 are not available for them, which the printed comparison and the plots
 indicate by an empty entry.
 
+`vignette("macroprojections", package = "bvartools")` races models
+against projections that institutions actually published. Those are
+annual, and it shows how the quarterly forecast draws of a model are
+aggregated to annual figures before they are compared.
+
 ``` r
 
 plot(sc_all, criterion = "AFE")

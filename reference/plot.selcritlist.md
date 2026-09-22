@@ -1,11 +1,14 @@
 # Plotting Selection Criteria
 
-A plot function for objects of class 'selcritlist'.
+A plot function for objects of class 'selcritlist' and 'selcrit'.
 
 ## Usage
 
 ``` r
 # S3 method for class 'selcritlist'
+plot(x, criterion = "WAIC", ...)
+
+# S3 method for class 'selcrit'
 plot(x, criterion = "WAIC", ...)
 ```
 
@@ -13,19 +16,25 @@ plot(x, criterion = "WAIC", ...)
 
 - x:
 
-  an object of class 'selcritlist', usually, a result of a call to
+  an object of class 'selcritlist' or 'selcrit', usually, a result of a
+  call to
   [`selection_criteria`](https://franzmohr.github.io/bvartools/reference/selection_criteria.md).
 
 - criterion:
 
   the selection criterion that should be plotted. Available choices are
   the in-sample criteria `"LL"`, `"AIC"`, `"BIC"`, `"HQ"`, `"WAIC"`
-  (default), `"LOOIC"` and the out-of-sample statistics `"FE"`, `"AFE"`
-  and `"RSFE"`.
+  (default), `"LOOIC"`, the log marginal likelihood `"LML"` of a
+  discounted model and the out-of-sample statistics `"FE"`, `"AFE"` and
+  `"RSFE"`.
 
 - ...:
 
   further graphical parameters.
+
+## Value
+
+`x`, invisibly. The function is called for its side effect, the plot.
 
 ## Details
 
@@ -34,9 +43,9 @@ bar, which is marked by the value of the criterion. The log-likelihood
 has a posterior distribution, so its bar covers the credible band and is
 marked by the median as well as the mean of its draws. `"WAIC"` and
 `"LOOIC"` are point estimates whose bars cover a normal interval built
-from their standard error. `"AIC"`, `"BIC"` and `"HQ"` are point
-estimates without a standard error, so they are drawn as a single point.
-The default is `"WAIC"`, for the reasons given in
+from their standard error. `"AIC"`, `"BIC"`, `"HQ"` and `"LML"` are
+point estimates without a standard error, so they are drawn as a single
+point. The default is `"WAIC"`, for the reasons given in
 [`selection_criteria`](https://franzmohr.github.io/bvartools/reference/selection_criteria.md).
 The criterion is measured on the x-axis and the models are arranged
 along the y-axis, beginning with the first model of `x` at the top. This
@@ -64,3 +73,7 @@ and negative, a horizontal reference line is added at zero for
 For both types of criteria arguments `col`, `pch`, `cex`, `lwd`, `main`
 and `xlab` can be used to change the appearance of the plot, where `col`
 and `lwd` are recycled over the models in `x`.
+
+A 'selcrit' – the criteria of one model, or those of the windows of an
+'expandingwindow' pooled into one – is drawn as a 'selcritlist' of that
+one model.

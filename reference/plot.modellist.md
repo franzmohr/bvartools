@@ -18,3 +18,8 @@ plot(x, ...)
 - ...:
 
   arguments passed forward to other methods.
+
+## Value
+
+`x`, invisibly. The function is called for its side effect, one plot per
+model in the list, drawn by the plot method of that model.

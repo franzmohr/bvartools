@@ -20,8 +20,8 @@ choose_best_model(object, criterion = "WAIC", ...)
 - criterion:
 
   the selection criterion that should be used. Available choices are
-  `"LL"`, `"AIC"`, `"BIC"`, `"HQ"`, `"WAIC"` (default), `"LOOIC"` and
-  `"LPL"`.
+  `"LL"`, `"AIC"`, `"BIC"`, `"HQ"`, `"WAIC"` (default), `"LOOIC"`,
+  `"LPL"` and, for the discounted models, `"LML"`.
 
 - ...:
 
@@ -30,12 +30,13 @@ choose_best_model(object, criterion = "WAIC", ...)
 ## Value
 
 An integer giving the position of the best model in the list provided in
-argument `object`.
+argument `object`. Where several models attain the best value exactly,
+the positions of all of them, in increasing order.
 
 ## Details
 
-If argument `criterion` is "LL" or "LPL", the model with the maximum
-value is chosen, otherwise, the model with the minimum value.
+If argument `criterion` is "LL", "LPL" or "LML", the model with the
+maximum value is chosen, otherwise, the model with the minimum value.
 
 Which criterion to use depends on the models that are compared. See
 [`selection_criteria`](https://franzmohr.github.io/bvartools/reference/selection_criteria.md),
@@ -53,17 +54,34 @@ expanding window exercise with
 is the criterion for the rank of a VEC model whose coefficients or
 variances follow a state equation.
 
+`"LML"` is the one criterion of the discounted models and the only one
+they carry. It is the exact log marginal likelihood of the sample, read
+off the file rather than estimated, so a grid over the rank, the
+cointegration matrix, the lag order or the two discounts is compared by
+it directly. It is not comparable with `"LL"`, which conditions on the
+parameters where this integrates them out.
+
 ## See also
 
 Other model comparison:
 [`add_forecast_errors.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/add_forecast_errors.bvarmodel.md),
 [`add_forecast_errors.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/add_forecast_errors.bvecmodel.md),
 [`add_predictive_loglik()`](https://franzmohr.github.io/bvartools/reference/add_predictive_loglik.md),
+[`add_predictive_loglik.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/add_predictive_loglik.bvarmodel.md),
+[`add_predictive_loglik.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/add_predictive_loglik.bvecmodel.md),
+[`aggregate_forecasts()`](https://franzmohr.github.io/bvartools/reference/aggregate_forecasts.md),
 [`align_model_obs.modellist()`](https://franzmohr.github.io/bvartools/reference/align_model_obs.modellist.md),
+[`analysis_of_stored_models`](https://franzmohr.github.io/bvartools/reference/analysis_of_stored_models.md),
 [`create_external_forecast()`](https://franzmohr.github.io/bvartools/reference/create_external_forecast.md),
+[`folder_steps`](https://franzmohr.github.io/bvartools/reference/folder_steps.md),
+[`map_draws()`](https://franzmohr.github.io/bvartools/reference/map_draws.md),
+[`map_models()`](https://franzmohr.github.io/bvartools/reference/map_models.md),
+[`open_model()`](https://franzmohr.github.io/bvartools/reference/open_model.md),
+[`open_models()`](https://franzmohr.github.io/bvartools/reference/open_models.md),
 [`plot_forecast_errors_by_period()`](https://franzmohr.github.io/bvartools/reference/plot_forecast_errors_by_period.md),
 [`selection_criteria.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.bvarmodel.md),
 [`selection_criteria.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.bvecmodel.md),
+[`selection_criteria.default()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.default.md),
 [`selection_criteria.modellist()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.modellist.md)
 
 ## Examples
@@ -105,9 +123,9 @@ sel
 #> Log-likelihood
 #> 
 #>            Mean Median Quantile (2.5%) Quantile (97.5%)
-#>  Model 1 -506.1 -506.2          -511.8           -501.2
-#>  Model 2 -496.7 -496.3          -506.4           -491.2
-#>  Model 3 -497.2 -497.1          -506.0           -489.7
+#>  Model 1 -505.5 -505.3          -513.3           -500.6
+#>  Model 2 -496.8 -496.1          -503.7           -489.2
+#>  Model 3 -497.1 -496.9          -504.7           -489.2
 #> 
 #> 
 #> Akaike Information Criterion (AIC)
@@ -121,7 +139,7 @@ sel
 #> Bayesian Information Criterion (BIC)
 #> 
 #>          Mean Median Quantile (2.5%) Quantile (97.5%)
-#>  Model 1 1074   1074                                 
+#>  Model 1 1073   1073                                 
 #>  Model 2 1088   1088                                 
 #>  Model 3 1120   1120                                 
 #> 
@@ -137,21 +155,21 @@ sel
 #> Widely Applicable Information Criterion (WAIC)
 #> 
 #>          Mean Median Quantile (2.5%) Quantile (97.5%)
-#>  Model 1 1037   1037           968.4             1106
-#>  Model 2 1025   1025           960.8             1089
-#>  Model 3 1038   1038           973.3             1102
+#>  Model 1 1035   1035           968.3             1102
+#>  Model 2 1026   1026           963.0             1089
+#>  Model 3 1035   1035           970.9             1099
 #> 
-#> Periods with a pointwise log-likelihood variance above 0.4, which makes the correction of WAIC unreliable, in models 1 (14), 2 (21), 3 (31).
+#> Periods with a pointwise log-likelihood variance above 0.4, which makes the correction of WAIC unreliable, in models 1 (13), 2 (18), 3 (29).
 #> 
 #> 
 #> Leave-One-Out Information Criterion (LOOIC)
 #> 
 #>          Mean Median Quantile (2.5%) Quantile (97.5%)
-#>  Model 1 1035   1035           967.4             1102
-#>  Model 2 1022   1022           959.1             1085
-#>  Model 3 1033   1033           971.1             1095
+#>  Model 1 1032   1032           967.0             1097
+#>  Model 2 1023   1023           961.3             1084
+#>  Model 3 1030   1030           968.4             1092
 #> 
-#> Influential periods, whose importance sampling is unreliable, in models 1 (16), 2 (31), 3 (32), counted as a Pareto k above 0.41.
+#> Influential periods, whose importance sampling is unreliable, in models 1 (30), 2 (30), 3 (39), counted as a Pareto k above 0.41.
 
 # Choose best model according to WAIC, the default
 choose_best_model(sel)

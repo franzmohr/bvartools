@@ -52,3 +52,15 @@ that. The starting values of the constant are shifted in the same way.
 If variable selection covered the deterministic terms, the draws of the
 inclusion indicators of the constant are carried over as they are, so
 they describe the constant of the centred series.
+
+What is unchanged is the sample. Beyond it, a model with time varying
+cointegration vectors cannot be carried on from the rescaled draws: the
+state equation of \\\beta_t\\ was estimated for the transformed series,
+and the constant absorbs \\\alpha_t \beta_t^{\prime} D^{-1} m\\ of the
+last period only, so a step of \\\beta_t\\ would reintroduce the
+intercept the centring removed. The function therefore sets
+`object$model$ect_rescaled` for such a model, and
+[`add_posterior_forecasts.bvecmodel`](https://franzmohr.github.io/bvartools/reference/add_posterior_forecasts.bvecmodel.md)
+and
+[`add_predictive_loglik.bvecmodel`](https://franzmohr.github.io/bvartools/reference/add_predictive_loglik.bvecmodel.md)
+accept it only with `forecast_states = "hold"`.

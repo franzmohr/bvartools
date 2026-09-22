@@ -25,6 +25,11 @@ write_to_hdf5(object, folder, ...)
 
   further arguments passed to or from other methods.
 
+## Value
+
+The paths of the written files, invisibly, one per window, in the
+subfolder of `folder` created for the exercise.
+
 ## Examples
 
 ``` r

@@ -29,7 +29,8 @@ generate_artificial_vec(
   range_variance_state = c(1e-04, 1e-04),
   range_variance_sv = c(0.01, 0.01),
   stable = TRUE,
-  presample = 100
+  presample = 100,
+  level = 0
 )
 ```
 
@@ -158,6 +159,12 @@ generate_artificial_vec(
   before the first returned observation and then discarded. Defaults to
   100.
 
+- level:
+
+  numeric vector with one or `k` elements, which are added to the
+  generated series to shift their levels. Defaults to 0. A non-zero
+  level requires a constant term if `r > 0`. See 'Details'.
+
 ## Value
 
 A list with the elements
@@ -281,6 +288,19 @@ period: an innovation, which violates it, is drawn again, and if no
 admissible innovation is found in 100 attempts, the coefficients keep
 the values of the previous period.
 
+The series start at zero before the presample. Argument `level` shifts
+them by a vector \\m\\, which gives series with high levels that follow
+a stochastic trend. The dynamics of the differences are unchanged, but
+the error correction term becomes \\\alpha_t \beta_t^{\prime}
+(y\_{t-1} - m)\\, so that the constant term absorbs \\-\beta_t^{\prime}
+m\\: the returned row of a restricted constant in \\\beta_t\\ is
+\\\beta^{c}\_t - \beta_t^{\prime} m\\ and the returned unrestricted
+constant is \\c_t - \alpha_t \beta_t^{\prime} m\\, where
+\\\beta^{c}\_t\\ and \\c_t\\ are drawn from `range_const` and
+\\\beta_t\\ here denotes the rows of the endogenous variables. Without a
+constant this term would not be part of the model, so that a non-zero
+level with `r > 0` requires `const = "restricted"` or `"unrestricted"`.
+
 ## References
 
 Johansen, S. (1995). *Likelihood-based inference in cointegrated vector
@@ -321,6 +341,16 @@ dt <- generate_artificial_vec(nobs = 200, k = 2, p = 1, r = 1, const = "restrict
 # Path of the cointegration coefficient of the second variable
 plot(dt[["params"]][["beta"]][2, 1, ], type = "l")
 
+
+# Cointegrated series with high levels around 100, 50 and 20
+dt <- generate_artificial_vec(nobs = 200, k = 3, p = 2, r = 1, const = "restricted",
+                              level = c(100, 50, 20))
+dt[["params"]][["beta"]]
+#>                ect1
+#> l.var1    1.0000000
+#> l.var2    0.8507194
+#> l.var3   -0.5602695
+#> const  -131.4972231
 
 # Structural model with an unrestricted constant
 dt <- generate_artificial_vec(nobs = 200, k = 3, p = 2, r = 1, const = "unrestricted",

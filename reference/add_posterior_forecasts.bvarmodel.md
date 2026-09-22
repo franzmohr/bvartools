@@ -37,10 +37,14 @@ add_posterior_forecasts(object, forecast_states = NULL, ...)
 
 ## Value
 
-The object in `object` with `posterior$forecast` added, a
+The object in `object` with `posterior$forecast$forecasts` added, a
 [`mcmc`](https://rdrr.io/pkg/coda/man/mcmc.html) object with one row per
 draw and \\Kh\\ columns, stacked by period: the \\K\\ variables of the
 first forecast period, then those of the second, and so on.
+`posterior$forecast` is the group everything the forecast periods
+produce hangs below, the `errors` of
+[`add_forecast_errors`](https://franzmohr.github.io/bvartools/reference/add_forecast_errors.md)
+beside these.
 [`predict`](https://franzmohr.github.io/bvartools/reference/predict.bvarmodel.md)
 summarises them. A `forecast_states` that was given is stored in
 `model$forecast_states`.
@@ -54,6 +58,9 @@ the package lacks it and stops with an error unless
 
 ## See also
 
+[`bvartools_model`](https://franzmohr.github.io/bvartools/reference/bvartools_model.md)
+describes the object this returns, element by element.
+
 Other posterior simulation:
 [`add_forecast_input.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/add_forecast_input.bvarmodel.md),
 [`add_forecast_input.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/add_forecast_input.bvecmodel.md),
@@ -63,9 +70,11 @@ Other posterior simulation:
 [`add_posterior_loglik.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/add_posterior_loglik.bvarmodel.md),
 [`add_posterior_loglik.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/add_posterior_loglik.bvecmodel.md),
 [`add_seed()`](https://franzmohr.github.io/bvartools/reference/add_seed.md),
+[`bayests_files()`](https://franzmohr.github.io/bvartools/reference/bayests_files.md),
 [`bayests_posterior()`](https://franzmohr.github.io/bvartools/reference/bayests_posterior.md),
 [`bvar()`](https://franzmohr.github.io/bvartools/reference/bvar.md),
 [`bvec()`](https://franzmohr.github.io/bvartools/reference/bvec.md),
+[`chain_diagnostics()`](https://franzmohr.github.io/bvartools/reference/chain_diagnostics.md),
 [`predict.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/predict.bvecmodel.md)
 
 ## Examples

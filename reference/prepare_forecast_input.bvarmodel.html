@@ -9,7 +9,7 @@ of class 'bvarmodel'."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -104,7 +104,11 @@ model. Required if the model has such variables. See 'Details'.</p></dd>
 the out-of-sample regressors: <code>h</code> rows, one per period, by one column
 per regressor. That is the compact layout, the same one a coefficient matrix
 is <code>k</code> by; the SUR layout this used to return spread every regressor
-over <code>k</code> columns and was <code>k^2</code> the size for no extra content.</p>
+over <code>k</code> columns and was <code>k^2</code> the size for no extra content.
+The lags of the endogenous variables that the estimation sample does not
+reach are the forecasts of earlier periods, which the forecast fills in as it
+goes; they are zero here, since the samplers refuse a missing value anywhere
+in <code>x</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

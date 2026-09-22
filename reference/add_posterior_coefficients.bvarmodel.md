@@ -7,7 +7,12 @@ autoregressive models.
 
 ``` r
 # S3 method for class 'bvarmodel'
-add_posterior_coefficients(object, posterior_function = NULL, ...)
+add_posterior_coefficients(
+  object,
+  posterior_function = NULL,
+  chains = NULL,
+  ...
+)
 ```
 
 ## Arguments
@@ -24,7 +29,20 @@ add_posterior_coefficients(object, posterior_function = NULL, ...)
 - posterior_function:
 
   the function to be applied to the model in argument `object`. If
-  `NULL` (default), internalal functions are used.
+  `NULL` (default), internal functions are used.
+
+- chains:
+
+  the number of chains to simulate. If `NULL` (default), the value in
+  `object$model$chains` is used, and one chain when there is none. Each
+  chain is the same simulation with a seed of its own – the first with
+  the seed of the model, so that one chain draws what it always has –
+  and the chains are pooled, one after the other, in the draws of
+  `posterior`, so that every later step uses all of them. Their number,
+  when above one, is stored in `object$model$chains`, and
+  [`chain_diagnostics`](https://franzmohr.github.io/bvartools/reference/chain_diagnostics.md)
+  compares them. A `posterior_function` is called once per chain. Not
+  available for discounted models, whose posterior is not a chain.
 
 - ...:
 
@@ -96,6 +114,9 @@ posterior and carrying it into whatever reads the results.
 
 ## See also
 
+[`bvartools_model`](https://franzmohr.github.io/bvartools/reference/bvartools_model.md)
+describes the object this returns, element by element.
+
 Other posterior simulation:
 [`add_forecast_input.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/add_forecast_input.bvarmodel.md),
 [`add_forecast_input.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/add_forecast_input.bvecmodel.md),
@@ -105,9 +126,11 @@ Other posterior simulation:
 [`add_posterior_loglik.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/add_posterior_loglik.bvarmodel.md),
 [`add_posterior_loglik.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/add_posterior_loglik.bvecmodel.md),
 [`add_seed()`](https://franzmohr.github.io/bvartools/reference/add_seed.md),
+[`bayests_files()`](https://franzmohr.github.io/bvartools/reference/bayests_files.md),
 [`bayests_posterior()`](https://franzmohr.github.io/bvartools/reference/bayests_posterior.md),
 [`bvar()`](https://franzmohr.github.io/bvartools/reference/bvar.md),
 [`bvec()`](https://franzmohr.github.io/bvartools/reference/bvec.md),
+[`chain_diagnostics()`](https://franzmohr.github.io/bvartools/reference/chain_diagnostics.md),
 [`predict.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/predict.bvecmodel.md)
 
 ## Examples

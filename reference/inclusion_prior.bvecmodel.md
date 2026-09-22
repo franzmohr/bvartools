@@ -59,10 +59,8 @@ inclusion_prior(
 - kappa3:
 
   a numeric specifying the size of the prior inclusion probabilities of
-  non-deterministic exogenous variables. Default is `NULL`, which
-  indicates that the formula for the calculation of the prior inclusion
-  probabilities of deterministic terms is used for all exogenous
-  variables. Only used if `minnesota_like = TRUE`. See 'Details'.
+  non-deterministic exogenous variables, between 0 and 1. Default is
+  0.5. Only used if `minnesota_like = TRUE`. See 'Details'.
 
 - kappa4:
 

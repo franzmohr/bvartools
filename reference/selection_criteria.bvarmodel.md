@@ -31,9 +31,22 @@ with the element `model` and one data frame per criterion. If the model
 contains `posterior$loglik`, these are `LL`, `AIC`, `BIC`, `HQ`, `WAIC`
 and `LOOIC`, each with the columns `mean`, `median`, `qlower` and
 `qupper`, where bands that do not apply are `NA`. If it contains
-`posterior$forecast_errors`, these are `FE`, `AFE` and `RSFE`, the
+`posterior$forecast$errors`, these are `FE`, `AFE` and `RSFE`, the
 forecast errors and their absolute and root squared values, with the
-columns `variable`, `h`, `mean`, `median`, `qlower` and `qupper`.
+columns `variable`, `h`, `mean`, `median`, `qlower` and `qupper`. For
+`RSFE` only `mean` is a statistic of its own, the root of the mean
+squared error. Its median and quantiles are those of the squared errors,
+rooted, and so differ from `AFE`'s only by the interpolation between
+neighbouring draws that
+[`quantile`](https://rdrr.io/r/stats/quantile.html) and
+[`median`](https://rdrr.io/r/stats/median.html) do – which, the root of
+an average of squares being at least the average of the roots, can only
+raise them. They add nothing to `AFE`'s. If it contains
+`posterior$forecast$loglik`, the score of its forecast against
+`data$test$y`, there is `LPL`, the log predictive likelihood: the log of
+the mean of the draws of each scored period's predictive density, summed
+over the periods. Attribute `"terms"` holds those per period and `"nse"`
+their numerical standard error.
 
 ## See also
 
@@ -41,11 +54,21 @@ Other model comparison:
 [`add_forecast_errors.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/add_forecast_errors.bvarmodel.md),
 [`add_forecast_errors.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/add_forecast_errors.bvecmodel.md),
 [`add_predictive_loglik()`](https://franzmohr.github.io/bvartools/reference/add_predictive_loglik.md),
+[`add_predictive_loglik.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/add_predictive_loglik.bvarmodel.md),
+[`add_predictive_loglik.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/add_predictive_loglik.bvecmodel.md),
+[`aggregate_forecasts()`](https://franzmohr.github.io/bvartools/reference/aggregate_forecasts.md),
 [`align_model_obs.modellist()`](https://franzmohr.github.io/bvartools/reference/align_model_obs.modellist.md),
+[`analysis_of_stored_models`](https://franzmohr.github.io/bvartools/reference/analysis_of_stored_models.md),
 [`choose_best_model.selcritlist()`](https://franzmohr.github.io/bvartools/reference/choose_best_model.selcritlist.md),
 [`create_external_forecast()`](https://franzmohr.github.io/bvartools/reference/create_external_forecast.md),
+[`folder_steps`](https://franzmohr.github.io/bvartools/reference/folder_steps.md),
+[`map_draws()`](https://franzmohr.github.io/bvartools/reference/map_draws.md),
+[`map_models()`](https://franzmohr.github.io/bvartools/reference/map_models.md),
+[`open_model()`](https://franzmohr.github.io/bvartools/reference/open_model.md),
+[`open_models()`](https://franzmohr.github.io/bvartools/reference/open_models.md),
 [`plot_forecast_errors_by_period()`](https://franzmohr.github.io/bvartools/reference/plot_forecast_errors_by_period.md),
 [`selection_criteria.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.bvecmodel.md),
+[`selection_criteria.default()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.default.md),
 [`selection_criteria.modellist()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.modellist.md)
 
 ## Examples

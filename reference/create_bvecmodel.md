@@ -20,6 +20,8 @@ create_bvecmodel(
   tvp = FALSE,
   varsel = "none",
   algorithm = NULL,
+  delta_beta = 1,
+  delta_sigma = 1,
   iterations = 20000,
   burnin = 2000,
   thin = 1
@@ -106,14 +108,22 @@ create_bvecmodel(
   (default), standard algorithms will be used. See 'Details' for
   available non-standard options.
 
+- delta_beta, delta_sigma:
+
+  numeric discount factors in \\(0, 1\]\\ of the discounted model, the
+  first governing the coefficients and the second the error covariance.
+  Both default to 1, at which the quantity they govern does not move.
+  Ignored unless `algorithm = "discount"`, and a vector in either
+  produces one model per value. See 'Details'.
+
 - iterations:
 
-  an integer of MCMC draws excluding burn-in draws (defaults to 50000).
+  an integer of MCMC draws excluding burn-in draws (defaults to 20000).
 
 - burnin:
 
   an integer of MCMC draws used to initialize the sampler (defaults to
-  5000). These draws do not enter the computation of posterior moments,
+  2000). These draws do not enter the computation of posterior moments,
   forecasts etc.
 
 - thin:
@@ -140,7 +150,7 @@ A 'bvecmodel' is a list with the elements
   time-series object of the differenced endogenous variables, `w`, the
   lagged levels that enter the cointegration term, `x`, the remaining
   regressors, and `z`, the corresponding \\TK\\ row matrix of regressors
-  in SUR form.
+  in SUR form, which is absent for the discounted model.
 
 - `model`:
 
@@ -212,6 +222,42 @@ Available specifications for argument `algorithm` are:
 - `"KLGS2010"`: Algorithm proposed in Koop, León-González & Strachan
   (2010).
 
+- `"discount"`: The discounted time varying parameter model of West &
+  Harrison (1997, ch. 16) with the discounted Wishart of Uhlig (1997),
+  estimated by `VecTvpDiscount`.
+
+The discounted model is not a sampler. Its posterior is closed form –
+one pass over the sample, no chain – so `burnin` must be 0 and `thin` 1,
+and `iterations` says only how many i.i.d. draws a forecast takes from
+the answer. Its error covariance is the inverse Wishart whole, so
+`error` must be `"wishart"` and neither variable selection nor a
+structural model is available. What it buys is speed and an exact
+marginal likelihood: the sum of `/posterior/loglik` is the log marginal
+likelihood of the sample given the rank, the cointegration matrix and
+the two discounts, so a grid over any of them can be compared without a
+chain being run for any of it.
+
+The one assumption that separates it from the sampling VEC models is
+that the cointegration space is given rather than estimated.
+[`add_initial_values`](https://franzmohr.github.io/bvartools/reference/add_initial_values.md)
+puts Johansen's maximum likelihood estimate at `/initial/beta` and the
+model conditions on it, so what drifts is the adjustment to the long-run
+relations and not the relations themselves. That is a different question
+from the one `"KLGS2010"` answers, not a cheaper way of answering the
+same one.
+
+[`add_posterior_coefficients`](https://franzmohr.github.io/bvartools/reference/add_posterior_coefficients.md)
+estimates it like any other algorithm, the filter being part of the
+vendored BayesTS core. It consumes no random numbers, so two runs agree
+to the bit and a model estimated here and the same model estimated by
+the `bayests` command line over a file written with
+[`write_to_hdf5`](https://franzmohr.github.io/bvartools/reference/write_to_hdf5.md)
+give the same numbers rather than merely the same distribution. What
+comes back is a posterior rather than a chain: one row per period under
+`posterior$a$mean`, `posterior$a$cov`, `posterior$u_sigma$scale` and
+`posterior$df`, and no `coeffs` anywhere, because joining one draw per
+period would look like a sampled path and is not one.
+
 ## References
 
 George, E. I., Sun, D., & Ni, S. (2008). Bayesian stochastic search for
@@ -230,7 +276,17 @@ Korobilis, D. (2013). VAR forecasting using Bayesian variable selection.
 Lütkepohl, H. (2006). *New introduction to multiple time series
 analysis* (2nd ed.). Berlin: Springer.
 
+Uhlig, H. (1997). Bayesian vector autoregressions with stochastic
+volatility. *Econometrica, 65*(1), 59–73.
+[doi:10.2307/2171813](https://doi.org/10.2307/2171813)
+
+West, M., & Harrison, J. (1997). *Bayesian forecasting and dynamic
+models* (2nd ed.). New York: Springer.
+
 ## See also
+
+[`bvartools_model`](https://franzmohr.github.io/bvartools/reference/bvartools_model.md)
+describes the object this returns, element by element.
 
 Other model set-up:
 [`add_initial_values.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/add_initial_values.bvarmodel.md),

@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -606,6 +606,10 @@ single value to the out-of-sample statistics instead of a full
 posterior. Accordingly, their credible bands are degenerate and
 in-sample criteria are not available for them, which the printed
 comparison and the plots indicate by an empty entry.</p>
+<p><code>vignette("macroprojections", package = "bvartools")</code>
+races models against projections that institutions actually published.
+Those are annual, and it shows how the quarterly forecast draws of a
+model are aggregated to annual figures before they are compared.</p>
 <div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">sc_all</span>, criterion <span class="op">=</span> <span class="st">"AFE"</span><span class="op">)</span></span></code></pre></div>
 <div class="float">

@@ -54,10 +54,10 @@ The object in `object` with the element `priors` added, a list with
 - `beta`:
 
   the prior of the cointegration space with `type` `"cointspace"`:
-  `v_inv` and `p_tau_inv` for constant cointegration parameters, or
-  `rho`, `mu` and `v_inv` of the state equation for time varying ones,
-  together with the elements added by `p_tau_i = "ml"` or a uniform
-  prior on \\\rho\\.
+  `v_inv` and `p_tau_inv` for constant cointegration parameters, with
+  `g_inv` if `coint$g_i` was given, or `rho`, `mu` and `v_inv` of the
+  state equation for time varying ones, together with the elements added
+  by `p_tau_i = "ml"` or a uniform prior on \\\rho\\.
 
 - `a`:
 
@@ -165,6 +165,36 @@ Argument `coef` can contain the following elements:
   steps of the cointegration vectors, which can absorb the residuals as
   well; see section 'Prior on the cointegration space'.
 
+- `omega_v`:
+
+  a positive numeric, in place of `shape`, `rate`, `rate_det` and
+  `rate_alpha`: the variance of a normal prior on the signed standard
+  deviation of the state innovations of the coefficients, loadings
+  included unless `omega_v_alpha` is given, and of the covariance
+  coefficients – the non-centred parameterisation that lets the
+  posterior carry the test for time variation of
+  [`time_variation_test`](https://franzmohr.github.io/bvartools/reference/time_variation_test.md);
+  see
+  [`add_priors.bvarmodel`](https://franzmohr.github.io/bvartools/reference/add_priors.bvarmodel.md)
+  for the model and the draws it adds. The cointegration space keeps its
+  state equation. Only for models with time varying parameters,
+  `tvp = TRUE`, and `error = "sv"`, `"sv+covar"`, `"gamma"` or
+  `"gamma+covar"`.
+
+- `omega_v_alpha`:
+
+  a positive numeric, the `omega_v` of the loadings, as `rate_alpha` is
+  their rate under the centred prior. If it is not given, `omega_v` is
+  used. The loadings multiply the levels in the error correction term,
+  so a standard deviation of their innovations that is small for a
+  coefficient on a differenced regressor moves the fitted value by much
+  more, and the test for time variation of
+  [`time_variation_test`](https://franzmohr.github.io/bvartools/reference/time_variation_test.md)
+  compares each loading's posterior at zero with its own prior: a prior
+  on the wrong scale makes the Bayes factor of a loading say more about
+  the prior than about the loading. Only used with `omega_v` and a
+  positive rank.
+
 Argument `coint` specifies the prior on the cointegration space. Its
 elements, and the priors they give, are described in section 'Prior on
 the cointegration space' below, which is shared with
@@ -178,7 +208,9 @@ the model:
 - `"gamma"` and `"gamma+covar"`: `shape` and `rate`.
 
 - `"sv"` and `"sv+covar"`: `mu`, `v_i`, `shape`, `rate`,
-  `state_variance` and `offset`.
+  `state_variance` and `offset`; with `tvp = TRUE`, `omega_v` may take
+  the place of `shape` and `rate`, as `coef$omega_v` does for the
+  coefficients.
 
 The elements are
 
@@ -336,6 +368,16 @@ state equation in the second. Any other element raises an error.
   \\(0.999, 1)\\. Only used for models with time varying cointegration
   parameters.
 
+- `g_i`:
+
+  the inverse of the matrix \\G\\ that scales the prior of the loadings,
+  for models with constant cointegration parameters and stochastic
+  volatility, `error = "sv"` or `"sv+covar"`, and refused for every
+  other model. Either a numeric of its diagonal elements, a full
+  symmetric positive definite matrix with one row and column per
+  endogenous variable, or `"ml"` for the inverse of the maximum
+  likelihood estimate of the error covariance. Optional. See below.
+
 For a model with constant cointegration parameters the prior is that of
 Koop et al. (2010). The sampler uses `v_i` and `p_tau_i` only through
 their product, so with `v_i = 0` the prior on the cointegration space is
@@ -343,6 +385,19 @@ uniform whatever `p_tau_i` is. An informative prior on the space
 therefore needs a positive `v_i`, which also shrinks the loadings: for
 \\\beta\\ close to the centre of the space they have prior \\N(0, \Sigma
 / v)\\.
+
+In Koop et al. (2010) the loadings' prior is scaled by a matrix \\G\\,
+which may be the error covariance \\\Sigma\\ or any fixed, known matrix.
+The models with a constant error covariance take \\G = \Sigma\\. With
+stochastic volatility the covariance differs from period to period, so
+\\G\\ is fixed for the whole run instead: \\G^{-1}\\ is `g_i` if it is
+given, and otherwise the error precision implied by the starting values
+of the log-volatilities, averaged over the sample once before the first
+draw. That fallback depends on
+[`add_initial_values`](https://franzmohr.github.io/bvartools/reference/add_initial_values.md),
+so giving `g_i` makes the prior independent of how the chain is started.
+`g_i = "ml"` uses Johansen's (1995) estimate of the error covariance,
+the same one `v_i = "ml"` is based on.
 
 With `p_tau_i = "ml"` the prior is centred on the space spanned by
 Johansen's (1995) maximum likelihood estimate \\\hat{\beta}\\, computed

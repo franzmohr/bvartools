@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -90,7 +90,7 @@ volatility are unaffected.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>The object in <code>object</code> with <code>posterior$forecast</code> added, a
+    <p>The object in <code>object</code> with <code>posterior$forecast$forecasts</code> added, a
 <code><a href="https://rdrr.io/pkg/coda/man/mcmc.html" class="external-link">mcmc</a></code> object with one row per draw and \(Kh\) columns of forecasts
 of the levels, stacked by period. <code>predict</code> summarises them. A
 <code>forecast_states</code> that was given is stored in <code>model$forecast_states</code>.</p>
@@ -103,6 +103,23 @@ with constant coefficients they are the forecasts <code><a href="vec_to_var.html
 coefficients they are not: its VAR representation has no state equation of its own and
 holds its coefficients at the last period, while this method steps the states of the VEC
 model and converts them to levels anew in every forecast period.</p>
+<p>Simulating the cointegration vectors forward depends on the units of the data. A step
+\(\eta_t\) of their state equation moves the error correction term by
+\(\eta_t^{\prime} w_t\), which for series far from zero – log levels times 100,
+say – is of the order of their levels rather than of their variation: the random
+walk intercept described in section 'Prior on the cointegration space' of
+<code><a href="cointspace_prior.html">cointspace_prior</a></code>, carried forward with nothing in the data to restrain
+it. The forecast is then mostly that drift, and its intervals widen accordingly.
+A warning names the series in the error correction term that are more than 50
+times their standard deviation per period away from zero at the end of the sample;
+<code>forecast_states = "hold"</code> is the alternative. Series near zero, such as
+interest rates and inflation in percent, do not draw it.</p>
+<p>A time varying model estimated on series that <code><a href="scale_error_correction.html">scale_error_correction</a></code>
+centred or scaled cannot be simulated forward and stops with an error unless
+<code>forecast_states = "hold"</code>: the state equation of its cointegration vectors
+belongs to the transformed series, while <code><a href="rescale_error_correction.html">rescale_error_correction</a></code>
+has put the vectors back on the scale of the data and moved the means into the
+constant of the last sample period only.</p>
 <p>Simulating the volatility forward needs <code>posterior$u_sigma_inv$sigma</code>, the variance
 of the log-volatility innovations, which <code><a href="add_posterior_coefficients.html">add_posterior_coefficients</a></code>
 stores. A model with stochastic volatility estimated with an earlier version of the
@@ -119,9 +136,11 @@ package lacks it and stops with an error unless <code>forecast_states = "hold"</
 <code><a href="add_posterior_loglik.bvarmodel.html">add_posterior_loglik.bvarmodel()</a></code>,
 <code><a href="add_posterior_loglik.bvecmodel.html">add_posterior_loglik.bvecmodel()</a></code>,
 <code><a href="add_seed.html">add_seed()</a></code>,
+<code><a href="bayests_files.html">bayests_files()</a></code>,
 <code><a href="bayests_posterior.html">bayests_posterior()</a></code>,
 <code><a href="bvar.html">bvar()</a></code>,
 <code><a href="bvec.html">bvec()</a></code>,
+<code><a href="chain_diagnostics.html">chain_diagnostics()</a></code>,
 <code><a href="predict.bvecmodel.html">predict.bvecmodel()</a></code></p></div>
     </div>
 

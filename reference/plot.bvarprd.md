@@ -30,6 +30,10 @@ plot(x, n_pre = NULL, ci = 0.95, ...)
   further graphical parameters. Arguments `main`, `ylab`, `lty` and
   `plot.type` overwrite the defaults of the function.
 
+## Value
+
+`x`, invisibly. The function is called for its side effect, the plot.
+
 ## Examples
 
 ``` r

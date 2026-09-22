@@ -92,17 +92,17 @@ sel
 #> Out-of-sample
 #> ------------------------------------------
 #>  Variable h   MAFE RMSFE
-#>      cons 1 1.3383 1.642
-#>      cons 2 0.8743 1.198
-#>      cons 3 1.3644 1.717
+#>      cons 1 1.1642 1.528
+#>      cons 2 1.0375 1.358
+#>      cons 3 0.9166 1.237
 #>      cons 4    NaN   NaN
-#>    income 1 1.8080 2.169
-#>    income 2 1.4582 1.792
-#>    income 3 1.1271 1.369
+#>    income 1 1.5769 1.981
+#>    income 2 1.4915 1.812
+#>    income 3 1.1437 1.489
 #>    income 4    NaN   NaN
-#>    invest 1 4.4761 5.272
-#>    invest 2 3.7738 4.560
-#>    invest 3 3.9006 4.529
+#>    invest 1 3.8008 5.114
+#>    invest 2 3.8017 4.518
+#>    invest 3 3.5345 4.925
 #>    invest 4    NaN   NaN
 
 ```

@@ -34,12 +34,22 @@ Other model comparison:
 [`add_forecast_errors.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/add_forecast_errors.bvarmodel.md),
 [`add_forecast_errors.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/add_forecast_errors.bvecmodel.md),
 [`add_predictive_loglik()`](https://franzmohr.github.io/bvartools/reference/add_predictive_loglik.md),
+[`add_predictive_loglik.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/add_predictive_loglik.bvarmodel.md),
+[`add_predictive_loglik.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/add_predictive_loglik.bvecmodel.md),
+[`aggregate_forecasts()`](https://franzmohr.github.io/bvartools/reference/aggregate_forecasts.md),
 [`align_model_obs.modellist()`](https://franzmohr.github.io/bvartools/reference/align_model_obs.modellist.md),
+[`analysis_of_stored_models`](https://franzmohr.github.io/bvartools/reference/analysis_of_stored_models.md),
 [`choose_best_model.selcritlist()`](https://franzmohr.github.io/bvartools/reference/choose_best_model.selcritlist.md),
 [`create_external_forecast()`](https://franzmohr.github.io/bvartools/reference/create_external_forecast.md),
+[`folder_steps`](https://franzmohr.github.io/bvartools/reference/folder_steps.md),
+[`map_draws()`](https://franzmohr.github.io/bvartools/reference/map_draws.md),
+[`map_models()`](https://franzmohr.github.io/bvartools/reference/map_models.md),
+[`open_model()`](https://franzmohr.github.io/bvartools/reference/open_model.md),
+[`open_models()`](https://franzmohr.github.io/bvartools/reference/open_models.md),
 [`plot_forecast_errors_by_period()`](https://franzmohr.github.io/bvartools/reference/plot_forecast_errors_by_period.md),
 [`selection_criteria.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.bvarmodel.md),
-[`selection_criteria.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.bvecmodel.md)
+[`selection_criteria.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.bvecmodel.md),
+[`selection_criteria.default()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.default.md)
 
 ## Examples
 
@@ -88,21 +98,21 @@ sel
 #> Mean absolute forecast errors (MAFE)
 #> 
 #>  Variable h Model 1 Model 2 Model 3
-#>    invest 1   4.103   3.699  5.1893
-#>    income 1   1.618   1.395  1.3465
-#>      cons 1   1.438   1.494  0.9281
-#>    invest 2   3.447   6.021  4.4958
-#>    income 2   1.337   1.448  1.1919
-#>      cons 2   1.230   1.038  0.7287
+#>    invest 1   2.288   4.254   4.069
+#>    income 1   1.868   1.648   1.629
+#>      cons 1   1.619   1.141   1.072
+#>    invest 2   3.986   4.959   4.911
+#>    income 2   1.346   1.173   1.471
+#>      cons 2   1.147   1.309   1.013
 #> 
 #> 
 #> Root mean squared forecast errors (RMSFE)
 #> 
 #>  Variable h Model 1 Model 2 Model 3
-#>    invest 1   4.988   4.512  6.1921
-#>    income 1   1.901   1.760  1.6416
-#>      cons 1   1.701   1.722  1.2042
-#>    invest 2   4.121   7.015  5.3257
-#>    income 2   1.892   1.843  1.4546
-#>      cons 2   1.536   1.405  0.9832
+#>    invest 1   2.836   5.074   4.871
+#>    income 1   2.156   2.019   1.952
+#>      cons 1   1.889   1.404   1.346
+#>    invest 2   4.713   5.727   6.295
+#>    income 2   1.593   1.390   1.742
+#>      cons 2   1.307   1.620   1.169
 ```

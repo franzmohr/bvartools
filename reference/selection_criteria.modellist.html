@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -86,12 +86,22 @@ described in <code><a href="selection_criteria.bvarmodel.html">selection_criteri
 <code><a href="add_forecast_errors.bvarmodel.html">add_forecast_errors.bvarmodel()</a></code>,
 <code><a href="add_forecast_errors.bvecmodel.html">add_forecast_errors.bvecmodel()</a></code>,
 <code><a href="add_predictive_loglik.html">add_predictive_loglik()</a></code>,
+<code><a href="add_predictive_loglik.bvarmodel.html">add_predictive_loglik.bvarmodel()</a></code>,
+<code><a href="add_predictive_loglik.bvecmodel.html">add_predictive_loglik.bvecmodel()</a></code>,
+<code><a href="aggregate_forecasts.html">aggregate_forecasts()</a></code>,
 <code><a href="align_model_obs.modellist.html">align_model_obs.modellist()</a></code>,
+<code><a href="analysis_of_stored_models.html">analysis_of_stored_models</a></code>,
 <code><a href="choose_best_model.selcritlist.html">choose_best_model.selcritlist()</a></code>,
 <code><a href="create_external_forecast.html">create_external_forecast()</a></code>,
+<code><a href="folder_steps.html">folder_steps</a></code>,
+<code><a href="map_draws.html">map_draws()</a></code>,
+<code><a href="map_models.html">map_models()</a></code>,
+<code><a href="open_model.html">open_model()</a></code>,
+<code><a href="open_models.html">open_models()</a></code>,
 <code><a href="plot_forecast_errors_by_period.html">plot_forecast_errors_by_period()</a></code>,
 <code><a href="selection_criteria.bvarmodel.html">selection_criteria.bvarmodel()</a></code>,
-<code><a href="selection_criteria.bvecmodel.html">selection_criteria.bvecmodel()</a></code></p></div>
+<code><a href="selection_criteria.bvecmodel.html">selection_criteria.bvecmodel()</a></code>,
+<code><a href="selection_criteria.default.html">selection_criteria.default()</a></code></p></div>
     </div>
 
     <div class="section level2">
@@ -140,23 +150,23 @@ described in <code><a href="selection_criteria.bvarmodel.html">selection_criteri
 <span class="r-out co"><span class="r-pr">#&gt;</span> Mean absolute forecast errors (MAFE)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Variable h Model 1 Model 2 Model 3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    invest 1   4.103   3.699  5.1893</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    income 1   1.618   1.395  1.3465</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      cons 1   1.438   1.494  0.9281</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    invest 2   3.447   6.021  4.4958</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    income 2   1.337   1.448  1.1919</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      cons 2   1.230   1.038  0.7287</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    invest 1   2.288   4.254   4.069</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    income 1   1.868   1.648   1.629</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      cons 1   1.619   1.141   1.072</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    invest 2   3.986   4.959   4.911</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    income 2   1.346   1.173   1.471</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      cons 2   1.147   1.309   1.013</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Root mean squared forecast errors (RMSFE)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Variable h Model 1 Model 2 Model 3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    invest 1   4.988   4.512  6.1921</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    income 1   1.901   1.760  1.6416</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      cons 1   1.701   1.722  1.2042</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    invest 2   4.121   7.015  5.3257</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    income 2   1.892   1.843  1.4546</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      cons 2   1.536   1.405  0.9832</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    invest 1   2.836   5.074   4.871</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    income 1   2.156   2.019   1.952</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      cons 1   1.889   1.404   1.346</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    invest 2   4.713   5.727   6.295</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    income 2   1.593   1.390   1.742</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      cons 2   1.307   1.620   1.169</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

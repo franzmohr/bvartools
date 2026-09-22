@@ -9,7 +9,7 @@ object of class 'bvarmodel'."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -111,7 +111,9 @@ the indices. Defaults to <code>FALSE</code>, so that the credible intervals are 
 <dt id="arg-period">period<a class="anchor" aria-label="anchor" href="#arg-period"></a></dt>
 <dd><p>integer. Index of the period, for which the measures should be generated.
 Only used for TVP or SV models. Default is <code>NULL</code>, so that the posterior draws of
-the last time period are used.</p></dd>
+the last time period are used. With <code>type = "sign"</code> the default is the period the
+restrictions were imposed in, and another period is refused, since the rotations do not
+identify it.</p></dd>
 
 
 <dt id="arg-impact">impact<a class="anchor" aria-label="anchor" href="#arg-impact"></a></dt>
@@ -228,6 +230,9 @@ linear multivariate models. <em>Economics Letters, 58</em>, 17–29.
 <code><a href="fevd.bvecmodel.html">fevd.bvecmodel()</a></code>,
 <code><a href="irf.bvarmodel.html">irf.bvarmodel()</a></code>,
 <code><a href="irf.bvecmodel.html">irf.bvecmodel()</a></code>,
+<code><a href="multipliers.html">multipliers()</a></code>,
+<code><a href="multipliers.bvarmodel.html">multipliers.bvarmodel()</a></code>,
+<code><a href="multipliers.bvecmodel.html">multipliers.bvecmodel()</a></code>,
 <code><a href="predict.bvarmodel.html">predict.bvarmodel()</a></code>,
 <code><a href="spillover.bvecmodel.html">spillover.bvecmodel()</a></code>,
 <code><a href="vec_to_var.bvecmodel.html">vec_to_var.bvecmodel()</a></code></p></div>
@@ -267,10 +272,10 @@ linear multivariate models. <em>Economics Letters, 58</em>, 17–29.
 <span class="r-out co"><span class="r-pr">#&gt;</span> Draws:         100 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>        invest income cons from</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> invest   82.2    6.6 11.2  5.9</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> income    8.3   66.6 25.1 11.1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> cons     11.7   29.4 58.9 13.7</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> to        6.7   12.0 12.1 30.7</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> invest   82.9    6.6 10.5  5.7</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> income    8.6   66.4 25.0 11.2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> cons     11.5   28.4 60.1 13.3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> to        6.7   11.7 11.8 30.2</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Rows are responses, columns are shocks. The corner is the total index.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Means only; see $total, $from, $to and $net for credible intervals.</span>

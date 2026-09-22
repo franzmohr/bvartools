@@ -9,7 +9,7 @@ and compared with the forecasts of Bayesian VAR and VEC models."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -132,7 +132,9 @@ are matched. For the methods of the estimation workflow an object of class
 <dt id="arg-n-ahead">n_ahead<a class="anchor" aria-label="anchor" href="#arg-n-ahead"></a></dt>
 <dd><p>the maximum forecast horizon that is considered. If <code>NULL</code>
 (default), the forecast horizon of the models in <code>object</code> is used, which
-requires that <code><a href="add_forecast_input.html">add_forecast_input</a></code> was already applied to them.</p></dd>
+requires that <code><a href="add_forecast_input.html">add_forecast_input</a></code> was already applied to them. For
+models whose forecasts were aggregated with <code><a href="aggregate_forecasts.html">aggregate_forecasts</a></code>
+it is a number of years.</p></dd>
 
 
 <dt id="arg-period">period<a class="anchor" aria-label="anchor" href="#arg-period"></a></dt>
@@ -208,6 +210,28 @@ specified in the arguments <code>period</code>, <code>origin</code>, <code>varia
 numerics, which follow the convention of <code><a href="https://rdrr.io/r/stats/time.html" class="external-link">time</a></code>, i.e. 2007.25
 for the second quarter of 2007. The periods, for which a forecast was made, are
 rounded to the frequency of the data of the models in <code>object</code>.</p>
+<p>Rounding places a forecast in the period of the data it falls into; it does
+not convert between frequencies. Forecasts made at a frequency other than that
+of the data are therefore refused: annual forecasts of a quarterly model,
+whose periods such as 2020 and 2021 would otherwise be read as the first
+quarters of those years and an annual growth rate scored as a quarterly one,
+or monthly forecasts of a quarterly model, of which three would fall into the
+same quarter. The frequency of the forecasts is read off the spacing of the
+periods within a publication and, where every publication forecasts a single
+period, off the position of the periods within the year.</p>
+<p>Annual forecasts are compared with models estimated on quarterly or monthly
+data by aggregating the forecasts of the models to annual figures with
+<code><a href="aggregate_forecasts.html">aggregate_forecasts</a></code> first and passing the result as argument
+<code>object</code>. The periods of the forecasts are then read as years, while
+publications are still matched to the training samples at the frequency of the
+data, and <code>data_lag</code> still counts periods of the data. Horizon 1 is the
+year of the first period after the training sample, so that a forecast for the
+year of its publication is a forecast of horizon 1 and one for the year after
+it of horizon 2, whichever quarter it was published in. The realised values,
+against which the forecasts are scored, are the annual figures of the data of
+the models, which the aggregated forecasts of the models are scored against,
+too, so that <code><a href="add_forecast_errors.html">add_forecast_errors</a></code> does not need argument
+<code>test_sample</code>.</p>
 <p>In contrast to a model, an external forecast does not have a training sample.
 Therefore, each publication is matched to the training sample, which ends closest
 before the publication of the forecast, so that a model and an external forecaster
@@ -242,11 +266,21 @@ of class 'modellist' and to apply the usual workflow to all elements of that lis
 <code><a href="add_forecast_errors.bvarmodel.html">add_forecast_errors.bvarmodel()</a></code>,
 <code><a href="add_forecast_errors.bvecmodel.html">add_forecast_errors.bvecmodel()</a></code>,
 <code><a href="add_predictive_loglik.html">add_predictive_loglik()</a></code>,
+<code><a href="add_predictive_loglik.bvarmodel.html">add_predictive_loglik.bvarmodel()</a></code>,
+<code><a href="add_predictive_loglik.bvecmodel.html">add_predictive_loglik.bvecmodel()</a></code>,
+<code><a href="aggregate_forecasts.html">aggregate_forecasts()</a></code>,
 <code><a href="align_model_obs.modellist.html">align_model_obs.modellist()</a></code>,
+<code><a href="analysis_of_stored_models.html">analysis_of_stored_models</a></code>,
 <code><a href="choose_best_model.selcritlist.html">choose_best_model.selcritlist()</a></code>,
+<code><a href="folder_steps.html">folder_steps</a></code>,
+<code><a href="map_draws.html">map_draws()</a></code>,
+<code><a href="map_models.html">map_models()</a></code>,
+<code><a href="open_model.html">open_model()</a></code>,
+<code><a href="open_models.html">open_models()</a></code>,
 <code><a href="plot_forecast_errors_by_period.html">plot_forecast_errors_by_period()</a></code>,
 <code><a href="selection_criteria.bvarmodel.html">selection_criteria.bvarmodel()</a></code>,
 <code><a href="selection_criteria.bvecmodel.html">selection_criteria.bvecmodel()</a></code>,
+<code><a href="selection_criteria.default.html">selection_criteria.default()</a></code>,
 <code><a href="selection_criteria.modellist.html">selection_criteria.modellist()</a></code></p></div>
     </div>
 

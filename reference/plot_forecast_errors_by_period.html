@@ -9,7 +9,7 @@ period, for which a forecast was made."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -88,7 +88,10 @@ period, for which a forecast was made.</p>
 <dt id="arg-criterion">criterion<a class="anchor" aria-label="anchor" href="#arg-criterion"></a></dt>
 <dd><p>the statistic that should be plotted. Available choices are
 <code>"FE"</code> for forecast errors, <code>"AFE"</code> (default) for absolute forecast
-errors and <code>"RSFE"</code> for root squared forecast errors.</p></dd>
+errors and <code>"RSFE"</code> for root squared forecast errors.
+The mean of <code>"RSFE"</code> is the root mean squared error; its median and band
+are those of <code>"AFE"</code> up to the interpolation between neighbouring draws,
+because the square root does not reorder them.</p></dd>
 
 
 <dt id="arg-ci">ci<a class="anchor" aria-label="anchor" href="#arg-ci"></a></dt>
@@ -126,6 +129,11 @@ band. Defaults to 0.95.</p></dd>
 
 </dl></div>
     <div class="section level2">
+    <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
+    <p><code>x</code>, invisibly. The function is called for its side effect, the
+plot.</p>
+    </div>
+    <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>Each row of the plot corresponds to an endogenous variable, each column
 to a forecast horizon and the x-axis to the period, for which a forecast was
@@ -148,11 +156,21 @@ error is obtained from the end of the training sample of the respective window.<
 <code><a href="add_forecast_errors.bvarmodel.html">add_forecast_errors.bvarmodel()</a></code>,
 <code><a href="add_forecast_errors.bvecmodel.html">add_forecast_errors.bvecmodel()</a></code>,
 <code><a href="add_predictive_loglik.html">add_predictive_loglik()</a></code>,
+<code><a href="add_predictive_loglik.bvarmodel.html">add_predictive_loglik.bvarmodel()</a></code>,
+<code><a href="add_predictive_loglik.bvecmodel.html">add_predictive_loglik.bvecmodel()</a></code>,
+<code><a href="aggregate_forecasts.html">aggregate_forecasts()</a></code>,
 <code><a href="align_model_obs.modellist.html">align_model_obs.modellist()</a></code>,
+<code><a href="analysis_of_stored_models.html">analysis_of_stored_models</a></code>,
 <code><a href="choose_best_model.selcritlist.html">choose_best_model.selcritlist()</a></code>,
 <code><a href="create_external_forecast.html">create_external_forecast()</a></code>,
+<code><a href="folder_steps.html">folder_steps</a></code>,
+<code><a href="map_draws.html">map_draws()</a></code>,
+<code><a href="map_models.html">map_models()</a></code>,
+<code><a href="open_model.html">open_model()</a></code>,
+<code><a href="open_models.html">open_models()</a></code>,
 <code><a href="selection_criteria.bvarmodel.html">selection_criteria.bvarmodel()</a></code>,
 <code><a href="selection_criteria.bvecmodel.html">selection_criteria.bvecmodel()</a></code>,
+<code><a href="selection_criteria.default.html">selection_criteria.default()</a></code>,
 <code><a href="selection_criteria.modellist.html">selection_criteria.modellist()</a></code></p></div>
     </div>
 

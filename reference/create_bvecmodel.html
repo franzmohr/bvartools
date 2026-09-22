@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -72,6 +72,8 @@
 <span>  tvp <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  varsel <span class="op">=</span> <span class="st">"none"</span>,</span>
 <span>  algorithm <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  delta_beta <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  delta_sigma <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  iterations <span class="op">=</span> <span class="fl">20000</span>,</span>
 <span>  burnin <span class="op">=</span> <span class="fl">2000</span>,</span>
 <span>  thin <span class="op">=</span> <span class="fl">1</span></span>
@@ -154,14 +156,22 @@ that should be employed. Default is <code>"none"</code>. See 'Details'.</p></dd>
 non-standard options.</p></dd>
 
 
+<dt id="arg-delta-beta-delta-sigma">delta_beta, delta_sigma<a class="anchor" aria-label="anchor" href="#arg-delta-beta-delta-sigma"></a></dt>
+<dd><p>numeric discount factors in \((0, 1]\) of the
+discounted model, the first governing the coefficients and the second the
+error covariance. Both default to 1, at which the quantity they govern does
+not move. Ignored unless <code>algorithm = "discount"</code>, and a vector in
+either produces one model per value. See 'Details'.</p></dd>
+
+
 <dt id="arg-iterations">iterations<a class="anchor" aria-label="anchor" href="#arg-iterations"></a></dt>
 <dd><p>an integer of MCMC draws excluding burn-in draws (defaults
-to 50000).</p></dd>
+to 20000).</p></dd>
 
 
 <dt id="arg-burnin">burnin<a class="anchor" aria-label="anchor" href="#arg-burnin"></a></dt>
 <dd><p>an integer of MCMC draws used to initialize the sampler
-(defaults to 5000). These draws do not enter the computation of posterior
+(defaults to 2000). These draws do not enter the computation of posterior
 moments, forecasts etc.</p></dd>
 
 
@@ -184,7 +194,7 @@ or <code>r</code>, a list of class 'modellist' with one such object per specific
   \(T \times K\) time-series object of the differenced endogenous variables,
   <code>w</code>, the lagged levels that enter the cointegration term, <code>x</code>, the
   remaining regressors, and <code>z</code>, the corresponding \(TK\) row matrix of
-  regressors in SUR form.</p></dd>
+  regressors in SUR form, which is absent for the discounted model.</p></dd>
 
   <dt><code>model</code></dt>
 <dd><p>a list of the specification with the same elements as that of
@@ -233,7 +243,37 @@ algorithm. Covariances are estimated based on a triangular decomposition.</p></l
 <li><p><code>"bvs"</code>: Bayesian variable selection as proposed in Korobilis (2013).</p></li>
 <li><p><code>"ssvs"</code>: Stochastic search variable selection as proposed in George et al. (2008).</p></li>
 </ul><p>Available specifications for argument <code>algorithm</code> are:</p><ul><li><p><code>"KLGS2010"</code>: Algorithm proposed in Koop, León-González &amp; Strachan (2010).</p></li>
-</ul></div>
+<li><p><code>"discount"</code>: The discounted time varying parameter model of
+ West &amp; Harrison (1997, ch. 16) with the discounted Wishart of Uhlig (1997),
+ estimated by <code>VecTvpDiscount</code>.</p></li>
+</ul><p>The discounted model is not a sampler. Its posterior is closed form – one
+pass over the sample, no chain – so <code>burnin</code> must be 0 and <code>thin</code>
+1, and <code>iterations</code> says only how many i.i.d. draws a forecast takes
+from the answer. Its error covariance is the inverse Wishart whole, so
+<code>error</code> must be <code>"wishart"</code> and neither variable selection nor a
+structural model is available. What it buys is speed and an exact marginal
+likelihood: the sum of <code>/posterior/loglik</code> is the log marginal
+likelihood of the sample given the rank, the cointegration matrix and the two
+discounts, so a grid over any of them can be compared without a chain being
+run for any of it.</p>
+<p>The one assumption that separates it from the sampling VEC models is that the
+cointegration space is given rather than estimated. <code><a href="add_initial_values.html">add_initial_values</a></code>
+puts Johansen's maximum likelihood estimate at <code>/initial/beta</code> and the
+model conditions on it, so what drifts is the adjustment to the long-run
+relations and not the relations themselves. That is a different question from
+the one <code>"KLGS2010"</code> answers, not a cheaper way of answering the same
+one.</p>
+<p><code><a href="add_posterior_coefficients.html">add_posterior_coefficients</a></code> estimates it like any other
+algorithm, the filter being part of the vendored BayesTS core. It consumes no
+random numbers, so two runs agree to the bit and a model estimated here and
+the same model estimated by the <code>bayests</code> command line over a file
+written with <code><a href="write_to_hdf5.html">write_to_hdf5</a></code> give the same numbers rather than
+merely the same distribution. What comes back is a posterior rather than a
+chain: one row per period under <code>posterior$a$mean</code>,
+<code>posterior$a$cov</code>, <code>posterior$u_sigma$scale</code> and
+<code>posterior$df</code>, and no <code>coeffs</code> anywhere, because joining one
+draw per period would look like a sampled path and is not one.</p>
+    </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
     <p>George, E. I., Sun, D., &amp; Ni, S. (2008). Bayesian stochastic search for VAR model
@@ -246,10 +286,15 @@ simulation for cointegrated models with priors on the cointegration space.
 <p>Korobilis, D. (2013). VAR forecasting using Bayesian variable selection.
 <em>Journal of Applied Econometrics, 28</em>(2), 204–230. <a href="https://doi.org/10.1002/jae.1271" class="external-link">doi:10.1002/jae.1271</a></p>
 <p>Lütkepohl, H. (2006). <em>New introduction to multiple time series analysis</em> (2nd ed.). Berlin: Springer.</p>
+<p>Uhlig, H. (1997). Bayesian vector autoregressions with stochastic volatility.
+<em>Econometrica, 65</em>(1), 59–73. <a href="https://doi.org/10.2307/2171813" class="external-link">doi:10.2307/2171813</a></p>
+<p>West, M., &amp; Harrison, J. (1997). <em>Bayesian forecasting and dynamic models</em>
+(2nd ed.). New York: Springer.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p>Other model set-up:
+    <div class="dont-index"><p><code><a href="bvartools_model.html">bvartools_model</a></code> describes the object this returns, element by element.</p>
+<p>Other model set-up:
 <code><a href="add_initial_values.bvarmodel.html">add_initial_values.bvarmodel()</a></code>,
 <code><a href="add_initial_values.bvecmodel.html">add_initial_values.bvecmodel()</a></code>,
 <code><a href="add_priors.bvarmodel.html">add_priors.bvarmodel()</a></code>,

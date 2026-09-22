@@ -47,7 +47,11 @@ A list with elements `h`, the forecast horizon, and `x`, the
 out-of-sample regressors: `h` rows, one per period, by one column per
 regressor. That is the compact layout, the same one a coefficient matrix
 is `k` by; the SUR layout this used to return spread every regressor
-over `k` columns and was `k^2` the size for no extra content.
+over `k` columns and was `k^2` the size for no extra content. The lags
+of the endogenous variables that the estimation sample does not reach
+are the forecasts of earlier periods, which the forecast fills in as it
+goes; they are zero here, since the samplers refuse a missing value
+anywhere in `x`.
 
 ## Details
 

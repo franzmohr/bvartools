@@ -38,7 +38,7 @@ add_posterior_forecasts(object, forecast_states = NULL, ...)
 
 ## Value
 
-The object in `object` with `posterior$forecast` added, a
+The object in `object` with `posterior$forecast$forecasts` added, a
 [`mcmc`](https://rdrr.io/pkg/coda/man/mcmc.html) object with one row per
 draw and \\Kh\\ columns of forecasts of the levels, stacked by period.
 `predict` summarises them. A `forecast_states` that was given is stored
@@ -55,6 +55,29 @@ gives. For a model with time varying coefficients they are not: its VAR
 representation has no state equation of its own and holds its
 coefficients at the last period, while this method steps the states of
 the VEC model and converts them to levels anew in every forecast period.
+
+Simulating the cointegration vectors forward depends on the units of the
+data. A step \\\eta_t\\ of their state equation moves the error
+correction term by \\\eta_t^{\prime} w_t\\, which for series far from
+zero – log levels times 100, say – is of the order of their levels
+rather than of their variation: the random walk intercept described in
+section 'Prior on the cointegration space' of
+[`cointspace_prior`](https://franzmohr.github.io/bvartools/reference/cointspace_prior.md),
+carried forward with nothing in the data to restrain it. The forecast is
+then mostly that drift, and its intervals widen accordingly. A warning
+names the series in the error correction term that are more than 50
+times their standard deviation per period away from zero at the end of
+the sample; `forecast_states = "hold"` is the alternative. Series near
+zero, such as interest rates and inflation in percent, do not draw it.
+
+A time varying model estimated on series that
+[`scale_error_correction`](https://franzmohr.github.io/bvartools/reference/scale_error_correction.md)
+centred or scaled cannot be simulated forward and stops with an error
+unless `forecast_states = "hold"`: the state equation of its
+cointegration vectors belongs to the transformed series, while
+[`rescale_error_correction`](https://franzmohr.github.io/bvartools/reference/rescale_error_correction.md)
+has put the vectors back on the scale of the data and moved the means
+into the constant of the last sample period only.
 
 Simulating the volatility forward needs `posterior$u_sigma_inv$sigma`,
 the variance of the log-volatility innovations, which
@@ -74,7 +97,9 @@ Other posterior simulation:
 [`add_posterior_loglik.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/add_posterior_loglik.bvarmodel.md),
 [`add_posterior_loglik.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/add_posterior_loglik.bvecmodel.md),
 [`add_seed()`](https://franzmohr.github.io/bvartools/reference/add_seed.md),
+[`bayests_files()`](https://franzmohr.github.io/bvartools/reference/bayests_files.md),
 [`bayests_posterior()`](https://franzmohr.github.io/bvartools/reference/bayests_posterior.md),
 [`bvar()`](https://franzmohr.github.io/bvartools/reference/bvar.md),
 [`bvec()`](https://franzmohr.github.io/bvartools/reference/bvec.md),
+[`chain_diagnostics()`](https://franzmohr.github.io/bvartools/reference/chain_diagnostics.md),
 [`predict.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/predict.bvecmodel.md)

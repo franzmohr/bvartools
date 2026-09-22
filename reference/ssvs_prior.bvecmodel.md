@@ -42,7 +42,11 @@ ssvs_prior(object, tau = c(0.05, 10), semiautomatic = NULL, ...)
 ## Value
 
 A list containing the vectors of prior standard deviations for
-restricted and unrestricted variables, respectively.
+restricted and unrestricted variables, respectively. The first \\K r\\
+elements, those of the loadings, are one: the loadings are not selected
+over, and their prior is the one the cointegration space prior implies,
+which the samplers form themselves every draw, so these entries are
+placeholders that are never read.
 
 ## References
 

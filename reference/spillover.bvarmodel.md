@@ -56,7 +56,10 @@ spillover(
 
   integer. Index of the period, for which the measures should be
   generated. Only used for TVP or SV models. Default is `NULL`, so that
-  the posterior draws of the last time period are used.
+  the posterior draws of the last time period are used. With
+  `type = "sign"` the default is the period the restrictions were
+  imposed in, and another period is refused, since the rotations do not
+  identify it.
 
 - impact:
 
@@ -191,6 +194,9 @@ Other post-estimation analysis:
 [`fevd.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/fevd.bvecmodel.md),
 [`irf.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/irf.bvarmodel.md),
 [`irf.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/irf.bvecmodel.md),
+[`multipliers()`](https://franzmohr.github.io/bvartools/reference/multipliers.md),
+[`multipliers.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/multipliers.bvarmodel.md),
+[`multipliers.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/multipliers.bvecmodel.md),
 [`predict.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/predict.bvarmodel.md),
 [`spillover.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/spillover.bvecmodel.md),
 [`vec_to_var.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/vec_to_var.bvecmodel.md)
@@ -230,10 +236,10 @@ sp
 #> Draws:         100 
 #> 
 #>        invest income cons from
-#> invest   82.2    6.6 11.2  5.9
-#> income    8.3   66.6 25.1 11.1
-#> cons     11.7   29.4 58.9 13.7
-#> to        6.7   12.0 12.1 30.7
+#> invest   82.9    6.6 10.5  5.7
+#> income    8.6   66.4 25.0 11.2
+#> cons     11.5   28.4 60.1 13.3
+#> to        6.7   11.7 11.8 30.2
 #> 
 #> Rows are responses, columns are shocks. The corner is the total index.
 #> Means only; see $total, $from, $to and $net for credible intervals.

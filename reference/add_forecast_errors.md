@@ -6,7 +6,7 @@ model object.
 ## Usage
 
 ``` r
-add_forecast_errors(object, test_sample, ...)
+add_forecast_errors(object, test_sample = NULL, ...)
 ```
 
 ## Arguments
@@ -17,7 +17,10 @@ add_forecast_errors(object, test_sample, ...)
 
 - test_sample:
 
-  a time-series object used as test data.
+  a time-series object used as test data. If `NULL` (default), the
+  values in `data$test$y` of the object are used, which is what a model
+  carries after it has been scored once and what a model read from a
+  file was written with.
 
 - ...:
 

@@ -25,6 +25,11 @@ write_to_hdf5(object, folder, ...)
 
   further arguments passed to or from other methods.
 
+## Value
+
+The paths of the written files, invisibly, one per model and, for a
+member that is itself a collection, one per model in it.
+
 ## Examples
 
 ``` r

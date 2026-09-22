@@ -11,7 +11,7 @@ the log predictive likelihood."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -137,6 +137,20 @@ VEC model must have been simulated on error correction terms that are neither
 scaled nor centred, or put back with
 <code><a href="rescale_error_correction.html">rescale_error_correction</a></code> first, and structural models are not
 supported.</p>
+<p>The expression is the normal density of the observation, so the function is
+available for the algorithms whose observation is normal given the parameters
+of a draw, and refuses the others. The asymmetric Laplace algorithms of
+quantile estimation, <code>"VarNormalAld"</code> and <code>"VarTvpAld"</code>, are
+refused: the precision their samplers store is the one of the normal that
+their scale mixture conditions on period by period, not the density of an
+observation, whose mixing variable would have to be integrated out.</p>
+<p>The methods for a single fitted model, <code><a href="add_predictive_loglik.bvarmodel.html">add_predictive_loglik.bvarmodel</a></code>
+and <code><a href="add_predictive_loglik.bvecmodel.html">add_predictive_loglik.bvecmodel</a></code>, score a forecast against
+the observations its horizon realised instead. That is the same statistic over
+a different set of periods – one step ahead densities, each conditioning on
+the realised history before it – and it is BayesTS that computes it rather
+than the R code here. It is stored in <code>posterior$forecast$loglik</code>, beside
+the forecasts it scores, rather than in <code>predictive</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
@@ -149,15 +163,28 @@ a time varying cointegration model. <em>Journal of Econometrics, 165</em>(2), 21
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p>Other model comparison:
+    <div class="dont-index"><p>Methods for a single fitted model:
+<code><a href="add_predictive_loglik.bvarmodel.html">add_predictive_loglik.bvarmodel</a></code>,
+<code><a href="add_predictive_loglik.bvecmodel.html">add_predictive_loglik.bvecmodel</a></code>.</p>
+<p>Other model comparison:
 <code><a href="add_forecast_errors.bvarmodel.html">add_forecast_errors.bvarmodel()</a></code>,
 <code><a href="add_forecast_errors.bvecmodel.html">add_forecast_errors.bvecmodel()</a></code>,
+<code><a href="add_predictive_loglik.bvarmodel.html">add_predictive_loglik.bvarmodel()</a></code>,
+<code><a href="add_predictive_loglik.bvecmodel.html">add_predictive_loglik.bvecmodel()</a></code>,
+<code><a href="aggregate_forecasts.html">aggregate_forecasts()</a></code>,
 <code><a href="align_model_obs.modellist.html">align_model_obs.modellist()</a></code>,
+<code><a href="analysis_of_stored_models.html">analysis_of_stored_models</a></code>,
 <code><a href="choose_best_model.selcritlist.html">choose_best_model.selcritlist()</a></code>,
 <code><a href="create_external_forecast.html">create_external_forecast()</a></code>,
+<code><a href="folder_steps.html">folder_steps</a></code>,
+<code><a href="map_draws.html">map_draws()</a></code>,
+<code><a href="map_models.html">map_models()</a></code>,
+<code><a href="open_model.html">open_model()</a></code>,
+<code><a href="open_models.html">open_models()</a></code>,
 <code><a href="plot_forecast_errors_by_period.html">plot_forecast_errors_by_period()</a></code>,
 <code><a href="selection_criteria.bvarmodel.html">selection_criteria.bvarmodel()</a></code>,
 <code><a href="selection_criteria.bvecmodel.html">selection_criteria.bvecmodel()</a></code>,
+<code><a href="selection_criteria.default.html">selection_criteria.default()</a></code>,
 <code><a href="selection_criteria.modellist.html">selection_criteria.modellist()</a></code></p></div>
     </div>
 

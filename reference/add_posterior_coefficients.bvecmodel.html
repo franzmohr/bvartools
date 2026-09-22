@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -59,7 +59,12 @@
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="co"># S3 method for class 'bvecmodel'</span></span>
-<span><span class="fu"><a href="add_posterior_coefficients.html">add_posterior_coefficients</a></span><span class="op">(</span><span class="va">object</span>, posterior_function <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="add_posterior_coefficients.html">add_posterior_coefficients</a></span><span class="op">(</span></span>
+<span>  <span class="va">object</span>,</span>
+<span>  posterior_function <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  chains <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -75,6 +80,17 @@ call to <code><a href="create_bvecmodel.html">create_bvecmodel</a></code> in com
 <dt id="arg-posterior-function">posterior_function<a class="anchor" aria-label="anchor" href="#arg-posterior-function"></a></dt>
 <dd><p>the function to be applied to the model in argument <code>object</code>.
 If <code>NULL</code> (default), internal functions are used.</p></dd>
+
+
+<dt id="arg-chains">chains<a class="anchor" aria-label="anchor" href="#arg-chains"></a></dt>
+<dd><p>the number of chains to simulate. If <code>NULL</code> (default), the value in
+<code>object$model$chains</code> is used, and one chain when there is none. Each chain is the
+same simulation with a seed of its own – the first with the seed of the model, so that one
+chain draws what it always has – and the chains are pooled, one after the other, in the
+draws of <code>posterior</code>, so that every later step uses all of them. Their number, when
+above one, is stored in <code>object$model$chains</code>, and <code><a href="chain_diagnostics.html">chain_diagnostics</a></code> compares them. A
+<code>posterior_function</code> is called once per chain. Not available for discounted models,
+whose posterior is not a chain.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -136,7 +152,8 @@ simulation for cointegrated models with priors on the cointegration space.
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p>Other posterior simulation:
+    <div class="dont-index"><p><code><a href="bvartools_model.html">bvartools_model</a></code> describes the object this returns, element by element.</p>
+<p>Other posterior simulation:
 <code><a href="add_forecast_input.bvarmodel.html">add_forecast_input.bvarmodel()</a></code>,
 <code><a href="add_forecast_input.bvecmodel.html">add_forecast_input.bvecmodel()</a></code>,
 <code><a href="add_posterior_coefficients.bvarmodel.html">add_posterior_coefficients.bvarmodel()</a></code>,
@@ -145,9 +162,11 @@ simulation for cointegrated models with priors on the cointegration space.
 <code><a href="add_posterior_loglik.bvarmodel.html">add_posterior_loglik.bvarmodel()</a></code>,
 <code><a href="add_posterior_loglik.bvecmodel.html">add_posterior_loglik.bvecmodel()</a></code>,
 <code><a href="add_seed.html">add_seed()</a></code>,
+<code><a href="bayests_files.html">bayests_files()</a></code>,
 <code><a href="bayests_posterior.html">bayests_posterior()</a></code>,
 <code><a href="bvar.html">bvar()</a></code>,
 <code><a href="bvec.html">bvec()</a></code>,
+<code><a href="chain_diagnostics.html">chain_diagnostics()</a></code>,
 <code><a href="predict.bvecmodel.html">predict.bvecmodel()</a></code></p></div>
     </div>
 

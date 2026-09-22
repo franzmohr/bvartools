@@ -2,7 +2,7 @@
 
 ## Authors
 
-- **Franz X. Mohr**. Author, maintainer.
+- **Franz X. Mohr**. Author, maintainer, copyright holder.
   [](https://orcid.org/0009-0003-8890-7781)
 
 ## Citation
@@ -11,14 +11,14 @@ Source:
 [`inst/CITATION`](https://github.com/franzmohr/bvartools/blob/main/inst/CITATION)
 
 Franz X. Mohr (2026). bvartools: Bayesian Inference of Vector
-Autoregressive and Error Correction Models. R package version
-0.3.0.9000. doi:10.5281/zenodo.22736604
+Autoregressive and Error Correction Models. R package version 1.0.0.
+doi:10.5281/zenodo.22736604
 
     @Manual{,
       title = {{bvartools}: Bayesian Inference of Vector Autoregressive and Error Correction Models},
       author = {Franz X. Mohr},
       year = {2026},
-      note = {R package version 0.3.0.9000},
+      note = {R package version 1.0.0},
       url = {https://CRAN.R-project.org/package=bvartools},
       doi = {10.5281/zenodo.22736604},
     }
@@ -113,12 +113,12 @@ inference and comparison with ARCH models Review of Economic Studies
     }
 
 Y. Omori, S. Chib, N. Shephard, & J. Nakajima (2007). Stochastic
-volatiltiy with leverage. Fast and efficient likelihood inference
+volatility with leverage. Fast and efficient likelihood inference
 Journal of Econometrics 140(2), 425-449.
 doi:10.1016/j.jeconom.2006.07.008
 
     @Article{,
-      title = {Stochastic volatiltiy with leverage. Fast and efficient likelihood inference},
+      title = {Stochastic volatility with leverage. Fast and efficient likelihood inference},
       author = {Y. Omori and S. Chib and N. Shephard and J. Nakajima},
       year = {2007},
       journal = {Journal of Econometrics},

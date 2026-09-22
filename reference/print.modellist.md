@@ -22,3 +22,10 @@ print(x, digits = max(3L, getOption("digits") - 3L), ...)
 - ...:
 
   further arguments passed to or from other methods.
+
+## Value
+
+A data frame with one row per model, as printed, invisibly: the
+specifications of
+[`get_model_specifications`](https://franzmohr.github.io/bvartools/reference/get_model_specifications.md),
+without the columns in which every model agrees.

@@ -2,10 +2,15 @@
 
 ## Model set-up
 
+- [`bvartools_model`](https://franzmohr.github.io/bvartools/reference/bvartools_model.md)
+  : The Structure of a Model Object
 - [`create_bvarmodel()`](https://franzmohr.github.io/bvartools/reference/create_bvarmodel.md)
   : Create a Vector Autoregressive Model
 - [`create_bvecmodel()`](https://franzmohr.github.io/bvartools/reference/create_bvecmodel.md)
   : Create Vector Error Correction Models
+- [`is_discount_model()`](https://franzmohr.github.io/bvartools/reference/discount_models.md)
+  [`check_discount_specification()`](https://franzmohr.github.io/bvartools/reference/discount_models.md)
+  : The Discounted Models
 - [`use_expanding_window()`](https://franzmohr.github.io/bvartools/reference/use_expanding_window.md)
   : Expanding Window Estimation
 - [`use_expanding_window(`*`<bvarmodel>`*`)`](https://franzmohr.github.io/bvartools/reference/use_expanding_window.bvarmodel.md)
@@ -59,6 +64,14 @@
   [`thin(`*`<externalforecast>`*`)`](https://franzmohr.github.io/bvartools/reference/create_external_forecast.md)
   [`print(`*`<externalforecast>`*`)`](https://franzmohr.github.io/bvartools/reference/create_external_forecast.md)
   : Objects for Externally Produced Forecasts
+- [`add_priors(`*`<bvarfolder>`*`)`](https://franzmohr.github.io/bvartools/reference/folder_steps.md)
+  [`add_initial_values(`*`<bvarfolder>`*`)`](https://franzmohr.github.io/bvartools/reference/folder_steps.md)
+  [`add_seed(`*`<bvarfolder>`*`)`](https://franzmohr.github.io/bvartools/reference/folder_steps.md)
+  [`add_posterior_coefficients(`*`<bvarfolder>`*`)`](https://franzmohr.github.io/bvartools/reference/folder_steps.md)
+  [`add_posterior_loglik(`*`<bvarfolder>`*`)`](https://franzmohr.github.io/bvartools/reference/folder_steps.md)
+  [`thin(`*`<bvarfolder>`*`)`](https://franzmohr.github.io/bvartools/reference/folder_steps.md)
+  [`selection_criteria(`*`<bvarfolder>`*`)`](https://franzmohr.github.io/bvartools/reference/folder_steps.md)
+  : Estimation Steps on a Folder of Models
 - [`minnesota_prior()`](https://franzmohr.github.io/bvartools/reference/minnesota_prior.md)
   : Minnesota Prior
 - [`minnesota_prior(`*`<bvarmodel>`*`)`](https://franzmohr.github.io/bvartools/reference/minnesota_prior.bvarmodel.md)
@@ -80,7 +93,7 @@
 - [`inclusion_prior(`*`<bvecmodel>`*`)`](https://franzmohr.github.io/bvartools/reference/inclusion_prior.bvecmodel.md)
   : Prior Inclusion Probabilities
 - [`cointspace_prior()`](https://franzmohr.github.io/bvartools/reference/cointspace_prior.md)
-  : Prior on the Cointegration Space
+  : Build the Prior on the Cointegration Space
 - [`add_sign_restrictions()`](https://franzmohr.github.io/bvartools/reference/add_sign_restrictions.md)
   : Sign Restrictions
 - [`add_sign_restrictions(`*`<bvarmodel>`*`)`](https://franzmohr.github.io/bvartools/reference/add_sign_restrictions.bvarmodel.md)
@@ -116,6 +129,14 @@
   [`thin(`*`<externalforecast>`*`)`](https://franzmohr.github.io/bvartools/reference/create_external_forecast.md)
   [`print(`*`<externalforecast>`*`)`](https://franzmohr.github.io/bvartools/reference/create_external_forecast.md)
   : Objects for Externally Produced Forecasts
+- [`add_priors(`*`<bvarfolder>`*`)`](https://franzmohr.github.io/bvartools/reference/folder_steps.md)
+  [`add_initial_values(`*`<bvarfolder>`*`)`](https://franzmohr.github.io/bvartools/reference/folder_steps.md)
+  [`add_seed(`*`<bvarfolder>`*`)`](https://franzmohr.github.io/bvartools/reference/folder_steps.md)
+  [`add_posterior_coefficients(`*`<bvarfolder>`*`)`](https://franzmohr.github.io/bvartools/reference/folder_steps.md)
+  [`add_posterior_loglik(`*`<bvarfolder>`*`)`](https://franzmohr.github.io/bvartools/reference/folder_steps.md)
+  [`thin(`*`<bvarfolder>`*`)`](https://franzmohr.github.io/bvartools/reference/folder_steps.md)
+  [`selection_criteria(`*`<bvarfolder>`*`)`](https://franzmohr.github.io/bvartools/reference/folder_steps.md)
+  : Estimation Steps on a Folder of Models
 - [`add_posterior_coefficients()`](https://franzmohr.github.io/bvartools/reference/add_posterior_coefficients.md)
   : Posterior Simulation of Model Coefficients
 - [`add_posterior_coefficients(`*`<bvarmodel>`*`)`](https://franzmohr.github.io/bvartools/reference/add_posterior_coefficients.bvarmodel.md)
@@ -136,8 +157,12 @@
   : Add Log-Likelihood
 - [`add_posterior_loglik(`*`<modellist>`*`)`](https://franzmohr.github.io/bvartools/reference/add_posterior_loglik.modellist.md)
   : Add Log-Likelihood
+- [`chain_diagnostics()`](https://franzmohr.github.io/bvartools/reference/chain_diagnostics.md)
+  : Convergence Diagnostics of Several Chains
 - [`bayests_posterior()`](https://franzmohr.github.io/bvartools/reference/bayests_posterior.md)
   : Posterior Simulation with the BayesTS Executable
+- [`bayests_files()`](https://franzmohr.github.io/bvartools/reference/bayests_files.md)
+  : Run BayesTS on Stored Models
 - [`thin(`*`<bvarmodel>`*`)`](https://franzmohr.github.io/bvartools/reference/thin.bvarmodel.md)
   : Thinning Posterior Draws
 - [`thin(`*`<bvecmodel>`*`)`](https://franzmohr.github.io/bvartools/reference/thin.bvecmodel.md)
@@ -209,10 +234,24 @@
   : Add Forecast Errors
 - [`add_predictive_loglik()`](https://franzmohr.github.io/bvartools/reference/add_predictive_loglik.md)
   : Add Predictive Log-Likelihood
+- [`add_predictive_loglik(`*`<bvarmodel>`*`)`](https://franzmohr.github.io/bvartools/reference/add_predictive_loglik.bvarmodel.md)
+  : Add the Log Predictive Density of a Forecast
+- [`add_predictive_loglik(`*`<bvecmodel>`*`)`](https://franzmohr.github.io/bvartools/reference/add_predictive_loglik.bvecmodel.md)
+  : Add the Log Predictive Density of a Forecast
 - [`get_forecast_errors()`](https://franzmohr.github.io/bvartools/reference/get_forecast_errors.md)
   : Get Forecast Errors
 - [`plot_forecast_errors_by_period()`](https://franzmohr.github.io/bvartools/reference/plot_forecast_errors_by_period.md)
   : Plotting Forecast Errors per Period
+- [`aggregate_forecasts()`](https://franzmohr.github.io/bvartools/reference/aggregate_forecasts.md)
+  : Aggregate Forecasts to Annual Figures
+- [`add_priors(`*`<bvarfolder>`*`)`](https://franzmohr.github.io/bvartools/reference/folder_steps.md)
+  [`add_initial_values(`*`<bvarfolder>`*`)`](https://franzmohr.github.io/bvartools/reference/folder_steps.md)
+  [`add_seed(`*`<bvarfolder>`*`)`](https://franzmohr.github.io/bvartools/reference/folder_steps.md)
+  [`add_posterior_coefficients(`*`<bvarfolder>`*`)`](https://franzmohr.github.io/bvartools/reference/folder_steps.md)
+  [`add_posterior_loglik(`*`<bvarfolder>`*`)`](https://franzmohr.github.io/bvartools/reference/folder_steps.md)
+  [`thin(`*`<bvarfolder>`*`)`](https://franzmohr.github.io/bvartools/reference/folder_steps.md)
+  [`selection_criteria(`*`<bvarfolder>`*`)`](https://franzmohr.github.io/bvartools/reference/folder_steps.md)
+  : Estimation Steps on a Folder of Models
 - [`selection_criteria()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.md)
   [`print(`*`<selcrit>`*`)`](https://franzmohr.github.io/bvartools/reference/selection_criteria.md)
   [`print(`*`<selcritlist>`*`)`](https://franzmohr.github.io/bvartools/reference/selection_criteria.md)
@@ -221,12 +260,19 @@
   : Model Selection Criteria
 - [`selection_criteria(`*`<bvecmodel>`*`)`](https://franzmohr.github.io/bvartools/reference/selection_criteria.bvecmodel.md)
   : Model Selection Criteria
+- [`selection_criteria(`*`<default>`*`)`](https://franzmohr.github.io/bvartools/reference/selection_criteria.default.md)
+  : Selection Criteria
 - [`selection_criteria(`*`<expandingwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/selection_criteria.expandingwindow.md)
   : Model Selection Criteria
 - [`selection_criteria(`*`<externalforecast>`*`)`](https://franzmohr.github.io/bvartools/reference/selection_criteria.externalforecast.md)
   : Model Selection Criteria
 - [`selection_criteria(`*`<modellist>`*`)`](https://franzmohr.github.io/bvartools/reference/selection_criteria.modellist.md)
   : Model Selection Criteria
+- [`time_variation_test()`](https://franzmohr.github.io/bvartools/reference/time_variation_test.md)
+  : Test for Time Variation
+- [`time_variation_test(`*`<bvarmodel>`*`)`](https://franzmohr.github.io/bvartools/reference/time_variation_test.bvarmodel.md)
+  [`time_variation_test(`*`<bvecmodel>`*`)`](https://franzmohr.github.io/bvartools/reference/time_variation_test.bvarmodel.md)
+  : Test for Time Variation in a VAR or VEC Model
 - [`choose_best_model()`](https://franzmohr.github.io/bvartools/reference/choose_best_model.md)
   : Choose Best Model
 - [`choose_best_model(`*`<selcritlist>`*`)`](https://franzmohr.github.io/bvartools/reference/choose_best_model.selcritlist.md)
@@ -236,6 +282,9 @@
 
 ## Structural analysis
 
+- [`irf(`*`<bvarfile>`*`)`](https://franzmohr.github.io/bvartools/reference/analysis_of_stored_models.md)
+  [`fevd(`*`<bvarfile>`*`)`](https://franzmohr.github.io/bvartools/reference/analysis_of_stored_models.md)
+  : Impulse Responses and Variance Decompositions of a Stored Model
 - [`irf()`](https://franzmohr.github.io/bvartools/reference/irf.md) :
   Impulse Response Function
 - [`irf(`*`<bvarmodel>`*`)`](https://franzmohr.github.io/bvartools/reference/irf.bvarmodel.md)
@@ -258,6 +307,12 @@
   : Rolling Spillover Index
 - [`spillover(`*`<modellist>`*`)`](https://franzmohr.github.io/bvartools/reference/spillover.modellist.md)
   : Spillover Index
+- [`multipliers()`](https://franzmohr.github.io/bvartools/reference/multipliers.md)
+  : Dynamic Multipliers
+- [`multipliers(`*`<bvarmodel>`*`)`](https://franzmohr.github.io/bvartools/reference/multipliers.bvarmodel.md)
+  : Dynamic Multipliers of a VAR Model with Exogenous Variables
+- [`multipliers(`*`<bvecmodel>`*`)`](https://franzmohr.github.io/bvartools/reference/multipliers.bvecmodel.md)
+  : Dynamic Multipliers of a VEC Model with Exogenous Variables
 - [`vec_to_var()`](https://franzmohr.github.io/bvartools/reference/vec_to_var.md)
   : Transform a VEC Model to a VAR in Levels
 - [`vec_to_var(`*`<bvecmodel>`*`)`](https://franzmohr.github.io/bvartools/reference/vec_to_var.bvecmodel.md)
@@ -301,6 +356,13 @@
   [`thin(`*`<externalforecast>`*`)`](https://franzmohr.github.io/bvartools/reference/create_external_forecast.md)
   [`print(`*`<externalforecast>`*`)`](https://franzmohr.github.io/bvartools/reference/create_external_forecast.md)
   : Objects for Externally Produced Forecasts
+- [`open_model()`](https://franzmohr.github.io/bvartools/reference/open_model.md)
+  [`print(`*`<bvarfile>`*`)`](https://franzmohr.github.io/bvartools/reference/open_model.md)
+  : Open a Model Stored in an HDF5 File
+- [`open_models()`](https://franzmohr.github.io/bvartools/reference/open_models.md)
+  [`print(`*`<bvarfolder>`*`)`](https://franzmohr.github.io/bvartools/reference/open_models.md)
+  [`model_files()`](https://franzmohr.github.io/bvartools/reference/open_models.md)
+  : Open a Folder of Stored Models
 - [`print(`*`<bvarmodel>`*`)`](https://franzmohr.github.io/bvartools/reference/print.bvarmodel.md)
   : Printing Model Information
 - [`print(`*`<bvarspillover>`*`)`](https://franzmohr.github.io/bvartools/reference/print.bvarspillover.md)
@@ -335,6 +397,7 @@
 - [`plot(`*`<modellist>`*`)`](https://franzmohr.github.io/bvartools/reference/plot.modellist.md)
   : Plotting Draws of a Bayesian Time Series Models
 - [`plot(`*`<selcritlist>`*`)`](https://franzmohr.github.io/bvartools/reference/plot.selcritlist.md)
+  [`plot(`*`<selcrit>`*`)`](https://franzmohr.github.io/bvartools/reference/plot.selcritlist.md)
   : Plotting Selection Criteria
 - [`plot_forecast_errors_by_period()`](https://franzmohr.github.io/bvartools/reference/plot_forecast_errors_by_period.md)
   : Plotting Forecast Errors per Period
@@ -359,6 +422,28 @@
   : Import Models from HDF5 Files
 - [`list_models_in_hdf5()`](https://franzmohr.github.io/bvartools/reference/list_models_in_hdf5.md)
   : Models in an HDF5 File
+- [`open_model()`](https://franzmohr.github.io/bvartools/reference/open_model.md)
+  [`print(`*`<bvarfile>`*`)`](https://franzmohr.github.io/bvartools/reference/open_model.md)
+  : Open a Model Stored in an HDF5 File
+- [`open_models()`](https://franzmohr.github.io/bvartools/reference/open_models.md)
+  [`print(`*`<bvarfolder>`*`)`](https://franzmohr.github.io/bvartools/reference/open_models.md)
+  [`model_files()`](https://franzmohr.github.io/bvartools/reference/open_models.md)
+  : Open a Folder of Stored Models
+- [`add_priors(`*`<bvarfolder>`*`)`](https://franzmohr.github.io/bvartools/reference/folder_steps.md)
+  [`add_initial_values(`*`<bvarfolder>`*`)`](https://franzmohr.github.io/bvartools/reference/folder_steps.md)
+  [`add_seed(`*`<bvarfolder>`*`)`](https://franzmohr.github.io/bvartools/reference/folder_steps.md)
+  [`add_posterior_coefficients(`*`<bvarfolder>`*`)`](https://franzmohr.github.io/bvartools/reference/folder_steps.md)
+  [`add_posterior_loglik(`*`<bvarfolder>`*`)`](https://franzmohr.github.io/bvartools/reference/folder_steps.md)
+  [`thin(`*`<bvarfolder>`*`)`](https://franzmohr.github.io/bvartools/reference/folder_steps.md)
+  [`selection_criteria(`*`<bvarfolder>`*`)`](https://franzmohr.github.io/bvartools/reference/folder_steps.md)
+  : Estimation Steps on a Folder of Models
+- [`irf(`*`<bvarfile>`*`)`](https://franzmohr.github.io/bvartools/reference/analysis_of_stored_models.md)
+  [`fevd(`*`<bvarfile>`*`)`](https://franzmohr.github.io/bvartools/reference/analysis_of_stored_models.md)
+  : Impulse Responses and Variance Decompositions of a Stored Model
+- [`map_models()`](https://franzmohr.github.io/bvartools/reference/map_models.md)
+  : Apply a Function to the Models of a Folder
+- [`map_draws()`](https://franzmohr.github.io/bvartools/reference/map_draws.md)
+  : Apply a Function to the Draws of a Stored Model
 
 ## Building blocks for custom samplers
 
@@ -405,7 +490,7 @@ object.
 - [`sur_const_to_tvp()`](https://franzmohr.github.io/bvartools/reference/sur_const_to_tvp.md)
   : SUR Matrix Transformation
 - [`loglik_normal()`](https://franzmohr.github.io/bvartools/reference/loglik_normal.md)
-  : Calculates the log-likelihood of a multivariate normal distribution.
+  : Log-Likelihood of a Multivariate Normal Distribution
 
 ## Data
 

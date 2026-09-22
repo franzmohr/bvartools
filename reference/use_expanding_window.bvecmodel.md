@@ -30,7 +30,10 @@ use_expanding_window(object, start, ...)
 
 A list of class 'expandingwindow' with one object of class 'bvecmodel'
 per window. The training sample of the first ends in the period before
-`start`, and each further window adds one period.
+`start`, and each further window adds one period. Posterior draws,
+starting values and forecast input that `object` already carries belong
+to the whole sample and are not copied into the windows; a warning says
+so.
 
 ## See also
 

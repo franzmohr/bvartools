@@ -67,7 +67,13 @@ section 'Prior on the cointegration space' of
 [`cointspace_prior`](https://franzmohr.github.io/bvartools/reference/cointspace_prior.md).
 On centred series the same step moves the term by \\\eta_t^{\prime}
 (w_t - m)\\, and the intercept is left to the constant and its own
-prior.
+prior. That holds for the estimation. The forecast of such a model,
+which needs
+[`rescale_error_correction`](https://franzmohr.github.io/bvartools/reference/rescale_error_correction.md)
+first, can only hold the cointegration vectors at their last value
+(`forecast_states = "hold"` in
+[`add_posterior_forecasts.bvecmodel`](https://franzmohr.github.io/bvartools/reference/add_posterior_forecasts.bvecmodel.md)),
+since after rescaling a step of them acts on the series as they are.
 
 Starting values of the constant in `object$initial` are shifted by \\\Pi
 m\\, computed from the starting values of the loadings and of \\\beta\\,

@@ -31,7 +31,7 @@ post_gamma_state_variance(a, a_init, shape_prior, rate_prior, inverse)
 - inverse:
 
   logical. If `TRUE`, the function returns the precision matrix, i.e.
-  the inverse of the variance matrix. Defaults to `FALSE`.
+  the inverse of the variance matrix, and otherwise the variance matrix.
 
 ## Value
 

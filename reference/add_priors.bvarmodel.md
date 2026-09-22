@@ -52,7 +52,7 @@ The object in `object` with the element `priors` added, a list with
   `mu` and the \\M \times M\\ prior precision matrix `v_inv`, where
   \\M\\ is the number of coefficients. With variable selection also
   `inprior` and `include`, for SSVS `tau0` and `tau1`, and for TVP
-  models `shape` and `rate` of the state variances.
+  models `shape` and `rate` of the state variances, or `omega_v`.
 
 - `psi`:
 
@@ -64,9 +64,10 @@ The object in `object` with the element `priors` added, a list with
 
   the prior of the error variances with its `type`: `"wishart"` with
   `df` and `scale`, `"gamma"` with `shape` and `rate`, or `"sv"` with
-  `mu`, `v_inv`, `shape`, `rate`, `sigma` and `offset`. With a Minnesota
-  prior it also holds `u_sigma_inv`, the inverse error covariance matrix
-  the prior was scaled with. Not present for `error = "ald"`.
+  `mu`, `v_inv`, `shape`, `rate` (or `omega_v`), `sigma` and `offset`.
+  With a Minnesota prior it also holds `u_sigma_inv`, the inverse error
+  covariance matrix the prior was scaled with. Not present for
+  `error = "ald"`.
 
 - `u_scale`:
 
@@ -143,14 +144,13 @@ Argument `coef` can contain the following elements:
 
   a numeric specifying the shape of the gamma prior on the precisions,
   the inverse error variances, of the state equation, whose mean is
-  `shape / rate`. Required for models with time varying parameters and
-  not used otherwise.
+  `shape / rate`. Required for models with time varying parameters
+  unless `omega_v` is given, and not used otherwise.
 
 - `rate`:
 
   a numeric specifying the rate of the gamma prior on the precisions of
-  the state equation. Required for models with time varying parameters
-  and not used otherwise.
+  the state equation. Required together with `shape`.
 
 - `rate_det`:
 
@@ -158,6 +158,19 @@ Argument `coef` can contain the following elements:
   of the state equation for coefficients, which correspond to
   deterministic terms. If it is not given, `rate` is used. Only used for
   models with time varying parameters.
+
+- `omega_v`:
+
+  a positive numeric, in place of `shape` and `rate`: the variance of a
+  normal prior on the signed standard deviation \\\omega\\ of the state
+  innovations, \\\omega \sim N(0, V\_\omega)\\, which is also the prior
+  mean of the state variance \\\omega^2\\. This is the non-centred
+  parameterisation of Frühwirth-Schnatter and Wagner (2010), which makes
+  a constant coefficient an interior point of the prior and lets the
+  posterior carry the Savage-Dickey test for time variation of Chan
+  (2018); see Details. It applies to the covariance coefficients as
+  well. Only for models with time varying parameters, `tvp = TRUE`, and
+  `error = "sv"`, `"sv+covar"`, `"gamma"` or `"gamma+covar"`.
 
 Argument `sigma` must contain the elements that belong to the `error` of
 the model:
@@ -167,7 +180,8 @@ the model:
 - `"gamma"` and `"gamma+covar"`: `shape` and `rate`.
 
 - `"sv"` and `"sv+covar"`: `mu`, `v_i`, `shape`, `rate`,
-  `state_variance` and `offset`.
+  `state_variance` and `offset`; with `tvp = TRUE`, `omega_v` may take
+  the place of `shape` and `rate`.
 
 - `"ald"`: `shape` and `rate`.
 
@@ -222,8 +236,30 @@ The elements are
   numeric of the constant, which is added before taking the log of the
   squared errors. Only used for models with time varying volatility.
 
-For structural models only a gamma prior or stochastic volatility
-specification is allowed.
+- `omega_v`:
+
+  a positive numeric, in place of `shape` and `rate`: the variance of a
+  normal prior on the signed standard deviation of the log-volatility
+  innovations, as `coef$omega_v` is for the coefficients. Only for
+  models with time varying parameters and stochastic volatility.
+
+Under `omega_v` a random walk \\x_t = x\_{t-1} + v_t\\, \\v_t \sim N(0,
+\omega^2)\\, is estimated as \\x_t = x_0 + \omega \tilde{x}\_t\\ with
+\\\tilde{x}\_t\\ a standard random walk. The hypothesis that \\x_t\\
+does not move is then \\\omega = 0\\, a point inside the prior, and its
+Bayes factor is the Savage-Dickey density ratio \\p(\omega = 0) /
+p(\omega = 0 \| y)\\, which a single run of the time varying model
+estimates (Chan 2018). Each block of the posterior estimated this way
+holds, beside `sigma`, the draws of \\\omega\\ in `omega`, and the log
+density at zero of its conditional posterior, per state in
+`omega_log_zero` and for the whole block in `omega_log_zero_joint`. The
+log Bayes factor in favour of time variation in state \\i\\ is \\\log
+N(0; 0, V\_{\omega, i})\\ less the log of the average over the draws of
+`exp(omega_log_zero[, i])`. The joint one compares "every state of the
+block moves" with "none does" rather than "at least one moves". Each
+block chooses its prior for itself, so the volatilities can be tested
+while the coefficients keep `shape` and `rate`. For structural models
+only a gamma prior or stochastic volatility specification is allowed.
 
 Argument `varsel` can contain the following elements:
 
@@ -281,8 +317,18 @@ for lag \\l\\ with \\\kappa_1\\, \\\kappa_2\\, \\\kappa_3\\,
 
 ## References
 
+Chan, J. C. C. (2018). Specification tests for time-varying parameter
+models with stochastic volatility. *Econometric Reviews, 37*(8),
+807–823.
+[doi:10.1080/07474938.2016.1167948](https://doi.org/10.1080/07474938.2016.1167948)
+
 Chan, J., Koop, G., Poirier, D. J., & Tobias J. L. (2019). *Bayesian
 econometric methods* (2nd ed.). Cambridge: Cambridge University Press.
+
+Frühwirth-Schnatter, S., & Wagner, H. (2010). Stochastic model
+specification search for Gaussian and partial non-Gaussian state space
+models. *Journal of Econometrics, 154*(1), 85–100.
+[doi:10.1016/j.jeconom.2009.07.003](https://doi.org/10.1016/j.jeconom.2009.07.003)
 
 George, E. I., Sun, D., & Ni, S. (2008). Bayesian stochastic search for
 VAR model restrictions. *Journal of Econometrics, 142*(1), 553–580.

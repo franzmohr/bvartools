@@ -1,4 +1,4 @@
-# Prior on the Cointegration Space
+# Build the Prior on the Cointegration Space
 
 Checks the specification of the prior on the cointegration space of a
 VEC model and builds it, in the form in which
@@ -30,10 +30,10 @@ cointspace_prior(object, coint)
 `NULL` for a model without cointegration, `model$rank = 0`, whose
 `coint` is checked all the same. Otherwise a list with
 `type = "cointspace"` and, for constant cointegration parameters,
-`v_inv` and `p_tau_inv`, or, for time varying ones, `rho`, `mu` and
-`v_inv` of the state equation, together with `rho_min` and `rho_max` for
-a uniform prior on \\\rho\\ and the transition `p_tau` added by
-`p_tau_i = "ml"`.
+`v_inv` and `p_tau_inv`, and `g_inv` if `g_i` was given, or, for time
+varying ones, `rho`, `mu` and `v_inv` of the state equation, together
+with `rho_min` and `rho_max` for a uniform prior on \\\rho\\ and the
+transition `p_tau` added by `p_tau_i = "ml"`.
 
 ## Details
 
@@ -97,6 +97,16 @@ state equation in the second. Any other element raises an error.
   \\(0.999, 1)\\. Only used for models with time varying cointegration
   parameters.
 
+- `g_i`:
+
+  the inverse of the matrix \\G\\ that scales the prior of the loadings,
+  for models with constant cointegration parameters and stochastic
+  volatility, `error = "sv"` or `"sv+covar"`, and refused for every
+  other model. Either a numeric of its diagonal elements, a full
+  symmetric positive definite matrix with one row and column per
+  endogenous variable, or `"ml"` for the inverse of the maximum
+  likelihood estimate of the error covariance. Optional. See below.
+
 For a model with constant cointegration parameters the prior is that of
 Koop et al. (2010). The sampler uses `v_i` and `p_tau_i` only through
 their product, so with `v_i = 0` the prior on the cointegration space is
@@ -104,6 +114,19 @@ uniform whatever `p_tau_i` is. An informative prior on the space
 therefore needs a positive `v_i`, which also shrinks the loadings: for
 \\\beta\\ close to the centre of the space they have prior \\N(0, \Sigma
 / v)\\.
+
+In Koop et al. (2010) the loadings' prior is scaled by a matrix \\G\\,
+which may be the error covariance \\\Sigma\\ or any fixed, known matrix.
+The models with a constant error covariance take \\G = \Sigma\\. With
+stochastic volatility the covariance differs from period to period, so
+\\G\\ is fixed for the whole run instead: \\G^{-1}\\ is `g_i` if it is
+given, and otherwise the error precision implied by the starting values
+of the log-volatilities, averaged over the sample once before the first
+draw. That fallback depends on
+[`add_initial_values`](https://franzmohr.github.io/bvartools/reference/add_initial_values.md),
+so giving `g_i` makes the prior independent of how the chain is started.
+`g_i = "ml"` uses Johansen's (1995) estimate of the error covariance,
+the same one `v_i = "ml"` is based on.
 
 With `p_tau_i = "ml"` the prior is centred on the space spanned by
 Johansen's (1995) maximum likelihood estimate \\\hat{\beta}\\, computed

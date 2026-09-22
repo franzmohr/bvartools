@@ -54,6 +54,9 @@ fevd(
   integer. Index of the period, for which the variance decomposition
   should be generated. Only used for TVP or SV models. Default is
   `NULL`, so that the posterior draws of the last time period are used.
+  With `type = "sign"` the default is the period the restrictions were
+  imposed in, and another period is refused, since the rotations do not
+  identify it.
 
 - max_groups:
 
@@ -177,6 +180,9 @@ Other post-estimation analysis:
 [`fevd.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/fevd.bvecmodel.md),
 [`irf.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/irf.bvarmodel.md),
 [`irf.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/irf.bvecmodel.md),
+[`multipliers()`](https://franzmohr.github.io/bvartools/reference/multipliers.md),
+[`multipliers.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/multipliers.bvarmodel.md),
+[`multipliers.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/multipliers.bvecmodel.md),
 [`predict.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/predict.bvarmodel.md),
 [`spillover.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/spillover.bvarmodel.md),
 [`spillover.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/spillover.bvecmodel.md),

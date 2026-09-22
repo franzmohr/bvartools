@@ -9,7 +9,7 @@ function create_bvarmodel."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -102,7 +102,7 @@ selection algorithm. Required if the model was created with
   prior means <code>mu</code> and the \(M \times M\) prior precision matrix
   <code>v_inv</code>, where \(M\) is the number of coefficients. With variable selection
   also <code>inprior</code> and <code>include</code>, for SSVS <code>tau0</code> and <code>tau1</code>, and
-  for TVP models <code>shape</code> and <code>rate</code> of the state variances.</p></dd>
+  for TVP models <code>shape</code> and <code>rate</code> of the state variances, or <code>omega_v</code>.</p></dd>
 
   <dt><code>psi</code></dt>
 <dd><p>for <code>error = "gamma+covar"</code> or <code>"sv+covar"</code>, the prior of
@@ -114,7 +114,7 @@ selection algorithm. Required if the model was created with
 <dd><p>the prior of the error variances with its <code>type</code>:
   <code>"wishart"</code> with <code>df</code> and <code>scale</code>, <code>"gamma"</code> with <code>shape</code>
   and <code>rate</code>, or <code>"sv"</code> with <code>mu</code>, <code>v_inv</code>, <code>shape</code>,
-  <code>rate</code>, <code>sigma</code> and <code>offset</code>. With a Minnesota prior it also holds
+  <code>rate</code> (or <code>omega_v</code>), <code>sigma</code> and <code>offset</code>. With a Minnesota prior it also holds
   <code>u_sigma_inv</code>, the inverse error covariance matrix the prior was scaled with.
   Not present for <code>error = "ald"</code>.</p></dd>
 
@@ -176,23 +176,35 @@ an element that is not listed below.</p>
   <dt><code>shape</code></dt>
 <dd><p>a numeric specifying the shape of the gamma prior on the precisions, the
   inverse error variances, of the state equation, whose mean is <code>shape / rate</code>. Required for
-  models with time varying parameters and not used otherwise.</p></dd>
+  models with time varying parameters unless <code>omega_v</code> is given, and not used otherwise.</p></dd>
 
   <dt><code>rate</code></dt>
 <dd><p>a numeric specifying the rate of the gamma prior on the precisions of the
-  state equation. Required for models with time varying parameters and not used otherwise.</p></dd>
+  state equation. Required together with <code>shape</code>.</p></dd>
 
   <dt><code>rate_det</code></dt>
 <dd><p>a numeric specifying the prior rate parameter of the error variances of the
   state equation for coefficients, which correspond to deterministic terms. If it is not given,
   <code>rate</code> is used. Only used for models with time varying parameters.</p></dd>
 
+  <dt><code>omega_v</code></dt>
+<dd><p>a positive numeric, in place of <code>shape</code> and <code>rate</code>: the
+  variance of a normal prior on the signed standard deviation \(\omega\) of the state
+  innovations, \(\omega \sim N(0, V_\omega)\), which is also the prior mean of the state
+  variance \(\omega^2\). This is the non-centred parameterisation of
+  Frühwirth-Schnatter and Wagner (2010), which makes a constant coefficient an interior point
+  of the prior and lets the posterior carry the Savage-Dickey test for time variation of
+  Chan (2018); see Details. It applies to the covariance coefficients as well. Only for
+  models with time varying parameters, <code>tvp = TRUE</code>, and <code>error = "sv"</code>,
+  <code>"sv+covar"</code>, <code>"gamma"</code> or <code>"gamma+covar"</code>.</p></dd>
+
 
 </dl><p>Argument <code>sigma</code> must contain the elements that belong to the
 <code>error</code> of the model:</p><ul><li><p><code>"wishart"</code>: <code>df</code> and <code>scale</code>. Not available for structural models.</p></li>
 <li><p><code>"gamma"</code> and <code>"gamma+covar"</code>: <code>shape</code> and <code>rate</code>.</p></li>
 <li><p><code>"sv"</code> and <code>"sv+covar"</code>: <code>mu</code>, <code>v_i</code>, <code>shape</code>, <code>rate</code>,
-  <code>state_variance</code> and <code>offset</code>.</p></li>
+  <code>state_variance</code> and <code>offset</code>; with <code>tvp = TRUE</code>, <code>omega_v</code> may take the
+  place of <code>shape</code> and <code>rate</code>.</p></li>
 <li><p><code>"ald"</code>: <code>shape</code> and <code>rate</code>.</p></li>
 </ul><p>The elements are</p><dl><dt><code>df</code></dt>
 <dd><p>a positive integer, or a character expression in <code>k</code>, the number of
@@ -233,8 +245,27 @@ an element that is not listed below.</p>
 <dd><p>numeric of the constant, which is added before taking the log of the squared errors.
   Only used for models with time varying volatility.</p></dd>
 
+  <dt><code>omega_v</code></dt>
+<dd><p>a positive numeric, in place of <code>shape</code> and <code>rate</code>: the variance
+  of a normal prior on the signed standard deviation of the log-volatility innovations, as
+  <code>coef$omega_v</code> is for the coefficients. Only for models with time varying parameters and
+  stochastic volatility.</p></dd>
 
-</dl><p>For structural models only a gamma prior or stochastic volatility specification is allowed.</p>
+
+</dl><p>Under <code>omega_v</code> a random walk \(x_t = x_{t-1} + v_t\), \(v_t \sim N(0, \omega^2)\),
+is estimated as \(x_t = x_0 + \omega \tilde{x}_t\) with \(\tilde{x}_t\) a standard random
+walk. The hypothesis that \(x_t\) does not move is then \(\omega = 0\), a point inside the
+prior, and its Bayes factor is the Savage-Dickey density ratio
+\(p(\omega = 0) / p(\omega = 0 | y)\), which a single run of the time varying model estimates
+(Chan 2018). Each block of the posterior estimated this way holds, beside <code>sigma</code>, the
+draws of \(\omega\) in <code>omega</code>, and the log density at zero of its conditional
+posterior, per state in <code>omega_log_zero</code> and for the whole block in
+<code>omega_log_zero_joint</code>. The log Bayes factor in favour of time variation in state
+\(i\) is \(\log N(0; 0, V_{\omega, i})\) less the log of the average over the draws of
+<code>exp(omega_log_zero[, i])</code>. The joint one compares "every state of the block moves" with
+"none does" rather than "at least one moves". Each block chooses its prior for itself, so the
+volatilities can be tested while the coefficients keep <code>shape</code> and <code>rate</code>.
+For structural models only a gamma prior or stochastic volatility specification is allowed.</p>
 <p>Argument <code>varsel</code> can contain the following elements:</p><dl><dt><code>inprior</code></dt>
 <dd><p>a numeric between 0 and 1 specifying the prior probability
   of a variable to be included in the model.</p></dd>
@@ -272,8 +303,13 @@ inclusion probabilities are calculated in a Minnesota-like fashion as</p><table 
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
-    <p>Chan, J., Koop, G., Poirier, D. J., &amp; Tobias J. L. (2019). <em>Bayesian econometric methods</em>
+    <p>Chan, J. C. C. (2018). Specification tests for time-varying parameter models with stochastic
+volatility. <em>Econometric Reviews, 37</em>(8), 807–823. <a href="https://doi.org/10.1080/07474938.2016.1167948" class="external-link">doi:10.1080/07474938.2016.1167948</a></p>
+<p>Chan, J., Koop, G., Poirier, D. J., &amp; Tobias J. L. (2019). <em>Bayesian econometric methods</em>
 (2nd ed.). Cambridge: Cambridge University Press.</p>
+<p>Frühwirth-Schnatter, S., &amp; Wagner, H. (2010). Stochastic model specification search for
+Gaussian and partial non-Gaussian state space models. <em>Journal of Econometrics, 154</em>(1),
+85–100. <a href="https://doi.org/10.1016/j.jeconom.2009.07.003" class="external-link">doi:10.1016/j.jeconom.2009.07.003</a></p>
 <p>George, E. I., Sun, D., &amp; Ni, S. (2008). Bayesian stochastic search for VAR model
 restrictions. <em>Journal of Econometrics, 142</em>(1), 553–580.
 <a href="https://doi.org/10.1016/j.jeconom.2007.08.017" class="external-link">doi:10.1016/j.jeconom.2007.08.017</a></p>

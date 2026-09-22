@@ -14,47 +14,22 @@ Luetkepohl (2006, ISBN: 9783540262398).
 Every step of an analysis takes a model object and returns it with
 something added, so the result of each call must be assigned back:
 `model <- add_initial_values(model)`. A model object is a list of class
-'bvarmodel' or 'bvecmodel' with the elements
-
-- `data`:
-
-  the data matrices, with the estimation sample in `data$train` (`y`,
-  `x` and `z` in SUR form).
-
-- `model`:
-
-  the specification: variables, lag orders, deterministic terms, error
-  and variable selection types, iterations and burn-in draws.
-
-- `priors`:
-
-  the prior hyperparameters, added by
-  [`add_priors`](https://franzmohr.github.io/bvartools/reference/add_priors.md).
-
-- `initial`:
-
-  the starting values of the sampler, added by
-  [`add_initial_values`](https://franzmohr.github.io/bvartools/reference/add_initial_values.md).
-
-- `posterior`:
-
-  the draws added by
-  [`add_posterior_coefficients`](https://franzmohr.github.io/bvartools/reference/add_posterior_coefficients.md)
-  and the later `add_posterior_*` functions.
-
-Posterior draws are stored as
-[`mcmc`](https://rdrr.io/pkg/coda/man/mcmc.html) objects with one row
-per draw and one column per parameter.
-[`bvar`](https://franzmohr.github.io/bvartools/reference/bvar.md) and
-[`bvec`](https://franzmohr.github.io/bvartools/reference/bvec.md), which
-collect the draws of a sampler written by the user, expect the
-transpose: one row per parameter and one column per draw.
+'bvarmodel' or 'bvecmodel' whose elements are `model`, the
+specification, `data`, `priors`, `initial` and `posterior`, the draws –
+stored as [`mcmc`](https://rdrr.io/pkg/coda/man/mcmc.html) objects with
+one row per draw and one column per parameter.
 
 Passing a vector to an argument such as `p` or `r` creates one model per
 specification in a list of class 'modellist', and
 [`use_expanding_window`](https://franzmohr.github.io/bvartools/reference/use_expanding_window.md)
 creates a list of class 'expandingwindow'. The functions of the workflow
 accept these lists as well and apply to each model in turn.
+
+[`bvartools_model`](https://franzmohr.github.io/bvartools/reference/bvartools_model.md)
+describes the whole object element by element: what each one holds,
+which step adds it, how the draws are laid out and which path of a model
+file each corresponds to. It is the page to read before reaching into
+the object by hand.
 
 ## Workflow of a VAR model
 
@@ -306,6 +281,8 @@ library for linear algebra. *Journal of Open Source Software, 1*(2), 26.
 Useful links:
 
 - <https://github.com/franzmohr/bvartools>
+
+- <https://franzmohr.github.io/bvartools/>
 
 - Report bugs at <https://github.com/franzmohr/bvartools/issues>
 

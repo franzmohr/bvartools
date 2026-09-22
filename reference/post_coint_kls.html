@@ -11,7 +11,7 @@ non-cointegration coefficients from a normal density."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -136,7 +136,10 @@ of the cointegration space prior of \(sp(\beta)\).</p></dd>
 <dd><p>a draw of the \(K \times M\) cointegration matrix \(\Pi = \alpha \beta^{\prime}\).</p></dd>
 
 <dt>Gamma</dt>
-<dd><p>a draw of the \(K \times N\) coefficient matrix for non-cointegration parameters.</p></dd>
+<dd><p>a draw of the coefficients of the non-cointegration regressors
+in <code>x</code>, as the \(KN \times 1\) vector \(vec(\Gamma)\) of the
+\(K \times N\) matrix; <code>matrix(Gamma, K)</code> restores the matrix. Empty
+if <code>x</code> is <code>NULL</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">

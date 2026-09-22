@@ -14,8 +14,8 @@ add_forecast_input(object, ...)
 
 - object:
 
-  an object of class 'modellist' containing objects that can be forward
-  to their respective \`add_forecast_input\` method.
+  an object of class 'modellist' containing objects that can be passed
+  on to their respective `add_forecast_input` method.
 
 - ...:
 

@@ -86,8 +86,10 @@ A named list containing the following elements:
 
 - Gamma:
 
-  a draw of the \\K \times N\\ coefficient matrix for non-cointegration
-  parameters.
+  a draw of the coefficients of the non-cointegration regressors in `x`,
+  as the \\KN \times 1\\ vector \\vec(\Gamma)\\ of the \\K \times N\\
+  matrix; `matrix(Gamma, K)` restores the matrix. Empty if `x` is
+  `NULL`.
 
 ## Details
 

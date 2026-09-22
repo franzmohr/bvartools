@@ -29,6 +29,10 @@ plot(x, max_groups = NULL, ...)
 
   further graphical parameters.
 
+## Value
+
+`x`, invisibly. The function is called for its side effect, the plot.
+
 ## Examples
 
 ``` r

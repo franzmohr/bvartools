@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -89,10 +89,12 @@ there is none. Models with constant coefficients and volatility are unaffected.<
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>The object in <code>object</code> with <code>posterior$forecast</code> added, a
+    <p>The object in <code>object</code> with <code>posterior$forecast$forecasts</code> added, a
 <code><a href="https://rdrr.io/pkg/coda/man/mcmc.html" class="external-link">mcmc</a></code> object with one row per draw and \(Kh\) columns, stacked by
 period: the \(K\) variables of the first forecast period, then those of the second,
-and so on. <code><a href="predict.bvarmodel.html">predict</a></code> summarises them. A
+and so on. <code>posterior$forecast</code> is the group everything the forecast periods
+produce hangs below, the <code>errors</code> of <code><a href="add_forecast_errors.html">add_forecast_errors</a></code> beside
+these. <code><a href="predict.bvarmodel.html">predict</a></code> summarises them. A
 <code>forecast_states</code> that was given is stored in <code>model$forecast_states</code>.</p>
 <p>Simulating the volatility forward needs the variance of the log-volatility
 innovations, <code>posterior$u_sigma_inv$sigma</code>, which <code><a href="add_posterior_coefficients.html">add_posterior_coefficients</a></code>
@@ -101,7 +103,8 @@ lacks it and stops with an error unless <code>forecast_states = "hold"</code>.</
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p>Other posterior simulation:
+    <div class="dont-index"><p><code><a href="bvartools_model.html">bvartools_model</a></code> describes the object this returns, element by element.</p>
+<p>Other posterior simulation:
 <code><a href="add_forecast_input.bvarmodel.html">add_forecast_input.bvarmodel()</a></code>,
 <code><a href="add_forecast_input.bvecmodel.html">add_forecast_input.bvecmodel()</a></code>,
 <code><a href="add_posterior_coefficients.bvarmodel.html">add_posterior_coefficients.bvarmodel()</a></code>,
@@ -110,9 +113,11 @@ lacks it and stops with an error unless <code>forecast_states = "hold"</code>.</
 <code><a href="add_posterior_loglik.bvarmodel.html">add_posterior_loglik.bvarmodel()</a></code>,
 <code><a href="add_posterior_loglik.bvecmodel.html">add_posterior_loglik.bvecmodel()</a></code>,
 <code><a href="add_seed.html">add_seed()</a></code>,
+<code><a href="bayests_files.html">bayests_files()</a></code>,
 <code><a href="bayests_posterior.html">bayests_posterior()</a></code>,
 <code><a href="bvar.html">bvar()</a></code>,
 <code><a href="bvec.html">bvec()</a></code>,
+<code><a href="chain_diagnostics.html">chain_diagnostics()</a></code>,
 <code><a href="predict.bvecmodel.html">predict.bvecmodel()</a></code></p></div>
     </div>
 

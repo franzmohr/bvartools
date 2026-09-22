@@ -15,7 +15,7 @@ add_forecast_input(object, ...)
 - object:
 
   an object of class 'expandingwindow' containing objects that can be
-  forward to their respective \`add_forecast_input\` method.
+  passed on to their respective `add_forecast_input` method.
 
 - ...:
 

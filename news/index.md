@@ -1,6 +1,928 @@
 # Changelog
 
-## bvartools (development version)
+## bvartools 1.0.0
+
+### Moving from 0.3.0 to 1.0.0
+
+A model is now an object:
+[`create_bvarmodel()`](https://franzmohr.github.io/bvartools/reference/create_bvarmodel.md)
+or
+[`create_bvecmodel()`](https://franzmohr.github.io/bvartools/reference/create_bvecmodel.md)
+builds it,
+[`add_priors()`](https://franzmohr.github.io/bvartools/reference/add_priors.md)
+and
+[`add_initial_values()`](https://franzmohr.github.io/bvartools/reference/add_initial_values.md)
+complete it, and
+[`add_posterior_coefficients()`](https://franzmohr.github.io/bvartools/reference/add_posterior_coefficients.md)
+estimates it. Forecasts, log-likelihoods and model comparison are
+further `add_*()` steps on the same object. The functions 0.3.0 marked
+for removal are gone:
+
+| 0.3.0 | 1.0.0 |
+|----|----|
+| `gen_var()`, `gen_vec()` | [`create_bvarmodel()`](https://franzmohr.github.io/bvartools/reference/create_bvarmodel.md), [`create_bvecmodel()`](https://franzmohr.github.io/bvartools/reference/create_bvecmodel.md) |
+| `draw_posterior()`, `bvarpost()`, `bvecpost()` | [`add_posterior_coefficients()`](https://franzmohr.github.io/bvartools/reference/add_posterior_coefficients.md), with [`add_posterior_forecasts()`](https://franzmohr.github.io/bvartools/reference/add_posterior_forecasts.md) and [`add_posterior_loglik()`](https://franzmohr.github.io/bvartools/reference/add_posterior_loglik.md) |
+| `bvec_to_bvar()` | [`vec_to_var()`](https://franzmohr.github.io/bvartools/reference/vec_to_var.md) |
+| `kalman_dk()` | [`kalman_durbin_koopman_2002()`](https://franzmohr.github.io/bvartools/reference/kalman_durbin_koopman_2002.md) |
+| `stochvol_ksc1998()`, `stoch_vol()` | [`stochvol_ksc_1998()`](https://franzmohr.github.io/bvartools/reference/stochvol_ksc_1998.md) |
+| `stochvol_ocsn2007()` | [`stochvol_ocsn_2007()`](https://franzmohr.github.io/bvartools/reference/stochvol_ocsn_2007.md) |
+| `bvs()` | [`post_bvs()`](https://franzmohr.github.io/bvartools/reference/post_bvs.md) |
+| `post_normal_covar_const()`, `post_normal_covar_tvp()` | none; the samplers draw the covariance block themselves |
+| `dfm()`, `dfmpost()`, `gen_dfm()`, `bem_dfmdata` | none here; dynamic factor models are in [dfmtools](https://github.com/franzmohr/dfmtools) |
+
+The classes `bvar`, `bvec` and `bvarlist` are now `bvarmodel`,
+`bvecmodel` and `modellist`.
+[`add_priors()`](https://franzmohr.github.io/bvartools/reference/add_priors.md),
+[`bvar()`](https://franzmohr.github.io/bvartools/reference/bvar.md),
+[`bvec()`](https://franzmohr.github.io/bvartools/reference/bvec.md),
+[`irf()`](https://franzmohr.github.io/bvartools/reference/irf.md),
+[`fevd()`](https://franzmohr.github.io/bvartools/reference/fevd.md),
+[`inclusion_prior()`](https://franzmohr.github.io/bvartools/reference/inclusion_prior.md),
+[`minnesota_prior()`](https://franzmohr.github.io/bvartools/reference/minnesota_prior.md)
+and
+[`ssvs_prior()`](https://franzmohr.github.io/bvartools/reference/ssvs_prior.md)
+keep their names but take the new model objects.
+[`add_priors()`](https://franzmohr.github.io/bvartools/reference/add_priors.md)
+no longer has defaults for `coef` and `sigma`. The entries below give
+the details.
+
+### Changes
+
+- **The remaining findings of the audit.**
+
+  - [`irf()`](https://franzmohr.github.io/bvartools/reference/irf.md) of
+    a quantile VAR (`error = "ald"`) takes only `type = "feir"` or
+    `"custom"`, and
+    [`fevd()`](https://franzmohr.github.io/bvartools/reference/fevd.md)
+    and
+    [`spillover()`](https://franzmohr.github.io/bvartools/reference/spillover.md)
+    refuse one. Its `u_sigma_inv` holds the latent precisions of the
+    asymmetric Laplace errors, period by period, which the other types
+    factorised as if they were an error covariance. *Results that were
+    returned before are no longer.*
+  - The trend of a VAR is one in the first period estimated on, whatever
+    period `exogen` starts in. It counted the rows of the data and
+    `exogen` together, so an exogenous series that reached further back
+    shifted the trend, and under `deterministic = "both"` the meaning of
+    the intercept. *Results change* for such models only.
+  - [`scale_error_correction()`](https://franzmohr.github.io/bvartools/reference/scale_error_correction.md)
+    refuses a model whose constant cointegration prior has a positive
+    `v_i`, numeric or `"ml"`: it sets the prior of the loadings given
+    beta, which scaling rescales. It no longer fails on an error
+    correction term of one series.
+  - [`thin()`](https://rdrr.io/pkg/coda/man/thin.html) thins every chain
+    of a model with several on its own, where it thinned the pooled
+    draws as one sequence, and says that a discounted model has nothing
+    to thin.
+  - Refused rather than accepted: a negative `coef$v_i_det`; a
+    `coint$rho` of -1 or below; a `p` in
+    [`create_bvarmodel()`](https://franzmohr.github.io/bvartools/reference/create_bvarmodel.md)
+    that is not a non-negative whole number; Wishart degrees of freedom
+    that are not a whole number, which the VAR method cut off and the
+    VEC method passed on; a Minnesota prior without `kappa3` for a model
+    with exogenous variables, as documented; and a forecast error
+    criterion in
+    [`choose_best_model()`](https://franzmohr.github.io/bvartools/reference/choose_best_model.md),
+    which returned a position in a matrix rather than a model.
+  - Least squares starting values need more periods than regressors, not
+    as many, and for a VEC the count includes every series of the error
+    correction term.
+  - [`fevd()`](https://franzmohr.github.io/bvartools/reference/fevd.md)
+    of a model stored in a file weights each chunk by its identified
+    draws under `type = "sign"`.
+  - [`ssvs_prior()`](https://franzmohr.github.io/bvartools/reference/ssvs_prior.md)
+    for a VEC refuses `"sv+covar"`, which a typo let through.
+
+- **Seven places where a result could be silently wrong, found in an
+  audit.**
+
+  - [`window()`](https://rdrr.io/r/stats/window.html) now cuts the `psi`
+    path of a time varying covariance. It expected k(k-1)/2 columns per
+    period where the samplers store k², so the path kept the whole
+    sample, and a forecast or
+    [`add_predictive_loglik()`](https://franzmohr.github.io/bvartools/reference/add_predictive_loglik.md)
+    from the window read Psi from a period of the original sample.
+    `VarTvpGamma`, `VarTvpStochvol`, `VecTvpGamma` and `VecTvpStochvol`
+    with a covariance block were affected.
+  - [`window()`](https://rdrr.io/r/stats/window.html) now also cuts the
+    posterior of a discounted model, one row per period, which it left
+    at the whole sample.
+  - [`use_expanding_window()`](https://franzmohr.github.io/bvartools/reference/use_expanding_window.md)
+    no longer copies the posterior draws, starting values or forecast
+    input of the model it is given into every window, and warns when it
+    drops them. Windows cut from an estimated model used to keep the
+    draws of the whole sample, so
+    [`add_predictive_loglik()`](https://franzmohr.github.io/bvartools/reference/add_predictive_loglik.md)
+    scored every window with draws that had seen the period it was
+    evaluated on. Priors are still copied.
+  - [`read_model_from_hdf5()`](https://franzmohr.github.io/bvartools/reference/read_model_from_hdf5.md)
+    keeps the shape of a matrix with one row. A one-step forecast input,
+    or the one realised period of the last but one expanding window,
+    came back transposed and could not be used. The realised values also
+    get their column names back.
+  - [`read_models_from_folder()`](https://franzmohr.github.io/bvartools/reference/read_models_from_folder.md)
+    returns a list of expanding windows as one expanding window per
+    specification, where it used to merge them all into one and so
+    pooled the specifications. A model list comes back in the order
+    [`write_to_hdf5()`](https://franzmohr.github.io/bvartools/reference/write_to_hdf5.md)
+    wrote it in, which the files now record.
+  - [`irf()`](https://franzmohr.github.io/bvartools/reference/irf.md),
+    [`fevd()`](https://franzmohr.github.io/bvartools/reference/fevd.md)
+    and
+    [`spillover()`](https://franzmohr.github.io/bvartools/reference/spillover.md)
+    with `type = "sign"` use the period
+    [`add_sign_restrictions()`](https://franzmohr.github.io/bvartools/reference/add_sign_restrictions.md)
+    found the rotations in, and refuse another one for a model whose
+    covariance moves: the rotations only satisfy the restrictions in
+    that period. They used to default to the last period, where a share
+    of the accepted draws broke the restrictions.
+    [`window()`](https://rdrr.io/r/stats/window.html) moves the stored
+    period with the sample, and drops the identification if it cuts that
+    period away.
+  - A time varying VEC with a Minnesota prior keeps the prior of its
+    state equation. `shape` and `rate`, or `omega_v`, and the
+    compensating scale of the loadings were only set without a Minnesota
+    prior, so
+    [`add_initial_values()`](https://franzmohr.github.io/bvartools/reference/add_initial_values.md)
+    failed.
+
+- **An `NA`, `NaN` or infinite value in the input stops with its name.**
+  The vendored BayesTS core now checks the estimation data, the forecast
+  regressors, the realised values a forecast is scored against, and
+  every prior and starting value. Such a value used to fail deep inside
+  the sampler with a message about a singular matrix or bad distribution
+  parameters. An `NA` in the forecast regressors or in the test sample
+  did not fail at all: it came back as a NaN forecast or a NaN score.
+  *Draws are unchanged* for every input that is accepted.
+
+  [`prepare_forecast_input()`](https://franzmohr.github.io/bvartools/reference/prepare_forecast_input.md),
+  and so
+  [`add_forecast_input()`](https://franzmohr.github.io/bvartools/reference/add_forecast_input.md),
+  used to leave the lags of the endogenous variables that the estimation
+  sample does not reach as `NA`. The forecast writes its own earlier
+  horizons into those cells, so nothing read them, but the check covers
+  them all the same; they are zero now, and forecasts are unchanged. A
+  model given its forecast input before this, whether kept in R or
+  written to a file with
+  [`write_to_hdf5()`](https://franzmohr.github.io/bvartools/reference/write_to_hdf5.md),
+  still carries the `NA`s and is refused: call
+  [`add_forecast_input()`](https://franzmohr.github.io/bvartools/reference/add_forecast_input.md)
+  on it again.
+
+- **Several chains, and a diagnostic that compares them.**
+  [`add_posterior_coefficients()`](https://franzmohr.github.io/bvartools/reference/add_posterior_coefficients.md)
+  takes `chains`: the simulation is run once per chain, each with a seed
+  of its own, and the chains are pooled one after the other in the draws
+  every later step reads, so forecasts, log-likelihoods, impulse
+  responses and files use all of them. The first chain uses the model’s
+  seed, so one chain, the default, draws exactly what it always has; the
+  others are spread far from the seeds
+  [`add_seed()`](https://franzmohr.github.io/bvartools/reference/add_seed.md)
+  gives neighbouring models of a list. New function
+  [`chain_diagnostics()`](https://franzmohr.github.io/bvartools/reference/chain_diagnostics.md)
+  reports the split R-hat of Gelman et al. (2013) and the effective
+  sample size of every parameter, and
+  [`summary()`](https://rdrr.io/r/base/summary.html) states the largest
+  R-hat and how many parameters exceed 1.01. A single chain can look
+  converged and not be: on Austrian log levels of GDP and prices,
+  unemployment and a short rate, four chains of a non-centred
+  `VecTvpStochvol` reached a split R-hat of 10.3, with 4,829 of 5,181
+  parameters above 1.01, where each chain on its own had healthy
+  effective sample sizes. The number of chains is stored in the element
+  `chains` of the object’s `model`, and travels through HDF5; lists of
+  models take `chains` too, on any number of workers. Discounted models,
+  whose posterior is not a chain, refuse `chains` above one. *Draws are
+  unchanged* with one chain.
+
+- **`coef$omega_v_alpha` gives the loadings of a time varying VEC a
+  non-centred prior of their own.** The centred prior has `rate_alpha`
+  for the loadings, because they multiply the levels in the error
+  correction term, but `omega_v` was one value for every coefficient,
+  the loadings included, so the test of
+  [`time_variation_test()`](https://franzmohr.github.io/bvartools/reference/time_variation_test.md)
+  compared each loading’s posterior at zero with a prior on the scale of
+  the other coefficients. `omega_v_alpha` sets the first `k * r`
+  elements of `priors$a$omega_v` and falls back to `omega_v`; it needs
+  `omega_v` and is ignored at rank zero. BayesTS already reads one
+  `omega_v` per coefficient, so no sampler changes and *draws are
+  unchanged* for every model that does not use it. On Austrian log
+  levels of GDP and prices, the unemployment rate and a short rate, a
+  tighter prior for the loadings (1e-6 and 1e-8 against 1e-3) moved the
+  Bayes factors of the loadings of prices, unemployment and the rate
+  towards zero but left that of GDP decisive, so what the test found
+  there was not the prior’s scale.
+
+- **[`create_external_forecast()`](https://franzmohr.github.io/bvartools/reference/create_external_forecast.md)
+  places publication dates in the quarter they fall in.** A publication
+  date was placed at its day of the year divided by the length of the
+  year, and quarters are not equal shares of a year: 1 April is day 91
+  of 365, short of a quarter, so a publication on that day counted as
+  one of the first quarter and, with `data_lag = 1`, was matched to the
+  window ending in the fourth quarter of the year before. A date is now
+  placed inside the period it falls in by the share of that period’s
+  days that have passed, for every frequency that divides the year into
+  months. Dates given as character strings, which are read as the first
+  of their month, were affected most: every publication in April, July
+  or October went to the quarter before (1 July is day 182 of 365, a
+  share of 0.496). As class `Date` it took the first days of those
+  months, such as the OeNB release of 1 April 2022 among the Austrian
+  projections of the `macroprojections` vignette.
+
+- **Forecasts from an error covariance that does not move cannot turn
+  NaN either.** The forecasts of the constant-coefficient VAR and VEC
+  models, and of the time varying ones under `forecast_states = "hold"`,
+  drew their errors through a square root of the inverse of the error
+  precision that was not guarded against a rounding error: a badly
+  conditioned draw of the precision could give it a negative eigenvalue
+  and put NaN into that draw’s forecast. They now go through the same
+  guarded square root as the simulated forecasts further down, whose NaN
+  fix this completes. *Forecast draws change by a rounding error*:
+  upstream’s fingerprints move only in `/posterior/forecast/forecasts`,
+  by at most 5.9e-16 relatively, and no estimated draw or log likelihood
+  moves. The vendored BayesTS core is refreshed to upstream `d8c8f80`
+  for it.
+
+- **Simulated forecasts of time varying VECs warn when the error
+  correction term is far from zero, and refuse after rescaling.** A step
+  of the cointegration vectors moves the term by about the level of its
+  series, so for log levels times 100 the forecast under
+  `forecast_states = "simulate"` is mostly that drift: on Austrian GDP,
+  prices, unemployment and a short rate, the spread of next year’s GDP
+  growth was 5 to 11 percentage points against about 1.5 with `"hold"`.
+  [`add_posterior_forecasts()`](https://franzmohr.github.io/bvartools/reference/add_posterior_forecasts.md)
+  and
+  [`add_predictive_loglik()`](https://franzmohr.github.io/bvartools/reference/add_predictive_loglik.md)
+  now warn when a series in the term is more than 50 times its standard
+  deviation per period away from zero; interest rates and inflation in
+  percent stay far below that. A time varying VEC estimated on series
+  that
+  [`scale_error_correction()`](https://franzmohr.github.io/bvartools/reference/scale_error_correction.md)
+  centred or scaled stops unless `forecast_states = "hold"`: after
+  [`rescale_error_correction()`](https://franzmohr.github.io/bvartools/reference/rescale_error_correction.md)
+  a step of the cointegration vectors acts on the series as they are,
+  and the constant takes up the means of the last period only, so the
+  simulation would not be that of the estimated model.
+  [`rescale_error_correction()`](https://franzmohr.github.io/bvartools/reference/rescale_error_correction.md)
+  records this in `model$ect_rescaled`. The default stays `"simulate"`,
+  and *draws are unchanged* wherever a forecast is still made.
+
+- **A simulated forecast no longer turns NaN when a log-volatility
+  drifts far.** With `forecast_states = "simulate"`, the default, the
+  forecast error at each horizon was drawn through the inverse of the
+  precision `Psi' diag(exp(-h)) Psi`. Once the simulated
+  log-volatilities had drifted far apart that inverse was
+  ill-conditioned, Armadillo warned
+  `eig_sym(): given matrix is not symmetric`, and an eigenvalue a
+  rounding error below zero put NaN into every variable of that draw
+  from that horizon on – seen in one draw in 2000 of a four-variable
+  TVP-VAR with `"sv+covar"`. The error is now drawn through the same
+  square root built from `Psi` and the variances directly, which cannot
+  fail that way. It affects the forecasts of the VAR and VEC models with
+  `error = "sv"` or `"sv+covar"`, constant or time varying, and of the
+  time varying ones with `"gamma+covar"`. *Forecast draws change by a
+  rounding error*: upstream’s fingerprints move only in
+  `/posterior/forecast/forecasts`, by at most 1.4e-15 relatively, and no
+  estimated draw, log likelihood or `forecast_states = "hold"` forecast
+  moves. On a badly conditioned model the draws that were finite before
+  can move by more (up to 1.6e-6 relatively on the file that showed the
+  fault), which is the accuracy the old route was losing there.
+
+- **The simulation smoother behind every time varying model is faster.**
+  The coefficients are random walks, so their transition is the
+  identity, and the smoother no longer multiplies by it: one call takes
+  25% to 38% less time at 60 to 120 coefficients, and it is most of an
+  iteration of every TVP sampler. *Draws are unchanged*: a product with
+  an exact identity is exact, and upstream’s fingerprints of all 120
+  fixtures match before and after.
+
+- The vendored BayesTS core is refreshed to upstream `94f81de`, which
+  brings the two items above.
+
+- **[`generate_artificial_var()`](https://franzmohr.github.io/bvartools/reference/generate_artificial_var.md)
+  gains the same argument `level`**, which shifts the generated series
+  to high levels without changing their dynamics. The intercept absorbs
+  the shift `(A_0 - A_1 - ... - A_p) level`, so a non-zero level
+  requires `deterministic = "const"` or `"both"`, and the returned
+  `a_coef` includes it, in every period of a time varying model.
+
+- **[`generate_artificial_vec()`](https://franzmohr.github.io/bvartools/reference/generate_artificial_vec.md)
+  gains an argument `level`**, a vector with one or `k` elements that
+  shifts the generated series, so that cointegrated series with high
+  levels that follow a stochastic trend can be simulated. Without it the
+  series start at zero and wander around it. The shift moves the error
+  correction term by `-beta' level`, which the constant absorbs: the
+  returned restricted constant in `beta` or unrestricted constant in `c`
+  include it, in every period of a time varying model. A non-zero level
+  with a cointegration rank above zero therefore requires
+  `const = "restricted"` or `"unrestricted"`.
+
+- **New vignette `macroprojections`** races a BVAR, a BVAR with
+  stochastic volatility and a TVP-SV VAR against the projections for
+  Austria that the ECB, the European Commission, the IMF, the OeNB, WIFO
+  and IHS published between 2015 and 2025, as collected by the
+  macroprojections repository. The projections are annual, so the
+  vignette turns every draw of the quarterly forecasts into the annual
+  growth and average rates it implies with
+  [`aggregate_forecasts()`](https://franzmohr.github.io/bvartools/reference/aggregate_forecasts.md)
+  and matches the publications to the estimation windows with
+  [`create_external_forecast()`](https://franzmohr.github.io/bvartools/reference/create_external_forecast.md).
+
+- **The forecasts of a discounted model are
+  [`coda::mcmc`](https://rdrr.io/pkg/coda/man/mcmc.html) draws, and an
+  estimated discounted model can be written to HDF5.**
+  [`add_posterior_forecasts()`](https://franzmohr.github.io/bvartools/reference/add_posterior_forecasts.md)
+  returned the i.i.d. forecast draws of `VarTvpDiscount` and
+  `VecTvpDiscount` as a plain matrix, without the start, end and
+  thinning interval every step after it reads, so
+  [`add_forecast_errors()`](https://franzmohr.github.io/bvartools/reference/add_forecast_errors.md)
+  stopped with “non-numeric argument to mathematical function” and
+  [`write_to_hdf5()`](https://franzmohr.github.io/bvartools/reference/write_to_hdf5.md)
+  with “If a sample robj is not provided, both dtype and space have to
+  be given”. They are now labelled as draws 1 to `iterations`,
+  unthinned, which is what BayesTS writes for them.
+  [`write_to_hdf5()`](https://franzmohr.github.io/bvartools/reference/write_to_hdf5.md)
+  also stopped on the per-period posterior itself, and would have left
+  out `posterior$u_sigma` and `posterior$df`; it now writes the
+  closed-form blocks without the chain attributes, as BayesTS does, and
+  [`read_model_from_hdf5()`](https://franzmohr.github.io/bvartools/reference/read_model_from_hdf5.md)
+  reads them back as the plain matrices they are.
+  [`selection_criteria()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.md)
+  on an expanding window of discounted models reports the last window’s
+  `LML`, which it dropped. The draws are unchanged: only their labels
+  are new.
+
+- **[`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws the
+  criteria of an expanding window.**
+  [`selection_criteria()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.md)
+  on an `expandingwindow` or a single model returns a `selcrit` that
+  keeps the model’s classes, and with no
+  [`plot.selcrit()`](https://franzmohr.github.io/bvartools/reference/plot.selcritlist.md)
+  the call reached
+  [`plot.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/plot.bvarmodel.md)
+  and stopped with “dim(X) must have positive length”. The new method
+  plots it as a `selcritlist` of one.
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) of either
+  also accepts `criterion = "LML"`.
+
+- **[`create_external_forecast()`](https://franzmohr.github.io/bvartools/reference/create_external_forecast.md)
+  refuses forecasts at another frequency than the data.** Periods were
+  rounded to the frequency of the models, so annual forecasts for 2020
+  and 2021 given to a quarterly model became forecasts of 2020Q1 and
+  2021Q1, and an annual growth rate was scored as a quarterly one. The
+  frequency is read off the spacing of the periods within a publication:
+  periods further apart than one period of the data, or several that
+  fall into the same period, now stop with a message saying which
+  frequency they appear to be. Where every publication forecasts a
+  single period, periods that all sit at the same position within the
+  year are refused as well.
+
+- **New function
+  [`aggregate_forecasts()`](https://franzmohr.github.io/bvartools/reference/aggregate_forecasts.md)
+  compares annual forecasts with a quarterly or monthly model.** It
+  turns every draw of each window’s forecast into a draw of the annual
+  figures it implies. Argument `code` takes the transformation codes of
+  FRED-MD and FRED-QD that
+  [`transform_variables()`](https://franzmohr.github.io/bvartools/reference/transform_variables.md)
+  applies: each draw is turned back into a path of the untransformed
+  series and continued from the periods observed at the end of the
+  training sample. Codes 4 to 7 give a growth rate in percent, codes 1
+  to 3 a level, and `target` picks the convention: `"average"`, the
+  growth of the annual average (also that of the annual sum, so GDP and
+  a price index are treated alike) or the annual average of a level, as
+  in the IMF’s World Economic Outlook; or `"q4q4"`, the fourth quarter
+  over the fourth quarter or the fourth quarter’s level, as in the Fed’s
+  Summary of Economic Projections. Codes 2, 3, 6 and 7 are reversed from
+  the untransformed series in `levels`, which must reproduce the models’
+  data under `code` and `scale` – a wrong `scale` stops there; codes 1,
+  4 and 5 can do without. Horizon 1 is the year of the forecast origin.
+  Passed to
+  [`create_external_forecast()`](https://franzmohr.github.io/bvartools/reference/create_external_forecast.md)
+  in place of the quarterly models, the result makes it read the periods
+  of the external forecasts as years while still matching publications
+  to the quarterly training samples, so IMF WEO projections of
+  `NGDP_RPCH`, `PCPIPCH` and `LUR` for the current and the next year can
+  be raced against eight-quarter forecasts. Both are scored against the
+  same realised annual figures, from `levels` or the models’ data, which
+  travel in `data$test$y`, so
+  [`add_forecast_errors()`](https://franzmohr.github.io/bvartools/reference/add_forecast_errors.md)
+  needs no test sample; an annual `test_sample` of official figures
+  overrides them. The frequency refusal of
+  [`create_external_forecast()`](https://franzmohr.github.io/bvartools/reference/create_external_forecast.md)
+  now names the function. Perfect foresight of the transformed series
+  gives zero annual forecast errors under every code and both targets,
+  and the average of codes 1 and 5 matches the aggregation the
+  `macroprojections` vignette used to carry out by hand, which now uses
+  this function. No sampler is touched: draws are unchanged.
+
+- **[`add_forecast_errors()`](https://franzmohr.github.io/bvartools/reference/add_forecast_errors.md)
+  refuses a test sample at another frequency than the forecasts.** It
+  matched the periods by their time alone, and 2020 is a year and the
+  first quarter of 2020 alike.
+
+- **`VecNormalGamma` and `VecNormalStochvol` draw from the posterior of
+  the prior they state, and their draws change.** Both use the
+  cointegration space prior of Koop, Leon-Gonzalez and Strachan (2010),
+  which scales the loadings’ prior by G. For `VecNormalGamma`, G is the
+  error covariance, so the prior is also a factor in the error
+  precisions’ posterior, and the vendored core left it out.
+  `VecNormalWishart` has always included it. For `VecNormalStochvol`, G
+  was re-averaged from the current volatilities after every draw, which
+  made the prior a function of them that their own draw never saw. It is
+  now fixed for the run, from the starting volatilities. *Draws change*
+  for both models with `rank > 0`, in every configuration. With one
+  variable, `VecNormalGamma` and `VecNormalWishart` given matching
+  priors are the same model, and upstream’s test finds them within 0.07%
+  of each other on the posterior mean of the precision, against 2.6%
+  before. `VecNormalWishart` and `VecKlgs2010` draws are unchanged.
+
+- **`coint$g_i` sets the G of `VecNormalStochvol`.**
+  [`add_priors()`](https://franzmohr.github.io/bvartools/reference/add_priors.md)
+  and
+  [`cointspace_prior()`](https://franzmohr.github.io/bvartools/reference/cointspace_prior.md)
+  take the inverse of G, the matrix the loadings’ prior is scaled by, as
+  diagonal elements, a full matrix or `"ml"` for the inverse of
+  Johansen’s error covariance, and store it as `priors$beta$g_inv`, the
+  name a BayesTS model file uses. Left out, G still comes from the
+  starting log-volatilities, so the prior depends on
+  [`add_initial_values()`](https://franzmohr.github.io/bvartools/reference/add_initial_values.md);
+  given, it does not. It is refused for every other model, which scales
+  the loadings’ prior by its error covariance.
+
+- **The VEC models refuse a cointegration prior the sampler cannot
+  honour.** The prior on the loadings has to be centred at zero and
+  independent of the other coefficients, so a non-zero prior mean on the
+  first `k * rank` coefficients, or a prior precision coupling them to
+  the rest, now stops with a message naming the position. So do a
+  negative `v_i` and a `p_tau_inv` that is not positive definite while
+  `v_i` is positive.
+  [`add_priors()`](https://franzmohr.github.io/bvartools/reference/add_priors.md)
+  and
+  [`cointspace_prior()`](https://franzmohr.github.io/bvartools/reference/cointspace_prior.md)
+  produce none of these, so only a prior edited by hand reaches them.
+
+- **[`bayests_files()`](https://franzmohr.github.io/bvartools/reference/bayests_files.md)
+  renames the exit status into place once it is written.** The script it
+  runs wrote BayesTS’s exit status straight into the file the session
+  polls for, and a redirection creates that file before anything is in
+  it, so a poll could find it empty and report a run that had succeeded
+  as failed with “exit status NA”. It happened once, on 21 September
+  2026, to two directories of a pass of `bayests loglik` that mostly
+  skipped files that already had their log-likelihood, which finish well
+  inside the polling interval. It did not happen again in 20 repetitions
+  of that pass or in 180 runs polled every 10 ms, so it is rare; the
+  status now goes to a file of its own and is renamed into place, and a
+  status that still cannot be read is read again for a quarter of a
+  second before it counts, in case something else held the file open for
+  a moment. A run that fails is still reported, with the status it
+  exited with.
+
+- **SSVS refuses three priors it could not honour.** The vendored core
+  now checks, at every coefficient SSVS selects over, that the prior
+  mean is zero, that the prior precision couples it to nothing else, and
+  that `tau0` is smaller than `tau1`. Each of those files used to run:
+  the coefficients were drawn under the prior as given while the
+  inclusion indicators were scored as if both mixture components sat at
+  zero, so the chain targeted neither model (George, Sun and Ni 2008,
+  eq. 12).
+  [`add_priors()`](https://franzmohr.github.io/bvartools/reference/add_priors.md)
+  produces a diagonal precision and `tau0 < tau1` from its defaults, so
+  what reaches this is a non-zero mean: **`coef$const` together with
+  SSVS and `varsel$exclude_det = FALSE`, the default, now stops** with a
+  message naming the position, as does `coef$coint_var = TRUE` with SSVS
+  over the first own lags it puts a mean of one on. Setting
+  `varsel$exclude_det = TRUE` keeps the intercept out of the selection
+  and runs. *Draws are unchanged* for every model still accepted.
+
+- **`bvs` warns when its coefficient prior is too flat to select
+  against.** An excluded coefficient is drawn from its prior and then
+  scored against the data, so the flatter the prior the harder it is for
+  anything to get back in, and inclusion probabilities pinned near zero
+  describe the prior rather than the data (Korobilis 2013, section 3.1).
+  The core reports a selected position whose conditional prior variance
+  is 100 or more, and
+  [`add_posterior_coefficients()`](https://franzmohr.github.io/bvartools/reference/add_posterior_coefficients.md)
+  raises it as an R warning for the seven constant-coefficient models
+  that offer `bvs`. It was collected rather than raised where it arose:
+  `Rf_warning()` may longjmp out of a running sampler. *Draws are
+  unchanged.*
+
+- The vendored BayesTS core is refreshed to upstream `cea124b`, which
+  brings the two items above and the one below. *Draws are unchanged*
+  for every model that does not use the new prior: upstream’s
+  fingerprint recording is identical for every file without it.
+
+- **A test for time variation in TVP-VARs with stochastic volatility.**
+  [`add_priors()`](https://franzmohr.github.io/bvartools/reference/add_priors.md)
+  takes `coef$omega_v` and `sigma$omega_v` in place of `shape`/`rate`
+  for a model with `tvp = TRUE` and `error = "sv"` or `"sv+covar"`. Each
+  puts a normal prior `N(0, omega_v)` on the signed standard deviation
+  of a random walk’s innovations – the coefficients and the covariance
+  coefficients for `coef`, the log-volatilities for `sigma` – which is
+  the non-centred parameterisation of Frühwirth-Schnatter and Wagner
+  (2010). A coefficient or volatility that does not move is then a point
+  inside the prior, so the Bayes factor for time variation is a
+  Savage-Dickey density ratio that one run estimates (Chan 2018). Each
+  block of the posterior drawn this way holds, beside `sigma` (still the
+  state variance, now `omega^2`), the draws of `omega` and the log
+  densities at zero `omega_log_zero`, per state, and
+  `omega_log_zero_joint`, for the block;
+  [`?add_priors.bvarmodel`](https://franzmohr.github.io/bvartools/reference/add_priors.bvarmodel.md)
+  gives the formula. The blocks choose their prior one by one, `omega_v`
+  is refused beside `shape`/`rate` and on every other model, and
+  [`write_to_hdf5()`](https://franzmohr.github.io/bvartools/reference/write_to_hdf5.md)
+  and
+  [`read_model_from_hdf5()`](https://franzmohr.github.io/bvartools/reference/read_model_from_hdf5.md)
+  carry the prior and the draws. `VarTvpStochvol` now also returns the
+  core’s warnings, which
+  [`add_posterior_coefficients()`](https://franzmohr.github.io/bvartools/reference/add_posterior_coefficients.md)
+  raises.
+
+- **[`time_variation_test()`](https://franzmohr.github.io/bvartools/reference/time_variation_test.md)
+  turns those draws into Bayes factors.** For a `bvarmodel` estimated
+  under `omega_v` it reports, for every coefficient, covariance
+  coefficient and log-volatility, the log Bayes factor in favour of time
+  variation against a constant state, and one for each block jointly,
+  each with a numerical standard error from batch means. The joint Bayes
+  factor compares “every state of the block moves” with “none does”, not
+  “at least one moves”, and
+  [`?time_variation_test.bvarmodel`](https://franzmohr.github.io/bvartools/reference/time_variation_test.bvarmodel.md)
+  says why the two can disagree.
+
+- **The test covers TVP-VARs with a gamma error term too.**
+  `coef$omega_v` is accepted for `tvp = TRUE` with `error = "gamma"` or
+  `"gamma+covar"` as well, for the coefficients and the covariance
+  coefficients, whose draws and
+  [`time_variation_test()`](https://franzmohr.github.io/bvartools/reference/time_variation_test.md)
+  rows are those of the stochastic volatility model. The error precision
+  of these models does not move, so `sigma$omega_v` remains for
+  stochastic volatility, and is now refused on every other error term
+  rather than accepted as a name and left unread.
+
+- **And TVP-VEC models with stochastic volatility.**
+  [`add_priors()`](https://franzmohr.github.io/bvartools/reference/add_priors.md)
+  on a `bvecmodel` with `tvp = TRUE` and `error = "sv"` or `"sv+covar"`
+  takes `coef$omega_v` (the loadings, the other coefficients and the
+  covariance coefficients) and `sigma$omega_v` (the log-volatilities) in
+  place of `shape`/`rate`, and
+  [`time_variation_test()`](https://franzmohr.github.io/bvartools/reference/time_variation_test.md)
+  has a `bvecmodel` method, which labels the loadings by the error
+  correction term they load on. The cointegration space keeps its state
+  equation, whose variance is fixed to pin down the scale of beta, so it
+  has no prior to test against. The same `coef$omega_v` works for
+  TVP-VEC models with `error = "gamma"` or `"gamma+covar"`, whose
+  coefficients and covariance coefficients are tested as those of the
+  stochastic volatility model are.
+
+- **[`transform_variables()`](https://franzmohr.github.io/bvartools/reference/transform_variables.md)
+  returns a vector series for a vector series**, where it returned a
+  one-column matrix, and a single series takes a named or an unnamed
+  code alike: a named code on a series without a column name used to
+  stop with “subscript out of bounds”. Its documentation said code 7
+  loses one leading observation; it loses two, being the difference of a
+  growth rate, and always did.
+
+- **Every plot method returns its input invisibly**, which
+  [`plot.bvarfevd()`](https://franzmohr.github.io/bvartools/reference/plot.bvarfevd.md),
+  [`plot.bvarirf()`](https://franzmohr.github.io/bvartools/reference/plot.bvarirf.md),
+  [`plot.bvarprd()`](https://franzmohr.github.io/bvartools/reference/plot.bvarprd.md),
+  [`plot.modellist()`](https://franzmohr.github.io/bvartools/reference/plot.modellist.md)
+  and
+  [`plot_forecast_errors_by_period()`](https://franzmohr.github.io/bvartools/reference/plot_forecast_errors_by_period.md)
+  did not: they returned whatever their last drawing call did.
+  **[`write_to_hdf5()`](https://franzmohr.github.io/bvartools/reference/write_to_hdf5.md)
+  on a ‘modellist’ or an ‘expandingwindow’ returns the paths it wrote**,
+  invisibly, as it already did for a single model.
+
+- Every exported function documents its value. The help of
+  [`post_coint_kls()`](https://franzmohr.github.io/bvartools/reference/post_coint_kls.md)
+  and
+  [`post_coint_kls_sur()`](https://franzmohr.github.io/bvartools/reference/post_coint_kls_sur.md)
+  said `Gamma` is a K x N matrix; it is a column vector, `vec(Gamma)`
+  for the first, which is how
+  [`bvec()`](https://franzmohr.github.io/bvartools/reference/bvec.md)’s
+  example and the VEC vignette have always used it.
+  [`selection_criteria()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.md)
+  says what the median and the band of `RSFE` are – the ones of `AFE` up
+  to the interpolation between draws – and the agent skill in
+  `inst/agents` covers the discounted models and `LML`.
+
+- `Depends` requires `R (>= 4.0.0)` rather than `(>= 3.5)`.
+  `src/Makevars` has set `CXX_STD = CXX17` since the C++ core arrived,
+  and 3.5 predates R’s own requirement of a C++11 compiler, let alone a
+  toolchain that honours a request for C++17 – so the old floor was a
+  claim nothing tested, the check matrix reaching back only to
+  `oldrel-1`. dfmtools and fincond, which carry the same mismatch or
+  depend on this one, move with it.
+
+- **The two discounted models, `VarTvpDiscount` and `VecTvpDiscount`,
+  can be set up, estimated, forecast, scored, written and read back.**
+  They are reached with `algorithm = "discount"` of
+  [`create_bvarmodel()`](https://franzmohr.github.io/bvartools/reference/create_bvarmodel.md)
+  and
+  [`create_bvecmodel()`](https://franzmohr.github.io/bvartools/reference/create_bvecmodel.md),
+  and
+  [`add_posterior_coefficients()`](https://franzmohr.github.io/bvartools/reference/add_posterior_coefficients.md)
+  estimates them here like any other algorithm: the filter is part of
+  the vendored BayesTS core, as every sampler in this package is.
+  Estimating one consumes no random numbers, so a model estimated in R
+  and the same model estimated by the `bayests` command line over a
+  written file agree to the bit rather than merely in distribution. No
+  sampler here changes, and no model that does not ask for the new
+  algorithm is written differently.
+
+  What comes back is a posterior rather than a chain, and the steps that
+  follow know it: `posterior$a$mean`, `posterior$a$scale`,
+  `posterior$a$cov`, `posterior$u_sigma$scale` and `posterior$df` hold
+  one row per period and carry no `mcpar`, and there is no `coeffs`
+  anywhere, because joining one draw per period would look like a
+  sampled path and is not one.
+
+  They are not samplers. The posterior is the matrix normal dynamic
+  linear model of West & Harrison (1997, ch. 16) with the discounted
+  Wishart of Uhlig (1997), closed form in one pass over the sample, so
+  `burnin` must be 0 and `thin` 1 and `iterations` says only how many
+  i.i.d. draws a forecast takes. Two discounts govern it, `delta_beta`
+  for the coefficients and `delta_sigma` for the error covariance, both
+  in `(0, 1]` and both a model in their own right at 1, where the
+  quantity they govern does not move. A vector in either gives one model
+  per value, as a vector in `p`, `s` or `r` does.
+
+  What they buy, besides the speed, is that the sum of
+  `/posterior/loglik` is the **exact** log marginal likelihood of the
+  sample rather than an estimate of it.
+  [`selection_criteria()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.md)
+  reports it as `LML`, and it is the one criterion they carry: there is
+  no chain to estimate an effective number of parameters from, and the
+  marginal likelihood has already paid for the complexity a count of
+  parameters would charge for.
+  [`choose_best_model()`](https://franzmohr.github.io/bvartools/reference/choose_best_model.md)
+  maximises it, so a grid over the rank, the lag order, the
+  cointegration matrix or the two discounts is compared without a chain
+  being run for any of it.
+
+  Three things about the file differ from every other model here, and
+  each is a different model rather than a spelling. The coefficient
+  prior is a matrix normal at `/priors/a/mean` and `/priors/a/cov` – an
+  n_design x k mean and the n_design x n_design regressor side of a
+  covariance – and not the `/priors/a/mu` and `/priors/a/v_inv` of a
+  sampler, which a discounted model reads as no prior at all.
+  [`add_priors()`](https://franzmohr.github.io/bvartools/reference/add_priors.md)
+  therefore takes `coef$v_i`, `coef$v_i_det`, `coef$v_i_alpha` and
+  `coef$const`, refuses `coef$shape` and `coef$rate`, which are the
+  prior of state variances this model does not have, and refuses
+  `coef$v_i = 0`, a precision with no covariance to write. The SUR
+  matrix `/data/train/z` is not written, the filter running against the
+  compact `/data/train/x` instead. And a discounted VEC **conditions on
+  a fixed cointegration matrix** rather than drawing one:
+  [`add_initial_values()`](https://franzmohr.github.io/bvartools/reference/add_initial_values.md)
+  puts Johansen’s estimate at `/initial/beta`, or the space given in its
+  new `beta` argument, and there is no cointegration space prior to
+  specify. What drifts is the adjustment to the long-run relations and
+  not the relations themselves, which is a different question from the
+  one `algorithm = "KLGS2010"` answers rather than a cheaper way of
+  answering the same one.
+
+  [`open_models()`](https://franzmohr.github.io/bvartools/reference/open_models.md)
+  reports `delta_beta` and `delta_sigma` in the manifest, at 1 for every
+  model that has no discounts, which is what 1 means.
+
+- **[`read_model_from_hdf5()`](https://franzmohr.github.io/bvartools/reference/read_model_from_hdf5.md)
+  reads a posterior block of one row as one row.** hdf5r drops a
+  dimension of size one, and
+  [`as.matrix()`](https://rdrr.io/r/base/matrix.html) then made a column
+  of what the file holds as a row, so such a block came back transposed:
+  a single draw over many columns read as many draws of one column.
+  Nothing a sampler writes has one draw, which is why this went unseen –
+  the discounted models’ `/posterior/loglik` and their one-column
+  `/posterior/beta/coeffs` are exactly that. A block with no `mcpar`
+  attributes is now also read as the plain matrix it is rather than
+  labelled as a chain, because a closed form’s columns are periods and
+  its rows are not draws.
+
+- **Vendored BayesTS core refreshed to BayesTS 0.3.0 plus one commit,
+  `6fe91d2`.** **Draws are unchanged** for every sampler here, and
+  nothing this package compiles behaves differently: the four headers
+  that changed – `bayests/inputs.h`, `priors.h`, `results.h` and
+  `spec.h` – gain declarations and nothing else, and no vendored source
+  reads what they declare. The fix itself does not reach this package.
+  It is to `core/models/factor_score.h`, the filter a *factor* model’s
+  forecast is scored by, which is one of the sources
+  `src/core/VENDORED.md` records as not copied; a VAR or a VEC is scored
+  by its own pointwise log likelihood over the scored periods, which
+  needs no filter. dfmtools, which does vendor that file, carries the
+  fix.
+
+  What 0.3.0 adds is `VarTvpDiscount` and `VecTvpDiscount`, two models
+  with a closed-form posterior rather than a chain, and **both are now
+  vendored**: `core/models/var_tvp_discount.cpp`,
+  `core/models/vec_tvp_discount.cpp` and the
+  `core/models/discount_support.h` they share. An earlier refresh held
+  them back because nothing here could reach them;
+  `src/VarTvpDiscount.cpp` and `src/VecTvpDiscount.cpp` now can, so
+  their entries are out of the refresh script’s `skip` and
+  `src/core/VENDORED.md` describes them under a section of their own
+  rather than under *Not copied*.
+
+  The one commit past the release is a fix to `VarTvpDiscount`, found by
+  wiring its score up here: `predictive_log_density()` read the rows of
+  `/data/forecast/x` as they arrived, and the lagged endogenous blocks
+  of a horizon past the first hold a placeholder, which a forecast
+  overwrites as it simulates and that recursion does not. The first
+  horizon was scored correctly and every one after it came back as
+  `NaN`. It now fills those blocks from the realised values, as the
+  eight sampling VARs beside it always have. `VecTvpDiscount` was never
+  affected.
+
+  `src/core/VENDORED.md` now also records which upstream commit the copy
+  is at, which it never has. Nothing but a reader enforces that
+  paragraph – the refresh script compares files and `inst/COPYRIGHTS`,
+  not prose – so it says to check it against the upstream log during a
+  refresh.
+
+- **[`selection_criteria()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.md)
+  has a default method.** A model of a class this package has no method
+  for – a dynamic factor model of dfmtools, say – now gets `LL`, `WAIC`,
+  `LOOIC` from `posterior$loglik` and `LPL` from
+  `posterior$forecast$loglik`, which is everything the draws alone
+  support.
+  [`choose_best_model()`](https://franzmohr.github.io/bvartools/reference/choose_best_model.md)
+  ranks the result and [`print()`](https://rdrr.io/r/base/print.html)
+  shows it, both unchanged.
+
+  What the default cannot report is `AIC`, `BIC` and `HQ`, which charge
+  a model for its size and so need a count of its free parameters, and
+  `FE`, `AFE` and `RSFE`, which need the variables named and paired up.
+  Those are properties of a model rather than of its draws, and a class
+  that has them should write its own method. The periods of the `LPL`
+  terms are numbered from one for the same reason: this method does not
+  know where a model keeps its sample, so it cannot say when the scored
+  periods were.
+
+  The point is that one implementation serves every class. WAIC and
+  LOOIC in particular need nothing but a pointwise log-likelihood, and a
+  package that has one should not have to write them again to report
+  them.
+
+- **Dynamic multipliers.**
+  [`multipliers()`](https://franzmohr.github.io/bvartools/reference/multipliers.md)
+  returns the response of an endogenous variable to a change in a weakly
+  exogenous one, with methods for a `bvarmodel` and a `bvecmodel`. The
+  change is held from period zero on by default, or confined to period
+  zero with `type = "transitory"`. An error correction model is put into
+  its levels form with
+  [`vec_to_var()`](https://franzmohr.github.io/bvartools/reference/vec_to_var.md)
+  first, so the multipliers are statements about the levels and the
+  long-run relations enter them. What comes back has the class an
+  impulse response has, so it plots the same way. This is the quantity
+  the country models of a global VAR are read for, where the foreign
+  block is weakly exogenous.
+
+- **[`selection_criteria()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.md)
+  reports the score of a forecast as `LPL`.** A model that carries
+  `posterior$forecast$loglik` – the log predictive density of each
+  period its horizon realised, written by BayesTS against `data$test$y`
+  – now gets the criterion `"LPL"`, the log of the mean of the draws of
+  each period’s density, summed over the periods.
+  [`choose_best_model()`](https://franzmohr.github.io/bvartools/reference/choose_best_model.md)
+  takes it as before and [`print()`](https://rdrr.io/r/base/print.html)
+  shows it beside the in-sample criteria.
+
+  It is the criterion an expanding window exercise already reported,
+  from the densities of
+  [`add_predictive_loglik()`](https://franzmohr.github.io/bvartools/reference/add_predictive_loglik.md),
+  and the two now go through one function: the same densities give the
+  same entry, band and numerical standard error alike, so a comparison
+  of a scored model with a scored window is a comparison of the same
+  quantity. A single model’s densities are those of the horizons of one
+  forecast, each conditioning on the periods realised before it; an
+  expanding window’s are one per window. Both are one step ahead and
+  both sum to the log predictive likelihood of the stretch they cover.
+
+- **A model carries what it was scored against, in `data$test$y`.**
+  [`add_forecast_errors()`](https://franzmohr.github.io/bvartools/reference/add_forecast_errors.md)
+  puts the periods of the horizon it took the errors against into the
+  model, and
+  [`write_to_hdf5()`](https://franzmohr.github.io/bvartools/reference/write_to_hdf5.md)
+  writes them to `/data/test/y`, beside `/data/train/y`. `test_sample`
+  now defaults to `NULL`, in which case those values are used, so a
+  model read back from a file is scored without the sample being
+  supplied a second time.
+
+  This is what lets an expanding window exercise be scored a file at a
+  time. A window used to need its test data passed in from outside,
+  which for a folder of models means holding the series in the session
+  and knowing which periods belong to which window; now each file
+  carries the periods it is to be judged by.
+  [`vec_to_var()`](https://franzmohr.github.io/bvartools/reference/vec_to_var.md)
+  takes them across with the forecast data, the levels being what a VEC
+  model is scored in either way.
+
+  BayesTS 0.3.0 reads the same dataset into every model’s input, so
+  `bayests check` no longer reports it as one the model never reads, and
+  the predictive log-likelihood that will fill
+  `posterior$forecast$loglik` has its observations waiting for it.
+  Nothing in BayesTS computes from it yet.
+
+- **The forecasts move to `posterior$forecast$forecasts`, with the
+  forecast errors beside them at `posterior$forecast$errors`.**
+  `posterior$forecast` is a group now rather than a matrix of draws, and
+  `posterior$forecast_errors` is gone. **This breaks code that reads
+  either of the old names**, in a model object as much as in a file
+  written with
+  [`write_to_hdf5()`](https://franzmohr.github.io/bvartools/reference/write_to_hdf5.md);
+  the accessors [`predict()`](https://rdrr.io/r/stats/predict.html),
+  [`get_forecast_errors()`](https://franzmohr.github.io/bvartools/reference/get_forecast_errors.md)
+  and
+  [`selection_criteria()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.md)
+  are unchanged and are the way to reach both without naming a path.
+
+  The group is the place for everything the forecast periods produce,
+  which is about to include the log predictive density of what those
+  periods realised. One matrix could not hold three things, and the
+  errors were already spelling the group with an underscore. The members
+  are named after what they hold rather than one of them being `draws`,
+  since all of them are draws. `posterior$loglik`, the in-sample
+  pointwise log-likelihood, does not move: it evaluates each observation
+  of the sample under states that have already seen it, which is a
+  different statistic from a forecast score rather than the same one
+  over other periods.
+
+  It is the layout of the model file as well –
+  `/posterior/forecast/forecasts` and `/posterior/forecast/errors` –
+  which is what BayesTS 0.3.0 writes. A file written before that is
+  migrated by running its forecast again. An object in a session is
+  migrated the same way, by
+  [`add_posterior_forecasts()`](https://franzmohr.github.io/bvartools/reference/add_posterior_forecasts.md),
+  and says so rather than being read as one that was never forecast.
+
+- **A folder of models is worked on without holding it.**
+  [`open_models()`](https://franzmohr.github.io/bvartools/reference/open_models.md)
+  returns a handle to a folder written with
+  [`write_to_hdf5()`](https://franzmohr.github.io/bvartools/reference/write_to_hdf5.md),
+  carrying a row per model – where it is and what it is – and none of
+  the draws.
+  [`map_models()`](https://franzmohr.github.io/bvartools/reference/map_models.md)
+  reads one model, applies a function, writes it back and drops it, and
+  [`add_priors()`](https://franzmohr.github.io/bvartools/reference/add_priors.md),
+  [`add_initial_values()`](https://franzmohr.github.io/bvartools/reference/add_initial_values.md),
+  [`add_seed()`](https://franzmohr.github.io/bvartools/reference/add_seed.md),
+  [`add_posterior_coefficients()`](https://franzmohr.github.io/bvartools/reference/add_posterior_coefficients.md),
+  [`add_posterior_loglik()`](https://franzmohr.github.io/bvartools/reference/add_posterior_loglik.md)
+  and [`thin()`](https://rdrr.io/pkg/coda/man/thin.html) have methods
+  for the handle, so a step costs one model per worker rather than the
+  whole folder. They take `models`, the models a step is applied to,
+  which makes a long estimation resumable, and the seeds are the ones
+  the same models get as a list, so a run taken in parts draws what a
+  run over all of them draws. With `write = FALSE`
+  [`map_models()`](https://franzmohr.github.io/bvartools/reference/map_models.md)
+  only reads, which is how
+  [`selection_criteria()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.md)
+  compares a grid too large to hold, and
+  [`read_models_from_folder()`](https://franzmohr.github.io/bvartools/reference/read_models_from_folder.md)
+  takes `draws` for reading part of every chain. This is the file-first
+  workflow bgvars has for a global model, for any list of models: a lag
+  and rank grid, or an expanding window.
+
+- **BayesTS can be run on stored models.**
+  [`bayests_files()`](https://franzmohr.github.io/bvartools/reference/bayests_files.md)
+  returns a function that runs the BayesTS executable on a model file or
+  on a whole directory of them and leaves the results where it wrote
+  them.
+  [`bayests_posterior()`](https://franzmohr.github.io/bvartools/reference/bayests_posterior.md)
+  remains the way to draw a model that is in the session, but for a
+  model that is already stored it copies the draws three times and holds
+  them in R for no purpose; run on the files, nothing of them passes
+  through the session. The draws are the same either way, since a model
+  is drawn with the seed in its file.
+
+- **A model can be analysed from its file.**
+  [`open_model()`](https://franzmohr.github.io/bvartools/reference/open_model.md)
+  returns a handle to a model written with
+  [`write_to_hdf5()`](https://franzmohr.github.io/bvartools/reference/write_to_hdf5.md),
+  carrying its specification, its data and the length of its chain but
+  none of its draws.
+  [`map_draws()`](https://franzmohr.github.io/bvartools/reference/map_draws.md)
+  reads the chain in pieces and applies a function to each, and
+  [`irf()`](https://franzmohr.github.io/bvartools/reference/irf.md) and
+  [`fevd()`](https://franzmohr.github.io/bvartools/reference/fevd.md)
+  have methods for such a handle: an impulse response stacks the
+  responses of the pieces and takes its quantiles over all of them, a
+  variance decomposition averages the pieces before shares are
+  normalised or groups collapsed. Both give what the same call on the
+  model in memory gives, which is what the tests check. This is for the
+  models whose draws are what they are large in – a time varying model,
+  or a global model solved from many sub-models.
+
+- **[`read_model_from_hdf5()`](https://franzmohr.github.io/bvartools/reference/read_model_from_hdf5.md)
+  reads part of a chain.** It read every draw of every block, so a
+  caller working through a long chain – solving a global model of time
+  varying sub-models draw by draw, say – had to hold the whole posterior
+  of every model to get at one draw of it. The new `draws` argument
+  takes the positions of the draws to read, and only those rows are read
+  from the file; `integer(0)` gives the model, its data and its priors
+  without the draws. A partial read cannot describe the chain it came
+  from, so its blocks are labelled as a chain of their own, while a full
+  read keeps the labels the file carries.
 
 - **[`add_predictive_loglik()`](https://franzmohr.github.io/bvartools/reference/add_predictive_loglik.md)
   takes VAR models.** It refused anything but a VEC model, so the log
@@ -1118,7 +2040,7 @@
     back, priors given as precisions with no defaults, draws in rows,
     and
     [`vec_to_var()`](https://franzmohr.github.io/bvartools/reference/vec_to_var.md)
-    before forecasting a VEC;
+    before the impulse responses of a VEC;
   - the combinations the samplers refuse, and why;
   - complete examples of a VAR, a VEC, a TVP-SV model, a quantile VAR,
     lag order comparison and an HDF5 round trip;
@@ -1413,14 +2335,15 @@
   unchanged, and the matrix that reproduces one of them is not always
   the obvious one –
   [`irf()`](https://franzmohr.github.io/bvartools/reference/irf.md)
-  normalises the Choleski factor to a unit shock under `"oir"` while
+  normalised the Choleski factor to a unit shock under `"oir"` while
   [`fevd()`](https://franzmohr.github.io/bvartools/reference/fevd.md)
-  does not, and the custom path normalises nothing at all. Under
-  `"custom"` the two decompositions keep `Sigma` as the forecast error
-  covariance, so their shares add up across shocks exactly when `P P'`
-  equals `Sigma`, as it does for a rotation of the Choleski factor. This
-  is groundwork for sign restrictions, which produce such a rotation per
-  draw.
+  did not, and the custom path normalises nothing at all. (A later entry
+  above removed that normalisation, so the Choleski factor now
+  reproduces `"oir"` in both.) Under `"custom"` the two decompositions
+  keep `Sigma` as the forecast error covariance, so their shares add up
+  across shocks exactly when `P P'` equals `Sigma`, as it does for a
+  rotation of the Choleski factor. This is groundwork for sign
+  restrictions, which produce such a rotation per draw.
 
 - **[`summary()`](https://rdrr.io/r/base/summary.html) no longer marks a
   covariance that was never estimated as significant.** The asterisk
@@ -2162,7 +3085,9 @@
   [`fevd()`](https://franzmohr.github.io/bvartools/reference/fevd.md)
   and `gfevd()` numbers, so it is left for a deliberate decision;
   `test-spillover.R` pins the current behaviour in both directions so
-  that a change to it fails loudly.
+  that a change to it fails loudly. *Since corrected: see the
+  `fevd(type = "gir")` entry above, which divides by the variance of the
+  shock as Pesaran and Shin do.*
 
 - **Vendored BayesTS core refreshed.** **Draws are unchanged**, for
   every VAR and VEC model this package samples. Upstream’s own
@@ -2652,48 +3577,29 @@
   rounding error. The documentation of the mixture, previously described
   as having seven components, now says ten.
 
-- Fixed missing transformations for structural modesl in `irf.bvar` and
-  `fevd.bvar`.
+- Fixed missing transformations for structural models in
+  [`irf()`](https://franzmohr.github.io/bvartools/reference/irf.md) and
+  [`fevd()`](https://franzmohr.github.io/bvartools/reference/fevd.md).
 
 - Added function `choose_best_model`.
 
-- Added function `create_first_difference_matrix`.
-
-- Added function `create_second_difference_matrix`.
-
-- Added functions `create_bvarmodel`, `create_bvecmodel` and
-  `create_dfmodel` to replace `gen_var`, `gen_vec` and `gen_dfm`,
-  respectively, in the future.
+- Added functions `create_bvarmodel` and `create_bvecmodel`, which
+  replace `gen_var` and `gen_vec`.
 
 - Added `generate_lower_block_diagonal` for faster simulation of
   autocorrelated TVP coefficients.
 
-- Updated functions for dynamic factor models to the revised design
-  pattern.
-
-- Added a warning message that the functionality for dynamic factor
-  models will be exported to a separate package with package in the
-  future.
-
-- Add a generic function `mean_absolute_forecast_error` for MAFE
-  calculation.
-
-- Add a generic function `prediction_matrix` which helps with forecast
-  generation.
-
 - Add a generic function `selection_criteria` to calculate information
   criteria for model selection.
 
-- Add a generic function `forecast_errors` to generate forecast errors.
+- Add generic functions `add_forecast_errors` and `get_forecast_errors`
+  to generate forecast errors.
 
 - Add a generic function `add_initial_values` to separate initial value
   generation from prior specification.
 
-- Added `gen_artificial_vec` to generate artificial data sets for
-  algorithm and model testing.
-
-- Added `gen_artificial_var` to generate artificial data sets for
-  algorithm and model testing.
+- Added `generate_artificial_var` and `generate_artificial_vec` to
+  generate artificial data sets for algorithm and model testing.
 
 - Added `coint_kls2010_reparameterise_two` for more convenient data
   transformation.
@@ -2701,8 +3607,8 @@
 - Added `coint_prepare_sur_data` for more convenient input data
   preparation for cointegration simulation.
 
-- `plot.bvar` and `plot.bvec` allow to specify whether a horizontal line
-  should be added or not.
+- The `plot` methods allow to specify whether a horizontal line should
+  be added or not.
 
 ## bvartools 0.3.0
 
@@ -2739,8 +3645,9 @@ functions. Nothing here stops working.
   the class is renamed, to `bvarmodel`, `bvecmodel` and `modellist`. So
   are the functions that keep their name in 1.0.0 but take the
   reorganised model object: `add_priors`, `bvar`, `bvec`, `irf`, `fevd`,
-  `inclusion_prior`, `minnesota_prior` and `ssvs_prior`. The new
-  vignette, *Moving from bvartools 0.3.0 to 1.0.0*, lists all of it.
+  `inclusion_prior`, `minnesota_prior` and `ssvs_prior`. The section
+  *Moving from 0.3.0 to 1.0.0* at the top of the 1.0.0 entry lists all
+  of it.
 
 - **Fixed: `stochvol_ksc1998` and `stochvol_ocsn2007` failed on an
   observation far out in the tails of every mixture component.** Both

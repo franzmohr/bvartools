@@ -24,7 +24,7 @@
 
     <a class="navbar-brand me-2" href="index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -232,7 +232,7 @@
 <span><span class="va">cl</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/parallel/makeCluster.html" class="external-link">makeCluster</a></span><span class="op">(</span><span class="fl">4</span><span class="op">)</span></span>
 <span><span class="co"># ... parLapply(cl, ...) running the models ...</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/parallel/makeCluster.html" class="external-link">stopCluster</a></span><span class="op">(</span><span class="va">cl</span><span class="op">)</span></span></code></pre></div>
-<p>The script’s own session keeps all cores. To restrict it as well, set the variable before R starts, e.g. <code>OPENBLAS_NUM_THREADS=1 Rscript script.R</code>.</p>
+<p>The script’s own session keeps all cores. To restrict it as well, set the variable before R starts, e.g. <code>OPENBLAS_NUM_THREADS=1 Rscript script.R</code>.</p>
 <p>For lists of models none of this is needed: <code><a href="reference/add_posterior_coefficients.html">add_posterior_coefficients()</a></code>, <code><a href="reference/add_posterior_forecasts.html">add_posterior_forecasts()</a></code> and <code><a href="reference/add_posterior_loglik.html">add_posterior_loglik()</a></code> take an argument <code>cores</code> for objects of class ‘modellist’ and ‘expandingwindow’, start that many workers with one BLAS thread each and stop them again. For 16 TVP models, two lag orders over eight expanding windows, eight workers cut the time of <code><a href="reference/add_posterior_coefficients.html">add_posterior_coefficients()</a></code> from 21 to 5 seconds.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">models</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/add_posterior_coefficients.html">add_posterior_coefficients</a></span><span class="op">(</span><span class="va">models</span>, cores <span class="op">=</span> <span class="fl">8</span><span class="op">)</span></span></code></pre></div>
@@ -260,7 +260,7 @@
 <span></span>
 <span><span class="co"># Plot the series</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">e1</span><span class="op">)</span></span></code></pre></div>
-<p><img src="reference/figures/README-data-1.png" alt="" style="display: block; margin: auto;"></p>
+<p><img src="reference/figures/README-data-1.png" alt="Three stacked time series panels showing the quarterly log-differences of West German fixed investment, disposable income and consumption expenditures from 1960 to 1978." style="display: block; margin: auto;"></p>
 </div>
 <div class="section level3">
 <h3 id="setting-up-a-model">Setting up a model<a class="anchor" aria-label="anchor" href="#setting-up-a-model"></a>
@@ -455,11 +455,11 @@
 <p>Posterior draws can be visually inspected by using the <code>plot</code> function. By default, it produces a series of histograms of all estimated coefficients.</p>
 <div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">bvar_est</span><span class="op">)</span></span></code></pre></div>
-<p><img src="reference/figures/README-unnamed-chunk-6-1.png" alt="" style="display: block; margin: auto;"><img src="reference/figures/README-unnamed-chunk-6-2.png" alt="" style="display: block; margin: auto;"><img src="reference/figures/README-unnamed-chunk-6-3.png" alt="" style="display: block; margin: auto;"></p>
+<p><img src="reference/figures/README-unnamed-chunk-6-1.png" alt="Grid of histograms of the posterior draws of the coefficients on the lagged endogenous variables, one row per equation and one column per regressor." style="display: block; margin: auto;"><img src="reference/figures/README-unnamed-chunk-6-2.png" alt="Histograms of the posterior draws of the intercept of each of the three equations." style="display: block; margin: auto;"><img src="reference/figures/README-unnamed-chunk-6-3.png" alt="Grid of histograms of the posterior draws of the elements of the covariance matrix of the error term." style="display: block; margin: auto;"></p>
 <p>Alternatively, the trace plot of the post-burnin draws can be drawn by adding the argument <code>type = "trace"</code>:</p>
 <div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">bvar_est</span>, type <span class="op">=</span> <span class="st">"trace"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="reference/figures/README-unnamed-chunk-7-1.png" alt="" style="display: block; margin: auto;"><img src="reference/figures/README-unnamed-chunk-7-2.png" alt="" style="display: block; margin: auto;"><img src="reference/figures/README-unnamed-chunk-7-3.png" alt="" style="display: block; margin: auto;"></p>
+<p><img src="reference/figures/README-unnamed-chunk-7-1.png" alt="Grid of trace plots of the post-burnin draws of the coefficients on the lagged endogenous variables, one row per equation and one column per regressor." style="display: block; margin: auto;"><img src="reference/figures/README-unnamed-chunk-7-2.png" alt="Trace plots of the post-burnin draws of the intercept of each of the three equations." style="display: block; margin: auto;"><img src="reference/figures/README-unnamed-chunk-7-3.png" alt="Grid of trace plots of the post-burnin draws of the elements of the covariance matrix of the error term." style="display: block; margin: auto;"></p>
 </div>
 <div class="section level3">
 <h3 id="thin-results">Thin results<a class="anchor" aria-label="anchor" href="#thin-results"></a>
@@ -477,12 +477,10 @@
 <span><span class="va">bvar_est</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/add_posterior_forecasts.html">add_posterior_forecasts</a></span><span class="op">(</span><span class="va">bvar_est</span><span class="op">)</span></span></code></pre></div>
 <p>Forecasts with credible bands can be extracted from the model using the <code>predict</code> function. The <code>n_ahead</code> argument can be used to set the given forecast horizon. However, the number of available forecast periods is limited to specification used in <code>add_forecast_input</code>.</p>
 <div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">bvar_pred</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">bvar_est</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb24"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" tabindex="-1"></a><span class="do">## Warning in predict.bvarmodel(bvar_est): Argument 'n_ahead' is larger than the value in object$model$h.</span></span>
-<span id="cb24-2"><a href="#cb24-2" tabindex="-1"></a><span class="do">## Limiting the output to the latter.</span></span></code></pre></div>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">bvar_pred</span><span class="op">)</span></span></code></pre></div>
-<p><img src="reference/figures/README-forecasts-1.png"><!-- --><img src="reference/figures/README-forecasts-2.png"><!-- --><img src="reference/figures/README-forecasts-3.png"><!-- --></p>
+<code class="sourceCode R"><span><span class="va">bvar_pred</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">bvar_est</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">bvar_pred</span><span class="op">)</span></span></code></pre></div>
+<p><img src="reference/figures/README-forecasts-1.png" alt="Fixed investment from 1960 to 1978 with a five-period forecast and its credible band attached to the end of the series."><img src="reference/figures/README-forecasts-2.png" alt="Disposable income from 1960 to 1978 with a five-period forecast and its credible band attached to the end of the series."><img src="reference/figures/README-forecasts-3.png" alt="Consumption expenditures from 1960 to 1978 with a five-period forecast and its credible band attached to the end of the series."></p>
 </div>
 <div class="section level3">
 <h3 id="impulse-response-analysis">Impulse response analysis<a class="anchor" aria-label="anchor" href="#impulse-response-analysis"></a>
@@ -490,39 +488,39 @@
 <div class="section level4">
 <h4 id="forecast-error-impulse-response">Forecast error impulse response<a class="anchor" aria-label="anchor" href="#forecast-error-impulse-response"></a>
 </h4>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">IR</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/irf.html">irf</a></span><span class="op">(</span><span class="va">bvar_est</span>, impulse <span class="op">=</span> <span class="st">"income"</span>, response <span class="op">=</span> <span class="st">"cons"</span>, n_ahead <span class="op">=</span> <span class="fl">8</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">IR</span>, main <span class="op">=</span> <span class="st">"Forecast Error Impulse Response"</span>, xlab <span class="op">=</span> <span class="st">"Period"</span>, ylab <span class="op">=</span> <span class="st">"Response"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="reference/figures/README-feir-1.png"><!-- --></p>
+<p><img src="reference/figures/README-feir-1.png" alt="Forecast error impulse response of consumption to a shock in income over eight periods, drawn as the posterior median with a credible band around it."></p>
 </div>
 <div class="section level4">
 <h4 id="orthogonalised-impulse-response">Orthogonalised impulse response<a class="anchor" aria-label="anchor" href="#orthogonalised-impulse-response"></a>
 </h4>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">OIR</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/irf.html">irf</a></span><span class="op">(</span><span class="va">bvar_est</span>, impulse <span class="op">=</span> <span class="st">"income"</span>, response <span class="op">=</span> <span class="st">"cons"</span>, n_ahead <span class="op">=</span> <span class="fl">8</span>, type <span class="op">=</span> <span class="st">"oir"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">OIR</span>, main <span class="op">=</span> <span class="st">"Orthogonalised Impulse Response"</span>, xlab <span class="op">=</span> <span class="st">"Period"</span>, ylab <span class="op">=</span> <span class="st">"Response"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="reference/figures/README-oir-1.png"><!-- --></p>
+<p><img src="reference/figures/README-oir-1.png" alt="Orthogonalised impulse response of consumption to a shock in income over eight periods, drawn as the posterior median with a credible band around it."></p>
 </div>
 <div class="section level4">
 <h4 id="generalised-impulse-response">Generalised impulse response<a class="anchor" aria-label="anchor" href="#generalised-impulse-response"></a>
 </h4>
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">GIR</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/irf.html">irf</a></span><span class="op">(</span><span class="va">bvar_est</span>, impulse <span class="op">=</span> <span class="st">"income"</span>, response <span class="op">=</span> <span class="st">"cons"</span>, n_ahead <span class="op">=</span> <span class="fl">8</span>, type <span class="op">=</span> <span class="st">"gir"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">GIR</span>, main <span class="op">=</span> <span class="st">"Generalised Impulse Response"</span>, xlab <span class="op">=</span> <span class="st">"Period"</span>, ylab <span class="op">=</span> <span class="st">"Response"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="reference/figures/README-gir-1.png"><!-- --></p>
+<p><img src="reference/figures/README-gir-1.png" alt="Generalised impulse response of consumption to a shock in income over eight periods, drawn as the posterior median with a credible band around it."></p>
 </div>
 </div>
 <div class="section level3">
 <h3 id="forecast-error-variance-decomposition">Forecast error variance decomposition<a class="anchor" aria-label="anchor" href="#forecast-error-variance-decomposition"></a>
 </h3>
-<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bvar_fevd</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fevd.html">fevd</a></span><span class="op">(</span><span class="va">bvar_est</span>, response <span class="op">=</span> <span class="st">"cons"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">bvar_fevd</span>, main <span class="op">=</span> <span class="st">"FEVD of consumption"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="reference/figures/README-fevd-1.png"><!-- --></p>
+<p><img src="reference/figures/README-fevd-1.png" alt="Stacked bar chart of the forecast error variance decomposition of consumption over six periods, with the share of the variance attributed to investment, income and consumption."></p>
 </div>
 </div>
 <div class="section level2">
@@ -574,7 +572,7 @@
 <div class="developers">
 <h2 data-toc-skip>Developers</h2>
 <ul class="list-unstyled">
-<li>Franz X. Mohr <br><small class="roles"> Author, maintainer </small> <a href="https://orcid.org/0009-0003-8890-7781" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a>  </li>
+<li>Franz X. Mohr <br><small class="roles"> Author, maintainer, copyright holder </small> <a href="https://orcid.org/0009-0003-8890-7781" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a>  </li>
 </ul>
 </div>
 

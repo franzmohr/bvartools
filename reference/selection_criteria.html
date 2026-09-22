@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -90,7 +90,7 @@
 
 <dt id="arg-relative">relative<a class="anchor" aria-label="anchor" href="#arg-relative"></a></dt>
 <dd><p>an integer specifying the model that is used as the reference
-of relative forecast performance. Default is `0`, which indicates that results
+of relative forecast performance. Default is <code>0</code>, which indicates that results
 are not displayed in relation to each other.</p></dd>
 
 </dl></div>
@@ -165,11 +165,17 @@ observation out by reweighting fails for exactly the periods a path bends
 towards, and neither criterion separates models that differ in how much of
 that freedom they have, such as the cointegration ranks of a time varying
 VEC model. The criterion for those comparisons is <code>"LPL"</code>, the log
-predictive likelihood of an expanding window exercise
-(<code><a href="add_predictive_loglik.html">add_predictive_loglik</a></code>), whose densities condition only on the
-data before the period they evaluate and carry the states forward with their
-state equations. Koop, León-González and Strachan (2011) choose between time
+predictive likelihood, whose densities condition only on the data before the
+period they evaluate. Koop, León-González and Strachan (2011) choose between time
 varying cointegration models with it.</p>
+<p>Two things produce those densities and both report them as <code>"LPL"</code>.
+<code><a href="add_predictive_loglik.html">add_predictive_loglik</a></code> takes one per window of an expanding
+window exercise, carrying the states forward with their state equations, which
+is the form the comparison of ranks above is made in. A single model carries
+one per horizon of its forecast in <code>posterior$forecast$loglik</code>, written
+by BayesTS against the values in <code>data$test$y</code>, each conditioning on the
+periods realised before it. They are the same quantity computed two ways and
+are summarised by the same code, so the same densities give the same number.</p>
 <p>All criteria require that the models that are compared were estimated on the
 same observations. <code><a href="create_bvarmodel.html">create_bvarmodel</a></code> and
 <code><a href="create_bvecmodel.html">create_bvecmodel</a></code> ensure this for a vector of lag orders by

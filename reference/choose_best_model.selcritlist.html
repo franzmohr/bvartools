@@ -9,7 +9,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -77,7 +77,8 @@ to <code><a href="selection_criteria.html">selection_criteria</a></code>.</p></d
 <dt id="arg-criterion">criterion<a class="anchor" aria-label="anchor" href="#arg-criterion"></a></dt>
 <dd><p>the selection criterion that should be used. Available choices
 are <code>"LL"</code>, <code>"AIC"</code>, <code>"BIC"</code>, <code>"HQ"</code>,
-<code>"WAIC"</code> (default), <code>"LOOIC"</code> and <code>"LPL"</code>.</p></dd>
+<code>"WAIC"</code> (default), <code>"LOOIC"</code>, <code>"LPL"</code> and, for the
+discounted models, <code>"LML"</code>.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -87,12 +88,13 @@ are <code>"LL"</code>, <code>"AIC"</code>, <code>"BIC"</code>, <code>"HQ"</code>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>An integer giving the position of the best model in the list provided
-in argument <code>object</code>.</p>
+in argument <code>object</code>. Where several models attain the best value
+exactly, the positions of all of them, in increasing order.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>If argument <code>criterion</code> is "LL" or "LPL", the model with the maximum value
-is chosen, otherwise, the model with the minimum value.</p>
+    <p>If argument <code>criterion</code> is "LL", "LPL" or "LML", the model with the
+maximum value is chosen, otherwise, the model with the minimum value.</p>
 <p>Which criterion to use depends on the models that are compared. See
 <code><a href="selection_criteria.html">selection_criteria</a></code>, whose details set out what each of them
 penalises and when a count of parameters ceases to describe a model. The
@@ -106,6 +108,12 @@ prior, which is the case they are derived for. <code>"LPL"</code>, the log
 predictive likelihood of an expanding window exercise with
 <code><a href="add_predictive_loglik.html">add_predictive_loglik</a></code>, is the criterion for the rank of a VEC
 model whose coefficients or variances follow a state equation.</p>
+<p><code>"LML"</code> is the one criterion of the discounted models and the only one
+they carry. It is the exact log marginal likelihood of the sample, read off
+the file rather than estimated, so a grid over the rank, the cointegration
+matrix, the lag order or the two discounts is compared by it directly. It is
+not comparable with <code>"LL"</code>, which conditions on the parameters where
+this integrates them out.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -113,11 +121,21 @@ model whose coefficients or variances follow a state equation.</p>
 <code><a href="add_forecast_errors.bvarmodel.html">add_forecast_errors.bvarmodel()</a></code>,
 <code><a href="add_forecast_errors.bvecmodel.html">add_forecast_errors.bvecmodel()</a></code>,
 <code><a href="add_predictive_loglik.html">add_predictive_loglik()</a></code>,
+<code><a href="add_predictive_loglik.bvarmodel.html">add_predictive_loglik.bvarmodel()</a></code>,
+<code><a href="add_predictive_loglik.bvecmodel.html">add_predictive_loglik.bvecmodel()</a></code>,
+<code><a href="aggregate_forecasts.html">aggregate_forecasts()</a></code>,
 <code><a href="align_model_obs.modellist.html">align_model_obs.modellist()</a></code>,
+<code><a href="analysis_of_stored_models.html">analysis_of_stored_models</a></code>,
 <code><a href="create_external_forecast.html">create_external_forecast()</a></code>,
+<code><a href="folder_steps.html">folder_steps</a></code>,
+<code><a href="map_draws.html">map_draws()</a></code>,
+<code><a href="map_models.html">map_models()</a></code>,
+<code><a href="open_model.html">open_model()</a></code>,
+<code><a href="open_models.html">open_models()</a></code>,
 <code><a href="plot_forecast_errors_by_period.html">plot_forecast_errors_by_period()</a></code>,
 <code><a href="selection_criteria.bvarmodel.html">selection_criteria.bvarmodel()</a></code>,
 <code><a href="selection_criteria.bvecmodel.html">selection_criteria.bvecmodel()</a></code>,
+<code><a href="selection_criteria.default.html">selection_criteria.default()</a></code>,
 <code><a href="selection_criteria.modellist.html">selection_criteria.modellist()</a></code></p></div>
     </div>
 
@@ -159,9 +177,9 @@ model whose coefficients or variances follow a state equation.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Log-likelihood</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Mean Median Quantile (2.5%) Quantile (97.5%)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Model 1 -506.1 -506.2          -511.8           -501.2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Model 2 -496.7 -496.3          -506.4           -491.2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Model 3 -497.2 -497.1          -506.0           -489.7</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Model 1 -505.5 -505.3          -513.3           -500.6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Model 2 -496.8 -496.1          -503.7           -489.2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Model 3 -497.1 -496.9          -504.7           -489.2</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Akaike Information Criterion (AIC)</span>
@@ -175,7 +193,7 @@ model whose coefficients or variances follow a state equation.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Bayesian Information Criterion (BIC)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>          Mean Median Quantile (2.5%) Quantile (97.5%)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Model 1 1074   1074                                 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Model 1 1073   1073                                 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Model 2 1088   1088                                 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Model 3 1120   1120                                 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -191,21 +209,21 @@ model whose coefficients or variances follow a state equation.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Widely Applicable Information Criterion (WAIC)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>          Mean Median Quantile (2.5%) Quantile (97.5%)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Model 1 1037   1037           968.4             1106</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Model 2 1025   1025           960.8             1089</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Model 3 1038   1038           973.3             1102</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Model 1 1035   1035           968.3             1102</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Model 2 1026   1026           963.0             1089</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Model 3 1035   1035           970.9             1099</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Periods with a pointwise log-likelihood variance above 0.4, which makes the correction of WAIC unreliable, in models 1 (14), 2 (21), 3 (31).</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Periods with a pointwise log-likelihood variance above 0.4, which makes the correction of WAIC unreliable, in models 1 (13), 2 (18), 3 (29).</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Leave-One-Out Information Criterion (LOOIC)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>          Mean Median Quantile (2.5%) Quantile (97.5%)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Model 1 1035   1035           967.4             1102</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Model 2 1022   1022           959.1             1085</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Model 3 1033   1033           971.1             1095</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Model 1 1032   1032           967.0             1097</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Model 2 1023   1023           961.3             1084</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Model 3 1030   1030           968.4             1092</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Influential periods, whose importance sampling is unreliable, in models 1 (16), 2 (31), 3 (32), counted as a Pareto k above 0.41.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Influential periods, whose importance sampling is unreliable, in models 1 (30), 2 (30), 3 (39), counted as a Pareto k above 0.41.</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Choose best model according to WAIC, the default</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="choose_best_model.html">choose_best_model</a></span><span class="op">(</span><span class="va">sel</span><span class="op">)</span></span></span>

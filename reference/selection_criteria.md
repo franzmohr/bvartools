@@ -36,7 +36,7 @@ print(x, digits = max(3L, getOption("digits") - 3L), relative = 0, ...)
 - relative:
 
   an integer specifying the model that is used as the reference of
-  relative forecast performance. Default is \`0\`, which indicates that
+  relative forecast performance. Default is `0`, which indicates that
   results are not displayed in relation to each other.
 
 ## Value
@@ -124,12 +124,21 @@ leaving the observation out by reweighting fails for exactly the periods
 a path bends towards, and neither criterion separates models that differ
 in how much of that freedom they have, such as the cointegration ranks
 of a time varying VEC model. The criterion for those comparisons is
-`"LPL"`, the log predictive likelihood of an expanding window exercise
-([`add_predictive_loglik`](https://franzmohr.github.io/bvartools/reference/add_predictive_loglik.md)),
-whose densities condition only on the data before the period they
-evaluate and carry the states forward with their state equations. Koop,
-León-González and Strachan (2011) choose between time varying
-cointegration models with it.
+`"LPL"`, the log predictive likelihood, whose densities condition only
+on the data before the period they evaluate. Koop, León-González and
+Strachan (2011) choose between time varying cointegration models with
+it.
+
+Two things produce those densities and both report them as `"LPL"`.
+[`add_predictive_loglik`](https://franzmohr.github.io/bvartools/reference/add_predictive_loglik.md)
+takes one per window of an expanding window exercise, carrying the
+states forward with their state equations, which is the form the
+comparison of ranks above is made in. A single model carries one per
+horizon of its forecast in `posterior$forecast$loglik`, written by
+BayesTS against the values in `data$test$y`, each conditioning on the
+periods realised before it. They are the same quantity computed two ways
+and are summarised by the same code, so the same densities give the same
+number.
 
 All criteria require that the models that are compared were estimated on
 the same observations.

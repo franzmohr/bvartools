@@ -9,7 +9,7 @@ transformation codes of FRED-MD/FRED-QD."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -75,12 +75,14 @@ transformation codes of FRED-MD/FRED-QD.</p>
 <dt id="arg-code">code<a class="anchor" aria-label="anchor" href="#arg-code"></a></dt>
 <dd><p>a named integer vector of transformation codes, one of
 <code>1:7</code> – see 'Details'. Names must match columns of <code>x</code>; a column
-with no entry is left untransformed (code <code>1</code>).</p></dd>
+with no entry is left untransformed (code <code>1</code>). For a single series
+<code>code</code> may also be one unnamed code.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A time-series object of the same shape as <code>x</code>.</p>
+    <p>A time-series object of the same shape as <code>x</code>: a vector series
+for a vector series, and a matrix of series with the same columns otherwise.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -108,9 +110,11 @@ with no entry is left untransformed (code <code>1</code>).</p></dd>
 
 
 </dl><p>Codes <code>4:6</code> need a strictly positive series.</p>
-<p>A difference drops as many leading observations as its order – one for
-codes <code>2</code>, <code>5</code> and <code>7</code>, two for <code>3</code> and <code>6</code> –
-rather than shortening the series: those leading periods become <code>NA</code>,
+<p>A transformation loses as many leading observations as it reaches back –
+one for codes <code>2</code> and <code>5</code>, two for <code>3</code>, <code>6</code> and
+<code>7</code>, the last being the difference of a growth rate that is itself
+taken over one period – rather than shortening the series: those leading
+periods become <code>NA</code>,
 so every column keeps the time index of <code>x</code> and can still be combined
 with <code><a href="https://rdrr.io/r/stats/ts.union.html" class="external-link">ts.intersect</a></code> or passed to
 <code><a href="create_bvarmodel.html">create_bvarmodel</a></code>.</p>

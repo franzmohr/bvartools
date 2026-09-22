@@ -9,7 +9,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -67,35 +67,19 @@
 <p>Every step of an analysis takes a model object and returns it with something
 added, so the result of each call must be assigned back:
 <code>model &lt;- add_initial_values(model)</code>. A model object is a list of class
-'bvarmodel' or 'bvecmodel' with the elements</p><dl><dt><code>data</code></dt>
-<dd><p>the data matrices, with the estimation sample in
-  <code>data$train</code> (<code>y</code>, <code>x</code> and <code>z</code> in SUR form).</p></dd>
-
-  <dt><code>model</code></dt>
-<dd><p>the specification: variables, lag orders, deterministic
-  terms, error and variable selection types, iterations and burn-in draws.</p></dd>
-
-  <dt><code>priors</code></dt>
-<dd><p>the prior hyperparameters, added by <code><a href="add_priors.html">add_priors</a></code>.</p></dd>
-
-  <dt><code>initial</code></dt>
-<dd><p>the starting values of the sampler, added by
-  <code><a href="add_initial_values.html">add_initial_values</a></code>.</p></dd>
-
-  <dt><code>posterior</code></dt>
-<dd><p>the draws added by <code><a href="add_posterior_coefficients.html">add_posterior_coefficients</a></code>
-  and the later <code>add_posterior_*</code> functions.</p></dd>
-
-
-</dl><p>Posterior draws are stored as <code><a href="https://rdrr.io/pkg/coda/man/mcmc.html" class="external-link">mcmc</a></code> objects with one row
-per draw and one column per parameter. <code><a href="bvar.html">bvar</a></code> and
-<code><a href="bvec.html">bvec</a></code>, which collect the draws of a sampler written by the user,
-expect the transpose: one row per parameter and one column per draw.</p>
+'bvarmodel' or 'bvecmodel' whose elements are <code>model</code>, the
+specification, <code>data</code>, <code>priors</code>, <code>initial</code> and
+<code>posterior</code>, the draws – stored as <code><a href="https://rdrr.io/pkg/coda/man/mcmc.html" class="external-link">mcmc</a></code> objects
+with one row per draw and one column per parameter.</p>
 <p>Passing a vector to an argument such as <code>p</code> or <code>r</code> creates one model
 per specification in a list of class 'modellist', and
 <code><a href="use_expanding_window.html">use_expanding_window</a></code> creates a list of class 'expandingwindow'.
 The functions of the workflow accept these lists as well and apply to each
 model in turn.</p>
+<p><code><a href="bvartools_model.html">bvartools_model</a></code> describes the whole object element by element:
+what each one holds, which step adds it, how the draws are laid out and which
+path of a model file each corresponds to. It is the page to read before
+reaching into the object by hand.</p>
     </div>
     <div class="section level2">
     <h2 id="workflow-of-a-var-model">Workflow of a VAR model<a class="anchor" aria-label="anchor" href="#workflow-of-a-var-model"></a></h2>
@@ -272,6 +256,7 @@ monetary policy. <em>The Review of Economic Studies, 72</em>(3), 821–852.
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p>Useful links:</p><ul><li><p><a href="https://github.com/franzmohr/bvartools" class="external-link">https://github.com/franzmohr/bvartools</a></p></li>
+<li><p><a href="https://franzmohr.github.io/bvartools/">https://franzmohr.github.io/bvartools/</a></p></li>
 <li><p>Report bugs at <a href="https://github.com/franzmohr/bvartools/issues" class="external-link">https://github.com/franzmohr/bvartools/issues</a></p></li>
 </ul></div>
     </div>

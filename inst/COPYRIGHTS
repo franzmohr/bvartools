@@ -96,14 +96,31 @@ BSD 3-Clause portion
     src/core/models/vec_tvp_wishart.cpp
 
     That is every file under inst/include/bayests/ and every source under
-    src/core/. inst/include/bayests/arma.h, the header that routes Armadillo
-    through RcppArmadillo, began in this package and has since been adopted
-    upstream unchanged; it is BayesTS's like the headers it sits beside, and
-    under the same terms.
+    src/core/. src/core/VENDORED.md is not one of them: it is this package's
+    own note on what was copied and what was changed on the way in, and it is
+    GPL (>= 2) like the rest of the package.
+
+    inst/include/bayests/arma.h, the header that routes Armadillo through
+    RcppArmadillo, began in this package and has since been adopted upstream
+    unchanged; it is BayesTS's like the headers it sits beside, and under the
+    same terms.
 
     inst/include/bayests_reporter.h is *not* part of this set. It lives one
     directory up, belongs to this package rather than to BayesTS, and is
     GPL (>= 2) like the rest of the package.
+
+Data sets
+---------
+
+The five data sets under data/ were compiled by others and are reproduced
+here for documentation and examples: e1 and e6 from the files accompanying
+Luetkepohl (2006), distributed at www.jmulti.de; us_macrodata from the files
+accompanying Chan, Koop, Poirier and Tobias (2019); uk_macrodata from the
+supplementary material to Koop, Leon-Gonzalez and Strachan (2011); and
+at_macrodata, derived from the GVAR database of Mohaddes and Raissi (2024).
+Each of them is published by its compiler for unrestricted download, and the
+help page of each names its origin and the work to cite, which is the
+attribution those sources ask for.
 
 License text
 ------------

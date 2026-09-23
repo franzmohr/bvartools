@@ -718,6 +718,21 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// arw_draw_q
+Rcpp::List arw_draw_q(Rcpp::List A, Rcpp::List setup_list, bool weight, double epsilon, bool one_sided);
+RcppExport SEXP _bvartools_arw_draw_q(SEXP ASEXP, SEXP setup_listSEXP, SEXP weightSEXP, SEXP epsilonSEXP, SEXP one_sidedSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type A(ASEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type setup_list(setup_listSEXP);
+    Rcpp::traits::input_parameter< bool >::type weight(weightSEXP);
+    Rcpp::traits::input_parameter< double >::type epsilon(epsilonSEXP);
+    Rcpp::traits::input_parameter< bool >::type one_sided(one_sidedSEXP);
+    rcpp_result_gen = Rcpp::wrap(arw_draw_q(A, setup_list, weight, epsilon, one_sided));
+    return rcpp_result_gen;
+END_RCPP
+}
 // coint_kls2010_reparameterise_two
 Rcpp::List coint_kls2010_reparameterise_two(const arma::mat alpha, const arma::mat beta);
 static SEXP _bvartools_coint_kls2010_reparameterise_two_try(SEXP alphaSEXP, SEXP betaSEXP) {
@@ -1301,6 +1316,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_bvartools_VecTvpWishartForecasts", (DL_FUNC) &_bvartools_VecTvpWishartForecasts, 1},
     {"_bvartools_VecTvpWishartLogLik", (DL_FUNC) &_bvartools_VecTvpWishartLogLik, 1},
     {"_bvartools_VecTvpWishartScore", (DL_FUNC) &_bvartools_VecTvpWishartScore, 1},
+    {"_bvartools_arw_draw_q", (DL_FUNC) &_bvartools_arw_draw_q, 5},
     {"_bvartools_coint_kls2010_reparameterise_two", (DL_FUNC) &_bvartools_coint_kls2010_reparameterise_two, 2},
     {"_bvartools_coint_prepare_sur_data", (DL_FUNC) &_bvartools_coint_prepare_sur_data, 6},
     {"_bvartools_covar_prepare_data", (DL_FUNC) &_bvartools_covar_prepare_data, 5},

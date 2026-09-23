@@ -257,6 +257,43 @@
     .Call(`_bvartools_VecTvpWishartScore`, object)
 }
 
+#' One draw of the sign and zero restricted rotation, with its importance weight
+#'
+#' Draws a rotation that satisfies the zero restrictions by construction,
+#' following Algorithm 2 of Arias, Rubio-Ramirez and Waggoner (2018), and
+#' returns the log of the unnormalised importance weight of their Algorithm 3,
+#' which corrects the distribution that construction induces back to the
+#' posterior conditional on the sign and zero restrictions.
+#'
+#' Unlike the rejection sampler in \code{.draw_sign_restricted_q}, there is one
+#' rotation per posterior draw and no second attempt: a draw whose rotation
+#' fails the sign restrictions gets weight zero rather than another try, and a
+#' shock is not retried with its sign flipped, since the sphere the column is
+#' drawn from already covers both signs of it.
+#'
+#' @param A a list with elements \code{A}, the k x m coefficients of one draw
+#'   with the deterministic terms included, and \code{Sigma}, its k x k error
+#'   covariance.
+#' @param setup a list with the elements \code{k}, \code{m}, \code{lags},
+#'   \code{horizons}, the zero and sign restriction blocks \code{z} and
+#'   \code{s}, and \code{w}, the fixed matrices that complete each column's
+#'   constraints to a square system. See \code{.arw_setup}.
+#' @param weight logical. Should the importance weight be computed? It is the
+#'   expensive part of the algorithm by an order of magnitude and is needed only
+#'   for a draw that satisfies the sign restrictions.
+#' @param epsilon the step of the numerical derivative.
+#' @param one_sided logical. Should the numerical derivative be one sided?
+#'
+#' @return A list with the accepted k x k rotation in \code{q}, or a 0 x 0
+#'   matrix when the draw fails the sign restrictions, and the log of the
+#'   unnormalised importance weight in \code{log_weight}, which is \code{NA}
+#'   when it was not asked for or could not be computed.
+#'
+#' @noRd
+.arw_draw_q <- function(A, setup_list, weight = TRUE, epsilon = 1e-6, one_sided = FALSE) {
+    .Call(`_bvartools_arw_draw_q`, A, setup_list, weight, epsilon, one_sided)
+}
+
 #' Cointegration Reparameterisation
 #' 
 #' Performs the second transformation of the loading and

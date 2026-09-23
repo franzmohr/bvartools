@@ -40,7 +40,10 @@ take the new model objects. `add_priors()` no longer has defaults for `coef` and
   `fevd()` and `spillover()` read it under `type = "sign"` unchanged; `summary()`
   reports the effective sample size, which is what says how much independent
   information the resample carries. The order of the endogenous variables
-  matters, and a shock left with no column to draw is refused by name.
+  matters, and a shock left with no column to draw is refused by name. It has
+  the `modellist` and `expandingwindow` methods its sibling has, which identify
+  each member on its own -- so unless `draws` is given, the members come back
+  with the number of draws their own effective sample size allows.
 
 * **The non-centred prior reaches every model whose coefficients drift.**
   `coef$omega_v` is accepted for `tvp = TRUE` with `error = "wishart"` and

@@ -85,6 +85,13 @@ NULL
 #' The result depends on the state of the random number generator, so
 #' \code{\link{set.seed}} is needed to reproduce it.
 #'
+#' Applied to a 'modellist' or an 'expandingwindow' the function identifies
+#' each member on its own and returns the collection. Each therefore gets its
+#' own effective sample size, and unless \code{draws} is given the members come
+#' back with different numbers of draws -- which is what it means for one model,
+#' or one window of the sample, to support the restrictions less well than
+#' another. Pass \code{draws} to give them all the same number.
+#'
 #' @return The object of class 'bvarmodel' with its posterior draws resampled,
 #' the accepted rotations in element \code{q} of its \code{posterior}, one row
 #' per resampled draw, and the specification of the restrictions in element

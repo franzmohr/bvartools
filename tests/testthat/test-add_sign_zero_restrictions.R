@@ -158,6 +158,41 @@ test_that("a model whose covariance cannot be rotated is refused", {
                "error covariances are estimated")
 })
 
+test_that("the identification maps over lists and windows", {
+  # Zero restrictions alone, so that no draw is rejected for its signs: what is
+  # checked here is that every member is identified, not how well the small
+  # fixtures support a sign restriction.
+  restrictions <- data.frame(impulse = "y", response = "Dp", sign = 0, horizon = 0)
+
+  models <- fx_var_modellist()
+  set.seed(2)
+  signed <- add_sign_zero_restrictions(models, restrictions)
+  expect_s3_class(signed, "modellist")
+  expect_length(signed, length(models))
+  for (m in signed) {
+    expect_false(is.null(m[["posterior"]][["q"]]))
+    expect_equal(nrow(m[["posterior"]][["q"]][["coeffs"]]),
+                 nrow(m[["posterior"]][["a"]][["coeffs"]]))
+  }
+
+  windows <- fx_expanding_window()
+  set.seed(3)
+  signed_windows <- add_sign_zero_restrictions(windows, restrictions)
+  expect_s3_class(signed_windows, "expandingwindow")
+  expect_length(signed_windows, length(windows))
+  for (w in signed_windows) {
+    expect_false(is.null(w[["posterior"]][["q"]]))
+  }
+
+  # Each member is identified on its own, so `draws` is what makes them agree.
+  set.seed(4)
+  fixed <- add_sign_zero_restrictions(models, restrictions, draws = 12)
+  for (m in fixed) {
+    expect_equal(nrow(m[["posterior"]][["q"]][["coeffs"]]), 12)
+    expect_equal(nrow(m[["posterior"]][["a"]][["coeffs"]]), 12)
+  }
+})
+
 test_that("the summary reports the effective sample size", {
   set.seed(1234)
   object <- add_sign_zero_restrictions(szr_model(), szr_restrictions())

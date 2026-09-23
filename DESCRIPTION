@@ -66,6 +66,8 @@ Collate:
     'add_sign_restrictions.modellist.R'
     'add_sign_zero_restrictions.R'
     'add_sign_zero_restrictions.bvarmodel.R'
+    'add_sign_zero_restrictions.expandingwindow.R'
+    'add_sign_zero_restrictions.modellist.R'
     'aggregate_forecasts.R'
     'align_model_obs.R'
     'align_model_obs.modellist.R'

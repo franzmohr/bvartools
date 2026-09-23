@@ -89,10 +89,11 @@ that no row mentions is left as it is drawn, since nothing in the
 restrictions distinguishes one rotation of it from another; only the
 restricted shocks should be interpreted.
 
-Only sign restrictions are supported. Zero restrictions on the impact
-responses cannot be imposed by rejection, because the set of rotations that
-satisfies them has probability zero, and need the algorithm of Arias et al.
-(2018) instead.
+Only sign restrictions are supported. A zero restriction cannot be imposed by
+rejection, because the set of rotations that satisfies one has probability
+zero, so no number of tries finds a member of it. Use
+\code{\link{add_sign_zero_restrictions}}, which draws rotations that satisfy
+the zero restrictions by construction and reweights them.
 
 The accepted rotations are added to the object as element \code{q} of its
 posterior draws, from where \code{\link{irf}}, \code{\link{fevd}} and
@@ -151,6 +152,7 @@ identification procedure. \emph{Journal of Monetary Economics, 52}(2), 381-419.
 }
 \seealso{
 Other post-estimation analysis:
+\code{\link[=add_sign_zero_restrictions.bvarmodel]{add_sign_zero_restrictions.bvarmodel()}},
 \code{\link[=fevd.bvarmodel]{fevd.bvarmodel()}},
 \code{\link[=fevd.bvecmodel]{fevd.bvecmodel()}},
 \code{\link[=irf.bvarmodel]{irf.bvarmodel()}},

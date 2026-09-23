@@ -56,6 +56,7 @@ dm <- multipliers(model, impulse = "g", response = "R", n_ahead = 8)
 \seealso{
 Other post-estimation analysis:
 \code{\link[=add_sign_restrictions.bvarmodel]{add_sign_restrictions.bvarmodel()}},
+\code{\link[=add_sign_zero_restrictions.bvarmodel]{add_sign_zero_restrictions.bvarmodel()}},
 \code{\link[=fevd.bvarmodel]{fevd.bvarmodel()}},
 \code{\link[=fevd.bvecmodel]{fevd.bvecmodel()}},
 \code{\link[=irf.bvarmodel]{irf.bvarmodel()}},

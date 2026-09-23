@@ -68,16 +68,33 @@ print.summary.bvarmodel <- function(x, digits = max(3L, getOption("digits") - 3L
     printed <- sign_restrictions[["restrictions"]]
     printed[["impulse"]] <- varnames[printed[["impulse"]]]
     printed[["response"]] <- varnames[printed[["response"]]]
-    printed[["sign"]] <- ifelse(printed[["sign"]] > 0, "+", "-")
+    printed[["sign"]] <- c("-", "0", "+")[printed[["sign"]] + 2]
 
-    cat("\nSign restrictions:\n\n")
+    arw <- x[["model"]][["sign_zero_restrictions"]]
+    cat("\nSign", if (is.null(arw)) NULL else "and zero", "restrictions:\n\n")
     print(printed, row.names = FALSE)
 
-    accepted <- sign_restrictions[["accepted"]]
-    draws <- sign_restrictions[["draws"]]
-    if (!is.null(accepted) && !is.null(draws) && draws > 0) {
-      cat("\nIdentified draws: ", accepted, " of ", draws, " (",
-          format(round(100 * accepted / draws, 1), nsmall = 1), "%)\n", sep = "")
+    if (is.null(arw)) {
+      accepted <- sign_restrictions[["accepted"]]
+      draws <- sign_restrictions[["draws"]]
+      if (!is.null(accepted) && !is.null(draws) && draws > 0) {
+        cat("\nIdentified draws: ", accepted, " of ", draws, " (",
+            format(round(100 * accepted / draws, 1), nsmall = 1), "%)\n", sep = "")
+      }
+    } else {
+      # The draws of an importance sample are resampled, so counting the
+      # identified ones would report the resample rather than what went into
+      # it. What says how much independent information is there is the
+      # effective sample size, which the algorithm's own authors ask for every
+      # time it is used.
+      cat("\nDraws satisfying the signs: ", arw[["accepted"]], " of ",
+          arw[["candidates"]], " (",
+          format(round(100 * arw[["accepted"]] / arw[["candidates"]], 1), nsmall = 1),
+          "%)\n", sep = "")
+      cat("Effective sample size: ", arw[["effective_sample_size"]], " (",
+          format(round(100 * arw[["effective_sample_size"]] / arw[["accepted"]], 1),
+                 nsmall = 1),
+          "% of those)\n", sep = "")
     }
   }
 

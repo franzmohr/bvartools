@@ -7,6 +7,7 @@
 #include "core/algorithms/kalman_durbin_koopman_2002.h"
 #include "core/models/ald_support.h"
 #include "core/models/model_support.h"
+#include "core/models/noncentred_support.h"
 
 #include <cmath>
 #include <optional>
@@ -50,6 +51,12 @@ VarTvpAldDraws VarTvpAldSampler::draw_coefficients(const VarTvpAldInput &input,
     const bool use_bvs = input.spec.varsel == VarSelection::bvs;
     const bool use_varsel = use_bvs;
 
+    // Whether the coefficients' random walk is drawn non-centred, by whether
+    // its prior names omega_v. See core/models/noncentred_support.h. The scale
+    // of the asymmetric Laplace and its latent weights are not random walks, so
+    // the coefficients are the only block with a state variance to replace.
+    const bool a_noncentred = use_a && input.a_prior.noncentred();
+
     VarTvpAldDraws out;
 
     // Coefficients
@@ -66,6 +73,12 @@ VarTvpAldDraws VarTvpAldSampler::draw_coefficients(const VarTvpAldInput &input,
     const arma::vec &a_sigma_prior_rate = input.a_prior.sigma.rate;
     const arma::vec &a0_prior_mu = input.a_prior.initial_state.mu;
     const arma::mat &a0_prior_v_inv = input.a_prior.initial_state.v_inv;
+
+    // Non-centred: the signed standard deviations, the standardised path, and
+    // the latest draw's ordinates at zero.
+    arma::vec a_omega;
+    arma::mat a_tilde;
+    core::NoncentredCoefficients a_nc;
 
     if (use_a)
     {
@@ -85,6 +98,15 @@ VarTvpAldDraws VarTvpAldSampler::draw_coefficients(const VarTvpAldInput &input,
         a0_prior_v = initial_state_variance(input.a_prior.initial_state);
         a0_sigma_inv = a_sigma;
         a0_sigma_inv.diag() = 1 / a_sigma.diag();
+
+        if (a_noncentred)
+        {
+            // The chain starts on the positive branch; the sign switch reaches
+            // the other within a draw.
+            a_omega = arma::sqrt(arma::vec(a_sigma.diag()));
+            core::allocate_noncentred(out.a_noncentred, static_cast<arma::uword>(nparams),
+                                      static_cast<arma::uword>(iterations));
+        }
 
         if (use_varsel)
         {
@@ -118,6 +140,15 @@ VarTvpAldDraws VarTvpAldSampler::draw_coefficients(const VarTvpAldInput &input,
     // against.
     arma::sp_mat u_sigma_inv_diag = arma::eye<arma::sp_mat>(k * tt, k * tt);
 
+    // And as the stack of per-period blocks the non-centred draw reads, in the
+    // layout of u_sigma above. Only filled when that draw is used: it is the
+    // same numbers a third time, and k tt k doubles of them.
+    arma::mat u_sigma_inv_blocks;
+    if (a_noncentred)
+    {
+        u_sigma_inv_blocks = arma::zeros<arma::mat>(k * tt, k);
+    }
+
     const arma::vec u_scale_post_shape =
         input.u_scale_prior.shape + static_cast<double>(tt) * 3.0 / 2.0;
     const arma::vec &u_scale_prior_rate = input.u_scale_prior.rate;
@@ -131,6 +162,10 @@ VarTvpAldDraws VarTvpAldSampler::draw_coefficients(const VarTvpAldInput &input,
                 const double variance = shape.tau2 * u_scale(i) * w(t, i);
                 u_sigma(k * t + i, i) = variance;
                 u_sigma_inv_diag(k * t + i, k * t + i) = 1.0 / variance;
+                if (a_noncentred)
+                {
+                    u_sigma_inv_blocks(k * t + i, i) = 1.0 / variance;
+                }
             }
         }
     };
@@ -153,31 +188,44 @@ VarTvpAldDraws VarTvpAldSampler::draw_coefficients(const VarTvpAldInput &input,
                 z = z_bvs * a_bvs->lambda_diag;
             }
 
-            // Update a. The response carries the offset: the smoother measures
-            // z_t a_t against y_t - theta w_t, not against y_t.
-            // a0 is integrated out of the prior of the first period; see
-            // initial_state_variance().
-            a = kalman_durbin_koopman_2002(y_adjusted, z, u_sigma, a_sigma, a_B, a0_prior_mu,
-                                           a0_prior_v + a_sigma)
-                    .cols(0, tt - 1);
-
-            // Draw a0, given the path it was integrated out of and before a_sigma
-            // conditions on it
-            a0_sigma_inv.diag() = 1 / a_sigma.diag();
-            a0_post_v = a0_prior_v_inv + a0_sigma_inv;
-            a0 = draw_normal_precision(a0_post_v,
-                                       a0_prior_v_inv * a0_prior_mu + a0_sigma_inv * a.col(0));
-
-            // Draw a_sigma
-            a_lag.col(0) = a0;
-            a_lag.cols(1, tt - 1) = a.cols(0, tt - 2);
-            a_lag = a - a_lag;
-            a_sigma_post_scale = 1 / (a_sigma_prior_rate + arma::sum(arma::pow(a_lag, 2), 1) * 0.5);
-            for (int i = 0; i < nparams; i++)
+            if (a_noncentred)
             {
-                a_sigma(i, i) =
-                    1 / arma::randg<double>(
-                            arma::distr_param(a_sigma_post_shape(i), a_sigma_post_scale(i)));
+                // The standardised path, then a0 and omega jointly, then the
+                // signs; a is rebuilt from the three. The response carries the
+                // offset here as well: the draw measures against y_t - theta w_t.
+                a_nc = core::draw_noncentred_path(y_adjusted, z, u_sigma, u_sigma_inv_blocks,
+                                                  input.a_prior, a0, a_omega, a_tilde, a);
+                a_sigma.diag() = arma::square(a_omega);
+            }
+            else
+            {
+                // Update a. The response carries the offset: the smoother measures
+                // z_t a_t against y_t - theta w_t, not against y_t.
+                // a0 is integrated out of the prior of the first period; see
+                // initial_state_variance().
+                a = kalman_durbin_koopman_2002(y_adjusted, z, u_sigma, a_sigma, a_B, a0_prior_mu,
+                                               a0_prior_v + a_sigma)
+                        .cols(0, tt - 1);
+
+                // Draw a0, given the path it was integrated out of and before a_sigma
+                // conditions on it
+                a0_sigma_inv.diag() = 1 / a_sigma.diag();
+                a0_post_v = a0_prior_v_inv + a0_sigma_inv;
+                a0 = draw_normal_precision(a0_post_v,
+                                           a0_prior_v_inv * a0_prior_mu + a0_sigma_inv * a.col(0));
+
+                // Draw a_sigma
+                a_lag.col(0) = a0;
+                a_lag.cols(1, tt - 1) = a.cols(0, tt - 2);
+                a_lag = a - a_lag;
+                a_sigma_post_scale =
+                    1 / (a_sigma_prior_rate + arma::sum(arma::pow(a_lag, 2), 1) * 0.5);
+                for (int i = 0; i < nparams; i++)
+                {
+                    a_sigma(i, i) =
+                        1 / arma::randg<double>(
+                                arma::distr_param(a_sigma_post_shape(i), a_sigma_post_scale(i)));
+                }
             }
 
             if (a_bvs)
@@ -230,6 +278,11 @@ VarTvpAldDraws VarTvpAldSampler::draw_coefficients(const VarTvpAldInput &input,
                 if (use_varsel)
                 {
                     out.a_lambda.col(draw_pos) = a_bvs->lambda;
+                }
+                if (a_noncentred)
+                {
+                    core::store_noncentred(out.a_noncentred, static_cast<arma::uword>(draw_pos),
+                                           a_omega, a_nc);
                 }
             }
 

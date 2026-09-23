@@ -106,8 +106,7 @@ Argument \code{coef} can contain the following elements:
   the test for time variation of \code{\link{time_variation_test}}; see
   \code{\link{add_priors.bvarmodel}} for the model and the draws it adds. The cointegration
   space keeps its state equation. Only for models with time varying parameters,
-  \code{tvp = TRUE}, and \code{error = "sv"}, \code{"sv+covar"}, \code{"gamma"} or
-  \code{"gamma+covar"}.}
+  \code{tvp = TRUE}, whatever their \code{error}.}
   \item{\code{omega_v_alpha}}{a positive numeric, the \code{omega_v} of the loadings, as
   \code{rate_alpha} is their rate under the centred prior. If it is not given,
   \code{omega_v} is used. The loadings multiply the levels in the error correction term, so

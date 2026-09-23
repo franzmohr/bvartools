@@ -33,9 +33,8 @@ time_variation_test.default <- function(object, ...) {
 #' each log-volatility of a VAR or VEC model with time varying parameters, from
 #' the draws of a single estimation of that model.
 #'
-#' @param object an object of class \code{"bvarmodel"} with \code{tvp = TRUE} and
-#' \code{error = "sv"}, \code{"sv+covar"}, \code{"gamma"} or \code{"gamma+covar"}, or
-#' of class \code{"bvecmodel"} with the same, whose priors were set with
+#' @param object an object of class \code{"bvarmodel"} with \code{tvp = TRUE},
+#' whatever its error term, or of class \code{"bvecmodel"} with the same, whose priors were set with
 #' \code{coef$omega_v} or, under stochastic volatility, \code{sigma$omega_v} in \code{\link{add_priors}} and whose
 #' posterior was drawn by \code{\link{add_posterior_coefficients}}.
 #' @param joint logical. Should the Bayes factor for the time variation of every
@@ -229,9 +228,9 @@ time_variation_test.bvecmodel <- function(object, joint = TRUE, batches = 20, ..
 
   if (is.null(result)) {
     stop("No block of the model was estimated under the non-centred prior. Set ",
-         "'coef$omega_v' in add_priors() for a model with tvp = TRUE and a gamma or ",
-         "stochastic volatility error term, or 'sigma$omega_v' for one with stochastic ",
-         "volatility, and draw the posterior again.", call. = FALSE)
+         "'coef$omega_v' in add_priors() for a model with tvp = TRUE, or ",
+         "'sigma$omega_v' for one with stochastic volatility, and draw the ",
+         "posterior again.", call. = FALSE)
   }
 
   rownames(result) <- NULL

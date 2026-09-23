@@ -10,6 +10,7 @@
 #include "core/algorithms/wishart.h"
 #include "core/models/forecast_states.h"
 #include "core/models/model_support.h"
+#include "core/models/noncentred_support.h"
 #include "core/models/vec_support.h"
 
 #include <cmath>
@@ -75,6 +76,13 @@ VecTvpWishartDraws VecTvpWishartSampler::draw_coefficients(const VecTvpWishartIn
     const bool use_bvs = input.spec.varsel == VarSelection::bvs;
     const bool use_varsel = use_bvs;
 
+    // Whether the coefficients' random walk is drawn non-centred, by whether
+    // its prior names omega_v. See core/models/noncentred_support.h. The error
+    // covariance does not move in this model and the cointegration space keeps
+    // its fixed unit state variance, which is what pins beta's scale, so the
+    // coefficients are the only block with a variance to put a prior on.
+    const bool a_noncentred = use_a && input.a_prior.noncentred();
+
     VecTvpWishartDraws out;
 
     // Coefficients: a whole path per draw, moved by the simulation smoother.
@@ -91,6 +99,12 @@ VecTvpWishartDraws VecTvpWishartSampler::draw_coefficients(const VecTvpWishartIn
     const arma::vec &a_sigma_prior_rate = input.a_prior.sigma.rate;
     const arma::vec &a0_prior_mu = input.a_prior.initial_state.mu;
     const arma::mat &a0_prior_v_inv = input.a_prior.initial_state.v_inv;
+
+    // Non-centred: the signed standard deviations, the standardised path, and
+    // the latest draw's ordinates at zero.
+    arma::vec a_omega;
+    arma::mat a_tilde;
+    core::NoncentredCoefficients a_nc;
 
     if (use_a)
     {
@@ -110,6 +124,15 @@ VecTvpWishartDraws VecTvpWishartSampler::draw_coefficients(const VecTvpWishartIn
         a0_prior_v = initial_state_variance(input.a_prior.initial_state);
         a0_sigma_inv = a_sigma;
         a0_sigma_inv.diag() = 1 / a_sigma.diag();
+
+        if (a_noncentred)
+        {
+            // The chain starts on the positive branch; the sign switch reaches
+            // the other within a draw.
+            a_omega = arma::sqrt(arma::vec(a_sigma.diag()));
+            core::allocate_noncentred(out.a_noncentred, static_cast<arma::uword>(n_a),
+                                      static_cast<arma::uword>(iterations));
+        }
 
         if (use_varsel)
         {
@@ -206,27 +229,43 @@ VecTvpWishartDraws VecTvpWishartSampler::draw_coefficients(const VecTvpWishartIn
                 z_masked = z * a_bvs->lambda_diag;
             }
 
-            // Update a, with a0 integrated out of the prior of the first period.
-            // See initial_state_variance().
-            a = kalman_durbin_koopman_2002(ymat, z_a, u_sigma, a_sigma, a_B, a0_prior_mu,
-                                           a0_prior_v + a_sigma)
-                    .cols(0, tt - 1);
-
-            // Draw a0, given the path it was integrated out of and before a_sigma
-            // conditions on it
-            a0_sigma_inv.diag() = 1 / a_sigma.diag();
-            a0_post_v = a0_prior_v_inv + a0_sigma_inv;
-            a0 = draw_normal_precision(a0_post_v, a0_prior_v_inv * a0_prior_mu + a0_sigma_inv * a.col(0));
-
-            // Draw a_sigma
-            a_lag.col(0) = a0;
-            a_lag.cols(1, tt - 1) = a.cols(0, tt - 2);
-            a_lag = a - a_lag;
-            a_sigma_post_scale = 1 / (a_sigma_prior_rate + arma::sum(arma::pow(a_lag, 2), 1) * 0.5);
-            for (int i = 0; i < n_a; i++)
+            if (a_noncentred)
             {
-                a_sigma(i, i) = 1 / arma::randg<double>(
-                                        arma::distr_param(a_sigma_post_shape(i), a_sigma_post_scale(i)));
+                // The standardised path, then a0 and omega jointly, then the
+                // signs; a is rebuilt from the three. The loadings' regressors
+                // are this draw's beta' w, as they are for the centred draw.
+                // One k x k precision serves every period, which
+                // draw_noncentred_path() takes as well as one block per period.
+                a_nc = core::draw_noncentred_path(ymat, z_a, u_sigma, u_sigma_inv, input.a_prior,
+                                                  a0, a_omega, a_tilde, a);
+                a_sigma.diag() = arma::square(a_omega);
+            }
+            else
+            {
+                // Update a, with a0 integrated out of the prior of the first period.
+                // See initial_state_variance().
+                a = kalman_durbin_koopman_2002(ymat, z_a, u_sigma, a_sigma, a_B, a0_prior_mu,
+                                               a0_prior_v + a_sigma)
+                        .cols(0, tt - 1);
+
+                // Draw a0, given the path it was integrated out of and before a_sigma
+                // conditions on it
+                a0_sigma_inv.diag() = 1 / a_sigma.diag();
+                a0_post_v = a0_prior_v_inv + a0_sigma_inv;
+                a0 = draw_normal_precision(a0_post_v,
+                                           a0_prior_v_inv * a0_prior_mu + a0_sigma_inv * a.col(0));
+
+                // Draw a_sigma
+                a_lag.col(0) = a0;
+                a_lag.cols(1, tt - 1) = a.cols(0, tt - 2);
+                a_lag = a - a_lag;
+                a_sigma_post_scale =
+                    1 / (a_sigma_prior_rate + arma::sum(arma::pow(a_lag, 2), 1) * 0.5);
+                for (int i = 0; i < n_a; i++)
+                {
+                    a_sigma(i, i) = 1 / arma::randg<double>(arma::distr_param(
+                                            a_sigma_post_shape(i), a_sigma_post_scale(i)));
+                }
             }
 
             if (a_bvs)
@@ -334,6 +373,11 @@ VecTvpWishartDraws VecTvpWishartSampler::draw_coefficients(const VecTvpWishartIn
                 if (use_varsel)
                 {
                     out.a_lambda.col(draw_pos) = a_bvs->lambda;
+                }
+                if (a_noncentred)
+                {
+                    core::store_noncentred(out.a_noncentred, static_cast<arma::uword>(draw_pos),
+                                           a_omega, a_nc);
                 }
             }
 

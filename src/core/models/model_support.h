@@ -179,6 +179,177 @@ inline arma::vec stacked_response(const TrainData &train)
     return arma::vectorise(arma::trans(train.y));
 }
 
+/// What an i.i.d. block needs of the model it is asked of.
+///
+/// Refused rather than ignored where no sampler reads it. A file that sets
+/// `n_iid` on an algorithm that does not honour it would otherwise run to
+/// completion and report coefficients for equations the researcher believes
+/// carry none, which is the failure this codebase refuses elsewhere: output
+/// that looks like output.
+///
+/// `supported` is the algorithm's own answer and `algorithm` names it, so that
+/// a refusal says which sampler declined rather than that something did.
+inline void require_supported_iid_block(const VarSpec &spec, bool supported, const char *algorithm)
+{
+    if (spec.n_iid == 0)
+    {
+        return;
+    }
+
+    if (spec.n_iid < 0)
+    {
+        throw std::invalid_argument("n_iid counts endogenous variables and cannot be negative, got " +
+                                    std::to_string(spec.n_iid));
+    }
+
+    if (!supported)
+    {
+        throw std::invalid_argument(
+            std::string(algorithm) +
+            " does not read n_iid: only the constant-coefficient VARs restrict an equation to "
+            "carry no coefficients. Estimate the model with VarNormalWishart, VarNormalGamma, "
+            "VarNormalStochvol or VarNormalAld, or drop the restriction");
+    }
+
+    // Every equation restricted leaves a model with no coefficients to draw and
+    // nothing for the i.i.d. variables to be correlated with, which is a
+    // covariance matrix rather than a VAR.
+    if (spec.n_iid >= spec.k)
+    {
+        throw std::invalid_argument(
+            "n_iid is " + std::to_string(spec.n_iid) + " of " + std::to_string(spec.k) +
+            " endogenous variables, which leaves no equation with dynamics. At least one "
+            "variable has to be modelled for the restricted ones to be correlated with");
+    }
+
+    // The contemporaneous block sits at the end of `a` and is not laid out by
+    // the rule that makes an equation a residue modulo k, so the two cannot be
+    // combined without deciding what a restricted equation's contemporaneous
+    // coefficients are.
+    if (spec.structural)
+    {
+        throw std::invalid_argument(
+            "n_iid and a structural form cannot be combined: the contemporaneous coefficients "
+            "sit at the end of `a` under a different layout, so which of them belong to a "
+            "restricted equation is not defined");
+    }
+
+    // Both switch coefficients off, one by assumption and one by the data, and
+    // a coefficient cannot be selected over once it is fixed.
+    if (spec.uses_varsel())
+    {
+        throw std::invalid_argument(
+            "n_iid and variable selection cannot be combined: the restricted equations' "
+            "coefficients are fixed at zero, so there is nothing for selection to decide about "
+            "them, and the positions it is given count into the unrestricted coefficient vector");
+    }
+}
+
+/// The coefficients a model with an i.i.d. block actually draws.
+///
+/// `VarSpec::n_iid` names endogenous variables, ordered first, whose equations
+/// carry no coefficients at all. Rather than draw those coefficients and throw
+/// them away, this drops their columns out of the SUR system so that only the
+/// rest is drawn, and puts the zeros back when a draw is stored. Two things
+/// follow and both are wanted.
+///
+/// The restriction is exact. A coefficient fixed at zero is zero in every draw,
+/// not shrunk towards zero by a tight prior -- which is the other way to spell
+/// this, and is not the same model.
+///
+/// And the prior the free coefficients are drawn under is the right one. What
+/// the restriction asks for is the prior *conditional* on the restricted
+/// coefficients being zero, and for a normal prior with joint precision V that
+/// conditional has precision V_ff, the submatrix of the free positions, and
+/// precision-weighted mean (V mu)_f, the free part of the vector the
+/// unrestricted sampler already forms. So the reduction is two subsets of
+/// matrices that are built anyway, with no new algebra -- and it is not the
+/// same as masking the regressors and leaving the prior alone, which integrates
+/// the restricted coefficients out instead of conditioning on them. The two
+/// agree only when the prior is diagonal.
+struct IidBlock
+{
+    /// Positions of `a` that are drawn, zero-based and ascending. Empty and
+    /// unused when nothing is restricted.
+    arma::uvec free;
+
+    /// Length of the coefficient vector as it is stored and as every prior,
+    /// starting value and posterior draw is shaped.
+    arma::uword nparams = 0;
+
+    bool restricted = false;
+
+    /// The columns of a regressor matrix the free coefficients multiply.
+    arma::mat columns(const arma::mat &z) const
+    {
+        return restricted ? arma::mat(z.cols(free)) : z;
+    }
+
+    /// The free elements of a vector the full coefficient vector is shaped like.
+    arma::vec elements(const arma::vec &v) const
+    {
+        return restricted ? arma::vec(v.elem(free)) : v;
+    }
+
+    /// The free rows and columns of a precision.
+    arma::mat block(const arma::mat &m) const
+    {
+        return restricted ? arma::mat(m.submat(free, free)) : m;
+    }
+
+    /// A draw of the free coefficients, in the full-length vector the rest of
+    /// the library reads, with zeros where the restriction put them.
+    arma::vec scatter(const arma::vec &drawn) const
+    {
+        if (!restricted)
+        {
+            return drawn;
+        }
+        arma::vec out(nparams, arma::fill::zeros);
+        out.elem(free) = drawn;
+        return out;
+    }
+};
+
+/// Which coefficients a spec leaves free.
+///
+/// `a` is vec of the k by n_x coefficient matrix, so position j * k + i belongs
+/// to equation i and regressor j, and an equation is restricted exactly when
+/// its index is below `n_iid`. That is the whole of why the restricted
+/// variables have to be ordered first: it turns "these equations" into "these
+/// residues modulo k", which needs no list.
+///
+/// The caller passes the width of its own regressor matrix rather than letting
+/// this count it off the spec, because a model whose validate() has not run yet
+/// may disagree with the spec about it, and this is used before that.
+inline IidBlock iid_block(const VarSpec &spec, const arma::uword nparams)
+{
+    IidBlock out;
+    out.nparams = nparams;
+    out.restricted = spec.uses_iid() && nparams > 0;
+
+    if (!out.restricted)
+    {
+        return out;
+    }
+
+    const arma::uword k = static_cast<arma::uword>(spec.k);
+    const arma::uword n_iid = static_cast<arma::uword>(spec.n_iid);
+
+    out.free.set_size(nparams - (nparams / k) * n_iid);
+    arma::uword at = 0;
+    for (arma::uword pos = 0; pos < nparams; pos++)
+    {
+        if (pos % k >= n_iid)
+        {
+            out.free(at++) = pos;
+        }
+    }
+    out.free.resize(at);
+
+    return out;
+}
+
 /// One draw from the normal posterior written in precision form: returns a
 /// sample from N(V^-1 b, V^-1), where `precision` is V and `rhs` is b, the
 /// precision-weighted mean term.

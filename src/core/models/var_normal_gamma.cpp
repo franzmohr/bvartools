@@ -22,6 +22,8 @@ using core::BvsScope;
 using core::bvs_sweep;
 using core::covariance_root;
 using core::draw_normal_precision;
+using core::iid_block;
+using core::IidBlock;
 using core::fill_strict_lower_triangle;
 using core::fill_strict_lower_triangle_by_column;
 using core::SsvsBlock;
@@ -46,6 +48,7 @@ VarNormalGammaDraws VarNormalGammaSampler::draw_coefficients(const VarNormalGamm
     arma::mat z = input.train.z;
 
     const int nparams = static_cast<int>(z.n_cols);
+    const IidBlock iid = iid_block(input.spec, static_cast<arma::uword>(nparams));
     const bool use_a = nparams > 0;
     const int tt = static_cast<int>(y.n_elem) / k;
 
@@ -65,7 +68,7 @@ VarNormalGammaDraws VarNormalGammaSampler::draw_coefficients(const VarNormalGamm
     VarNormalGammaDraws out;
 
     // Coefficients
-    arma::vec a, a_prior_mu;
+    arma::vec a, a_prior_rhs;
     arma::mat a_prior_vinv, a_post_v;
 
     // Variable selection. Only one of the two ever holds a value -- the schemes
@@ -78,9 +81,19 @@ VarNormalGammaDraws VarNormalGammaSampler::draw_coefficients(const VarNormalGamm
 
     if (use_a)
     {
-        a_prior_mu = input.a_prior.mu;
-        a_prior_vinv = input.a_prior.v_inv;
-        a = input.initial.a;
+        // The i.i.d. block, if the model has one: the restricted equations'
+        // columns leave the regressors, their rows and columns leave the prior,
+        // and the zeros go back when a draw is stored. Every one of these is the
+        // identity when nothing is restricted.
+        //
+        // The prior's precision-weighted mean is formed once here rather than
+        // once per draw. It was a constant inside the loop before, so the draws
+        // are unchanged; reduced, it is the free part of V mu, which is what the
+        // prior conditional on the restricted coefficients being zero asks for.
+        a_prior_rhs = iid.elements(input.a_prior.v_inv * input.a_prior.mu);
+        a_prior_vinv = iid.block(input.a_prior.v_inv);
+        a = iid.elements(input.initial.a);
+        z = iid.columns(z);
         out.a = arma::mat(nparams, iterations);
 
         if (use_varsel)
@@ -179,7 +192,7 @@ VarNormalGammaDraws VarNormalGammaSampler::draw_coefficients(const VarNormalGamm
             dz = u_sigma_inv_diag * z;
             a_post_v = a_prior_vinv + arma::trans(dz) * z;
             a = draw_normal_precision(a_post_v,
-                                      a_prior_vinv * a_prior_mu + arma::trans(dz) * y);
+                                      a_prior_rhs + arma::trans(dz) * y);
 
             if (a_ssvs)
             {
@@ -279,7 +292,7 @@ VarNormalGammaDraws VarNormalGammaSampler::draw_coefficients(const VarNormalGamm
             const int draw_pos = input.spec.kept_index(draw);
             if (use_a)
             {
-                out.a.col(draw_pos) = a;
+                out.a.col(draw_pos) = iid.scatter(a);
                 if (use_varsel)
                 {
                     out.a_lambda.col(draw_pos) = a_ssvs ? a_ssvs->lambda : a_bvs->lambda;

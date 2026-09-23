@@ -7,7 +7,7 @@ project is here -- the core deliberately links neither HDF5 nor HighFive,
 prints nothing and reads no files, which is what makes it embeddable in an R
 package at all.
 
-The copy is **BayesTS `fa730f0`**, upstream after the `v0.3.0` release
+The copy is **BayesTS `3425586`**, upstream after the `v0.3.0` release
 (tagged on `18a86c2`). Past the release it carries the fix to
 `core/models/var_tvp_discount.cpp` (`2dc9250`), which is what makes
 `add_predictive_loglik()` score more than the first horizon of a discounted VAR;
@@ -48,13 +48,21 @@ element instead of failing deep in the numerics or coming back as a NaN forecast
 or score. The check covers the lag cells of `/data/forecast/x` that the forecast
 overwrites as well, which `prepare_forecast_input()` used to leave `NA` and now
 fills with zeros; and comment-only changes to five core files (`fd7ece5`).
-The refreshes before sat at `d92e581`, `f8b42a1`, `d8c8f80`, `94f81de`, `cea124b`,
+The refreshes before sat at `fa730f0`, `d92e581`, `f8b42a1`, `d8c8f80`, `94f81de`, `cea124b`,
 `0e75842`, `0e4847e` and `4a64082`, the one before that at `6fe91d2`, 0.3.0
 plus the discount fix. 0.3.0 is not archived yet, so
 there is no version DOI to name; the concept DOI
 <https://doi.org/10.5281/zenodo.22722531> resolves to the newest release
 whenever one is deposited, and the last archived release is 0.2.0,
 <https://doi.org/10.5281/zenodo.22765348>.
+
+The newest of them is `3425586`, which adds `/model/n_iid`: endogenous
+variables, ordered first, whose equations carry no coefficients at all. It
+brings `VarSpec::n_iid`, `iid_block()` and `require_supported_iid_block()` in
+`core/models/model_support.h`, a call to the latter from all twenty-two
+`validate()`s, and the reduction itself in the four constant-coefficient VARs.
+It reaches R through `iid` in `create_bvarmodel()` and `n_iid` in `read_spec()`
+of `bayests_r_io.h`. Draws are unchanged for every model that does not set it.
 
 Upstream commits that change nothing under `include/` or `src/core/` do not move
 the copy off that commit; a refresh that copies anything newer has to update this

@@ -13,6 +13,11 @@
 #' @param seasonal logical. If \code{TRUE}, seasonal dummy variables are
 #' generated as additional deterministic terms. The amount of dummies depends on the frequency of the
 #' time-series object provided in \code{data}. Defaults to \code{FALSE}.
+#' @param iid an optional character vector naming endogenous variables whose
+#' equations carry no coefficients at all -- no lags, no deterministic terms,
+#' nothing. They are white noise, and reach the rest of the model only through
+#' the error covariance. They must be the first columns of \code{data}. See
+#' 'Details'.
 #' @param structural logical indicating whether data should be prepared for the estimation of a
 #' structural VAR model. Defaults to \code{FALSE}.
 #' @param tvp logical indicating whether the model parameters are time varying.
@@ -139,7 +144,29 @@
 #' \code{posterior$a$cov}, \code{posterior$u_sigma$scale} and
 #' \code{posterior$df}, and no \code{coeffs} anywhere, because joining one
 #' draw per period would look like a sampled path and is not one.
-#' 
+#'
+#' Argument \code{iid} restricts the equations of the variables it names to
+#' carry no coefficients at all. Such a variable is white noise: nothing
+#' forecasts it, it forecasts nothing, and what the model is estimated for is
+#' its contemporaneous correlation with the errors of the equations that do have
+#' dynamics. That is how a high-frequency surprise becomes a variable of a
+#' monthly VAR rather than an instrument beside one, following Jarocinski and
+#' Karadi (2020).
+#'
+#' The restriction is exact rather than a tight prior on those coefficients: the
+#' sampler never draws them, so they are zero in every draw. Everything else
+#' treats the model as an ordinary VAR -- the restricted variables are still
+#' regressors in the other equations, the error covariance still covers them,
+#' and \code{\link{irf}} and \code{\link{fevd}} read the draws unchanged.
+#'
+#' \strong{The variables named in \code{iid} have to be the first columns of
+#' \code{data}}, in any order among themselves. The restriction is carried by a
+#' variable's position rather than by a list of positions, which is what lets
+#' the sampler apply it without being told again which coefficients it owns. A
+#' data set in another order is refused with a message naming the columns that
+#' are there instead. It is available for models with constant coefficients and
+#' cannot be combined with \code{structural} or \code{varsel}.
+#'
 #' @return An object of class 'bvarmodel' or, if a vector is given in \code{p}, \code{s}
 #' or \code{quantile}, a list of class 'modellist' with one such object per
 #' specification. A 'bvarmodel' is a list with the elements
@@ -204,6 +231,7 @@ create_bvarmodel <- function(data, p = 2,
                              exogen = NULL, s = 2,
                              deterministic = "const",
                              seasonal = FALSE,
+                             iid = NULL,
                              structural = FALSE,
                              error = "wishart",
                              quantile = 0.5,
@@ -366,6 +394,10 @@ create_bvarmodel <- function(data, p = 2,
   model[["n"]] <- 0L
   model[["varsel"]] <- varsel
   model[["endogen"]] <- dimnames(data)[[2]]
+  model[["n_iid"]] <- .check_iid_variables(iid, data_name, structural, varsel, tvp)
+  if (model[["n_iid"]] == 0L) {
+    model[["n_iid"]] <- NULL
+  }
   if (use_exo) {
     model[["exogen"]] <- dimnames(exogen)[[2]]
   }

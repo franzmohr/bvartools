@@ -121,6 +121,31 @@ struct VarSpec
     /// before a forecast path is simulated.
     bool structural = false;
 
+    /// Endogenous variables, ordered first, whose equations carry no
+    /// coefficients at all: no lags of anything, no deterministic terms,
+    /// nothing. They are white noise, and reach the rest of the model only
+    /// through the error covariance.
+    ///
+    /// That is what makes a high-frequency surprise a variable of a monthly VAR
+    /// rather than an instrument outside it -- Jarocinski and Karadi (2020). A
+    /// surprise is unforecastable by construction, so every coefficient in its
+    /// equation is zero by assumption rather than by estimation, and what the
+    /// model is estimated for is the contemporaneous correlation between it and
+    /// the errors of the equations that do have dynamics.
+    ///
+    /// Zero for every other model. The restricted variables have to be ordered
+    /// first, which is what makes the restriction a property of a position in
+    /// `a` rather than a list of positions, and is how the data are ordered in
+    /// the application the feature comes from anyway.
+    ///
+    /// Read by the constant-coefficient VARs: `VarNormalWishart`,
+    /// `VarNormalGamma`, `VarNormalStochvol` and `VarNormalAld`. Every other
+    /// algorithm refuses a non-zero value rather than ignoring it, and so do
+    /// those four together with a structural form, whose contemporaneous block
+    /// is laid out by a different rule, or with variable selection, which is a
+    /// second way of switching a coefficient off.
+    int n_iid = 0;
+
     /// What a forecast does with the states of a time-varying model. Read by the
     /// forecasts of every model with something that drifts: VarTvpWishart,
     /// VarTvpGamma, VarTvpStochvol, VarNormalStochvol, VecTvpWishart,
@@ -167,6 +192,9 @@ struct VarSpec
     int kept_index(int draw) const { return (draw - burnin) / thin; }
 
     bool uses_varsel() const { return varsel != VarSelection::none; }
+
+    /// Whether any equation is restricted to carry no coefficients at all.
+    bool uses_iid() const { return n_iid > 0; }
 
     /// Whether the model carries a Psi block. One variable has no off-diagonal
     /// covariance to model, so the flag on its own is not enough.

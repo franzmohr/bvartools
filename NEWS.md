@@ -28,6 +28,22 @@ take the new model objects. `add_priors()` no longer has defaults for `coef` and
 
 ## Changes
 
+* **`create_bvarmodel()` takes `iid`: endogenous variables whose equations carry
+  no coefficients at all.** No lags, no deterministic terms, nothing -- white
+  noise that reaches the rest of the model only through the error covariance,
+  which is how a high-frequency surprise becomes a variable of a monthly VAR
+  rather than an instrument beside one, after Jarocinski and Karadi (2020). The
+  argument names the variables rather than counting them, and they have to be
+  the first columns of `data`; a data set in another order is refused with a
+  message naming the columns that are there instead. The restriction is exact
+  rather than a tight prior: the sampler never draws those coefficients, so they
+  are zero in every draw. Everything else treats the model as the VAR it is --
+  the restricted variables are still regressors elsewhere, the error covariance
+  still covers them, and `irf()` and `fevd()` read the draws unchanged.
+  Available for constant coefficients and every error term, and refused
+  alongside `structural`, `varsel` or `tvp`. This is the refreshed BayesTS core
+  (`3425586`).
+
 * **`add_sign_zero_restrictions()` identifies a VAR with sign *and* zero
   restrictions**, by the algorithms of Arias, Rubio-Ramirez and Waggoner
   (2018). `add_sign_restrictions()` cannot impose a zero: the rotations that

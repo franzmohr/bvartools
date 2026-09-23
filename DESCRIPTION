@@ -111,6 +111,7 @@ Collate:
     'get_regressor_names.R'
     'hdf5_groups.R'
     'hdf5_write.R'
+    'iid_variables.R'
     'inclusion_prior.R'
     'inclusion_prior.bvarmodel.R'
     'inclusion_prior.bvecmodel.R'

@@ -143,6 +143,7 @@ struct VecTvpDiscountWalk
 
 void VecTvpDiscountInput::validate() const
 {
+    core::require_supported_iid_block(spec, false, "VecTvpDiscount");
     // Before anything that would read a value: a NaN or an infinity here would
     // otherwise surface as a failed factorisation, or as NaN in the output.
     core::require_finite_observations(train, forecast, test);

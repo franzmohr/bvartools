@@ -17,5 +17,11 @@ get_model_specifications.bvarmodel <- function(object, ...) {
 
   result[["varsel"]] <- object[["model"]][["varsel"]]
 
+  # Left out of a model that has none, so that the specification of every model
+  # this package estimated before the restriction existed prints as it did.
+  if (!is.null(object[["model"]][["n_iid"]])) {
+    result[["n_iid"]] <- object[["model"]][["n_iid"]]
+  }
+
   return(result)
 }

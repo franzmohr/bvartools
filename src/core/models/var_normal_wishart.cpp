@@ -22,6 +22,8 @@ using core::BvsScope;
 using core::bvs_sweep;
 using core::covariance_root;
 using core::draw_normal_precision;
+using core::iid_block;
+using core::IidBlock;
 using core::SsvsBlock;
 using core::ssvs_sweep;
 using core::split_structural_coefficients;
@@ -44,6 +46,7 @@ VarNormalWishartDraws VarNormalWishartSampler::draw_coefficients(const VarNormal
     arma::mat z = input.train.z;
 
     const int nparams = static_cast<int>(z.n_cols);
+    const IidBlock iid = iid_block(input.spec, static_cast<arma::uword>(nparams));
     const bool use_a = nparams > 0;
     const int tt = static_cast<int>(y.n_elem) / k;
 
@@ -54,7 +57,7 @@ VarNormalWishartDraws VarNormalWishartSampler::draw_coefficients(const VarNormal
     VarNormalWishartDraws out;
 
     // Coefficients
-    arma::vec a, prior_a_mu;
+    arma::vec a, prior_a_rhs;
     arma::mat prior_a_vinv;
     arma::mat post_a_v, dz;
 
@@ -72,9 +75,19 @@ VarNormalWishartDraws VarNormalWishartSampler::draw_coefficients(const VarNormal
     if (use_a)
     {
         diag_tt = arma::speye<arma::sp_mat>(tt, tt);
-        prior_a_mu = input.a_prior.mu;
-        prior_a_vinv = input.a_prior.v_inv;
-        a = input.initial.a;
+        // The i.i.d. block, if the model has one: the restricted equations'
+        // columns leave the regressors, their rows and columns leave the prior,
+        // and the zeros go back when a draw is stored. Every one of these is the
+        // identity when nothing is restricted.
+        //
+        // The prior's precision-weighted mean is formed once here rather than
+        // once per draw. It was a constant inside the loop before, so the draws
+        // are unchanged; reduced, it is the free part of V mu, which is what the
+        // prior conditional on the restricted coefficients being zero asks for.
+        prior_a_rhs = iid.elements(input.a_prior.v_inv * input.a_prior.mu);
+        prior_a_vinv = iid.block(input.a_prior.v_inv);
+        a = iid.elements(input.initial.a);
+        z = iid.columns(z);
         out.a = arma::mat(nparams, iterations);
 
         if (use_varsel)
@@ -128,7 +141,7 @@ VarNormalWishartDraws VarNormalWishartSampler::draw_coefficients(const VarNormal
             dz = u_sigma_inv_diag * z;
             post_a_v = prior_a_vinv + arma::trans(dz) * z;
             a = draw_normal_precision(post_a_v,
-                                      prior_a_vinv * prior_a_mu + arma::trans(dz) * y);
+                                      prior_a_rhs + arma::trans(dz) * y);
 
             if (a_ssvs)
             {
@@ -162,7 +175,7 @@ VarNormalWishartDraws VarNormalWishartSampler::draw_coefficients(const VarNormal
             const int draw_pos = input.spec.kept_index(draw);
             if (use_a)
             {
-                out.a.col(draw_pos) = a;
+                out.a.col(draw_pos) = iid.scatter(a);
                 if (use_varsel)
                 {
                     out.a_lambda.col(draw_pos) = a_ssvs ? a_ssvs->lambda : a_bvs->lambda;

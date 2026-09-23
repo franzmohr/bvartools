@@ -183,6 +183,11 @@ inline bayests::VarSpec read_spec(const Rcpp::List &model, const char *covar_err
   spec.m = optional_int(model, "m", 0);
   spec.s = optional_int(model, "s", 0);
   spec.n = optional_int(model, "n", 0);
+  // Endogenous variables, ordered first, whose equations carry no coefficients
+  // at all. Absent from every model but one create_bvarmodel() was given `iid`,
+  // and refused by the sampler's own validate() where no sampler reads it, so
+  // it is read for every algorithm rather than only the four that do.
+  spec.n_iid = optional_int(model, "n_iid", 0);
   spec.n_restricted = optional_int(model, "n_restricted", 0);
   spec.rank = optional_int(model, "rank", 0);
   spec.k_beta = optional_int(model, "k_beta", 0);

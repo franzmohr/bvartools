@@ -22,6 +22,8 @@ using core::BvsScope;
 using core::bvs_sweep;
 using core::covariance_root;
 using core::draw_normal_precision;
+using core::iid_block;
+using core::IidBlock;
 using core::require_period_draws;
 using core::require_state_variances;
 using core::simulates_states;
@@ -49,6 +51,7 @@ VarNormalStochvolDraws VarNormalStochvolSampler::draw_coefficients(
     arma::mat z = input.train.z;
 
     const int nparams = static_cast<int>(z.n_cols);
+    const IidBlock iid = iid_block(input.spec, static_cast<arma::uword>(nparams));
     const bool use_a = nparams > 0;
     const int tt = static_cast<int>(y.n_elem) / k;
     const arma::sp_mat diag_tt = arma::eye<arma::sp_mat>(tt, tt);
@@ -62,7 +65,7 @@ VarNormalStochvolDraws VarNormalStochvolSampler::draw_coefficients(
     VarNormalStochvolDraws out;
 
     // Coefficients
-    arma::vec a, a_prior_mu;
+    arma::vec a, a_prior_rhs;
     arma::mat a_prior_vinv, a_post_v;
 
     // Variable selection
@@ -71,9 +74,19 @@ VarNormalStochvolDraws VarNormalStochvolSampler::draw_coefficients(
 
     if (use_a)
     {
-        a_prior_mu = input.a_prior.mu;
-        a_prior_vinv = input.a_prior.v_inv;
-        a = input.initial.a;
+        // The i.i.d. block, if the model has one: the restricted equations'
+        // columns leave the regressors, their rows and columns leave the prior,
+        // and the zeros go back when a draw is stored. Every one of these is the
+        // identity when nothing is restricted.
+        //
+        // The prior's precision-weighted mean is formed once here rather than
+        // once per draw. It was a constant inside the loop before, so the draws
+        // are unchanged; reduced, it is the free part of V mu, which is what the
+        // prior conditional on the restricted coefficients being zero asks for.
+        a_prior_rhs = iid.elements(input.a_prior.v_inv * input.a_prior.mu);
+        a_prior_vinv = iid.block(input.a_prior.v_inv);
+        a = iid.elements(input.initial.a);
+        z = iid.columns(z);
         out.a = arma::mat(nparams, iterations);
 
         if (use_varsel)
@@ -168,7 +181,7 @@ VarNormalStochvolDraws VarNormalStochvolSampler::draw_coefficients(
             // Update a
             a_post_v = a_prior_vinv + arma::trans(z) * u_sigma_inv_diag * z;
             a = draw_normal_precision(a_post_v,
-                                      a_prior_vinv * a_prior_mu + arma::trans(z) * u_sigma_inv_diag * y);
+                                      a_prior_rhs + arma::trans(z) * u_sigma_inv_diag * y);
 
             if (a_bvs)
             {
@@ -270,7 +283,7 @@ VarNormalStochvolDraws VarNormalStochvolSampler::draw_coefficients(
 
             if (use_a)
             {
-                out.a.col(draw_pos) = a;
+                out.a.col(draw_pos) = iid.scatter(a);
                 if (use_varsel)
                 {
                     out.a_lambda.col(draw_pos) = a_bvs->lambda;

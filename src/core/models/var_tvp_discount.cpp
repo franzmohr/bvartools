@@ -27,6 +27,7 @@ using core::run_discount_filter;
 
 void VarTvpDiscountInput::validate() const
 {
+    core::require_supported_iid_block(spec, false, "VarTvpDiscount");
     // Before anything that would read a value: a NaN or an infinity here would
     // otherwise surface as a failed factorisation, or as NaN in the output.
     core::require_finite_observations(train, forecast, test);

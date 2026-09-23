@@ -17,6 +17,7 @@ print.bvarmodel <- function(x, digits = max(3L, getOption("digits") - 3L), ...){
   result <- get_model_specifications(x)
   names(result)[names(result) == "type"] <- "Type"
   names(result)[names(result) == "varsel"] <- "Variable selection"
+  names(result)[names(result) == "n_iid"] <- "Equations without coefficients"
   
   if (all(result[, "m"] == 0)) {
     result <- result[, !names(result) %in% c("m", "s")]

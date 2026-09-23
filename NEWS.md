@@ -28,6 +28,15 @@ take the new model objects. `add_priors()` no longer has defaults for `coef` and
 
 ## Changes
 
+* **The non-centred prior reaches every model whose coefficients drift.**
+  `coef$omega_v` is accepted for `tvp = TRUE` with `error = "wishart"` and
+  `"ald"` as well, so `VarTvpWishart`, `VecTvpWishart` and `VarTvpAld` join the
+  four models that already took it, and `time_variation_test()` reports their
+  Bayes factors for time variation. This is the refreshed BayesTS core
+  (`fa730f0`); the three bindings read `omega_v` and return the `omega` draws
+  beside `sigma`. *Draws are unchanged for every model estimated without
+  `omega_v`.*
+
 * **The remaining findings of the audit.**
   - `irf()` of a quantile VAR (`error = "ald"`) takes only `type = "feir"` or
     `"custom"`, and `fevd()` and `spillover()` refuse one. Its `u_sigma_inv`

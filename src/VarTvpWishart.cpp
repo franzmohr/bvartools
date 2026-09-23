@@ -60,6 +60,9 @@ bayests::VarTvpWishartInput read_input(const Rcpp::List &object) {
     // coefficients may drift, and where they start.
     input.a_prior.sigma = read_gamma_prior(prior_a);
     input.a_prior.initial_state = read_normal_prior(prior_a);
+    // The non-centred parameterisation, in place of shape and rate; validate()
+    // refuses a block that carries both.
+    read_vec_if_present(prior_a, "omega_v", input.a_prior.omega_v);
     if (bvs) {
       input.a_varsel_prior = read_varsel_prior(prior_a, input.spec.varsel);
     }
@@ -161,6 +164,7 @@ Rcpp::List write_draws(const bayests::VarTvpWishartDraws &draws) {
       posteriors["a"] = Rcpp::List::create(Rcpp::Named("coeffs") = draws_to_r(draws.a),
                                            Rcpp::Named("sigma") = draws_to_r(draws.a_sigma));
     }
+    posteriors["a"] = with_noncentred(posteriors["a"], draws.a_noncentred);
   }
   posteriors["u_sigma_inv"] = Rcpp::List::create(Rcpp::Named("coeffs") = draws_to_r(draws.u_sigma_inv));
 

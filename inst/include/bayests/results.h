@@ -185,6 +185,7 @@ struct VarTvpWishartDraws
     arma::mat a;
     arma::mat a_sigma;
     arma::mat a_lambda;
+    NoncentredStateDraws a_noncentred;
     arma::mat u_sigma_inv;
 
     arma::uword iterations() const { return u_sigma_inv.n_cols; }
@@ -238,6 +239,7 @@ struct VarTvpAldDraws
     arma::mat a;        ///< (nparams * tt) x iterations.
     arma::mat a_sigma;  ///< nparams x iterations.
     arma::mat a_lambda;
+    NoncentredStateDraws a_noncentred;
 
     /// k x iterations: the scale of the asymmetric Laplace, one per equation.
     arma::mat u_scale;
@@ -371,6 +373,7 @@ struct VecTvpWishartDraws
     arma::mat a;        ///< (n_a * tt) x iterations.
     arma::mat a_sigma;
     arma::mat a_lambda;
+    NoncentredStateDraws a_noncentred;
 
     arma::mat beta;     ///< (n_beta * tt) x iterations.
 
@@ -584,6 +587,7 @@ struct DfmTvpGammaDraws
     /// n_lambda x iterations: the variance of the loading random walks, one per
     /// free element in the row-major order the prior uses.
     arma::mat lambda_sigma;
+    NoncentredStateDraws lambda_noncentred;
 
     /// (n_factors * tt) x iterations; each column is vec of the N x tt factor
     /// path, periods along the columns of that matrix.
@@ -595,6 +599,7 @@ struct DfmTvpGammaDraws
 
     /// n_factor_a x iterations: the variance of the transition random walks.
     arma::mat a_sigma;
+    NoncentredStateDraws a_noncentred;
 
     /// k x iterations. U is diagonal, so only the diagonal is drawn and kept.
     arma::mat u_sigma_inv;
@@ -629,6 +634,7 @@ struct DfmTvpStochvolDraws
     /// n_lambda x iterations: the variance of the loading random walks, one per
     /// free element in the row-major order the prior uses.
     arma::mat lambda_sigma;
+    NoncentredStateDraws lambda_noncentred;
 
     /// (n_factors * tt) x iterations; each column is vec of the N x tt factor
     /// path, periods along the columns of that matrix.
@@ -640,6 +646,7 @@ struct DfmTvpStochvolDraws
 
     /// n_factor_a x iterations: the variance of the transition random walks.
     arma::mat a_sigma;
+    NoncentredStateDraws a_noncentred;
 
     /// (k * tt) x iterations: the diagonal of the idiosyncratic precision,
     /// period by period, periods stacked within a column.
@@ -651,7 +658,9 @@ struct DfmTvpStochvolDraws
     /// k x iterations and n_factors x iterations: the variances of the two
     /// groups of log-volatility innovations, as in DfmNormalStochvolDraws.
     arma::mat u_h_sigma;
+    NoncentredStateDraws u_h_noncentred;
     arma::mat v_h_sigma;
+    NoncentredStateDraws v_h_noncentred;
 
     arma::uword iterations() const { return u_sigma_inv.n_cols; }
     bool has_a() const { return a.n_elem > 0; }

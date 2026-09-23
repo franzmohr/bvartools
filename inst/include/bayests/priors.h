@@ -169,9 +169,10 @@ struct RandomWalkPrior
     /// `sigma`, and the two are not accepted together. It is what makes the
     /// constant model a point in the interior of the prior, which the
     /// Savage-Dickey test for time variation of Chan (2018) needs; see
-    /// src/core/models/noncentred_support.h. Only the models that say so read
-    /// it -- the four time-varying VARs and VECs with a gamma or stochastic
-    /// volatility error term.
+    /// src/core/models/noncentred_support.h. Every sampler whose coefficients
+    /// drift reads it: the time-varying VARs and VECs under all four error
+    /// terms, and the two dynamic factor models, for whichever of their blocks
+    /// the file sets it on.
     arma::vec omega_v;
 
     /// Normal on the state of the period before the sample.

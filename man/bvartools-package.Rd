@@ -243,11 +243,11 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Franz X. Mohr \email{franz.x.mohr@outlook.com} (\href{https://orcid.org/0009-0003-8890-7781}{ORCID})
+\strong{Maintainer}: Franz X. Mohr \email{franz.x.mohr@outlook.com} (\href{https://orcid.org/0009-0003-8890-7781}{ORCID}) [copyright holder]
 
 Authors:
 \itemize{
-  \item Franz X. Mohr \email{franz.x.mohr@outlook.com} (\href{https://orcid.org/0009-0003-8890-7781}{ORCID})
+  \item Franz X. Mohr \email{franz.x.mohr@outlook.com} (\href{https://orcid.org/0009-0003-8890-7781}{ORCID}) [copyright holder]
 }
 
 }

@@ -35,16 +35,16 @@
 }
 
 # Whether the model's sampler reads the non-centred prior 'omega_v' for the
-# random walks of 'arg': the coefficients and covariance coefficients of the
-# time varying VAR and VEC models with a gamma or stochastic volatility error
-# term for 'coef', the log-volatilities of the stochastic volatility ones for
-# 'sigma'. Anywhere else it would be written into the priors and silently left
-# unread, so the checks below refuse it instead.
+# random walks of 'arg': the coefficients and covariance coefficients of every
+# time varying VAR and VEC for 'coef', whatever its error term, and the
+# log-volatilities of the stochastic volatility ones for 'sigma'. Anywhere else
+# it would be written into the priors and silently left unread, so the checks
+# below refuse it instead.
 .add_priors_noncentred_errors <- function(object, arg) {
   if (arg == "sigma") {
     c("sv", "sv+covar")
   } else {
-    c("sv", "sv+covar", "gamma", "gamma+covar")
+    c("sv", "sv+covar", "gamma", "gamma+covar", "wishart", "ald")
   }
 }
 

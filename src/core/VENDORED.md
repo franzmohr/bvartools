@@ -7,7 +7,7 @@ project is here -- the core deliberately links neither HDF5 nor HighFive,
 prints nothing and reads no files, which is what makes it embeddable in an R
 package at all.
 
-The copy is **BayesTS `d92e581`**, upstream after the `v0.3.0` release
+The copy is **BayesTS `fa730f0`**, upstream after the `v0.3.0` release
 (tagged on `18a86c2`). Past the release it carries the fix to
 `core/models/var_tvp_discount.cpp` (`2dc9250`), which is what makes
 `add_predictive_loglik()` score more than the first horizon of a discounted VAR;
@@ -15,13 +15,18 @@ the flat-prior warning for `bvs` (`fa6dd89`, `f2abd4e`), which adds
 `flat_selection_prior()` and `flat_selection_message()` to `priors.h` and reaches
 R through `RcppReporter::warnings()` and `.raise_core_warnings()`; the three
 SSVS refusals in `validate()` (`a85abe2`); and the non-centred random walks of
-`VarTvpStochvol` (`59c495f`), `VarTvpGamma` (`0a2a0c0`), `VecTvpStochvol` (`95bacdb`)
-and `VecTvpGamma` (`3c1e32a`),
-which bring
+`VarTvpStochvol` (`59c495f`), `VarTvpGamma` (`0a2a0c0`), `VecTvpStochvol` (`95bacdb`),
+`VecTvpGamma` (`3c1e32a`) and, with `fa730f0`, of every remaining time-varying
+sampler: `VarTvpWishart`, `VecTvpWishart` and `VarTvpAld` here, and the two
+time-varying DFMs, which are skipped. They bring
 `core/models/noncentred_support.h` and reach R through `omega_v` in
 `add_priors()` and the `omega*` draws `src/VarTvpStochvol.cpp`,
-`src/VarTvpGamma.cpp`, `src/VecTvpStochvol.cpp` and `src/VecTvpGamma.cpp`
-return, through `with_noncentred()` in `bayests_r_io.h`;
+`src/VarTvpGamma.cpp`, `src/VecTvpStochvol.cpp`, `src/VecTvpGamma.cpp`,
+`src/VarTvpWishart.cpp`, `src/VecTvpWishart.cpp` and `src/VarTvpAld.cpp`
+return, through `with_noncentred()` in `bayests_r_io.h`. `fa730f0` also puts
+`validate_dfm_stochvol_block()` in `core/inputs.cpp` through the shared
+`validate_state_variance_prior()`, which accepts either parameterisation; that
+block belongs to a skipped sampler, but `inputs.cpp` is copied whole;
 and the constant VECs brought in line with Koop, Leon-Gonzalez and Strachan
 (2010) (`b8d6c2c`): `VecNormalGamma` now pays the cointegration space prior's
 term in its error precision through `coint_prior_pseudo_errors()` in
@@ -43,7 +48,7 @@ element instead of failing deep in the numerics or coming back as a NaN forecast
 or score. The check covers the lag cells of `/data/forecast/x` that the forecast
 overwrites as well, which `prepare_forecast_input()` used to leave `NA` and now
 fills with zeros; and comment-only changes to five core files (`fd7ece5`).
-The refreshes before sat at `f8b42a1`, `d8c8f80`, `94f81de`, `cea124b`,
+The refreshes before sat at `d92e581`, `f8b42a1`, `d8c8f80`, `94f81de`, `cea124b`,
 `0e75842`, `0e4847e` and `4a64082`, the one before that at `6fe91d2`, 0.3.0
 plus the discount fix. 0.3.0 is not archived yet, so
 there is no version DOI to name; the concept DOI

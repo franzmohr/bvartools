@@ -1489,17 +1489,18 @@ void validate_dfm_stochvol_block(const StochvolPrior &prior, const arma::mat &h,
     const std::string of_block(block);
 
     require_length(prior.offset, width, ("log-volatility offset of the " + of_errors).c_str());
-    require_length(prior.state.sigma.shape, width,
-                   ("prior shape of the " + of_block + " log-volatility variance").c_str());
-    require_length(prior.state.sigma.rate, width,
-                   ("prior rate of the " + of_block + " log-volatility variance").c_str());
+
+    // Either parameterisation of how far the log-volatility moves: the inverse
+    // gamma on its variance, or omega_v on its signed standard deviation. The
+    // shared check refuses a file that gives both and sizes whichever it got.
+    validate_state_variance_prior(prior.state, width, of_block + " log-volatility");
+
     require_length(prior.state.initial_state.mu, width,
                    ("prior mean of the initial " + of_block + " log-volatility").c_str());
     require_square(prior.state.initial_state.v_inv, width,
                    ("prior precision of the initial " + of_block + " log-volatility").c_str());
 
     require_above(prior.offset, 0.0, true, "log-volatility offset of the " + of_errors);
-    require_gamma_values(prior.state.sigma, "the " + of_block + " log-volatility variance");
     require_symmetric(prior.state.initial_state.v_inv,
                       ("prior precision of the initial " + of_block + " log-volatility").c_str());
 

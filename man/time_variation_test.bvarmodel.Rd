@@ -10,9 +10,8 @@
 \method{time_variation_test}{bvecmodel}(object, joint = TRUE, batches = 20, ...)
 }
 \arguments{
-\item{object}{an object of class \code{"bvarmodel"} with \code{tvp = TRUE} and
-\code{error = "sv"}, \code{"sv+covar"}, \code{"gamma"} or \code{"gamma+covar"}, or
-of class \code{"bvecmodel"} with the same, whose priors were set with
+\item{object}{an object of class \code{"bvarmodel"} with \code{tvp = TRUE},
+whatever its error term, or of class \code{"bvecmodel"} with the same, whose priors were set with
 \code{coef$omega_v} or, under stochastic volatility, \code{sigma$omega_v} in \code{\link{add_priors}} and whose
 posterior was drawn by \code{\link{add_posterior_coefficients}}.}
 

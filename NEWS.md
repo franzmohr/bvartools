@@ -28,6 +28,20 @@ take the new model objects. `add_priors()` no longer has defaults for `coef` and
 
 ## Changes
 
+* **`add_sign_zero_restrictions()` identifies a VAR with sign *and* zero
+  restrictions**, by the algorithms of Arias, Rubio-Ramirez and Waggoner
+  (2018). `add_sign_restrictions()` cannot impose a zero: the rotations that
+  satisfy one form a set of probability zero, so no number of tries finds a
+  member of it. The new function draws rotations that satisfy the zero
+  restrictions by construction, one column at a time, and reweights them to the
+  posterior with an importance sampler whose weights it computes numerically.
+  The restriction table gains a `sign` of `0` and a `horizon` of `Inf` for the
+  long run. What comes back is an equally weighted resample, so `irf()`,
+  `fevd()` and `spillover()` read it under `type = "sign"` unchanged; `summary()`
+  reports the effective sample size, which is what says how much independent
+  information the resample carries. The order of the endogenous variables
+  matters, and a shock left with no column to draw is refused by name.
+
 * **The non-centred prior reaches every model whose coefficients drift.**
   `coef$omega_v` is accepted for `tvp = TRUE` with `error = "wishart"` and
   `"ald"` as well, so `VarTvpWishart`, `VecTvpWishart` and `VarTvpAld` join the

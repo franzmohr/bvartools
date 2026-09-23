@@ -101,7 +101,7 @@
 
   if (is.null(rotations)) {
     stop(caller, " of type \"sign\" need an identified model: run add_sign_restrictions() ",
-         "on it first.")
+         "or add_sign_zero_restrictions() on it first.")
   }
 
   k <- x[["model"]][["k"]]
@@ -160,8 +160,20 @@
   period
 }
 
+# `all_regressors` widens element `A` from the lag coefficients to every
+# non-structural one, the deterministic terms and unmodelled exogenous
+# variables included. Only the sign and zero restriction algorithm asks for
+# them: it rebuilds A_+ = B A_0, whose rows past the lags are what the
+# deterministic terms contribute, and the number of regressors enters its
+# importance weight directly. Everything else here propagates a shock through
+# the lag polynomial alone and would be slowed down by carrying the rest.
 .collect_draws <- function(x, period = NULL, need_A0 = FALSE, need_Sigma = TRUE,
-                           impact = NULL) {
+                           impact = NULL, all_regressors = FALSE) {
+
+  if (all_regressors && need_A0) {
+    stop("'.collect_draws' cannot widen 'A' to every regressor and solve out A_0 at once: ",
+         "a structural model has no reduced form to widen.", call. = FALSE)
+  }
 
   k <- x[["model"]][["k"]]
   kk <- k * k
@@ -214,9 +226,14 @@
     temp <- NULL
     if (p > 0) {
       if (tvp) {
-        temp[["A"]] <- matrix(x[["posterior"]][["a"]][["coeffs"]][i, (period - 1) * nparams + 1:(kk * p)], k)
+        # With no structural block the period's parameters are the regressors
+        # of the k equations and nothing else, which is what makes counting
+        # them off `nparams` right rather than only usually right.
+        n_use <- if (all_regressors) nparams else kk * p
+        temp[["A"]] <- matrix(x[["posterior"]][["a"]][["coeffs"]][i, (period - 1) * nparams + 1:n_use], k)
       } else {
-        temp[["A"]] <- matrix(x[["posterior"]][["a"]][["coeffs"]][i, 1:(kk * p)], k)
+        n_use <- if (all_regressors) ncol(x[["posterior"]][["a"]][["coeffs"]]) else kk * p
+        temp[["A"]] <- matrix(x[["posterior"]][["a"]][["coeffs"]][i, 1:n_use], k)
       }
     } else {
       temp[["A"]] <- matrix(0, k, k)

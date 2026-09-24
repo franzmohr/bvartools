@@ -16,14 +16,14 @@ the flat-prior warning for `bvs` (`fa6dd89`, `f2abd4e`), which adds
 R through `RcppReporter::warnings()` and `.raise_core_warnings()`; the three
 SSVS refusals in `validate()` (`a85abe2`); and the non-centred random walks of
 `VarTvpStochvol` (`59c495f`), `VarTvpGamma` (`0a2a0c0`), `VecTvpStochvol` (`95bacdb`),
-`VecTvpGamma` (`3c1e32a`) and, with `fa730f0`, of every remaining time-varying
+`VecTvpGamma` (`3c1e32a`) and, with `1e21f94`, of every remaining time-varying
 sampler: `VarTvpWishart`, `VecTvpWishart` and `VarTvpAld` here, and the two
 time-varying DFMs, which are skipped. They bring
 `core/models/noncentred_support.h` and reach R through `omega_v` in
 `add_priors()` and the `omega*` draws `src/VarTvpStochvol.cpp`,
 `src/VarTvpGamma.cpp`, `src/VecTvpStochvol.cpp`, `src/VecTvpGamma.cpp`,
 `src/VarTvpWishart.cpp`, `src/VecTvpWishart.cpp` and `src/VarTvpAld.cpp`
-return, through `with_noncentred()` in `bayests_r_io.h`. `fa730f0` also puts
+return, through `with_noncentred()` in `bayests_r_io.h`. `1e21f94` also puts
 `validate_dfm_stochvol_block()` in `core/inputs.cpp` through the shared
 `validate_state_variance_prior()`, which accepts either parameterisation; that
 block belongs to a skipped sampler, but `inputs.cpp` is copied whole;
@@ -48,7 +48,7 @@ element instead of failing deep in the numerics or coming back as a NaN forecast
 or score. The check covers the lag cells of `/data/forecast/x` that the forecast
 overwrites as well, which `prepare_forecast_input()` used to leave `NA` and now
 fills with zeros; and comment-only changes to five core files (`fd7ece5`).
-The refreshes before sat at `fa730f0`, `d92e581`, `f8b42a1`, `d8c8f80`, `94f81de`, `cea124b`,
+The refreshes before sat at `1e21f94`, `d92e581`, `f8b42a1`, `d8c8f80`, `94f81de`, `cea124b`,
 `0e75842`, `0e4847e` and `4a64082`, the one before that at `6fe91d2`, 0.3.0
 plus the discount fix. 0.3.0 is not archived yet, so
 there is no version DOI to name; the concept DOI
@@ -63,6 +63,14 @@ brings `VarSpec::n_iid`, `iid_block()` and `require_supported_iid_block()` in
 `validate()`s, and the reduction itself in the four constant-coefficient VARs.
 It reaches R through `iid` in `create_bvarmodel()` and `n_iid` in `read_spec()`
 of `bayests_r_io.h`. Draws are unchanged for every model that does not set it.
+
+A refresh on 24 September 2026 copied nothing: `include/` and `src/core/` had
+not moved since `3425586`, though upstream `main` had. It also corrected the
+commit named for the non-centred samplers, which upstream amended from
+`fa730f0` to `1e21f94` after this package had vendored it. The amend touched
+`README.md` and the agent documentation only, so the copy here was already
+right and what was stale was the name for it -- which is the failure this
+paragraph warns about, arriving from the one direction it does not mention.
 
 Upstream commits that change nothing under `include/` or `src/core/` do not move
 the copy off that commit; a refresh that copies anything newer has to update this

@@ -48,8 +48,9 @@ The object of class 'bvarmodel' with its posterior draws resampled,
 the accepted rotations in element \code{q} of its \code{posterior}, one row
 per resampled draw, and the specification of the restrictions in element
 \code{sign_zero_restrictions} of its \code{model}, together with the number
-of draws that satisfied the sign restrictions and the effective sample size
-of the importance sampler. Element \code{sign_restrictions} is set alongside
+of draws that satisfied the sign restrictions, the effective sample size
+of the importance sampler and the share of the total weight held by its
+single largest draw. Element \code{sign_restrictions} is set alongside
 it, so that \code{\link{irf}}, \code{\link{fevd}} and \code{\link{spillover}}
 read the rotations under \code{type = "sign"} as they do for
 \code{\link{add_sign_restrictions}}.
@@ -120,7 +121,30 @@ therefore has to be named early. The function refuses an ordering that leaves
 a column with nothing to draw and says which shock it was.
 
 The result depends on the state of the random number generator, so
-\code{\link{set.seed}} is needed to reproduce it.
+\code{\link{set.seed}} is needed to reproduce it. It depends on it in two
+places rather than one: the rotations are drawn at random, and so are the
+matrices that complete each shock's constraints to a square system. Appendix
+A.3 of the paper says any draw of the latter defines a valid algorithm, and
+that is true -- but not that any draw defines an equally efficient one.
+Holding a model, its posterior draws and every rotation fixed, different
+completions have moved the effective sample size by a factor of four. A run
+reporting a poor effective sample size is therefore worth repeating under a
+different seed before the restrictions themselves are blamed.
+
+\strong{The function warns when the importance sample is not fit to
+summarise}: when its effective sample size is below twenty, so that the
+draws returned have no percentiles worth reading, or when it keeps less
+than a quarter of the information in the draws that satisfied the signs.
+The warning then says which repair applies, and that turns on the share of
+the weight held by the single largest draw. Many mildly unequal weights are
+an efficiency problem that more candidate draws fix, since the effective
+sample size grows roughly in proportion to them. One enormous weight is not
+fixed that way: it says the proposal put little probability where the target
+has a lot, and a different seed, a different variable ordering or weaker
+restrictions are the things worth trying. That share is reported by
+\code{\link{summary}} beside the effective sample size, whether or not
+anything was warned about, and kept in element \code{max_weight_share} of
+\code{sign_zero_restrictions}.
 
 Applied to a 'modellist' or an 'expandingwindow' the function identifies
 each member on its own and returns the collection. Each therefore gets its

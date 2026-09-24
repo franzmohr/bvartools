@@ -83,7 +83,30 @@ NULL
 #' a column with nothing to draw and says which shock it was.
 #'
 #' The result depends on the state of the random number generator, so
-#' \code{\link{set.seed}} is needed to reproduce it.
+#' \code{\link{set.seed}} is needed to reproduce it. It depends on it in two
+#' places rather than one: the rotations are drawn at random, and so are the
+#' matrices that complete each shock's constraints to a square system. Appendix
+#' A.3 of the paper says any draw of the latter defines a valid algorithm, and
+#' that is true -- but not that any draw defines an equally efficient one.
+#' Holding a model, its posterior draws and every rotation fixed, different
+#' completions have moved the effective sample size by a factor of four. A run
+#' reporting a poor effective sample size is therefore worth repeating under a
+#' different seed before the restrictions themselves are blamed.
+#'
+#' \strong{The function warns when the importance sample is not fit to
+#' summarise}: when its effective sample size is below twenty, so that the
+#' draws returned have no percentiles worth reading, or when it keeps less
+#' than a quarter of the information in the draws that satisfied the signs.
+#' The warning then says which repair applies, and that turns on the share of
+#' the weight held by the single largest draw. Many mildly unequal weights are
+#' an efficiency problem that more candidate draws fix, since the effective
+#' sample size grows roughly in proportion to them. One enormous weight is not
+#' fixed that way: it says the proposal put little probability where the target
+#' has a lot, and a different seed, a different variable ordering or weaker
+#' restrictions are the things worth trying. That share is reported by
+#' \code{\link{summary}} beside the effective sample size, whether or not
+#' anything was warned about, and kept in element \code{max_weight_share} of
+#' \code{sign_zero_restrictions}.
 #'
 #' Applied to a 'modellist' or an 'expandingwindow' the function identifies
 #' each member on its own and returns the collection. Each therefore gets its
@@ -96,8 +119,9 @@ NULL
 #' the accepted rotations in element \code{q} of its \code{posterior}, one row
 #' per resampled draw, and the specification of the restrictions in element
 #' \code{sign_zero_restrictions} of its \code{model}, together with the number
-#' of draws that satisfied the sign restrictions and the effective sample size
-#' of the importance sampler. Element \code{sign_restrictions} is set alongside
+#' of draws that satisfied the sign restrictions, the effective sample size
+#' of the importance sampler and the share of the total weight held by its
+#' single largest draw. Element \code{sign_restrictions} is set alongside
 #' it, so that \code{\link{irf}}, \code{\link{fevd}} and \code{\link{spillover}}
 #' read the rotations under \code{type = "sign"} as they do for
 #' \code{\link{add_sign_restrictions}}.
@@ -202,6 +226,16 @@ add_sign_zero_restrictions.bvarmodel <- function(object, restrictions, draws = N
 
   weights <- .arw_weights(log_weight)
   effective <- max(1L, as.integer(floor(1 / sum(weights^2))))
+  largest <- max(weights)
+
+  # An importance sampler can fail quietly. When one draw carries most of the
+  # weight the effective sample size collapses, and because `draws` defaults to
+  # it the function would then hand back a posterior of a handful of rows that
+  # irf() and fevd() would summarise without complaint. Both halves of that are
+  # worth saying out loud, and they are separate symptoms: a small effective
+  # sample can come from many mildly unequal weights, while one draw at a tenth
+  # of the total mass is a different problem with a different fix.
+  .warn_importance_sample(effective, largest, accepted)
 
   if (is.null(draws)) {
     draws <- effective
@@ -231,7 +265,8 @@ add_sign_zero_restrictions.bvarmodel <- function(object, restrictions, draws = N
     "period" = period,
     "candidates" = store,
     "accepted" = accepted,
-    "effective_sample_size" = effective
+    "effective_sample_size" = effective,
+    "max_weight_share" = largest
   )
 
   # What irf(), fevd() and spillover() read under type = "sign". Both
@@ -342,6 +377,76 @@ add_sign_zero_restrictions.bvarmodel <- function(object, restrictions, draws = N
        "z" = z, "s" = s, "w" = w)
 }
 
+
+# Whether the importance sample is fit to summarise, and if not, why.
+#
+# The effective sample size is what the algorithm's own authors ask for every
+# time it is used (Section 7.3 of the paper). Two things can make it too small
+# to summarise and they are reported separately, because a resample of fifteen
+# draws that wasted nothing and a resample of fifteen that wasted a thousand
+# are different situations.
+#
+# The share held by the largest single weight is not a third alarm. It is what
+# distinguishes the two repairs, so it is reported only when one of the alarms
+# has already gone off: a sampler losing its information to one enormous weight
+# will not be rescued by drawing more from the same proposal, while one losing
+# it to many mildly unequal weights will. Firing on the share alone would
+# report a sampler that keeps half its information as a failure, which it is
+# not -- the share is on `summary()` for anyone who wants to look.
+#
+# The second repair is worth naming because nothing else the function says
+# would suggest it. The proposal is not unique: the matrices that complete each
+# shock's constraints to a square system are drawn at random in .arw_setup(),
+# and Appendix A.3 of the paper says any draw of them defines a valid algorithm
+# -- but not an equally efficient one. Holding a model, its posterior draws and
+# every rotation fixed, different completions have been seen to move the
+# effective sample size by a factor of four.
+.warn_importance_sample <- function(effective, largest, accepted) {
+
+  # Below this a resample has no percentiles worth reading.
+  too_few <- effective < 20
+  # A quarter of the information in the accepted draws is a generous floor.
+  wasteful <- effective / accepted < 0.25
+  if (!too_few && !wasteful) {
+    return(invisible(NULL))
+  }
+
+  # Ten times what an equal weight would be.
+  dominated <- largest * accepted >= 10
+
+  detail <- character(0)
+  if (too_few) {
+    detail <- c(detail, paste0(
+      "its effective sample size is ", effective,
+      ", too few to read percentiles from -- and unless 'draws' was given, that ",
+      "is also how many draws came back"))
+  }
+  if (wasteful) {
+    detail <- c(detail, paste0(
+      "it keeps only ", format(round(100 * effective / accepted, 1), nsmall = 1),
+      "% of the information in the ", accepted,
+      " draws that satisfied the signs"))
+  }
+
+  remedy <- if (dominated) {
+    paste0("A single draw carries ", format(round(100 * largest, 1), nsmall = 1),
+           "% of the total weight, ", round(largest * accepted),
+           " times what an equal weight would be, so more candidate draws will not ",
+           "help much: the proposal put little probability where the target has a ",
+           "lot. The proposal is partly arbitrary, though -- the matrices completing ",
+           "each shock's constraints are drawn at random and any draw of them is ",
+           "valid -- so re-running under a different seed gives a different and ",
+           "possibly far more efficient importance sampler.")
+  } else {
+    paste("No single draw dominates, so more candidate draws are the fix:",
+          "the effective sample size grows roughly in proportion to them.")
+  }
+
+  warning("The importance sample is unreliable: ", paste(detail, collapse = "; and "),
+          ". ", remedy, call. = FALSE)
+
+  invisible(NULL)
+}
 
 # The normalised importance weights. The largest log weight is taken out before
 # exponentiating, which is what keeps a draw with a large weight from

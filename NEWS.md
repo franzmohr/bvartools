@@ -61,6 +61,29 @@ take the new model objects. `add_priors()` no longer has defaults for `coef` and
   each member on its own -- so unless `draws` is given, the members come back
   with the number of draws their own effective sample size allows.
 
+* **`add_sign_zero_restrictions()` now says when its importance sample cannot
+  be trusted.** An importance sampler fails quietly: when the weights are
+  unequal the effective sample size collapses, and because `draws` defaults to
+  it the function would hand back a posterior of a handful of rows that `irf()`
+  and `fevd()` would summarise without complaint. It now warns -- when the
+  effective sample size is below twenty, or when it keeps less than a quarter
+  of the information in the draws that satisfied the signs -- and says which of
+  two repairs applies. Many mildly unequal weights are fixed by more candidate
+  draws; one enormous weight is not, and calls for a different seed, a
+  different variable ordering or weaker restrictions. `summary()` reports the
+  share held by the largest draw beside the effective sample size whether or
+  not anything was warned about, and it is kept in `max_weight_share` of
+  `sign_zero_restrictions`.
+
+  The documentation now also says that the seed matters in two places rather
+  than one. Besides the rotations, the matrices completing each shock's
+  constraints to a square system are drawn at random, and while Appendix A.3 of
+  the paper is right that any draw of them defines a valid algorithm, it does
+  not define an equally efficient one: holding a model, its posterior draws and
+  every rotation fixed, different completions have moved the effective sample
+  size by a factor of four. Repeating a poor run under a different seed is a
+  real remedy rather than a superstition.
+
 * **The non-centred prior reaches every model whose coefficients drift.**
   `coef$omega_v` is accepted for `tvp = TRUE` with `error = "wishart"` and
   `"ald"` as well, so `VarTvpWishart`, `VecTvpWishart` and `VarTvpAld` join the

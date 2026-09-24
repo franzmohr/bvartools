@@ -95,6 +95,16 @@ print.summary.bvarmodel <- function(x, digits = max(3L, getOption("digits") - 3L
           format(round(100 * arw[["effective_sample_size"]] / arw[["accepted"]], 1),
                  nsmall = 1),
           "% of those)\n", sep = "")
+
+      # An effective sample size can be small because many weights are mildly
+      # unequal or because one of them is enormous, and only the second is
+      # visible here. Models fitted before this was recorded have no share to
+      # print, which is why it is not simply assumed to be there.
+      largest <- arw[["max_weight_share"]]
+      if (!is.null(largest)) {
+        cat("Largest single weight: ",
+            format(round(100 * largest, 1), nsmall = 1), "% of the total\n", sep = "")
+      }
     }
   }
 

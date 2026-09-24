@@ -177,7 +177,10 @@ test_that("the identification maps over lists and windows", {
 
   windows <- fx_expanding_window()
   set.seed(3)
-  signed_windows <- add_sign_zero_restrictions(windows, restrictions)
+  # The early windows are short enough that their importance samples are a
+  # handful of draws, which the function says so. That is the warning working,
+  # not the collection method failing, and it is tested on its own below.
+  signed_windows <- suppressWarnings(add_sign_zero_restrictions(windows, restrictions))
   expect_s3_class(signed_windows, "expandingwindow")
   expect_length(signed_windows, length(windows))
   for (w in signed_windows) {
@@ -200,5 +203,57 @@ test_that("the summary reports the effective sample size", {
   printed <- utils::capture.output(print(summary(object)))
   expect_true(any(grepl("Sign and zero restrictions", printed)))
   expect_true(any(grepl("Draws satisfying the signs", printed)))
+  expect_true(any(grepl("Effective sample size", printed)))
+})
+
+test_that("an unreliable importance sample is not returned quietly", {
+  # A model with few draws produces an importance sample with few draws, and a
+  # resample of it has no percentiles worth reading.
+  small <- create_bvarmodel(var_data(), p = 1, deterministic = "const",
+                            iterations = 16, burnin = 10)
+  small <- add_priors(small, coef = list(v_i = 1, v_i_det = 0.1),
+                      sigma = list(df = "k", scale = 1))
+  small <- add_posterior_coefficients(add_seed(add_initial_values(small), 216))
+  set.seed(1234)
+  expect_warning(object <- add_sign_zero_restrictions(small, szr_restrictions()),
+                 "importance sample is unreliable")
+
+  # The symptom and the repair are both named, because which repair applies
+  # depends on whether one weight dominates or many are mildly unequal.
+  set.seed(1234)
+  message <- tryCatch(add_sign_zero_restrictions(small, szr_restrictions()),
+                      warning = function(w) conditionMessage(w))
+  expect_match(message, "effective sample size")
+  expect_match(message, "candidate draws")
+
+  info <- object[["model"]][["sign_zero_restrictions"]]
+  expect_true(is.numeric(info[["max_weight_share"]]))
+  expect_gt(info[["max_weight_share"]], 0)
+  expect_lte(info[["max_weight_share"]], 1)
+})
+
+test_that("a healthy importance sample says nothing", {
+  set.seed(1234)
+  object <- szr_model()
+  info <- suppressWarnings(
+    add_sign_zero_restrictions(object, szr_restrictions())
+  )[["model"]][["sign_zero_restrictions"]]
+
+  # The thresholds are relative to the number of accepted draws, so a fixture
+  # this small must not trip them on size alone: an equal weight is already
+  # 1/accepted, and the rule asks for ten times that.
+  expect_lt(info[["max_weight_share"]] * info[["accepted"]], 10)
+})
+
+test_that("the summary reports the weight held by the largest draw", {
+  set.seed(1234)
+  object <- add_sign_zero_restrictions(szr_model(), szr_restrictions())
+  printed <- utils::capture.output(print(summary(object)))
+  expect_true(any(grepl("Largest single weight", printed)))
+
+  # A model identified before the share was recorded still prints.
+  object[["model"]][["sign_zero_restrictions"]][["max_weight_share"]] <- NULL
+  printed <- utils::capture.output(print(summary(object)))
+  expect_false(any(grepl("Largest single weight", printed)))
   expect_true(any(grepl("Effective sample size", printed)))
 })

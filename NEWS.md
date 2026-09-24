@@ -66,7 +66,7 @@ take the new model objects. `add_priors()` no longer has defaults for `coef` and
   `"ald"` as well, so `VarTvpWishart`, `VecTvpWishart` and `VarTvpAld` join the
   four models that already took it, and `time_variation_test()` reports their
   Bayes factors for time variation. This is the refreshed BayesTS core
-  (`fa730f0`); the three bindings read `omega_v` and return the `omega` draws
+  (`1e21f94`); the three bindings read `omega_v` and return the `omega` draws
   beside `sigma`. *Draws are unchanged for every model estimated without
   `omega_v`.*
 

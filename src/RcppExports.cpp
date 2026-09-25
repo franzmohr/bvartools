@@ -961,6 +961,17 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// psis_smooth
+Rcpp::List psis_smooth(Rcpp::NumericVector log_weight);
+RcppExport SEXP _bvartools_psis_smooth(SEXP log_weightSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type log_weight(log_weightSEXP);
+    rcpp_result_gen = Rcpp::wrap(psis_smooth(log_weight));
+    return rcpp_result_gen;
+END_RCPP
+}
 // post_bvs
 arma::sp_mat post_bvs(const arma::vec& y, const arma::mat& z, arma::vec& a, arma::uword k, arma::uword m, arma::sp_mat lambda, arma::sp_mat sigma_i, arma::vec prob_prior, Rcpp::Nullable<Rcpp::IntegerVector> include);
 RcppExport SEXP _bvartools_post_bvs(SEXP ySEXP, SEXP zSEXP, SEXP aSEXP, SEXP kSEXP, SEXP mSEXP, SEXP lambdaSEXP, SEXP sigma_iSEXP, SEXP prob_priorSEXP, SEXP includeSEXP) {
@@ -1325,6 +1336,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_bvartools_ir", (DL_FUNC) &_bvartools_ir, 5},
     {"_bvartools_kalman_durbin_koopman_2002_export", (DL_FUNC) &_bvartools_kalman_durbin_koopman_2002_export, 7},
     {"_bvartools_loglik_normal", (DL_FUNC) &_bvartools_loglik_normal, 2},
+    {"_bvartools_psis_smooth", (DL_FUNC) &_bvartools_psis_smooth, 1},
     {"_bvartools_post_bvs", (DL_FUNC) &_bvartools_post_bvs, 9},
     {"_bvartools_post_coint_kls", (DL_FUNC) &_bvartools_post_coint_kls, 10},
     {"_bvartools_post_coint_kls_sur", (DL_FUNC) &_bvartools_post_coint_kls_sur, 11},

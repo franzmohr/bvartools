@@ -651,6 +651,23 @@ loglik_normal <- function(u, sigma) {
     .Call(`_bvartools_loglik_normal`, u, sigma)
 }
 
+#' Pareto smoothed importance weights
+#'
+#' @param log_weight numeric. The unnormalised log importance weights. Draws
+#'   that carry no weight are passed as \code{-Inf} and are neither smoothed nor
+#'   counted towards the tail.
+#'
+#' @return A list with \code{log_weights}, the smoothed and normalised log
+#'   weights in the order they were given, and \code{pareto_k}, the shape of the
+#'   generalised Pareto distribution fitted to the tail. \code{pareto_k} is
+#'   \code{NA} when there were too few finite weights to fit one, in which case
+#'   the weights come back normalised but unsmoothed.
+#'
+#' @noRd
+.psis_smooth <- function(log_weight) {
+    .Call(`_bvartools_psis_smooth`, log_weight)
+}
+
 #' Bayesian Variable Selection
 #' 
 #' \code{post_bvs} employs Bayesian variable selection as proposed by Korobilis (2013)

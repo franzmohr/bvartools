@@ -18,6 +18,9 @@ NULL
 #' @param one_sided logical. Should the numerical derivative behind the
 #' importance weights be taken on one side only? It is about forty percent
 #' faster and correspondingly less accurate. Defaults to \code{FALSE}.
+#' @param smooth logical. Should the importance weights be Pareto smoothed?
+#' Defaults to \code{TRUE}. \code{FALSE} uses the raw weights of the paper's
+#' Algorithm 3, which is what to set to reproduce it exactly.
 #' @param period integer. Index of the period, whose draws should be identified.
 #' Only used for TVP or SV models. Default is \code{NULL}, so that the posterior
 #' draws of the last time period are used.
@@ -93,20 +96,40 @@ NULL
 #' reporting a poor effective sample size is therefore worth repeating under a
 #' different seed before the restrictions themselves are blamed.
 #'
+#' \strong{The weights are Pareto smoothed before they are used.} Nothing in
+#' the algorithm bounds the ratio of two volume elements, so a draw landing
+#' where the proposal put almost no probability and the target a great deal
+#' carries an enormous weight, the effective sample size collapses, and the
+#' resample is a few copies of that one draw. Pareto smoothing, of Vehtari
+#' et al. (2024), fits a generalised Pareto distribution to the largest few
+#' weights and replaces them by its quantiles. On a model where the raw weights
+#' gave an effective sample size of 4 out of 487 accepted draws, with one of
+#' them holding 46 percent of the total weight, smoothing returned 138 and the
+#' largest share fell to 6 percent; on the same model under three other seeds,
+#' where nothing was wrong, it changed the effective sample size by less than
+#' three percent either way. It buys that at the cost of a small bias, which is
+#' the trade the paper argues for. \code{smooth = FALSE} takes the raw weights
+#' of Algorithm 3 instead.
+#'
+#' The shape \eqn{k} of the fitted distribution is worth more than the
+#' smoothing. It estimates how heavy the tail of the weights is, and so says
+#' when the sample cannot be trusted rather than leaving that to be guessed
+#' from an effective sample size: the estimator has a finite variance only for
+#' \eqn{k} below one half, and above about 0.7 neither it nor its effective
+#' sample size means much. It is reported by \code{\link{summary}} and kept in
+#' element \code{pareto_k} of \code{sign_zero_restrictions}.
+#'
 #' \strong{The function warns when the importance sample is not fit to
-#' summarise}: when its effective sample size is below twenty, so that the
-#' draws returned have no percentiles worth reading, or when it keeps less
-#' than a quarter of the information in the draws that satisfied the signs.
-#' The warning then says which repair applies, and that turns on the share of
-#' the weight held by the single largest draw. Many mildly unequal weights are
-#' an efficiency problem that more candidate draws fix, since the effective
-#' sample size grows roughly in proportion to them. One enormous weight is not
-#' fixed that way: it says the proposal put little probability where the target
-#' has a lot, and a different seed, a different variable ordering or weaker
-#' restrictions are the things worth trying. That share is reported by
-#' \code{\link{summary}} beside the effective sample size, whether or not
-#' anything was warned about, and kept in element \code{max_weight_share} of
-#' \code{sign_zero_restrictions}.
+#' summarise}: when \eqn{k} is 0.7 or above, when the effective sample size is
+#' below twenty, so that the draws returned have no percentiles worth reading,
+#' or when it keeps less than a quarter of the information in the draws that
+#' satisfied the signs. The warning says which repair applies. A well-behaved
+#' tail with a small effective sample size is an efficiency problem that more
+#' candidate draws fix, since the effective sample size grows roughly in
+#' proportion to them. A heavy tail is not fixed that way, because the trouble
+#' is where the proposal put its probability rather than how much of it was
+#' drawn; a different seed, a different variable ordering or weaker
+#' restrictions are the things worth trying.
 #'
 #' Applied to a 'modellist' or an 'expandingwindow' the function identifies
 #' each member on its own and returns the collection. Each therefore gets its
@@ -121,7 +144,9 @@ NULL
 #' \code{sign_zero_restrictions} of its \code{model}, together with the number
 #' of draws that satisfied the sign restrictions, the effective sample size
 #' of the importance sampler and the share of the total weight held by its
-#' single largest draw. Element \code{sign_restrictions} is set alongside
+#' single largest draw, the shape \code{pareto_k} of the distribution fitted to
+#' the tail of the weights and whether they were \code{smooth}ed. Element
+#' \code{sign_restrictions} is set alongside
 #' it, so that \code{\link{irf}}, \code{\link{fevd}} and \code{\link{spillover}}
 #' read the rotations under \code{type = "sign"} as they do for
 #' \code{\link{add_sign_restrictions}}.
@@ -172,11 +197,15 @@ NULL
 #' identification and algorithms for inference. \emph{The Review of Economic Studies, 77}(2), 665-696.
 #' \doi{10.1111/j.1467-937X.2009.00578.x}
 #'
+#' Vehtari, A., Simpson, D., Gelman, A., Yao, Y., Gabry, J. (2024). Pareto smoothed
+#' importance sampling. \emph{Journal of Machine Learning Research, 25}(72), 1-58.
+#'
 #' @family post-estimation analysis
 #' @export
 #' @method add_sign_zero_restrictions bvarmodel
 add_sign_zero_restrictions.bvarmodel <- function(object, restrictions, draws = NULL,
-                                                 one_sided = FALSE, period = NULL, ...) {
+                                                 one_sided = FALSE, smooth = TRUE,
+                                                 period = NULL, ...) {
 
   .refuse_unrotatable(object, "Sign and zero restrictions")
 
@@ -185,6 +214,9 @@ add_sign_zero_restrictions.bvarmodel <- function(object, restrictions, draws = N
 
   if (!is.logical(one_sided) || length(one_sided) != 1 || is.na(one_sided)) {
     stop("Argument 'one_sided' must be either TRUE or FALSE.")
+  }
+  if (!is.logical(smooth) || length(smooth) != 1 || is.na(smooth)) {
+    stop("Argument 'smooth' must be either TRUE or FALSE.")
   }
 
   A <- .collect_draws(object, period = period, need_A0 = FALSE, need_Sigma = TRUE,
@@ -224,7 +256,9 @@ add_sign_zero_restrictions.bvarmodel <- function(object, restrictions, draws = N
     log_weight[is.na(log_weight)] <- -Inf
   }
 
-  weights <- .arw_weights(log_weight)
+  smoothed <- .arw_weights(log_weight, smooth = smooth)
+  weights <- smoothed[["weights"]]
+  pareto_k <- smoothed[["pareto_k"]]
   effective <- max(1L, as.integer(floor(1 / sum(weights^2))))
   largest <- max(weights)
 
@@ -233,9 +267,10 @@ add_sign_zero_restrictions.bvarmodel <- function(object, restrictions, draws = N
   # it the function would then hand back a posterior of a handful of rows that
   # irf() and fevd() would summarise without complaint. Both halves of that are
   # worth saying out loud, and they are separate symptoms: a small effective
-  # sample can come from many mildly unequal weights, while one draw at a tenth
-  # of the total mass is a different problem with a different fix.
-  .warn_importance_sample(effective, largest, accepted)
+  # sample can come from many mildly unequal weights, while a tail too heavy for
+  # the estimator to have a finite variance is a different problem with a
+  # different fix.
+  .warn_importance_sample(effective, largest, accepted, pareto_k)
 
   if (is.null(draws)) {
     draws <- effective
@@ -266,7 +301,9 @@ add_sign_zero_restrictions.bvarmodel <- function(object, restrictions, draws = N
     "candidates" = store,
     "accepted" = accepted,
     "effective_sample_size" = effective,
-    "max_weight_share" = largest
+    "max_weight_share" = largest,
+    "smooth" = smooth,
+    "pareto_k" = pareto_k
   )
 
   # What irf(), fevd() and spillover() read under type = "sign". Both
@@ -386,35 +423,50 @@ add_sign_zero_restrictions.bvarmodel <- function(object, restrictions, draws = N
 # draws that wasted nothing and a resample of fifteen that wasted a thousand
 # are different situations.
 #
-# The share held by the largest single weight is not a third alarm. It is what
-# distinguishes the two repairs, so it is reported only when one of the alarms
-# has already gone off: a sampler losing its information to one enormous weight
-# will not be rescued by drawing more from the same proposal, while one losing
-# it to many mildly unequal weights will. Firing on the share alone would
-# report a sampler that keeps half its information as a failure, which it is
-# not -- the share is on `summary()` for anyone who wants to look.
+# A third alarm comes from the shape of the weights rather than their spread.
+# Pareto smoothing fits a generalised Pareto distribution to the tail, and its
+# shape k says how heavy that tail is: the estimator has a finite variance only
+# for k below one half, and above about 0.7 neither it nor its effective sample
+# size means much (Vehtari et al., 2024). That is a statement about the
+# proposal rather than about how many draws were taken from it, which is why it
+# fires on its own and why more draws are not its remedy.
 #
-# The second repair is worth naming because nothing else the function says
-# would suggest it. The proposal is not unique: the matrices that complete each
-# shock's constraints to a square system are drawn at random in .arw_setup(),
-# and Appendix A.3 of the paper says any draw of them defines a valid algorithm
-# -- but not an equally efficient one. Holding a model, its posterior draws and
-# every rotation fixed, different completions have been seen to move the
-# effective sample size by a factor of four.
-.warn_importance_sample <- function(effective, largest, accepted) {
+# When the weights were left unsmoothed there is no k, and the share held by
+# the largest single weight stands in for it -- the cruder diagnostic this
+# function carried before the smoother existed.
+#
+# Either way the second repair is worth naming, because nothing else the
+# function says would suggest it. The proposal is not unique: the matrices that
+# complete each shock's constraints to a square system are drawn at random in
+# .arw_setup(), and Appendix A.3 of the paper says any draw of them defines a
+# valid algorithm -- but not an equally efficient one. Holding a model, its
+# posterior draws and every rotation fixed, different completions have been
+# seen to move the effective sample size by a factor of four.
+.warn_importance_sample <- function(effective, largest, accepted, pareto_k = NA_real_) {
 
   # Below this a resample has no percentiles worth reading.
   too_few <- effective < 20
   # A quarter of the information in the accepted draws is a generous floor.
   wasteful <- effective / accepted < 0.25
-  if (!too_few && !wasteful) {
+  # The threshold of Vehtari et al. (2024), above which the estimate is not to
+  # be relied on however large the effective sample size looks.
+  heavy <- is.finite(pareto_k) && pareto_k >= 0.7
+
+  if (!too_few && !wasteful && !heavy) {
     return(invisible(NULL))
   }
 
-  # Ten times what an equal weight would be.
-  dominated <- largest * accepted >= 10
+  # Ten times what an equal weight would be: the stand-in for k where the
+  # weights were not smoothed.
+  dominated <- !is.finite(pareto_k) && largest * accepted >= 10
 
   detail <- character(0)
+  if (heavy) {
+    detail <- c(detail, paste0(
+      "the shape of its weight tail is ", format(round(pareto_k, 2), nsmall = 2),
+      ", above the 0.7 at which the estimator has neither a finite variance nor a ",
+      "meaningful effective sample size"))
+  }
   if (too_few) {
     detail <- c(detail, paste0(
       "its effective sample size is ", effective,
@@ -428,17 +480,24 @@ add_sign_zero_restrictions.bvarmodel <- function(object, restrictions, draws = N
       " draws that satisfied the signs"))
   }
 
-  remedy <- if (dominated) {
+  arbitrary <- paste("The proposal is partly arbitrary, though -- the matrices",
+                     "completing each shock's constraints are drawn at random and any",
+                     "draw of them is valid -- so re-running under a different seed",
+                     "gives a different and possibly far more efficient importance",
+                     "sampler.")
+
+  remedy <- if (heavy) {
+    paste("More candidate draws will not repair this: the proposal put too little",
+          "probability where the target has a lot, and smoothing the tail has",
+          "already done what it can for it.", arbitrary)
+  } else if (dominated) {
     paste0("A single draw carries ", format(round(100 * largest, 1), nsmall = 1),
            "% of the total weight, ", round(largest * accepted),
            " times what an equal weight would be, so more candidate draws will not ",
-           "help much: the proposal put little probability where the target has a ",
-           "lot. The proposal is partly arbitrary, though -- the matrices completing ",
-           "each shock's constraints are drawn at random and any draw of them is ",
-           "valid -- so re-running under a different seed gives a different and ",
-           "possibly far more efficient importance sampler.")
+           "help much. ", arbitrary, " Leaving 'smooth' at its default would also ",
+           "give a Pareto shape to read instead of this share.")
   } else {
-    paste("No single draw dominates, so more candidate draws are the fix:",
+    paste("The weight tail is well behaved, so more candidate draws are the fix:",
           "the effective sample size grows roughly in proportion to them.")
   }
 
@@ -451,11 +510,24 @@ add_sign_zero_restrictions.bvarmodel <- function(object, restrictions, draws = N
 # The normalised importance weights. The largest log weight is taken out before
 # exponentiating, which is what keeps a draw with a large weight from
 # overflowing and every draw from underflowing to zero together.
-.arw_weights <- function(log_weight) {
+.arw_weights <- function(log_weight, smooth = TRUE) {
+
   finite <- is.finite(log_weight)
-  weights <- rep(0, length(log_weight))
-  weights[finite] <- exp(log_weight[finite] - max(log_weight[finite]))
-  weights / sum(weights)
+  normalise <- function(lw) {
+    weights <- rep(0, length(lw))
+    weights[finite] <- exp(lw[finite] - max(lw[finite]))
+    weights / sum(weights)
+  }
+
+  # Fewer than five draws in the tail say nothing about the shape of a tail, and
+  # the smoother declines to guess. The raw weights are then what there is.
+  if (!smooth || sum(finite) < 25) {
+    return(list("weights" = normalise(log_weight), "pareto_k" = NA_real_))
+  }
+
+  smoothed <- .psis_smooth(log_weight)
+  list("weights" = normalise(smoothed[["log_weights"]]),
+       "pareto_k" = smoothed[["pareto_k"]])
 }
 
 

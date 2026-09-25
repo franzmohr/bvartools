@@ -257,3 +257,84 @@ test_that("the summary reports the weight held by the largest draw", {
   expect_false(any(grepl("Largest single weight", printed)))
   expect_true(any(grepl("Effective sample size", printed)))
 })
+
+test_that("the weights are Pareto smoothed unless the paper's own are asked for", {
+  set.seed(1234)
+  smoothed <- suppressWarnings(add_sign_zero_restrictions(szr_model(), szr_restrictions()))
+  set.seed(1234)
+  raw <- suppressWarnings(
+    add_sign_zero_restrictions(szr_model(), szr_restrictions(), smooth = FALSE))
+
+  smoothed_info <- smoothed[["model"]][["sign_zero_restrictions"]]
+  raw_info <- raw[["model"]][["sign_zero_restrictions"]]
+
+  # Both see the same draws and accept the same ones; only the reweighting of
+  # them differs, which is what makes the two comparable at all.
+  expect_identical(smoothed_info[["accepted"]], raw_info[["accepted"]])
+  expect_true(smoothed_info[["smooth"]])
+  expect_false(raw_info[["smooth"]])
+
+  # Algorithm 3 has no Pareto shape to report, by construction.
+  expect_true(is.na(raw_info[["pareto_k"]]))
+
+  expect_error(add_sign_zero_restrictions(szr_model(), szr_restrictions(), smooth = "yes"),
+               "must be either TRUE or FALSE")
+  expect_error(add_sign_zero_restrictions(szr_model(), szr_restrictions(), smooth = NA),
+               "must be either TRUE or FALSE")
+})
+
+test_that("a weight tail too heavy to rely on is named as such", {
+  # A model small enough that one rotation can dominate, which is the case the
+  # shape parameter exists to detect. The fixture is what it is, so the
+  # diagnostic is exercised on a constructed weight vector rather than hoping a
+  # tiny model produces one.
+  heavy <- c(stats::rnorm(500), 15)
+  fit <- .psis_smooth(heavy)
+  expect_gt(fit[["pareto_k"]], 0.7)
+
+  message <- tryCatch(
+    .warn_importance_sample(effective = 17, largest = 0.22, accepted = 501,
+                            pareto_k = fit[["pareto_k"]]),
+    warning = function(w) conditionMessage(w))
+  expect_match(message, "shape of its weight tail")
+  expect_match(message, "0.7")
+  expect_match(message, "More candidate draws will not repair this")
+
+  # Where the tail is well behaved but the sample is merely small, the remedy
+  # named is the opposite one.
+  message <- tryCatch(
+    .warn_importance_sample(effective = 17, largest = 0.02, accepted = 500,
+                            pareto_k = 0.2),
+    warning = function(w) conditionMessage(w))
+  expect_match(message, "more candidate draws are the fix")
+
+  # A heavy tail is worth a warning on its own, even where the effective
+  # sample size looks comfortable -- that is the point of having a statistic
+  # about the shape of the weights rather than only about their spread.
+  message <- tryCatch(
+    .warn_importance_sample(effective = 900, largest = 0.01, accepted = 1000,
+                            pareto_k = 0.95),
+    warning = function(w) conditionMessage(w))
+  expect_match(message, "shape of its weight tail")
+
+  # And a healthy sample says nothing at all.
+  expect_silent(.warn_importance_sample(effective = 900, largest = 0.01,
+                                        accepted = 1000, pareto_k = 0.2))
+})
+
+test_that("the summary reports the shape of the weight tail", {
+  set.seed(1234)
+  object <- suppressWarnings(add_sign_zero_restrictions(szr_model(), szr_restrictions()))
+  printed <- utils::capture.output(print(summary(object)))
+
+  shape <- object[["model"]][["sign_zero_restrictions"]][["pareto_k"]]
+  if (is.finite(shape)) {
+    expect_true(any(grepl("Pareto shape of the weight tail", printed)))
+  }
+
+  # A model whose weights were not smoothed has no shape, and the line is
+  # absent rather than printed as NA.
+  object[["model"]][["sign_zero_restrictions"]][["pareto_k"]] <- NA_real_
+  printed <- utils::capture.output(print(summary(object)))
+  expect_false(any(grepl("Pareto shape", printed)))
+})

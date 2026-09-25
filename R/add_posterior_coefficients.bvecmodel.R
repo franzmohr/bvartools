@@ -181,8 +181,38 @@ add_posterior_coefficients.bvecmodel <- function(object, posterior_function = NU
     # Apply own function
     object <- posterior_function(object)
   }
-  
+
+  object <- .name_beta_draws(object)
+
   class(object) <- class_of_object
-  
+
   return(object)
+}
+
+
+# Column names of the draws of the cointegration vectors: the error correction
+# term and the series of it that each element weights, "ect1.l.R", in the order
+# of vec(beta), and with the period, ".t1", ".t2", ..., where the vectors move
+# with time. The loadings are "ect1" in the labels of time_variation_test(), so
+# the two read together. Draws whose width fits neither layout keep theirs.
+.name_beta_draws <- function(object) {
+  beta <- object[["posterior"]][["beta"]][["coeffs"]]
+  r <- object[["model"]][["rank"]]
+  w <- object[["data"]][["train"]][["w"]]
+  if (is.null(beta) || is.null(r) || r < 1 || is.null(w)) {
+    return(object)
+  }
+  series <- colnames(w)
+  if (is.null(series)) {
+    series <- paste0("w", seq_len(ncol(w)))
+  }
+  names_beta <- paste0("ect", rep(seq_len(r), each = length(series)), ".", series)
+  tt <- NROW(object[["data"]][["train"]][["y"]])
+  if (ncol(beta) == length(names_beta)) {
+    colnames(object[["posterior"]][["beta"]][["coeffs"]]) <- names_beta
+  } else if (ncol(beta) == tt * length(names_beta)) {
+    colnames(object[["posterior"]][["beta"]][["coeffs"]]) <-
+      paste0(rep(names_beta, tt), ".t", rep(seq_len(tt), each = length(names_beta)))
+  }
+  object
 }

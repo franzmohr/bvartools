@@ -9,7 +9,10 @@
 #' \code{v_i} or \code{minnesota}. Variances are specified as precisions, i.e. as
 #' inverses of the variances. See 'Details'.
 #' @param coint a named list of prior specifications for coefficients determining the
-#' cointegration space of VEC models. It has no default. See 'Details'.
+#' cointegration space of VEC models. It has no default and is required for a positive
+#' cointegration rank. A model of rank zero has no cointegration space and needs none; one
+#' that is given is checked and ignored, so that a list of models over several ranks can
+#' share the same arguments. See 'Details'.
 #' @param sigma a named list of prior specifications for the error term. It has
 #' no default, and the elements it must contain depend on argument \code{error}
 #' of \code{\link{create_bvecmodel}}. See 'Details'.
@@ -241,7 +244,7 @@
 #' @method add_priors bvecmodel
 add_priors.bvecmodel <- function(object,
                                  coef,
-                                 coint,
+                                 coint = NULL,
                                  sigma,
                                  varsel = NULL,
                                  ...){
@@ -252,7 +255,7 @@ add_priors.bvecmodel <- function(object,
   # before anything else so that `coint`, which is never given for it, is never
   # forced.
   if (.is_discount(object)) {
-    if (!missing(coint) && !is.null(coint)) {
+    if (!is.null(coint)) {
       stop("The discounted VEC conditions on a fixed cointegration matrix ",
            "rather than drawing one, so there is no cointegration space prior ",
            "to specify. add_initial_values() puts the space at /initial/beta, ",
@@ -279,7 +282,19 @@ add_priors.bvecmodel <- function(object,
   ## cointegration ----
   # Checked and built by cointspace_prior(), which packages with VEC models of
   # their own layout call as well. It is stored further down, with the others.
-  beta_prior <- cointspace_prior(object, coint)
+  # A model of rank zero has no cointegration space, so it needs no prior on
+  # one; a prior that is given all the same is checked and ignored, so that a
+  # list of models over ranks 0, 1, 2, ... can share the same arguments.
+  rank <- object[["model"]][["rank"]]
+  if (is.null(coint)) {
+    if (!is.null(rank) && rank > 0) {
+      stop("Argument 'coint', the prior on the cointegration space, must be specified ",
+           "for a VEC model with a cointegration rank of ", rank, ".")
+    }
+    beta_prior <- NULL
+  } else {
+    beta_prior <- cointspace_prior(object, coint)
+  }
   
   ## sigma ----
   error_prior <- .add_priors_check_sigma(object, sigma)

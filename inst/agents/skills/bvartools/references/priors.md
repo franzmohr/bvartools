@@ -12,7 +12,7 @@ value a model needs must be given, in the list it belongs to:
 | --- | --- | --- |
 | `coef` | every model | the prior of the coefficients |
 | `sigma` | every model | the prior of the error term, by `error` |
-| `coint` | VEC models | the prior of the cointegration space |
+| `coint` | VEC models of positive rank | the prior of the cointegration space. At rank 0 it may be left out; given, it is checked and ignored, so `r = 0:2` can share one |
 | `varsel` | `varsel = "ssvs"` or `"bvs"` | the variable selection prior; an error otherwise |
 
 A missing required element stops with a message naming it, and so does an

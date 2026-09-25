@@ -42,7 +42,7 @@ the posterior still holds `iterations` draws; see `references/objects.md`.
 the priors and discards them. Always write `model <- add_priors(model, ...)`.
 
 **2. `add_priors()` has no defaults.** `coef` and `sigma` must always be given,
-`coint` for a VEC, and `varsel` exactly when the model was created with
+`coint` for a VEC of positive rank, and `varsel` exactly when the model was created with
 `varsel = "ssvs"` or `"bvs"`. Nothing is filled in: a missing required element
 stops with a message naming it, and so does an element that is not recognised in
 any of the four lists. `coef` needs `v_i` or a `minnesota` list. Which `sigma`

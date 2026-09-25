@@ -17,7 +17,7 @@ context at all times.
    `predict()`. Model comparison adds `add_posterior_loglik()`, then
    `selection_criteria()`.
 3. **`add_priors()` has no defaults.** `coef` and `sigma` are required, `coint`
-   for a VEC, and prior variances are precisions. Which `sigma` elements are
+   for a VEC of positive rank, and prior variances are precisions. Which `sigma` elements are
    needed depends on `error`: `df` and `scale` for the default Wishart prior,
    `shape` and `rate` for gamma, six elements for stochastic volatility. A
    missing or misspelt element stops with an error. Check `model$priors`

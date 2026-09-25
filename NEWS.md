@@ -28,6 +28,18 @@ take the new model objects. `add_priors()` no longer has defaults for `coef` and
 
 ## Changes
 
+* **A VEC model of rank zero needs no `coint` prior, and the draws of the
+  cointegration vectors have names.** `add_priors()` insisted on `coint` for
+  every VEC model, although one of rank zero has no cointegration space; it is
+  now required only for a positive rank, with a message saying so, and one
+  given at rank zero is checked and ignored, so that `r = 0:2` still shares
+  one set of priors. `posterior$beta$coeffs` had no column names, so
+  summaries of it printed `var1`, `var2`, ...; its columns are now named
+  after the error correction term and the series each element weights,
+  `ect1.l.R`, `ect1.l.Dp`, ..., with `.t1`, `.t2`, ... where the vectors move
+  with time, after sampling and when a model is read from HDF5. *Draws are
+  unchanged.*
+
 * **`create_bvarmodel()` takes `iid`: endogenous variables whose equations carry
   no coefficients at all.** No lags, no deterministic terms, nothing -- white
   noise that reaches the rest of the model only through the error covariance,

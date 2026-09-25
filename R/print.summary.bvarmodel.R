@@ -100,6 +100,17 @@ print.summary.bvarmodel <- function(x, digits = max(3L, getOption("digits") - 3L
       # unequal or because one of them is enormous, and only the second is
       # visible here. Models fitted before this was recorded have no share to
       # print, which is why it is not simply assumed to be there.
+      # The shape of the weight tail says more than the largest weight does,
+      # and is absent only for a model whose weights were not smoothed.
+      shape <- arw[["pareto_k"]]
+      if (!is.null(shape) && is.finite(shape)) {
+        cat("Pareto shape of the weight tail: ",
+            format(round(shape, 2), nsmall = 2),
+            if (shape >= 0.7) " (above 0.7: not to be relied on)" else "",
+            "
+", sep = "")
+      }
+
       largest <- arw[["max_weight_share"]]
       if (!is.null(largest)) {
         cat("Largest single weight: ",

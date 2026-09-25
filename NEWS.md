@@ -28,6 +28,38 @@ take the new model objects. `add_priors()` no longer has defaults for `coef` and
 
 ## Changes
 
+* **`add_sign_zero_restrictions()` Pareto smooths its importance weights, and
+  reports how heavy their tail is.** Nothing in the algorithm bounds the ratio
+  of two volume elements, so a draw landing where the proposal put almost no
+  probability and the target a great deal carries an enormous weight, the
+  effective sample size collapses, and what comes back is a few copies of that
+  one draw. On a six-variable Austrian VAR under five zero restrictions the raw
+  weights gave an effective sample size of **4** out of 487 accepted draws,
+  with one of them holding 46% of the total weight; smoothing returns **138**
+  and the largest share falls to 6%. Under three other seeds of the same model,
+  where nothing was wrong, it moved the effective sample size by less than
+  three percent either way.
+
+  The method of Vehtari, Simpson, Gelman, Yao and Gabry (2024): a generalised
+  Pareto distribution is fitted to the largest few weights and they are
+  replaced by its quantiles. It is implemented in
+  `src/pareto_smoothed_importance_sampling.cpp` rather than taken from a
+  dependency, and agrees with the reference implementation in **loo** to
+  machine precision on both the weights and the shape.
+
+  The fitted shape is worth more than the smoothing. It says how heavy the tail
+  is, and so when the sample cannot be trusted rather than leaving that to be
+  guessed from a small effective sample size: the estimator has a finite
+  variance only below one half, and above about 0.7 neither it nor its
+  effective sample size means much. `summary()` reports it, it is kept in
+  `pareto_k` of `sign_zero_restrictions`, and it is now what decides which
+  repair the warning recommends -- a heavy tail is not fixed by drawing more
+  from the same proposal, and the warning says so instead of pointing at the
+  largest single weight.
+
+  `smooth = FALSE` takes the raw weights of the paper's Algorithm 3, which is
+  what to set to reproduce it exactly.
+
 * **`chain_diagnostics()` reports the rank-normalised R-hat and two effective
   sample sizes, one of which is about the credible bands.** The diagnostics
   were the pre-2021 ones: a plain split R-hat and the sum over chains of

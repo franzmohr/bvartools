@@ -2,7 +2,7 @@
 #'
 #' Compares the chains of a model estimated with \code{chains} above one in
 #' \code{\link{add_posterior_coefficients}} and reports, for every parameter, the
-#' split potential scale reduction factor and the effective sample size.
+#' potential scale reduction factor and two effective sample sizes.
 #'
 #' @param object an object of class 'bvarmodel' or 'bvecmodel', whose posterior was
 #' simulated with \code{chains} of at least two.
@@ -16,17 +16,31 @@
 #' several modes or the sampler has not left the neighbourhood of its start, and
 #' comparing them is the check a single chain cannot provide.
 #'
-#' The statistic is the split \eqn{\hat{R}} of Gelman et al. (2013, section 11.4):
-#' every chain is cut into two halves, and the variance between the means of the
-#' halves is compared with the variance within them,
+#' The statistic is the rank-normalised split \eqn{\hat{R}} of Vehtari et al.
+#' (2021). Every chain is cut into two halves, the pooled draws are replaced by
+#' their ranks and put back on a normal scale, and the variance between the means
+#' of the halves is compared with the variance within them,
 #' \deqn{\hat{R} = \sqrt{\frac{\frac{n - 1}{n} W + \frac{1}{n} B}{W}},}
 #' where \eqn{n} is the length of a half, \eqn{W} the average variance within the
 #' halves and \eqn{B} \eqn{n} times the variance of their means. Splitting the chains
-#' also catches a chain that is still drifting. Values close to one indicate that
-#' the chains describe the same distribution; above 1.01, Vehtari et al. (2021)
-#' recommend running the chains longer or reconsidering the model. A parameter that
-#' does not vary in any chain, such as a coefficient that variable selection
-#' excluded throughout, has no \eqn{\hat{R}} and is reported as \code{NA}.
+#' catches a chain that is still drifting.
+#'
+#' \strong{The rank normalisation is what makes the number mean the same thing
+#' whatever scale the parameter is on.} The plain version of this statistic is
+#' built on variances, so it is undefined for a posterior heavy-tailed enough to
+#' have none and it moves when the same draws are transformed monotonically --
+#' which is awkward for a package whose parameters are freely rescaled and whose
+#' variance blocks are reported both as \code{omega} and as its square. What is
+#' reported is the larger of the rank-normalised \eqn{\hat{R}} and the one computed
+#' on the draws folded around their median, so that chains agreeing about the
+#' centre but not about the spread are caught as well.
+#'
+#' Values close to one indicate that the chains describe the same distribution;
+#' above 1.01, Vehtari et al. (2021) recommend running the chains longer or
+#' reconsidering the model. A parameter that does not vary in any chain, such as a
+#' coefficient that variable selection excluded throughout or an equation that
+#' \code{iid} left without coefficients, has no \eqn{\hat{R}} and is reported as
+#' \code{NA}.
 #'
 #' The signed standard deviations \code{omega} of a block estimated under the
 #' non-centred prior \code{omega_v} are symmetric around zero by construction --
@@ -34,9 +48,19 @@
 #' one whether or not the chains agree. Their squares, \code{sigma}, which are in
 #' the posterior beside them, are the ones to read.
 #'
-#' The effective sample size is the sum over the chains of
-#' \code{\link[coda]{effectiveSize}} of each chain. It is not a convergence
-#' diagnostic: chains stuck in different modes can each have a large one.
+#' \strong{Two effective sample sizes are reported, and for this package the
+#' second is usually the one that matters.} \code{ess_bulk} is computed on the
+#' rank-normalised draws and says how much independent information the sample
+#' carries about the centre of the posterior. \code{ess_tail} is the smaller of
+#' the effective sample sizes at the 5th and 95th percentiles and says the same
+#' about the extremes. Almost nothing this package reports is a point:
+#' \code{\link{irf}}, \code{\link{fevd}} and the forecasts all come back as
+#' quantiles, and it is \code{ess_tail} that says whether those quantiles have
+#' settled. A sample can carry a comfortable \code{ess_bulk} and still have a
+#' band that moves from one run to the next.
+#'
+#' Neither is a convergence diagnostic: chains stuck in different modes can each
+#' have a large one.
 #'
 #' The chains start from the same initial values, those of
 #' \code{\link{add_initial_values}}, and differ in their random numbers. Dispersed
@@ -44,7 +68,7 @@
 #'
 #' @return A data frame with one row per parameter of every block of posterior draws,
 #' other than the forecasts and the log-likelihood, and the columns \code{block},
-#' \code{parameter}, \code{rhat} and \code{ess}.
+#' \code{parameter}, \code{rhat}, \code{ess_bulk} and \code{ess_tail}.
 #'
 #' @references
 #'
@@ -104,9 +128,28 @@ chain_diagnostics <- function(object, ...) {
     if (is.null(parameter)) {
       parameter <- as.character(seq_len(ncol(draws)))
     }
+    stats <- vapply(seq_len(ncol(draws)), function(j) {
+      # The pooled block stacks the chains one after another, so filling a
+      # matrix column by column puts each chain in a column of its own, which
+      # is the shape the diagnostics of the posterior package take.
+      x <- matrix(draws[, j], nrow = n)
+      # posterior warns when it caps an effective sample size that came out
+      # above the number of draws, which an antithetic chain legitimately
+      # produces. The cap is the right answer and there is nothing for the user
+      # to do about it, so the warning is not passed on -- once per parameter it
+      # would bury the diagnostics it is attached to.
+      withCallingHandlers(
+        c(posterior::rhat(x), posterior::ess_bulk(x), posterior::ess_tail(x)),
+        warning = function(w) {
+          if (grepl("capped", conditionMessage(w), fixed = TRUE)) {
+            invokeRestart("muffleWarning")
+          }
+        }
+      )
+    }, numeric(3))
+
     data.frame(block = name, parameter = parameter,
-               rhat = .split_rhat(draws, chains),
-               ess = .chain_ess(draws, chains),
+               rhat = stats[1, ], ess_bulk = stats[2, ], ess_tail = stats[3, ],
                stringsAsFactors = FALSE, row.names = NULL)
   })
   do.call(rbind, result)
@@ -194,27 +237,6 @@ chain_diagnostics <- function(object, ...) {
   blocks
 }
 
-# Split R-hat, column by column: each chain cut into two halves of equal length.
-.split_rhat <- function(draws, chains) {
-  n <- nrow(draws) %/% chains
-  half <- n %/% 2
-  rows <- unlist(lapply(seq_len(chains), function(c) {
-    start <- (c - 1) * n + (n - 2 * half)
-    list(start + seq_len(half), start + half + seq_len(half))
-  }), recursive = FALSE)
-  means <- sapply(rows, function(r) colMeans(draws[r, , drop = FALSE]))
-  vars <- sapply(rows, function(r) apply(draws[r, , drop = FALSE], 2, stats::var))
-  if (is.null(dim(means))) {
-    means <- matrix(means, nrow = 1)
-    vars <- matrix(vars, nrow = 1)
-  }
-  w <- rowMeans(vars)
-  b <- half * apply(means, 1, stats::var)
-  rhat <- sqrt(((half - 1) / half * w + b / half) / w)
-  rhat[!is.finite(rhat) | w <= 0] <- NA_real_
-  rhat
-}
-
 # What summary() reports about the chains: nothing for one chain.
 .chains_summary <- function(object) {
   chains <- object[["model"]][["chains"]]
@@ -226,10 +248,18 @@ chain_diagnostics <- function(object, ...) {
     return(list(chains = as.integer(chains)))
   }
   worst <- which.max(diag[["rhat"]])
+  thinnest <- which.min(diag[["ess_tail"]])
   list(chains = as.integer(chains), n = sum(!is.na(diag[["rhat"]])),
        above = sum(diag[["rhat"]] > 1.01, na.rm = TRUE),
        max_rhat = diag[["rhat"]][worst],
-       worst = paste0(diag[["block"]][worst], "[", diag[["parameter"]][worst], "]"))
+       worst = paste0(diag[["block"]][worst], "[", diag[["parameter"]][worst], "]"),
+       # The bands irf() and the forecasts report are quantiles, so the smallest
+       # tail effective sample size is what says whether they have settled --
+       # which the largest R-hat, about agreement rather than precision, does not.
+       min_ess_tail = if (length(thinnest) == 1) diag[["ess_tail"]][thinnest] else NA_real_,
+       thinnest = if (length(thinnest) == 1) {
+         paste0(diag[["block"]][thinnest], "[", diag[["parameter"]][thinnest], "]")
+       } else NA_character_)
 }
 
 .print_chains_summary <- function(x) {
@@ -238,8 +268,16 @@ chain_diagnostics <- function(object, ...) {
   }
   cat("\nChains:", x[["chains"]])
   if (!is.null(x[["max_rhat"]])) {
-    cat(sprintf(". Largest split R-hat %.3f (%s); %d of %d parameters above 1.01.",
+    cat(sprintf(". Largest R-hat %.3f (%s); %d of %d parameters above 1.01.",
                 x[["max_rhat"]], x[["worst"]], x[["above"]], x[["n"]]))
+    if (!is.null(x[["min_ess_tail"]]) && is.finite(x[["min_ess_tail"]])) {
+      cat(sprintf("\nSmallest tail effective sample size %.0f (%s).",
+                  x[["min_ess_tail"]], x[["thinnest"]]))
+      if (x[["min_ess_tail"]] < 400) {
+        cat("\nBelow about 400 the outer quantiles of a credible band are not settled,",
+            "so the bands of irf(), fevd() and the forecasts will move between runs.")
+      }
+    }
     if (x[["above"]] > 0) {
       cat("\nThe chains disagree: run them longer or reconsider the model before using",
           "the draws. See ?chain_diagnostics.")
@@ -247,14 +285,4 @@ chain_diagnostics <- function(object, ...) {
   }
   cat("\n")
   invisible(NULL)
-}
-
-.chain_ess <- function(draws, chains) {
-  n <- nrow(draws) %/% chains
-  ess <- 0
-  for (c in seq_len(chains)) {
-    chain <- draws[(c - 1) * n + seq_len(n), , drop = FALSE]
-    ess <- ess + coda::effectiveSize(coda::mcmc(chain))
-  }
-  unname(ess)
 }

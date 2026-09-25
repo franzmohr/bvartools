@@ -15,12 +15,12 @@ simulated with \code{chains} of at least two.}
 \value{
 A data frame with one row per parameter of every block of posterior draws,
 other than the forecasts and the log-likelihood, and the columns \code{block},
-\code{parameter}, \code{rhat} and \code{ess}.
+\code{parameter}, \code{rhat}, \code{ess_bulk} and \code{ess_tail}.
 }
 \description{
 Compares the chains of a model estimated with \code{chains} above one in
 \code{\link{add_posterior_coefficients}} and reports, for every parameter, the
-split potential scale reduction factor and the effective sample size.
+potential scale reduction factor and two effective sample sizes.
 }
 \details{
 A single chain can look converged and not be: its autocorrelations and its
@@ -30,17 +30,31 @@ drawing different random numbers settle in different places if the posterior has
 several modes or the sampler has not left the neighbourhood of its start, and
 comparing them is the check a single chain cannot provide.
 
-The statistic is the split \eqn{\hat{R}} of Gelman et al. (2013, section 11.4):
-every chain is cut into two halves, and the variance between the means of the
-halves is compared with the variance within them,
+The statistic is the rank-normalised split \eqn{\hat{R}} of Vehtari et al.
+(2021). Every chain is cut into two halves, the pooled draws are replaced by
+their ranks and put back on a normal scale, and the variance between the means
+of the halves is compared with the variance within them,
 \deqn{\hat{R} = \sqrt{\frac{\frac{n - 1}{n} W + \frac{1}{n} B}{W}},}
 where \eqn{n} is the length of a half, \eqn{W} the average variance within the
 halves and \eqn{B} \eqn{n} times the variance of their means. Splitting the chains
-also catches a chain that is still drifting. Values close to one indicate that
-the chains describe the same distribution; above 1.01, Vehtari et al. (2021)
-recommend running the chains longer or reconsidering the model. A parameter that
-does not vary in any chain, such as a coefficient that variable selection
-excluded throughout, has no \eqn{\hat{R}} and is reported as \code{NA}.
+catches a chain that is still drifting.
+
+\strong{The rank normalisation is what makes the number mean the same thing
+whatever scale the parameter is on.} The plain version of this statistic is
+built on variances, so it is undefined for a posterior heavy-tailed enough to
+have none and it moves when the same draws are transformed monotonically --
+which is awkward for a package whose parameters are freely rescaled and whose
+variance blocks are reported both as \code{omega} and as its square. What is
+reported is the larger of the rank-normalised \eqn{\hat{R}} and the one computed
+on the draws folded around their median, so that chains agreeing about the
+centre but not about the spread are caught as well.
+
+Values close to one indicate that the chains describe the same distribution;
+above 1.01, Vehtari et al. (2021) recommend running the chains longer or
+reconsidering the model. A parameter that does not vary in any chain, such as a
+coefficient that variable selection excluded throughout or an equation that
+\code{iid} left without coefficients, has no \eqn{\hat{R}} and is reported as
+\code{NA}.
 
 The signed standard deviations \code{omega} of a block estimated under the
 non-centred prior \code{omega_v} are symmetric around zero by construction --
@@ -48,9 +62,19 @@ the sampler switches their sign at random -- so their \eqn{\hat{R}} is close to
 one whether or not the chains agree. Their squares, \code{sigma}, which are in
 the posterior beside them, are the ones to read.
 
-The effective sample size is the sum over the chains of
-\code{\link[coda]{effectiveSize}} of each chain. It is not a convergence
-diagnostic: chains stuck in different modes can each have a large one.
+\strong{Two effective sample sizes are reported, and for this package the
+second is usually the one that matters.} \code{ess_bulk} is computed on the
+rank-normalised draws and says how much independent information the sample
+carries about the centre of the posterior. \code{ess_tail} is the smaller of
+the effective sample sizes at the 5th and 95th percentiles and says the same
+about the extremes. Almost nothing this package reports is a point:
+\code{\link{irf}}, \code{\link{fevd}} and the forecasts all come back as
+quantiles, and it is \code{ess_tail} that says whether those quantiles have
+settled. A sample can carry a comfortable \code{ess_bulk} and still have a
+band that moves from one run to the next.
+
+Neither is a convergence diagnostic: chains stuck in different modes can each
+have a large one.
 
 The chains start from the same initial values, those of
 \code{\link{add_initial_values}}, and differ in their random numbers. Dispersed

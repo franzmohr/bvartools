@@ -533,8 +533,7 @@ take the new model objects. `add_priors()` no longer has defaults for `coef` and
   vector, `vec(Gamma)` for the first, which is how `bvec()`'s example and the
   VEC vignette have always used it. `selection_criteria()` says what the median
   and the band of `RSFE` are -- the ones of `AFE` up to the interpolation
-  between draws -- and the agent skill in `inst/agents` covers the discounted
-  models and `LML`.
+  between draws.
 
 * `Depends` requires `R (>= 4.0.0)` rather than `(>= 3.5)`. `src/Makevars` has
   set `CXX_STD = CXX17` since the C++ core arrived, and 3.5 predates R's own
@@ -1642,27 +1641,6 @@ take the new model objects. `add_priors()` no longer has defaults for `coef` and
   variable selection; the element is `exclude_det`. The check now also covers
   the elements of `coef$minnesota`, and rejects `coef$coint_var` for VEC models,
   which do not use it.
-
-* **Documentation for coding assistants, in `inst/agents/`.** An assistant
-  working from tutorials writes bvartools code that runs and means something
-  else, or that calls functions which no longer exist. `inst/agents/` has an
-  `AGENTS.md`, and a skill covering:
-  - the workflow and the rules that prevent that: assigning each step back,
-    priors given as precisions with no defaults, draws in rows, and
-    `vec_to_var()` before the impulse responses of a VEC;
-  - the combinations the samplers refuse, and why;
-  - complete examples of a VAR, a VEC, a TVP-SV model, a quantile VAR, lag
-    order comparison and an HDF5 round trip;
-  - references on what `add_priors()` needs for each model type, the layout of
-    model objects and their draws, forecasts, impulse responses, sign
-    restrictions and spillovers, and in-sample and out-of-sample model
-    comparison.
-
-  The installed package carries it at `system.file("agents", package =
-  "bvartools")`, matching its version, and the repository is a Claude Code
-  plugin marketplace. `tests/testthat/test-agent-docs.R` runs every R example
-  in it, and the examples assert the shapes their text states. No function
-  changes, so draws are unchanged.
 
 * **Fixes to reading the posterior draws of models whose draws vary by
   period.**

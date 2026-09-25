@@ -131,19 +131,6 @@ install.packages("bvartools")
 devtools::install_github("franzmohr/bvartools")
 ```
 
-### With an AI coding assistant
-
-`inst/agents/` holds documentation written for coding assistants: the
-rules that keep a bvartools analysis from quietly going wrong, and
-complete examples that the test suite runs. The installed package
-carries it at `system.file("agents", package = "bvartools")`, matching
-its version. In Claude Code it installs as a plugin:
-
-    /plugin marketplace add franzmohr/bvartools
-    /plugin install bvartools@bvartools
-
-Other assistants can be pointed at `inst/agents/AGENTS.md`.
-
 ### Speed and R’s BLAS library
 
 The samplers spend most of their time in linear algebra, which R hands

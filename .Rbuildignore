@@ -14,7 +14,8 @@ Rplots\.pdf$
 ^\.zenodo\.json$
 ^LICENSE$
 ^[.]claude-plugin$
-^inst/agents/[.]claude-plugin$
+^inst/agents$
+^CLAUDE\.md$
 ^_pkgdown\.yml$
 ^docs$
 ^pkgdown$

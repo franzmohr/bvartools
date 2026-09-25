@@ -50,18 +50,73 @@ test_that("forecasts, log-likelihoods and summaries use every chain", {
   model <- add_posterior_loglik(model)
   expect_identical(nrow(model[["posterior"]][["forecast"]][["forecasts"]]), 120L)
   expect_identical(nrow(model[["posterior"]][["loglik"]]), 120L)
-  expect_output(print(summary(model)), "Chains: 2\\. Largest split R-hat")
+  expect_output(print(summary(model)), "Chains: 2\\. Largest R-hat")
   expect_false(any(grepl("Chains", capture.output(print(summary(add_posterior_coefficients(chains_var())))))))
 })
 
-test_that("chain_diagnostics reports split R-hat near one for chains that agree", {
+test_that("chain_diagnostics reports R-hat near one for chains that agree", {
   model <- add_posterior_coefficients(chains_var(iterations = 400), chains = 4)
   diag <- chain_diagnostics(model)
-  expect_named(diag, c("block", "parameter", "rhat", "ess"))
+  expect_named(diag, c("block", "parameter", "rhat", "ess_bulk", "ess_tail"))
   expect_true(all(c("a$coeffs", "u_sigma_inv$coeffs") %in% diag[["block"]]))
   expect_equal(sum(diag[["block"]] == "a$coeffs"), ncol(model[["posterior"]][["a"]][["coeffs"]]))
   expect_true(all(diag[["rhat"]] < 1.05, na.rm = TRUE))
-  expect_true(all(diag[["ess"]] > 0))
+  expect_true(all(diag[["ess_bulk"]] > 0))
+  expect_true(all(diag[["ess_tail"]] > 0))
+})
+
+test_that("R-hat stays meaningful where the plain one stops being defined", {
+  # This is the reason for preferring the rank-normalised statistic. The plain
+  # split version is built on variances, so on a posterior heavy-tailed enough
+  # to have none it is estimating something that does not exist and wanders
+  # away from one even when the chains agree perfectly. Rank normalisation
+  # replaces the draws by their ranks first, and ranks always have a variance.
+  set.seed(216)
+  n <- 2000
+  cauchy <- matrix(stats::rcauchy(2 * n), n, 2)
+
+  plain <- posterior::rhat_basic(cauchy, split = TRUE)
+  ranked <- posterior::rhat(cauchy)
+
+  # Two independent draws from the same distribution: the honest answer is one.
+  expect_lt(abs(ranked - 1), 0.02)
+  expect_gt(abs(plain - 1), abs(ranked - 1))
+
+  # And the rank-normalised one is what chain_diagnostics() reports.
+  model <- add_posterior_coefficients(chains_var(iterations = 400), chains = 2)
+  draws <- as.matrix(model[["posterior"]][["a"]][["coeffs"]])
+  expect_equal(chain_diagnostics(model)[["rhat"]][1],
+               posterior::rhat(matrix(draws[, 1], nrow = nrow(draws) / 2)))
+})
+
+test_that("the tail effective sample size is reported and can differ from the bulk", {
+  model <- add_posterior_coefficients(chains_var(iterations = 400), chains = 2)
+  diag <- chain_diagnostics(model)
+
+  # Both are finite and of the right order, and neither is simply a copy of
+  # the other -- the whole point of carrying two numbers.
+  expect_true(all(is.finite(diag[["ess_tail"]])))
+  expect_false(isTRUE(all.equal(diag[["ess_tail"]], diag[["ess_bulk"]])))
+
+  # summary() surfaces the smaller of the two, because the bands this package
+  # reports are quantiles rather than means.
+  printed <- utils::capture.output(print(summary(model)))
+  expect_true(any(grepl("tail effective sample size", printed)))
+})
+
+test_that("a parameter that never moves has no diagnostics rather than a wrong one", {
+  model <- add_posterior_coefficients(chains_var(iterations = 200), chains = 2)
+  frozen <- as.matrix(model[["posterior"]][["a"]][["coeffs"]])
+  frozen[, 1] <- 0
+  model[["posterior"]][["a"]][["coeffs"]] <- coda::mcmc(frozen)
+
+  diag <- chain_diagnostics(model)
+  a <- diag[diag[["block"]] == "a$coeffs", ]
+  expect_true(is.na(a[["rhat"]][1]))
+  expect_true(is.na(a[["ess_bulk"]][1]))
+  expect_true(is.na(a[["ess_tail"]][1]))
+  # And the rest of the block is unaffected.
+  expect_false(anyNA(a[["rhat"]][-1]))
 })
 
 test_that("chain_diagnostics flags chains that describe different distributions", {
@@ -73,7 +128,13 @@ test_that("chain_diagnostics flags chains that describe different distributions"
   model[["posterior"]][["a"]][["coeffs"]] <- coda::mcmc(shifted)
   diag <- chain_diagnostics(model)
   rhat <- diag[diag[["block"]] == "a$coeffs", "rhat"]
-  expect_gt(rhat[1], 2)
+  # Rank normalisation compresses how far apart two chains can look, because
+  # ranks are bounded where the draws are not: a shift of ten standard
+  # deviations reads about 1.8 here, where the plain split statistic this
+  # package reported before gave well over 2. The diagnostic still fires far
+  # above the 1.01 that matters, and this is why an R-hat from an earlier
+  # version does not compare with one from this release.
+  expect_gt(rhat[1], 1.5)
   expect_true(all(rhat[-1] < 1.2))
   expect_output(print(summary(model)), "The chains disagree")
 })

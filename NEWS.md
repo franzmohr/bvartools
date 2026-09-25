@@ -28,6 +28,31 @@ take the new model objects. `add_priors()` no longer has defaults for `coef` and
 
 ## Changes
 
+* **`chain_diagnostics()` reports the rank-normalised R-hat and two effective
+  sample sizes, one of which is about the credible bands.** The diagnostics
+  were the pre-2021 ones: a plain split R-hat and the sum over chains of
+  `coda::effectiveSize()`. Both now come from the **posterior** package, which
+  is a new dependency.
+
+  `ess` becomes `ess_bulk` and `ess_tail`, and the second is the one to read
+  here. Almost nothing this package returns is a point -- `irf()`, `fevd()` and
+  the forecasts all come back as quantiles -- and the bulk effective sample
+  size is about the centre of the posterior, not about the 16th and 84th
+  percentiles the bands are drawn at. A sample can carry a comfortable
+  `ess_bulk` and a band that still moves between runs. `summary()` now prints
+  the smallest `ess_tail` beside the largest R-hat, and says so below about 400.
+
+  The rank normalisation makes R-hat mean the same thing whatever scale a
+  parameter is on, and keeps it defined for a posterior too heavy-tailed to
+  have the variances the plain statistic is built from. It also **changes the
+  numbers**: because ranks are bounded where draws are not, chains that
+  disagree grossly now read around 1.8 where the old statistic gave well over
+  2. The threshold that matters, 1.01, is unchanged, but an R-hat from an
+  earlier version does not compare with one from this release.
+
+  What did not change is the storage: posterior draws remain `coda::mcmc`
+  objects, so anything reading them keeps working.
+
 * **A VEC model of rank zero needs no `coint` prior, and the draws of the
   cointegration vectors have names.** `add_priors()` insisted on `coint` for
   every VEC model, although one of rank zero has no cointegration space; it is

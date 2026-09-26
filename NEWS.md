@@ -46,10 +46,10 @@ take the new model objects. `add_priors()` no longer has defaults for `coef` and
 
 ## Changes
 
-* **`expected_size()` says how large a model will be before it is estimated.**
-  It works from the specification alone, block by block: a matrix of eight-byte
-  numbers with one row per kept draw and one column per parameter, so it can
-  be called straight after `create_bvarmodel()` or `create_bvecmodel()`. The
+* **`expected_model_size()` says how large a model will be before it is
+  estimated.** It works from the specification alone, block by block: a
+  matrix of eight-byte numbers with one row per kept draw and one column per
+  parameter, so it can be called straight after `create_bvarmodel()` or `create_bvecmodel()`. The
   point is to catch a model that will not fit before hours are spent on it.
   Time-varying parameters and stochastic volatility multiply a block by the
   number of periods, so a model that is small with constant coefficients can
@@ -57,21 +57,21 @@ take the new model objects. `add_priors()` no longer has defaults for `coef` and
   (`add_posterior_coefficients()`, `add_posterior_loglik()`,
   `add_posterior_forecasts()`) and every block; `sum(result$bytes)` is the
   total. It is a generic with methods for 'bvarmodel', 'bvecmodel', 'modellist'
-  and 'expandingwindow', so that **bgvars** and **dfmtools** can add their own
-  classes to the same workflow.
+  and 'expandingwindow', and **bgvars** and **dfmtools** add methods for
+  their own classes, so the workflow is the same in all three packages.
 
   Two functions now warn before they start when the result would exceed
   `options(bvartools.size_warning)`, which is one gigabyte unless set
-  otherwise. `add_posterior_coefficients()` checks what `expected_size()`
-  predicts for the draws it is about to simulate, and `write_to_hdf5()` checks
-  the size of the object it is about to write, which is about the disk space
+  otherwise. `add_posterior_coefficients()` checks what
+  `expected_model_size()` predicts for the draws it is about to simulate, and
+  `write_to_hdf5()` checks the size of the object it is about to write, which is about the disk space
   the files will need. Each warns once per call, for a whole list of models
   rather than for each model in it. `Inf` turns the warnings off. The check
   never stops a call: the free memory and disk space of a machine cannot be
   read portably from R, so the limit is one the user sets rather than one
-  measured. `test-expected_size.R` holds the prediction against the posterior
-  of every sampler and every option that adds a block, so a sampler that
-  starts storing something new fails there.
+  measured. `test-expected_model_size.R` holds the prediction against the
+  posterior of every sampler and every option that adds a block, so a sampler
+  that starts storing something new fails there.
 
 * **`add_sign_zero_restrictions()` Pareto smooths its importance weights, and
   reports how heavy their tail is.** Nothing in the algorithm bounds the ratio

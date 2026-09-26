@@ -10,7 +10,7 @@
 #' @details Before the method is called, the size of \code{object} is compared
 #' with \code{options(bvartools.size_warning)}, and a warning is given if it is
 #' larger, since that is about the disk space the files will need. See
-#' \code{\link{expected_size}}.
+#' \code{\link{expected_model_size}}.
 #' 
 #' @return The value returned by the method for the class of \code{object},
 #' as described on the pages of the methods.

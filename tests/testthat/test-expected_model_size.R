@@ -1,8 +1,8 @@
-# expected_size() and the warnings built on it.
+# expected_model_size() and the warnings built on it.
 #
 # The size is predicted from the specification, so the invariant is that the
 # prediction is what the samplers then store: for every algorithm and every
-# option that adds a block, each element expected_size() lists is in the
+# option that adds a block, each element expected_model_size() lists is in the
 # fitted posterior with exactly the predicted dimensions, and nothing in the
 # posterior is missing from the list. A sampler that starts storing something
 # new fails here. The warnings of add_posterior_coefficients() and
@@ -74,7 +74,7 @@ predicted_dims <- function(size, step = "add_posterior_coefficients") {
 }
 
 expect_size_matches <- function(model, label) {
-  predicted <- expected_size(model)
+  predicted <- expected_model_size(model)
   set.seed(1)
   fitted <- suppressWarnings(add_posterior_coefficients(model))
   expect_identical(predicted_dims(predicted), posterior_dims(fitted), info = label)
@@ -129,7 +129,7 @@ test_that("the discounted models are sized by period rather than by draw", {
 
 test_that("the log-likelihood and the forecasts are predicted as well", {
   model <- add_forecast_input(size_var("sv", TRUE), n_ahead = 4)
-  size <- expected_size(model)
+  size <- expected_model_size(model)
 
   set.seed(2)
   fitted <- add_posterior_coefficients(model)
@@ -152,8 +152,8 @@ test_that("the log-likelihood and the forecasts are predicted as well", {
 
 test_that("draws are counted once per chain", {
   model <- size_var()
-  one <- expected_size(model)
-  three <- expected_size(model, chains = 3)
+  one <- expected_model_size(model)
+  three <- expected_model_size(model, chains = 3)
   expect_equal(three[["draws"]][-1], 3 * one[["draws"]][-1])
 
   fitted <- add_posterior_coefficients(add_seed(model, 7), chains = 3)
@@ -163,15 +163,15 @@ test_that("draws are counted once per chain", {
 
 test_that("a list of models is sized model by model", {
   models <- fx_var_modellist()
-  size <- expected_size(models)
+  size <- expected_model_size(models)
   expect_s3_class(size, "modelsize")
   expect_setequal(unique(size[["model"]]), c("1", "2"))
   expect_equal(sum(size[["bytes"]]),
-               sum(expected_size(models[[1]])[["bytes"]]) + sum(expected_size(models[[2]])[["bytes"]]))
+               sum(expected_model_size(models[[1]])[["bytes"]]) + sum(expected_model_size(models[[2]])[["bytes"]]))
   expect_output(print(size), "2 models")
-  expect_output(print(expected_size(models[[1]])), "posterior\\$a\\$coeffs")
+  expect_output(print(expected_model_size(models[[1]])), "posterior\\$a\\$coeffs")
 
-  expect_error(expected_size(list(1)), "no method")
+  expect_error(expected_model_size(list(1)), "no method")
 })
 
 test_that("drawing a model that is too large warns once, before it starts", {

@@ -24,7 +24,7 @@ of the first argument.
 Before the method is called, the size of \code{object} is compared
 with \code{options(bvartools.size_warning)}, and a warning is given if it is
 larger, since that is about the disk space the files will need. See
-\code{\link{expected_size}}.
+\code{\link{expected_model_size}}.
 }
 \seealso{
 Methods: \code{\link{write_to_hdf5.bvarmodel}},

@@ -59,20 +59,20 @@
 #' # and stochastic volatility
 #' model <- create_bvarmodel(e1, p = 2, deterministic = "const",
 #'                           iterations = 5000, burnin = 1000)
-#' expected_size(model)
+#' expected_model_size(model)
 #'
 #' model <- create_bvarmodel(e1, p = 2, deterministic = "const",
 #'                           tvp = TRUE, error = "sv",
 #'                           iterations = 5000, burnin = 1000)
-#' expected_size(model)
+#' expected_model_size(model)
 #'
 #' # The total in bytes
-#' sum(expected_size(model)$bytes)
+#' sum(expected_model_size(model)$bytes)
 #'
-#' @seealso \code{\link{expected_size}} for the warnings that are based on it, and
+#' @seealso \code{\link{expected_model_size}} for the warnings that are based on it, and
 #' \code{\link{bvartools_model}} for the blocks of the object.
-#' @include expected_size.R
+#' @include expected_model_size.R
 #' @export
-expected_size.bvarmodel <- function(object, chains = NULL, ...) {
+expected_model_size.bvarmodel <- function(object, chains = NULL, ...) {
   .model_size(object, chains = chains)
 }

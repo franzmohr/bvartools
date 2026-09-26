@@ -18,6 +18,11 @@ as described on the pages of the methods.
 \description{
 Generic function used for posterior simulation of model coefficients.
 }
+\details{
+Before the method is called, the size the object will have once its
+draws are complete is compared with \code{options(bvartools.size_warning)},
+and a warning is given if it is larger. See \code{\link{expected_size}}.
+}
 \seealso{
 Methods: \code{\link{add_posterior_coefficients.bvarmodel}},
 \code{\link{add_posterior_coefficients.bvecmodel}},

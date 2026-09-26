@@ -313,8 +313,14 @@ add_initial_values.bvecmodel <- function(object, method = "maxlik", ...){
 
 # Square root of a matrix
 # Used in add_initial_values methods to estimate VEC models
+#
+# The matrices this is given -- S11 of Johansen's reduced rank regression -- are
+# symmetric by construction and symmetric only to a rounding error in practice.
+# Decomposed as a general matrix they can come back complex, which is what
+# 'symmetric = TRUE' rules out; see .coint_ml() below, where the same omission
+# produced complex starting values for five of thirty-three sub-models.
 .mroot <- function(M){
-  eig <- eigen(M)
+  eig <- eigen((M + t(M)) / 2, symmetric = TRUE)
   if (length(eig$values) == 1){
     val <- matrix(sqrt(eig$values), 1)
   } else {
@@ -383,7 +389,18 @@ add_initial_values.bvecmodel <- function(object, method = "maxlik", ...){
   S10 <- tcrossprod(R1, R0) / tt
   S11 <- tcrossprod(R1) / tt
   S11_sqrt_inv <- solve(.mroot(S11))
-  lambda <- eigen(S11_sqrt_inv %*% S10 %*% S00_inv %*% S01 %*% t(S11_sqrt_inv))
+
+  # Symmetric by construction: S10 is the transpose of S01 and S00 is a
+  # covariance matrix, so the product is of the form A' A. In floating point it
+  # is symmetric only to about 1e-15, and eigen() without 'symmetric' takes the
+  # general route for it, which is free to return complex eigenvectors -- and
+  # does, for some designs. The complex values then travel into beta, alpha and
+  # the starting values built from them, where they fail at the first thing that
+  # cannot hold them: writing the model to HDF5, which has no complex type.
+  # Seen on 26 September 2026 in five of thirty-three GVEC sub-models whose
+  # error correction term carried a restricted constant.
+  problem <- S11_sqrt_inv %*% S10 %*% S00_inv %*% S01 %*% t(S11_sqrt_inv)
+  lambda <- eigen((problem + t(problem)) / 2, symmetric = TRUE)
 
   beta <- t(crossprod(matrix(lambda$vectors[, 1:r], nrow(w)), S11_sqrt_inv))
   # beta' S11 beta is the identity up to rounding; not relied upon here.

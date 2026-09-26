@@ -228,3 +228,55 @@ test_that("a time varying cointegration space starts on the scale of its state e
   from_prior <- add_initial_values(make(TRUE), method = "prior")
   expect_equal(sqrt(sum(from_prior[["initial"]][["beta_init"]]^2)), sqrt(k_w / (1 - 0.999^2)))
 })
+
+test_that("the cointegration starting values are real, not complex", {
+
+  # The matrix Johansen's reduced rank regression decomposes,
+  # S11^-1/2 S10 S00^-1 S01 S11^-1/2', is of the form A' A and so symmetric --
+  # in floating point only to about 1e-15. Decomposed as a general matrix it can
+  # come back complex, and the complex values travel into beta, alpha and
+  # everything built from them, failing at the first thing that cannot hold
+  # them: writing the model to a file, HDF5 having no complex type. It happened
+  # on 26 September 2026 to five of thirty-three GVEC sub-models.
+  #
+  # Gaussian noise does not reproduce it. What does is the shape the sub-models
+  # have: persistent series sharing a common trend, at the scale of log levels
+  # times 100, with more columns in the error correction term than the model has
+  # equations -- so that the product has rank k and the remaining eigenvalues
+  # are a degenerate cluster at zero, where an asymmetry of 1e-15 is enough to
+  # send a pair of them off the real line. Without the fix the eigenvectors of
+  # this design are complex.
+
+  set.seed(30)
+  tt <- 176
+  k <- 6
+  scale <- 100
+  common <- cumsum(stats::rnorm(tt))
+  levels <- vapply(seq_len(k + 7), function(j) {
+    scale * (common + cumsum(stats::rnorm(tt, sd = 0.3)))
+  }, numeric(tt))
+
+  y <- diff(levels[, seq_len(k), drop = FALSE])
+  w <- cbind(levels[-tt, , drop = FALSE], 1)
+  x <- y[c(1, seq_len(nrow(y) - 1)), , drop = FALSE]
+  colnames(y) <- paste0("y", seq_len(k))
+  colnames(w) <- c(paste0("l.y", seq_len(k + 7)), "const")
+  colnames(x) <- paste0("d.y", seq_len(k), ".01")
+
+  model <- fx_vec_priors()
+  model[["data"]][["train"]] <- list(y = y, w = w, x = x)
+  model[["model"]][["k"]] <- k
+  model[["model"]][["rank"]] <- 1L
+
+  ml <- .coint_ml(model)
+  expect_false(is.complex(ml[["beta"]]))
+  expect_false(is.complex(ml[["alpha"]]))
+  expect_false(is.complex(ml[["omega"]]))
+  expect_true(all(is.finite(ml[["beta"]])))
+
+  # And the square root it uses, on a matrix that is symmetric to a rounding
+  # error rather than exactly.
+  m <- crossprod(matrix(stats::rnorm(36), 6))
+  m[1, 2] <- m[2, 1] + 1e-15
+  expect_false(is.complex(.mroot(m)))
+})

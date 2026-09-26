@@ -565,14 +565,22 @@ test_that("the plug-in can be the best draw instead of the posterior mean", {
 
     # The deviance at the best draw is minus twice the largest log-likelihood
     # the chain visited, and the penalties are unchanged, so every criterion
-    # moves by the same amount.
+    # moves by the same amount. Compared with a tolerance rather than exactly,
+    # the same shift added to three penalties of different size not giving the
+    # same double three times.
     deviance <- -2 * max(rowSums(model[["posterior"]][["loglik"]]))
-    shift <- unique(vapply(c("AIC", "BIC", "HQ"), function(name) {
+    shifts <- vapply(c("AIC", "BIC", "HQ"), function(name) {
       at_best[[name]][["mean"]] - at_mean[[name]][["mean"]]
-    }, numeric(1)))
-    expect_length(shift, 1L)
-    expect_equal(at_best[["AIC"]][["mean"]] - deviance,
-                 at_mean[["AIC"]][["mean"]] + shift - deviance)
+    }, numeric(1))
+    expect_equal(shifts[["BIC"]], shifts[["AIC"]])
+    expect_equal(shifts[["HQ"]], shifts[["AIC"]])
+
+    # And the deviance really is the one at the best draw: the penalties left
+    # over after subtracting it imply the same number of parameters whichever
+    # criterion they are read from.
+    tt <- nrow(model[["data"]][["train"]][["y"]])
+    expect_equal((at_best[["AIC"]][["mean"]] - deviance) / 2,
+                 (at_best[["BIC"]][["mean"]] - deviance) / log(tt))
 
     # The criteria that do not use a point estimate are untouched.
     for (name in c("LL", "WAIC", "LOOIC")) {

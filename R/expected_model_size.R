@@ -11,7 +11,7 @@
 #' the result would exceed the limit set by \code{options(bvartools.size_warning)},
 #' in bytes, which is 1e9, one gigabyte, unless set otherwise, and \code{Inf}
 #' turns the warnings off. \code{\link{add_posterior_coefficients}} checks the
-#' size \code{expected_size()} predicts for the draws it is about to simulate,
+#' size \code{expected_model_size()} predicts for the draws it is about to simulate,
 #' and \code{\link{write_to_hdf5}} checks the size of the object it is about to
 #' write. A package that adds a model class gets both warnings by adding a method
 #' to this generic.
@@ -19,19 +19,19 @@
 #' @return The value returned by the method for the class of \code{object},
 #' as described on the pages of the methods.
 #'
-#' @seealso Methods: \code{\link{expected_size.bvarmodel}},
-#' \code{\link{expected_size.bvecmodel}},
-#' \code{\link{expected_size.expandingwindow}},
-#' \code{\link{expected_size.modellist}}.
+#' @seealso Methods: \code{\link{expected_model_size.bvarmodel}},
+#' \code{\link{expected_model_size.bvecmodel}},
+#' \code{\link{expected_model_size.expandingwindow}},
+#' \code{\link{expected_model_size.modellist}}.
 #'
 #' @export
-expected_size <- function(object, ...) {
-  UseMethod("expected_size")
+expected_model_size <- function(object, ...) {
+  UseMethod("expected_model_size")
 }
 
 #' @export
-expected_size.default <- function(object, ...) {
-  stop("expected_size() has no method for an object of class '",
+expected_model_size.default <- function(object, ...) {
+  stop("expected_model_size() has no method for an object of class '",
        paste(class(object), collapse = "', '"), "'. It knows the models of class ",
        "'bvarmodel' and 'bvecmodel', which create_bvarmodel() and create_bvecmodel() ",
        "return, and the lists of them of class 'modellist' and 'expandingwindow'.")
@@ -78,7 +78,7 @@ print.modelsize <- function(x, ...) {
 # specification alone. The numbers are the allocations of the samplers in
 # src/core/models/ and of their bindings in src/*.cpp: every block is a matrix
 # of doubles with one row per kept draw, and what decides its width is written
-# beside it. test-expected_size.R holds each of them against a fitted model, so
+# beside it. test-expected_model_size.R holds each of them against a fitted model, so
 # a sampler that stores something new fails there rather than here.
 .model_size <- function(object, chains = NULL) {
 
@@ -216,7 +216,7 @@ print.modelsize <- function(x, ...) {
     labels <- as.character(seq_along(object))
   }
   parts <- lapply(seq_along(object), function(i) {
-    part <- expected_size(object[[i]], ...)
+    part <- expected_model_size(object[[i]], ...)
     if (is.null(part[["model"]])) {
       part <- cbind(model = labels[i], as.data.frame(part), stringsAsFactors = FALSE)
     } else {
@@ -229,7 +229,7 @@ print.modelsize <- function(x, ...) {
   result
 }
 
-# The warnings expected_size() exists for.
+# The warnings expected_model_size() exists for.
 #
 # Each is raised once per call from the outside: the collection methods call
 # the same generic for every model in them, which would warn once per model
@@ -253,7 +253,7 @@ print.modelsize <- function(x, ...) {
 # Called by add_posterior_coefficients() before it dispatches. Returns whether
 # the object was checked, which is when the caller holds the flag.
 .check_posterior_size <- function(object, chains = NULL) {
-  size <- tryCatch(expected_size(object, chains = chains), error = function(e) NULL)
+  size <- tryCatch(expected_model_size(object, chains = chains), error = function(e) NULL)
   if (is.null(size)) {
     return(FALSE)
   }
@@ -263,10 +263,10 @@ print.modelsize <- function(x, ...) {
     warning("Once its posterior is drawn, this ",
             if (is.null(size[["model"]])) "model" else "list of models",
             " is expected to take about ", .format_bytes(bytes),
-            " of memory, and nearly as much disk space if it is written to a file, which is more ",
+            " -- of memory, or of disk space where it is kept in files -- which is more ",
             "than the limit of ", .format_bytes(limit), " in options(bvartools.size_warning). ",
             "If this machine cannot spare that, lower 'iterations' or raise 'thin' where the ",
-            "model was created; expected_size() shows which part of the model takes the space. ",
+            "model was created; expected_model_size() shows which part of the model takes the space. ",
             "options(bvartools.size_warning = Inf) turns this warning off.", call. = FALSE)
   }
   TRUE

@@ -1,5 +1,19 @@
 # bvartools 1.0.0
 
+* **`selection_criteria()` can evaluate AIC, BIC and HQ at the best draw.** The
+  new argument `plugin` chooses the point the deviance is taken at. `"mean"`,
+  the default and the behaviour up to now, uses the posterior mean of the
+  parameters -- for a VEC model the best approximation of the model's rank to
+  the posterior mean of `Pi`, since `alpha` and `beta` are identified only up to
+  a rotation. `"best"` instead uses the draw whose log-likelihood is the highest
+  the chain visited, which is nearer the maximum these corrections are derived
+  for and costs nothing, the draws of the log-likelihood already holding it.
+  The choice is recorded in the `plugin` attribute of the result. Note that the
+  maximum over a sample grows with the size of the sample, so a model drawn for
+  longer finds a better draw for that reason alone: criteria computed with
+  `"best"` compare only across models whose chains are of the same length.
+  `LL`, `WAIC` and `LOOIC` do not use a point estimate and are unaffected.
+
 * **The cointegration starting values of a VEC model are real.** Johansen's
   reduced rank regression decomposes `S11^-1/2 S10 S00^-1 S01 S11^-1/2'`, which
   is of the form `A' A` and so symmetric -- in floating point to about 1e-15,

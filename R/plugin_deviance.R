@@ -30,7 +30,26 @@
 # is therefore the approximation of rank r to the posterior mean of Pi that
 # fits best in the metric of the likelihood, factored back into alpha and beta;
 # see .posterior_mean_pi().
-.plugin_deviance <- function(object) {
+#
+# 'plugin' chooses the point. "mean" is the posterior mean just described and is
+# the default. "best" is instead the draw whose log-likelihood is the highest of
+# those the chain visited, which is closer to the maximum the correction is
+# derived for and needs no evaluation at all, the draws of the log-likelihood
+# already holding it. Its drawback is that the maximum over a sample grows with
+# the size of the sample: a model drawn for longer finds a better draw for no
+# other reason, so criteria computed this way are comparable only across models
+# whose chains are of the same length.
+.plugin_deviance <- function(object, plugin = c("mean", "best")) {
+
+  plugin <- match.arg(plugin)
+
+  if (plugin == "best") {
+    loglik <- object[["posterior"]][["loglik"]]
+    if (is.null(loglik)) {
+      return(NA_real_)
+    }
+    return(-2 * max(rowSums(loglik)))
+  }
 
   point <- .posterior_mean_model(object)
 

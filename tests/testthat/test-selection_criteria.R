@@ -553,3 +553,38 @@ test_that("choose_best_model refuses a criterion that names no single model", {
   class(criteria) <- c("selcritlist", "list")
   expect_error(choose_best_model(criteria, criterion = "RSFE"), "must be one of")
 })
+
+test_that("the plug-in can be the best draw instead of the posterior mean", {
+  for (model in list(fx_var_fitted(), fx_vec_fitted())) {
+
+    at_mean <- selection_criteria(model)
+    at_best <- selection_criteria(model, plugin = "best")
+
+    expect_identical(attr(at_mean, "plugin"), "mean")
+    expect_identical(attr(at_best, "plugin"), "best")
+
+    # The deviance at the best draw is minus twice the largest log-likelihood
+    # the chain visited, and the penalties are unchanged, so every criterion
+    # moves by the same amount.
+    deviance <- -2 * max(rowSums(model[["posterior"]][["loglik"]]))
+    shift <- unique(vapply(c("AIC", "BIC", "HQ"), function(name) {
+      at_best[[name]][["mean"]] - at_mean[[name]][["mean"]]
+    }, numeric(1)))
+    expect_length(shift, 1L)
+    expect_equal(at_best[["AIC"]][["mean"]] - deviance,
+                 at_mean[["AIC"]][["mean"]] + shift - deviance)
+
+    # The criteria that do not use a point estimate are untouched.
+    for (name in c("LL", "WAIC", "LOOIC")) {
+      expect_equal(at_best[[name]], at_mean[[name]])
+    }
+
+    # No draw beats the maximum, so the best draw never fits worse than the
+    # average draw does.
+    expect_lte(deviance, -2 * mean(rowSums(model[["posterior"]][["loglik"]])))
+  }
+})
+
+test_that("an unknown plug-in is refused", {
+  expect_error(selection_criteria(fx_var_fitted(), plugin = "median"))
+})

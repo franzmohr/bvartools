@@ -4,13 +4,21 @@
 \alias{selection_criteria.bvecmodel}
 \title{Model Selection Criteria}
 \usage{
-\method{selection_criteria}{bvecmodel}(object, ci = 0.95, ...)
+\method{selection_criteria}{bvecmodel}(object, ci = 0.95, plugin = c("mean", "best"), ...)
 }
 \arguments{
 \item{object}{an object of class 'bvecmodel'.}
 
 \item{ci}{a numeric between 0 and 1 specifying the probability of the credible band.
 Defaults to 0.95.}
+
+\item{plugin}{the point at which the deviance of \code{AIC}, \code{BIC} and
+\code{HQ} is evaluated. \code{"mean"}, the default, uses the posterior mean
+of the parameters, for a VEC model the best approximation of the model's rank
+to the posterior mean of \eqn{\Pi}. \code{"best"} uses the draw whose
+log-likelihood is the highest the chain visited, which is closer to the
+maximum these corrections are derived for, but grows with the length of the
+chain and is therefore comparable only across models drawn equally long.}
 
 \item{...}{further arguments passed to or from other methods.}
 }

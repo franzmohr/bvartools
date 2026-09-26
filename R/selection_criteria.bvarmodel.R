@@ -5,6 +5,13 @@
 #' @param object an object of class 'bvarmodel'.
 #' @param ci a numeric between 0 and 1 specifying the probability of the credible band.
 #' Defaults to 0.95.
+#' @param plugin the point at which the deviance of \code{AIC}, \code{BIC} and
+#' \code{HQ} is evaluated. \code{"mean"}, the default, uses the posterior mean
+#' of the parameters, for a VEC model the best approximation of the model's rank
+#' to the posterior mean of \eqn{\Pi}. \code{"best"} uses the draw whose
+#' log-likelihood is the highest the chain visited, which is closer to the
+#' maximum these corrections are derived for, but grows with the length of the
+#' chain and is therefore comparable only across models drawn equally long.
 #' @param ... further arguments passed to or from other methods.
 #' 
 #' @return A list of class 'selcrit', which also inherits the class of the model, with the
@@ -61,7 +68,10 @@
 #' @family model comparison
 #' @export
 #' @method selection_criteria bvarmodel
-selection_criteria.bvarmodel <- function(object, ci = 0.95, ...){
+selection_criteria.bvarmodel <- function(object, ci = 0.95,
+                                         plugin = c("mean", "best"), ...){
+
+  plugin <- match.arg(plugin)
   
   # The discounted models are compared by the log marginal likelihood their file
   # carries exactly, and by nothing else; see .selection_criteria_discount().
@@ -130,8 +140,9 @@ selection_criteria.bvarmodel <- function(object, ci = 0.95, ...){
     #
     # The criteria are evaluated at the point estimate of the model rather than
     # averaged over the posterior, which would charge the complexity of the
-    # model a second time. See .plugin_deviance().
-    deviance <- .plugin_deviance(object)
+    # model a second time. Which point that is follows 'plugin'. See
+    # .plugin_deviance().
+    deviance <- .plugin_deviance(object, plugin = plugin)
 
     # AIC
     result[["AIC"]] <- .point_criterion(deviance + 2 * nparams)
@@ -213,6 +224,7 @@ selection_criteria.bvarmodel <- function(object, ci = 0.95, ...){
   }
   
   attr(result, "ci") <- c(paste0(ci_low * 100, "%"), paste0(ci_high * 100, "%"))
+  attr(result, "plugin") <- plugin
   # The classes of the model are maintained, so that methods, which use the model
   # specifications, can be dispatched on them
   class(result) <- c("selcrit", class(object))

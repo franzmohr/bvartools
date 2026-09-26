@@ -1,5 +1,23 @@
 # bvartools 1.0.0
 
+* **The cointegration starting values of a VEC model are real.** Johansen's
+  reduced rank regression decomposes `S11^-1/2 S10 S00^-1 S01 S11^-1/2'`, which
+  is of the form `A' A` and so symmetric -- in floating point to about 1e-15,
+  no further. `add_initial_values()` decomposed it as a general matrix, and for
+  some designs the eigenvectors came back **complex**: the complex values
+  travelled into `beta`, `alpha` and everything built from them, and failed at
+  the first thing that cannot hold them, `write_to_hdf5()` reporting the HDF5
+  error "not a datatype" because the format has no complex type. It affected
+  five of the thirty-three sub-models of a GVEC whose error correction term
+  carried a restricted constant, where the term has more columns than the model
+  has equations and the surplus eigenvalues are a degenerate cluster at zero.
+  Both that decomposition and the matrix square root `.mroot()` beside it now
+  symmetrise and pass `symmetric = TRUE`. *Starting values change* wherever the
+  general route had ordered or signed the eigenvectors differently, which moves
+  the chain's starting point and so its draws; no posterior changes that was not
+  starting from complex numbers, since those could not be written or sampled
+  from at all.
+
 ## Moving from 0.3.0 to 1.0.0
 
 A model is now an object: `create_bvarmodel()` or `create_bvecmodel()` builds

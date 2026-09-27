@@ -50,7 +50,8 @@ the first forecast period, or ends before the last one, is refused with a messag
 periods it has to cover.
 
 If \code{deterministic} is not given, the deterministic terms are continued from the estimation
-sample, which works for a constant, a linear trend and seasonal dummies.
+sample, which works for a constant, a linear trend, seasonal dummies and the dummy variables of
+\code{\link{add_dummy_variables}}.
 }
 \examples{
 

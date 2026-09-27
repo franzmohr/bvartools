@@ -19,6 +19,11 @@ Suggests: knitr, loo (>= 2.10.0), pkgload, rmarkdown, testthat (>= 3.0.0)
 VignetteBuilder: knitr
 Collate: 
     'RcppExports.R'
+    'add_dummy_variables.R'
+    'add_dummy_variables.bvarmodel.R'
+    'add_dummy_variables.bvecmodel.R'
+    'add_dummy_variables.expandingwindow.R'
+    'add_dummy_variables.modellist.R'
     'add_forecast_errors.R'
     'add_forecast_errors.bvarmodel.R'
     'add_forecast_errors.bvecmodel.R'
@@ -92,6 +97,7 @@ Collate:
     'data.R'
     'discount_models.R'
     'draw_error_bars.R'
+    'dummy_variables_helpers.R'
     'expected_model_size.R'
     'expected_model_size.bvarmodel.R'
     'expected_model_size.bvecmodel.R'

@@ -30,7 +30,9 @@ directly. The layout below is the contract that makes that safe.
   is present only above one, and \code{algorithm} names the sampler that will
   draw it. A VEC model adds \code{rank}, \code{k_beta} and the deterministic
   terms restricted to the cointegration space; a quantile VAR adds
-  \code{quantile}. \code{\link{add_seed}} adds \code{seed},
+  \code{quantile}. \code{\link{add_dummy_variables}} adds
+  \code{dummy_variables}, the rule each of its dummies is continued by in a
+  forecast. \code{\link{add_seed}} adds \code{seed},
   \code{\link{add_forecast_input}} adds \code{h} and
   \code{forecast_states}.}
 

@@ -45,6 +45,8 @@ window.bvecmodel <- function(x, start = NULL, end = NULL, ...) {
     x[["data"]][["train"]][["z"]] <- x[["data"]][["train"]][["z"]][pos,]
   }
 
+  .warn_empty_dummy_variables(x)
+
   # The helpers are the VAR method's; the cointegration vectors are a path of
   # their own, and .path_widths() knows their width from the rank.
   if (!is.null(x[["posterior"]])) {

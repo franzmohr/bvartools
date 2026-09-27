@@ -49,6 +49,7 @@ model <- use_expanding_window(model, start = start_period)
 }
 \seealso{
 Other model set-up:
+\code{\link[=add_dummy_variables.bvarmodel]{add_dummy_variables.bvarmodel()}},
 \code{\link[=add_initial_values.bvarmodel]{add_initial_values.bvarmodel()}},
 \code{\link[=add_initial_values.bvecmodel]{add_initial_values.bvecmodel()}},
 \code{\link[=add_priors.bvarmodel]{add_priors.bvarmodel()}},

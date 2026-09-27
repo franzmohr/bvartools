@@ -65,7 +65,10 @@ use_expanding_window.bvarmodel <- function(object, start, ...) {
     if (!is.null(temp[["data"]][["train"]][["z"]])) {
       temp[["data"]][["train"]][["z"]] <- temp[["data"]][["train"]][["z"]][1:(k * pos_end[i]), ]
     }
-    
+
+    # A dummy variable whose period the window does not reach is left out of it.
+    temp <- .drop_empty_dummy_variables(temp)
+
     # Every window is simulated on its own, so a seed the model already has is
     # counted up from window to window rather than shared.
     if (!is.null(temp[["model"]][["seed"]])) {

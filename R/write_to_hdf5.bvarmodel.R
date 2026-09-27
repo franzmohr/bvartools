@@ -145,6 +145,9 @@ write_to_hdf5.bvarmodel <- function(object, filename, group = "", ...) {
   }
   .hdf5_write_attr(group_model, "rclass", class(object))
 
+  ## Dummy variables ----
+  .hdf5_write_dummy_variables(handles, group_model, object[["model"]][["dummy_variables"]])
+
   ## Sign restrictions ----
   #
   # The restriction table is the one piece of a specification that is a table

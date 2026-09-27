@@ -79,6 +79,13 @@ read_model_from_hdf5 <- function(filename, group = "", draws = NULL) {
         "period" = period
       )
     }
+
+    # The rules the dummy variables of add_dummy_variables() are continued by
+    # in a forecast, a table like the sign restrictions.
+    if ("dummy_variables" %in% names(h5_root[["model"]])) {
+      result[["model"]][["dummy_variables"]] <-
+        .hdf5_read_dummy_variables(h5_root[["model"]][["dummy_variables"]])
+    }
   } else {
     stop("File ", filename, " does not contain model specification",
          if (group != "") paste0(" in group ", group), ".")

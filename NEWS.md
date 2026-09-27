@@ -1,5 +1,34 @@
 # bvartools 1.0.0
 
+* **`add_dummy_variables()` adds dummy variables to a model.** `impulse`
+  takes one or several periods, given as `c(2020, 2)`, and makes a dummy that
+  is one in each of them; `step` makes one that is one from its period on; and
+  `data` takes any other series known in advance, such as a dummy for a range
+  of periods. They become deterministic terms after the ones
+  `create_bvarmodel()` or `create_bvecmodel()` made, with the prior of the
+  deterministic terms, and are placed by date, so every model of a grid gets
+  them in the same period. A forecast continues them by their rule -- an
+  impulse with zero, a step with one, a `data` series with the values it was
+  given -- and the rule is kept in `model$dummy_variables` and in the HDF5
+  file. The windows of an expanding window leave out a dummy whose period they
+  do not reach, since a forecast from there could not have known about it.
+  Refused are a call after `add_priors()`, which would leave the priors one
+  coefficient short, a dummy that is zero throughout the estimation sample,
+  and one the other regressors already span, such as a step that is one in
+  every period. In a VEC model the dummies enter the equations of the
+  differences, where an impulse dummy shifts the level for good; dummies
+  restricted to the cointegration space are not available yet.
+
+* **A failed `bayests_files()` run names the file it failed on.** The reason
+  reported for a path was the last five lines of the executable's log. A path
+  may be a directory, and the walk carries on past a file it cannot process, so
+  those lines are usually the "Processing" and "Posterior data already exists in
+  file" messages of the files after it, and a run that failed on one damaged
+  file read as though it had failed at having nothing to do. The lines are now
+  found by the marker every front-end writes, `Error processing <location>:
+  <reason>`, wherever they sit in the log, and the tail is used only when there
+  is none -- a process killed from outside still leaves the last thing it said.
+
 * **`selection_criteria()` can evaluate AIC, BIC and HQ at the best draw.** The
   new argument `plugin` chooses the point the deviance is taken at. `"mean"`,
   the default and the behaviour up to now, uses the posterior mean of the

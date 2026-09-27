@@ -273,6 +273,7 @@ West, M., & Harrison, J. (1997). \emph{Bayesian forecasting and dynamic models}
 \code{\link{bvartools_model}} describes the object this returns, element by element.
 
 Other model set-up:
+\code{\link[=add_dummy_variables.bvarmodel]{add_dummy_variables.bvarmodel()}},
 \code{\link[=add_initial_values.bvarmodel]{add_initial_values.bvarmodel()}},
 \code{\link[=add_initial_values.bvecmodel]{add_initial_values.bvecmodel()}},
 \code{\link[=add_priors.bvarmodel]{add_priors.bvarmodel()}},

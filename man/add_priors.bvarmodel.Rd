@@ -235,6 +235,7 @@ Lütkepohl, H. (2006). \emph{New introduction to multiple time series analysis} 
 }
 \seealso{
 Other model set-up:
+\code{\link[=add_dummy_variables.bvarmodel]{add_dummy_variables.bvarmodel()}},
 \code{\link[=add_initial_values.bvarmodel]{add_initial_values.bvarmodel()}},
 \code{\link[=add_initial_values.bvecmodel]{add_initial_values.bvecmodel()}},
 \code{\link[=add_priors.bvecmodel]{add_priors.bvecmodel()}},

@@ -137,7 +137,21 @@ bayests_files <- function(executable = NULL, library_path = NULL) {
         return(NULL)
       }
       reason <- if (file.exists(job[["log"]])) readLines(job[["log"]], warn = FALSE) else character()
-      reason <- reason[seq_len(length(reason)) > length(reason) - 5]
+      # The lines that say what went wrong, wherever they are in the log, and
+      # the tail only when there are none.
+      #
+      # A path may be a directory, and the walk carries on past a file it could
+      # not process: every file after it prints that it is being processed and,
+      # where it is already drawn, that it is being skipped. The tail is then
+      # those messages, and the run looks as though it failed at having nothing
+      # to do. On 27 September 2026 that cost an afternoon -- three directories
+      # of forecast windows were reported with nothing but "Posterior data
+      # already exists in file", while what had actually happened was that one
+      # file in each was left damaged by an earlier run that died.
+      #
+      # Every front-end of the executable writes the same marker, so the lines
+      # are found by it rather than by position.
+      reason <- .bayests_failure_reason(reason)
       unlink(c(job[["log"]], job[["done"]]))
       paste0(job[["path"]], " (exit status ", status, "): ",
              paste(reason, collapse = " | "))
@@ -176,6 +190,28 @@ bayests_files <- function(executable = NULL, library_path = NULL) {
 
     invisible(path)
   }
+}
+
+# The lines of a failed run's log that say what went wrong.
+#
+# A path may be a directory, and the walk carries on past a file it could not
+# process: every file after it prints that it is being processed and, where it
+# is already drawn, that it is being skipped. The tail of the log is then those
+# messages, and the run looks as though it failed at having nothing to do. On
+# 27 September 2026 that cost an afternoon -- three directories of forecast
+# windows were reported with nothing but "Posterior data already exists in
+# file", while what had actually happened was that one file in each was left
+# damaged by an earlier run that died.
+#
+# Every front-end of the executable writes the same marker before the reason,
+# so the lines are found by it rather than by position. Where there is none --
+# a process killed from outside, say -- the tail is still the best guess.
+.bayests_failure_reason <- function(lines, n = 5) {
+  errors <- grep("^Error processing ", lines, value = TRUE)
+  if (length(errors) > 0) {
+    return(utils::head(errors, n))
+  }
+  utils::tail(lines, n)
 }
 
 # One BayesTS process, started and not waited for. The command is put in a

@@ -227,6 +227,18 @@ compiled in. What goes is the samplers that would act on them.
 `src/bayests_r_io.h` reads `n_factors` for the same reason: the field is there
 whether or not anything sets it.
 
+## Native for the time being
+
+The sign restriction code is this package's own and has no counterpart
+upstream: `src/sign_restrictions.cpp`, `src/arias_rubio_ramirez_waggoner_2018.cpp`
+and `src/pareto_smoothed_importance_sampling.cpp`. The Arias, Rubio-Ramírez and
+Waggoner draw of the rotation with its importance weights is close enough to
+posterior simulation that it could be argued to belong in BayesTS, but it stays
+here for now. It is a deliberate exception rather than an oversight, and a refresh
+neither touches nor needs to account for it. If it moves upstream later, it
+arrives through the refresh script like any other core file and these three
+sources shrink to bindings.
+
 ## The discounted models
 
 `core/models/var_tvp_discount.cpp`, `core/models/vec_tvp_discount.cpp` and the
@@ -437,8 +449,9 @@ not vendored because it translates from files rather than from R:
 
 All eight VAR algorithms are converted: `VarNormalWishart`, `VarNormalGamma`,
 `VarNormalStochvol`, `VarNormalAld`, `VarTvpGamma`, `VarTvpWishart`,
-`VarTvpStochvol` and `VarTvpAld`. Nothing in `src/` samples any more; the
-numerics all live in `src/core/`.
+`VarTvpStochvol` and `VarTvpAld`. No model sampler in `src/` remains outside
+`src/core/`; the sign restriction draws are the one native exception, see
+*Native for the time being*.
 
 The seven VEC algorithms are converted too -- `VecNormalWishart`,
 `VecNormalGamma`, `VecNormalStochvol`, `VecKlgs2010`, `VecTvpGamma`,

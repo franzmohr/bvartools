@@ -130,12 +130,20 @@ write_to_hdf5.bvecmodel <- function(object, filename, group = "", ...) {
   # the only thing that changes it is this loop, which keeps track itself.
   attrs_model <- hdf5r::h5attr_names(group_model)
   for (i in names(object[["model"]])) {
+    # A specification that is itself a list gets a group of its own below, as
+    # in write_to_hdf5.bvarmodel.
+    if (is.list(object[["model"]][[i]])) {
+      next
+    }
     if (!i %in% attrs_model) {
       .hdf5_write_attr(group_model, i, object[["model"]][[i]])
       attrs_model <- c(attrs_model, i)
     }
   }
   .hdf5_write_attr(group_model, "rclass", class(object))
+
+  ## Dummy variables ----
+  .hdf5_write_dummy_variables(handles, group_model, object[["model"]][["dummy_variables"]])
 
   # Data ----
   group_data <- .hdf5_group(handles, output, "data")

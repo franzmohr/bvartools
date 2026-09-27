@@ -43,6 +43,8 @@ window.bvarmodel <- function(x, start = NULL, end = NULL, ...) {
     x[["data"]][["train"]][["z"]] <- x[["data"]][["train"]][["z"]][pos,]
   }
 
+  .warn_empty_dummy_variables(x)
+
   if (!is.null(x[["posterior"]])) {
     x[["posterior"]] <- .window_posterior(x[["posterior"]], periods, length(orig_time),
                                           .path_widths(x, k), .is_discount(x))

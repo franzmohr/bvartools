@@ -1,0 +1,104 @@
+#' @include add_dummy_variables.R
+NULL
+
+#' Dummy Variables
+#'
+#' Adds dummy variables to the deterministic terms of a model: impulse dummies
+#' for single unusual periods, step dummies for level shifts, or any other
+#' series that is known in advance.
+#'
+#' @param object an object of class 'bvarmodel' or 'bvecmodel', usually the
+#' output of \code{\link{create_bvarmodel}} or \code{\link{create_bvecmodel}},
+#' or a list of such models of class 'modellist' or 'expandingwindow'.
+#' @param impulse a period, given the way \code{\link[stats]{ts}} takes
+#' \code{start}, e.g. \code{c(2020, 2)}, or a list of such periods. Each gets a
+#' dummy variable that is one in that period and zero otherwise.
+#' @param step a period or a list of periods as in \code{impulse}. Each gets a
+#' dummy variable that is zero before that period and one from it on.
+#' @param data an optional time-series object of further dummy variables, or
+#' of any other series known in advance, with named columns at the frequency of
+#' the model. It has to cover the estimation sample. See 'Details'.
+#' @param ... further arguments passed to or from other methods.
+#'
+#' @details A dummy variable takes up what a model otherwise has no explanation
+#' for: an impulse dummy the one period of a strike, a tax change or a
+#' pandemic, a step dummy a lasting shift in the level of the series, such as a
+#' change in how they are measured. Without one, a single extreme observation
+#' pulls the coefficients of every equation towards itself and inflates the
+#' estimated error variance for the whole sample.
+#'
+#' The dummies are deterministic terms like the constant. They are appended to
+#' the end of the deterministic terms of the regressors, named after their type
+#' and period -- \code{impulse.2020Q2}, \code{step.2008M09} -- or after the
+#' columns of \code{data}, and their coefficients take the prior of the
+#' deterministic terms, \code{v_i_det} in \code{\link{add_priors}}.
+#' \strong{The coefficient of an impulse dummy is estimated from a single
+#' observation}, so its prior matters more than that of the constant: a tight
+#' one leaves most of the observation to the other coefficients, which is what
+#' the dummy was meant to prevent.
+#'
+#' \strong{The function has to be called before \code{\link{add_priors}}},
+#' since it changes the number of coefficients the priors are given for. A
+#' dummy variable that is zero in every period of the estimation sample, or
+#' that the other regressors already span -- a step dummy that is one in every
+#' period is the constant again -- is refused.
+#'
+#' A forecast continues the dummies by their definition: an impulse dummy is
+#' zero after its period and a step dummy stays one. The series in \code{data}
+#' are continued with the values they were given, so for a forecast they have
+#' to reach the last forecast period, or all deterministic terms of the
+#' forecast have to be given in argument \code{deterministic} of
+#' \code{\link{add_forecast_input}}.
+#'
+#' Of a list of models of class 'expandingwindow', each window gets the dummies
+#' whose periods it reaches and leaves out the rest: a forecast made at the end
+#' of a window that ends before a period could not have known about what
+#' happened in it. \code{\link{use_expanding_window}} applied to a model with
+#' dummy variables does the same.
+#'
+#' In a VEC model the dummies enter the equations of the differences, not the
+#' cointegration term. \strong{An impulse dummy there shifts the level of the
+#' series for good}, since a one-off change in a difference is a lasting change
+#' in the level. A one-off blip in the level is a dummy that is one in its
+#' period and minus one in the next, which can be given in \code{data}.
+#' \code{\link{vec_to_var}} carries the dummies into the VAR representation.
+#'
+#' @return The object in \code{object} with the dummy variables added to
+#' \code{data$train$x} and its SUR form \code{data$train$z}, to
+#' \code{data$original$deterministic} and to the names in
+#' \code{model$deterministic}, \code{model$n} increased by their number, and
+#' \code{model$dummy_variables}, a data frame with one row per dummy variable
+#' giving its \code{name}, its \code{type} (\code{"impulse"}, \code{"step"} or
+#' \code{"data"}) and the \code{time} of its period, which is what a forecast
+#' continues it by.
+#'
+#' @examples
+#'
+#' # Load data
+#' data("e1")
+#' e1 <- diff(log(e1)) * 100
+#'
+#' # Create model
+#' model <- create_bvarmodel(e1, p = 2, deterministic = "const",
+#'                           iterations = 20, burnin = 10)
+#' # Number of iterations and burnin should be much higher.
+#'
+#' # An impulse dummy for the first quarter of 1975 and a step dummy from 1979
+#' model <- add_dummy_variables(model, impulse = c(1975, 1), step = c(1979, 1))
+#' model[["model"]][["deterministic"]]
+#'
+#' # Add priors
+#' model <- add_priors(model,
+#'                     coef = list(v_i = 1, v_i_det = 1 / 10),
+#'                     sigma = list(df = "k", scale = 1))
+#'
+#' @family model set-up
+#' @export
+#' @method add_dummy_variables bvarmodel
+add_dummy_variables.bvarmodel <- function(object, impulse = NULL, step = NULL, data = NULL, ...) {
+
+  frequency <- stats::frequency(object[["data"]][["train"]][["y"]])
+  dummies <- .dummy_specification(impulse, step, data, frequency)
+
+  return(.add_dummy_variables(object, dummies))
+}

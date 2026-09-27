@@ -20,7 +20,8 @@
 #' periods it has to cover.
 #'
 #' If \code{deterministic} is not given, the deterministic terms are continued from the estimation
-#' sample, which works for a constant, a linear trend and seasonal dummies.
+#' sample, which works for a constant, a linear trend, seasonal dummies and the dummy variables of
+#' \code{\link{add_dummy_variables}}.
 #'
 #' @return A list with elements \code{h}, the forecast horizon, and \code{x},
 #' the out-of-sample regressors: \code{h} rows, one per period, by one column
@@ -127,6 +128,14 @@ prepare_forecast_input.bvarmodel <- function(object, n_ahead = 10, deterministic
       }
     }
     
+    ## dummy variables of add_dummy_variables(), continued by the rule each
+    ## was built by rather than by pattern
+    spec <- object[["model"]][["dummy_variables"]]
+    if (!is.null(spec)) {
+      det_times <- y_end + (0:n_ahead) / y_freq
+      deterministic[, spec[["name"]]] <- .continue_dummy_variables(object, det_times)
+    }
+
     if (any(is.na(deterministic))) {
       stop("Could not identify all deterministic terms. Please specify argument 'deterministic' instead.") 
     }

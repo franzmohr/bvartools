@@ -323,6 +323,26 @@ vec_to_var.bvecmodel <- function(object, ...) {
                                               "x" = x,
                                               "z" = z)))
 
+  # The dummy variables of add_dummy_variables() are among the deterministic
+  # terms above already; what the representation needs besides is the rule each
+  # is continued by in a forecast, and the values a 'data' dummy was given for
+  # the periods after the sample.
+  spec <- specs[["dummy_variables"]]
+  if (!is.null(spec)) {
+    result[["model"]][["dummy_variables"]] <- spec
+    given <- spec[["name"]][spec[["type"]] == "data"]
+    if (length(given) > 0) {
+      original <- object[["data"]][["original"]][["deterministic"]]
+      series <- lapply(given, function(i) original[, i])
+      kept <- result[["data"]][["original"]][["deterministic"]]
+      kept <- kept[, setdiff(colnames(kept), given), drop = FALSE]
+      if (ncol(kept) == 0) {
+        kept <- NULL
+      }
+      result[["data"]][["original"]][["deterministic"]] <- .merge_series(kept, series, given)
+    }
+  }
+
   # Data for forecast simulation is generated in the layout of the VAR
   # representation already, since that is the form a VEC model is forecast in.
   if (!is.null(object[["data"]][["forecast"]])) {

@@ -198,6 +198,42 @@ plot_forecast_errors_by_period(models, criterion = "FE")
 ```
 
 
+## Pooling forecasts
+
+No single specification forecasts best in every period, because the errors of
+different models are not perfectly correlated. A pool of forecasts exploits this:
+it is the mixture of the predictive distributions of its members, and combining
+forecasts in this way is one of the most reliable ways of improving them. Function
+`pool_forecasts` forms the equal-weight pool from the draws the models already
+hold, taking the same number of draws from each member, and matches the windows
+of the members by the end of their estimation samples, so that every pooled
+forecast combines forecasts made with the same information. Here it pools all six
+models of the race:
+
+```{r pool}
+set.seed(1234567)
+pool <- pool_forecasts(models)
+pool
+```
+
+The pool is scored and ranked like the models. Function `combine_models` adds it to
+the list of models, where the functions that estimate a model leave it unchanged:
+
+```{r pool-compare}
+models_and_pool <- combine_models(models, pool)
+models_and_pool <- add_forecast_errors(models_and_pool, test_sample = data)
+sc_pool <- selection_criteria(models_and_pool)
+print(sc_pool, relative = 1)
+```
+
+The pool is the last model of the list. It was not estimated, so it has no in-sample
+criteria. Over these nine forecasts it lands in the middle of the field in most
+columns: it seldom beats the best model of a column, but neither does it share the
+largest errors, and over a longer race that robustness is what makes pools hard to
+beat. A pool is only as honest as the choice of its members: members chosen
+because they scored well over the same periods the pool is judged on flatter the
+pool with information it would not have had.
+
 ## Adding forecasts from other sources
 
 A horse race becomes more informative, if the models do not only compete with each

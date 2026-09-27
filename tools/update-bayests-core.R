@@ -14,7 +14,7 @@ args <- commandArgs(trailingOnly = TRUE)
 upstream <- if (length(args) > 0) {
   args[1]
 } else {
-  Sys.getenv("BAYESTS_SOURCE", "D:/workspace-cpp/BayesTS")
+  Sys.getenv("BAYESTS_SOURCE", "D:/projects/BayesTS")
 }
 
 if (!dir.exists(file.path(upstream, "src", "core"))) {

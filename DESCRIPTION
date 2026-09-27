@@ -158,6 +158,8 @@ Collate:
     'plot_forecast_errors_by_period.R'
     'plot_selcrit_forecast_errors.R'
     'plugin_deviance.R'
+    'pool_forecasts.R'
+    'pool_forecasts_methods.R'
     'predict.bvarmodel.R'
     'predict.expandingwindow.R'
     'predict.modellist.R'

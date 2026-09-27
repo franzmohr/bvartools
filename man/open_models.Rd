@@ -95,6 +95,7 @@ Other model comparison:
 \code{\link[=map_models]{map_models()}},
 \code{\link[=open_model]{open_model()}},
 \code{\link[=plot_forecast_errors_by_period]{plot_forecast_errors_by_period()}},
+\code{\link[=pool_forecasts]{pool_forecasts()}},
 \code{\link[=selection_criteria.bvarmodel]{selection_criteria.bvarmodel()}},
 \code{\link[=selection_criteria.bvecmodel]{selection_criteria.bvecmodel()}},
 \code{\link[=selection_criteria.default]{selection_criteria.default()}},

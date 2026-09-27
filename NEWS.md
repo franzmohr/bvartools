@@ -1,5 +1,26 @@
 # bvartools 1.0.0
 
+* **`pool_forecasts()` pools the forecasts of several models with equal
+  weights.** A pool is the mixture of its members' predictive distributions,
+  formed from the draws they already hold: the same number of draws from each
+  member, as many as the member with the fewest has, so that every member has
+  the same weight. Combining forecasts is one of the most reliable ways of
+  improving them, and before this function a pool had to be built outside the
+  package. The pool behaves like an expanding window exercise, or like a single
+  model if single models were pooled: it joins a list of models through
+  `combine_models()`, is scored by `add_forecast_errors()` and ranked by
+  `selection_criteria()`, and the functions that estimate a model leave it
+  unchanged. Windows are matched by the end of their estimation samples, and
+  the pool keeps the variables and horizons all members share. The log
+  predictive densities of the members are pooled into the density of the
+  mixture, not scored on its draws, and kept only where all members have the
+  same variables. Refused are external forecasts, which are points rather than
+  distributions, a pool as a member of another pool, which would make the
+  weights unequal, single models together with expanding windows, and members
+  that share no variable -- a VEC model forecasting levels with VAR models of
+  growth rates, for instance. A pool is not written to a file; its members are,
+  and the pool is formed again after reading them back.
+
 * **`add_dummy_variables()` adds dummy variables to a model.** `impulse`
   takes one or several periods, given as `c(2020, 2)`, and makes a dummy that
   is one in each of them; `step` makes one that is one from its period on; and

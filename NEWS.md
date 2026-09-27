@@ -19,6 +19,22 @@
   differences, where an impulse dummy shifts the level for good; dummies
   restricted to the cointegration space are not available yet.
 
+* **`persistence_profiles()` follows a cointegrating relation after a
+  system-wide shock.** The statistic of Pesaran and Shin (1996), scaled to one
+  on impact: it falls to zero for a relation that is cointegrating, and how fast
+  it falls is the speed of convergence to equilibrium. A profile that does not
+  fall says the relation is not cointegrating whatever the rank asserts, which
+  makes it the check on a rank chosen by a test or a criterion. Unlike `irf()`
+  and `fevd()`, which a VEC model reaches through `vec_to_var()`, this one
+  cannot be taken from the level VAR alone -- `vec_to_var()` drops `beta`, and
+  the profile is a statement about the cointegrating vectors -- so the
+  `bvecmodel` method uses the level form for the moving average coefficients and
+  the model's own `beta` for the relations. For a model with weakly exogenous
+  variables the profile is partial and the method says so: only the domestic
+  block responds to a shock to that model, and the whole relation has to be
+  followed in the system where the remaining variables are endogenous. A VAR is
+  refused, having no long-run relation to follow.
+
 * **A failed `bayests_files()` run names the file it failed on.** The reason
   reported for a path was the last five lines of the executable's log. A path
   may be a directory, and the walk carries on past a file it cannot process, so

@@ -84,6 +84,7 @@ bayests::VecNormalWishartInput read_input(const Rcpp::List &object) {
     read_mat_if_present(initial, "u_sigma_inv", input.initial.u_sigma_inv);
   }
 
+  read_extensions(object, input);
   return input;
 }
 
@@ -94,7 +95,8 @@ bayests::VecNormalWishartDraws read_draws(const Rcpp::List &object) {
   bayests::VecNormalWishartDraws draws;
 
   if (!has(object, "posterior")) {
-    return draws;
+    read_draw_extensions(object, draws);
+  return draws;
   }
 
   const Rcpp::List posterior = object["posterior"];
@@ -112,6 +114,7 @@ bayests::VecNormalWishartDraws read_draws(const Rcpp::List &object) {
     read_draws_if_present(posterior_u_sigma_inv, "coeffs", draws.u_sigma_inv);
   }
 
+  read_draw_extensions(object, draws);
   return draws;
 }
 
@@ -136,6 +139,7 @@ Rcpp::List write_draws(const bayests::VecNormalWishartDraws &draws) {
   }
   posteriors["u_sigma_inv"] = Rcpp::List::create(Rcpp::Named("coeffs") = draws_to_r(draws.u_sigma_inv));
 
+  write_draw_extensions(posteriors, draws);
   return posteriors;
 }
 

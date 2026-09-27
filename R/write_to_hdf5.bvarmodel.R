@@ -223,6 +223,12 @@ write_to_hdf5.bvarmodel <- function(object, filename, group = "", ...) {
     .hdf5_write(group_data_test, "y", object[["data"]][["test"]][["y"]])
   }
 
+  # What was observed of a panel not observed whole, of the horizon, and the
+  # scenario a forecast is conditioned on: /data/<part>/constraints.
+  for (i in c("train", "test", "forecast")) {
+    .hdf5_write_constraints(handles, group_data, i, object[["data"]][[i]][["constraints"]])
+  }
+
   # Priors ----
   # Nothing is written at all for a model that has not been through
   # add_priors(), because an empty group is worse than no group: the reader
@@ -234,11 +240,24 @@ write_to_hdf5.bvarmodel <- function(object, filename, group = "", ...) {
     ## Those kept in a group of their own ----
     # u_scale belongs to an ald error, whose scale prior is not a prior on
     # Sigma and so does not live under u_sigma the way every other one does.
-    for (i in c("a", "psi", "u_scale")) {
+    #
+    # 'mu' is the prior of the unconditional mean under a steady-state prior,
+    # 'constraints' that of the error precision of soft constraints. An element
+    # that is itself a list -- the adaptive prior in a$shrinkage -- is a group
+    # below the block's.
+    for (i in c("a", "psi", "u_scale", "mu", "constraints")) {
       if (!is.null(object[["priors"]][[i]])) {
         group_prior <- .hdf5_group(handles, group_priors, i)
         for (j in names(object[["priors"]][[i]])) {
-          .hdf5_write(group_prior, j, object[["priors"]][[i]][[j]])
+          value <- object[["priors"]][[i]][[j]]
+          if (is.list(value)) {
+            group_sub <- .hdf5_group(handles, group_prior, j)
+            for (l in names(value)) {
+              .hdf5_write(group_sub, l, value[[l]])
+            }
+          } else {
+            .hdf5_write(group_prior, j, value)
+          }
         }
       }
     }
@@ -296,8 +315,11 @@ write_to_hdf5.bvarmodel <- function(object, filename, group = "", ...) {
     #
     # 'u_sigma' is a discounted model's: the scale of its Wishart, one column
     # per period, which the samplers' 'u_sigma_inv' has no counterpart for.
+    #
+    # 'y', 'constraints_inv' and 'mu' are the completed panel, the precision of
+    # soft constraints and the unconditional mean; see add_posterior_coefficients().
     for (i in c("a", "psi", "u_omega_inv", "u_sigma_inv", "u_scale", "q", "forecast",
-                "u_sigma")) {
+                "u_sigma", "y", "constraints_inv", "mu")) {
       if (i %in% names(object[["posterior"]])) {
         group_draws <- .hdf5_group(handles, group_posterior, i)
         for (j in names(object[["posterior"]][[i]])) {

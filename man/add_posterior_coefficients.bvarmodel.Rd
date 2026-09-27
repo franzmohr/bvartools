@@ -47,6 +47,13 @@ elements is a list whose element \code{coeffs} holds the draws after burn-in as 
   coefficients.}
   \item{\code{u_scale}}{for \code{error = "ald"}, the \eqn{K} scales of the asymmetric
   Laplace distribution.}
+  \item{\code{y}}{for a model estimated from a panel not observed whole, the completed
+  panel, \eqn{TK} columns ordered by period, and \code{constraints_inv} the error
+  precisions of its soft constraints. See \code{\link{create_bvarmodel}}.}
+  \item{\code{mu}}{under a steady-state prior, the \eqn{K} unconditional means. Under an
+  adaptive prior, \code{a} holds the scales of its groups in element \code{shrinkage}
+  and, for the horseshoe, the scales of its coefficients in \code{local}. See
+  \code{\link{add_prior_options}}.}
 }
 Elements that do not apply to a model are absent or \code{NULL}. Note that
 \code{\link{bvar}} expects draws in the transposed orientation.

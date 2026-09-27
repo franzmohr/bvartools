@@ -102,6 +102,7 @@ bayests::VecTvpDiscountInput read_input(const Rcpp::List &object) {
     read_mat_if_present(prior_u_sigma, "scale", input.u_sigma_prior.scale);
   }
 
+  read_extensions(object, input);
   return input;
 }
 

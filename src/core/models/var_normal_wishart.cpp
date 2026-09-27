@@ -4,12 +4,18 @@
 #include "bayests/var_normal_wishart.h"
 
 #include "core/algorithms/bvs.h"
+#include "core/algorithms/constrained_var_path.h"
 #include "core/algorithms/ssvs.h"
 #include "core/algorithms/wishart.h"
+#include "core/models/completion_support.h"
+#include "core/models/constraint_support.h"
 #include "core/models/forecast_states.h"
 #include "core/models/model_support.h"
+#include "core/models/shrinkage_support.h"
+#include "core/models/steady_state_support.h"
 #include "core/models/predictive_score.h"
 
+#include <algorithm>
 #include <cmath>
 #include <optional>
 #include <stdexcept>
@@ -42,7 +48,8 @@ VarNormalWishartDraws VarNormalWishartSampler::draw_coefficients(const VarNormal
     const int iterations = input.spec.iterations;
     const int draws = input.spec.draws();
 
-    const arma::vec y = stacked_response(input.train);
+    // Not const: where the panel is not observed whole, every sweep completes it.
+    arma::vec y = stacked_response(input.train);
     arma::mat z = input.train.z;
 
     const int nparams = static_cast<int>(z.n_cols);
@@ -116,11 +123,65 @@ VarNormalWishartDraws VarNormalWishartSampler::draw_coefficients(const VarNormal
     out.u_sigma_inv = arma::mat(k * k, iterations);
     arma::mat u = arma::reshape(y, k, tt);
 
+    // A panel not observed whole. Each sweep starts by drawing what was not
+    // observed given the current coefficients and precision, then rebuilds the
+    // lag block of the regressors from the completed panel, and everything
+    // after that is the sweep of a complete panel, unchanged. A file without
+    // constraints never enters any of this, so its draws are untouched.
+    // The error precision of each soft group is drawn there too, after every
+    // completion, from what the completed panel leaves its rows to explain.
+    core::PanelCompletion completion(input.spec, input.train, use_a, input.constraints_prior,
+                                     input.initial.constraints_inv);
+    const bool complete = completion.active();
+    completion.allocate(out.y, out.constraints_inv, static_cast<arma::uword>(iterations),
+                        static_cast<arma::uword>(tt));
+
     // Start simulation
+    // The adaptive prior on the coefficients, and how many sweeps found no
+    // stationary draw and kept the one before; see shrinkage_support.h. Both
+    // idle -- no random number, no rescaled prior -- unless /model asks.
+    core::CoefficientShrinkage shrinkage(input.spec.shrinkage, input.a_shrinkage_prior, input.a_prior,
+                                         input.initial.a_shrinkage, input.initial.a_local);
+    if (shrinkage.active())
+    {
+        out.a_shrinkage = arma::mat(shrinkage.groups(), iterations);
+        if (input.spec.shrinkage == Shrinkage::horseshoe)
+        {
+            out.a_local = arma::mat(nparams, iterations);
+        }
+    }
+    int unstationary_sweeps = 0;
+
+    // The unconditional mean under the steady-state prior.
+    arma::vec mu = input.initial.mu;
+    if (input.spec.steady_state)
+    {
+        out.mu = arma::mat(static_cast<arma::uword>(k), iterations);
+    }
+
     for (int draw = 0; draw < draws; draw++)
     {
         reporter.check_interrupt();
         reporter.progress(draw + 1, draws);
+
+        if (complete)
+        {
+            const arma::mat path =
+                completion.complete(a, core::covariance_of(u_sigma_inv, "VarNormalWishart"));
+            y = arma::vectorise(path);
+            if (use_a)
+            {
+                z = completion.regressors();
+                if (a_bvs)
+                {
+                    z_bvs = z;
+                }
+            }
+            else
+            {
+                u = path;
+            }
+        }
 
         if (use_a)
         {
@@ -139,9 +200,45 @@ VarNormalWishartDraws VarNormalWishartSampler::draw_coefficients(const VarNormal
             // Armadillo's sparse-times-dense path rather than promoting the
             // whole block diagonal back to dense.
             dz = u_sigma_inv_diag * z;
-            post_a_v = prior_a_vinv + arma::trans(dz) * z;
-            a = draw_normal_precision(post_a_v,
-                                      prior_a_rhs + arma::trans(dz) * y);
+            if (input.spec.steady_state)
+            {
+                // The prior on the unconditional mean: the lags given mu, then mu
+                // given the lags, the intercept they imply written into `a`.
+                if (!core::draw_steady_state(a, mu, y, z, u_sigma_inv_diag, input.a_prior,
+                                             input.mu_prior, static_cast<arma::uword>(k),
+                                             static_cast<arma::uword>(input.spec.p),
+                                             input.spec.stationary))
+                {
+                    unstationary_sweeps++;
+                }
+            }
+            else
+            {
+                // An adaptive prior: the precision this draw is made under, rescaled
+                // by the scales of the last sweep.
+                if (shrinkage.active())
+                {
+                    prior_a_vinv = shrinkage.precision();
+                    prior_a_rhs = shrinkage.rhs();
+                }
+                post_a_v = prior_a_vinv + arma::trans(dz) * z;
+                if (input.spec.stationary)
+                {
+                    const arma::vec a_rhs = prior_a_rhs + arma::trans(dz) * y;
+                    if (!core::draw_stationary(
+                            a, [&]() { return draw_normal_precision(post_a_v, a_rhs); },
+                            static_cast<arma::uword>(k), static_cast<arma::uword>(input.spec.p)))
+                    {
+                        unstationary_sweeps++;
+                    }
+                }
+                else
+                {
+                    a = draw_normal_precision(post_a_v,
+                                              prior_a_rhs + arma::trans(dz) * y);
+                }
+                shrinkage.update(a);
+            }
 
             if (a_ssvs)
             {
@@ -173,6 +270,18 @@ VarNormalWishartDraws VarNormalWishartSampler::draw_coefficients(const VarNormal
         if (input.spec.keeps(draw))
         {
             const int draw_pos = input.spec.kept_index(draw);
+            if (input.spec.steady_state)
+            {
+                out.mu.col(draw_pos) = mu;
+            }
+            if (shrinkage.active())
+            {
+                out.a_shrinkage.col(draw_pos) = shrinkage.scale();
+                if (input.spec.shrinkage == Shrinkage::horseshoe)
+                {
+                    out.a_local.col(draw_pos) = shrinkage.local();
+                }
+            }
             if (use_a)
             {
                 out.a.col(draw_pos) = iid.scatter(a);
@@ -182,10 +291,19 @@ VarNormalWishartDraws VarNormalWishartSampler::draw_coefficients(const VarNormal
                 }
             }
             out.u_sigma_inv.col(draw_pos) = arma::vectorise(u_sigma_inv);
+            completion.store(out.y, out.constraints_inv, static_cast<arma::uword>(draw_pos), y);
         }
     }
 
     reporter.finish();
+    if (unstationary_sweeps > 0)
+    {
+        reporter.message(std::to_string(unstationary_sweeps) + " of " + std::to_string(draws) +
+                         " sweeps found no stationary draw of the coefficients in " +
+                         std::to_string(core::kStationaryTries) +
+                         " tries and kept the one before: the posterior may put much of its mass "
+                         "on explosive coefficients");
+    }
     return out;
 }
 
@@ -254,14 +372,36 @@ ForecastDraws VarNormalWishartSampler::forecast(const VarNormalWishartInput &inp
     const bool p_larger_than_0 = p > 0;
 
     arma::mat fcst = arma::zeros<arma::mat>(h * k, draws);
+
+    // A panel not observed whole: the lags a forecast starts from are the
+    // draw's own completed panel, not what the host wrote into x, which for an
+    // entry nothing observed is a placeholder.
+    const bool complete = !input.train.constraints.empty();
+    const arma::uword tt =
+        complete ? stacked_response(input.train).n_elem / static_cast<arma::uword>(k) : 0;
+    core::require_completed_panels(input, coefficients, use_a);
     const arma::mat diag_k = arma::eye<arma::mat>(k, k);
     arma::mat error_root;
+
+    // A scenario: the horizon is drawn whole, as the path the draw's VAR puts
+    // on it conditioned on /data/forecast/constraints -- the completion step,
+    // over h periods that start where the draw's panel ends. Only where a
+    // scenario is given: an unconditional forecast keeps the recursion below,
+    // and with it every draw it made before.
+    const bool conditioned = !input.forecast.constraints.empty();
 
     // Calculate forecasts
     for (arma::uword draw = 0; draw < draws; draw++)
     {
         reporter.check_interrupt();
         reporter.progress(static_cast<long long>(draw) + 1, static_cast<long long>(draws));
+
+        if (conditioned)
+        {
+            fcst.col(draw) = arma::vectorise(
+                core::conditioned_forecast(input, coefficients, draw, use_a, "VarNormalWishart"));
+            continue;
+        }
 
         // Once per draw: nothing in either depends on the horizon.
         const arma::mat a0_inv =
@@ -276,6 +416,15 @@ ForecastDraws VarNormalWishartSampler::forecast(const VarNormalWishartInput &inp
         // horizon: the precision is the same at every horizon, and the
         // factorisation draws nothing, so where it sits does not move a draw.
         error_root = covariance_root(arma::reshape(coefficients.u_sigma_inv.col(draw), k, k));
+
+        // Every lag that reaches back into the sample, from this draw's panel:
+        // horizon i's lag j for j > i. The ones inside the horizon are the
+        // forecast's own and update_forecast_lags() writes them below.
+        if (complete && use_a && p_larger_than_0)
+        {
+            core::start_from_panel(x, arma::reshape(coefficients.y.col(draw), k, tt),
+                                   static_cast<arma::uword>(p));
+        }
 
         for (int i = 0; i < h; i++)
         {
@@ -335,6 +484,15 @@ arma::mat VarNormalWishartSampler::log_likelihood(const VarNormalWishartInput &i
     const int tt = static_cast<int>(y.n_elem) / k;
     arma::mat loglik = arma::mat(draws, tt);
 
+    // A panel not observed whole: the density of what was observed, with what
+    // was not integrated out -- never the density of one draw's completion,
+    // which is not a likelihood of the data. Period t is the density of the
+    // rows ending in t given those ending before it.
+    if (!input.train.constraints.empty())
+    {
+        return core::observed_log_likelihood(input, coefficients, "VarNormalWishart");
+    }
+
     // Calculate errors
     arma::mat u = arma::repmat(y, 1, draws);
     if (use_a)
@@ -366,6 +524,17 @@ arma::mat VarNormalWishartSampler::predictive_log_density(const VarNormalWishart
     const arma::uword periods = core::scored_horizons(input.test.y, input.spec);
     const arma::mat x =
         core::realised_regressors(input.forecast.x, input.test.y, input.spec.k, input.spec.p);
+
+    // A sample not observed whole, or a horizon realised in part: the density
+    // of what the horizon realised under the path each draw puts on it, from
+    // where that draw's panel ends, period by period -- the completion step's
+    // log density. For a horizon realised whole it is the same pointwise log
+    // likelihood as below, computed another way; the recursion below stays for
+    // every file without constraints, so its scores do not move.
+    if (!input.train.constraints.empty() || !input.test.constraints.empty())
+    {
+        return core::score_from_panel(input, coefficients, periods, "VarNormalWishart");
+    }
 
     // The scored periods as a sample of their own. Nothing in this model moves
     // over the horizon, so a draw describes period T + i exactly as it

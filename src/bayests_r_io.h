@@ -3,11 +3,15 @@
 
 #include <RcppArmadillo.h>
 
+#include "bayests/data.h"
 #include "bayests/priors.h"
 #include "bayests/results.h"
 #include "bayests/spec.h"
 
+#include <cmath>
 #include <string>
+#include <type_traits>
+#include <utility>
 
 // Translation between the R model object and the structs the vendored BayesTS
 // core takes. This is the R counterpart of that project's src/io/hdf5/ layer:
@@ -210,6 +214,13 @@ inline bayests::VarSpec read_spec(const Rcpp::List &model, const char *covar_err
   read_double_if_present(model, "delta_sigma", spec.delta_sigma);
   spec.varsel = bayests::var_selection_from_string(optional_string(model, "varsel", "none"));
   spec.structural = optional_bool(model, "structural", false);
+  // What the core added after this reader was written: the adaptive prior on
+  // `a`, the stationarity condition and the steady-state prior. Absent unless
+  // add_prior_options() set them, and refused by the sampler's own validate()
+  // where no sampler reads them.
+  spec.shrinkage = bayests::shrinkage_from_string(optional_string(model, "shrinkage", "none"));
+  spec.stationary = optional_bool(model, "stationary", false);
+  spec.steady_state = optional_bool(model, "steady_state", false);
   // Whether a time-varying model's forecast carries its random walks over the
   // horizon or holds them at the last sample period. Absent unless
   // add_posterior_forecasts() was given one, and `simulate` then, which is the
@@ -399,6 +410,215 @@ inline Rcpp::List with_forecast_member(const Rcpp::List &object, const char *nam
   }
   result["posterior"] = posterior;
   return result;
+}
+
+// ---------------------------------------------------------------------------
+// A panel not observed whole, and the prior options of the constant VARs
+// ---------------------------------------------------------------------------
+//
+// What the core added after the bindings were written, read and written for
+// every model in one place: the three constraint groups (data$train, data$test
+// and data$forecast, each a list of value, group, row, period, variable and
+// weight), the soft groups' prior and start, the adaptive prior on `a`, and
+// the steady-state prior on the mean. Each binding calls read_extensions(),
+// read_draw_extensions() and write_draw_extensions() whatever its model, and
+// what the model's structs have no member for is skipped at compile time. A
+// model that does not read a group it is handed refuses it in its validate(),
+// as a model file would be refused -- the point of reading it everywhere.
+
+template <typename T, typename = void>
+struct has_forecast_constraints : std::false_type {};
+template <typename T>
+struct has_forecast_constraints<T, std::void_t<decltype(std::declval<T &>().forecast.constraints)>>
+    : std::true_type {};
+
+template <typename T, typename = void>
+struct has_constraints_prior : std::false_type {};
+template <typename T>
+struct has_constraints_prior<T, std::void_t<decltype(std::declval<T &>().constraints_prior)>>
+    : std::true_type {};
+
+template <typename T, typename = void>
+struct has_shrinkage_prior : std::false_type {};
+template <typename T>
+struct has_shrinkage_prior<T, std::void_t<decltype(std::declval<T &>().a_shrinkage_prior)>>
+    : std::true_type {};
+
+template <typename T, typename = void>
+struct has_mu_prior : std::false_type {};
+template <typename T>
+struct has_mu_prior<T, std::void_t<decltype(std::declval<T &>().mu_prior)>> : std::true_type {};
+
+template <typename T, typename = void>
+struct has_completion_draws : std::false_type {};
+template <typename T>
+struct has_completion_draws<T, std::void_t<decltype(std::declval<T &>().constraints_inv)>>
+    : std::true_type {};
+
+template <typename T, typename = void>
+struct has_shrinkage_draws : std::false_type {};
+template <typename T>
+struct has_shrinkage_draws<T, std::void_t<decltype(std::declval<T &>().a_shrinkage)>>
+    : std::true_type {};
+
+template <typename T, typename = void>
+struct has_mu_draws : std::false_type {};
+template <typename T>
+struct has_mu_draws<T, std::void_t<decltype(std::declval<T &>().mu)>> : std::true_type {};
+
+/// Whole numbers no smaller than `minimum`, shifted down by it, from a numeric
+/// R vector: what the file's positions are, counted from one, and its groups,
+/// from zero.
+inline arma::uvec read_counted(const Rcpp::List &list, const char *name, const double minimum,
+                               const char *where)
+{
+  const arma::vec values = Rcpp::as<arma::vec>(list[name]);
+  for (const double v : values) {
+    if (!std::isfinite(v) || v != std::floor(v) || v < minimum) {
+      Rcpp::stop("%s$%s holds %f, which is not a whole number of at least %d", where, name, v,
+                 static_cast<int>(minimum));
+    }
+  }
+  return arma::conv_to<arma::uvec>::from(values - minimum);
+}
+
+/// A constraint set from its R list, the six elements of the model file's
+/// group; empty when the element is absent or NULL.
+inline bayests::Constraints read_constraints(const Rcpp::List &parent, const char *name,
+                                             const char *where)
+{
+  bayests::Constraints c;
+  if (!has(parent, name) || Rf_isNull(parent[name])) {
+    return c;
+  }
+  const Rcpp::List group = parent[name];
+  for (const char *member : {"value", "group", "row", "period", "variable", "weight"}) {
+    if (!has(group, member)) {
+      Rcpp::stop("%s has no '%s': a constraint set is value, group, row, period, variable and "
+                 "weight together", where, member);
+    }
+  }
+  c.value = Rcpp::as<arma::vec>(group["value"]);
+  c.group = read_counted(group, "group", 0.0, where);
+  c.row = read_counted(group, "row", 1.0, where);
+  c.period = read_counted(group, "period", 1.0, where);
+  c.variable = read_counted(group, "variable", 1.0, where);
+  c.weight = Rcpp::as<arma::vec>(group["weight"]);
+  return c;
+}
+
+template <typename Input>
+void read_extensions(const Rcpp::List &object, Input &input)
+{
+  if (has(object, "data")) {
+    const Rcpp::List data = object["data"];
+    if (has(data, "train")) {
+      input.train.constraints = read_constraints(data["train"], "constraints",
+                                                 "data$train$constraints");
+    }
+    if (has(data, "test")) {
+      input.test.constraints = read_constraints(data["test"], "constraints",
+                                                "data$test$constraints");
+    }
+    if constexpr (has_forecast_constraints<Input>::value) {
+      if (has(data, "forecast")) {
+        input.forecast.constraints = read_constraints(data["forecast"], "constraints",
+                                                      "data$forecast$constraints");
+      }
+    }
+  }
+
+  const Rcpp::List priors = has(object, "priors") ? Rcpp::List(object["priors"]) : Rcpp::List();
+  const Rcpp::List initial = has(object, "initial") ? Rcpp::List(object["initial"]) : Rcpp::List();
+
+  if constexpr (has_constraints_prior<Input>::value) {
+    if (has(priors, "constraints")) {
+      input.constraints_prior = read_gamma_prior(priors["constraints"]);
+    }
+    read_vec_if_present(initial, "constraints_inv", input.initial.constraints_inv);
+  }
+  if constexpr (has_shrinkage_prior<Input>::value) {
+    if (has(priors, "a")) {
+      const Rcpp::List prior_a = priors["a"];
+      if (has(prior_a, "shrinkage")) {
+        const Rcpp::List shrinkage = prior_a["shrinkage"];
+        if (has(shrinkage, "group")) {
+          input.a_shrinkage_prior.group = read_counted(shrinkage, "group", 0.0,
+                                                       "priors$a$shrinkage");
+        }
+        read_vec_if_present(shrinkage, "shape", input.a_shrinkage_prior.shape);
+        read_vec_if_present(shrinkage, "rate", input.a_shrinkage_prior.rate);
+      }
+    }
+    read_vec_if_present(initial, "a_shrinkage", input.initial.a_shrinkage);
+    read_vec_if_present(initial, "a_local", input.initial.a_local);
+  }
+  if constexpr (has_mu_prior<Input>::value) {
+    if (has(priors, "mu")) {
+      input.mu_prior = read_normal_prior(priors["mu"]);
+    }
+    read_vec_if_present(initial, "mu", input.initial.mu);
+  }
+}
+
+template <typename Draws>
+void read_draw_extensions(const Rcpp::List &object, Draws &draws)
+{
+  if (!has(object, "posterior")) {
+    return;
+  }
+  const Rcpp::List posterior = object["posterior"];
+  if constexpr (has_completion_draws<Draws>::value) {
+    if (has(posterior, "y")) {
+      read_draws_if_present(posterior["y"], "coeffs", draws.y);
+    }
+    if (has(posterior, "constraints_inv")) {
+      read_draws_if_present(posterior["constraints_inv"], "coeffs", draws.constraints_inv);
+    }
+  }
+  if constexpr (has_shrinkage_draws<Draws>::value) {
+    if (has(posterior, "a") && Rf_isNewList(posterior["a"])) {
+      const Rcpp::List a = posterior["a"];
+      read_draws_if_present(a, "shrinkage", draws.a_shrinkage);
+      read_draws_if_present(a, "local", draws.a_local);
+    }
+  }
+  if constexpr (has_mu_draws<Draws>::value) {
+    if (has(posterior, "mu")) {
+      read_draws_if_present(posterior["mu"], "coeffs", draws.mu);
+    }
+  }
+}
+
+template <typename Draws>
+void write_draw_extensions(Rcpp::List &posteriors, const Draws &draws)
+{
+  if constexpr (has_completion_draws<Draws>::value) {
+    if (draws.y.n_elem > 0) {
+      posteriors.push_back(Rcpp::List::create(Rcpp::Named("coeffs") = draws_to_r(draws.y)), "y");
+    }
+    if (draws.constraints_inv.n_elem > 0) {
+      posteriors.push_back(
+          Rcpp::List::create(Rcpp::Named("coeffs") = draws_to_r(draws.constraints_inv)),
+          "constraints_inv");
+    }
+  }
+  if constexpr (has_shrinkage_draws<Draws>::value) {
+    if (draws.a_shrinkage.n_elem > 0 && posteriors.containsElementNamed("a") &&
+        Rf_isNewList(posteriors["a"])) {
+      Rcpp::List a(Rf_shallow_duplicate(posteriors["a"]));
+      a.push_back(draws_to_r(draws.a_shrinkage), "shrinkage");
+      if (draws.a_local.n_elem > 0) {
+        a.push_back(draws_to_r(draws.a_local), "local");
+      }
+      posteriors["a"] = a;
+    }
+  }
+  if constexpr (has_mu_draws<Draws>::value) {
+    if (draws.mu.n_elem > 0) {
+      posteriors.push_back(Rcpp::List::create(Rcpp::Named("coeffs") = draws_to_r(draws.mu)), "mu");
+    }
+  }
 }
 
 } // namespace bayests_r

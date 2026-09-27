@@ -3,7 +3,11 @@
 
 #include "bayests/inputs.h"
 
+#include "core/models/completion_support.h"
+#include "core/models/constraint_support.h"
 #include "core/models/model_support.h"
+#include "core/models/shrinkage_support.h"
+#include "core/models/steady_state_support.h"
 
 #include <algorithm>
 #include <cmath>
@@ -733,6 +737,18 @@ namespace bayests
 void VarNormalWishartInput::validate() const
 {
     core::require_supported_iid_block(spec, true, "VarNormalWishart");
+    core::require_supported_shrinkage(spec, true, "VarNormalWishart");
+    core::require_supported_steady_state(spec, true, "VarNormalWishart");
+    core::require_steady_state(spec, true, train, a_prior, mu_prior, initial.mu, "VarNormalWishart");
+    core::validate_shrinkage(spec.shrinkage, a_shrinkage_prior, a_prior, initial.a_shrinkage,
+                             initial.a_local, "a");
+    // What this sampler does not do with constraints yet is refused first, so the
+    // message names that rather than a shape the set was never going to be read in.
+    core::require_completion_spec(spec, train, forecast, test, "VarNormalWishart");
+    core::require_supported_constraints(spec, train, test, true, "VarNormalWishart");
+    core::require_supported_forecast_constraints(spec, forecast, true, "VarNormalWishart");
+    core::require_soft_prior(train.constraints, constraints_prior, initial.constraints_inv,
+                             "VarNormalWishart");
     // Before anything that would read a value: a NaN or an infinity here would
     // otherwise surface as a failed factorisation, or as NaN in the output.
     core::require_finite_observations(train, forecast, test);
@@ -770,6 +786,16 @@ void VarNormalWishartInput::validate() const
 void VarNormalGammaInput::validate() const
 {
     core::require_supported_iid_block(spec, true, "VarNormalGamma");
+    core::require_supported_shrinkage(spec, true, "VarNormalGamma");
+    core::require_supported_steady_state(spec, true, "VarNormalGamma");
+    core::require_steady_state(spec, true, train, a_prior, mu_prior, initial.mu, "VarNormalGamma");
+    core::validate_shrinkage(spec.shrinkage, a_shrinkage_prior, a_prior, initial.a_shrinkage,
+                             initial.a_local, "a");
+    core::require_completion_spec(spec, train, forecast, test, "VarNormalGamma");
+    core::require_supported_constraints(spec, train, test, true, "VarNormalGamma");
+    core::require_supported_forecast_constraints(spec, forecast, true, "VarNormalGamma");
+    core::require_soft_prior(train.constraints, constraints_prior, initial.constraints_inv,
+                             "VarNormalGamma");
     // Before anything that would read a value: a NaN or an infinity here would
     // otherwise surface as a failed factorisation, or as NaN in the output.
     core::require_finite_observations(train, forecast, test);
@@ -820,6 +846,19 @@ void VarNormalGammaInput::validate() const
 void VarNormalStochvolInput::validate() const
 {
     core::require_supported_iid_block(spec, true, "VarNormalStochvol");
+    core::require_supported_shrinkage(spec, true, "VarNormalStochvol");
+    core::require_supported_steady_state(spec, true, "VarNormalStochvol");
+    core::require_steady_state(spec, true, train, a_prior, mu_prior, initial.mu, "VarNormalStochvol");
+    core::validate_shrinkage(spec.shrinkage, a_shrinkage_prior, a_prior, initial.a_shrinkage,
+                             initial.a_local, "a");
+    // A panel not observed whole is estimated; a score from one, a horizon
+    // realised in part and a scenario are refused, the forecast carrying
+    // states forward that the completion step over the horizon does not yet.
+    core::require_supported_forecast_constraints(spec, forecast, false, "VarNormalStochvol");
+    core::require_completion_spec(spec, train, forecast, test, "VarNormalStochvol", false);
+    core::require_supported_constraints(spec, train, test, true, "VarNormalStochvol");
+    core::require_soft_prior(train.constraints, constraints_prior, initial.constraints_inv,
+                             "VarNormalStochvol");
     // Before anything that would read a value: a NaN or an infinity here would
     // otherwise surface as a failed factorisation, or as NaN in the output.
     core::require_finite_observations(train, forecast, test);
@@ -886,6 +925,10 @@ void VarNormalStochvolInput::validate() const
 void VarNormalAldInput::validate() const
 {
     core::require_supported_iid_block(spec, true, "VarNormalAld");
+    core::require_supported_shrinkage(spec, false, "VarNormalAld");
+    core::require_supported_steady_state(spec, false, "VarNormalAld");
+    core::require_supported_constraints(spec, train, test, false, "VarNormalAld");
+    core::require_supported_forecast_constraints(spec, forecast, false, "VarNormalAld");
     // Before anything that would read a value: a NaN or an infinity here would
     // otherwise surface as a failed factorisation, or as NaN in the output.
     core::require_finite_observations(train, forecast, test);
@@ -917,6 +960,10 @@ void VarNormalAldInput::validate() const
 void VarTvpAldInput::validate() const
 {
     core::require_supported_iid_block(spec, false, "VarTvpAld");
+    core::require_supported_shrinkage(spec, false, "VarTvpAld");
+    core::require_supported_steady_state(spec, false, "VarTvpAld");
+    core::require_supported_constraints(spec, train, test, false, "VarTvpAld");
+    core::require_supported_forecast_constraints(spec, forecast, false, "VarTvpAld");
     // Before anything that would read a value: a NaN or an infinity here would
     // otherwise surface as a failed factorisation, or as NaN in the output.
     core::require_finite_observations(train, forecast, test);
@@ -953,6 +1000,16 @@ void VarTvpAldInput::validate() const
 void VarTvpGammaInput::validate() const
 {
     core::require_supported_iid_block(spec, false, "VarTvpGamma");
+    core::require_supported_shrinkage(spec, false, "VarTvpGamma");
+    core::require_supported_steady_state(spec, false, "VarTvpGamma");
+    // A panel not observed whole is estimated; a score from one, a horizon
+    // realised in part and a scenario are refused, the forecast carrying
+    // states forward that the completion step over the horizon does not yet.
+    core::require_supported_forecast_constraints(spec, forecast, false, "VarTvpGamma");
+    core::require_completion_spec(spec, train, forecast, test, "VarTvpGamma", false);
+    core::require_supported_constraints(spec, train, test, true, "VarTvpGamma");
+    core::require_soft_prior(train.constraints, constraints_prior, initial.constraints_inv,
+                             "VarTvpGamma");
     // Before anything that would read a value: a NaN or an infinity here would
     // otherwise surface as a failed factorisation, or as NaN in the output.
     core::require_finite_observations(train, forecast, test);
@@ -1010,6 +1067,16 @@ void VarTvpGammaInput::validate() const
 void VarTvpWishartInput::validate() const
 {
     core::require_supported_iid_block(spec, false, "VarTvpWishart");
+    core::require_supported_shrinkage(spec, false, "VarTvpWishart");
+    core::require_supported_steady_state(spec, false, "VarTvpWishart");
+    // A panel not observed whole is estimated; a score from one, a horizon
+    // realised in part and a scenario are refused, the forecast carrying
+    // states forward that the completion step over the horizon does not yet.
+    core::require_supported_forecast_constraints(spec, forecast, false, "VarTvpWishart");
+    core::require_completion_spec(spec, train, forecast, test, "VarTvpWishart", false);
+    core::require_supported_constraints(spec, train, test, true, "VarTvpWishart");
+    core::require_soft_prior(train.constraints, constraints_prior, initial.constraints_inv,
+                             "VarTvpWishart");
     // Before anything that would read a value: a NaN or an infinity here would
     // otherwise surface as a failed factorisation, or as NaN in the output.
     core::require_finite_observations(train, forecast, test);
@@ -1061,6 +1128,16 @@ void VarTvpWishartInput::validate() const
 void VarTvpStochvolInput::validate() const
 {
     core::require_supported_iid_block(spec, false, "VarTvpStochvol");
+    core::require_supported_shrinkage(spec, false, "VarTvpStochvol");
+    core::require_supported_steady_state(spec, false, "VarTvpStochvol");
+    // A panel not observed whole is estimated; a score from one, a horizon
+    // realised in part and a scenario are refused, the forecast carrying
+    // states forward that the completion step over the horizon does not yet.
+    core::require_supported_forecast_constraints(spec, forecast, false, "VarTvpStochvol");
+    core::require_completion_spec(spec, train, forecast, test, "VarTvpStochvol", false);
+    core::require_supported_constraints(spec, train, test, true, "VarTvpStochvol");
+    core::require_soft_prior(train.constraints, constraints_prior, initial.constraints_inv,
+                             "VarTvpStochvol");
     // Before anything that would read a value: a NaN or an infinity here would
     // otherwise surface as a failed factorisation, or as NaN in the output.
     core::require_finite_observations(train, forecast, test);
@@ -1355,6 +1432,10 @@ void validate_wishart_block(const WishartPrior &prior, const arma::mat &initial,
 void VecNormalWishartInput::validate() const
 {
     core::require_supported_iid_block(spec, false, "VecNormalWishart");
+    core::require_supported_shrinkage(spec, false, "VecNormalWishart");
+    core::require_supported_steady_state(spec, false, "VecNormalWishart");
+    core::require_supported_constraints(spec, train, test, false, "VecNormalWishart");
+    core::require_supported_forecast_constraints(spec, forecast, false, "VecNormalWishart");
     // Before anything that would read a value: a NaN or an infinity here would
     // otherwise surface as a failed factorisation, or as NaN in the output.
     core::require_finite_observations(train, forecast, test);
@@ -1534,6 +1615,9 @@ void validate_dfm_stochvol_block(const StochvolPrior &prior, const arma::mat &h,
 void DfmNormalGammaInput::validate() const
 {
     core::require_supported_iid_block(spec, false, "DfmNormalGamma");
+    core::require_supported_shrinkage(spec, false, "DfmNormalGamma");
+    core::require_supported_steady_state(spec, false, "DfmNormalGamma");
+    core::require_supported_constraints(spec, train, test, false, "DfmNormalGamma");
     // Before anything that would read a value: a NaN or an infinity here would
     // otherwise surface as a failed factorisation, or as NaN in the output.
     core::require_finite_observations(train, test);
@@ -1551,6 +1635,9 @@ void DfmNormalGammaInput::validate() const
 void DfmTvpGammaInput::validate() const
 {
     core::require_supported_iid_block(spec, false, "DfmTvpGamma");
+    core::require_supported_shrinkage(spec, false, "DfmTvpGamma");
+    core::require_supported_steady_state(spec, false, "DfmTvpGamma");
+    core::require_supported_constraints(spec, train, test, false, "DfmTvpGamma");
     // Before anything that would read a value: a NaN or an infinity here would
     // otherwise surface as a failed factorisation, or as NaN in the output.
     core::require_finite_observations(train, test);
@@ -1593,6 +1680,9 @@ void DfmTvpGammaInput::validate() const
 void DfmTvpStochvolInput::validate() const
 {
     core::require_supported_iid_block(spec, false, "DfmTvpStochvol");
+    core::require_supported_shrinkage(spec, false, "DfmTvpStochvol");
+    core::require_supported_steady_state(spec, false, "DfmTvpStochvol");
+    core::require_supported_constraints(spec, train, test, false, "DfmTvpStochvol");
     // Before anything that would read a value: a NaN or an infinity here would
     // otherwise surface as a failed factorisation, or as NaN in the output.
     core::require_finite_observations(train, test);
@@ -1634,6 +1724,9 @@ void DfmTvpStochvolInput::validate() const
 void DfmNormalStochvolInput::validate() const
 {
     core::require_supported_iid_block(spec, false, "DfmNormalStochvol");
+    core::require_supported_shrinkage(spec, false, "DfmNormalStochvol");
+    core::require_supported_steady_state(spec, false, "DfmNormalStochvol");
+    core::require_supported_constraints(spec, train, test, false, "DfmNormalStochvol");
     // Before anything that would read a value: a NaN or an infinity here would
     // otherwise surface as a failed factorisation, or as NaN in the output.
     core::require_finite_observations(train, test);
@@ -1664,6 +1757,9 @@ void DfmNormalStochvolInput::validate() const
 void FavarNormalWishartInput::validate() const
 {
     core::require_supported_iid_block(spec, false, "FavarNormalWishart");
+    core::require_supported_shrinkage(spec, false, "FavarNormalWishart");
+    core::require_supported_steady_state(spec, false, "FavarNormalWishart");
+    core::require_supported_constraints(spec, train, test, false, "FavarNormalWishart");
     // Before anything that would read a value: a NaN or an infinity here would
     // otherwise surface as a failed factorisation, or as NaN in the output.
     core::require_finite_observations(train, test);
@@ -1738,6 +1834,10 @@ void FavarNormalWishartInput::validate() const
 void VecKlgs2010Input::validate() const
 {
     core::require_supported_iid_block(spec, false, "VecKlgs2010");
+    core::require_supported_shrinkage(spec, false, "VecKlgs2010");
+    core::require_supported_steady_state(spec, false, "VecKlgs2010");
+    core::require_supported_constraints(spec, train, test, false, "VecKlgs2010");
+    core::require_supported_forecast_constraints(spec, forecast, false, "VecKlgs2010");
     // Before anything that would read a value: a NaN or an infinity here would
     // otherwise surface as a failed factorisation, or as NaN in the output.
     core::require_finite_observations(train, forecast, test);
@@ -1789,6 +1889,10 @@ void VecKlgs2010Input::validate() const
 void VecNormalGammaInput::validate() const
 {
     core::require_supported_iid_block(spec, false, "VecNormalGamma");
+    core::require_supported_shrinkage(spec, false, "VecNormalGamma");
+    core::require_supported_steady_state(spec, false, "VecNormalGamma");
+    core::require_supported_constraints(spec, train, test, false, "VecNormalGamma");
+    core::require_supported_forecast_constraints(spec, forecast, false, "VecNormalGamma");
     // Before anything that would read a value: a NaN or an infinity here would
     // otherwise surface as a failed factorisation, or as NaN in the output.
     core::require_finite_observations(train, forecast, test);
@@ -1842,6 +1946,10 @@ void VecNormalGammaInput::validate() const
 void VecNormalStochvolInput::validate() const
 {
     core::require_supported_iid_block(spec, false, "VecNormalStochvol");
+    core::require_supported_shrinkage(spec, false, "VecNormalStochvol");
+    core::require_supported_steady_state(spec, false, "VecNormalStochvol");
+    core::require_supported_constraints(spec, train, test, false, "VecNormalStochvol");
+    core::require_supported_forecast_constraints(spec, forecast, false, "VecNormalStochvol");
     // Before anything that would read a value: a NaN or an infinity here would
     // otherwise surface as a failed factorisation, or as NaN in the output.
     core::require_finite_observations(train, forecast, test);
@@ -1904,6 +2012,10 @@ void VecNormalStochvolInput::validate() const
 void VecTvpWishartInput::validate() const
 {
     core::require_supported_iid_block(spec, false, "VecTvpWishart");
+    core::require_supported_shrinkage(spec, false, "VecTvpWishart");
+    core::require_supported_steady_state(spec, false, "VecTvpWishart");
+    core::require_supported_constraints(spec, train, test, false, "VecTvpWishart");
+    core::require_supported_forecast_constraints(spec, forecast, false, "VecTvpWishart");
     // Before anything that would read a value: a NaN or an infinity here would
     // otherwise surface as a failed factorisation, or as NaN in the output.
     core::require_finite_observations(train, forecast, test);
@@ -1939,6 +2051,10 @@ void VecTvpWishartInput::validate() const
 void VecTvpGammaInput::validate() const
 {
     core::require_supported_iid_block(spec, false, "VecTvpGamma");
+    core::require_supported_shrinkage(spec, false, "VecTvpGamma");
+    core::require_supported_steady_state(spec, false, "VecTvpGamma");
+    core::require_supported_constraints(spec, train, test, false, "VecTvpGamma");
+    core::require_supported_forecast_constraints(spec, forecast, false, "VecTvpGamma");
     // Before anything that would read a value: a NaN or an infinity here would
     // otherwise surface as a failed factorisation, or as NaN in the output.
     core::require_finite_observations(train, forecast, test);
@@ -1987,6 +2103,10 @@ void VecTvpGammaInput::validate() const
 void VecTvpStochvolInput::validate() const
 {
     core::require_supported_iid_block(spec, false, "VecTvpStochvol");
+    core::require_supported_shrinkage(spec, false, "VecTvpStochvol");
+    core::require_supported_steady_state(spec, false, "VecTvpStochvol");
+    core::require_supported_constraints(spec, train, test, false, "VecTvpStochvol");
+    core::require_supported_forecast_constraints(spec, forecast, false, "VecTvpStochvol");
     // Before anything that would read a value: a NaN or an infinity here would
     // otherwise surface as a failed factorisation, or as NaN in the output.
     core::require_finite_observations(train, forecast, test);

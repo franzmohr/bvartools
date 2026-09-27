@@ -167,6 +167,15 @@ read_model_from_hdf5 <- function(filename, group = "", draws = NULL) {
         }
       }
     }
+
+    # What was observed of a panel not observed whole; see write_to_hdf5().
+    for (i in c("train", "test", "forecast")) {
+      if (i %in% names(h5_root[["data"]]) &&
+          "constraints" %in% names(h5_root[["data"]][[i]])) {
+        result[["data"]][[i]][["constraints"]] <-
+          .hdf5_read_constraints(h5_root[["data"]][[i]][["constraints"]])
+      }
+    }
   }
   
   
@@ -177,7 +186,16 @@ read_model_from_hdf5 <- function(filename, group = "", draws = NULL) {
     for (i in names(h5_root[["priors"]])) {
       result[["priors"]][[i]] <- list()
       for (j in names(h5_root[["priors"]][[i]])) {
-        result[["priors"]][[i]][[j]] <- .hdf5_read_value(h5_root[["priors"]][[i]][[j]])
+        element <- h5_root[["priors"]][[i]][[j]]
+        if (inherits(element, "H5Group")) {
+          # A prior of its own below the block's: a$shrinkage.
+          result[["priors"]][[i]][[j]] <- list()
+          for (l in names(element)) {
+            result[["priors"]][[i]][[j]][[l]] <- .hdf5_read_value(element[[l]])
+          }
+        } else {
+          result[["priors"]][[i]][[j]] <- .hdf5_read_value(element)
+        }
       }
     }
   }

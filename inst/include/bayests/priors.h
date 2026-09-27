@@ -22,6 +22,34 @@ struct NormalPrior
     arma::mat v_inv;
 };
 
+/// The groups and hyperparameters of an adaptive prior on a block of
+/// coefficients, the scheme itself being VarSpec::shrinkage.
+///
+/// Coefficient j of the block has base prior precision v_inv(j, j) from its
+/// NormalPrior, which has to be diagonal wherever a coefficient is shrunk.
+/// Under `minnesota` its prior variance is s_g / v_inv(j, j), s_g the scale of
+/// its group, with s_g ~ IG(shape_g, rate_g): the hierarchical Minnesota prior
+/// of Chan (2021), own lags, other lags and whatever else the host groups
+/// sharing a scale the data choose. Under `horseshoe` it is
+/// tau_g^2 lambda_j^2 / v_inv(j, j) with half-Cauchy global and local scales,
+/// drawn through the auxiliary inverse gammas of Makalic and Schmidt (2016);
+/// shape and rate are not read.
+///
+/// Carvalho, Polson and Scott (2010), The horseshoe estimator for sparse
+/// signals; Makalic and Schmidt (2016), A simple sampler for the horseshoe
+/// estimator; Chan (2021), Minnesota-type adaptive hierarchical priors for
+/// large Bayesian VARs.
+struct ShrinkagePrior
+{
+    /// One per coefficient of the block: its group, 1..G with none left out,
+    /// or 0 where its prior stays as given.
+    arma::uvec group;
+
+    /// One per group, `minnesota` only: the inverse gamma on the group's scale.
+    arma::vec shape;
+    arma::vec rate;
+};
+
 /// Prior on the cointegration space of Koop, Leon-Gonzalez and Strachan (2010).
 ///
 /// The semi-orthogonal k_beta x rank matrix beta has the matrix angular central

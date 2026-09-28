@@ -58,7 +58,8 @@
 #'   \item{\code{mu}}{under a steady-state prior, the \eqn{K} unconditional means. Under an
 #'   adaptive prior, \code{a} holds the scales of its groups in element \code{shrinkage}
 #'   and, for the horseshoe and the normal-gamma prior, the scales of its coefficients
-#'   in \code{local}. See
+#'   in \code{local}; where the normal-gamma prior draws \eqn{\theta}, its draws are in
+#'   \code{theta}. See
 #'   \code{\link{add_prior_options}}.}
 #' }
 #' Elements that do not apply to a model are absent or \code{NULL}. Note that
@@ -159,7 +160,7 @@ add_posterior_coefficients.bvarmodel <- function(object, posterior_function = NU
     # adaptive prior on the coefficients.
     for (i in c("a", "psi", "u_sigma_inv", "u_omega_inv", "u_scale", "y", "constraints_inv", "mu")) {
       for (j in c("coeffs", "lambda", "sigma", "omega", "omega_log_zero", "omega_log_zero_joint",
-                  "shrinkage", "local")) {
+                  "shrinkage", "local", "theta")) {
         if (!is.null(object[["posterior"]][[i]][[j]])) {
           object[["posterior"]][[i]][[j]] <- .mcmc_draws(object[["model"]], object[["posterior"]][[i]][[j]])
         }

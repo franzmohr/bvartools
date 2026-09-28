@@ -25,6 +25,9 @@ struct VarNormalWishartInitial
     /// Empty starts them at one.
     arma::vec a_shrinkage;
     arma::vec a_local;
+    /// The starting theta_g of a normal-gamma prior that draws it, one per
+    /// group. Empty starts each at its prior mean, 1 / theta_rate_g.
+    arma::vec a_theta;
     /// The unconditional mean the chain starts from under VarSpec::steady_state.
     arma::vec mu;
 };
@@ -87,6 +90,9 @@ struct VarNormalGammaInitial
     /// Empty starts them at one.
     arma::vec a_shrinkage;
     arma::vec a_local;
+    /// The starting theta_g of a normal-gamma prior that draws it, one per
+    /// group. Empty starts each at its prior mean, 1 / theta_rate_g.
+    arma::vec a_theta;
     /// The unconditional mean the chain starts from under VarSpec::steady_state.
     arma::vec mu;
 };
@@ -151,6 +157,9 @@ struct VarNormalStochvolInitial
     /// Empty starts them at one.
     arma::vec a_shrinkage;
     arma::vec a_local;
+    /// The starting theta_g of a normal-gamma prior that draws it, one per
+    /// group. Empty starts each at its prior mean, 1 / theta_rate_g.
+    arma::vec a_theta;
     /// The unconditional mean the chain starts from under VarSpec::steady_state.
     arma::vec mu;
 };

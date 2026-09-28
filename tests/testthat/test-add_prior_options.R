@@ -71,6 +71,30 @@ test_that("the normal-gamma prior has one global rate per lag order", {
   expect_equal(back$model$shrinkage, "normal_gamma")
 })
 
+test_that("theta of the normal-gamma prior can be drawn", {
+  expect_error(add_prior_options(po_model(), shrinkage = list(type = "normal_gamma", theta = 0.1,
+                                                              theta_rate = 1)),
+               "not both")
+  model <- add_prior_options(po_model(), shrinkage = list(type = "normal_gamma", theta_rate = 1))
+  expect_null(model[["priors"]][["a"]][["shrinkage"]][["theta"]])
+  expect_equal(as.numeric(model$priors$a$shrinkage$theta_rate), c(1, 1))
+
+  set.seed(11)
+  model <- add_posterior_coefficients(add_initial_values(model))
+  expect_s3_class(model$posterior$a$theta, "mcmc")
+  expect_equal(dim(model$posterior$a$theta), c(fx_iterations, 2))
+  expect_true(all(model$posterior$a$theta > 0))
+
+  skip_if_not_installed("hdf5r")
+  file <- tempfile(fileext = ".h5")
+  on.exit(unlink(file))
+  write_to_hdf5(model, file)
+  back <- read_model_from_hdf5(file)
+  expect_equal(as.numeric(back$priors$a$shrinkage$theta_rate), c(1, 1))
+  expect_equal(unclass(back$posterior$a$theta), unclass(model$posterior$a$theta),
+               ignore_attr = TRUE)
+})
+
 test_that("every kept draw is stationary under the stationarity condition", {
   set.seed(7)
   model <- add_posterior_coefficients(add_initial_values(

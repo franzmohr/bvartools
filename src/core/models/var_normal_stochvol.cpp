@@ -182,13 +182,18 @@ VarNormalStochvolDraws VarNormalStochvolSampler::draw_coefficients(
     // stationary draw and kept the one before; see shrinkage_support.h. Both
     // idle -- no random number, no rescaled prior -- unless /model asks.
     core::CoefficientShrinkage shrinkage(input.spec.shrinkage, input.a_shrinkage_prior, input.a_prior,
-                                         input.initial.a_shrinkage, input.initial.a_local);
+                                         input.initial.a_shrinkage, input.initial.a_local,
+                                         input.initial.a_theta, input.spec.burnin);
     if (shrinkage.active())
     {
         out.a_shrinkage = arma::mat(shrinkage.groups(), iterations);
         if (core::shrinkage_has_local(input.spec.shrinkage))
         {
             out.a_local = arma::mat(nparams, iterations);
+        }
+        if (shrinkage.draws_theta())
+        {
+            out.a_theta = arma::mat(shrinkage.groups(), iterations);
         }
     }
     int unstationary_sweeps = 0;
@@ -373,6 +378,10 @@ VarNormalStochvolDraws VarNormalStochvolSampler::draw_coefficients(
                 if (core::shrinkage_has_local(input.spec.shrinkage))
                 {
                     out.a_local.col(draw_pos) = shrinkage.local();
+                }
+                if (shrinkage.draws_theta())
+                {
+                    out.a_theta.col(draw_pos) = shrinkage.theta();
                 }
             }
             completion.store(out.y, out.constraints_inv, static_cast<arma::uword>(draw_pos), y);

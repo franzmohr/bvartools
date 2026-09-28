@@ -110,7 +110,8 @@ block is a list whose \code{coeffs} carries the draws:
   \item{\code{mu}}{The unconditional means under a steady-state prior,
   \eqn{K} columns. Under an adaptive prior \code{a} adds \code{shrinkage},
   the scales of its groups, and for the horseshoe and the normal-gamma prior
-  \code{local}, one scale per coefficient.}
+  \code{local}, one scale per coefficient, and \code{theta} where the
+  normal-gamma prior draws it.}
   \item{\code{beta}}{The cointegration vectors of a VEC model,
   \eqn{k_\beta r} columns, and \code{rho} where a time-varying cointegration
   space put a prior on its state autoregression.}

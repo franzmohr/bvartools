@@ -19,7 +19,8 @@ result of \code{\link{add_priors}}.}
 \item{shrinkage}{a character, \code{"none"} (default), \code{"minnesota"},
 \code{"horseshoe"} or \code{"normal_gamma"}, or a list with element
 \code{type} naming one of them and elements \code{group}, \code{shape},
-\code{rate} and, for \code{"normal_gamma"}, \code{theta}. See 'Details'.}
+\code{rate} and, for \code{"normal_gamma"}, \code{theta} or \code{theta_rate}.
+See 'Details'.}
 
 \item{stationary}{logical. If \code{TRUE}, every draw of the coefficients
 is a stationary model. Defaults to \code{FALSE}.}
@@ -69,7 +70,10 @@ the coefficients:
  \eqn{l} form group \eqn{l}, with \code{theta = 0.1} and
  \code{shape = rate = 0.01}. \code{theta} is held fixed; the smaller it is,
  the more the prior pushes small coefficients to zero while leaving large
- ones alone.
+ ones alone. Give \code{theta_rate} instead to draw \eqn{\theta} under an
+ exponential prior of that rate, by a Metropolis-Hastings step tuned during
+ the burn-in, as Huber and Feldkircher (2019) do; the draws come back as
+ \code{posterior$a$theta}, and the chain needs a burn-in to tune the step.
 }
 Coefficients in group 0 -- by default the deterministic terms and the
 exogenous variables -- keep the prior of \code{add_priors}. A \code{group} of

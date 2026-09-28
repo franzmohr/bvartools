@@ -77,6 +77,7 @@ Collate:
     'aggregate_forecasts.R'
     'align_model_obs.R'
     'align_model_obs.modellist.R'
+    'arias_rubio_ramirez_waggoner_2018.R'
     'bayests_files.R'
     'bayests_posterior.R'
     'bvar.R'

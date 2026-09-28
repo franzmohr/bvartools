@@ -4,7 +4,13 @@
 \alias{add_posterior_forecasts.bvarmodel}
 \title{Add Forecasts}
 \usage{
-\method{add_posterior_forecasts}{bvarmodel}(object, forecast_states = NULL, ...)
+\method{add_posterior_forecasts}{bvarmodel}(
+  object,
+  forecast_states = NULL,
+  scenario = NULL,
+  forecast_quantile = NULL,
+  ...
+)
 }
 \arguments{
 \item{object}{an object of class 'bvarmodel', usually, the result of a call
@@ -19,6 +25,22 @@ sample period, which gives forecasts conditional on no further drift and narrowe
 intervals, and is what earlier versions of the package did. If \code{NULL} (default),
 the value in \code{object$model$forecast_states} is used, and \code{"simulate"} when
 there is none. Models with constant coefficients and volatility are unaffected.}
+
+\item{scenario}{an optional data frame with columns \code{period}, \code{variable} and
+\code{value}, one row per value a variable is held at in a forecast period: a
+conditional forecast. \code{period} counts forecast periods from one and \code{variable}
+is a name or a position among the endogenous variables. It is stored in
+\code{data$forecast$constraints}, which is where the forecast reads it from; set that
+element to \code{NULL} to forecast without it again. Available for models with constant
+coefficients and \code{error = "wishart"} or \code{"gamma"}, and for a grid of quantiles.}
+
+\item{forecast_quantile}{for a grid of quantiles (see \code{quantile_grid} in
+\code{\link{create_bvarmodel}}), a level in \eqn{(0, 1)} every draw of the forecast is taken
+at, which gives quantile paths rather than draws from the predictive distribution: the
+paths of Chavleishvili and Manganelli (2019), whose difference with and without a
+\code{scenario} is an impulse response at that quantile. If \code{NULL} (default), the
+value in \code{object$model$forecast_quantile} is used, and the levels are drawn at random
+when there is none. Zero removes a stored one.}
 
 \item{...}{arguments passed forward to method.}
 }
@@ -68,6 +90,10 @@ model <- add_forecast_input(model, n_ahead = 4)
 model <- add_posterior_forecasts(model)
 
 
+}
+\references{
+Chavleishvili, S., & Manganelli, S. (2019). Forecasting and stress testing with quantile
+vector autoregression. \emph{ECB Working Paper}, 2330.
 }
 \seealso{
 \code{\link{bvartools_model}} describes the object this returns, element by element.

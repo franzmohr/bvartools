@@ -197,6 +197,7 @@ Collate:
     'spillover.bvarmodel.R'
     'spillover.expandingwindow.R'
     'spillover.modellist.R'
+    'split_quantile_grid.R'
     'ssvs_prior.R'
     'ssvs_prior.bvarmodel.R'
     'ssvs_prior.bvecmodel.R'

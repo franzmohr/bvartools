@@ -82,6 +82,7 @@ BSD 3-Clause portion
     src/core/models/model_support.h
     src/core/models/noncentred_support.h
     src/core/models/predictive_score.h
+    src/core/models/quantile_grid.h
     src/core/models/shrinkage_support.h
     src/core/models/steady_state_support.h
     src/core/models/var_normal_ald.cpp

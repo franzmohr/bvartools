@@ -49,7 +49,9 @@ add_posterior_loglik.bvarmodel <- function(object, ...) {
   if (.is_discount(object)) {
     return(.discount_loglik(object))
   }
-  if (is.null(object[["posterior"]][["u_sigma_inv"]][["coeffs"]])) {
+  # A quantile model split off a grid keeps its scales and no precisions.
+  if (is.null(object[["posterior"]][["u_sigma_inv"]][["coeffs"]]) &&
+      is.null(object[["posterior"]][["u_scale"]][["coeffs"]])) {
     stop("Object does not contain posterior draws in posterior$u_sigma_inv.")
   }
   
@@ -71,7 +73,7 @@ add_posterior_loglik.bvarmodel <- function(object, ...) {
   }
   
   # Calculate log likelihoods
-  temp_mcpar <- coda::mcpar(object[["posterior"]][["u_sigma_inv"]][["coeffs"]])
+  temp_mcpar <- .draws_mcpar(object)
   object[["posterior"]][["loglik"]] <- coda::mcmc(object[["posterior"]][["loglik"]], start = temp_mcpar[1], end = temp_mcpar[2], thin = temp_mcpar[3])
   
   return(object)

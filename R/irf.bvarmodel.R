@@ -118,6 +118,8 @@
 irf.bvarmodel <- function(x, impulse = NULL, response = NULL, n_ahead = 5, ci = .95, shock = 1,
                           type = "feir", cumulative = FALSE, keep_draws = FALSE, period = NULL,
                           impact = NULL, ...) {
+
+  .refuse_quantile_grid(x, "Impulse responses")
   
   if (!type %in% c("feir", "oir", "gir", "sir", "sgir", "sign", "custom")) {
     stop("Argument 'type' not known.")

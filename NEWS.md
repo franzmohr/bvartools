@@ -1,5 +1,24 @@
 # bvartools 1.0.0
 
+* **A grid of quantiles is one model: the structural quantile VAR of
+  Chavleishvili and Manganelli (2019).** With `quantile_grid = TRUE`,
+  `create_bvarmodel(error = "ald")` estimates every quantile in `quantile` as
+  one model rather than one model each. Each level is the chain its
+  single-quantile model would draw, and the draws are stacked level by level.
+  With `structural = TRUE` the grid describes each variable's whole
+  conditional distribution given the ones ordered before it: the quantiles are
+  sorted, interpolated linearly and continued by exponential tails.
+  `add_posterior_loglik()` scores that density, and
+  `add_posterior_forecasts()` simulates from it variable by variable, so a grid
+  forecasts where a single quantile still does not. `forecast_quantile` takes
+  every forecast draw at one level, and `scenario` pins variables in forecast
+  periods. The difference between quantile paths with and without a scenario
+  is the model's impulse response at that quantile. `scenario` also
+  conditions the forecasts of the constant-coefficient Wishart and gamma
+  models. `split_quantile_grid()` returns the single levels, which `summary()`,
+  `plot()` and `irf()` work on; on the grid itself they stop and say so. Draws
+  are unchanged for every model without a grid.
+
 * **`historical_decomposition()` decomposes the path of a variable into the
   contributions of the identified shocks.** For every posterior draw the
   structural shocks are recovered from the draw's residuals and impact matrix

@@ -7,7 +7,7 @@ project is here -- the core deliberately links neither HDF5 nor HighFive,
 prints nothing and reads no files, which is what makes it embeddable in an R
 package at all.
 
-The copy is **BayesTS `2f9f010`**, on the upstream branch `constraints-iid`
+The copy is **BayesTS `696dc7d`**, on the upstream branch `structural-qvar`
 (see the last paragraph of this section), upstream after the `v0.3.0` release
 (tagged on `18a86c2`). Past the release it carries the fix to
 `core/models/var_tvp_discount.cpp` (`2dc9250`), which is what makes
@@ -65,12 +65,11 @@ brings `VarSpec::n_iid`, `iid_block()` and `require_supported_iid_block()` in
 It reaches R through `iid` in `create_bvarmodel()` and `n_iid` in `read_spec()`
 of `bayests_r_io.h`. Draws are unchanged for every model that does not set it.
 
-The newest is `2f9f010`, the tip of upstream's `constraints-iid` branch, off
-`main` after `mf-constraints`, `normal-gamma-shrinkage` and `normal-gamma-theta`
-were merged into it with their commits unchanged; `constraints-iid` had not
-been merged when it was vendored: refresh again from `main` once they have, and correct
-this paragraph if the commit names moved. It brings the panel not observed
-whole and four options of the prior:
+The one before this one is `2f9f010`, the tip of upstream's `constraints-iid`
+branch, which has since been merged into `main` (`03956c5`) with every commit
+below unchanged, after `mf-constraints`, `normal-gamma-shrinkage` and
+`normal-gamma-theta`. It brings the panel not observed whole and four options
+of the prior:
 
 - **Constraints** (`567aa57`, `f28a79b`, `436f3a7`, `f6f985b`, `deed44a`,
   `8d82d18`, `90fa2ad`): `bayests::Constraints` in `data.h` on the training
@@ -107,6 +106,24 @@ no member for, and through `missing`, `aggregate` and `soft` in
 every model that uses none of them: upstream verified that over 145 fixtures
 for the first three, 148 for the normal-gamma prior and 151 for drawing theta, and the testthat suite
 here passes unchanged.
+
+The newest is `696dc7d`, the tip of upstream's `structural-qvar` branch, off
+`main` at `03956c5`; it had not been merged when it was vendored: refresh again
+from `main` once it has, and correct this paragraph if the commit names moved.
+It brings the structural quantile VAR of Chavleishvili and Manganelli (2019)
+(`2e4fe3e`, `696dc7d`): `VarSpec::quantiles` and `VarSpec::forecast_quantile`
+in `spec.h`, the distribution a grid of conditional quantiles describes in the
+new `core/models/quantile_grid.h`, and in `core/models/var_normal_ald.cpp` the
+grid's estimation (every level run as its single-quantile model, the draws
+stacked level by level), its simulated forecast with pins as a scenario and its
+log likelihood. `validate()` in `inputs.cpp` accepts a horizon on
+`VarNormalAld` with a grid and refuses the grid on `VarTvpAld`; `results.h`
+counts a grid's draws by its scales. It reaches R through `quantile_grid` in
+`create_bvarmodel()`, `quantiles` and `forecast_quantile` in `read_spec()` of
+`bayests_r_io.h`, `.VarNormalAldForecasts` in `src/VarNormalAld.cpp`, which now
+reads `data$forecast`, and `forecast_quantile` and `scenario` in
+`add_posterior_forecasts()`. Draws are unchanged for every model without a
+grid: upstream verified that over 154 fixtures.
 
 A refresh on 24 September 2026 copied nothing: `include/` and `src/core/` had
 not moved since `3425586`, though upstream `main` had. It also corrected the

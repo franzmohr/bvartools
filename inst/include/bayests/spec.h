@@ -5,6 +5,7 @@
 #define BAYESTS_SPEC_H
 
 #include <string>
+#include <vector>
 
 namespace bayests
 {
@@ -203,6 +204,23 @@ struct VarSpec
     /// with a vector of lag orders, and which lets the grid be run in parallel
     /// without the sampler knowing.
     double quantile = 0.5;
+
+    /// A grid of quantiles, strictly increasing in (0, 1), which turns
+    /// VarNormalAld into a structural quantile VAR (Chavleishvili and Manganelli
+    /// 2019): every quantile of the grid is estimated, and together they describe
+    /// each equation's whole conditional distribution, which a forecast can then
+    /// simulate. Empty for every other file, and `quantile` is read instead.
+    /// Only VarNormalAld reads it; see VarNormalAldSampler.
+    std::vector<double> quantiles;
+
+    /// Where a quantile grid forecasts, the quantile level every draw of the
+    /// simulation is taken at, in (0, 1) -- the quantile paths Chavleishvili and
+    /// Manganelli build impulse responses from. Zero, the default, draws the
+    /// levels at random, which simulates the predictive distribution.
+    double forecast_quantile = 0.0;
+
+    /// Whether `quantiles` holds a grid.
+    bool uses_quantile_grid() const { return !quantiles.empty(); }
 
     /// The two discount factors of `VarTvpDiscount`, each in (0, 1]. Like
     /// `quantile` they are continuous and every other model ignores them, and

@@ -573,11 +573,51 @@ void require_vec_regressors(const VarSpec &spec, bool use_a)
 /// means the file is rejected before a chain is spent on it.
 void validate_ald_spec(const VarSpec &spec)
 {
-    if (!(spec.quantile > 0.0 && spec.quantile < 1.0))
+    const bool grid = spec.uses_quantile_grid();
+    if (grid)
+    {
+        // A grid of quantiles: at least two, each in (0, 1), strictly
+        // increasing, so that between them they describe a distribution.
+        if (spec.quantiles.size() < 2)
+        {
+            throw std::invalid_argument(
+                "/model/quantiles needs at least two quantile levels to describe a distribution, "
+                "got " + std::to_string(spec.quantiles.size()));
+        }
+        for (std::size_t j = 0; j < spec.quantiles.size(); j++)
+        {
+            const double q = spec.quantiles[j];
+            if (!(q > 0.0 && q < 1.0))
+            {
+                throw std::invalid_argument("every level of /model/quantiles must lie in (0, 1), got " +
+                                            std::to_string(q));
+            }
+            if (j > 0 && !(q > spec.quantiles[j - 1]))
+            {
+                throw std::invalid_argument("/model/quantiles must be strictly increasing");
+            }
+        }
+    }
+    else if (!(spec.quantile > 0.0 && spec.quantile < 1.0))
     {
         throw std::invalid_argument(
             "the quantile of an asymmetric Laplace model must lie in (0, 1), got " +
             std::to_string(spec.quantile));
+    }
+
+    if (spec.forecast_quantile != 0.0)
+    {
+        if (!grid)
+        {
+            throw std::invalid_argument(
+                "/model/forecast_quantile is read by a quantile grid only, /model/quantiles");
+        }
+        if (!(spec.forecast_quantile > 0.0 && spec.forecast_quantile < 1.0))
+        {
+            throw std::invalid_argument("/model/forecast_quantile must lie in (0, 1), or be zero to "
+                                        "draw the levels at random; got " +
+                                        std::to_string(spec.forecast_quantile));
+        }
     }
 
     if (spec.covar)
@@ -587,12 +627,25 @@ void validate_ald_spec(const VarSpec &spec)
             "equations into each other leaves a residual whose quantile is not the one asked for");
     }
 
-    if (spec.h != 0)
+    if (spec.h != 0 && !grid)
     {
         throw std::invalid_argument(
             "a quantile regression model does not forecast, so its horizon must be zero, got " +
             std::to_string(spec.h) +
-            "; the h step quantile is not the quantile of the iterated one step quantiles");
+            "; the h step quantile is not the quantile of the iterated one step quantiles. A grid "
+            "of quantiles, /model/quantiles, describes the whole distribution and does forecast");
+    }
+
+    // A grid forecasts by drawing each variable from its conditional
+    // distribution given the ones before it. Without contemporaneous terms
+    // there is no "before": the equations model each variable given the past
+    // alone, and the draws would make the variables independent in every period.
+    if (spec.h != 0 && grid && spec.k > 1 && !spec.structural)
+    {
+        throw std::invalid_argument(
+            "a quantile grid forecasts from the recursive system of a structural model, in which "
+            "each variable's quantiles condition on the variables ordered before it: set "
+            "/model/structural, or forecast each variable in a model of its own");
     }
 
     if (spec.varsel == VarSelection::ssvs)
@@ -928,7 +981,23 @@ void VarNormalAldInput::validate() const
     core::require_supported_shrinkage(spec, false, "VarNormalAld");
     core::require_supported_steady_state(spec, false, "VarNormalAld");
     core::require_supported_constraints(spec, train, test, false, "VarNormalAld");
-    core::require_supported_forecast_constraints(spec, forecast, false, "VarNormalAld");
+    core::require_supported_forecast_constraints(spec, forecast, spec.uses_quantile_grid(),
+                                                 "VarNormalAld");
+    // A quantile grid's scenario pins values: each row one entry, held exactly.
+    // Anything else would ask for a distribution conditioned on a combination,
+    // which the recursive simulation does not draw from.
+    if (!forecast.constraints.empty())
+    {
+        const Constraints &c = forecast.constraints;
+        const arma::uvec counts = arma::hist(c.row, arma::regspace<arma::uvec>(0, c.value.n_elem - 1));
+        if (arma::any(c.group != 0) || arma::any(counts != 1) || arma::any(c.weight == 0.0))
+        {
+            throw std::invalid_argument(
+                "VarNormalAld reads /data/forecast/constraints as pins: every row one entry with a "
+                "non-zero weight, in group 0. A pinned value replaces the draw of that variable in "
+                "that period, and what follows responds to it");
+        }
+    }
     // Before anything that would read a value: a NaN or an infinity here would
     // otherwise surface as a failed factorisation, or as NaN in the output.
     core::require_finite_observations(train, forecast, test);
@@ -959,6 +1028,12 @@ void VarNormalAldInput::validate() const
 
 void VarTvpAldInput::validate() const
 {
+    if (spec.uses_quantile_grid() || spec.forecast_quantile != 0.0)
+    {
+        throw std::invalid_argument(
+            "VarTvpAld does not read /model/quantiles or /model/forecast_quantile: a grid of "
+            "quantiles is estimated by VarNormalAld only");
+    }
     core::require_supported_iid_block(spec, false, "VarTvpAld");
     core::require_supported_shrinkage(spec, false, "VarTvpAld");
     core::require_supported_steady_state(spec, false, "VarTvpAld");

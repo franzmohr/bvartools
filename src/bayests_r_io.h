@@ -206,6 +206,15 @@ inline bayests::VarSpec read_spec(const Rcpp::List &model, const char *covar_err
   // read rather than left alone: a model asked for the 0.8 quantile whose
   // spec never reaches the sampler estimates the median and says nothing.
   read_double_if_present(model, "quantile", spec.quantile);
+  // A grid of quantiles, which makes VarNormalAld the structural quantile VAR
+  // and supersedes `quantile`; absent unless create_bvarmodel() was given
+  // quantile_grid = TRUE. The level every forecast draw is taken at is absent
+  // unless add_posterior_forecasts() was given one, and zero then, which draws
+  // the levels at random.
+  if (has(model, "quantiles") && !Rf_isNull(model["quantiles"])) {
+    spec.quantiles = Rcpp::as<std::vector<double>>(model["quantiles"]);
+  }
+  read_double_if_present(model, "forecast_quantile", spec.forecast_quantile);
   // The two discount factors of VarTvpDiscount and VecTvpDiscount. One apiece
   // is VarSpec's default and the model in which the quantity they govern does
   // not move, so a specification that names neither is a constant coefficient

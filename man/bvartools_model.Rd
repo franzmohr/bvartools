@@ -30,7 +30,9 @@ directly. The layout below is the contract that makes that safe.
   is present only above one, and \code{algorithm} names the sampler that will
   draw it. A VEC model adds \code{rank}, \code{k_beta} and the deterministic
   terms restricted to the cointegration space; a quantile VAR adds
-  \code{quantile}. \code{\link{add_dummy_variables}} adds
+  \code{quantile}, or \code{quantiles} for a grid of them, and
+  \code{\link{add_posterior_forecasts}} a grid's \code{forecast_quantile}.
+  \code{\link{add_dummy_variables}} adds
   \code{dummy_variables}, the rule each of its dummies is continued by in a
   forecast. \code{\link{add_seed}} adds \code{seed},
   \code{\link{add_forecast_input}} adds \code{h} and
@@ -102,7 +104,9 @@ block is a list whose \code{coeffs} carries the draws:
   columns -- the whole matrix, not only its free elements -- with
   \code{lambda} and \code{sigma} as above.}
   \item{\code{u_scale}}{The scale of the asymmetric Laplace, \eqn{K} columns,
-  for a quantile VAR.}
+  for a quantile VAR, and \eqn{K} per level for a grid of quantiles, whose
+  \code{a} is stacked the same way and which keeps no \code{u_sigma_inv}
+  or \code{u_omega_inv}.}
   \item{\code{y}}{The completed panel of a VAR estimated from one not
   observed whole, \eqn{TK} columns stacked by period, and
   \code{constraints_inv} the error precisions of its soft constraints, one

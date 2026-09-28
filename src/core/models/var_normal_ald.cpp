@@ -4,15 +4,89 @@
 #include "bayests/var_normal_ald.h"
 
 #include "core/algorithms/bvs.h"
+#include "core/algorithms/triangular_packing.h"
 #include "core/models/ald_support.h"
 #include "core/models/model_support.h"
+#include "core/models/quantile_grid.h"
 
 #include <cmath>
 #include <optional>
 #include <stdexcept>
+#include <vector>
 
 namespace bayests
 {
+
+namespace
+{
+
+/// Progress over a whole quantile grid: each quantile's run reports its own
+/// draws, and this maps them onto one count, so a host sees a single bar.
+class GridReporter final : public Reporter
+{
+public:
+    GridReporter(Reporter &parent, const long long offset, const long long total)
+        : parent_(parent), offset_(offset), total_(total)
+    {
+    }
+    void message(const std::string &text) override { parent_.message(text); }
+    void progress(const long long done, const long long) override
+    {
+        parent_.progress(offset_ + done, total_);
+    }
+    void finish() override {}
+    void check_interrupt() override { parent_.check_interrupt(); }
+
+private:
+    Reporter &parent_;
+    long long offset_;
+    long long total_;
+};
+
+/// A uniform strictly inside (0, 1), so that a tail of the grid is never asked
+/// for the level zero.
+double open_uniform()
+{
+    double u = 0.0;
+    while (!(u > 0.0 && u < 1.0))
+    {
+        u = arma::randu<double>();
+    }
+    return u;
+}
+
+/// One draw's coefficients at every level of the grid: the k x n_x matrices
+/// and the contemporaneous matrices A_0, unit lower triangular.
+struct GridDraw
+{
+    std::vector<arma::mat> b;
+    std::vector<arma::mat> a0;
+};
+
+GridDraw grid_draw(const VarSpec &spec, const arma::mat &a, const arma::uword draw,
+                   const arma::uword n_x)
+{
+    const arma::uword k = static_cast<arma::uword>(spec.k);
+    const arma::uword n_levels = spec.quantiles.size();
+    const arma::uword n_structural = static_cast<arma::uword>(spec.n_structural());
+    const arma::uword nparams = a.n_rows / n_levels;
+    GridDraw out;
+    for (arma::uword j = 0; j < n_levels; j++)
+    {
+        const arma::vec level = a.col(draw).subvec(j * nparams, (j + 1) * nparams - 1);
+        out.b.push_back(n_x > 0 ? arma::mat(arma::reshape(level.head(k * n_x), k, n_x))
+                                : arma::mat(k, 0));
+        arma::mat a0 = arma::eye<arma::mat>(k, k);
+        if (spec.structural && n_structural > 0)
+        {
+            core::fill_strict_lower_triangle_by_column(a0, level.tail(n_structural));
+        }
+        out.a0.push_back(a0);
+    }
+    return out;
+}
+
+} // namespace
 
 using core::AldShape;
 using core::ald_log_density;
@@ -32,6 +106,33 @@ VarNormalAldDraws VarNormalAldSampler::draw_coefficients(const VarNormalAldInput
                                                         Reporter &reporter) const
 {
     input.validate();
+
+    // A grid: every level estimated as the single-quantile model it is, one
+    // after the other, and the draws stacked level by level. Each level's run
+    // is the chain a file with that one quantile would have drawn.
+    if (input.spec.uses_quantile_grid())
+    {
+        const std::vector<double> &levels = input.spec.quantiles;
+        const long long per_level = input.spec.draws();
+        const long long total = per_level * static_cast<long long>(levels.size());
+        VarNormalAldDraws out;
+        for (std::size_t j = 0; j < levels.size(); j++)
+        {
+            VarNormalAldInput one = input;
+            one.spec.quantiles.clear();
+            one.spec.quantile = levels[j];
+            one.spec.h = 0;
+            one.spec.forecast_quantile = 0.0;
+            one.forecast = ForecastData();
+            GridReporter level_reporter(reporter, per_level * static_cast<long long>(j), total);
+            const VarNormalAldDraws level = draw_coefficients(one, level_reporter);
+            out.a = arma::join_cols(out.a, level.a);
+            out.a_lambda = arma::join_cols(out.a_lambda, level.a_lambda);
+            out.u_scale = arma::join_cols(out.u_scale, level.u_scale);
+        }
+        reporter.finish();
+        return out;
+    }
 
     const int k = input.spec.k;
     const int iterations = input.spec.iterations;
@@ -213,14 +314,119 @@ ForecastDraws VarNormalAldSampler::forecast(const VarNormalAldInput &input,
                                             const VarNormalAldDraws &draws,
                                             Reporter &reporter) const
 {
-    (void)input;
-    (void)draws;
-    (void)reporter;
+    if (!input.spec.uses_quantile_grid())
+    {
+        throw std::invalid_argument(
+            "a quantile regression model does not forecast: the h step ahead quantile is not the "
+            "quantile of the iterated one step ahead quantiles, so iterating this model forward "
+            "would produce a path that cannot be read as a quantile of anything. A grid of "
+            "quantiles, /model/quantiles, describes the whole distribution and does forecast");
+    }
+    input.validate();
 
-    throw std::invalid_argument(
-        "a quantile regression model does not forecast: the h step ahead quantile is not the "
-        "quantile of the iterated one step ahead quantiles, so iterating this model forward "
-        "would produce a path that cannot be read as a quantile of anything");
+    const int k = input.spec.k;
+    const int p = input.spec.p;
+    const int h = input.spec.h;
+    if (h <= 0)
+    {
+        throw std::invalid_argument("forecast horizon (h) must be positive");
+    }
+    if (draws.u_scale.n_elem == 0)
+    {
+        throw std::invalid_argument("posterior draws of the asymmetric Laplace scale are missing");
+    }
+
+    arma::mat x = input.forecast.x;
+    core::require_forecast_regressors(input.spec, x);
+    core::require_forecast_horizons(x, h);
+
+    const arma::uword n_levels = input.spec.quantiles.size();
+    const arma::vec tau(input.spec.quantiles);
+    const bool use_a = x.n_elem > 0 || input.spec.structural;
+    if (use_a && (!draws.has_a() || draws.a.n_rows % n_levels != 0))
+    {
+        throw std::invalid_argument("posterior draws of a are missing, or do not hold one block per "
+                                    "level of /model/quantiles");
+    }
+    if (x.n_elem > 0 && draws.a.n_rows / n_levels !=
+                            x.n_cols * static_cast<arma::uword>(k) +
+                                static_cast<arma::uword>(input.spec.n_structural()))
+    {
+        throw std::invalid_argument(
+            "forecast regressors and coefficient draws disagree: x has " +
+            std::to_string(x.n_cols) + " columns, and each level of a has " +
+            std::to_string(draws.a.n_rows / n_levels) + " coefficients");
+    }
+
+    // The scenario: a pinned value replaces the draw of that variable in that
+    // period, and everything ordered after it and every later period responds.
+    arma::mat pinned(k, h);
+    pinned.fill(arma::datum::nan);
+    const Constraints &c = input.forecast.constraints;
+    for (arma::uword e = 0; e < c.row.n_elem; e++)
+    {
+        pinned(c.variable(e), c.period(e)) = c.value(c.row(e)) / c.weight(e);
+    }
+
+    // Every draw of a level is used, so the level is drawn even where a pin
+    // makes it unused: a scenario and the same forecast without it then share
+    // their random numbers, and their difference is the response to the pins.
+    const bool fixed_level = input.spec.forecast_quantile > 0.0;
+    const arma::uword n_draws = draws.u_scale.n_cols;
+    arma::mat fcst(static_cast<arma::uword>(h * k), n_draws, arma::fill::zeros);
+    arma::vec q(n_levels);
+
+    for (arma::uword draw = 0; draw < n_draws; draw++)
+    {
+        reporter.check_interrupt();
+        reporter.progress(static_cast<long long>(draw) + 1, static_cast<long long>(n_draws));
+
+        const GridDraw g = use_a ? grid_draw(input.spec, draws.a, draw, x.n_cols) : GridDraw();
+        for (int i = 0; i < h; i++)
+        {
+            if (i > 0 && p > 0 && x.n_elem > 0)
+            {
+                core::update_forecast_lags(x, fcst, draw, i, k, p);
+            }
+            arma::vec y(static_cast<arma::uword>(k), arma::fill::zeros);
+            for (int v = 0; v < k; v++)
+            {
+                for (arma::uword j = 0; j < n_levels; j++)
+                {
+                    double value = 0.0;
+                    if (use_a)
+                    {
+                        if (x.n_elem > 0)
+                        {
+                            value = arma::dot(g.b[j].row(v), x.row(i));
+                        }
+                        // A_0 y = B x + u: each earlier variable enters with minus
+                        // its contemporaneous coefficient.
+                        for (int w = 0; w < v; w++)
+                        {
+                            value -= g.a0[j](v, w) * y(w);
+                        }
+                    }
+                    q(j) = value;
+                }
+                const double level = fixed_level ? input.spec.forecast_quantile : open_uniform();
+                const double pin = pinned(v, i);
+                const double lower_scale = draws.u_scale(static_cast<arma::uword>(v), draw);
+                const double upper_scale =
+                    draws.u_scale((n_levels - 1) * static_cast<arma::uword>(k) + v, draw);
+                y(v) = std::isnan(pin)
+                           ? core::quantile_grid_value(
+                                 core::quantile_grid(tau, q, lower_scale, upper_scale), level)
+                           : pin;
+            }
+            fcst.submat(i * k, draw, (i + 1) * k - 1, draw) = y;
+        }
+    }
+
+    reporter.finish();
+    ForecastDraws out;
+    out.values = fcst;
+    return out;
 }
 
 arma::mat VarNormalAldSampler::log_likelihood(const VarNormalAldInput &input,
@@ -249,6 +455,50 @@ arma::mat VarNormalAldSampler::log_likelihood(const VarNormalAldInput &input,
     const arma::uword draws = coefficients.iterations();
     const int tt = static_cast<int>(y.n_elem) / k;
     const double q = input.spec.quantile;
+
+    // A grid: the density its quantiles describe, at every observation. The
+    // contemporaneous terms are regressors in z, so one product per level gives
+    // every conditional quantile of the sample.
+    if (input.spec.uses_quantile_grid())
+    {
+        const arma::uword n_levels = input.spec.quantiles.size();
+        const arma::vec tau(input.spec.quantiles);
+        if (use_a && coefficients.a.n_rows != z.n_cols * n_levels)
+        {
+            throw std::invalid_argument("posterior draws of a do not hold one block per level of "
+                                        "/model/quantiles");
+        }
+        const arma::uword nparams = z.n_cols;
+        arma::mat loglik(draws, static_cast<arma::uword>(tt), arma::fill::zeros);
+        arma::mat levels(y.n_elem, n_levels, arma::fill::zeros);
+        for (arma::uword draw = 0; draw < draws; draw++)
+        {
+            if (use_a)
+            {
+                for (arma::uword j = 0; j < n_levels; j++)
+                {
+                    levels.col(j) =
+                        z * coefficients.a.col(draw).subvec(j * nparams, (j + 1) * nparams - 1);
+                }
+            }
+            for (int t = 0; t < tt; t++)
+            {
+                double total = 0.0;
+                for (int v = 0; v < k; v++)
+                {
+                    const arma::uword r = static_cast<arma::uword>(t * k + v);
+                    const double lower_scale = coefficients.u_scale(static_cast<arma::uword>(v), draw);
+                    const double upper_scale = coefficients.u_scale(
+                        (n_levels - 1) * static_cast<arma::uword>(k) + v, draw);
+                    total += core::quantile_grid_log_density(
+                        core::quantile_grid(tau, arma::vec(levels.row(r).t()), lower_scale, upper_scale),
+                        y(r));
+                }
+                loglik(draw, static_cast<arma::uword>(t)) = total;
+            }
+        }
+        return loglik;
+    }
 
     // Errors, one column per draw.
     arma::mat u = arma::repmat(y, 1, draws);

@@ -23,6 +23,8 @@
 #'
 #' @export
 summary.bvarmodel <- function(object, ci = .95, period = NULL, ...){
+
+  .refuse_quantile_grid(object, "Summaries")
   
   # Number of endogenous variables
   k <- object[["model"]][["k"]]

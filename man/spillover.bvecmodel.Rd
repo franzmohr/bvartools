@@ -34,6 +34,7 @@ Other post-estimation analysis:
 \code{\link[=multipliers.bvecmodel]{multipliers.bvecmodel()}},
 \code{\link[=predict.bvarmodel]{predict.bvarmodel()}},
 \code{\link[=spillover.bvarmodel]{spillover.bvarmodel()}},
+\code{\link[=split_quantile_grid]{split_quantile_grid()}},
 \code{\link[=vec_to_var.bvecmodel]{vec_to_var.bvecmodel()}}
 }
 \concept{post-estimation analysis}

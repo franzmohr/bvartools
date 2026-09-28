@@ -5,6 +5,10 @@
     .Call(`_bvartools_VarNormalAldCoefficients`, object)
 }
 
+.VarNormalAldForecasts <- function(object) {
+    .Call(`_bvartools_VarNormalAldForecasts`, object)
+}
+
 .VarNormalAldLogLik <- function(object) {
     .Call(`_bvartools_VarNormalAldLogLik`, object)
 }

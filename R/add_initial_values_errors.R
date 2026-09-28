@@ -125,7 +125,12 @@
     # the mean of the check function, which is what makes it the starting value
     # to take from a fit. Residuals of exactly zero would put it at zero, which
     # the sampler divides by, so it is floored.
+    # Every level of a grid starts from the same values, and the median's
+    # scale is between those of the levels either side of it.
     q <- object[["model"]][["quantile"]]
+    if (is.null(q)) {
+      q <- 0.5
+    }
     u_scale <- apply(u, 1, function(z) {mean(z * (q - as.numeric(z < 0)))})
   }
   

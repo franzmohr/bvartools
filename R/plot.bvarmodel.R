@@ -55,6 +55,8 @@
 plot.bvarmodel <- function(x, ci = 0.95, type = "hist", show_zero_y = TRUE,
                            max_cols = 6, ...) {
 
+  .refuse_quantile_grid(x, "Plots")
+
   # 'layout' is called below, so all parameters have to be restored on exit
   orig_par <- graphics::par(no.readonly = TRUE)
   on.exit(graphics::par(orig_par))

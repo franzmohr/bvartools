@@ -194,7 +194,14 @@ struct VarNormalAldDraws
     /// periods stacked within a column. Diagonal throughout.
     arma::mat u_sigma_inv;
 
-    arma::uword iterations() const { return u_sigma_inv.n_cols; }
+    // Under a quantile grid (VarSpec::quantiles) `a`, `a_lambda` and `u_scale`
+    // hold one block per level, stacked level by level -- (nparams * Q) and
+    // (k * Q) rows -- and the two precisions, one path per level, are not kept.
+
+    arma::uword iterations() const
+    {
+        return u_sigma_inv.n_cols > 0 ? u_sigma_inv.n_cols : u_scale.n_cols;
+    }
     bool has_a() const { return a.n_elem > 0; }
 };
 

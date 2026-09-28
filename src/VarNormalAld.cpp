@@ -11,10 +11,11 @@
 // translation between the R model object and the core's structs. See
 // src/core/VENDORED.md.
 //
-// Two things this model does not have, and neither is worked around here: it
-// takes no covariance block, and it does not forecast. The core's validate()
-// refuses both with a reason, which is why there is no .VarNormalAldForecasts
-// beside the two entry points below.
+// It takes no covariance block, and at a single quantile it does not forecast:
+// the core's validate() refuses both with a reason. A grid of quantiles,
+// model$quantiles, is the structural quantile VAR of Chavleishvili and
+// Manganelli (2019), which describes the whole conditional distribution and
+// forecasts by simulating through it -- what .VarNormalAldForecasts is for.
 
 namespace {
 
@@ -37,8 +38,12 @@ bayests::VarNormalAldInput read_input(const Rcpp::List &object) {
       read_mat_if_present(train, "y", input.train.y);
       read_mat_if_present(train, "z", input.train.z);
     }
-    // data$forecast is not read: input.forecast stays empty, and a non-zero
-    // horizon in the specification is what validate() reports.
+    // Read for a grid of quantiles, and refused by validate() for a single
+    // quantile together with the non-zero horizon add_forecast_input() sets.
+    if (has(data, "forecast")) {
+      const Rcpp::List forecast = data["forecast"];
+      read_forecast_regressors(forecast, input.spec.k, input.forecast.x);
+    }
   }
 
   const Rcpp::List initial = has(object, "initial") ? Rcpp::List(object["initial"]) : Rcpp::List();
@@ -71,12 +76,13 @@ bayests::VarNormalAldInput read_input(const Rcpp::List &object) {
   return input;
 }
 
-/// The log likelihood is the asymmetric Laplace density itself, which is
-/// closed form and marginal of the latent scales, so it wants the coefficients
-/// and the scale and nothing else. The precision path is read for its column
-/// count alone -- iterations() counts it -- and one period is enough for that,
-/// which saves carrying k * k * tt numbers per draw across the boundary.
-bayests::VarNormalAldDraws read_draws_for_loglik(const Rcpp::List &object,
+/// The log likelihood and the forecast of a grid want the coefficients and the
+/// scale and nothing else: the asymmetric Laplace density is closed form and
+/// marginal of the latent scales, and a grid simulates from the distribution
+/// its quantiles describe. The precision path is read for its column count
+/// alone -- iterations() counts it -- and one period is enough for that, which
+/// saves carrying k * k * tt numbers per draw across the boundary.
+bayests::VarNormalAldDraws read_draws(const Rcpp::List &object,
                                                  const bayests::VarNormalAldInput &input) {
 
   bayests::VarNormalAldDraws draws;
@@ -125,8 +131,14 @@ Rcpp::List write_draws(const bayests::VarNormalAldDraws &draws) {
   // multiplies are not returned: they are k * tt numbers of pure nuisance per
   // draw, and u_omega_inv together with u_scale recovers them.
   posteriors["u_scale"] = Rcpp::List::create(Rcpp::Named("coeffs") = draws_to_r(draws.u_scale));
-  posteriors["u_omega_inv"] = Rcpp::List::create(Rcpp::Named("coeffs") = draws_to_r(draws.u_omega_inv));
-  posteriors["u_sigma_inv"] = Rcpp::List::create(Rcpp::Named("coeffs") = draws_to_r(draws.u_sigma_inv));
+  // A grid of quantiles keeps no latent scales -- each level's are a nuisance
+  // of its own chain -- so the two are left NULL and dropped on the R side.
+  if (draws.u_omega_inv.n_elem > 0) {
+    posteriors["u_omega_inv"] = Rcpp::List::create(Rcpp::Named("coeffs") = draws_to_r(draws.u_omega_inv));
+  }
+  if (draws.u_sigma_inv.n_elem > 0) {
+    posteriors["u_sigma_inv"] = Rcpp::List::create(Rcpp::Named("coeffs") = draws_to_r(draws.u_sigma_inv));
+  }
 
   write_draw_extensions(posteriors, draws);
   return posteriors;
@@ -152,11 +164,25 @@ Rcpp::List VarNormalAldCoefficients(Rcpp::List object) {
                             Rcpp::Named("warnings") = reporter.warnings());
 }
 
+// [[Rcpp::export(.VarNormalAldForecasts)]]
+Rcpp::List VarNormalAldForecasts(Rcpp::List object) {
+
+  const bayests::VarNormalAldInput input = read_input(object);
+  const bayests::VarNormalAldDraws draws = read_draws(object, input);
+
+  bvartools::RcppReporter reporter;
+
+  const bayests::ForecastDraws forecast =
+    bayests::VarNormalAldSampler().forecast(input, draws, reporter);
+
+  return with_forecast_member(object, "forecasts", Rcpp::wrap(draws_to_r(forecast.values)));
+}
+
 // [[Rcpp::export(.VarNormalAldLogLik)]]
 Rcpp::List VarNormalAldLogLik(Rcpp::List object) {
 
   const bayests::VarNormalAldInput input = read_input(object);
-  const bayests::VarNormalAldDraws draws = read_draws_for_loglik(object, input);
+  const bayests::VarNormalAldDraws draws = read_draws(object, input);
 
   const arma::mat loglik = bayests::VarNormalAldSampler().log_likelihood(input, draws);
 

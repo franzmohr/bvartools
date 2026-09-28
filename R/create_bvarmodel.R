@@ -26,7 +26,8 @@
 #' of the covariance matrix of the error term. Default is \code{"wishart"}. See 'Details'.
 #' @param quantile a numeric vector of quantiles in the interval \eqn{(0, 1)} that should be
 #' estimated. Only used, if \code{error = "ald"}. Defaults to \code{0.5}, the median. One model
-#' is created per quantile, so a vector produces a list of models. See 'Details'.
+#' is created per quantile, so a vector produces a list of models, unless \code{quantile_grid}
+#' is \code{TRUE}. See 'Details'.
 #' @param varsel character specifying the type of variable selection algorithm
 #' that should be employed. Default is \code{"none"}. See 'Details'.
 #' @param algorithm algorithm that should be used for posterior simulation. If
@@ -60,6 +61,9 @@
 #' @param soft an optional character vector of series of \code{data} whose
 #' observations hold up to a normal measurement error instead of exactly, each
 #' series with an error variance of its own. See 'Details'.
+#' @param quantile_grid logical. If \code{TRUE}, the quantiles in \code{quantile} are
+#' estimated as one structural quantile VAR rather than as one model each. Needs
+#' \code{error = "ald"} and constant coefficients. Defaults to \code{FALSE}. See 'Details'.
 #'
 #' @details The function produces the data matrices for vector autoregressive (VAR)
 #' models, which can also include unmodelled, non-deterministic variables:
@@ -120,12 +124,28 @@
 #' 
 #' Three properties of these models differ from the rest of the package. Covariances are not
 #' estimated, since rotating the equations into each other leaves a residual whose quantile is not
-#' the one that was asked for. Forecasts are not available, since the \eqn{h} step ahead quantile is
+#' the one that was asked for. A single quantile does not forecast, since the \eqn{h} step ahead quantile is
 #' not the quantile of the iterated one step ahead quantiles. And the asymmetric Laplace is a working
 #' likelihood rather than a claim about the data, so the posterior locates the quantile, but the
 #' spread of the draws is not a calibrated credible interval without the adjustment of Yang et al.
 #' (2016), which is not applied. Variable selection is available as \code{"bvs"}, not as
 #' \code{"ssvs"}.
+#'
+#' With \code{quantile_grid = TRUE} the quantiles in \code{quantile}, at least two, form one
+#' model rather than one model each: the structural quantile VAR of Chavleishvili and Manganelli
+#' (2019). Every level is estimated -- each is the chain its single-quantile model would have
+#' drawn -- and the draws of \code{posterior$a} and \code{posterior$u_scale} are stacked level by
+#' level, the block of the first quantile first. With \code{structural = TRUE}, or a single
+#' variable, the grid describes the whole distribution of each variable given the ones ordered
+#' before it: the estimated quantiles are sorted (Chernozhukov et al., 2010), interpolated linearly
+#' between the levels and continued by exponential tails. That distribution is what
+#' \code{\link{add_posterior_forecasts}} simulates from, variable by variable, so a grid does
+#' forecast. A scenario given there pins variables in forecast periods, and a
+#' \code{forecast_quantile} takes every draw at one level, which gives the quantile paths the
+#' impulse responses of the model are differences of. \code{\link{add_posterior_loglik}} scores
+#' the density the grid describes. Only models with constant coefficients take a grid. Summaries,
+#' plots and impulse responses work on the single levels, which
+#' \code{\link{split_quantile_grid}} returns.
 #' 
 #' Available specifications for argument \code{varsel} are:
 #' \itemize{
@@ -255,6 +275,12 @@
 #'
 #' Chan, J., Koop, G., Poirier, D. J., & Tobias, J. L. (2019). \emph{Bayesian Econometric Methods}
 #' (2nd ed.). Cambridge: University Press.
+#'
+#' Chavleishvili, S., & Manganelli, S. (2019). Forecasting and stress testing with quantile
+#' vector autoregression. \emph{ECB Working Paper}, 2330.
+#'
+#' Chernozhukov, V., Fernandez-Val, I., & Galichon, A. (2010). Quantile and probability curves
+#' without crossing. \emph{Econometrica, 78}(3), 1093--1125.
 #' 
 #' George, E. I., Sun, D., & Ni, S. (2008). Bayesian stochastic search for VAR model
 #' restrictions. \emph{Journal of Econometrics, 142}(1), 553--580.
@@ -300,7 +326,8 @@ create_bvarmodel <- function(data, p = 2,
                              thin = 1,
                              missing = "omit",
                              aggregate = NULL,
-                             soft = NULL) {
+                             soft = NULL,
+                             quantile_grid = FALSE) {
   
   # Input checks ----
   if (!"ts" %in% class(data)) {
@@ -332,6 +359,19 @@ create_bvarmodel <- function(data, p = 2,
   # own, so it is checked here and looped over below. It is meaningless for
   # every model that is not an asymmetric Laplace one, which is why an object
   # of theirs does not carry it at all.
+  if (!is.logical(quantile_grid) || length(quantile_grid) != 1 || is.na(quantile_grid)) {
+    stop("Argument 'quantile_grid' must be TRUE or FALSE.")
+  }
+  if (quantile_grid) {
+    if (error != "ald" || tvp || !is.null(algorithm)) {
+      stop("A grid of quantiles needs error = \"ald\" and constant coefficients.")
+    }
+    if (length(quantile) < 2 || anyDuplicated(quantile) > 0) {
+      stop("Argument 'quantile' must contain at least two distinct values when ",
+           "'quantile_grid' is TRUE.")
+    }
+    quantile <- sort(quantile)
+  }
   if (error == "ald") {
     if (!"numeric" %in% class(quantile)) {
       stop("Argument 'quantile' must be of class 'numeric'.")
@@ -653,11 +693,16 @@ create_bvarmodel <- function(data, p = 2,
   }
   
   # Create model list ----
-  # A quantile grid is a list of models, in the same way a grid of lag orders
+  # A vector of quantiles is a list of models, in the same way a grid of lag orders
   # is: one quantile per model, so the grid parallelises without the sampler
   # knowing about it. Models that are not asymmetric Laplace ones pass through
   # this loop once and never see the field.
-  quantiles <- if (error == "ald") quantile else NA_real_
+  # A grid of quantiles is the one exception: its levels are one model, so the
+  # loop runs once and the model carries all of them.
+  quantiles <- if (error == "ald" && !quantile_grid) quantile else NA_real_
+  if (quantile_grid) {
+    model[["quantiles"]] <- quantile
+  }
   
   # A grid over the two discounts, for the one algorithm that has them. Every
   # other model gets the single specification it always had, so the two inner
@@ -679,7 +724,7 @@ create_bvarmodel <- function(data, p = 2,
        for (d_sigma in grid_sigma) {
       pos <- NULL
       model_i <- model
-      if (error == "ald") {
+      if (error == "ald" && !quantile_grid) {
         model_i[["quantile"]] <- q
       }
       if (use_discount) {

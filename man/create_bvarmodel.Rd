@@ -25,7 +25,8 @@ create_bvarmodel(
   thin = 1,
   missing = "omit",
   aggregate = NULL,
-  soft = NULL
+  soft = NULL,
+  quantile_grid = FALSE
 )
 }
 \arguments{
@@ -60,7 +61,8 @@ of the covariance matrix of the error term. Default is \code{"wishart"}. See 'De
 
 \item{quantile}{a numeric vector of quantiles in the interval \eqn{(0, 1)} that should be
 estimated. Only used, if \code{error = "ald"}. Defaults to \code{0.5}, the median. One model
-is created per quantile, so a vector produces a list of models. See 'Details'.}
+is created per quantile, so a vector produces a list of models, unless \code{quantile_grid}
+is \code{TRUE}. See 'Details'.}
 
 \item{tvp}{logical indicating whether the model parameters are time varying.
 Defaults to \code{FALSE}.}
@@ -106,6 +108,10 @@ last period they aggregate. Implies \code{missing = "estimate"}.}
 \item{soft}{an optional character vector of series of \code{data} whose
 observations hold up to a normal measurement error instead of exactly, each
 series with an error variance of its own. See 'Details'.}
+
+\item{quantile_grid}{logical. If \code{TRUE}, the quantiles in \code{quantile} are
+estimated as one structural quantile VAR rather than as one model each. Needs
+\code{error = "ald"} and constant coefficients. Defaults to \code{FALSE}. See 'Details'.}
 }
 \value{
 An object of class 'bvarmodel' or, if a vector is given in \code{p}, \code{s}
@@ -193,12 +199,28 @@ model a Gibbs sampler like the others.
 
 Three properties of these models differ from the rest of the package. Covariances are not
 estimated, since rotating the equations into each other leaves a residual whose quantile is not
-the one that was asked for. Forecasts are not available, since the \eqn{h} step ahead quantile is
+the one that was asked for. A single quantile does not forecast, since the \eqn{h} step ahead quantile is
 not the quantile of the iterated one step ahead quantiles. And the asymmetric Laplace is a working
 likelihood rather than a claim about the data, so the posterior locates the quantile, but the
 spread of the draws is not a calibrated credible interval without the adjustment of Yang et al.
 (2016), which is not applied. Variable selection is available as \code{"bvs"}, not as
 \code{"ssvs"}.
+
+With \code{quantile_grid = TRUE} the quantiles in \code{quantile}, at least two, form one
+model rather than one model each: the structural quantile VAR of Chavleishvili and Manganelli
+(2019). Every level is estimated -- each is the chain its single-quantile model would have
+drawn -- and the draws of \code{posterior$a} and \code{posterior$u_scale} are stacked level by
+level, the block of the first quantile first. With \code{structural = TRUE}, or a single
+variable, the grid describes the whole distribution of each variable given the ones ordered
+before it: the estimated quantiles are sorted (Chernozhukov et al., 2010), interpolated linearly
+between the levels and continued by exponential tails. That distribution is what
+\code{\link{add_posterior_forecasts}} simulates from, variable by variable, so a grid does
+forecast. A scenario given there pins variables in forecast periods, and a
+\code{forecast_quantile} takes every draw at one level, which gives the quantile paths the
+impulse responses of the model are differences of. \code{\link{add_posterior_loglik}} scores
+the density the grid describes. Only models with constant coefficients take a grid. Summaries,
+plots and impulse responses work on the single levels, which
+\code{\link{split_quantile_grid}} returns.
 
 Available specifications for argument \code{varsel} are:
 \itemize{
@@ -306,6 +328,12 @@ Econometrics, 236}(1), 105468. \doi{10.1016/j.jeconom.2023.05.005}
 
 Chan, J., Koop, G., Poirier, D. J., & Tobias, J. L. (2019). \emph{Bayesian Econometric Methods}
 (2nd ed.). Cambridge: University Press.
+
+Chavleishvili, S., & Manganelli, S. (2019). Forecasting and stress testing with quantile
+vector autoregression. \emph{ECB Working Paper}, 2330.
+
+Chernozhukov, V., Fernandez-Val, I., & Galichon, A. (2010). Quantile and probability curves
+without crossing. \emph{Econometrica, 78}(3), 1093--1125.
 
 George, E. I., Sun, D., & Ni, S. (2008). Bayesian stochastic search for VAR model
 restrictions. \emph{Journal of Econometrics, 142}(1), 553--580.

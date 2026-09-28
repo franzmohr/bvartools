@@ -1,5 +1,28 @@
 # bvartools 1.0.0
 
+* **`add_sign_zero_restrictions()` takes `max_tries`.**
+  - **The problem.** The algorithm of Arias, Rubio-Ramírez and Waggoner
+    (2018) draws one rotation per posterior draw. With many sign
+    restrictions, a few thousand draws can then produce none, as with the
+    six shocks and 28 signs of a daily cross-asset BVAR.
+  - **What `max_tries` does.** It draws rotations until two of them satisfy
+    the signs, or until `max_tries` have been drawn, and keeps the first.
+  - **Why the sample stays exact.** The weight of the kept rotation is
+    multiplied by an unbiased estimate of the probability that a rotation
+    satisfies the signs (Girshick, Mosteller and Savage, 1946). A rejection
+    sampler that stopped at the first success would count a draw with a tiny
+    admissible set as much as one with a large set.
+  - **Flipped columns.** With more than one try, a column whose signs are all
+    reversed is flipped rather than rejected. The proposal does not change
+    under a flip, so this too is exact, and it cuts the tries needed by
+    `2^s` for `s` sign-restricted shocks.
+  - **The effect.** On that six-variable model, 20,000 tries identify 364 of
+    1,000 draws, with an effective sample size of 161. A single try
+    identifies none.
+  - **Unchanged by default.** `max_tries = 1` is the default and draws
+    exactly what the function drew before.
+  - **Reporting.** `summary()` reports the rotations drawn.
+
 * **A grid of quantiles is one model: the structural quantile VAR of
   Chavleishvili and Manganelli (2019).** With `quantile_grid = TRUE`,
   `create_bvarmodel(error = "ald")` estimates every quantile in `quantile` as

@@ -15,6 +15,7 @@
   one_sided = FALSE,
   smooth = TRUE,
   period = NULL,
+  max_tries = 1,
   ...
 )
 
@@ -46,14 +47,20 @@ Algorithm 3, which is what to set to reproduce it exactly.}
 Only used for TVP or SV models. Default is \code{NULL}, so that the posterior
 draws of the last time period are used.}
 
+\item{max_tries}{integer. The largest number of rotations drawn for each
+posterior draw. Defaults to 1, the algorithm of the paper. More tries find
+rotations where the sign restrictions leave a region too small for a single
+try to hit, and the importance weights account for them. See 'Details'.}
+
 \item{...}{further arguments passed to or from other methods.}
 }
 \value{
 The object of class 'bvarmodel' with its posterior draws resampled,
 the accepted rotations in element \code{q} of its \code{posterior}, one row
 per resampled draw, and the specification of the restrictions in element
-\code{sign_zero_restrictions} of its \code{model}, together with the number
-of draws that satisfied the sign restrictions, the effective sample size
+\code{sign_zero_restrictions} of its \code{model}, together with
+\code{max_tries}, the number of rotations drawn in all (\code{tries}), the
+number of draws that satisfied the sign restrictions, the effective sample size
 of the importance sampler and the share of the total weight held by its
 single largest draw, the shape \code{pareto_k} of the distribution fitted to
 the tail of the weights and whether they were \code{smooth}ed. Element
@@ -95,9 +102,38 @@ is an importance sample: each draw carries a weight, and the draws are
 resampled with replacement according to those weights so that what the
 function returns is an ordinary, equally weighted sample. A draw whose
 rotation fails the sign restrictions is given weight zero and so never
-resampled; unlike the rejection sampler no second rotation is tried for it,
-and a shock is not retried with its sign flipped, since the sphere its column
-is drawn from already covers both of its signs.
+resampled, and a shock is not retried with its sign flipped, since the sphere
+its column is drawn from already covers both of its signs.
+
+\strong{By default each posterior draw gets one rotation}, as in the paper.
+With many sign restrictions that can leave nothing: when one rotation in
+tens of thousands satisfies them all, a few thousand posterior draws produce
+no admissible rotation, and the function stops. \code{max_tries} draws more
+rotations per draw, but not the way \code{\link{add_sign_restrictions}}
+does. Stopping at the first rotation that satisfies the signs would bias an
+importance sampler: the single try is what weights each posterior draw by the
+probability \eqn{p} that its rotations satisfy the signs, and a draw whose
+admissible set is tiny would count as much as one whose set is large.
+Instead the rotations are drawn until two of them satisfy the signs, or
+until \code{max_tries} have been drawn. The first of them is kept, and its
+weight is multiplied by an unbiased estimate of \eqn{p} from the tries
+(Girshick, Mosteller and Savage, 1946): \eqn{1 / (N - 1)} when the second
+came at try \eqn{N}, and \eqn{1 / T} when only one came in all \eqn{T}
+tries. The rotation kept does not depend on how many tries it took, so the
+weight stays an unbiased estimate of the paper's and the sample stays exact.
+The price is variance: an estimated \eqn{p} spreads the weights, and the
+effective sample size says by how much. Looking for the second success
+also means drawing about twice the rotations a first success needs.
+
+With more than one try a column whose sign restrictions all hold with the
+opposite sign is also flipped rather than rejected. That is exact too: the
+proposal does not change when a column changes sign, so the rotation kept
+has the same distribution, and the probability that a try succeeds grows by
+\eqn{2^s}, \eqn{s} the number of shocks carrying sign restrictions -- the same
+factor for every draw, which cancels when the weights are normalised. It
+cuts the tries needed by that factor, 64 for six sign restricted shocks.
+\code{max_tries = 1} flips nothing: it is the paper's algorithm and draws
+exactly what the function drew before the argument existed.
 
 \strong{The draws that come back are a resample and no longer a chain.}
 Their order carries no information, several of them may be copies of the same
@@ -221,6 +257,9 @@ ir <- irf(model, impulse = "invest", response = "income", type = "sign")
 Arias, J. E., Rubio-Ramirez, J. F., Waggoner, D. F. (2018). Inference based on structural vector
 autoregressions identified with sign and zero restrictions: Theory and applications.
 \emph{Econometrica, 86}(2), 685-720. \doi{10.3982/ECTA14468}
+
+Girshick, M. A., Mosteller, F., Savage, L. J. (1946). Unbiased estimates for certain binomial
+sampling problems with applications. \emph{The Annals of Mathematical Statistics, 17}(1), 13-23.
 
 Rubio-Ramirez, J. F., Waggoner, D. F., Zha, T. (2010). Structural vector autoregressions: Theory of
 identification and algorithms for inference. \emph{The Review of Economic Studies, 77}(2), 665-696.

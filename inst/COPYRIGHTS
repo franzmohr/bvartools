@@ -52,6 +52,8 @@ BSD 3-Clause portion
     src/core/algorithms/bvs.h
     src/core/algorithms/chan_jeliazkov_2009.cpp
     src/core/algorithms/chan_jeliazkov_2009.h
+    src/core/algorithms/constrained_var_path.cpp
+    src/core/algorithms/constrained_var_path.h
     src/core/algorithms/inclusion_probability.h
     src/core/algorithms/inverse_gaussian.cpp
     src/core/algorithms/inverse_gaussian.h
@@ -71,11 +73,15 @@ BSD 3-Clause portion
     src/core/algorithms/wishart.cpp
     src/core/algorithms/wishart.h
     src/core/models/ald_support.h
+    src/core/models/completion_support.h
+    src/core/models/constraint_support.h
     src/core/models/discount_support.h
     src/core/models/forecast_states.h
     src/core/models/model_support.h
     src/core/models/noncentred_support.h
     src/core/models/predictive_score.h
+    src/core/models/shrinkage_support.h
+    src/core/models/steady_state_support.h
     src/core/models/var_normal_ald.cpp
     src/core/models/var_normal_gamma.cpp
     src/core/models/var_normal_stochvol.cpp

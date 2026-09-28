@@ -40,7 +40,12 @@
 #'   compact layout, one row per period; \code{z} is the same regressors in SUR
 #'   form, \code{kron(x, I_k)}, which is what the samplers of a VAR read. A VEC
 #'   model adds \code{w}, the lagged levels the cointegration term is formed
-#'   from.}
+#'   from. A VAR estimated from a panel not observed whole adds
+#'   \code{constraints}, what was observed of it: \code{value} and \code{group}
+#'   with one element per observation, and \code{row}, \code{period},
+#'   \code{variable} and \code{weight} with one per entry of the linear
+#'   combination each observation is, counted from one. See
+#'   \code{\link{create_bvarmodel}}.}
 #'
 #'   \item{\code{data$forecast}}{Added by \code{\link{add_forecast_input}}: the
 #'   regressors of the forecast periods, \code{x} in the compact layout, one row
@@ -58,7 +63,9 @@
 #'   hyperparameters, one block per parameter block of the posterior. Prior
 #'   variances are given as precisions. Which elements are needed depends on
 #'   \code{error}; the method's own help page, \code{\link{add_priors.bvarmodel}}
-#'   or \code{\link{add_priors.bvecmodel}}, lists them.}
+#'   or \code{\link{add_priors.bvecmodel}}, lists them. \code{a$shrinkage},
+#'   \code{mu} and \code{constraints} are added by
+#'   \code{\link{add_prior_options}}.}
 #'
 #'   \item{\code{initial}}{Added by \code{\link{add_initial_values}}: the
 #'   starting values the sampler begins from.}
@@ -89,6 +96,14 @@
 #'   \code{lambda} and \code{sigma} as above.}
 #'   \item{\code{u_scale}}{The scale of the asymmetric Laplace, \eqn{K} columns,
 #'   for a quantile VAR.}
+#'   \item{\code{y}}{The completed panel of a VAR estimated from one not
+#'   observed whole, \eqn{TK} columns stacked by period, and
+#'   \code{constraints_inv} the error precisions of its soft constraints, one
+#'   column per group.}
+#'   \item{\code{mu}}{The unconditional means under a steady-state prior,
+#'   \eqn{K} columns. Under an adaptive prior \code{a} adds \code{shrinkage},
+#'   the scales of its groups, and for the horseshoe \code{local}, one scale per
+#'   coefficient.}
 #'   \item{\code{beta}}{The cointegration vectors of a VEC model,
 #'   \eqn{k_\beta r} columns, and \code{rho} where a time-varying cointegration
 #'   space put a prior on its state autoregression.}

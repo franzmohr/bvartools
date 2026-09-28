@@ -1,5 +1,36 @@
 # bvartools 1.0.0
 
+* **VAR models are estimated from a panel that is not observed whole.** With
+  `missing = "estimate"`, `create_bvarmodel()` keeps the periods in which a
+  series is `NA` instead of dropping them, and every sweep of the sampler draws
+  what was not observed from its distribution given what was, the coefficients
+  and the error covariance. A series observed at a lower frequency -- quarterly
+  GDP in a monthly model -- enters through `aggregate` as the average, sum or
+  growth rate of the periods it covers, with weights from the new
+  `aggregation_weights()`, which makes the model a mixed-frequency VAR. `soft`
+  lets the observations of a series hold up to an estimated measurement error
+  rather than exactly. What was observed is stored in `data$train$constraints`,
+  one linear constraint per observation, and the completed panel comes back in
+  `posterior$y`; forecasts start from it and `add_posterior_loglik()` scores
+  only what was observed. Available for the Gaussian errors with constant or
+  time varying coefficients; not for quantile, discounted or structural models
+  or with `iid`. The model file carries the constraints, so the BayesTS command
+  line estimates the same model.
+
+* **`add_prior_options()` adds adaptive priors, the stationarity condition and
+  the steady-state prior.** `shrinkage = "minnesota"` estimates the tightness of
+  the prior on the lags per group, own lags and other lags by default, as in
+  Chan (2021); `shrinkage = "horseshoe"` puts the horseshoe prior on them.
+  `stationary = TRUE` keeps only stationary draws of the coefficients.
+  `steady_state` puts the prior on the unconditional mean of the variables
+  instead of the intercept (Villani 2009), and its draws come back in
+  `posterior$mu`. All three are available for the constant-coefficient models
+  with a Gaussian error. `constraints` sets the prior of the measurement error of
+  soft constraints.
+
+* The vendored BayesTS core moves to `638355a`. Draws of every model that uses
+  none of the above are unchanged.
+
 * **`pool_forecasts()` pools the forecasts of several models with equal
   weights.** A pool is the mixture of its members' predictive distributions,
   formed from the draws they already hold: the same number of draws from each

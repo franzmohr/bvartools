@@ -47,6 +47,19 @@
 #' \code{burnin + iterations * thin} draws and still keeps \code{iterations}. Unlike
 #' \code{\link[=thin.bvarmodel]{thin}}, which thins draws already made, the draws
 #' that are not kept are never held in memory.
+#' @param missing a character, what to do with periods in which a series of
+#' \code{data} is \code{NA}. \code{"omit"} (default) drops them, as
+#' \code{\link[stats]{na.omit}} does. \code{"estimate"} keeps them and estimates
+#' what was not observed together with the model. See 'Details'.
+#' @param aggregate an optional named list, one element per series of
+#' \code{data} that is observed at a lower frequency than the model, holding the
+#' weights with which it aggregates the periods of the model, oldest first, as
+#' \code{\link{aggregation_weights}} returns them. The series is \code{NA} in
+#' every period in which it is not observed, and its observations stand in the
+#' last period they aggregate. Implies \code{missing = "estimate"}.
+#' @param soft an optional character vector of series of \code{data} whose
+#' observations hold up to a normal measurement error instead of exactly, each
+#' series with an error variance of its own. See 'Details'.
 #'
 #' @details The function produces the data matrices for vector autoregressive (VAR)
 #' models, which can also include unmodelled, non-deterministic variables:
@@ -167,6 +180,35 @@
 #' are there instead. It is available for models with constant coefficients and
 #' cannot be combined with \code{structural} or \code{varsel}.
 #'
+#' With \code{missing = "estimate"} the panel does not have to be observed
+#' whole. Every observation becomes one linear constraint on the panel, stored
+#' in \code{data$train$constraints}, and every sweep of the sampler draws the
+#' periods that were not observed from their distribution given the
+#' constraints, the coefficients and the error covariance before it draws those
+#' (Chan, Poon and Zhu 2023). A series observed at a lower frequency is a
+#' constraint on several periods, the weights of which \code{aggregate} gives,
+#' so that a quarterly series enters a monthly model as the average, sum or
+#' growth rate of three months (Schorfheide and Song 2015). Which periods a
+#' constraint reaches is decided by the dates of \code{data}, and one that
+#' reaches before the estimation sample is left out with a message. The periods
+#' before the sample that the first lags reach are taken as observed, with gaps
+#' there filled by interpolation. What \code{data$train$y} holds where nothing
+#' was observed is a starting value: a linear interpolation of what was.
+#' The draws of the completed panel come back as \code{posterior$y}.
+#'
+#' A series named in \code{soft} holds its constraints up to a normal error
+#' whose precision is estimated with a gamma prior, which
+#' \code{\link{add_prior_options}} sets. It suits an aggregate whose weights
+#' are an approximation, such as the growth rate of an average.
+#'
+#' Estimating what was not observed is available for \code{error = "wishart"},
+#' \code{"gamma"}, \code{"gamma+covar"}, \code{"sv"} and \code{"sv+covar"},
+#' with constant or time varying coefficients. It cannot be combined with
+#' \code{structural}, \code{iid} or the discounted model. Forecasts start from
+#' each draw's completed panel. Forecasts are scored and conditioned on a
+#' scenario in \code{data$forecast$constraints} only by models with constant
+#' coefficients and \code{error = "wishart"} or \code{"gamma"}.
+#'
 #' @return An object of class 'bvarmodel' or, if a vector is given in \code{p}, \code{s}
 #' or \code{quantile}, a list of class 'modellist' with one such object per
 #' specification. A 'bvarmodel' is a list with the elements
@@ -202,6 +244,10 @@
 #' 
 #' @references
 #' 
+#' Chan, J. C. C., Poon, A., & Zhu, D. (2023). High-dimensional conditionally
+#' Gaussian state space models with missing data. \emph{Journal of
+#' Econometrics, 236}(1), 105468. \doi{10.1016/j.jeconom.2023.05.005}
+#'
 #' Chan, J., Koop, G., Poirier, D. J., & Tobias, J. L. (2019). \emph{Bayesian Econometric Methods}
 #' (2nd ed.). Cambridge: University Press.
 #' 
@@ -216,6 +262,10 @@
 #' \emph{Journal of Statistical Computation and Simulation, 81}(11), 1565--1578.
 #' \doi{10.1080/00949655.2010.496117}
 #' 
+#' Schorfheide, F., & Song, D. (2015). Real-time forecasting with a
+#' mixed-frequency VAR. \emph{Journal of Business & Economic Statistics,
+#' 33}(3), 366--380. \doi{10.1080/07350015.2014.954707}
+#'
 #' Lütkepohl, H. (2006). \emph{New Introduction to Multiple Time Series Analysis} (2nd ed.). Berlin: Springer.
 #' 
 #' Uhlig, H. (1997). Bayesian vector autoregressions with stochastic volatility.
@@ -242,7 +292,10 @@ create_bvarmodel <- function(data, p = 2,
                              delta_sigma = 1,
                              iterations = 20000,
                              burnin = 2000,
-                             thin = 1) {
+                             thin = 1,
+                             missing = "omit",
+                             aggregate = NULL,
+                             soft = NULL) {
   
   # Input checks ----
   if (!"ts" %in% class(data)) {
@@ -335,6 +388,29 @@ create_bvarmodel <- function(data, p = 2,
          "regression model. Consider using 'bvs' instead.")
   }
   
+  # The panel as it was observed, and the same panel with every gap filled
+  # for the regressors to be built from. See .panel_constraints().
+  if (!is.character(missing) || length(missing) != 1 || !missing %in% c("omit", "estimate")) {
+    stop("Argument 'missing' must be either 'omit' or 'estimate'.")
+  }
+  if (!is.null(aggregate)) {
+    missing <- "estimate"
+  }
+  if (!is.null(soft) && missing != "estimate") {
+    stop("Argument 'soft' needs missing = 'estimate'.")
+  }
+  observed <- NULL
+  if (missing == "estimate") {
+    if (error == "ald" || !is.null(algorithm) || structural || !is.null(iid)) {
+      stop("Estimating what was not observed is not available for a quantile regression ",
+           "model, the discounted model, a structural model or 'iid' variables.")
+    }
+    panel <- .check_panel_arguments(data, aggregate, soft)
+    aggregate <- panel[["aggregate"]]
+    observed <- data
+    data <- .fill_panel(data, aggregate)
+  }
+
   # A lag order of 1.5 failed with "subscript out of bounds" and one of -1 was
   # taken as zero.
   if (!is.numeric(p) || length(p) == 0 || anyNA(p) || any(p != round(p)) || any(p < 0)) {
@@ -554,6 +630,12 @@ create_bvarmodel <- function(data, p = 2,
   stats::tsp(y) <- stats::tsp(temp)
   dimnames(y)[[2]] <- temp_name[1:k]
   
+  # What was observed of the sample, where it was not observed whole
+  constraints <- NULL
+  if (!is.null(observed)) {
+    constraints <- .panel_constraints(observed, y, aggregate, soft)
+  }
+
   # Structural data
   y_A0 <- NULL
   if (structural & k > 1) {
@@ -635,12 +717,13 @@ create_bvarmodel <- function(data, p = 2,
       
       # Create individual model
       result_i <- list("model" = model_i,
-                       "data" = list("original" = .drop_null(list("endogen" = data,
+                       "data" = list("original" = .drop_null(list("endogen" = if (is.null(observed)) data else observed,
                                                        "exogen" = exogen,
                                                        "deterministic" = det_data)),
-                                     "train" = list("y" = y,
+                                     "train" = .drop_null(list("y" = y,
                                                     "x" = x,
-                                                    "z" = z)))
+                                                    "z" = z,
+                                                    "constraints" = constraints))))
       
       # Update class of individual model
       class(result_i) <- append("bvarmodel", class(result_i)) 

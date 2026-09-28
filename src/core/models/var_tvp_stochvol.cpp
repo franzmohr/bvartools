@@ -7,6 +7,7 @@
 #include "core/algorithms/kalman_durbin_koopman_2002.h"
 #include "core/algorithms/stochvol_ocsn_2007.h"
 #include "core/models/forecast_states.h"
+#include "core/models/completion_support.h"
 #include "core/models/model_support.h"
 #include "core/models/noncentred_support.h"
 #include "core/models/predictive_score.h"
@@ -50,7 +51,8 @@ VarTvpStochvolDraws VarTvpStochvolSampler::draw_coefficients(const VarTvpStochvo
     const int iterations = input.spec.iterations;
     const int draws = input.spec.draws();
 
-    const arma::vec y = stacked_response(input.train);
+    // Not const: where the panel is not observed whole, every sweep completes it.
+    arma::vec y = stacked_response(input.train);
     arma::mat z = input.train.z;
 
     const int nparams = static_cast<int>(z.n_cols);
@@ -58,7 +60,7 @@ VarTvpStochvolDraws VarTvpStochvolSampler::draw_coefficients(const VarTvpStochvo
     const int tt = static_cast<int>(y.n_elem) / k;
 
     const arma::mat diag_k = arma::eye<arma::mat>(k, k);
-    const arma::mat ymat = arma::reshape(y, k, tt);
+    arma::mat ymat = arma::reshape(y, k, tt);
 
     const bool use_psi = input.use_psi();
     const int n_psi = input.spec.n_psi();
@@ -252,10 +254,32 @@ VarTvpStochvolDraws VarTvpStochvolSampler::draw_coefficients(const VarTvpStochvo
     out.h_sigma = arma::mat(k, iterations);
 
     // Start simulation
+    // A panel not observed whole: each sweep starts by completing it given the
+    // current coefficients and error covariance -- one per period where they
+    // move -- and runs on the completed panel unchanged. See VarNormalWishart.
+    core::PanelCompletion completion(input.spec, input.train, use_a, input.constraints_prior,
+                                     input.initial.constraints_inv);
+    completion.allocate(out.y, out.constraints_inv, static_cast<arma::uword>(iterations),
+                        static_cast<arma::uword>(tt));
+
     for (int draw = 0; draw < draws; draw++)
     {
         reporter.check_interrupt();
         reporter.progress(draw + 1, draws);
+
+        if (completion.active())
+        {
+            y = arma::vectorise(completion.complete(a, core::stacked_covariance(u_sigma_inv_blocks, static_cast<arma::uword>(k), "VarTvpStochvol")));
+            ymat = arma::reshape(y, k, tt);
+            if (use_a)
+            {
+                z = completion.regressors();
+                if (a_bvs)
+                {
+                    z_bvs = z;
+                }
+            }
+        }
 
         if (use_a)
         {
@@ -283,7 +307,7 @@ VarTvpStochvolDraws VarTvpStochvolSampler::draw_coefficients(const VarTvpStochvo
             {
                 // Update a, with a0 integrated out of the prior of the first period.
                 // See initial_state_variance().
-                a = kalman_durbin_koopman_2002(const_cast<arma::mat &>(ymat), z, u_sigma, a_sigma,
+                a = kalman_durbin_koopman_2002(ymat, z, u_sigma, a_sigma,
                                                a_B, a0_prior_mu, a0_prior_v + a_sigma)
                         .cols(0, tt - 1);
 
@@ -461,6 +485,7 @@ VarTvpStochvolDraws VarTvpStochvolSampler::draw_coefficients(const VarTvpStochvo
         if (input.spec.keeps(draw))
         {
             const int draw_pos = input.spec.kept_index(draw);
+            completion.store(out.y, out.constraints_inv, static_cast<arma::uword>(draw_pos), y);
 
             if (use_a)
             {
@@ -611,6 +636,13 @@ ForecastDraws VarTvpStochvolSampler::forecast(const VarTvpStochvolInput &input,
     }
 
     arma::mat fcst = arma::zeros<arma::mat>(h * k, draws);
+
+    // A panel not observed whole: each draw's forecast starts from its own
+    // completed panel.
+    const bool complete = !input.train.constraints.empty();
+    const arma::uword tt_sample =
+        complete ? stacked_response(input.train).n_elem / static_cast<arma::uword>(k) : 0;
+    core::require_completed_panels(input, coefficients, x.n_elem > 0);
     const arma::mat diag_k = arma::eye<arma::mat>(k, k);
 
     // What a simulated forecast carries from one horizon to the next.
@@ -663,6 +695,12 @@ ForecastDraws VarTvpStochvolSampler::forecast(const VarTvpStochvolInput &input,
             // horizon: the precision is the same at every horizon, and the
             // factorisation draws nothing, so where it sits does not move a draw.
             error_root = covariance_root(arma::reshape(coefficients.u_sigma_inv.col(draw), k, k));
+        }
+
+        if (complete && x.n_elem > 0 && p > 0)
+        {
+            core::start_from_panel(x, arma::reshape(coefficients.y.col(draw), k, tt_sample),
+                                   static_cast<arma::uword>(p));
         }
 
         for (int i = 0; i < h; i++)
@@ -755,6 +793,13 @@ arma::mat VarTvpStochvolSampler::log_likelihood(const VarTvpStochvolInput &input
     const arma::uword draws = coefficients.iterations();
     const int tt = static_cast<int>(y.n_elem) / k;
 
+    // A panel not observed whole: the density of what was observed, with the
+    // rest integrated out, under each period's coefficients and covariance.
+    if (!input.train.constraints.empty())
+    {
+        return core::observed_log_likelihood(input, coefficients, "VarTvpStochvol");
+    }
+
     // Every period has its own coefficients, so the regressors become block
     // diagonal and the whole path multiplies out in one go.
     arma::mat u = arma::repmat(y, 1, draws);
@@ -807,6 +852,7 @@ arma::mat VarTvpStochvolSampler::predictive_log_density(const VarTvpStochvolInpu
     const arma::uword periods = core::scored_horizons(input.test.y, input.spec);
     const arma::mat x =
         core::realised_regressors(input.forecast.x, input.test.y, input.spec.k, input.spec.p);
+    core::require_no_panel_score(input, "VarTvpStochvol");
 
     VarTvpStochvolInput scored;
     scored.spec = input.spec;

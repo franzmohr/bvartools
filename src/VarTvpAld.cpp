@@ -68,6 +68,7 @@ bayests::VarTvpAldInput read_input(const Rcpp::List &object) {
   read_mat_if_present(initial, "w", input.initial.w);
   read_vec_if_present(initial, "u_scale", input.initial.u_scale);
 
+  read_extensions(object, input);
   return input;
 }
 
@@ -81,7 +82,8 @@ bayests::VarTvpAldDraws read_draws_for_loglik(const Rcpp::List &object,
   bayests::VarTvpAldDraws draws;
 
   if (!has(object, "posterior")) {
-    return draws;
+    read_draw_extensions(object, draws);
+  return draws;
   }
 
   const Rcpp::List posterior = object["posterior"];
@@ -99,6 +101,7 @@ bayests::VarTvpAldDraws read_draws_for_loglik(const Rcpp::List &object,
                                       draws.u_sigma_inv);
   }
 
+  read_draw_extensions(object, draws);
   return draws;
 }
 
@@ -123,6 +126,7 @@ Rcpp::List write_draws(const bayests::VarTvpAldDraws &draws) {
   posteriors["u_omega_inv"] = Rcpp::List::create(Rcpp::Named("coeffs") = draws_to_r(draws.u_omega_inv));
   posteriors["u_sigma_inv"] = Rcpp::List::create(Rcpp::Named("coeffs") = draws_to_r(draws.u_sigma_inv));
 
+  write_draw_extensions(posteriors, draws);
   return posteriors;
 }
 

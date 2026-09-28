@@ -336,3 +336,30 @@
   }
   name
 }
+
+# A constraint set, the six one-dimensional datasets of
+# /data/<part>/constraints. Positions are stored as doubles, which is how
+# BayesTS reads them, and one-based as R holds them.
+.hdf5_write_constraints <- function(handles, group_data, part, constraints) {
+
+  if (is.null(constraints)) {
+    return(invisible(NULL))
+  }
+  group_part <- .hdf5_group(handles, group_data, part)
+  group <- .hdf5_group(handles, group_part, "constraints")
+  for (i in c("value", "group", "row", "period", "variable", "weight")) {
+    .hdf5_write(group, i, as.numeric(constraints[[i]]))
+  }
+
+  invisible(NULL)
+}
+
+.hdf5_read_constraints <- function(group) {
+
+  result <- list()
+  for (i in c("value", "group", "row", "period", "variable", "weight")) {
+    result[[i]] <- as.vector(hdf5r::readDataSet(group[[i]]))
+  }
+
+  result
+}

@@ -84,6 +84,7 @@ bayests::VecNormalGammaInput read_input(const Rcpp::List &object) {
   // u_sigma_inv, and the sampler opens by copying one into the other.
   read_mat_if_present(initial, "u_omega_inv", input.initial.u_sigma_inv);
 
+  read_extensions(object, input);
   return input;
 }
 
@@ -96,7 +97,8 @@ bayests::VecNormalGammaDraws read_draws(const Rcpp::List &object) {
   bayests::VecNormalGammaDraws draws;
 
   if (!has(object, "posterior")) {
-    return draws;
+    read_draw_extensions(object, draws);
+  return draws;
   }
 
   const Rcpp::List posterior = object["posterior"];
@@ -120,6 +122,7 @@ bayests::VecNormalGammaDraws read_draws(const Rcpp::List &object) {
     read_draws_if_present(Rcpp::List(posterior["u_sigma_inv"]), "coeffs", draws.u_sigma_inv);
   }
 
+  read_draw_extensions(object, draws);
   return draws;
 }
 
@@ -157,6 +160,7 @@ Rcpp::List write_draws(const bayests::VecNormalGammaDraws &draws) {
   posteriors["u_omega_inv"] = Rcpp::List::create(Rcpp::Named("coeffs") = draws_to_r(draws.u_omega_inv));
   posteriors["u_sigma_inv"] = Rcpp::List::create(Rcpp::Named("coeffs") = draws_to_r(draws.u_sigma_inv));
 
+  write_draw_extensions(posteriors, draws);
   return posteriors;
 }
 

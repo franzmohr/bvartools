@@ -7,7 +7,8 @@ project is here -- the core deliberately links neither HDF5 nor HighFive,
 prints nothing and reads no files, which is what makes it embeddable in an R
 package at all.
 
-The copy is **BayesTS `3425586`**, upstream after the `v0.3.0` release
+The copy is **BayesTS `638355a`**, on the upstream branch `mf-constraints`
+(see the last paragraph of this section), upstream after the `v0.3.0` release
 (tagged on `18a86c2`). Past the release it carries the fix to
 `core/models/var_tvp_discount.cpp` (`2dc9250`), which is what makes
 `add_predictive_loglik()` score more than the first horizon of a discounted VAR;
@@ -56,13 +57,42 @@ there is no version DOI to name; the concept DOI
 whenever one is deposited, and the last archived release is 0.2.0,
 <https://doi.org/10.5281/zenodo.22765348>.
 
-The newest of them is `3425586`, which adds `/model/n_iid`: endogenous
+The one before this one is `3425586`, which adds `/model/n_iid`: endogenous
 variables, ordered first, whose equations carry no coefficients at all. It
 brings `VarSpec::n_iid`, `iid_block()` and `require_supported_iid_block()` in
 `core/models/model_support.h`, a call to the latter from all twenty-two
 `validate()`s, and the reduction itself in the four constant-coefficient VARs.
 It reaches R through `iid` in `create_bvarmodel()` and `n_iid` in `read_spec()`
 of `bayests_r_io.h`. Draws are unchanged for every model that does not set it.
+
+The newest is `638355a`, the tip of upstream's `mf-constraints` branch, which
+had not been merged into upstream `main` when it was vendored: refresh again
+from `main` once it has, and correct this paragraph if the commit names moved.
+It brings the panel not observed whole and three options of the prior:
+
+- **Constraints** (`567aa57`, `f28a79b`, `436f3a7`, `f6f985b`, `deed44a`,
+  `8d82d18`, `90fa2ad`): `bayests::Constraints` in `data.h` on the training
+  sample, the scored horizon and the forecast scenario, the completion step in
+  `core/algorithms/constrained_var_path.{h,cpp}` and
+  `core/models/completion_support.h`, and the refusals in
+  `core/models/constraint_support.h`. All six Gaussian VARs complete the panel;
+  the two constant ones with a Wishart or gamma error also score a horizon not
+  observed whole and condition a forecast on a scenario. Soft rows bring a gamma
+  prior per group (`constraints_prior`) and draws of its precision.
+- **Shrinkage and stationarity** (`38bee41`): the hierarchical Minnesota and the
+  horseshoe prior and the stationarity condition, in
+  `core/models/shrinkage_support.h`, read by the three constant-coefficient
+  Gaussian VARs.
+- **The steady-state prior** (`638355a`) of Villani (2009), in
+  `core/models/steady_state_support.h`, read by the same three.
+
+They reach R through `read_extensions()`, `read_draw_extensions()` and
+`write_draw_extensions()` in `bayests_r_io.h`, which every binding calls
+whatever its model and which skip at compile time what a model's structs have
+no member for, and through `missing`, `aggregate` and `soft` in
+`create_bvarmodel()` and the new `add_prior_options()`. Draws are unchanged for
+every model that uses none of them: upstream verified that over 145 fixtures,
+and the testthat suite here passes unchanged.
 
 A refresh on 24 September 2026 copied nothing: `include/` and `src/core/` had
 not moved since `3425586`, though upstream `main` had. It also corrected the

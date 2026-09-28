@@ -52,6 +52,13 @@
 #'   coefficients.}
 #'   \item{\code{u_scale}}{for \code{error = "ald"}, the \eqn{K} scales of the asymmetric
 #'   Laplace distribution.}
+#'   \item{\code{y}}{for a model estimated from a panel not observed whole, the completed
+#'   panel, \eqn{TK} columns ordered by period, and \code{constraints_inv} the error
+#'   precisions of its soft constraints. See \code{\link{create_bvarmodel}}.}
+#'   \item{\code{mu}}{under a steady-state prior, the \eqn{K} unconditional means. Under an
+#'   adaptive prior, \code{a} holds the scales of its groups in element \code{shrinkage}
+#'   and, for the horseshoe, the scales of its coefficients in \code{local}. See
+#'   \code{\link{add_prior_options}}.}
 #' }
 #' Elements that do not apply to a model are absent or \code{NULL}. Note that
 #' \code{\link{bvar}} expects draws in the transposed orientation.
@@ -123,6 +130,7 @@ add_posterior_coefficients.bvarmodel <- function(object, posterior_function = NU
     .check_bvarpost_input(object)
 
     algorithm <- object[["model"]][["algorithm"]]
+    object <- .complete_initial_values(object)
 
     if (algorithm %in% c("VarNormalAld", "VarNormalGamma", "VarNormalStochvol", "VarNormalWishart",
                          "VarTvpAld", "VarTvpGamma", "VarTvpStochvol", "VarTvpWishart")) {
@@ -143,8 +151,14 @@ add_posterior_coefficients.bvarmodel <- function(object, posterior_function = NU
     # 'omega' and the two 'omega_log_zero' elements are what a block drawn under
     # the non-centred prior 'omega_v' adds beside 'sigma'. They are chains like
     # the others, and the HDF5 writer reads their mcpar.
-    for (i in c("a", "psi", "u_sigma_inv", "u_omega_inv", "u_scale")) {
-      for (j in c("coeffs", "lambda", "sigma", "omega", "omega_log_zero", "omega_log_zero_joint")) {
+    #
+    # 'y' is the completed panel of a model not observed whole, 'constraints_inv'
+    # the error precision of its soft constraints, 'mu' the unconditional mean
+    # under a steady-state prior, and a$shrinkage and a$local the scales of an
+    # adaptive prior on the coefficients.
+    for (i in c("a", "psi", "u_sigma_inv", "u_omega_inv", "u_scale", "y", "constraints_inv", "mu")) {
+      for (j in c("coeffs", "lambda", "sigma", "omega", "omega_log_zero", "omega_log_zero_joint",
+                  "shrinkage", "local")) {
         if (!is.null(object[["posterior"]][[i]][[j]])) {
           object[["posterior"]][[i]][[j]] <- .mcmc_draws(object[["model"]], object[["posterior"]][[i]][[j]])
         }

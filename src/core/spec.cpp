@@ -42,6 +42,38 @@ const char *to_string(VarSelection selection)
     return "none";
 }
 
+Shrinkage shrinkage_from_string(const std::string &name)
+{
+    if (name == "none" || name.empty())
+    {
+        return Shrinkage::none;
+    }
+    if (name == "minnesota")
+    {
+        return Shrinkage::minnesota;
+    }
+    if (name == "horseshoe")
+    {
+        return Shrinkage::horseshoe;
+    }
+    throw std::invalid_argument("unknown shrinkage '" + name +
+                                "'; expected one of none, minnesota, horseshoe");
+}
+
+const char *to_string(Shrinkage shrinkage)
+{
+    switch (shrinkage)
+    {
+    case Shrinkage::minnesota:
+        return "minnesota";
+    case Shrinkage::horseshoe:
+        return "horseshoe";
+    case Shrinkage::none:
+        break;
+    }
+    return "none";
+}
+
 ForecastStates forecast_states_from_string(const std::string &name)
 {
     if (name == "simulate" || name.empty())

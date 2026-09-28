@@ -26,6 +26,23 @@ VarSelection var_selection_from_string(const std::string &name);
 /// Inverse of var_selection_from_string.
 const char *to_string(VarSelection selection);
 
+/// How the prior variance of the coefficients adapts to the data, if at all.
+/// Each scheme keeps the file's prior precision as every coefficient's base
+/// scale and rescales it every sweep by quantities drawn from their own
+/// conditional posteriors; see ShrinkagePrior.
+enum class Shrinkage
+{
+    none,      ///< The prior as given.
+    minnesota, ///< One scale per group of coefficients, inverse gamma a priori.
+    horseshoe  ///< A global scale per group and a local one per coefficient.
+};
+
+/// "none", "minnesota" or "horseshoe"; throws std::invalid_argument otherwise.
+Shrinkage shrinkage_from_string(const std::string &name);
+
+/// Inverse of shrinkage_from_string.
+const char *to_string(Shrinkage shrinkage);
+
 /// What a forecast does with the quantities a time-varying model lets drift --
 /// its coefficients, its covariance block, its log-volatilities -- over the
 /// horizon.
@@ -109,6 +126,25 @@ struct VarSpec
     int thin = 1;
 
     VarSelection varsel = VarSelection::none;
+
+    /// How the prior variance of `a` adapts, if at all. Read by the three
+    /// constant-coefficient Gaussian VARs -- VarNormalWishart, VarNormalGamma and
+    /// VarNormalStochvol -- and refused by every other algorithm, and by those
+    /// three together with variable selection, a structural form or n_iid, each
+    /// of which rearranges the prior the scales act on.
+    Shrinkage shrinkage = Shrinkage::none;
+
+    /// Whether every draw of the coefficients has to describe a stationary VAR:
+    /// a draw whose companion matrix has an eigenvalue of modulus one or more is
+    /// drawn again. Read by the same three algorithms and refused by the rest.
+    bool stationary = false;
+
+    /// Whether the prior is on the unconditional mean rather than the intercept
+    /// -- the steady-state prior of Villani (2009): /priors/mu holds a normal
+    /// prior on mu, and the intercept (I - sum_j A_j) mu it implies is written
+    /// into `a`. Read by the same three algorithms, for a model of p lags and an
+    /// intercept only, and refused by the rest.
+    bool steady_state = false;
 
     /// Whether the error specification asks for a covariance block -- the
     /// "+covar" suffix the files carry. Which prefix it had, "gamma" or "sv",

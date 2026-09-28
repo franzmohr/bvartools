@@ -16,6 +16,7 @@ reference:
   - bvartools_model
   - create_bvarmodel
   - create_bvecmodel
+  - aggregation_weights
   - discount_models
   - starts_with("use_expanding_window")
   - combine_models
@@ -28,6 +29,7 @@ reference:
 - title: Priors and initial values
   contents:
   - starts_with("add_priors")
+  - add_prior_options
   - starts_with("minnesota_prior")
   - starts_with("ssvs_prior")
   - starts_with("inclusion_prior")

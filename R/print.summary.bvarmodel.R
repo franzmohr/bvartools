@@ -91,6 +91,11 @@ print.summary.bvarmodel <- function(x, digits = max(3L, getOption("digits") - 3L
           arw[["candidates"]], " (",
           format(round(100 * arw[["accepted"]] / arw[["candidates"]], 1), nsmall = 1),
           "%)\n", sep = "")
+      # Absent from models fitted before max_tries existed, which had one try.
+      if (!is.null(arw[["max_tries"]]) && arw[["max_tries"]] > 1) {
+        cat("Rotations drawn: ", arw[["tries"]], " (up to ", arw[["max_tries"]],
+            " per draw)\n", sep = "")
+      }
       cat("Effective sample size: ", arw[["effective_sample_size"]], " (",
           format(round(100 * arw[["effective_sample_size"]] / arw[["accepted"]], 1),
                  nsmall = 1),

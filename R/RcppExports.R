@@ -269,11 +269,35 @@
 #' which corrects the distribution that construction induces back to the
 #' posterior conditional on the sign and zero restrictions.
 #'
-#' Unlike the rejection sampler in \code{.draw_sign_restricted_q}, there is one
-#' rotation per posterior draw and no second attempt: a draw whose rotation
-#' fails the sign restrictions gets weight zero rather than another try, and a
-#' shock is not retried with its sign flipped, since the sphere the column is
-#' drawn from already covers both signs of it.
+#' With \code{max_tries = 1} there is one rotation per posterior draw, as in
+#' the paper: a draw whose rotation fails the sign restrictions gets weight
+#' zero, and a shock is not flipped, since the sphere its column is drawn from
+#' already covers both of its signs.
+#'
+#' With more tries a column whose sign restrictions all hold with the opposite
+#' sign is flipped. The proposal is unchanged by flipping a column -- each
+#' sphere is symmetric, and the zero restrictions and the spaces the later
+#' columns are drawn from depend on the column only through its span -- so
+#' the rotation kept has the same distribution as without flipping, and the
+#' probability that a try succeeds is multiplied by \eqn{2^s}, \eqn{s} the
+#' number of shocks carrying sign restrictions. That factor is the same for
+#' every draw and cancels when the weights are normalised; what it buys is
+#' \eqn{2^s} times fewer tries.
+#'
+#' With more tries the rotations are drawn until two of them satisfy the signs
+#' or \code{max_tries} have been drawn, and the first that satisfies them is
+#' returned. Retrying is not free in an importance sampler: a single try is what
+#' weights each posterior draw by the probability \eqn{p} that its rotations
+#' satisfy the signs, and a rejection sampler that stops at the first success
+#' loses that factor, counting a draw whose admissible set is tiny as much as
+#' one whose set is large. The weight is therefore multiplied by an unbiased
+#' estimate of \eqn{p} from the tries (Girshick, Mosteller and Savage, 1946):
+#' \eqn{1 / (N - 1)} when the second success came at try \eqn{N}, and
+#' \eqn{1 / T} when a single one came in all \eqn{T} tries. The rotation that
+#' is returned does not depend on the number of tries, so the product is an
+#' unbiased estimate of the weight of the paper's algorithm, and the
+#' importance sample stays exact. At \code{max_tries = 1} the estimate is one
+#' and the draws are those of the single try.
 #'
 #' @param A a list with elements \code{A}, the k x m coefficients of one draw
 #'   with the deterministic terms included, and \code{Sigma}, its k x k error
@@ -287,15 +311,17 @@
 #'   for a draw that satisfies the sign restrictions.
 #' @param epsilon the step of the numerical derivative.
 #' @param one_sided logical. Should the numerical derivative be one sided?
+#' @param max_tries the largest number of rotations drawn for this draw.
 #'
 #' @return A list with the accepted k x k rotation in \code{q}, or a 0 x 0
-#'   matrix when the draw fails the sign restrictions, and the log of the
+#'   matrix when the draw fails the sign restrictions, the log of the
 #'   unnormalised importance weight in \code{log_weight}, which is \code{NA}
-#'   when it was not asked for or could not be computed.
+#'   when it was not asked for or could not be computed, and the number of
+#'   rotations drawn in \code{tries}.
 #'
 #' @noRd
-.arw_draw_q <- function(A, setup_list, weight = TRUE, epsilon = 1e-6, one_sided = FALSE) {
-    .Call(`_bvartools_arw_draw_q`, A, setup_list, weight, epsilon, one_sided)
+.arw_draw_q <- function(A, setup_list, weight = TRUE, epsilon = 1e-6, one_sided = FALSE, max_tries = 1L) {
+    .Call(`_bvartools_arw_draw_q`, A, setup_list, weight, epsilon, one_sided, max_tries)
 }
 
 #' Cointegration Reparameterisation

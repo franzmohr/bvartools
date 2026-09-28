@@ -45,13 +45,13 @@ struct VarNormalWishartDraws
     /// log likelihood of a panel with soft rows depends on it.
     arma::mat constraints_inv;
 
-    /// G x iterations: the group scales of the adaptive prior on `a`, and
-    /// nparams x iterations: its local scales under a horseshoe. Empty without
     /// k x iterations: the unconditional mean under VarSpec::steady_state,
     /// whose intercept is in `a`. Empty without it.
     arma::mat mu;
 
-    /// one (VarSpec::shrinkage).
+    /// G x iterations: the group scales of the adaptive prior on `a`, and
+    /// nparams x iterations: its local scales under a horseshoe or a
+    /// normal-gamma prior. Empty without one (VarSpec::shrinkage).
     arma::mat a_shrinkage;
     arma::mat a_local;
 
@@ -92,13 +92,13 @@ struct VarNormalGammaDraws
     /// constraints; see VarNormalWishartDraws::constraints_inv.
     arma::mat constraints_inv;
 
-    /// G x iterations: the group scales of the adaptive prior on `a`, and
-    /// nparams x iterations: its local scales under a horseshoe. Empty without
     /// k x iterations: the unconditional mean under VarSpec::steady_state,
     /// whose intercept is in `a`. Empty without it.
     arma::mat mu;
 
-    /// one (VarSpec::shrinkage).
+    /// G x iterations: the group scales of the adaptive prior on `a`, and
+    /// nparams x iterations: its local scales under a horseshoe or a
+    /// normal-gamma prior. Empty without one (VarSpec::shrinkage).
     arma::mat a_shrinkage;
     arma::mat a_local;
 
@@ -142,13 +142,13 @@ struct VarNormalStochvolDraws
     /// constraints; see VarNormalWishartDraws::constraints_inv.
     arma::mat constraints_inv;
 
-    /// G x iterations: the group scales of the adaptive prior on `a`, and
-    /// nparams x iterations: its local scales under a horseshoe. Empty without
     /// k x iterations: the unconditional mean under VarSpec::steady_state,
     /// whose intercept is in `a`. Empty without it.
     arma::mat mu;
 
-    /// one (VarSpec::shrinkage).
+    /// G x iterations: the group scales of the adaptive prior on `a`, and
+    /// nparams x iterations: its local scales under a horseshoe or a
+    /// normal-gamma prior. Empty without one (VarSpec::shrinkage).
     arma::mat a_shrinkage;
     arma::mat a_local;
 

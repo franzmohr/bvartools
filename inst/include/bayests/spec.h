@@ -33,11 +33,13 @@ const char *to_string(VarSelection selection);
 enum class Shrinkage
 {
     none,      ///< The prior as given.
-    minnesota, ///< One scale per group of coefficients, inverse gamma a priori.
-    horseshoe  ///< A global scale per group and a local one per coefficient.
+    minnesota,   ///< One scale per group of coefficients, inverse gamma a priori.
+    horseshoe,   ///< A global scale per group and a local one per coefficient.
+    normal_gamma ///< Gamma local variances under a gamma global rate per group.
 };
 
-/// "none", "minnesota" or "horseshoe"; throws std::invalid_argument otherwise.
+/// "none", "minnesota", "horseshoe" or "normal_gamma"; throws
+/// std::invalid_argument otherwise.
 Shrinkage shrinkage_from_string(const std::string &name);
 
 /// Inverse of shrinkage_from_string.

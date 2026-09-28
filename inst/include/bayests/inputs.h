@@ -20,8 +20,9 @@ struct VarNormalWishartInitial
     /// The error precision of each soft group of TrainData::constraints, group g
     /// at position g - 1. Empty when no row is soft.
     arma::vec constraints_inv;
-    /// The starting group scales and, under a horseshoe, local scales of the
-    /// adaptive prior on `a` (VarSpec::shrinkage). Empty starts them at one.
+    /// The starting group scales and, under a horseshoe or a normal-gamma
+    /// prior, local scales of the adaptive prior on `a` (VarSpec::shrinkage).
+    /// Empty starts them at one.
     arma::vec a_shrinkage;
     arma::vec a_local;
     /// The unconditional mean the chain starts from under VarSpec::steady_state.
@@ -81,8 +82,9 @@ struct VarNormalGammaInitial
     /// The error precision of each soft group of TrainData::constraints, group g
     /// at position g - 1. Empty when no row is soft.
     arma::vec constraints_inv;
-    /// The starting group scales and, under a horseshoe, local scales of the
-    /// adaptive prior on `a` (VarSpec::shrinkage). Empty starts them at one.
+    /// The starting group scales and, under a horseshoe or a normal-gamma
+    /// prior, local scales of the adaptive prior on `a` (VarSpec::shrinkage).
+    /// Empty starts them at one.
     arma::vec a_shrinkage;
     arma::vec a_local;
     /// The unconditional mean the chain starts from under VarSpec::steady_state.
@@ -144,8 +146,9 @@ struct VarNormalStochvolInitial
     /// The error precision of each soft group of TrainData::constraints, group g
     /// at position g - 1. Empty when no row is soft.
     arma::vec constraints_inv;
-    /// The starting group scales and, under a horseshoe, local scales of the
-    /// adaptive prior on `a` (VarSpec::shrinkage). Empty starts them at one.
+    /// The starting group scales and, under a horseshoe or a normal-gamma
+    /// prior, local scales of the adaptive prior on `a` (VarSpec::shrinkage).
+    /// Empty starts them at one.
     arma::vec a_shrinkage;
     arma::vec a_local;
     /// The unconditional mean the chain starts from under VarSpec::steady_state.

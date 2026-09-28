@@ -56,8 +56,12 @@ Shrinkage shrinkage_from_string(const std::string &name)
     {
         return Shrinkage::horseshoe;
     }
+    if (name == "normal_gamma")
+    {
+        return Shrinkage::normal_gamma;
+    }
     throw std::invalid_argument("unknown shrinkage '" + name +
-                                "'; expected one of none, minnesota, horseshoe");
+                                "'; expected one of none, minnesota, horseshoe, normal_gamma");
 }
 
 const char *to_string(Shrinkage shrinkage)
@@ -68,6 +72,8 @@ const char *to_string(Shrinkage shrinkage)
         return "minnesota";
     case Shrinkage::horseshoe:
         return "horseshoe";
+    case Shrinkage::normal_gamma:
+        return "normal_gamma";
     case Shrinkage::none:
         break;
     }

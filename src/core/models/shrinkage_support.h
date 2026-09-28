@@ -7,8 +7,10 @@
 #include "bayests/priors.h"
 #include "bayests/reporter.h"
 #include "bayests/spec.h"
+#include "core/algorithms/gig_hormann_leydold_2014.h"
 #include "core/models/model_support.h"
 
+#include <algorithm>
 #include <complex>
 #include <functional>
 #include <stdexcept>
@@ -31,6 +33,23 @@ inline double draw_inverse_gamma(const double shape, const double rate)
     return 1.0 / arma::randg<double>(arma::distr_param(shape, 1.0 / rate));
 }
 
+/// Whether the scheme keeps a local scale per coefficient beside its group
+/// scales, which the samplers then write as /posterior/<block>/local.
+inline bool shrinkage_has_local(const Shrinkage type)
+{
+    return type == Shrinkage::horseshoe || type == Shrinkage::normal_gamma;
+}
+
+/// Floors of the normal-gamma draw. The squared deviation a local variance is
+/// drawn from is floored so that its generalised inverse Gaussian stays proper
+/// when theta < 1/2 and a coefficient lands on its prior mean; the local
+/// variance itself so that the prior precision, the base precision divided by
+/// it, stays finite. A coefficient whose prior standard deviation is 1e-6 of
+/// its base one is zero for every purpose a VAR has, so the second floor moves
+/// nothing but a division by zero.
+constexpr double kNormalGammaMinDeviation = 1e-300;
+constexpr double kNormalGammaMinLocal = 1e-12;
+
 /// The adaptive prior of VarSpec::shrinkage over one block of coefficients,
 /// and the scales it keeps from one sweep to the next.
 ///
@@ -51,10 +70,13 @@ public:
         }
         groups_ = prior_.group.max();
         scale_ = initial_scale.n_elem > 0 ? initial_scale : arma::vec(groups_, arma::fill::ones);
-        if (type_ == Shrinkage::horseshoe)
+        if (shrinkage_has_local(type_))
         {
             local_ = initial_local.n_elem > 0 ? initial_local
                                               : arma::vec(prior_.group.n_elem, arma::fill::ones);
+        }
+        if (type_ == Shrinkage::horseshoe)
+        {
             local_aux_.ones(prior_.group.n_elem);
             global_aux_.ones(groups_);
         }
@@ -64,11 +86,13 @@ public:
     bool active() const { return type_ != Shrinkage::none; }
     arma::uword groups() const { return groups_; }
 
-    /// The group scales: s_g under `minnesota`, tau_g^2 under `horseshoe`.
+    /// The group scales: s_g under `minnesota`, tau_g^2 under `horseshoe`,
+    /// the global rate lambda_g under `normal_gamma`.
     const arma::vec &scale() const { return scale_; }
 
-    /// The local scales lambda_j^2 under `horseshoe`, one per coefficient, and
-    /// one for an unshrunk coefficient too, left at its start.
+    /// The local scales lambda_j^2 under `horseshoe` and the local variances
+    /// psi_j under `normal_gamma`, one per coefficient, and one for an unshrunk
+    /// coefficient too, left at its start.
     const arma::vec &local() const { return local_; }
 
     /// The prior precision of the block the next draw is made under: the base
@@ -104,6 +128,37 @@ public:
         {
             const double d = a(j) - base_.mu(j);
             dev(j) = d * d * base_diag_(j);
+        }
+
+        if (type_ == Shrinkage::normal_gamma)
+        {
+            // psi_j | a_j, lambda_g ~ GIG(theta_g - 1/2, dev_j, theta_g lambda_g),
+            // then lambda_g | psi ~ G(shape_g + theta_g n_g,
+            // rate_g + theta_g sum_j psi_j / 2), after Huber and Feldkircher
+            // (2019).
+            arma::vec count(groups_, arma::fill::zeros), sum(groups_, arma::fill::zeros);
+            for (arma::uword j = 0; j < dev.n_elem; j++)
+            {
+                const arma::uword g = prior_.group(j);
+                if (g == 0)
+                {
+                    continue;
+                }
+                const double theta = prior_.theta(g - 1);
+                local_(j) = std::max(
+                    gig_hormann_leydold_2014(theta - 0.5, std::max(dev(j), kNormalGammaMinDeviation),
+                                             theta * scale_(g - 1)),
+                    kNormalGammaMinLocal);
+                count(g - 1) += 1.0;
+                sum(g - 1) += local_(j);
+            }
+            for (arma::uword g = 0; g < groups_; g++)
+            {
+                const double theta = prior_.theta(g);
+                scale_(g) = arma::randg<double>(arma::distr_param(
+                    prior_.shape(g) + theta * count(g), 1.0 / (prior_.rate(g) + 0.5 * theta * sum(g))));
+            }
+            return;
         }
 
         if (type_ == Shrinkage::minnesota)
@@ -152,7 +207,15 @@ private:
     double multiplier(const arma::uword j) const
     {
         const arma::uword g = prior_.group(j) - 1;
-        return type_ == Shrinkage::minnesota ? scale_(g) : scale_(g) * local_(j);
+        switch (type_)
+        {
+        case Shrinkage::minnesota:
+            return scale_(g);
+        case Shrinkage::normal_gamma:
+            return local_(j);
+        default:
+            return scale_(g) * local_(j);
+        }
     }
 
     Shrinkage type_;
@@ -272,16 +335,25 @@ inline void validate_shrinkage(const Shrinkage type, const ShrinkagePrior &prior
             throw std::invalid_argument(what + " must be positive");
         }
     };
-    if (type == Shrinkage::minnesota)
+    if (type == Shrinkage::minnesota || type == Shrinkage::normal_gamma)
     {
         positive(prior.shape, groups, where + "/shape");
         positive(prior.rate, groups, where + "/rate");
+    }
+    if (type == Shrinkage::normal_gamma)
+    {
+        positive(prior.theta, groups, where + "/theta");
+    }
+    else if (prior.theta.n_elem > 0)
+    {
+        throw std::invalid_argument(where + "/theta is read by /model/shrinkage normal_gamma only, "
+                                            "and it is " + to_string(type));
     }
     if (initial_scale.n_elem > 0)
     {
         positive(initial_scale, groups, std::string("/initial/") + block + "_shrinkage");
     }
-    if (type == Shrinkage::horseshoe && initial_local.n_elem > 0)
+    if (shrinkage_has_local(type) && initial_local.n_elem > 0)
     {
         positive(initial_local, n, std::string("/initial/") + block + "_local");
     }

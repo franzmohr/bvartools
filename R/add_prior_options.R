@@ -11,7 +11,8 @@
 #' @param shrinkage a character, \code{"none"} (default), \code{"minnesota"},
 #' \code{"horseshoe"} or \code{"normal_gamma"}, or a list with element
 #' \code{type} naming one of them and elements \code{group}, \code{shape},
-#' \code{rate} and, for \code{"normal_gamma"}, \code{theta}. See 'Details'.
+#' \code{rate} and, for \code{"normal_gamma"}, \code{theta} or \code{theta_rate}.
+#' See 'Details'.
 #' @param stationary logical. If \code{TRUE}, every draw of the coefficients
 #' is a stationary model. Defaults to \code{FALSE}.
 #' @param steady_state an optional list with elements \code{mu}, the prior mean
@@ -44,7 +45,10 @@
 #'  \eqn{l} form group \eqn{l}, with \code{theta = 0.1} and
 #'  \code{shape = rate = 0.01}. \code{theta} is held fixed; the smaller it is,
 #'  the more the prior pushes small coefficients to zero while leaving large
-#'  ones alone.
+#'  ones alone. Give \code{theta_rate} instead to draw \eqn{\theta} under an
+#'  exponential prior of that rate, by a Metropolis-Hastings step tuned during
+#'  the burn-in, as Huber and Feldkircher (2019) do; the draws come back as
+#'  \code{posterior$a$theta}, and the chain needs a burn-in to tune the step.
 #' }
 #' Coefficients in group 0 -- by default the deterministic terms and the
 #' exogenous variables -- keep the prior of \code{add_priors}. A \code{group} of
@@ -181,7 +185,15 @@ add_prior_options <- function(object, shrinkage = "none", stationary = FALSE,
       n_groups <- max(group)
       prior[["shape"]] <- .column(if (is.null(shrinkage[["shape"]])) 0.01 else shrinkage[["shape"]], n_groups)
       prior[["rate"]] <- .column(if (is.null(shrinkage[["rate"]])) 0.01 else shrinkage[["rate"]], n_groups)
-      prior[["theta"]] <- .column(if (is.null(shrinkage[["theta"]])) 0.1 else shrinkage[["theta"]], n_groups)
+      if (!is.null(shrinkage[["theta_rate"]])) {
+        if (!is.null(shrinkage[["theta"]])) {
+          stop("Give either 'theta' or 'theta_rate' in argument 'shrinkage', not both: theta is ",
+               "either fixed or drawn.")
+        }
+        prior[["theta_rate"]] <- .column(shrinkage[["theta_rate"]], n_groups)
+      } else {
+        prior[["theta"]] <- .column(if (is.null(shrinkage[["theta"]])) 0.1 else shrinkage[["theta"]], n_groups)
+      }
     }
     object[["priors"]][["a"]][["shrinkage"]] <- prior
     model[["shrinkage"]] <- shrinkage[["type"]]

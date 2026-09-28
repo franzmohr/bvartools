@@ -549,10 +549,12 @@ void read_extensions(const Rcpp::List &object, Input &input)
         read_vec_if_present(shrinkage, "shape", input.a_shrinkage_prior.shape);
         read_vec_if_present(shrinkage, "rate", input.a_shrinkage_prior.rate);
         read_vec_if_present(shrinkage, "theta", input.a_shrinkage_prior.theta);
+        read_vec_if_present(shrinkage, "theta_rate", input.a_shrinkage_prior.theta_rate);
       }
     }
     read_vec_if_present(initial, "a_shrinkage", input.initial.a_shrinkage);
     read_vec_if_present(initial, "a_local", input.initial.a_local);
+    read_vec_if_present(initial, "a_theta", input.initial.a_theta);
   }
   if constexpr (has_mu_prior<Input>::value) {
     if (has(priors, "mu")) {
@@ -582,6 +584,7 @@ void read_draw_extensions(const Rcpp::List &object, Draws &draws)
       const Rcpp::List a = posterior["a"];
       read_draws_if_present(a, "shrinkage", draws.a_shrinkage);
       read_draws_if_present(a, "local", draws.a_local);
+      read_draws_if_present(a, "theta", draws.a_theta);
     }
   }
   if constexpr (has_mu_draws<Draws>::value) {
@@ -611,6 +614,9 @@ void write_draw_extensions(Rcpp::List &posteriors, const Draws &draws)
       a.push_back(draws_to_r(draws.a_shrinkage), "shrinkage");
       if (draws.a_local.n_elem > 0) {
         a.push_back(draws_to_r(draws.a_local), "local");
+      }
+      if (draws.a_theta.n_elem > 0) {
+        a.push_back(draws_to_r(draws.a_theta), "theta");
       }
       posteriors["a"] = a;
     }

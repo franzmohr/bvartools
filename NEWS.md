@@ -22,7 +22,8 @@
   the prior on the lags per group, own lags and other lags by default, as in
   Chan (2021); `shrinkage = "horseshoe"` puts the horseshoe prior on them, and
   `shrinkage = "normal_gamma"` the normal-gamma prior of Huber and Feldkircher
-  (2019), with one global scale per lag order by default.
+  (2019), with one global scale per lag order by default; its `theta` is fixed,
+  or drawn under an exponential prior given as `theta_rate`, as they do.
   `stationary = TRUE` keeps only stationary draws of the coefficients.
   `steady_state` puts the prior on the unconditional mean of the variables
   instead of the intercept (Villani 2009), and its draws come back in
@@ -30,7 +31,7 @@
   with a Gaussian error. `constraints` sets the prior of the measurement error of
   soft constraints.
 
-* The vendored BayesTS core moves to `89b0495`. Draws of every model that uses
+* The vendored BayesTS core moves to `afeb326`. Draws of every model that uses
   none of the above are unchanged.
 
 * **`pool_forecasts()` pools the forecasts of several models with equal

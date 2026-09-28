@@ -60,8 +60,15 @@ struct ShrinkagePrior
     arma::vec rate;
 
     /// One per group, `normal_gamma` only: the shape theta_g of the gamma on
-    /// each local variance.
+    /// each local variance, held fixed. Absent where `theta_rate` is given.
     arma::vec theta;
+
+    /// One per group, `normal_gamma` only: the rate of an exponential prior on
+    /// theta_g, which is then drawn -- a random walk Metropolis-Hastings step on
+    /// log theta_g each sweep, its step size tuned during the burn-in and held
+    /// after it, as in Huber and Feldkircher (2019). Absent where `theta` is
+    /// given; exactly one of the two.
+    arma::vec theta_rate;
 };
 
 /// Prior on the cointegration space of Koop, Leon-Gonzalez and Strachan (2010).

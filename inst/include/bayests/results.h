@@ -54,6 +54,9 @@ struct VarNormalWishartDraws
     /// normal-gamma prior. Empty without one (VarSpec::shrinkage).
     arma::mat a_shrinkage;
     arma::mat a_local;
+    /// G x iterations: theta_g of a normal-gamma prior that draws it. Empty
+    /// where theta is fixed.
+    arma::mat a_theta;
 
     /// Length of the chain these draws came from.
     arma::uword iterations() const { return u_sigma_inv.n_cols; }
@@ -101,6 +104,9 @@ struct VarNormalGammaDraws
     /// normal-gamma prior. Empty without one (VarSpec::shrinkage).
     arma::mat a_shrinkage;
     arma::mat a_local;
+    /// G x iterations: theta_g of a normal-gamma prior that draws it. Empty
+    /// where theta is fixed.
+    arma::mat a_theta;
 
     arma::uword iterations() const { return u_sigma_inv.n_cols; }
     bool has_a() const { return a.n_elem > 0; }
@@ -151,6 +157,9 @@ struct VarNormalStochvolDraws
     /// normal-gamma prior. Empty without one (VarSpec::shrinkage).
     arma::mat a_shrinkage;
     arma::mat a_local;
+    /// G x iterations: theta_g of a normal-gamma prior that draws it. Empty
+    /// where theta is fixed.
+    arma::mat a_theta;
 
     arma::uword iterations() const { return u_sigma_inv.n_cols; }
     bool has_a() const { return a.n_elem > 0; }

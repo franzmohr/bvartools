@@ -11,6 +11,7 @@
 #include "core/models/model_support.h"
 
 #include <algorithm>
+#include <cmath>
 #include <complex>
 #include <functional>
 #include <stdexcept>
@@ -50,6 +51,12 @@ inline bool shrinkage_has_local(const Shrinkage type)
 constexpr double kNormalGammaMinDeviation = 1e-300;
 constexpr double kNormalGammaMinLocal = 1e-12;
 
+/// The Metropolis-Hastings step on log theta of a normal-gamma prior that
+/// draws theta: its starting step size, and the acceptance rate the burn-in
+/// tunes it towards.
+constexpr double kThetaInitialStep = 0.5;
+constexpr double kThetaTargetAcceptance = 0.3;
+
 /// The adaptive prior of VarSpec::shrinkage over one block of coefficients,
 /// and the scales it keeps from one sweep to the next.
 ///
@@ -57,12 +64,19 @@ constexpr double kNormalGammaMinLocal = 1e-12;
 /// the prior it is to be drawn under; after it, update() draws the scales given
 /// the block. Inactive (Shrinkage::none) it holds nothing and the sampler keeps
 /// the prior it had.
+///
+/// Under a normal-gamma prior that draws theta, the first `adapt_sweeps` calls
+/// of update() also tune the step of the Metropolis-Hastings move on log theta
+/// towards an acceptance rate of kThetaTargetAcceptance; the sampler passes its
+/// burn-in, so the step is fixed over every kept draw and the chain there is an
+/// ordinary Metropolis-within-Gibbs one.
 class CoefficientShrinkage
 {
 public:
     CoefficientShrinkage(const Shrinkage type, const ShrinkagePrior &prior, const NormalPrior &base,
-                         const arma::vec &initial_scale, const arma::vec &initial_local)
-        : type_(type), prior_(prior), base_(base)
+                         const arma::vec &initial_scale, const arma::vec &initial_local,
+                         const arma::vec &initial_theta = arma::vec(), const int adapt_sweeps = 0)
+        : type_(type), prior_(prior), base_(base), adapt_sweeps_(adapt_sweeps)
     {
         if (type_ == Shrinkage::none)
         {
@@ -80,6 +94,19 @@ public:
             local_aux_.ones(prior_.group.n_elem);
             global_aux_.ones(groups_);
         }
+        if (type_ == Shrinkage::normal_gamma)
+        {
+            if (draws_theta())
+            {
+                theta_ = initial_theta.n_elem > 0 ? initial_theta : arma::vec(1.0 / prior_.theta_rate);
+                log_step_ = arma::vec(groups_, arma::fill::value(std::log(kThetaInitialStep)));
+                accepted_.zeros(groups_);
+            }
+            else
+            {
+                theta_ = prior_.theta;
+            }
+        }
         base_diag_ = base_.v_inv.diag();
     }
 
@@ -94,6 +121,24 @@ public:
     /// psi_j under `normal_gamma`, one per coefficient, and one for an unshrunk
     /// coefficient too, left at its start.
     const arma::vec &local() const { return local_; }
+
+    /// Whether theta_g of a normal-gamma prior is drawn rather than fixed.
+    bool draws_theta() const
+    {
+        return type_ == Shrinkage::normal_gamma && prior_.theta_rate.n_elem > 0;
+    }
+
+    /// theta_g under `normal_gamma`, fixed or the current draw.
+    const arma::vec &theta() const { return theta_; }
+
+    /// The step of the move on log theta_g, and the share of moves accepted
+    /// since the burn-in ended; for tests and diagnostics.
+    arma::vec theta_step() const { return arma::exp(log_step_); }
+    arma::vec theta_acceptance() const
+    {
+        const int kept = sweeps_ - adapt_sweeps_;
+        return kept > 0 ? arma::vec(accepted_ / kept) : arma::vec(groups_, arma::fill::zeros);
+    }
 
     /// The prior precision of the block the next draw is made under: the base
     /// precision, its diagonal divided by the current prior variance multiplier
@@ -144,7 +189,7 @@ public:
                 {
                     continue;
                 }
-                const double theta = prior_.theta(g - 1);
+                const double theta = theta_(g - 1);
                 local_(j) = std::max(
                     gig_hormann_leydold_2014(theta - 0.5, std::max(dev(j), kNormalGammaMinDeviation),
                                              theta * scale_(g - 1)),
@@ -154,10 +199,15 @@ public:
             }
             for (arma::uword g = 0; g < groups_; g++)
             {
-                const double theta = prior_.theta(g);
+                const double theta = theta_(g);
                 scale_(g) = arma::randg<double>(arma::distr_param(
                     prior_.shape(g) + theta * count(g), 1.0 / (prior_.rate(g) + 0.5 * theta * sum(g))));
             }
+            if (draws_theta())
+            {
+                update_theta();
+            }
+            sweeps_++;
             return;
         }
 
@@ -204,6 +254,65 @@ public:
     }
 
 private:
+    /// log p(theta_g | psi, lambda_g) up to a constant: the exponential prior
+    /// times the gamma density of every local variance of the group,
+    ///
+    ///     -r theta + n (theta log(theta lambda / 2) - lgamma(theta))
+    ///       + (theta - 1) sum log psi_j - theta lambda sum psi_j / 2.
+    double theta_log_density(const double theta, const arma::uword g, const double n,
+                             const double sum_log, const double sum) const
+    {
+        const double lambda = scale_(g);
+        return -prior_.theta_rate(g) * theta +
+               n * (theta * std::log(0.5 * theta * lambda) - std::lgamma(theta)) +
+               (theta - 1.0) * sum_log - 0.5 * theta * lambda * sum;
+    }
+
+    /// One random walk Metropolis-Hastings move on log theta_g per group; the
+    /// Jacobian of the log is the log theta term of the acceptance ratio.
+    /// During the first adapt_sweeps_ sweeps the step follows a Robbins-Monro
+    /// recursion towards kThetaTargetAcceptance; after them it is fixed and the
+    /// acceptances are counted.
+    void update_theta()
+    {
+        arma::vec n(groups_, arma::fill::zeros), sum_log(groups_, arma::fill::zeros),
+            sum(groups_, arma::fill::zeros);
+        for (arma::uword j = 0; j < prior_.group.n_elem; j++)
+        {
+            const arma::uword g = prior_.group(j);
+            if (g > 0)
+            {
+                n(g - 1) += 1.0;
+                sum_log(g - 1) += std::log(local_(j));
+                sum(g - 1) += local_(j);
+            }
+        }
+        const bool adapting = sweeps_ < adapt_sweeps_;
+        for (arma::uword g = 0; g < groups_; g++)
+        {
+            const double current = theta_(g);
+            const double proposal = current * std::exp(std::exp(log_step_(g)) * arma::randn<double>());
+            const double log_ratio =
+                theta_log_density(proposal, g, n(g), sum_log(g), sum(g)) -
+                theta_log_density(current, g, n(g), sum_log(g), sum(g)) + std::log(proposal / current);
+            const double u = arma::randu<double>();
+            const bool accept = std::log(u) < log_ratio;
+            if (accept)
+            {
+                theta_(g) = proposal;
+            }
+            if (adapting)
+            {
+                log_step_(g) += ((accept ? 1.0 : 0.0) - kThetaTargetAcceptance) /
+                                std::sqrt(1.0 + static_cast<double>(sweeps_));
+            }
+            else if (accept)
+            {
+                accepted_(g) += 1.0;
+            }
+        }
+    }
+
     double multiplier(const arma::uword j) const
     {
         const arma::uword g = prior_.group(j) - 1;
@@ -227,6 +336,11 @@ private:
     arma::vec local_;
     arma::vec local_aux_;
     arma::vec global_aux_;
+    arma::vec theta_;
+    arma::vec log_step_;
+    arma::vec accepted_;
+    int adapt_sweeps_ = 0;
+    int sweeps_ = 0;
 };
 
 /// Whether VarSpec::shrinkage and VarSpec::stationary are read by the
@@ -264,7 +378,8 @@ inline void require_supported_shrinkage(const VarSpec &spec, const bool supporte
 /// group and one per coefficient, positive.
 inline void validate_shrinkage(const Shrinkage type, const ShrinkagePrior &prior,
                                const NormalPrior &base, const arma::vec &initial_scale,
-                               const arma::vec &initial_local, const char *block)
+                               const arma::vec &initial_local, const arma::vec &initial_theta,
+                               const char *block)
 {
     const std::string where = std::string("/priors/") + block + "/shrinkage";
     if (type == Shrinkage::none)
@@ -342,12 +457,33 @@ inline void validate_shrinkage(const Shrinkage type, const ShrinkagePrior &prior
     }
     if (type == Shrinkage::normal_gamma)
     {
-        positive(prior.theta, groups, where + "/theta");
+        if (prior.theta.n_elem > 0 && prior.theta_rate.n_elem > 0)
+        {
+            throw std::invalid_argument(where + " has both /theta and /theta_rate: theta is either "
+                                                "fixed or drawn, so give one of the two");
+        }
+        if (prior.theta_rate.n_elem > 0)
+        {
+            positive(prior.theta_rate, groups, where + "/theta_rate");
+            if (initial_theta.n_elem > 0)
+            {
+                positive(initial_theta, groups, std::string("/initial/") + block + "_theta");
+            }
+        }
+        else
+        {
+            positive(prior.theta, groups, where + "/theta");
+        }
     }
-    else if (prior.theta.n_elem > 0)
+    else if (prior.theta.n_elem > 0 || prior.theta_rate.n_elem > 0)
     {
-        throw std::invalid_argument(where + "/theta is read by /model/shrinkage normal_gamma only, "
-                                            "and it is " + to_string(type));
+        throw std::invalid_argument(where + "/theta and /theta_rate are read by /model/shrinkage "
+                                            "normal_gamma only, and it is " + to_string(type));
+    }
+    if (initial_theta.n_elem > 0 && !(type == Shrinkage::normal_gamma && prior.theta_rate.n_elem > 0))
+    {
+        throw std::invalid_argument(std::string("/initial/") + block + "_theta is read only where "
+                                    "/priors/" + block + "/shrinkage/theta_rate draws theta");
     }
     if (initial_scale.n_elem > 0)
     {

@@ -741,7 +741,7 @@ void VarNormalWishartInput::validate() const
     core::require_supported_steady_state(spec, true, "VarNormalWishart");
     core::require_steady_state(spec, true, train, a_prior, mu_prior, initial.mu, "VarNormalWishart");
     core::validate_shrinkage(spec.shrinkage, a_shrinkage_prior, a_prior, initial.a_shrinkage,
-                             initial.a_local, "a");
+                             initial.a_local, initial.a_theta, "a");
     // What this sampler does not do with constraints yet is refused first, so the
     // message names that rather than a shape the set was never going to be read in.
     core::require_completion_spec(spec, train, forecast, test, "VarNormalWishart");
@@ -790,7 +790,7 @@ void VarNormalGammaInput::validate() const
     core::require_supported_steady_state(spec, true, "VarNormalGamma");
     core::require_steady_state(spec, true, train, a_prior, mu_prior, initial.mu, "VarNormalGamma");
     core::validate_shrinkage(spec.shrinkage, a_shrinkage_prior, a_prior, initial.a_shrinkage,
-                             initial.a_local, "a");
+                             initial.a_local, initial.a_theta, "a");
     core::require_completion_spec(spec, train, forecast, test, "VarNormalGamma");
     core::require_supported_constraints(spec, train, test, true, "VarNormalGamma");
     core::require_supported_forecast_constraints(spec, forecast, true, "VarNormalGamma");
@@ -850,7 +850,7 @@ void VarNormalStochvolInput::validate() const
     core::require_supported_steady_state(spec, true, "VarNormalStochvol");
     core::require_steady_state(spec, true, train, a_prior, mu_prior, initial.mu, "VarNormalStochvol");
     core::validate_shrinkage(spec.shrinkage, a_shrinkage_prior, a_prior, initial.a_shrinkage,
-                             initial.a_local, "a");
+                             initial.a_local, initial.a_theta, "a");
     // A panel not observed whole is estimated; a score from one, a horizon
     // realised in part and a scenario are refused, the forecast carrying
     // states forward that the completion step over the horizon does not yet.

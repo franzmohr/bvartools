@@ -53,7 +53,8 @@ elements is a list whose element \code{coeffs} holds the draws after burn-in as 
   \item{\code{mu}}{under a steady-state prior, the \eqn{K} unconditional means. Under an
   adaptive prior, \code{a} holds the scales of its groups in element \code{shrinkage}
   and, for the horseshoe and the normal-gamma prior, the scales of its coefficients
-  in \code{local}. See
+  in \code{local}; where the normal-gamma prior draws \eqn{\theta}, its draws are in
+  \code{theta}. See
   \code{\link{add_prior_options}}.}
 }
 Elements that do not apply to a model are absent or \code{NULL}. Note that

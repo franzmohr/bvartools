@@ -217,10 +217,10 @@ VarNormalGammaDraws VarNormalGammaSampler::draw_coefficients(const VarNormalGamm
         if (complete)
         {
             y = arma::vectorise(
-                completion.complete(a, core::covariance_of(u_sigma_inv, "VarNormalGamma")));
+                completion.complete(iid.scatter(a), core::covariance_of(u_sigma_inv, "VarNormalGamma")));
             if (use_a)
             {
-                z = completion.regressors();
+                z = iid.columns(completion.regressors());
                 if (a_bvs)
                 {
                     z_bvs = z;

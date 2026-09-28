@@ -100,7 +100,10 @@ aggregation_weights <- function(type = c("average", "sum", "growth"), n = 3) {
 # interpolation of what was, carried flat past either end, and for an aggregated
 # series the interpolation of its observations divided by the sum of their
 # weights, which puts the start on the scale of the series the model contains.
-.fill_panel <- function(data, aggregate) {
+# The series named in 'zero' -- the i.i.d. variables of create_bvarmodel() --
+# start at zero instead, their unconditional mean, since a white noise series
+# has nothing an interpolation could carry.
+.fill_panel <- function(data, aggregate, zero = NULL) {
 
   series <- dimnames(data)[[2]]
   filled <- data
@@ -114,7 +117,10 @@ aggregation_weights <- function(type = c("average", "sum", "growth"), n = 3) {
     if (!is.null(aggregate[[series[j]]])) {
       values <- values / sum(aggregate[[series[j]]])
     }
-    if (length(observed) == 1) {
+    if (series[j] %in% zero) {
+      values[is.na(values)] <- 0
+      filled[, j] <- values
+    } else if (length(observed) == 1) {
       filled[, j] <- values[observed]
     } else {
       filled[, j] <- stats::approx(observed, values[observed], xout = index, rule = 2)$y

@@ -25,6 +25,8 @@ Other post-estimation analysis:
 \code{\link[=add_sign_zero_restrictions.bvarmodel]{add_sign_zero_restrictions.bvarmodel()}},
 \code{\link[=fevd.bvarmodel]{fevd.bvarmodel()}},
 \code{\link[=fevd.bvecmodel]{fevd.bvecmodel()}},
+\code{\link[=historical_decomposition]{historical_decomposition()}},
+\code{\link[=historical_decomposition.bvarmodel]{historical_decomposition.bvarmodel()}},
 \code{\link[=irf.bvarmodel]{irf.bvarmodel()}},
 \code{\link[=multipliers]{multipliers()}},
 \code{\link[=multipliers.bvarmodel]{multipliers.bvarmodel()}},

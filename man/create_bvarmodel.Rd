@@ -277,7 +277,12 @@ are an approximation, such as the growth rate of an average.
 Estimating what was not observed is available for \code{error = "wishart"},
 \code{"gamma"}, \code{"gamma+covar"}, \code{"sv"} and \code{"sv+covar"},
 with constant or time varying coefficients. It cannot be combined with
-\code{structural}, \code{iid} or the discounted model. Forecasts start from
+\code{structural} or the discounted model. It can be combined with
+\code{iid}, for models with constant coefficients: a variable named there
+that was not observed in a period -- a high-frequency surprise whose series
+starts after the sample does, as in Jarocinski and Karadi (2020) -- is drawn
+from its white noise given the errors of the other equations, and its gaps
+start at zero rather than at an interpolation. Forecasts start from
 each draw's completed panel. Forecasts are scored and conditioned on a
 scenario in \code{data$forecast$constraints} only by models with constant
 coefficients and \code{error = "wishart"} or \code{"gamma"}.

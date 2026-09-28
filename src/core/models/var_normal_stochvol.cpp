@@ -212,10 +212,10 @@ VarNormalStochvolDraws VarNormalStochvolSampler::draw_coefficients(
 
         if (completion.active())
         {
-            y = arma::vectorise(completion.complete(a, core::stacked_covariance(u_sigma_inv_diag, static_cast<arma::uword>(k), "VarNormalStochvol")));
+            y = arma::vectorise(completion.complete(iid.scatter(a), core::stacked_covariance(u_sigma_inv_diag, static_cast<arma::uword>(k), "VarNormalStochvol")));
             if (use_a)
             {
-                z = completion.regressors();
+                z = iid.columns(completion.regressors());
                 if (a_bvs)
                 {
                     z_bvs = z;

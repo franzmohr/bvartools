@@ -204,7 +204,12 @@
 #' Estimating what was not observed is available for \code{error = "wishart"},
 #' \code{"gamma"}, \code{"gamma+covar"}, \code{"sv"} and \code{"sv+covar"},
 #' with constant or time varying coefficients. It cannot be combined with
-#' \code{structural}, \code{iid} or the discounted model. Forecasts start from
+#' \code{structural} or the discounted model. It can be combined with
+#' \code{iid}, for models with constant coefficients: a variable named there
+#' that was not observed in a period -- a high-frequency surprise whose series
+#' starts after the sample does, as in Jarocinski and Karadi (2020) -- is drawn
+#' from its white noise given the errors of the other equations, and its gaps
+#' start at zero rather than at an interpolation. Forecasts start from
 #' each draw's completed panel. Forecasts are scored and conditioned on a
 #' scenario in \code{data$forecast$constraints} only by models with constant
 #' coefficients and \code{error = "wishart"} or \code{"gamma"}.
@@ -401,14 +406,14 @@ create_bvarmodel <- function(data, p = 2,
   }
   observed <- NULL
   if (missing == "estimate") {
-    if (error == "ald" || !is.null(algorithm) || structural || !is.null(iid)) {
+    if (error == "ald" || !is.null(algorithm) || structural) {
       stop("Estimating what was not observed is not available for a quantile regression ",
-           "model, the discounted model, a structural model or 'iid' variables.")
+           "model, the discounted model or a structural model.")
     }
     panel <- .check_panel_arguments(data, aggregate, soft)
     aggregate <- panel[["aggregate"]]
     observed <- data
-    data <- .fill_panel(data, aggregate)
+    data <- .fill_panel(data, aggregate, zero = iid)
   }
 
   # A lag order of 1.5 failed with "subscript out of bounds" and one of -1 was

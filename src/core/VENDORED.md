@@ -7,8 +7,8 @@ project is here -- the core deliberately links neither HDF5 nor HighFive,
 prints nothing and reads no files, which is what makes it embeddable in an R
 package at all.
 
-The copy is **BayesTS `696dc7d`**, on the upstream branch `structural-qvar`
-(see the last paragraph of this section), upstream after the `v0.3.0` release
+The copy is **BayesTS `696dc7d`**, which upstream `main` holds unchanged
+since merging `structural-qvar` (`82ac49c`), after the `v0.3.0` release
 (tagged on `18a86c2`). Past the release it carries the fix to
 `core/models/var_tvp_discount.cpp` (`2dc9250`), which is what makes
 `add_predictive_loglik()` score more than the first horizon of a discounted VAR;
@@ -108,8 +108,8 @@ for the first three, 148 for the normal-gamma prior and 151 for drawing theta, a
 here passes unchanged.
 
 The newest is `696dc7d`, the tip of upstream's `structural-qvar` branch, off
-`main` at `03956c5`; it had not been merged when it was vendored: refresh again
-from `main` once it has, and correct this paragraph if the commit names moved.
+`main` at `03956c5` and merged into it as `82ac49c` with its commits unchanged,
+so the files here are those of upstream `main`.
 It brings the structural quantile VAR of Chavleishvili and Manganelli (2019)
 (`2e4fe3e`, `696dc7d`): `VarSpec::quantiles` and `VarSpec::forecast_quantile`
 in `spec.h`, the distribution a grid of conditional quantiles describes in the

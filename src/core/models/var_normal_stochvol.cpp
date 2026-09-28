@@ -186,7 +186,7 @@ VarNormalStochvolDraws VarNormalStochvolSampler::draw_coefficients(
     if (shrinkage.active())
     {
         out.a_shrinkage = arma::mat(shrinkage.groups(), iterations);
-        if (input.spec.shrinkage == Shrinkage::horseshoe)
+        if (core::shrinkage_has_local(input.spec.shrinkage))
         {
             out.a_local = arma::mat(nparams, iterations);
         }
@@ -370,7 +370,7 @@ VarNormalStochvolDraws VarNormalStochvolSampler::draw_coefficients(
             if (shrinkage.active())
             {
                 out.a_shrinkage.col(draw_pos) = shrinkage.scale();
-                if (input.spec.shrinkage == Shrinkage::horseshoe)
+                if (core::shrinkage_has_local(input.spec.shrinkage))
                 {
                     out.a_local.col(draw_pos) = shrinkage.local();
                 }

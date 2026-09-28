@@ -16,9 +16,10 @@ add_prior_options(
 \item{object}{an object of class 'bvarmodel' or 'modellist', usually the
 result of \code{\link{add_priors}}.}
 
-\item{shrinkage}{a character, \code{"none"} (default), \code{"minnesota"} or
-\code{"horseshoe"}, or a list with element \code{type} naming one of them and
-elements \code{group}, \code{shape} and \code{rate}. See 'Details'.}
+\item{shrinkage}{a character, \code{"none"} (default), \code{"minnesota"},
+\code{"horseshoe"} or \code{"normal_gamma"}, or a list with element
+\code{type} naming one of them and elements \code{group}, \code{shape},
+\code{rate} and, for \code{"normal_gamma"}, \code{theta}. See 'Details'.}
 
 \item{stationary}{logical. If \code{TRUE}, every draw of the coefficients
 is a stationary model. Defaults to \code{FALSE}.}
@@ -60,6 +61,15 @@ the coefficients:
  \item \code{"horseshoe"}: the horseshoe prior of Carvalho, Polson and Scott
  (2010), a half-Cauchy scale per group and one per coefficient, drawn as in
  Makalic and Schmidt (2016). By default all lags form one group.
+ \item \code{"normal_gamma"}: the normal-gamma prior of Griffin and Brown
+ (2010) as Huber and Feldkircher (2019) put it on a VAR. Each coefficient's
+ scale \eqn{\psi_j} has a gamma prior of shape \code{theta} and rate
+ \eqn{\theta \lambda_g / 2}, and each group's \eqn{\lambda_g} a gamma
+ prior of \code{shape} and \code{rate}. By default the lags of order
+ \eqn{l} form group \eqn{l}, with \code{theta = 0.1} and
+ \code{shape = rate = 0.01}. \code{theta} is held fixed; the smaller it is,
+ the more the prior pushes small coefficients to zero while leaving large
+ ones alone.
 }
 Coefficients in group 0 -- by default the deterministic terms and the
 exogenous variables -- keep the prior of \code{add_priors}. A \code{group} of
@@ -98,6 +108,14 @@ model <- add_posterior_coefficients(model)
 Carvalho, C. M., Polson, N. G., & Scott, J. G. (2010). The horseshoe
 estimator for sparse signals. \emph{Biometrika, 97}(2), 465--480.
 \doi{10.1093/biomet/asq017}
+
+Griffin, J. E., & Brown, P. J. (2010). Inference with normal-gamma prior
+distributions in regression problems. \emph{Bayesian Analysis, 5}(1),
+171--188. \doi{10.1214/10-BA507}
+
+Huber, F., & Feldkircher, M. (2019). Adaptive shrinkage in Bayesian vector
+autoregressive models. \emph{Journal of Business & Economic Statistics,
+37}(1), 27--39. \doi{10.1080/07350015.2016.1256217}
 
 Chan, J. C. C. (2021). Minnesota-type adaptive hierarchical priors for large
 Bayesian VARs. \emph{International Journal of Forecasting, 37}(3),

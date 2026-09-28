@@ -33,21 +33,35 @@ struct NormalPrior
 /// sharing a scale the data choose. Under `horseshoe` it is
 /// tau_g^2 lambda_j^2 / v_inv(j, j) with half-Cauchy global and local scales,
 /// drawn through the auxiliary inverse gammas of Makalic and Schmidt (2016);
-/// shape and rate are not read.
+/// shape and rate are not read. Under `normal_gamma` it is psi_j / v_inv(j, j)
+/// with psi_j ~ G(theta_g, rate theta_g lambda_g / 2) and
+/// lambda_g ~ G(shape_g, rate_g): the normal-gamma prior of Griffin and Brown
+/// (2010) as Huber and Feldkircher (2019) put it on a VAR. psi_j is drawn from
+/// its generalised inverse Gaussian conditional, lambda_g from its gamma one;
+/// theta is fixed, and the smaller it is the more mass sits near zero and in
+/// the tails.
 ///
 /// Carvalho, Polson and Scott (2010), The horseshoe estimator for sparse
 /// signals; Makalic and Schmidt (2016), A simple sampler for the horseshoe
 /// estimator; Chan (2021), Minnesota-type adaptive hierarchical priors for
-/// large Bayesian VARs.
+/// large Bayesian VARs; Griffin and Brown (2010), Inference with normal-gamma
+/// prior distributions in regression problems; Huber and Feldkircher (2019),
+/// Adaptive shrinkage in Bayesian vector autoregressive models.
 struct ShrinkagePrior
 {
     /// One per coefficient of the block: its group, 1..G with none left out,
     /// or 0 where its prior stays as given.
     arma::uvec group;
 
-    /// One per group, `minnesota` only: the inverse gamma on the group's scale.
+    /// One per group, `minnesota` and `normal_gamma`: the inverse gamma on
+    /// the group's scale under the first, the gamma on its global rate
+    /// lambda_g under the second.
     arma::vec shape;
     arma::vec rate;
+
+    /// One per group, `normal_gamma` only: the shape theta_g of the gamma on
+    /// each local variance.
+    arma::vec theta;
 };
 
 /// Prior on the cointegration space of Koop, Leon-Gonzalez and Strachan (2010).

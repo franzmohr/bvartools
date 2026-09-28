@@ -46,6 +46,31 @@ test_that("the adaptive priors return their scales", {
   expect_equal(dim(horseshoe$posterior$a$local), c(fx_iterations, 21))
 })
 
+test_that("the normal-gamma prior has one global rate per lag order", {
+  model <- add_prior_options(po_model(), shrinkage = "normal_gamma")
+  group <- matrix(as.numeric(model$priors$a$shrinkage$group), nrow = 3)
+  expect_equal(group[, 1:3], matrix(1, 3, 3))
+  expect_equal(group[, 4:6], matrix(2, 3, 3))
+  expect_equal(group[, 7], rep(0, 3))
+  expect_equal(as.numeric(model$priors$a$shrinkage$theta), c(0.1, 0.1))
+  expect_equal(as.numeric(model$priors$a$shrinkage$shape), c(0.01, 0.01))
+
+  set.seed(10)
+  model <- add_posterior_coefficients(add_initial_values(model))
+  expect_equal(dim(model$posterior$a$shrinkage), c(fx_iterations, 2))
+  expect_equal(dim(model$posterior$a$local), c(fx_iterations, 21))
+  expect_true(all(model$posterior$a$local > 0))
+
+  # Written to a file, theta comes back.
+  skip_if_not_installed("hdf5r")
+  file <- tempfile(fileext = ".h5")
+  on.exit(unlink(file))
+  write_to_hdf5(model, file)
+  back <- read_model_from_hdf5(file)
+  expect_equal(as.numeric(back$priors$a$shrinkage$theta), c(0.1, 0.1))
+  expect_equal(back$model$shrinkage, "normal_gamma")
+})
+
 test_that("every kept draw is stationary under the stationarity condition", {
   set.seed(7)
   model <- add_posterior_coefficients(add_initial_values(
@@ -68,7 +93,10 @@ test_that("under a steady-state prior the intercept is (I - A) mu in every draw"
 })
 
 test_that("options a model cannot honour are refused", {
-  expect_error(add_prior_options(po_model(), shrinkage = "lasso"), "'minnesota' or 'horseshoe'")
+  expect_error(add_prior_options(po_model(), shrinkage = "lasso"), "'horseshoe' or 'normal_gamma'")
+  expect_error(add_posterior_coefficients(add_initial_values(
+    add_prior_options(po_model(), shrinkage = list(type = "normal_gamma", theta = -1)))),
+    "theta must be positive")
   expect_error(add_prior_options(po_model(), shrinkage = list(type = "minnesota", group = 1)),
                "one element per coefficient")
   expect_error(add_prior_options(po_model(), steady_state = list(mu = 0)), "'mu' and 'v_i'")

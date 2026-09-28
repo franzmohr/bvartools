@@ -548,6 +548,7 @@ void read_extensions(const Rcpp::List &object, Input &input)
         }
         read_vec_if_present(shrinkage, "shape", input.a_shrinkage_prior.shape);
         read_vec_if_present(shrinkage, "rate", input.a_shrinkage_prior.rate);
+        read_vec_if_present(shrinkage, "theta", input.a_shrinkage_prior.theta);
       }
     }
     read_vec_if_present(initial, "a_shrinkage", input.initial.a_shrinkage);

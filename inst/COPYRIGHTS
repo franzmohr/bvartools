@@ -54,6 +54,8 @@ BSD 3-Clause portion
     src/core/algorithms/chan_jeliazkov_2009.h
     src/core/algorithms/constrained_var_path.cpp
     src/core/algorithms/constrained_var_path.h
+    src/core/algorithms/gig_hormann_leydold_2014.cpp
+    src/core/algorithms/gig_hormann_leydold_2014.h
     src/core/algorithms/inclusion_probability.h
     src/core/algorithms/inverse_gaussian.cpp
     src/core/algorithms/inverse_gaussian.h

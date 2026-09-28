@@ -7,7 +7,7 @@ project is here -- the core deliberately links neither HDF5 nor HighFive,
 prints nothing and reads no files, which is what makes it embeddable in an R
 package at all.
 
-The copy is **BayesTS `638355a`**, on the upstream branch `mf-constraints`
+The copy is **BayesTS `89b0495`**, on the upstream branch `normal-gamma-shrinkage`
 (see the last paragraph of this section), upstream after the `v0.3.0` release
 (tagged on `18a86c2`). Past the release it carries the fix to
 `core/models/var_tvp_discount.cpp` (`2dc9250`), which is what makes
@@ -65,10 +65,11 @@ brings `VarSpec::n_iid`, `iid_block()` and `require_supported_iid_block()` in
 It reaches R through `iid` in `create_bvarmodel()` and `n_iid` in `read_spec()`
 of `bayests_r_io.h`. Draws are unchanged for every model that does not set it.
 
-The newest is `638355a`, the tip of upstream's `mf-constraints` branch, which
-had not been merged into upstream `main` when it was vendored: refresh again
-from `main` once it has, and correct this paragraph if the commit names moved.
-It brings the panel not observed whole and three options of the prior:
+The newest is `89b0495`, the tip of upstream's `normal-gamma-shrinkage` branch,
+which sits on `mf-constraints`; neither had been merged into upstream `main`
+when it was vendored: refresh again from `main` once they have, and correct
+this paragraph if the commit names moved. It brings the panel not observed
+whole and four options of the prior:
 
 - **Constraints** (`567aa57`, `f28a79b`, `436f3a7`, `f6f985b`, `deed44a`,
   `8d82d18`, `90fa2ad`): `bayests::Constraints` in `data.h` on the training
@@ -85,14 +86,20 @@ It brings the panel not observed whole and three options of the prior:
   Gaussian VARs.
 - **The steady-state prior** (`638355a`) of Villani (2009), in
   `core/models/steady_state_support.h`, read by the same three.
+- **The normal-gamma prior** (`c4f344c`, `89b0495`) of Griffin and Brown
+  (2010), a fourth `shrinkage` in `core/models/shrinkage_support.h`, whose local
+  variances are drawn by the new `core/algorithms/gig_hormann_leydold_2014.{h,cpp}`.
+  It reaches R as `shrinkage = "normal_gamma"` in `add_prior_options()`, its
+  `theta` read by `read_extensions()`.
 
 They reach R through `read_extensions()`, `read_draw_extensions()` and
 `write_draw_extensions()` in `bayests_r_io.h`, which every binding calls
 whatever its model and which skip at compile time what a model's structs have
 no member for, and through `missing`, `aggregate` and `soft` in
 `create_bvarmodel()` and the new `add_prior_options()`. Draws are unchanged for
-every model that uses none of them: upstream verified that over 145 fixtures,
-and the testthat suite here passes unchanged.
+every model that uses none of them: upstream verified that over 145 fixtures
+for the first three and 148 for the normal-gamma prior, and the testthat suite
+here passes unchanged.
 
 A refresh on 24 September 2026 copied nothing: `include/` and `src/core/` had
 not moved since `3425586`, though upstream `main` had. It also corrected the

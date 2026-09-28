@@ -85,6 +85,14 @@ test_that("a completed panel is decomposed draw by draw", {
   # The data it decomposes is the mean completed series, observed where it was.
   completed <- colMeans(model$posterior$y$coeffs)[seq(2, length(model$data$train$y), by = 3)]
   expect_equal(as.numeric(attr(hd, "data")), as.numeric(completed), tolerance = 1e-8)
+  # An impact function that drops draws still reads the completed panel at the
+  # rows of the draws it kept.
+  half <- historical_decomposition(model, response = "Dp", type = "custom",
+                                   impact = function(draw, i) if (i %% 2 == 0) NULL else diag(3))
+  kept <- seq(1, nrow(model$posterior$y$coeffs), by = 2)
+  kept_mean <- colMeans(model$posterior$y$coeffs[kept, , drop = FALSE])[seq(2, length(model$data$train$y), by = 3)]
+  expect_equal(as.numeric(rowSums(half)), as.numeric(kept_mean), tolerance = 1e-8)
+
   observed <- !is.na(stats::window(data[, "Dp"], start = stats::start(hd)))
   expect_equal(as.numeric(attr(hd, "data"))[observed],
                as.numeric(stats::window(data[, "Dp"], start = stats::start(hd)))[observed],

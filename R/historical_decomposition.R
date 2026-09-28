@@ -137,7 +137,7 @@ historical_decomposition.bvarmodel <- function(x, response = NULL, type = "oir",
   y_data <- as.matrix(x[["data"]][["train"]][["y"]])
   x_data <- as.matrix(x[["data"]][["train"]][["x"]])
   completed <- x[["posterior"]][["y"]][["coeffs"]]
-  kept <- if (is.null(completed)) NULL else .kept_draws(x, A)
+  kept <- attr(A, "kept")
 
   result <- array(NA_real_, c(length(A), tt, k + 1))
   for (d in seq_along(A)) {
@@ -177,22 +177,6 @@ historical_decomposition.bvarmodel <- function(x, response = NULL, type = "oir",
   attr(out, "response") <- response
   class(out) <- append("bvarhd", class(out))
   out
-}
-
-# The rows of the posterior draws each element of .collect_draws() came from:
-# it drops the draws a sign restricted identification could not identify, and
-# a completed panel has to be read at the same rows as the coefficients.
-.kept_draws <- function(x, A) {
-  store <- nrow(x[["posterior"]][["u_sigma_inv"]][["coeffs"]])
-  if (length(A) == store) {
-    return(seq_len(store))
-  }
-  rotations <- x[["posterior"]][["q"]][["coeffs"]]
-  if (is.null(rotations)) {
-    stop("An impact function that drops draws cannot be combined with a completed panel: ",
-         "which draw of the panel belongs to which impact matrix is lost.")
-  }
-  which(!apply(rotations, 1, anyNA))
 }
 
 # One draw's decomposition of response `r`: a tt x (k + 1) matrix, one column

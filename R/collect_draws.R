@@ -274,5 +274,9 @@
     A[[i]] <- temp
   }
 
-  return(A[keep])
+  # Which draws survived, for a caller that reads other blocks of the posterior
+  # at the same rows -- the completed panel, for historical_decomposition().
+  result <- A[keep]
+  attr(result, "kept") <- which(keep)
+  return(result)
 }

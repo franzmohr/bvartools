@@ -703,11 +703,18 @@ inline void require_completion_spec(const VarSpec &spec, const TrainData &train,
                    "/data/forecast/constraints replaces that forecast with a scenario. Score "
                    "without the scenario, or condition without /data/test");
     }
-    if (spec.structural || spec.n_iid > 0)
+    // n_iid is not refused: its equations are rows of zeros in the coefficient
+    // matrix the completion step reads, so the samplers hand it the full vector
+    // (IidBlock::scatter) and reduce the rebuilt regressors again
+    // (IidBlock::columns). An i.i.d. variable not observed in a period is then
+    // drawn from its white noise, conditioned on the other errors through the
+    // covariance -- the Kalman filter of Jarocinski and Karadi (2020) over
+    // surprises missing before their sample starts.
+    if (spec.structural)
     {
         throw std::invalid_argument(
-            name + " does not combine constraints with a structural form or n_iid: both "
-                   "rearrange the coefficients the lags are read from");
+            name + " does not combine constraints with a structural form, whose "
+                   "contemporaneous coefficients rearrange the ones the lags are read from");
     }
 
     const arma::uword k = spec.k > 0 ? static_cast<arma::uword>(spec.k) : 0;

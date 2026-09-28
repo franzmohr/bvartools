@@ -24,6 +24,10 @@
 #' @param impact the impact matrix of a \code{"custom"} decomposition, either a single
 #' \eqn{K \times K} matrix that identifies every posterior draw the same way, or a list of such
 #' matrices with one entry per draw. Ignored for every other value of \code{type}. See 'Details'.
+#' @param statistic the posterior summary of each share, \code{"mean"} (default) or
+#' \code{"median"}.
+#' @param ci an optional probability, the coverage of a credible interval returned
+#' alongside, such as \code{0.68} for the 16th and 84th percentiles.
 #' @param ... further arguments passed to or from other methods.
 #' 
 #' @details The function produces forecast error variance decompositions (FEVD) for the VAR model
@@ -87,6 +91,11 @@
 #' with one column per variable holding the share of the forecast error variance of
 #' \code{response} that is due to its shocks. For \code{type = "oir"} the rows sum to
 #' one; for \code{type = "gir"} they do so only with \code{normalise_gir = TRUE}.
+#' With \code{ci}, attributes \code{lower} and \code{upper} hold the bounds of the credible
+#' interval of each share in the same shape. With \code{statistic = "median"} or \code{ci}, a
+#' GIR-based decomposition is normalised draw by draw rather than after averaging, and the
+#' medians need not sum to one. \code{ci} cannot be combined with \code{max_groups}, since the
+#' bounds of a pooled column are not the pooled bounds.
 #'
 #' @examples
 #' 
@@ -126,7 +135,7 @@
 #' @family post-estimation analysis
 #' @export
 fevd.bvarmodel <- function(x, response = NULL, n_ahead = 5, type = "oir", normalise_gir = FALSE, period = NULL,
-                           max_groups = NULL, impact = NULL, ...) {
+                           max_groups = NULL, impact = NULL, statistic = "mean", ci = NULL, ...) {
 
   .refuse_quantile_covariance(x, "Variance decompositions")
 
@@ -182,6 +191,14 @@ fevd.bvarmodel <- function(x, response = NULL, n_ahead = 5, type = "oir", normal
   }
 
   max_groups <- .check_max_groups(max_groups)
+  if (!statistic %in% c("mean", "median")) {
+    stop("Argument 'statistic' must be \"mean\" or \"median\".")
+  }
+  .check_ci(ci)
+  if (!is.null(ci) && !is.null(max_groups)) {
+    stop("Arguments 'ci' and 'max_groups' cannot be combined: the bounds of a pooled column ",
+         "are not the pooled bounds.")
+  }
 
   varnames <- x[["model"]][["endogen"]]
   response <- which(varnames == response)
@@ -196,14 +213,40 @@ fevd.bvarmodel <- function(x, response = NULL, n_ahead = 5, type = "oir", normal
   phi <- lapply(A, .vardecomp, h = n_ahead,
                 type = if (type == "sign") "custom" else type, response = response)
   
-  result <- matrix(rowMeans(matrix(unlist(phi), (n_ahead + 1) * k)), n_ahead + 1)
-  
-  if (type %in% c("gir", "sgir")) {
-    if (normalise_gir) {
-      result <- t(apply(result, 1, function(x) {x / sum(x)}))
+  draws <- matrix(unlist(phi), (n_ahead + 1) * k)
+
+  if (statistic == "mean" && is.null(ci)) {
+    # The decomposition as it always was: the mean over the draws, normalised
+    # afterwards where asked for.
+    result <- matrix(rowMeans(draws), n_ahead + 1)
+    if (type %in% c("gir", "sgir")) {
+      if (normalise_gir) {
+        result <- t(apply(result, 1, function(x) {x / sum(x)}))
+      }
+    }
+  } else {
+    # Summaries other than the mean are taken over the draws' own shares, so a
+    # GIR decomposition is normalised draw by draw first.
+    if (type %in% c("gir", "sgir") && normalise_gir) {
+      draws <- apply(draws, 2, function(d) {
+        m <- matrix(d, n_ahead + 1)
+        as.vector(m / rowSums(m))
+      })
+      draws <- matrix(draws, (n_ahead + 1) * k)
+    }
+    shape <- function(v) {
+      out <- stats::ts(matrix(v, n_ahead + 1), start = 0, frequency = 1)
+      colnames(out) <- varnames
+      out
+    }
+    result <- matrix(if (statistic == "mean") rowMeans(draws) else apply(draws, 1, stats::median),
+                     n_ahead + 1)
+    if (!is.null(ci)) {
+      lower <- shape(apply(draws, 1, stats::quantile, probs = (1 - ci) / 2, names = FALSE))
+      upper <- shape(apply(draws, 1, stats::quantile, probs = 1 - (1 - ci) / 2, names = FALSE))
     }
   }
-  
+
   colnames(result) <- varnames # Name columns
 
   if (!is.null(max_groups) && max_groups < k) {
@@ -211,7 +254,11 @@ fevd.bvarmodel <- function(x, response = NULL, n_ahead = 5, type = "oir", normal
   }
 
   result <- stats::ts(result, start = 0, frequency = 1)
-  
+  if (!is.null(ci)) {
+    attr(result, "lower") <- lower
+    attr(result, "upper") <- upper
+  }
+
   class(result) <- append("bvarfevd", class(result))
   return(result)
 }

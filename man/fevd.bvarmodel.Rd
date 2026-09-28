@@ -13,6 +13,8 @@
   period = NULL,
   max_groups = NULL,
   impact = NULL,
+  statistic = "mean",
+  ci = NULL,
   ...
 )
 }
@@ -47,6 +49,12 @@ with many variables. Default is \code{NULL}, so that a column is returned for ev
 \eqn{K \times K} matrix that identifies every posterior draw the same way, or a list of such
 matrices with one entry per draw. Ignored for every other value of \code{type}. See 'Details'.}
 
+\item{statistic}{the posterior summary of each share, \code{"mean"} (default) or
+\code{"median"}.}
+
+\item{ci}{an optional probability, the coverage of a credible interval returned
+alongside, such as \code{0.68} for the 16th and 84th percentiles.}
+
 \item{...}{further arguments passed to or from other methods.}
 }
 \value{
@@ -54,6 +62,11 @@ A time-series object of class 'bvarfevd' running from period 0 to \code{n_ahead}
 with one column per variable holding the share of the forecast error variance of
 \code{response} that is due to its shocks. For \code{type = "oir"} the rows sum to
 one; for \code{type = "gir"} they do so only with \code{normalise_gir = TRUE}.
+With \code{ci}, attributes \code{lower} and \code{upper} hold the bounds of the credible
+interval of each share in the same shape. With \code{statistic = "median"} or \code{ci}, a
+GIR-based decomposition is normalised draw by draw rather than after averaging, and the
+medians need not sum to one. \code{ci} cannot be combined with \code{max_groups}, since the
+bounds of a pooled column are not the pooled bounds.
 }
 \description{
 Produces the forecast error variance decomposition for an object of class 'bvarmodel'.
@@ -156,6 +169,8 @@ Other post-estimation analysis:
 \code{\link[=add_sign_restrictions.bvarmodel]{add_sign_restrictions.bvarmodel()}},
 \code{\link[=add_sign_zero_restrictions.bvarmodel]{add_sign_zero_restrictions.bvarmodel()}},
 \code{\link[=fevd.bvecmodel]{fevd.bvecmodel()}},
+\code{\link[=historical_decomposition]{historical_decomposition()}},
+\code{\link[=historical_decomposition.bvarmodel]{historical_decomposition.bvarmodel()}},
 \code{\link[=irf.bvarmodel]{irf.bvarmodel()}},
 \code{\link[=irf.bvecmodel]{irf.bvecmodel()}},
 \code{\link[=multipliers]{multipliers()}},

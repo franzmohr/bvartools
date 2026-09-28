@@ -7,7 +7,7 @@ project is here -- the core deliberately links neither HDF5 nor HighFive,
 prints nothing and reads no files, which is what makes it embeddable in an R
 package at all.
 
-The copy is **BayesTS `afeb326`**, on the upstream branch `normal-gamma-theta`
+The copy is **BayesTS `2f9f010`**, on the upstream branch `constraints-iid`
 (see the last paragraph of this section), upstream after the `v0.3.0` release
 (tagged on `18a86c2`). Past the release it carries the fix to
 `core/models/var_tvp_discount.cpp` (`2dc9250`), which is what makes
@@ -65,9 +65,10 @@ brings `VarSpec::n_iid`, `iid_block()` and `require_supported_iid_block()` in
 It reaches R through `iid` in `create_bvarmodel()` and `n_iid` in `read_spec()`
 of `bayests_r_io.h`. Draws are unchanged for every model that does not set it.
 
-The newest is `afeb326`, the tip of upstream's `normal-gamma-theta` branch,
-which sits on `normal-gamma-shrinkage` and that on `mf-constraints`; none had
-been merged into upstream `main` when it was vendored: refresh again from `main` once they have, and correct
+The newest is `2f9f010`, the tip of upstream's `constraints-iid` branch, off
+`main` after `mf-constraints`, `normal-gamma-shrinkage` and `normal-gamma-theta`
+were merged into it with their commits unchanged; `constraints-iid` had not
+been merged when it was vendored: refresh again from `main` once they have, and correct
 this paragraph if the commit names moved. It brings the panel not observed
 whole and four options of the prior:
 
@@ -93,6 +94,10 @@ whole and four options of the prior:
   `theta` read by `read_extensions()`. With `afeb326` theta can be drawn
   instead, under an exponential prior (`theta_rate`, started at `a_theta`),
   its draws returned as `posterior$a$theta` by `write_draw_extensions()`.
+- **`n_iid` beside constraints** (`2f9f010`): the three constant-coefficient
+  Gaussian VARs complete a panel whose i.i.d. variables are not observed in
+  some periods. It reaches R through `create_bvarmodel()`, which no longer
+  refuses `iid` with `missing = "estimate"`.
 
 They reach R through `read_extensions()`, `read_draw_extensions()` and
 `write_draw_extensions()` in `bayests_r_io.h`, which every binding calls

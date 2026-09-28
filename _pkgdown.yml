@@ -68,6 +68,8 @@ reference:
   contents:
   - starts_with("irf")
   - starts_with("fevd")
+  - starts_with("historical_decomposition")
+  - plot.bvarhd
   - starts_with("spillover")
   - starts_with("multipliers")
   - starts_with("vec_to_var")

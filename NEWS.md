@@ -1,5 +1,30 @@
 # bvartools 1.0.0
 
+* **`historical_decomposition()` decomposes the path of a variable into the
+  contributions of the identified shocks.** For every posterior draw the
+  structural shocks are recovered from the draw's residuals and impact matrix
+  and propagated by its lag coefficients; what remains is a baseline, the path
+  the lags before the sample, the deterministic terms and the exogenous
+  variables produce without shocks. The identification is `"oir"`, the
+  rotations of `add_sign_restrictions()` or `add_sign_zero_restrictions()`
+  (`"sign"`), or any impact matrix (`"custom"`), as in `irf()`. The result is
+  a time series of the posterior mean or median contributions, with credible
+  bounds on request (`ci`), and `plot()` draws them as stacked bars. A panel
+  not observed whole is decomposed draw by draw over the completed panel.
+  Available for models with constant coefficients and a covariance that does
+  not change over the sample.
+
+* **`fevd()` reports medians and credible bands.** `statistic = "median"`
+  summarises the shares by their posterior median instead of the mean, and
+  `ci = 0.68` attaches the 16th and 84th percentiles as attributes `lower` and
+  `upper`. Without either argument the result is the same as before.
+
+* **An `iid` variable can be missing.** `create_bvarmodel()` accepts `iid`
+  together with `missing = "estimate"`, for models with constant coefficients: a
+  surprise series that starts after the sample does, as in Jarocinski and
+  Karadi (2020), is drawn in the periods it was not observed from its white
+  noise given the errors of the other equations. Its gaps start at zero.
+
 * **VAR models are estimated from a panel that is not observed whole.** With
   `missing = "estimate"`, `create_bvarmodel()` keeps the periods in which a
   series is `NA` instead of dropping them, and every sweep of the sampler draws
@@ -31,7 +56,7 @@
   with a Gaussian error. `constraints` sets the prior of the measurement error of
   soft constraints.
 
-* The vendored BayesTS core moves to `afeb326`. Draws of every model that uses
+* The vendored BayesTS core moves to `2f9f010`. Draws of every model that uses
   none of the above are unchanged.
 
 * **`pool_forecasts()` pools the forecasts of several models with equal

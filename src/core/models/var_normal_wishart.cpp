@@ -172,11 +172,11 @@ VarNormalWishartDraws VarNormalWishartSampler::draw_coefficients(const VarNormal
         if (complete)
         {
             const arma::mat path =
-                completion.complete(a, core::covariance_of(u_sigma_inv, "VarNormalWishart"));
+                completion.complete(iid.scatter(a), core::covariance_of(u_sigma_inv, "VarNormalWishart"));
             y = arma::vectorise(path);
             if (use_a)
             {
-                z = completion.regressors();
+                z = iid.columns(completion.regressors());
                 if (a_bvs)
                 {
                     z_bvs = z;

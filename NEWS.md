@@ -1,5 +1,19 @@
 # bvartools 1.0.0
 
+* **`arias_rubio_ramirez_waggoner_2018()` is exported.** It is the
+  identification step of `add_sign_zero_restrictions()` on its own. It takes
+  a list of reduced-form draws, each a coefficient matrix and a covariance,
+  and returns:
+  - the rotations;
+  - the smoothed importance weights;
+  - the diagnostics.
+
+  It exists for packages that estimate a VAR inside something larger, such
+  as the state equation of a factor augmented VAR in dfmtools.
+  `add_sign_zero_restrictions()` now runs it, so the same seed gives the same
+  draws through either, and the draws are unchanged. Unlike the method, the
+  function accepts a table of signs alone.
+
 * **`add_sign_zero_restrictions()` takes `max_tries`.**
   - **The problem.** The algorithm of Arias, Rubio-Ramírez and Waggoner
     (2018) draws one rotation per posterior draw. With many sign

@@ -247,81 +247,25 @@ add_sign_zero_restrictions.bvarmodel <- function(object, restrictions, draws = N
   .refuse_unrotatable(object, "Sign and zero restrictions")
 
   k <- object[["model"]][["k"]]
-  restrictions <- .check_sign_zero_restrictions(restrictions, object[["model"]][["endogen"]], k)
-
-  if (!is.logical(one_sided) || length(one_sided) != 1 || is.na(one_sided)) {
-    stop("Argument 'one_sided' must be either TRUE or FALSE.")
-  }
-  if (!is.logical(smooth) || length(smooth) != 1 || is.na(smooth)) {
-    stop("Argument 'smooth' must be either TRUE or FALSE.")
-  }
-  if (!is.numeric(max_tries) || length(max_tries) != 1 || is.na(max_tries) ||
-      max_tries < 1 || max_tries != round(max_tries) || max_tries > .Machine$integer.max) {
-    stop("Argument 'max_tries' must be a single positive integer.")
-  }
-  max_tries <- as.integer(max_tries)
+  endogen <- object[["model"]][["endogen"]]
+  # Checked here as well as by the worker, for the one refusal that belongs to
+  # this function alone: a table without a zero restriction, for which
+  # add_sign_restrictions() is the cheaper way to the same draws.
+  .check_sign_zero_restrictions(restrictions, endogen, k)
 
   A <- .collect_draws(object, period = period, need_A0 = FALSE, need_Sigma = TRUE,
                       all_regressors = TRUE)
   store <- length(A)
-  m <- ncol(A[[1]][["A"]])
 
-  setup <- .arw_setup(restrictions, k, m, object[["model"]][["p"]])
-
-  q <- matrix(NA_real_, store, k * k)
-  log_weight <- rep(-Inf, store)
-  tries <- 0
-  for (i in seq_len(store)) {
-    identified <- .arw_draw_q(A[[i]], setup, weight = TRUE, one_sided = one_sided,
-                              max_tries = max_tries)
-    tries <- tries + identified[["tries"]]
-    if (length(identified[["q"]]) > 0) {
-      q[i, ] <- as.numeric(identified[["q"]])
-      log_weight[i] <- identified[["log_weight"]]
-    }
-  }
-
-  accepted <- sum(!is.na(q[, 1]))
-  if (accepted == 0) {
-    stop("No rotation satisfying the sign restrictions was found for any of the ", store,
-         " posterior draws, with ", max_tries, if (max_tries == 1) " try" else " tries",
-         " each. ",
-         if (max_tries == 1) {
-           paste0("With many sign restrictions a single try rarely satisfies them all; ",
-                  "'max_tries' draws more rotations per draw. ")
-         },
-         "Otherwise every rotation the zero restrictions admit carries the wrong ",
-         "signs, so either the restrictions contradict each other or the model does not ",
-         "produce the pattern they describe.", call. = FALSE)
-  }
-
-  # A weight that could not be computed is not a draw that was rejected: it is
-  # one whose volume element came back singular. Both are dropped, but only the
-  # second is worth telling the user about.
-  unweighted <- sum(!is.na(q[, 1]) & is.na(log_weight))
-  if (unweighted > 0) {
-    warning("The importance weight of ", unweighted, " of the ", accepted,
-            " draws satisfying the sign restrictions could not be computed and they were ",
-            "dropped. Their volume element was singular, which a near-singular draw of the ",
-            "error covariance can cause.", call. = FALSE)
-    log_weight[is.na(log_weight)] <- -Inf
-  }
-
-  smoothed <- .arw_weights(log_weight, smooth = smooth)
-  weights <- smoothed[["weights"]]
-  pareto_k <- smoothed[["pareto_k"]]
-  effective <- max(1L, as.integer(floor(1 / sum(weights^2))))
-  largest <- max(weights)
-
-  # An importance sampler can fail quietly. When one draw carries most of the
-  # weight the effective sample size collapses, and because `draws` defaults to
-  # it the function would then hand back a posterior of a handful of rows that
-  # irf() and fevd() would summarise without complaint. Both halves of that are
-  # worth saying out loud, and they are separate symptoms: a small effective
-  # sample can come from many mildly unequal weights, while a tail too heavy for
-  # the estimator to have a finite variance is a different problem with a
-  # different fix.
-  .warn_importance_sample(effective, largest, accepted, pareto_k)
+  identified <- arias_rubio_ramirez_waggoner_2018(A, restrictions, endogen,
+                                                  object[["model"]][["p"]],
+                                                  max_tries = max_tries, smooth = smooth,
+                                                  one_sided = one_sided)
+  q <- identified[["q"]]
+  weights <- identified[["weights"]]
+  effective <- identified[["effective_sample_size"]]
+  restrictions <- identified[["restrictions"]]
+  max_tries <- as.integer(max_tries)
 
   if (is.null(draws)) {
     draws <- effective
@@ -351,12 +295,12 @@ add_sign_zero_restrictions.bvarmodel <- function(object, restrictions, draws = N
     "period" = period,
     "max_tries" = max_tries,
     "candidates" = store,
-    "tries" = tries,
-    "accepted" = accepted,
+    "tries" = identified[["tries"]],
+    "accepted" = identified[["accepted"]],
     "effective_sample_size" = effective,
-    "max_weight_share" = largest,
+    "max_weight_share" = identified[["max_weight_share"]],
     "smooth" = smooth,
-    "pareto_k" = pareto_k
+    "pareto_k" = identified[["pareto_k"]]
   )
 
   # What irf(), fevd() and spillover() read under type = "sign". Both
@@ -377,7 +321,7 @@ add_sign_zero_restrictions.bvarmodel <- function(object, restrictions, draws = N
 # It differs from the table add_sign_restrictions() takes in two ways, and both
 # are what the algorithm buys: a sign of zero is a restriction rather than an
 # error, and a horizon may be infinite, which restricts the long-run response.
-.check_sign_zero_restrictions <- function(restrictions, varnames, k) {
+.check_sign_zero_restrictions <- function(restrictions, varnames, k, require_zero = TRUE) {
 
   restrictions <- .check_restriction_columns(restrictions, varnames)
 
@@ -393,7 +337,7 @@ add_sign_zero_restrictions.bvarmodel <- function(object, restrictions, draws = N
          "or Inf for the long run.")
   }
 
-  if (!any(restrictions[["sign"]] == 0)) {
+  if (require_zero && !any(restrictions[["sign"]] == 0)) {
     stop("Argument 'restrictions' contains no zero restriction, so this function has ",
          "nothing to offer over add_sign_restrictions(), which imposes signs alone by ",
          "trying rotations. Use that one: it draws from the same distribution and does ",

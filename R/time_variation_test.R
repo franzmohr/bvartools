@@ -10,7 +10,11 @@
 #' as described on the pages of the methods.
 #'
 #' @seealso Methods: \code{\link{time_variation_test.bvarmodel}},
-#' \code{\link{time_variation_test.bvecmodel}}.
+#' \code{\link{time_variation_test.bvecmodel}}, and for a list of models, the
+#' windows of an expanding window comparison or a folder of stored models,
+#' \code{\link{time_variation_test.modellist}},
+#' \code{\link{time_variation_test.expandingwindow}} and
+#' \code{\link[=folder_steps]{time_variation_test.bvarfolder}}.
 #'
 #' @export
 time_variation_test <- function(object, ...) {
@@ -21,8 +25,9 @@ time_variation_test <- function(object, ...) {
 #' @export
 time_variation_test.default <- function(object, ...) {
   stop("time_variation_test() is available for 'bvarmodel' and 'bvecmodel' objects with ",
-       "time varying parameters, estimated with the prior 'omega_v' in add_priors().",
-       call. = FALSE)
+       "time varying parameters, estimated with the prior 'omega_v' in add_priors(), ",
+       "and for the 'modellist', 'expandingwindow' and 'bvarfolder' objects that hold ",
+       "them.", call. = FALSE)
 }
 
 

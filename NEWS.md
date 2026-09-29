@@ -1,5 +1,24 @@
 # bvartools 1.0.0
 
+* **`time_variation_test()` now works on a list of models, on expanding windows
+  and on a folder of stored models.** The Bayes factors of Chan (2018) could be
+  computed for one `bvarmodel` or `bvecmodel` at a time, which meant that a grid
+  of specifications, a rolling comparison, or a global model whose sub-models are
+  held in a folder had to be taken apart by hand to be asked whether its
+  coefficients move at all.
+
+  Like `persistence_profiles()` and `selection_criteria()`, the new methods read
+  rather than write: `modellist` and `expandingwindow` return a list of results of
+  the same class as the object, and `bvarfolder` returns a named list with one
+  entry per stored model and leaves the folder untouched. Arguments such as
+  `joint` and `batches` reach every element, and the folder method takes `cores`.
+
+  The motivation is the prior it tests. Under the inverse-gamma prior on a state
+  variance the data do not identify how much a coefficient moves, so a
+  time-varying model drifts or stands still because the prior said so; `omega_v`
+  and this test are how to let the data answer instead, and a test that only
+  reaches one model at a time is not much use for deciding a specification.
+
 * **`arias_rubio_ramirez_waggoner_2018()` is exported.** It is the
   identification step of `add_sign_zero_restrictions()` on its own. It takes
   a list of reduced-form draws, each a coefficient matrix and a covariance,

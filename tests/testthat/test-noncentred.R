@@ -406,3 +406,83 @@ test_that("a TVP VEC gives its loadings an omega_v of their own", {
                           sigma = list(shape = 3, rate = 0.01)),
                "not recognised")
 })
+
+# The collection classes. time_variation_test() is a reading method, so a list
+# of models gives a list of results and a folder gives one per stored model,
+# rather than the object back. This is the pattern of persistence_profiles() for
+# the lists and of selection_criteria() for a folder.
+
+test_that("time_variation_test() maps over a list of models", {
+
+  models <- create_bvarmodel(at_data_var(), p = 1:2, deterministic = "const",
+                             tvp = TRUE, error = "sv",
+                             iterations = fx_iterations, burnin = fx_burnin)
+  expect_s3_class(models, "modellist")
+  models <- add_priors(models, coef = list(v_i = 1, v_i_det = 0.1, omega_v = 0.001),
+                       sigma = nc_sigma_prior)
+  models <- add_initial_values(models)
+  models <- add_posterior_coefficients(models)
+
+  res <- time_variation_test(models)
+
+  expect_s3_class(res, "modellist")
+  expect_length(res, 2)
+  for (i in seq_along(res)) {
+    expect_s3_class(res[[i]], "bvartimevar")
+    expect_equal(res[[i]], time_variation_test(models[[i]]))
+  }
+
+  # Arguments reach every element, and the second lag order has more states.
+  no_joint <- time_variation_test(models, joint = FALSE)
+  expect_false(any(vapply(no_joint, function(z) any(z[["term"]] == "(joint)"),
+                          logical(1))))
+  expect_gt(nrow(no_joint[[2]]), nrow(no_joint[[1]]))
+})
+
+test_that("time_variation_test() maps over expanding windows", {
+
+  model <- create_bvarmodel(at_data_var(), p = 1, deterministic = "const",
+                            tvp = TRUE, error = "sv",
+                            iterations = fx_iterations, burnin = fx_burnin)
+  model <- add_priors(model, coef = list(v_i = 1, v_i_det = 0.1, omega_v = 0.001),
+                      sigma = nc_sigma_prior)
+  windows <- use_expanding_window(model, start = c(2019, 4))
+  expect_s3_class(windows, "expandingwindow")
+  windows <- add_posterior_coefficients(add_initial_values(windows))
+
+  res <- time_variation_test(windows)
+
+  expect_s3_class(res, "expandingwindow")
+  expect_length(res, length(windows))
+  expect_s3_class(res[[1]], "bvartimevar")
+  # Every window tests the same states, only on more data.
+  expect_equal(nrow(res[[1]]), nrow(res[[length(res)]]))
+})
+
+test_that("time_variation_test() reads a folder of stored models", {
+
+  models <- create_bvarmodel(at_data_var(), p = 1:2, deterministic = "const",
+                             tvp = TRUE, error = "sv",
+                             iterations = fx_iterations, burnin = fx_burnin)
+  models <- add_priors(models, coef = list(v_i = 1, v_i_det = 0.1, omega_v = 0.001),
+                       sigma = nc_sigma_prior)
+  models <- add_posterior_coefficients(add_initial_values(models))
+
+  folder <- file.path(tempdir(), "bvartools-folder-timevar")
+  unlink(folder, recursive = TRUE)
+  dir.create(folder, recursive = TRUE)
+  write_to_hdf5(models, folder = folder)
+  stored <- open_models(folder)
+
+  res <- time_variation_test(stored)
+
+  # A named list per model, and the folder is left as it was.
+  expect_type(res, "list")
+  expect_length(res, 2)
+  expect_named(res, stored[["manifest"]][["model"]])
+  expect_s3_class(res[[1]], "bvartimevar")
+  expect_equal(res[[1]], time_variation_test(models[[1]]))
+  expect_equal(open_models(folder)[["manifest"]], stored[["manifest"]])
+
+  unlink(folder, recursive = TRUE)
+})

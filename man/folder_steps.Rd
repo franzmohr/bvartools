@@ -9,6 +9,7 @@
 \alias{add_posterior_loglik.bvarfolder}
 \alias{thin.bvarfolder}
 \alias{selection_criteria.bvarfolder}
+\alias{time_variation_test.bvarfolder}
 \title{Estimation Steps on a Folder of Models}
 \usage{
 \method{add_priors}{bvarfolder}(object, ..., cores = 1)
@@ -24,6 +25,8 @@
 \method{thin}{bvarfolder}(x, ..., cores = 1)
 
 \method{selection_criteria}{bvarfolder}(object, ..., cores = 1)
+
+\method{time_variation_test}{bvarfolder}(object, ..., cores = 1)
 }
 \arguments{
 \item{object}{an object of class 'bvarfolder', from
@@ -73,10 +76,12 @@ executable, \code{\link{bayests_files}} runs it on the files instead:
 run(model_files(stored), jobs = 6)}
 which gives the same draws, since a model is drawn with the seed in its file.
 
-\code{selection_criteria} is the one method that reads rather than writes:
-it hands back a criterion per model and leaves the folder as it is. It is
-what \code{\link{choose_best_model}} compares, so a grid of specifications
-too large to hold is still chosen from.
+\code{selection_criteria} and \code{time_variation_test} are the methods that
+read rather than write: they hand back a result per model and leave the folder
+as it is. The first is what \code{\link{choose_best_model}} compares, so a grid
+of specifications too large to hold is still chosen from; the second gives the
+Bayes factors for time variation of every model of the folder, which is how a
+grid of time varying models is asked whether its coefficients move at all.
 }
 \examples{
 

@@ -21,5 +21,9 @@ coefficients and volatilities of a model with time varying parameters.
 }
 \seealso{
 Methods: \code{\link{time_variation_test.bvarmodel}},
-\code{\link{time_variation_test.bvecmodel}}.
+\code{\link{time_variation_test.bvecmodel}}, and for a list of models, the
+windows of an expanding window comparison or a folder of stored models,
+\code{\link{time_variation_test.modellist}},
+\code{\link{time_variation_test.expandingwindow}} and
+\code{\link[=folder_steps]{time_variation_test.bvarfolder}}.
 }

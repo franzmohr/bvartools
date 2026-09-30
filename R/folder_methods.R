@@ -121,10 +121,12 @@ thin.bvarfolder <- function(x, ..., cores = 1) {
 
 #' @rdname folder_steps
 #' @details
-#' \code{selection_criteria} is the one method that reads rather than writes:
-#' it hands back a criterion per model and leaves the folder as it is. It is
-#' what \code{\link{choose_best_model}} compares, so a grid of specifications
-#' too large to hold is still chosen from.
+#' \code{selection_criteria} and \code{time_variation_test} are the methods that
+#' read rather than write: they hand back a result per model and leave the folder
+#' as it is. The first is what \code{\link{choose_best_model}} compares, so a grid
+#' of specifications too large to hold is still chosen from; the second gives the
+#' Bayes factors for time variation of every model of the folder, which is how a
+#' grid of time varying models is asked whether its coefficients move at all.
 #'
 #' @export
 #' @method selection_criteria bvarfolder
@@ -134,4 +136,13 @@ selection_criteria.bvarfolder <- function(object, ..., cores = 1) {
                        ..., write = FALSE, cores = cores)
   class(result) <- append("selcritlist", class(result))
   result
+}
+
+#' @rdname folder_steps
+#' @export
+#' @method time_variation_test bvarfolder
+time_variation_test.bvarfolder <- function(object, ..., cores = 1) {
+
+  map_models(object, function(model, ...) time_variation_test(model, ...),
+             ..., write = FALSE, cores = cores)
 }

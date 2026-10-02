@@ -1,5 +1,24 @@
 # bvartools 1.0.0
 
+* **The log predictive likelihood can now be plotted, as a total and period by
+  period.** `selection_criteria()` has computed `"LPL"` for expanding windows for
+  some time, with a band around the sum and the per-period log predictive
+  densities in attribute `"terms"`, but no plot could reach it:
+  `plot.selcritlist()` matched the criterion against a list that did not contain
+  `"LPL"`, so an object that carried it reported it as unavailable. It is in that
+  list now, and `plot(criteria, criterion = "LPL")` draws the usual error bar per
+  model.
+
+  `plot_predictive_loglik()` is new and plots the terms of that sum rather than
+  the sum. With a `baseline` it draws the cumulative difference of every model to
+  that one, which answers a question the total cannot: whether a model's advantage
+  accrued steadily or came from a few periods. On a comparison of global VEC
+  specifications for the United Kingdom, the benchmark's deficit of 197 log points
+  turned out to be one quarter -- 2020Q2, worth about 145 of it -- after tracking
+  within 30 of the others for the preceding six years. A total of 197 does not say
+  that; a cumulative line says it at a glance. `cumulative = FALSE` plots each
+  period on its own, and without a `baseline` the densities themselves are drawn.
+
 * **`time_variation_test()` now works on a list of models, on expanding windows
   and on a folder of stored models.** The Bayes factors of Chan (2018) could be
   computed for one `bvarmodel` or `bvecmodel` at a time, which meant that a grid

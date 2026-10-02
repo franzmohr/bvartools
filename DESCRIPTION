@@ -160,6 +160,7 @@ Collate:
     'plot.selcritlist.R'
     'plot_blocks.R'
     'plot_forecast_errors_by_period.R'
+    'plot_predictive_loglik.R'
     'plot_selcrit_forecast_errors.R'
     'plugin_deviance.R'
     'pool_forecasts.R'

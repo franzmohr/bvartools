@@ -16,8 +16,9 @@ call to \code{\link{selection_criteria}}.}
 \item{criterion}{the selection criterion that should be plotted. Available choices
 are the in-sample criteria \code{"LL"}, \code{"AIC"}, \code{"BIC"},
 \code{"HQ"}, \code{"WAIC"} (default), \code{"LOOIC"}, the log marginal
-likelihood \code{"LML"} of a discounted model and the out-of-sample
-statistics \code{"FE"}, \code{"AFE"} and \code{"RSFE"}.}
+likelihood \code{"LML"} of a discounted model, the log predictive likelihood
+\code{"LPL"} of expanding windows and the out-of-sample statistics
+\code{"FE"}, \code{"AFE"} and \code{"RSFE"}.}
 
 \item{...}{further graphical parameters.}
 }
@@ -32,9 +33,15 @@ A plot function for objects of class 'selcritlist' and 'selcrit'.
 For in-sample criteria each model is represented by a horizontal error
 bar, which is marked by the value of the criterion. The log-likelihood has a
 posterior distribution, so its bar covers the credible band and is marked by the
-median as well as the mean of its draws. \code{"WAIC"} and \code{"LOOIC"} are
+median as well as the mean of its draws. \code{"WAIC"}, \code{"LOOIC"} and
+\code{"LPL"} are
 point estimates whose bars cover a normal interval built from their standard
-error. \code{"AIC"}, \code{"BIC"}, \code{"HQ"} and \code{"LML"} are point estimates without a
+error. The interval of \code{"LPL"} is the one of
+\code{\link{selection_criteria}}, around the sum of the log predictive
+densities of the evaluated periods;
+\code{\link{plot_predictive_loglik}} plots the terms of that sum, which is
+where a difference between two models can be seen to be steady or to rest on
+a few periods. \code{"AIC"}, \code{"BIC"}, \code{"HQ"} and \code{"LML"} are point estimates without a
 standard error, so they are drawn as a single point. The default is
 \code{"WAIC"}, for the reasons given in \code{\link{selection_criteria}}.
 The criterion is measured on

@@ -1,3 +1,18 @@
+# bvartools (development version)
+
+* **`use_expanding_window()` and `window()` now cut the observations of a panel
+  not observed whole.** For a model created with `missing = "estimate"` or
+  `aggregate`, every window used to keep all of `data$train$constraints`,
+  including the observations after its end, so that the first sampler call
+  failed with an error such as "/data/train/constraints/period holds 48, but the
+  panel has 47 periods". A window now holds only the constraints whose periods
+  it contains: an observation after its end is left out, and so is an aggregate
+  reaching before its start, with a message, as `create_bvarmodel()` does at the
+  start of the sample. Rows and groups are numbered again from one. The starting
+  values of what was not observed, in `data$train$y` and the lags in
+  `data$train$x`, are filled again from what was observed up to the end of the
+  window, so that they no longer interpolate towards later observations.
+
 # bvartools 1.0.0
 
 * **The log predictive likelihood can now be plotted, as a total and period by

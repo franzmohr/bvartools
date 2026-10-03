@@ -283,3 +283,80 @@ test_that("an algorithm whose likelihood is not normal is refused", {
   unnamed[[1]][["model"]][["algorithm"]] <- NULL
   expect_error(add_predictive_loglik(unnamed), "the algorithm of window 1")
 })
+
+test_that("a dummy that first enters during the evaluation period is left out of its forecast", {
+  # use_expanding_window() leaves a dummy out of the windows that end before its
+  # event, so the window just before the event has fewer regressors than the
+  # observation the next window adds. Its density uses only its own regressors,
+  # matched by name: the forecaster did not know about the event.
+  n <- 80
+  event <- 70
+  freq <- 12
+  set.seed(1)
+  y <- stats::ts(matrix(cumsum(stats::rnorm(n)), ncol = 1, dimnames = list(NULL, "y")),
+                 start = c(2018, 1), frequency = freq)
+  y2 <- stats::ts(cbind(y1 = cumsum(stats::rnorm(n)), y2 = cumsum(stats::rnorm(n))),
+                  start = c(2018, 1), frequency = freq)
+  d <- stats::ts(matrix(as.numeric(seq_len(n + 24) == event), ncol = 1,
+                        dimnames = list(NULL, "imp")),
+                 start = c(2018, 1), frequency = freq)
+  event_period <- stats::time(y)[event]
+
+  specs <- list(
+    list(label = "VAR, data dummy", vec = FALSE, dummy = list(data = d)),
+    list(label = "VAR, impulse", vec = FALSE, dummy = list(impulse = c(2023, 10))),
+    list(label = "VAR, step", vec = FALSE, dummy = list(step = c(2023, 10))),
+    list(label = "VAR, p = 3, seasonal", vec = FALSE, p = 3, seasonal = TRUE,
+         dummy = list(data = d)),
+    list(label = "VEC, data dummy", vec = TRUE, dummy = list(data = d)))
+
+  for (spec in specs) {
+    p <- if (is.null(spec[["p"]])) 1 else spec[["p"]]
+    model <- if (spec[["vec"]]) {
+      create_bvecmodel(y2, p = p, r = 1, const = "unrestricted",
+                       iterations = 30, burnin = 10)
+    } else {
+      create_bvarmodel(y, p = p, deterministic = "const",
+                       seasonal = isTRUE(spec[["seasonal"]]),
+                       iterations = 30, burnin = 10)
+    }
+    model <- do.call(add_dummy_variables, c(list(model), spec[["dummy"]]))
+    model <- use_expanding_window(model, start = c(2023, 6))
+    priors <- list(model, coef = list(v_i = 0.1, v_i_det = 0.01),
+                   sigma = list(df = "k", scale = 1))
+    if (spec[["vec"]]) {
+      priors[["coint"]] <- list(v_i = 0, p_tau_i = 1)
+    }
+    model <- add_initial_values(do.call(add_priors, priors))
+    model <- add_posterior_coefficients(model)
+    model <- add_predictive_loglik(model)
+
+    n_windows <- length(model)
+    expect_null(model[[n_windows]][["predictive"]], info = spec[["label"]])
+    periods <- numeric(n_windows - 1)
+    for (i in seq_len(n_windows - 1)) {
+      expect_false(is.null(model[[i]][["predictive"]]), info = spec[["label"]])
+      periods[i] <- model[[i]][["predictive"]][["period"]]
+    }
+
+    i <- which(abs(periods - event_period) < 1e-8)
+    expect_length(i, 1)
+    # The window that predicts the event does not have the dummy; the next does.
+    dummy_name <- model[[i + 1]][["model"]][["dummy_variables"]][["name"]]
+    expect_false(any(dummy_name %in% colnames(model[[i]][["data"]][["train"]][["x"]])),
+                 info = spec[["label"]])
+    expect_true(all(dummy_name %in% colnames(model[[i + 1]][["data"]][["train"]][["x"]])),
+                info = spec[["label"]])
+    loglik <- model[[i]][["predictive"]][["loglik"]]
+    expect_true(all(is.finite(loglik)), info = spec[["label"]])
+
+    # It is the density of the observation without the dummy.
+    following <- model[[i + 1]]
+    x_names <- colnames(model[[i]][["data"]][["train"]][["x"]])
+    x_next <- following[["data"]][["train"]][["x"]]
+    newdata <- last_observation(following)
+    newdata[["x"]] <- as.numeric(x_next[nrow(x_next), x_names])
+    expect_equal(loglik, .predictive_log_density(model[[i]], newdata),
+                 info = spec[["label"]])
+  }
+})

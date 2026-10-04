@@ -16,6 +16,7 @@ reference:
   - bvartools_model
   - create_bvarmodel
   - create_bvecmodel
+  - starts_with("add_dummy_variables")
   - aggregation_weights
   - discount_models
   - starts_with("use_expanding_window")
@@ -35,12 +36,14 @@ reference:
   - starts_with("inclusion_prior")
   - cointspace_prior
   - starts_with("add_sign_restrictions")
+  - starts_with("add_sign_zero_restrictions")
   - starts_with("add_initial_values")
 
 - title: Posterior simulation
   contents:
   - starts_with("add_seed")
   - starts_with("add_posterior_coefficients")
+  - split_quantile_grid
   - starts_with("add_posterior_loglik")
   - chain_diagnostics
   - bayests_posterior
@@ -71,6 +74,7 @@ reference:
   - starts_with("historical_decomposition")
   - plot.bvarhd
   - starts_with("spillover")
+  - starts_with("persistence_profiles")
   - starts_with("multipliers")
   - starts_with("vec_to_var")
   - starts_with("scale_error_correction")
@@ -85,6 +89,7 @@ reference:
 - title: Storage
   contents:
   - starts_with("write_to_hdf5")
+  - starts_with("expected_model_size")
   - read_model_from_hdf5
   - read_models_from_folder
   - read_expanding_window_model_from_folder
@@ -109,6 +114,7 @@ reference:
   - ssvs
   - starts_with("stochvol_")
   - kalman_durbin_koopman_2002
+  - arias_rubio_ramirez_waggoner_2018
   - starts_with("covar_")
   - starts_with("coint_")
   - generate_lower_block_diagonal

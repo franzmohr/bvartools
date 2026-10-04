@@ -33,7 +33,8 @@
 #'   Not used if \code{minnesota} is given or SSVS is applied.}
 #'   \item{\code{coint_var}}{a logical specifying whether the prior mean of the first own lag of an
 #'   endogenous variable should be set to 1, which is commonly used for cointegrated
-#'   VAR models. Default is \code{FALSE}.}
+#'   VAR models. Default is \code{FALSE}. Ignored, with a warning, under SSVS, which centres the
+#'   prior of every coefficient it selects at zero; BVS keeps the prior mean.}
 #'   \item{\code{const}}{a numeric or character specifying the prior mean of coefficients, which correspond
 #'   to the intercept. If a numeric is provided, all prior means are set to this value.
 #'   If \code{coef$const = "mean"}, the mean of the respective endogenous variable is used as prior mean.
@@ -306,6 +307,16 @@ add_priors.bvarmodel <- function(object,
     if (minnesota) {
       minnesota <- FALSE
       warning("Minnesota prior specification overwritten by SSVS.")
+    }
+    # SSVS centres both components of its prior at zero, and the sampler refuses a
+    # non-zero prior mean at a selected position. Say so here, where the prior is
+    # chosen, rather than let add_posterior_coefficients() fail on it later.
+    if (coint_var && object[["model"]][["p"]] > 0) {
+      coint_var <- FALSE
+      warning("'coef$coint_var = TRUE' is ignored under SSVS: SSVS centres the prior of every ",
+              "coefficient it selects at zero, so it cannot shrink the first own lags towards one. ",
+              "Their prior mean is set to zero. To select variables around a random walk, use ",
+              "varsel = \"bvs\", which keeps the prior mean.", call. = FALSE)
     }
   }
   

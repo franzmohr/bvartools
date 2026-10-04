@@ -102,7 +102,7 @@ write_to_hdf5(model, filename = file)
 
 stored <- open_model(file)
 stored
-#> Model in /tmp/RtmpNfaUfc/bvartools-example-model.h5 
+#> Model in /tmp/RtmpkJu4gs/bvartools-example-model.h5 
 #> 100 draws of a VarNormalWishart model of 3 variables
 
 # The analysis reads the draws in pieces

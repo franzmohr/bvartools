@@ -2,6 +2,18 @@
 
 ## bvartools 1.0.0
 
+- **[`add_priors()`](https://franzmohr.github.io/bvartools/reference/add_priors.md)
+  now warns when SSVS is combined with `coef$coint_var = TRUE`, and the
+  model runs.** SSVS centres both components of its prior at zero, so
+  the sampler refuses a prior mean of one on the first own lags, and
+  until now that surfaced only as an error from
+  [`add_posterior_coefficients()`](https://franzmohr.github.io/bvartools/reference/add_posterior_coefficients.md),
+  one step after the prior was chosen.
+  [`add_priors()`](https://franzmohr.github.io/bvartools/reference/add_priors.md)
+  now says so where the choice is made, sets those prior means to zero
+  and points to `varsel = "bvs"`, which keeps the prior mean and so can
+  select variables around a random walk.
+
 - **Models of other packages can now be stored in BayesTS files and kept
   in one `modellist` with the VARs and VECs.**
   [`write_bayests_tree()`](https://franzmohr.github.io/bvartools/reference/write_bayests_tree.md)

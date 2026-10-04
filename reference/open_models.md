@@ -121,7 +121,7 @@ write_to_hdf5(models, folder = folder)
 
 stored <- open_models(folder)
 stored
-#> 3 models in /tmp/RtmpNfaUfc/bvartools-example-folder 
+#> 3 models in /tmp/RtmpkJu4gs/bvartools-example-folder 
 #>   3 VarNormalWishart 
 stored[["manifest"]][, c("model", "p", "iterations")]
 #>                                       model p iterations

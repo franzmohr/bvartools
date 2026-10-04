@@ -103,7 +103,9 @@ Argument `coef` can contain the following elements:
 
   a logical specifying whether the prior mean of the first own lag of an
   endogenous variable should be set to 1, which is commonly used for
-  cointegrated VAR models. Default is `FALSE`.
+  cointegrated VAR models. Default is `FALSE`. Ignored, with a warning,
+  under SSVS, which centres the prior of every coefficient it selects at
+  zero; BVS keeps the prior mean.
 
 - `const`:
 

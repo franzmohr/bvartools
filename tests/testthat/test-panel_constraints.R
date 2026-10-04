@@ -171,3 +171,86 @@ test_that("a panel not observed whole survives the round trip through a file", {
   expect_equal(add_posterior_loglik(back)$posterior$loglik,
                add_posterior_loglik(model)$posterior$loglik, ignore_attr = TRUE)
 })
+
+# Every constraint of 'model' names a period, row and group its sample has.
+expect_constraints_fit <- function(model, label = NULL) {
+  c <- model$data$train$constraints
+  expect_true(all(c$period >= 1 & c$period <= nrow(model$data$train$y)), label = label)
+  expect_equal(sort(unique(c$row)), seq_along(c$value), label = label)
+  expect_length(c$group, length(c$value))
+}
+
+test_that("an expanding window keeps only the observations inside each window", {
+  set.seed(1)
+  n <- 60
+  y <- ts(cbind(a = cumsum(rnorm(n)), b = rnorm(n)), start = c(2020, 1), frequency = 12)
+  y[seq(2, n, by = 3), "b"] <- NA
+  model <- create_bvarmodel(y, p = 1, deterministic = "const", missing = "estimate",
+                            iterations = fx_iterations, burnin = fx_burnin)
+  windows <- use_expanding_window(model, start = c(2024, 1))
+
+  for (i in seq_along(windows)) {
+    expect_constraints_fit(windows[[i]], label = paste("window", i))
+  }
+  # The window is the model created on the data up to its end: the same
+  # observations, and starting values that know nothing of the periods after it.
+  first <- windows[[1]]
+  truncated <- create_bvarmodel(stats::window(y, end = c(2023, 12)), p = 1,
+                                deterministic = "const", missing = "estimate")
+  expect_equal(first$data$train$constraints, truncated$data$train$constraints)
+  expect_equal(unclass(first$data$train$y), unclass(truncated$data$train$y),
+               ignore_attr = TRUE)
+  expect_equal(unclass(first$data$train$x), unclass(truncated$data$train$x),
+               ignore_attr = TRUE)
+  expect_equal(first$data$train$z, truncated$data$train$z)
+  # The last window is the whole sample.
+  last <- windows[[length(windows)]]
+  expect_identical(last$data$train$constraints, model$data$train$constraints)
+
+  first <- add_initial_values(add_priors(first, coef = list(v_i = 0.1, v_i_det = 0.01),
+                                         sigma = list(df = "k", scale = 1)))
+  set.seed(3)
+  first <- add_posterior_coefficients(first)
+  expect_equal(dim(first$posterior$y$coeffs), c(fx_iterations, length(first$data$train$y)))
+})
+
+test_that("an expanding window over a quarterly aggregate drops what ends after it", {
+  model <- create_bvarmodel(mf_data(), p = 1, iterations = fx_iterations, burnin = fx_burnin,
+                            aggregate = list(y = aggregation_weights("average", 3)))
+  tt <- nrow(model$data$train$y)
+  start <- stats::time(model$data$train$y)[tt - 3]
+  windows <- use_expanding_window(model, start = start)
+
+  n_rows <- vapply(windows, function(x) length(x$data$train$constraints$value), integer(1))
+  for (i in seq_along(windows)) {
+    expect_constraints_fit(windows[[i]], label = paste("window", i))
+  }
+  # Rows are only ever added as the window grows, and an aggregate is added
+  # whole, in the period it is observed.
+  expect_true(all(diff(n_rows) >= 0))
+  expect_identical(windows[[length(windows)]]$data$train$constraints,
+                   model$data$train$constraints)
+  agg <- windows[[1]]$data$train$constraints
+  y_rows <- unique(agg$row[agg$variable == match("y", model$model$endogen)])
+  expect_true(all(table(agg$row)[y_rows] == 3))
+
+  first <- add_initial_values(mf_priors(windows[[1]]))
+  set.seed(4)
+  first <- add_posterior_coefficients(first)
+  expect_s3_class(first$posterior$y$coeffs, "mcmc")
+})
+
+test_that("window() cuts the constraints of a panel not observed whole", {
+  model <- create_bvarmodel(mf_data(), p = 1,
+                            aggregate = list(y = aggregation_weights("average", 3)))
+  times <- stats::time(model$data$train$y)
+  # A start one period before an observation of the aggregate leaves that
+  # observation reaching before the window.
+  c <- model$data$train$constraints
+  agg_end <- tapply(c$period, c$row, max)[unique(c$row[c$variable == match("y", model$model$endogen)])]
+  start <- times[agg_end[3] - 1]
+  end <- times[length(times) - 5]
+  expect_message(cut <- window(model, start = start, end = end), "reach before the window")
+  expect_constraints_fit(cut)
+  expect_equal(nrow(cut$data$train$y), nrow(stats::window(model$data$train$y, start = start, end = end)))
+})

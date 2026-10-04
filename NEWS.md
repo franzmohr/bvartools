@@ -15,6 +15,17 @@
 
 # bvartools 1.0.0
 
+* **`add_predictive_loglik()` no longer fails on expanding windows when a dummy
+  variable first enters during the evaluation period.** `use_expanding_window()`
+  leaves an impulse, step or data dummy of `add_dummy_variables()` out of the
+  windows that end before its event, so the window just before the event has
+  fewer regressors than the observation the next window adds, and the density
+  stopped with "subscript out of bounds". The regressors of the predicted
+  observation are now matched to the ones of the predicting window by name, and
+  a dummy that window does not have is left out: the forecast made at its end
+  could not have known about the event. This holds for VAR and VEC models,
+  and the help page says so.
+
 * **The log predictive likelihood can now be plotted, as a total and period by
   period.** `selection_criteria()` has computed `"LPL"` for expanding windows for
   some time, with a band around the sum and the per-period log predictive

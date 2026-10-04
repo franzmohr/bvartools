@@ -43,3 +43,28 @@ test_that("ssvs runs once that position is left out of the selection", {
                   list(inprior = 0.5, tau = c(0.05, 10), exclude_det = TRUE))
   expect_s3_class(add_posterior_coefficients(m), "bvarmodel")
 })
+
+test_that("ssvs warns about coint_var and centres the own lags at zero", {
+  m <- create_bvarmodel(var_data(), p = 1, deterministic = "const",
+                        iterations = fx_iterations, burnin = fx_burnin, varsel = "ssvs")
+  expect_warning(
+    m <- add_priors(m, coef = list(v_i = 1, coint_var = TRUE),
+                    sigma = list(df = 1, scale = 0.0001),
+                    varsel = list(inprior = 0.5, tau = c(0.05, 10))),
+    "'coef$coint_var = TRUE' is ignored under SSVS", fixed = TRUE)
+  # The estimand: no selected coefficient keeps the unit mean the sampler would refuse.
+  expect_true(all(m[["priors"]][["a"]][["mu"]] == 0))
+  expect_s3_class(add_posterior_coefficients(add_initial_values(m)), "bvarmodel")
+})
+
+test_that("bvs keeps the unit prior mean of coint_var without a warning", {
+  m <- create_bvarmodel(var_data(), p = 1, deterministic = "const",
+                        iterations = fx_iterations, burnin = fx_burnin, varsel = "bvs")
+  expect_no_warning(
+    m <- add_priors(m, coef = list(v_i = 1, coint_var = TRUE),
+                    sigma = list(df = 1, scale = 0.0001), varsel = list(inprior = 0.5)))
+  k <- m[["model"]][["k"]]
+  mu <- matrix(m[["priors"]][["a"]][["mu"]], k)
+  expect_equal(diag(mu[, 1:k]), rep(1, k))
+  expect_s3_class(add_posterior_coefficients(add_initial_values(m)), "bvarmodel")
+})

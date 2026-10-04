@@ -1,5 +1,13 @@
 # bvartools 1.0.0
 
+* **`add_priors()` now warns when SSVS is combined with `coef$coint_var = TRUE`,
+  and the model runs.** SSVS centres both components of its prior at zero, so the
+  sampler refuses a prior mean of one on the first own lags, and until now that
+  surfaced only as an error from `add_posterior_coefficients()`, one step after
+  the prior was chosen. `add_priors()` now says so where the choice is made, sets
+  those prior means to zero and points to `varsel = "bvs"`, which keeps the prior
+  mean and so can select variables around a random walk.
+
 * **`use_expanding_window()` and `window()` now cut the observations of a panel
   not observed whole.** For a model created with `missing = "estimate"` or
   `aggregate`, every window used to keep all of `data$train$constraints`,

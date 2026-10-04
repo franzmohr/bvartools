@@ -80,6 +80,7 @@ Collate:
     'arias_rubio_ramirez_waggoner_2018.R'
     'bayests_files.R'
     'bayests_posterior.R'
+    'bayests_tree.R'
     'bvar.R'
     'bvar_fill_helper.R'
     'bvartools-package.R'

@@ -39,6 +39,11 @@
 #' model is a plain matrix, since its rows are periods rather than draws.
 #' \code{\link{bvartools_model}} describes the elements one by one.
 #'
+#' A model of another package -- a dynamic factor model of \pkg{dfmtools},
+#' say -- is returned as the object of that package's
+#' \code{\link{from_bayests_tree}} method, so that one 'modellist' can hold
+#' and evaluate models of either.
+#'
 #' @export
 read_model_from_hdf5 <- function(filename, group = "", draws = NULL) {
   
@@ -51,7 +56,19 @@ read_model_from_hdf5 <- function(filename, group = "", draws = NULL) {
   # Every path below is named against this rather than against the file, which
   # is all a group amounts to on the way in.
   h5_root <- .hdf5_model_root(h5_file, group)
-  
+
+  # A model of another package -- a dynamic factor model of dfmtools, which
+  # writes its files with write_bayests_tree() -- is read as a tree and turned
+  # into its object by that package's from_bayests_tree() method. Everything
+  # below is about the layout of the VARs and VECs of this package.
+  foreign <- .foreign_model_class(h5_root)
+  if (!is.null(foreign)) {
+    tree <- .hdf5_read_tree(h5_root, draws, "")
+    h5_file$close_all()
+    class(tree) <- foreign
+    return(from_bayests_tree(tree))
+  }
+
   h5_names <- names(h5_root)
   
   result <- NULL
@@ -350,4 +367,44 @@ read_model_from_hdf5 <- function(filename, group = "", draws = NULL) {
   } else {
     matrix(dataset[draws], nrow = length(draws), ncol = 1L)
   }
+}
+
+
+# The class a model file is read as when it is not a VAR or a VEC of this
+# package, or NULL when it is one -- or when the file has no specification,
+# which the reader reports in its own words.
+#
+# The class is the one recorded in /model/rclass. A file without it, as the
+# BayesTS command line writes one, is placed by its algorithm: the factor
+# models are dfmtools', whose namespace is loaded for its methods. That is also
+# done for a file that names its class, since a factor model is read the same
+# way whether or not dfmtools is attached -- by a worker of map_models(), say.
+.foreign_model_class <- function(h5_root) {
+
+  if (!"model" %in% names(h5_root)) {
+    return(NULL)
+  }
+  attrs <- hdf5r::h5attributes(h5_root[["model"]])
+  algorithm <- attrs[["algorithm"]]
+  rclass <- attrs[["rclass"]]
+
+  factor_model <- !is.null(algorithm) && grepl("^(Dfm|Favar)", algorithm)
+  if (factor_model && !requireNamespace("dfmtools", quietly = TRUE)) {
+    stop("The file holds a ", algorithm, " model, which is a factor model of ",
+         "package dfmtools. Install dfmtools to read it, or read the raw tree ",
+         "with read_bayests_tree().")
+  }
+
+  if (!is.null(rclass)) {
+    if (any(rclass %in% c("bvarmodel", "bvecmodel"))) {
+      return(NULL)
+    }
+    return(rclass)
+  }
+
+  if (factor_model) {
+    return(c(if (startsWith(algorithm, "Dfm")) "dfmodel" else "favarmodel", "list"))
+  }
+
+  NULL
 }

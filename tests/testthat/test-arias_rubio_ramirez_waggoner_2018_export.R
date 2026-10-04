@@ -80,3 +80,35 @@ test_that("the draws and the arguments are checked", {
                                               v, 1),
                "does not contain")
 })
+
+test_that("the estimate of p from several tries is not mistaken for a heavy tail", {
+  # With signs alone the volume elements are equal, so the weights of
+  # max_tries > 1 vary only through the estimate of p: 1, 1/2, 1/3 and so on.
+  # Those are bounded and tied, and a Pareto fit to them used to return a shape
+  # far above 0.7 and warn that a sound sample was unreliable. Smoothing a
+  # constant changes nothing, so the smoothed weights must be the raw ones.
+  object <- ex_model()
+  draws <- ex_draws(object)
+  v <- object[["model"]][["endogen"]]
+  restrictions <- data.frame(impulse = "y", response = c("y", "Dp", "r"),
+                             sign = c(1, -1, 1))
+  messages <- character(0)
+  set.seed(8)
+  smoothed <- withCallingHandlers(
+    arias_rubio_ramirez_waggoner_2018(draws, restrictions, v, lags = 1, max_tries = 50),
+    warning = function(w) {
+      messages <<- c(messages, conditionMessage(w))
+      invokeRestart("muffleWarning")
+    })
+  set.seed(8)
+  raw <- suppressWarnings(
+    arias_rubio_ramirez_waggoner_2018(draws, restrictions, v, lags = 1, max_tries = 50,
+                                      smooth = FALSE))
+
+  # The test means something only if the weights are unequal.
+  kept <- smoothed[["weights"]][smoothed[["weights"]] > 0]
+  expect_gt(length(unique(round(kept / max(kept), 8))), 1)
+  expect_equal(smoothed[["weights"]], raw[["weights"]])
+  expect_true(is.na(smoothed[["pareto_k"]]) || smoothed[["pareto_k"]] < 0.7)
+  expect_false(any(grepl("shape of its weight tail", messages)))
+})

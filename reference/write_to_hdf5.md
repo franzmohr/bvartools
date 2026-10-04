@@ -25,6 +25,13 @@ write_to_hdf5(object, ...)
 The value returned by the method for the class of `object`, as described
 on the pages of the methods.
 
+## Details
+
+Before the method is called, the size of `object` is compared with
+`options(bvartools.size_warning)`, and a warning is given if it is
+larger, since that is about the disk space the files will need. See
+[`expected_model_size`](https://franzmohr.github.io/bvartools/reference/expected_model_size.md).
+
 ## See also
 
 Methods:

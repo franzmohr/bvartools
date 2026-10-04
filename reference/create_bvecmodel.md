@@ -289,10 +289,13 @@ models* (2nd ed.). New York: Springer.
 describes the object this returns, element by element.
 
 Other model set-up:
+[`add_dummy_variables.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/add_dummy_variables.bvarmodel.md),
 [`add_initial_values.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/add_initial_values.bvarmodel.md),
 [`add_initial_values.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/add_initial_values.bvecmodel.md),
+[`add_prior_options()`](https://franzmohr.github.io/bvartools/reference/add_prior_options.md),
 [`add_priors.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/add_priors.bvarmodel.md),
 [`add_priors.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/add_priors.bvecmodel.md),
+[`aggregation_weights()`](https://franzmohr.github.io/bvartools/reference/aggregation_weights.md),
 [`combine_models()`](https://franzmohr.github.io/bvartools/reference/combine_models.md),
 [`create_bvarmodel()`](https://franzmohr.github.io/bvartools/reference/create_bvarmodel.md),
 [`transform_variables()`](https://franzmohr.github.io/bvartools/reference/transform_variables.md),

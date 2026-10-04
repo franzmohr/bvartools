@@ -91,6 +91,10 @@ model has been estimated, <code>posterior</code>. The draws of a sampler are
 <code><a href="https://rdrr.io/pkg/coda/man/mcmc.html" class="external-link">mcmc</a></code> objects; the per-period posterior of a discounted
 model is a plain matrix, since its rows are periods rather than draws.
 <code><a href="bvartools_model.html">bvartools_model</a></code> describes the elements one by one.</p>
+<p>A model of another package – a dynamic factor model of <span class="pkg">dfmtools</span>,
+say – is returned as the object of that package's
+<code><a href="from_bayests_tree.html">from_bayests_tree</a></code> method, so that one 'modellist' can hold
+and evaluate models of either.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

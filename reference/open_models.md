@@ -98,6 +98,7 @@ Other model comparison:
 [`map_models()`](https://franzmohr.github.io/bvartools/reference/map_models.md),
 [`open_model()`](https://franzmohr.github.io/bvartools/reference/open_model.md),
 [`plot_forecast_errors_by_period()`](https://franzmohr.github.io/bvartools/reference/plot_forecast_errors_by_period.md),
+[`pool_forecasts()`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md),
 [`selection_criteria.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.bvarmodel.md),
 [`selection_criteria.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.bvecmodel.md),
 [`selection_criteria.default()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.default.md),
@@ -120,7 +121,7 @@ write_to_hdf5(models, folder = folder)
 
 stored <- open_models(folder)
 stored
-#> 3 models in /tmp/RtmpcU1dnC/bvartools-example-folder 
+#> 3 models in /tmp/RtmpNfaUfc/bvartools-example-folder 
 #>   3 VarNormalWishart 
 stored[["manifest"]][, c("model", "p", "iterations")]
 #>                                       model p iterations

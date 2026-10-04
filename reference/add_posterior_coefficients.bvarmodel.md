@@ -83,6 +83,22 @@ row per draw and one column per parameter:
   for `error = "ald"`, the \\K\\ scales of the asymmetric Laplace
   distribution.
 
+- `y`:
+
+  for a model estimated from a panel not observed whole, the completed
+  panel, \\TK\\ columns ordered by period, and `constraints_inv` the
+  error precisions of its soft constraints. See
+  [`create_bvarmodel`](https://franzmohr.github.io/bvartools/reference/create_bvarmodel.md).
+
+- `mu`:
+
+  under a steady-state prior, the \\K\\ unconditional means. Under an
+  adaptive prior, `a` holds the scales of its groups in element
+  `shrinkage` and, for the horseshoe and the normal-gamma prior, the
+  scales of its coefficients in `local`; where the normal-gamma prior
+  draws \\\theta\\, its draws are in `theta`. See
+  [`add_prior_options`](https://franzmohr.github.io/bvartools/reference/add_prior_options.md).
+
 Elements that do not apply to a model are absent or `NULL`. Note that
 [`bvar`](https://franzmohr.github.io/bvartools/reference/bvar.md)
 expects draws in the transposed orientation.

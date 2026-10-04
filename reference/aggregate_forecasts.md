@@ -152,6 +152,7 @@ Other model comparison:
 [`open_model()`](https://franzmohr.github.io/bvartools/reference/open_model.md),
 [`open_models()`](https://franzmohr.github.io/bvartools/reference/open_models.md),
 [`plot_forecast_errors_by_period()`](https://franzmohr.github.io/bvartools/reference/plot_forecast_errors_by_period.md),
+[`pool_forecasts()`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md),
 [`selection_criteria.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.bvarmodel.md),
 [`selection_criteria.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.bvecmodel.md),
 [`selection_criteria.default()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.default.md),
@@ -200,17 +201,17 @@ selection_criteria(models)
 #> Mean absolute forecast errors (MAFE)
 #> 
 #>  Variable h Model 1 Model 2
-#>        Dp 1  0.3278   1.306
-#>         r 1  0.7703   2.090
-#>        Dp 2  0.4959   1.263
-#>         r 2  1.7598   2.994
+#>        Dp 1  0.3579   1.306
+#>         r 1  0.6508   2.090
+#>        Dp 2  0.5152   1.263
+#>         r 2  1.9153   2.994
 #> 
 #> 
 #> Root mean squared forecast errors (RMSFE)
 #> 
 #>  Variable h Model 1 Model 2
-#>        Dp 1  0.4274   1.322
-#>         r 1  1.0754   2.267
-#>        Dp 2  0.6196   1.287
-#>         r 2  2.1979   2.994
+#>        Dp 1  0.4683   1.322
+#>         r 1  0.9632   2.267
+#>        Dp 2  0.6790   1.287
+#>         r 2  2.3931   2.994
 ```

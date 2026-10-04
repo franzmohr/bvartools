@@ -169,8 +169,8 @@ Argument `coef` can contain the following elements:
   a constant coefficient an interior point of the prior and lets the
   posterior carry the Savage-Dickey test for time variation of Chan
   (2018); see Details. It applies to the covariance coefficients as
-  well. Only for models with time varying parameters, `tvp = TRUE`, and
-  `error = "sv"`, `"sv+covar"`, `"gamma"` or `"gamma+covar"`.
+  well. Only for models with time varying parameters, `tvp = TRUE`,
+  whatever their `error`.
 
 Argument `sigma` must contain the elements that belong to the `error` of
 the model:
@@ -344,9 +344,12 @@ analysis* (2nd ed.). Berlin: Springer.
 ## See also
 
 Other model set-up:
+[`add_dummy_variables.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/add_dummy_variables.bvarmodel.md),
 [`add_initial_values.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/add_initial_values.bvarmodel.md),
 [`add_initial_values.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/add_initial_values.bvecmodel.md),
+[`add_prior_options()`](https://franzmohr.github.io/bvartools/reference/add_prior_options.md),
 [`add_priors.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/add_priors.bvecmodel.md),
+[`aggregation_weights()`](https://franzmohr.github.io/bvartools/reference/aggregation_weights.md),
 [`combine_models()`](https://franzmohr.github.io/bvartools/reference/combine_models.md),
 [`create_bvarmodel()`](https://franzmohr.github.io/bvartools/reference/create_bvarmodel.md),
 [`create_bvecmodel()`](https://franzmohr.github.io/bvartools/reference/create_bvecmodel.md),

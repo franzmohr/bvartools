@@ -68,6 +68,8 @@
 <span>  period <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  max_groups <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  impact <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  statistic <span class="op">=</span> <span class="st">"mean"</span>,</span>
+<span>  ci <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -122,6 +124,16 @@ with many variables. Default is <code>NULL</code>, so that a column is returned 
 matrices with one entry per draw. Ignored for every other value of <code>type</code>. See 'Details'.</p></dd>
 
 
+<dt id="arg-statistic">statistic<a class="anchor" aria-label="anchor" href="#arg-statistic"></a></dt>
+<dd><p>the posterior summary of each share, <code>"mean"</code> (default) or
+<code>"median"</code>.</p></dd>
+
+
+<dt id="arg-ci">ci<a class="anchor" aria-label="anchor" href="#arg-ci"></a></dt>
+<dd><p>an optional probability, the coverage of a credible interval returned
+alongside, such as <code>0.68</code> for the 16th and 84th percentiles.</p></dd>
+
+
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>further arguments passed to or from other methods.</p></dd>
 
@@ -131,7 +143,12 @@ matrices with one entry per draw. Ignored for every other value of <code>type</c
     <p>A time-series object of class 'bvarfevd' running from period 0 to <code>n_ahead</code>,
 with one column per variable holding the share of the forecast error variance of
 <code>response</code> that is due to its shocks. For <code>type = "oir"</code> the rows sum to
-one; for <code>type = "gir"</code> they do so only with <code>normalise_gir = TRUE</code>.</p>
+one; for <code>type = "gir"</code> they do so only with <code>normalise_gir = TRUE</code>.
+With <code>ci</code>, attributes <code>lower</code> and <code>upper</code> hold the bounds of the credible
+interval of each share in the same shape. With <code>statistic = "median"</code> or <code>ci</code>, a
+GIR-based decomposition is normalised draw by draw rather than after averaging, and the
+medians need not sum to one. <code>ci</code> cannot be combined with <code>max_groups</code>, since the
+bounds of a pooled column are not the pooled bounds.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -192,7 +209,10 @@ on impact.</p>
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p>Other post-estimation analysis:
 <code><a href="add_sign_restrictions.bvarmodel.html">add_sign_restrictions.bvarmodel()</a></code>,
+<code><a href="add_sign_zero_restrictions.bvarmodel.html">add_sign_zero_restrictions.bvarmodel()</a></code>,
 <code><a href="fevd.bvecmodel.html">fevd.bvecmodel()</a></code>,
+<code><a href="historical_decomposition.html">historical_decomposition()</a></code>,
+<code><a href="historical_decomposition.bvarmodel.html">historical_decomposition.bvarmodel()</a></code>,
 <code><a href="irf.bvarmodel.html">irf.bvarmodel()</a></code>,
 <code><a href="irf.bvecmodel.html">irf.bvecmodel()</a></code>,
 <code><a href="multipliers.html">multipliers()</a></code>,
@@ -201,6 +221,7 @@ on impact.</p>
 <code><a href="predict.bvarmodel.html">predict.bvarmodel()</a></code>,
 <code><a href="spillover.bvarmodel.html">spillover.bvarmodel()</a></code>,
 <code><a href="spillover.bvecmodel.html">spillover.bvecmodel()</a></code>,
+<code><a href="split_quantile_grid.html">split_quantile_grid()</a></code>,
 <code><a href="vec_to_var.bvecmodel.html">vec_to_var.bvecmodel()</a></code></p></div>
     </div>
 

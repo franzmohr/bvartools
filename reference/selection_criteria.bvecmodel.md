@@ -6,7 +6,7 @@ Calculates model selection criteria for an object of class 'bvecmodel'.
 
 ``` r
 # S3 method for class 'bvecmodel'
-selection_criteria(object, ci = 0.95, ...)
+selection_criteria(object, ci = 0.95, plugin = c("mean", "best"), ...)
 ```
 
 ## Arguments
@@ -19,6 +19,16 @@ selection_criteria(object, ci = 0.95, ...)
 
   a numeric between 0 and 1 specifying the probability of the credible
   band. Defaults to 0.95.
+
+- plugin:
+
+  the point at which the deviance of `AIC`, `BIC` and `HQ` is evaluated.
+  `"mean"`, the default, uses the posterior mean of the parameters, for
+  a VEC model the best approximation of the model's rank to the
+  posterior mean of \\\Pi\\. `"best"` uses the draw whose log-likelihood
+  is the highest the chain visited, which is closer to the maximum these
+  corrections are derived for, but grows with the length of the chain
+  and is therefore comparable only across models drawn equally long.
 
 - ...:
 
@@ -50,6 +60,7 @@ Other model comparison:
 [`open_model()`](https://franzmohr.github.io/bvartools/reference/open_model.md),
 [`open_models()`](https://franzmohr.github.io/bvartools/reference/open_models.md),
 [`plot_forecast_errors_by_period()`](https://franzmohr.github.io/bvartools/reference/plot_forecast_errors_by_period.md),
+[`pool_forecasts()`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md),
 [`selection_criteria.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.bvarmodel.md),
 [`selection_criteria.default()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.default.md),
 [`selection_criteria.modellist()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.modellist.md)

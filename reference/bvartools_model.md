@@ -28,7 +28,13 @@ directly. The layout below is the contract that makes that safe.
   identified. `iterations` and `burnin` size the chain, `thin` is
   present only above one, and `algorithm` names the sampler that will
   draw it. A VEC model adds `rank`, `k_beta` and the deterministic terms
-  restricted to the cointegration space; a quantile VAR adds `quantile`.
+  restricted to the cointegration space; a quantile VAR adds `quantile`,
+  or `quantiles` for a grid of them, and
+  [`add_posterior_forecasts`](https://franzmohr.github.io/bvartools/reference/add_posterior_forecasts.md)
+  a grid's `forecast_quantile`.
+  [`add_dummy_variables`](https://franzmohr.github.io/bvartools/reference/add_dummy_variables.md)
+  adds `dummy_variables`, the rule each of its dummies is continued by
+  in a forecast.
   [`add_seed`](https://franzmohr.github.io/bvartools/reference/add_seed.md)
   adds `seed`,
   [`add_forecast_input`](https://franzmohr.github.io/bvartools/reference/add_forecast_input.md)
@@ -46,7 +52,12 @@ directly. The layout below is the contract that makes that safe.
   variable; `x` is the regressors in the same compact layout, one row
   per period; `z` is the same regressors in SUR form, `kron(x, I_k)`,
   which is what the samplers of a VAR read. A VEC model adds `w`, the
-  lagged levels the cointegration term is formed from.
+  lagged levels the cointegration term is formed from. A VAR estimated
+  from a panel not observed whole adds `constraints`, what was observed
+  of it: `value` and `group` with one element per observation, and
+  `row`, `period`, `variable` and `weight` with one per entry of the
+  linear combination each observation is, counted from one. See
+  [`create_bvarmodel`](https://franzmohr.github.io/bvartools/reference/create_bvarmodel.md).
 
 - `data$forecast`:
 
@@ -76,7 +87,8 @@ directly. The layout below is the contract that makes that safe.
   [`add_priors.bvarmodel`](https://franzmohr.github.io/bvartools/reference/add_priors.bvarmodel.md)
   or
   [`add_priors.bvecmodel`](https://franzmohr.github.io/bvartools/reference/add_priors.bvecmodel.md),
-  lists them.
+  lists them. `a$shrinkage`, `mu` and `constraints` are added by
+  [`add_prior_options`](https://franzmohr.github.io/bvartools/reference/add_prior_options.md).
 
 - `initial`:
 
@@ -123,7 +135,22 @@ block is a list whose `coeffs` carries the draws:
 - `u_scale`:
 
   The scale of the asymmetric Laplace, \\K\\ columns, for a quantile
-  VAR.
+  VAR, and \\K\\ per level for a grid of quantiles, whose `a` is stacked
+  the same way and which keeps no `u_sigma_inv` or `u_omega_inv`.
+
+- `y`:
+
+  The completed panel of a VAR estimated from one not observed whole,
+  \\TK\\ columns stacked by period, and `constraints_inv` the error
+  precisions of its soft constraints, one column per group.
+
+- `mu`:
+
+  The unconditional means under a steady-state prior, \\K\\ columns.
+  Under an adaptive prior `a` adds `shrinkage`, the scales of its
+  groups, and for the horseshoe and the normal-gamma prior `local`, one
+  scale per coefficient, and `theta` where the normal-gamma prior draws
+  it.
 
 - `beta`:
 

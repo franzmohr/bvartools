@@ -132,21 +132,6 @@ install.packages("bvartools")
 devtools::install_github("franzmohr/bvartools")
 ```
 
-### With an AI coding assistant
-
-`inst/agents/` holds documentation written for coding assistants: the
-rules that keep a bvartools analysis from quietly going wrong, and
-complete examples that the test suite runs. The installed package
-carries it at `system.file("agents", package = "bvartools")`, matching
-its version. In Claude Code it installs as a plugin:
-
-``` R
-/plugin marketplace add franzmohr/bvartools
-/plugin install bvartools@bvartools
-```
-
-Other assistants can be pointed at `inst/agents/AGENTS.md`.
-
 ### Speed and R’s BLAS library
 
 The samplers spend most of their time in linear algebra, which R hands
@@ -728,6 +713,15 @@ Economics, 52*(2), 381-419.
   : Create a Vector Autoregressive Model
 - [`create_bvecmodel()`](https://franzmohr.github.io/bvartools/reference/create_bvecmodel.md)
   : Create Vector Error Correction Models
+- [`add_dummy_variables()`](https://franzmohr.github.io/bvartools/reference/add_dummy_variables.md)
+  : Dummy Variables
+- [`add_dummy_variables(`*`<bvarmodel>`*`)`](https://franzmohr.github.io/bvartools/reference/add_dummy_variables.bvarmodel.md)
+  [`add_dummy_variables(`*`<bvecmodel>`*`)`](https://franzmohr.github.io/bvartools/reference/add_dummy_variables.bvarmodel.md)
+  [`add_dummy_variables(`*`<expandingwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/add_dummy_variables.bvarmodel.md)
+  [`add_dummy_variables(`*`<modellist>`*`)`](https://franzmohr.github.io/bvartools/reference/add_dummy_variables.bvarmodel.md)
+  : Dummy Variables
+- [`aggregation_weights()`](https://franzmohr.github.io/bvartools/reference/aggregation_weights.md)
+  : Weights of a Temporal Aggregate
 - [`is_discount_model()`](https://franzmohr.github.io/bvartools/reference/discount_models.md)
   [`check_discount_specification()`](https://franzmohr.github.io/bvartools/reference/discount_models.md)
   : The Discounted Models
@@ -791,7 +785,34 @@ Economics, 52*(2), 381-419.
   [`add_posterior_loglik(`*`<bvarfolder>`*`)`](https://franzmohr.github.io/bvartools/reference/folder_steps.md)
   [`thin(`*`<bvarfolder>`*`)`](https://franzmohr.github.io/bvartools/reference/folder_steps.md)
   [`selection_criteria(`*`<bvarfolder>`*`)`](https://franzmohr.github.io/bvartools/reference/folder_steps.md)
+  [`time_variation_test(`*`<bvarfolder>`*`)`](https://franzmohr.github.io/bvartools/reference/folder_steps.md)
   : Estimation Steps on a Folder of Models
+- [`pool_forecasts()`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_priors(`*`<forecastpool>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_initial_values(`*`<forecastpool>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_seed(`*`<forecastpool>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_posterior_coefficients(`*`<forecastpool>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_posterior_loglik(`*`<forecastpool>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_forecast_input(`*`<forecastpool>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_posterior_forecasts(`*`<forecastpool>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_predictive_loglik(`*`<forecastpool>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`thin(`*`<forecastpool>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_priors(`*`<poolwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_initial_values(`*`<poolwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_seed(`*`<poolwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_posterior_coefficients(`*`<poolwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_posterior_loglik(`*`<poolwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_forecast_input(`*`<poolwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_posterior_forecasts(`*`<poolwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_predictive_loglik(`*`<poolwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`thin(`*`<poolwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`write_to_hdf5(`*`<forecastpool>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`write_to_hdf5(`*`<poolwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`print(`*`<forecastpool>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`print(`*`<poolwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  : Pool Forecasts
+- [`add_prior_options()`](https://franzmohr.github.io/bvartools/reference/add_prior_options.md)
+  : Adaptive Priors, Stationarity and the Steady State
 - [`minnesota_prior()`](https://franzmohr.github.io/bvartools/reference/minnesota_prior.md)
   : Minnesota Prior
 - [`minnesota_prior(`*`<bvarmodel>`*`)`](https://franzmohr.github.io/bvartools/reference/minnesota_prior.bvarmodel.md)
@@ -820,6 +841,12 @@ Economics, 52*(2), 381-419.
   [`add_sign_restrictions(`*`<expandingwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/add_sign_restrictions.bvarmodel.md)
   [`add_sign_restrictions(`*`<modellist>`*`)`](https://franzmohr.github.io/bvartools/reference/add_sign_restrictions.bvarmodel.md)
   : Sign Restrictions
+- [`add_sign_zero_restrictions()`](https://franzmohr.github.io/bvartools/reference/add_sign_zero_restrictions.md)
+  : Sign and Zero Restrictions
+- [`add_sign_zero_restrictions(`*`<bvarmodel>`*`)`](https://franzmohr.github.io/bvartools/reference/add_sign_zero_restrictions.bvarmodel.md)
+  [`add_sign_zero_restrictions(`*`<expandingwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/add_sign_zero_restrictions.bvarmodel.md)
+  [`add_sign_zero_restrictions(`*`<modellist>`*`)`](https://franzmohr.github.io/bvartools/reference/add_sign_zero_restrictions.bvarmodel.md)
+  : Sign and Zero Restrictions
 - [`add_initial_values()`](https://franzmohr.github.io/bvartools/reference/add_initial_values.md)
   : Add Initial Values of an MCMC Chain
 - [`add_initial_values(`*`<bvarmodel>`*`)`](https://franzmohr.github.io/bvartools/reference/add_initial_values.bvarmodel.md)
@@ -856,7 +883,32 @@ Economics, 52*(2), 381-419.
   [`add_posterior_loglik(`*`<bvarfolder>`*`)`](https://franzmohr.github.io/bvartools/reference/folder_steps.md)
   [`thin(`*`<bvarfolder>`*`)`](https://franzmohr.github.io/bvartools/reference/folder_steps.md)
   [`selection_criteria(`*`<bvarfolder>`*`)`](https://franzmohr.github.io/bvartools/reference/folder_steps.md)
+  [`time_variation_test(`*`<bvarfolder>`*`)`](https://franzmohr.github.io/bvartools/reference/folder_steps.md)
   : Estimation Steps on a Folder of Models
+- [`pool_forecasts()`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_priors(`*`<forecastpool>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_initial_values(`*`<forecastpool>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_seed(`*`<forecastpool>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_posterior_coefficients(`*`<forecastpool>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_posterior_loglik(`*`<forecastpool>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_forecast_input(`*`<forecastpool>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_posterior_forecasts(`*`<forecastpool>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_predictive_loglik(`*`<forecastpool>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`thin(`*`<forecastpool>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_priors(`*`<poolwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_initial_values(`*`<poolwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_seed(`*`<poolwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_posterior_coefficients(`*`<poolwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_posterior_loglik(`*`<poolwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_forecast_input(`*`<poolwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_posterior_forecasts(`*`<poolwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_predictive_loglik(`*`<poolwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`thin(`*`<poolwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`write_to_hdf5(`*`<forecastpool>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`write_to_hdf5(`*`<poolwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`print(`*`<forecastpool>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`print(`*`<poolwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  : Pool Forecasts
 - [`add_posterior_coefficients()`](https://franzmohr.github.io/bvartools/reference/add_posterior_coefficients.md)
   : Posterior Simulation of Model Coefficients
 - [`add_posterior_coefficients(`*`<bvarmodel>`*`)`](https://franzmohr.github.io/bvartools/reference/add_posterior_coefficients.bvarmodel.md)
@@ -867,6 +919,8 @@ Economics, 52*(2), 381-419.
   : Posterior Simulation of Model Coefficients
 - [`add_posterior_coefficients(`*`<modellist>`*`)`](https://franzmohr.github.io/bvartools/reference/add_posterior_coefficients.modellist.md)
   : Posterior Simulation of Model Coefficients
+- [`split_quantile_grid()`](https://franzmohr.github.io/bvartools/reference/split_quantile_grid.md)
+  : Single Quantiles of a Quantile Grid
 - [`add_posterior_loglik()`](https://franzmohr.github.io/bvartools/reference/add_posterior_loglik.md)
   : Add Log-Likelihood
 - [`add_posterior_loglik(`*`<bvarmodel>`*`)`](https://franzmohr.github.io/bvartools/reference/add_posterior_loglik.bvarmodel.md)
@@ -918,6 +972,30 @@ Economics, 52*(2), 381-419.
   [`thin(`*`<externalforecast>`*`)`](https://franzmohr.github.io/bvartools/reference/create_external_forecast.md)
   [`print(`*`<externalforecast>`*`)`](https://franzmohr.github.io/bvartools/reference/create_external_forecast.md)
   : Objects for Externally Produced Forecasts
+- [`pool_forecasts()`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_priors(`*`<forecastpool>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_initial_values(`*`<forecastpool>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_seed(`*`<forecastpool>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_posterior_coefficients(`*`<forecastpool>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_posterior_loglik(`*`<forecastpool>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_forecast_input(`*`<forecastpool>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_posterior_forecasts(`*`<forecastpool>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_predictive_loglik(`*`<forecastpool>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`thin(`*`<forecastpool>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_priors(`*`<poolwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_initial_values(`*`<poolwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_seed(`*`<poolwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_posterior_coefficients(`*`<poolwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_posterior_loglik(`*`<poolwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_forecast_input(`*`<poolwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_posterior_forecasts(`*`<poolwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_predictive_loglik(`*`<poolwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`thin(`*`<poolwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`write_to_hdf5(`*`<forecastpool>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`write_to_hdf5(`*`<poolwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`print(`*`<forecastpool>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`print(`*`<poolwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  : Pool Forecasts
 - [`prepare_forecast_input()`](https://franzmohr.github.io/bvartools/reference/prepare_forecast_input.md)
   : Prepare Forecast Input
 - [`prepare_forecast_input(`*`<bvarmodel>`*`)`](https://franzmohr.github.io/bvartools/reference/prepare_forecast_input.bvarmodel.md)
@@ -971,6 +1049,7 @@ Economics, 52*(2), 381-419.
   [`add_posterior_loglik(`*`<bvarfolder>`*`)`](https://franzmohr.github.io/bvartools/reference/folder_steps.md)
   [`thin(`*`<bvarfolder>`*`)`](https://franzmohr.github.io/bvartools/reference/folder_steps.md)
   [`selection_criteria(`*`<bvarfolder>`*`)`](https://franzmohr.github.io/bvartools/reference/folder_steps.md)
+  [`time_variation_test(`*`<bvarfolder>`*`)`](https://franzmohr.github.io/bvartools/reference/folder_steps.md)
   : Estimation Steps on a Folder of Models
 - [`selection_criteria()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.md)
   [`print(`*`<selcrit>`*`)`](https://franzmohr.github.io/bvartools/reference/selection_criteria.md)
@@ -992,6 +1071,8 @@ Economics, 52*(2), 381-419.
   : Test for Time Variation
 - [`time_variation_test(`*`<bvarmodel>`*`)`](https://franzmohr.github.io/bvartools/reference/time_variation_test.bvarmodel.md)
   [`time_variation_test(`*`<bvecmodel>`*`)`](https://franzmohr.github.io/bvartools/reference/time_variation_test.bvarmodel.md)
+  [`time_variation_test(`*`<modellist>`*`)`](https://franzmohr.github.io/bvartools/reference/time_variation_test.bvarmodel.md)
+  [`time_variation_test(`*`<expandingwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/time_variation_test.bvarmodel.md)
   : Test for Time Variation in a VAR or VEC Model
 - [`choose_best_model()`](https://franzmohr.github.io/bvartools/reference/choose_best_model.md)
   : Choose Best Model
@@ -1017,6 +1098,12 @@ Economics, 52*(2), 381-419.
   : Forecast Error Variance Decomposition
 - [`fevd(`*`<bvecmodel>`*`)`](https://franzmohr.github.io/bvartools/reference/fevd.bvecmodel.md)
   : Forecast Error Variance Decomposition
+- [`historical_decomposition()`](https://franzmohr.github.io/bvartools/reference/historical_decomposition.md)
+  : Historical Decomposition
+- [`historical_decomposition(`*`<bvarmodel>`*`)`](https://franzmohr.github.io/bvartools/reference/historical_decomposition.bvarmodel.md)
+  : Historical Decomposition of a Vector Autoregressive Model
+- [`plot(`*`<bvarhd>`*`)`](https://franzmohr.github.io/bvartools/reference/plot.bvarhd.md)
+  : Plot a Historical Decomposition
 - [`spillover()`](https://franzmohr.github.io/bvartools/reference/spillover.md)
   : Spillover Index
 - [`spillover(`*`<bvarmodel>`*`)`](https://franzmohr.github.io/bvartools/reference/spillover.bvarmodel.md)
@@ -1027,6 +1114,13 @@ Economics, 52*(2), 381-419.
   : Rolling Spillover Index
 - [`spillover(`*`<modellist>`*`)`](https://franzmohr.github.io/bvartools/reference/spillover.modellist.md)
   : Spillover Index
+- [`persistence_profiles()`](https://franzmohr.github.io/bvartools/reference/persistence_profiles.md)
+  : Persistence Profiles
+- [`persistence_profiles(`*`<bvarmodel>`*`)`](https://franzmohr.github.io/bvartools/reference/persistence_profiles.bvecmodel.md)
+  [`persistence_profiles(`*`<bvecmodel>`*`)`](https://franzmohr.github.io/bvartools/reference/persistence_profiles.bvecmodel.md)
+  [`persistence_profiles(`*`<modellist>`*`)`](https://franzmohr.github.io/bvartools/reference/persistence_profiles.bvecmodel.md)
+  [`persistence_profiles(`*`<expandingwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/persistence_profiles.bvecmodel.md)
+  : Persistence Profiles of a VEC Model
 - [`multipliers()`](https://franzmohr.github.io/bvartools/reference/multipliers.md)
   : Dynamic Multipliers
 - [`multipliers(`*`<bvarmodel>`*`)`](https://franzmohr.github.io/bvartools/reference/multipliers.bvarmodel.md)
@@ -1083,6 +1177,30 @@ Economics, 52*(2), 381-419.
   [`print(`*`<bvarfolder>`*`)`](https://franzmohr.github.io/bvartools/reference/open_models.md)
   [`model_files()`](https://franzmohr.github.io/bvartools/reference/open_models.md)
   : Open a Folder of Stored Models
+- [`pool_forecasts()`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_priors(`*`<forecastpool>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_initial_values(`*`<forecastpool>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_seed(`*`<forecastpool>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_posterior_coefficients(`*`<forecastpool>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_posterior_loglik(`*`<forecastpool>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_forecast_input(`*`<forecastpool>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_posterior_forecasts(`*`<forecastpool>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_predictive_loglik(`*`<forecastpool>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`thin(`*`<forecastpool>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_priors(`*`<poolwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_initial_values(`*`<poolwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_seed(`*`<poolwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_posterior_coefficients(`*`<poolwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_posterior_loglik(`*`<poolwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_forecast_input(`*`<poolwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_posterior_forecasts(`*`<poolwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_predictive_loglik(`*`<poolwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`thin(`*`<poolwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`write_to_hdf5(`*`<forecastpool>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`write_to_hdf5(`*`<poolwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`print(`*`<forecastpool>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`print(`*`<poolwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  : Pool Forecasts
 - [`print(`*`<bvarmodel>`*`)`](https://franzmohr.github.io/bvartools/reference/print.bvarmodel.md)
   : Printing Model Information
 - [`print(`*`<bvarspillover>`*`)`](https://franzmohr.github.io/bvartools/reference/print.bvarspillover.md)
@@ -1098,6 +1216,8 @@ Economics, 52*(2), 381-419.
 - [`plot(`*`<bvarfevd>`*`)`](https://franzmohr.github.io/bvartools/reference/plot.bvarfevd.md)
   : Plotting Forecast Error Variance Decompositions of Bayesian Vector
   Autoregression
+- [`plot(`*`<bvarhd>`*`)`](https://franzmohr.github.io/bvartools/reference/plot.bvarhd.md)
+  : Plot a Historical Decomposition
 - [`plot(`*`<bvarirf>`*`)`](https://franzmohr.github.io/bvartools/reference/plot.bvarirf.md)
   : Plotting Impulse Responses of Bayesian Vector Autoregression
 - [`plot(`*`<bvarmodel>`*`)`](https://franzmohr.github.io/bvartools/reference/plot.bvarmodel.md)
@@ -1121,9 +1241,35 @@ Economics, 52*(2), 381-419.
   : Plotting Selection Criteria
 - [`plot_forecast_errors_by_period()`](https://franzmohr.github.io/bvartools/reference/plot_forecast_errors_by_period.md)
   : Plotting Forecast Errors per Period
+- [`plot_predictive_loglik()`](https://franzmohr.github.io/bvartools/reference/plot_predictive_loglik.md)
+  : Plotting the Log Predictive Likelihood per Period
 
 ## Storage
 
+- [`pool_forecasts()`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_priors(`*`<forecastpool>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_initial_values(`*`<forecastpool>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_seed(`*`<forecastpool>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_posterior_coefficients(`*`<forecastpool>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_posterior_loglik(`*`<forecastpool>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_forecast_input(`*`<forecastpool>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_posterior_forecasts(`*`<forecastpool>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_predictive_loglik(`*`<forecastpool>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`thin(`*`<forecastpool>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_priors(`*`<poolwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_initial_values(`*`<poolwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_seed(`*`<poolwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_posterior_coefficients(`*`<poolwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_posterior_loglik(`*`<poolwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_forecast_input(`*`<poolwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_posterior_forecasts(`*`<poolwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`add_predictive_loglik(`*`<poolwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`thin(`*`<poolwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`write_to_hdf5(`*`<forecastpool>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`write_to_hdf5(`*`<poolwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`print(`*`<forecastpool>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  [`print(`*`<poolwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+  : Pool Forecasts
 - [`write_to_hdf5()`](https://franzmohr.github.io/bvartools/reference/write_to_hdf5.md)
   : Export to HDF5 File
 - [`write_to_hdf5(`*`<bvarmodel>`*`)`](https://franzmohr.github.io/bvartools/reference/write_to_hdf5.bvarmodel.md)
@@ -1134,6 +1280,13 @@ Economics, 52*(2), 381-419.
   : Export to HDF5 File
 - [`write_to_hdf5(`*`<modellist>`*`)`](https://franzmohr.github.io/bvartools/reference/write_to_hdf5.modellist.md)
   : Export to HDF5 File
+- [`expected_model_size()`](https://franzmohr.github.io/bvartools/reference/expected_model_size.md)
+  : Expected Size of a Model
+- [`expected_model_size(`*`<bvarmodel>`*`)`](https://franzmohr.github.io/bvartools/reference/expected_model_size.bvarmodel.md)
+  [`expected_model_size(`*`<bvecmodel>`*`)`](https://franzmohr.github.io/bvartools/reference/expected_model_size.bvarmodel.md)
+  [`expected_model_size(`*`<expandingwindow>`*`)`](https://franzmohr.github.io/bvartools/reference/expected_model_size.bvarmodel.md)
+  [`expected_model_size(`*`<modellist>`*`)`](https://franzmohr.github.io/bvartools/reference/expected_model_size.bvarmodel.md)
+  : Expected Size of a Model
 - [`read_model_from_hdf5()`](https://franzmohr.github.io/bvartools/reference/read_model_from_hdf5.md)
   : Import Models from HDF5 Files
 - [`read_models_from_folder()`](https://franzmohr.github.io/bvartools/reference/read_models_from_folder.md)
@@ -1156,12 +1309,18 @@ Economics, 52*(2), 381-419.
   [`add_posterior_loglik(`*`<bvarfolder>`*`)`](https://franzmohr.github.io/bvartools/reference/folder_steps.md)
   [`thin(`*`<bvarfolder>`*`)`](https://franzmohr.github.io/bvartools/reference/folder_steps.md)
   [`selection_criteria(`*`<bvarfolder>`*`)`](https://franzmohr.github.io/bvartools/reference/folder_steps.md)
+  [`time_variation_test(`*`<bvarfolder>`*`)`](https://franzmohr.github.io/bvartools/reference/folder_steps.md)
   : Estimation Steps on a Folder of Models
 - [`irf(`*`<bvarfile>`*`)`](https://franzmohr.github.io/bvartools/reference/analysis_of_stored_models.md)
   [`fevd(`*`<bvarfile>`*`)`](https://franzmohr.github.io/bvartools/reference/analysis_of_stored_models.md)
   : Impulse Responses and Variance Decompositions of a Stored Model
 - [`map_models()`](https://franzmohr.github.io/bvartools/reference/map_models.md)
   : Apply a Function to the Models of a Folder
+- [`write_bayests_tree()`](https://franzmohr.github.io/bvartools/reference/write_bayests_tree.md)
+  [`read_bayests_tree()`](https://franzmohr.github.io/bvartools/reference/write_bayests_tree.md)
+  : Write and Read the Tree of a BayesTS Model File
+- [`from_bayests_tree()`](https://franzmohr.github.io/bvartools/reference/from_bayests_tree.md)
+  : Turn the Tree of a Model File into a Model
 - [`map_draws()`](https://franzmohr.github.io/bvartools/reference/map_draws.md)
   : Apply a Function to the Draws of a Stored Model
 
@@ -1197,6 +1356,8 @@ object.
   : Stochastic Volatility
 - [`kalman_durbin_koopman_2002()`](https://franzmohr.github.io/bvartools/reference/kalman_durbin_koopman_2002.md)
   : Durbin and Koopman Simulation Smoother
+- [`arias_rubio_ramirez_waggoner_2018()`](https://franzmohr.github.io/bvartools/reference/arias_rubio_ramirez_waggoner_2018.md)
+  : Sign and Zero Restricted Rotations of Posterior Draws
 - [`covar_prepare_data()`](https://franzmohr.github.io/bvartools/reference/covar_prepare_data.md)
   : Covariance: Data Preparation
 - [`covar_vector_to_matrix()`](https://franzmohr.github.io/bvartools/reference/covar_vector_to_matrix.md)

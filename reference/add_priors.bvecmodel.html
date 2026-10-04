@@ -62,7 +62,7 @@ function <code><a href="create_bvecmodel.html">create_bvecmodel</a></code>.</p>
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="co"># S3 method for class 'bvecmodel'</span></span>
-<span><span class="fu"><a href="add_priors.html">add_priors</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">coef</span>, <span class="va">coint</span>, <span class="va">sigma</span>, varsel <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="add_priors.html">add_priors</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">coef</span>, coint <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">sigma</span>, varsel <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -82,7 +82,10 @@ inverses of the variances. See 'Details'.</p></dd>
 
 <dt id="arg-coint">coint<a class="anchor" aria-label="anchor" href="#arg-coint"></a></dt>
 <dd><p>a named list of prior specifications for coefficients determining the
-cointegration space of VEC models. It has no default. See 'Details'.</p></dd>
+cointegration space of VEC models. It has no default and is required for a positive
+cointegration rank. A model of rank zero has no cointegration space and needs none; one
+that is given is checked and ignored, so that a list of models over several ranks can
+share the same arguments. See 'Details'.</p></dd>
 
 
 <dt id="arg-sigma">sigma<a class="anchor" aria-label="anchor" href="#arg-sigma"></a></dt>
@@ -198,8 +201,7 @@ error, as does an element that is not listed below.</p>
   the test for time variation of <code><a href="time_variation_test.html">time_variation_test</a></code>; see
   <code><a href="add_priors.bvarmodel.html">add_priors.bvarmodel</a></code> for the model and the draws it adds. The cointegration
   space keeps its state equation. Only for models with time varying parameters,
-  <code>tvp = TRUE</code>, and <code>error = "sv"</code>, <code>"sv+covar"</code>, <code>"gamma"</code> or
-  <code>"gamma+covar"</code>.</p></dd>
+  <code>tvp = TRUE</code>, whatever their <code>error</code>.</p></dd>
 
   <dt><code>omega_v_alpha</code></dt>
 <dd><p>a positive numeric, the <code>omega_v</code> of the loadings, as
@@ -529,9 +531,12 @@ a time varying cointegration model. <em>Journal of Econometrics, 165</em>(2), 21
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p>Other model set-up:
+<code><a href="add_dummy_variables.bvarmodel.html">add_dummy_variables.bvarmodel()</a></code>,
 <code><a href="add_initial_values.bvarmodel.html">add_initial_values.bvarmodel()</a></code>,
 <code><a href="add_initial_values.bvecmodel.html">add_initial_values.bvecmodel()</a></code>,
+<code><a href="add_prior_options.html">add_prior_options()</a></code>,
 <code><a href="add_priors.bvarmodel.html">add_priors.bvarmodel()</a></code>,
+<code><a href="aggregation_weights.html">aggregation_weights()</a></code>,
 <code><a href="combine_models.html">combine_models()</a></code>,
 <code><a href="create_bvarmodel.html">create_bvarmodel()</a></code>,
 <code><a href="create_bvecmodel.html">create_bvecmodel()</a></code>,

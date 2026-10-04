@@ -28,6 +28,9 @@ thin(x, ..., cores = 1)
 
 # S3 method for class 'bvarfolder'
 selection_criteria(object, ..., cores = 1)
+
+# S3 method for class 'bvarfolder'
+time_variation_test(object, ..., cores = 1)
 ```
 
 ## Arguments
@@ -96,12 +99,14 @@ runs it on the files instead:
 which gives the same draws, since a model is drawn with the seed in its
 file.
 
-`selection_criteria` is the one method that reads rather than writes: it
-hands back a criterion per model and leaves the folder as it is. It is
-what
+`selection_criteria` and `time_variation_test` are the methods that read
+rather than write: they hand back a result per model and leave the
+folder as it is. The first is what
 [`choose_best_model`](https://franzmohr.github.io/bvartools/reference/choose_best_model.md)
 compares, so a grid of specifications too large to hold is still chosen
-from.
+from; the second gives the Bayes factors for time variation of every
+model of the folder, which is how a grid of time varying models is asked
+whether its coefficients move at all.
 
 ## See also
 
@@ -121,6 +126,7 @@ Other model comparison:
 [`open_model()`](https://franzmohr.github.io/bvartools/reference/open_model.md),
 [`open_models()`](https://franzmohr.github.io/bvartools/reference/open_models.md),
 [`plot_forecast_errors_by_period()`](https://franzmohr.github.io/bvartools/reference/plot_forecast_errors_by_period.md),
+[`pool_forecasts()`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md),
 [`selection_criteria.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.bvarmodel.md),
 [`selection_criteria.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.bvecmodel.md),
 [`selection_criteria.default()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.default.md),

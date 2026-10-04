@@ -6,7 +6,13 @@ Calculates and adds forecasts to an object of class 'bvarmodel'.
 
 ``` r
 # S3 method for class 'bvarmodel'
-add_posterior_forecasts(object, forecast_states = NULL, ...)
+add_posterior_forecasts(
+  object,
+  forecast_states = NULL,
+  scenario = NULL,
+  forecast_quantile = NULL,
+  ...
+)
 ```
 
 ## Arguments
@@ -30,6 +36,29 @@ add_posterior_forecasts(object, forecast_states = NULL, ...)
   earlier versions of the package did. If `NULL` (default), the value in
   `object$model$forecast_states` is used, and `"simulate"` when there is
   none. Models with constant coefficients and volatility are unaffected.
+
+- scenario:
+
+  an optional data frame with columns `period`, `variable` and `value`,
+  one row per value a variable is held at in a forecast period: a
+  conditional forecast. `period` counts forecast periods from one and
+  `variable` is a name or a position among the endogenous variables. It
+  is stored in `data$forecast$constraints`, which is where the forecast
+  reads it from; set that element to `NULL` to forecast without it
+  again. Available for models with constant coefficients and
+  `error = "wishart"` or `"gamma"`, and for a grid of quantiles.
+
+- forecast_quantile:
+
+  for a grid of quantiles (see `quantile_grid` in
+  [`create_bvarmodel`](https://franzmohr.github.io/bvartools/reference/create_bvarmodel.md)),
+  a level in \\(0, 1)\\ every draw of the forecast is taken at, which
+  gives quantile paths rather than draws from the predictive
+  distribution: the paths of Chavleishvili and Manganelli (2019), whose
+  difference with and without a `scenario` is an impulse response at
+  that quantile. If `NULL` (default), the value in
+  `object$model$forecast_quantile` is used, and the levels are drawn at
+  random when there is none. Zero removes a stored one.
 
 - ...:
 
@@ -55,6 +84,11 @@ log-volatility innovations, `posterior$u_sigma_inv$sigma`, which
 stores. A stochastic volatility model fitted with an earlier version of
 the package lacks it and stops with an error unless
 `forecast_states = "hold"`.
+
+## References
+
+Chavleishvili, S., & Manganelli, S. (2019). Forecasting and stress
+testing with quantile vector autoregression. *ECB Working Paper*, 2330.
 
 ## See also
 

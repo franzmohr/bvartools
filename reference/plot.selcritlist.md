@@ -25,8 +25,8 @@ plot(x, criterion = "WAIC", ...)
   the selection criterion that should be plotted. Available choices are
   the in-sample criteria `"LL"`, `"AIC"`, `"BIC"`, `"HQ"`, `"WAIC"`
   (default), `"LOOIC"`, the log marginal likelihood `"LML"` of a
-  discounted model and the out-of-sample statistics `"FE"`, `"AFE"` and
-  `"RSFE"`.
+  discounted model, the log predictive likelihood `"LPL"` of expanding
+  windows and the out-of-sample statistics `"FE"`, `"AFE"` and `"RSFE"`.
 
 - ...:
 
@@ -41,11 +41,18 @@ plot(x, criterion = "WAIC", ...)
 For in-sample criteria each model is represented by a horizontal error
 bar, which is marked by the value of the criterion. The log-likelihood
 has a posterior distribution, so its bar covers the credible band and is
-marked by the median as well as the mean of its draws. `"WAIC"` and
-`"LOOIC"` are point estimates whose bars cover a normal interval built
-from their standard error. `"AIC"`, `"BIC"`, `"HQ"` and `"LML"` are
-point estimates without a standard error, so they are drawn as a single
-point. The default is `"WAIC"`, for the reasons given in
+marked by the median as well as the mean of its draws. `"WAIC"`,
+`"LOOIC"` and `"LPL"` are point estimates whose bars cover a normal
+interval built from their standard error. The interval of `"LPL"` is the
+one of
+[`selection_criteria`](https://franzmohr.github.io/bvartools/reference/selection_criteria.md),
+around the sum of the log predictive densities of the evaluated periods;
+[`plot_predictive_loglik`](https://franzmohr.github.io/bvartools/reference/plot_predictive_loglik.md)
+plots the terms of that sum, which is where a difference between two
+models can be seen to be steady or to rest on a few periods. `"AIC"`,
+`"BIC"`, `"HQ"` and `"LML"` are point estimates without a standard
+error, so they are drawn as a single point. The default is `"WAIC"`, for
+the reasons given in
 [`selection_criteria`](https://franzmohr.github.io/bvartools/reference/selection_criteria.md).
 The criterion is measured on the x-axis and the models are arranged
 along the y-axis, beginning with the first model of `x` at the top. This

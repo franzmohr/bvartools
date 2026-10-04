@@ -123,6 +123,19 @@ elements is a list whose element <code>coeffs</code> holds the draws after burn-
 <dd><p>for <code>error = "ald"</code>, the \(K\) scales of the asymmetric
   Laplace distribution.</p></dd>
 
+  <dt><code>y</code></dt>
+<dd><p>for a model estimated from a panel not observed whole, the completed
+  panel, \(TK\) columns ordered by period, and <code>constraints_inv</code> the error
+  precisions of its soft constraints. See <code><a href="create_bvarmodel.html">create_bvarmodel</a></code>.</p></dd>
+
+  <dt><code>mu</code></dt>
+<dd><p>under a steady-state prior, the \(K\) unconditional means. Under an
+  adaptive prior, <code>a</code> holds the scales of its groups in element <code>shrinkage</code>
+  and, for the horseshoe and the normal-gamma prior, the scales of its coefficients
+  in <code>local</code>; where the normal-gamma prior draws \(\theta\), its draws are in
+  <code>theta</code>. See
+  <code><a href="add_prior_options.html">add_prior_options</a></code>.</p></dd>
+
 
 </dl><p>Elements that do not apply to a model are absent or <code>NULL</code>. Note that
 <code><a href="bvar.html">bvar</a></code> expects draws in the transposed orientation.</p>

@@ -78,8 +78,9 @@ call to <code><a href="selection_criteria.html">selection_criteria</a></code>.</
 <dd><p>the selection criterion that should be plotted. Available choices
 are the in-sample criteria <code>"LL"</code>, <code>"AIC"</code>, <code>"BIC"</code>,
 <code>"HQ"</code>, <code>"WAIC"</code> (default), <code>"LOOIC"</code>, the log marginal
-likelihood <code>"LML"</code> of a discounted model and the out-of-sample
-statistics <code>"FE"</code>, <code>"AFE"</code> and <code>"RSFE"</code>.</p></dd>
+likelihood <code>"LML"</code> of a discounted model, the log predictive likelihood
+<code>"LPL"</code> of expanding windows and the out-of-sample statistics
+<code>"FE"</code>, <code>"AFE"</code> and <code>"RSFE"</code>.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -96,9 +97,15 @@ plot.</p>
     <p>For in-sample criteria each model is represented by a horizontal error
 bar, which is marked by the value of the criterion. The log-likelihood has a
 posterior distribution, so its bar covers the credible band and is marked by the
-median as well as the mean of its draws. <code>"WAIC"</code> and <code>"LOOIC"</code> are
+median as well as the mean of its draws. <code>"WAIC"</code>, <code>"LOOIC"</code> and
+<code>"LPL"</code> are
 point estimates whose bars cover a normal interval built from their standard
-error. <code>"AIC"</code>, <code>"BIC"</code>, <code>"HQ"</code> and <code>"LML"</code> are point estimates without a
+error. The interval of <code>"LPL"</code> is the one of
+<code><a href="selection_criteria.html">selection_criteria</a></code>, around the sum of the log predictive
+densities of the evaluated periods;
+<code><a href="plot_predictive_loglik.html">plot_predictive_loglik</a></code> plots the terms of that sum, which is
+where a difference between two models can be seen to be steady or to rest on
+a few periods. <code>"AIC"</code>, <code>"BIC"</code>, <code>"HQ"</code> and <code>"LML"</code> are point estimates without a
 standard error, so they are drawn as a single point. The default is
 <code>"WAIC"</code>, for the reasons given in <code><a href="selection_criteria.html">selection_criteria</a></code>.
 The criterion is measured on

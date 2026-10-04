@@ -13,6 +13,7 @@ create_bvarmodel(
   s = 2,
   deterministic = "const",
   seasonal = FALSE,
+  iid = NULL,
   structural = FALSE,
   error = "wishart",
   quantile = 0.5,
@@ -23,7 +24,11 @@ create_bvarmodel(
   delta_sigma = 1,
   iterations = 20000,
   burnin = 2000,
-  thin = 1
+  thin = 1,
+  missing = "omit",
+  aggregate = NULL,
+  soft = NULL,
+  quantile_grid = FALSE
 )
 ```
 
@@ -60,6 +65,14 @@ create_bvarmodel(
   frequency of the time-series object provided in `data`. Defaults to
   `FALSE`.
 
+- iid:
+
+  an optional character vector naming endogenous variables whose
+  equations carry no coefficients at all – no lags, no deterministic
+  terms, nothing. They are white noise, and reach the rest of the model
+  only through the error covariance. They must be the first columns of
+  `data`. See 'Details'.
+
 - structural:
 
   logical indicating whether data should be prepared for the estimation
@@ -76,7 +89,7 @@ create_bvarmodel(
   a numeric vector of quantiles in the interval \\(0, 1)\\ that should
   be estimated. Only used, if `error = "ald"`. Defaults to `0.5`, the
   median. One model is created per quantile, so a vector produces a list
-  of models. See 'Details'.
+  of models, unless `quantile_grid` is `TRUE`. See 'Details'.
 
 - tvp:
 
@@ -121,6 +134,37 @@ create_bvarmodel(
   [`thin`](https://franzmohr.github.io/bvartools/reference/thin.bvarmodel.md),
   which thins draws already made, the draws that are not kept are never
   held in memory.
+
+- missing:
+
+  a character, what to do with periods in which a series of `data` is
+  `NA`. `"omit"` (default) drops them, as
+  [`na.omit`](https://rdrr.io/r/stats/na.fail.html) does. `"estimate"`
+  keeps them and estimates what was not observed together with the
+  model. See 'Details'.
+
+- aggregate:
+
+  an optional named list, one element per series of `data` that is
+  observed at a lower frequency than the model, holding the weights with
+  which it aggregates the periods of the model, oldest first, as
+  [`aggregation_weights`](https://franzmohr.github.io/bvartools/reference/aggregation_weights.md)
+  returns them. The series is `NA` in every period in which it is not
+  observed, and its observations stand in the last period they
+  aggregate. Implies `missing = "estimate"`.
+
+- soft:
+
+  an optional character vector of series of `data` whose observations
+  hold up to a normal measurement error instead of exactly, each series
+  with an error variance of its own. See 'Details'.
+
+- quantile_grid:
+
+  logical. If `TRUE`, the quantiles in `quantile` are estimated as one
+  structural quantile VAR rather than as one model each. Needs
+  `error = "ald"` and constant coefficients. Defaults to `FALSE`. See
+  'Details'.
 
 ## Value
 
@@ -222,13 +266,35 @@ others.
 Three properties of these models differ from the rest of the package.
 Covariances are not estimated, since rotating the equations into each
 other leaves a residual whose quantile is not the one that was asked
-for. Forecasts are not available, since the \\h\\ step ahead quantile is
-not the quantile of the iterated one step ahead quantiles. And the
-asymmetric Laplace is a working likelihood rather than a claim about the
-data, so the posterior locates the quantile, but the spread of the draws
-is not a calibrated credible interval without the adjustment of Yang et
-al. (2016), which is not applied. Variable selection is available as
-`"bvs"`, not as `"ssvs"`.
+for. A single quantile does not forecast, since the \\h\\ step ahead
+quantile is not the quantile of the iterated one step ahead quantiles.
+And the asymmetric Laplace is a working likelihood rather than a claim
+about the data, so the posterior locates the quantile, but the spread of
+the draws is not a calibrated credible interval without the adjustment
+of Yang et al. (2016), which is not applied. Variable selection is
+available as `"bvs"`, not as `"ssvs"`.
+
+With `quantile_grid = TRUE` the quantiles in `quantile`, at least two,
+form one model rather than one model each: the structural quantile VAR
+of Chavleishvili and Manganelli (2019). Every level is estimated – each
+is the chain its single-quantile model would have drawn – and the draws
+of `posterior$a` and `posterior$u_scale` are stacked level by level, the
+block of the first quantile first. With `structural = TRUE`, or a single
+variable, the grid describes the whole distribution of each variable
+given the ones ordered before it: the estimated quantiles are sorted
+(Chernozhukov et al., 2010), interpolated linearly between the levels
+and continued by exponential tails. That distribution is what
+[`add_posterior_forecasts`](https://franzmohr.github.io/bvartools/reference/add_posterior_forecasts.md)
+simulates from, variable by variable, so a grid does forecast. A
+scenario given there pins variables in forecast periods, and a
+`forecast_quantile` takes every draw at one level, which gives the
+quantile paths the impulse responses of the model are differences of.
+[`add_posterior_loglik`](https://franzmohr.github.io/bvartools/reference/add_posterior_loglik.md)
+scores the density the grid describes. Only models with constant
+coefficients take a grid. Summaries, plots and impulse responses work on
+the single levels, which
+[`split_quantile_grid`](https://franzmohr.github.io/bvartools/reference/split_quantile_grid.md)
+returns.
 
 Available specifications for argument `varsel` are:
 
@@ -264,10 +330,82 @@ comes back is a posterior rather than a chain: one row per period under
 `posterior$df`, and no `coeffs` anywhere, because joining one draw per
 period would look like a sampled path and is not one.
 
+Argument `iid` restricts the equations of the variables it names to
+carry no coefficients at all. Such a variable is white noise: nothing
+forecasts it, it forecasts nothing, and what the model is estimated for
+is its contemporaneous correlation with the errors of the equations that
+do have dynamics. That is how a high-frequency surprise becomes a
+variable of a monthly VAR rather than an instrument beside one,
+following Jarocinski and Karadi (2020).
+
+The restriction is exact rather than a tight prior on those
+coefficients: the sampler never draws them, so they are zero in every
+draw. Everything else treats the model as an ordinary VAR – the
+restricted variables are still regressors in the other equations, the
+error covariance still covers them, and
+[`irf`](https://franzmohr.github.io/bvartools/reference/irf.md) and
+[`fevd`](https://franzmohr.github.io/bvartools/reference/fevd.md) read
+the draws unchanged.
+
+**The variables named in `iid` have to be the first columns of `data`**,
+in any order among themselves. The restriction is carried by a
+variable's position rather than by a list of positions, which is what
+lets the sampler apply it without being told again which coefficients it
+owns. A data set in another order is refused with a message naming the
+columns that are there instead. It is available for models with constant
+coefficients and cannot be combined with `structural` or `varsel`.
+
+With `missing = "estimate"` the panel does not have to be observed
+whole. Every observation becomes one linear constraint on the panel,
+stored in `data$train$constraints`, and every sweep of the sampler draws
+the periods that were not observed from their distribution given the
+constraints, the coefficients and the error covariance before it draws
+those (Chan, Poon and Zhu 2023). A series observed at a lower frequency
+is a constraint on several periods, the weights of which `aggregate`
+gives, so that a quarterly series enters a monthly model as the average,
+sum or growth rate of three months (Schorfheide and Song 2015). Which
+periods a constraint reaches is decided by the dates of `data`, and one
+that reaches before the estimation sample is left out with a message.
+The periods before the sample that the first lags reach are taken as
+observed, with gaps there filled by interpolation. What `data$train$y`
+holds where nothing was observed is a starting value: a linear
+interpolation of what was. The draws of the completed panel come back as
+`posterior$y`.
+
+A series named in `soft` holds its constraints up to a normal error
+whose precision is estimated with a gamma prior, which
+[`add_prior_options`](https://franzmohr.github.io/bvartools/reference/add_prior_options.md)
+sets. It suits an aggregate whose weights are an approximation, such as
+the growth rate of an average.
+
+Estimating what was not observed is available for `error = "wishart"`,
+`"gamma"`, `"gamma+covar"`, `"sv"` and `"sv+covar"`, with constant or
+time varying coefficients. It cannot be combined with `structural` or
+the discounted model. It can be combined with `iid`, for models with
+constant coefficients: a variable named there that was not observed in a
+period – a high-frequency surprise whose series starts after the sample
+does, as in Jarocinski and Karadi (2020) – is drawn from its white noise
+given the errors of the other equations, and its gaps start at zero
+rather than at an interpolation. Forecasts start from each draw's
+completed panel. Forecasts are scored and conditioned on a scenario in
+`data$forecast$constraints` only by models with constant coefficients
+and `error = "wishart"` or `"gamma"`.
+
 ## References
+
+Chan, J. C. C., Poon, A., & Zhu, D. (2023). High-dimensional
+conditionally Gaussian state space models with missing data. *Journal of
+Econometrics, 236*(1), 105468.
+[doi:10.1016/j.jeconom.2023.05.005](https://doi.org/10.1016/j.jeconom.2023.05.005)
 
 Chan, J., Koop, G., Poirier, D. J., & Tobias, J. L. (2019). *Bayesian
 Econometric Methods* (2nd ed.). Cambridge: University Press.
+
+Chavleishvili, S., & Manganelli, S. (2019). Forecasting and stress
+testing with quantile vector autoregression. *ECB Working Paper*, 2330.
+
+Chernozhukov, V., Fernandez-Val, I., & Galichon, A. (2010). Quantile and
+probability curves without crossing. *Econometrica, 78*(3), 1093–1125.
 
 George, E. I., Sun, D., & Ni, S. (2008). Bayesian stochastic search for
 VAR model restrictions. *Journal of Econometrics, 142*(1), 553–580.
@@ -281,6 +419,11 @@ Kozumi, H., & Kobayashi, G. (2011). Gibbs sampling methods for Bayesian
 quantile regression. *Journal of Statistical Computation and Simulation,
 81*(11), 1565–1578.
 [doi:10.1080/00949655.2010.496117](https://doi.org/10.1080/00949655.2010.496117)
+
+Schorfheide, F., & Song, D. (2015). Real-time forecasting with a
+mixed-frequency VAR. *Journal of Business & Economic Statistics, 33*(3),
+366–380.
+[doi:10.1080/07350015.2014.954707](https://doi.org/10.1080/07350015.2014.954707)
 
 Lütkepohl, H. (2006). *New Introduction to Multiple Time Series
 Analysis* (2nd ed.). Berlin: Springer.
@@ -298,10 +441,13 @@ models* (2nd ed.). New York: Springer.
 describes the object this returns, element by element.
 
 Other model set-up:
+[`add_dummy_variables.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/add_dummy_variables.bvarmodel.md),
 [`add_initial_values.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/add_initial_values.bvarmodel.md),
 [`add_initial_values.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/add_initial_values.bvecmodel.md),
+[`add_prior_options()`](https://franzmohr.github.io/bvartools/reference/add_prior_options.md),
 [`add_priors.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/add_priors.bvarmodel.md),
 [`add_priors.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/add_priors.bvecmodel.md),
+[`aggregation_weights()`](https://franzmohr.github.io/bvartools/reference/aggregation_weights.md),
 [`combine_models()`](https://franzmohr.github.io/bvartools/reference/combine_models.md),
 [`create_bvecmodel()`](https://franzmohr.github.io/bvartools/reference/create_bvecmodel.md),
 [`transform_variables()`](https://franzmohr.github.io/bvartools/reference/transform_variables.md),

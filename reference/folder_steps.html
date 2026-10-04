@@ -83,7 +83,10 @@ it, writes it back and drops it, so a step costs one model per worker.</p>
 <span><span class="fu"><a href="https://rdrr.io/pkg/coda/man/thin.html" class="external-link">thin</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span>, cores <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'bvarfolder'</span></span>
-<span><span class="fu"><a href="selection_criteria.html">selection_criteria</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span>, cores <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="selection_criteria.html">selection_criteria</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span>, cores <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'bvarfolder'</span></span>
+<span><span class="fu"><a href="time_variation_test.html">time_variation_test</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span>, cores <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -140,10 +143,12 @@ the largest thing a model has, and a cluster of R workers carries every draw
 into the session and out again to do it. Where the sampler is the BayesTS
 executable, <code><a href="bayests_files.html">bayests_files</a></code> runs it on the files instead:</p><div class="sourceCode"><pre><code><span><span class="va">run</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bayests_files.html">bayests_files</a></span><span class="op">(</span>executable <span class="op">=</span> <span class="st">"/opt/bayests/bin/bayests"</span><span class="op">)</span></span>
 <span><span class="fu">run</span><span class="op">(</span><span class="fu"><a href="../reference/open_models.html">model_files</a></span><span class="op">(</span><span class="va">stored</span><span class="op">)</span>, jobs <span class="op">=</span> <span class="fl">6</span><span class="op">)</span></span></code></pre></div><p>which gives the same draws, since a model is drawn with the seed in its file.</p>
-<p><code>selection_criteria</code> is the one method that reads rather than writes:
-it hands back a criterion per model and leaves the folder as it is. It is
-what <code><a href="choose_best_model.html">choose_best_model</a></code> compares, so a grid of specifications
-too large to hold is still chosen from.</p>
+<p><code>selection_criteria</code> and <code>time_variation_test</code> are the methods that
+read rather than write: they hand back a result per model and leave the folder
+as it is. The first is what <code><a href="choose_best_model.html">choose_best_model</a></code> compares, so a grid
+of specifications too large to hold is still chosen from; the second gives the
+Bayes factors for time variation of every model of the folder, which is how a
+grid of time varying models is asked whether its coefficients move at all.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -163,6 +168,7 @@ too large to hold is still chosen from.</p>
 <code><a href="open_model.html">open_model()</a></code>,
 <code><a href="open_models.html">open_models()</a></code>,
 <code><a href="plot_forecast_errors_by_period.html">plot_forecast_errors_by_period()</a></code>,
+<code><a href="pool_forecasts.html">pool_forecasts()</a></code>,
 <code><a href="selection_criteria.bvarmodel.html">selection_criteria.bvarmodel()</a></code>,
 <code><a href="selection_criteria.bvecmodel.html">selection_criteria.bvecmodel()</a></code>,
 <code><a href="selection_criteria.default.html">selection_criteria.default()</a></code>,

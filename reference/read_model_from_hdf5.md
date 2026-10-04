@@ -39,6 +39,11 @@ periods rather than draws.
 [`bvartools_model`](https://franzmohr.github.io/bvartools/reference/bvartools_model.md)
 describes the elements one by one.
 
+A model of another package – a dynamic factor model of dfmtools, say –
+is returned as the object of that package's
+[`from_bayests_tree`](https://franzmohr.github.io/bvartools/reference/from_bayests_tree.md)
+method, so that one 'modellist' can hold and evaluate models of either.
+
 ## Details
 
 With a `group` every path the reader looks for is read under it instead

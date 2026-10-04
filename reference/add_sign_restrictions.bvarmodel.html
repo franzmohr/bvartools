@@ -159,10 +159,11 @@ rarely produces the pattern that was asked of it.</p>
 that no row mentions is left as it is drawn, since nothing in the
 restrictions distinguishes one rotation of it from another; only the
 restricted shocks should be interpreted.</p>
-<p>Only sign restrictions are supported. Zero restrictions on the impact
-responses cannot be imposed by rejection, because the set of rotations that
-satisfies them has probability zero, and need the algorithm of Arias et al.
-(2018) instead.</p>
+<p>Only sign restrictions are supported. A zero restriction cannot be imposed by
+rejection, because the set of rotations that satisfies one has probability
+zero, so no number of tries finds a member of it. Use
+<code><a href="add_sign_zero_restrictions.html">add_sign_zero_restrictions</a></code>, which draws rotations that satisfy
+the zero restrictions by construction and reweights them.</p>
 <p>The accepted rotations are added to the object as element <code>q</code> of its
 posterior draws, from where <code><a href="irf.html">irf</a></code>, <code><a href="fevd.html">fevd</a></code> and
 <code><a href="spillover.html">spillover</a></code> use them under <code>type = "sign"</code>.</p>
@@ -184,8 +185,11 @@ identification procedure. <em>Journal of Monetary Economics, 52</em>(2), 381-419
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p>Other post-estimation analysis:
+<code><a href="add_sign_zero_restrictions.bvarmodel.html">add_sign_zero_restrictions.bvarmodel()</a></code>,
 <code><a href="fevd.bvarmodel.html">fevd.bvarmodel()</a></code>,
 <code><a href="fevd.bvecmodel.html">fevd.bvecmodel()</a></code>,
+<code><a href="historical_decomposition.html">historical_decomposition()</a></code>,
+<code><a href="historical_decomposition.bvarmodel.html">historical_decomposition.bvarmodel()</a></code>,
 <code><a href="irf.bvarmodel.html">irf.bvarmodel()</a></code>,
 <code><a href="irf.bvecmodel.html">irf.bvecmodel()</a></code>,
 <code><a href="multipliers.html">multipliers()</a></code>,
@@ -194,6 +198,7 @@ identification procedure. <em>Journal of Monetary Economics, 52</em>(2), 381-419
 <code><a href="predict.bvarmodel.html">predict.bvarmodel()</a></code>,
 <code><a href="spillover.bvarmodel.html">spillover.bvarmodel()</a></code>,
 <code><a href="spillover.bvecmodel.html">spillover.bvecmodel()</a></code>,
+<code><a href="split_quantile_grid.html">split_quantile_grid()</a></code>,
 <code><a href="vec_to_var.bvecmodel.html">vec_to_var.bvecmodel()</a></code></p></div>
     </div>
 

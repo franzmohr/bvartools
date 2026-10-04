@@ -73,6 +73,7 @@ Other model comparison:
 [`map_models()`](https://franzmohr.github.io/bvartools/reference/map_models.md),
 [`open_models()`](https://franzmohr.github.io/bvartools/reference/open_models.md),
 [`plot_forecast_errors_by_period()`](https://franzmohr.github.io/bvartools/reference/plot_forecast_errors_by_period.md),
+[`pool_forecasts()`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md),
 [`selection_criteria.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.bvarmodel.md),
 [`selection_criteria.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.bvecmodel.md),
 [`selection_criteria.default()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.default.md),
@@ -101,7 +102,7 @@ write_to_hdf5(model, filename = file)
 
 stored <- open_model(file)
 stored
-#> Model in /tmp/RtmpcU1dnC/bvartools-example-model.h5 
+#> Model in /tmp/RtmpNfaUfc/bvartools-example-model.h5 
 #> 100 draws of a VarNormalWishart model of 3 variables
 
 # The analysis reads the draws in pieces

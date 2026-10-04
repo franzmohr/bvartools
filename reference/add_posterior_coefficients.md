@@ -23,6 +23,13 @@ add_posterior_coefficients(object, ...)
 The value returned by the method for the class of `object`, as described
 on the pages of the methods.
 
+## Details
+
+Before the method is called, the size the object will have once its
+draws are complete is compared with `options(bvartools.size_warning)`,
+and a warning is given if it is larger. See
+[`expected_model_size`](https://franzmohr.github.io/bvartools/reference/expected_model_size.md).
+
 ## See also
 
 Methods:

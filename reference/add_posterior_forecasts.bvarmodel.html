@@ -59,7 +59,13 @@
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="co"># S3 method for class 'bvarmodel'</span></span>
-<span><span class="fu"><a href="add_posterior_forecasts.html">add_posterior_forecasts</a></span><span class="op">(</span><span class="va">object</span>, forecast_states <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="add_posterior_forecasts.html">add_posterior_forecasts</a></span><span class="op">(</span></span>
+<span>  <span class="va">object</span>,</span>
+<span>  forecast_states <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  scenario <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  forecast_quantile <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -83,6 +89,26 @@ the value in <code>object$model$forecast_states</code> is used, and <code>"simul
 there is none. Models with constant coefficients and volatility are unaffected.</p></dd>
 
 
+<dt id="arg-scenario">scenario<a class="anchor" aria-label="anchor" href="#arg-scenario"></a></dt>
+<dd><p>an optional data frame with columns <code>period</code>, <code>variable</code> and
+<code>value</code>, one row per value a variable is held at in a forecast period: a
+conditional forecast. <code>period</code> counts forecast periods from one and <code>variable</code>
+is a name or a position among the endogenous variables. It is stored in
+<code>data$forecast$constraints</code>, which is where the forecast reads it from; set that
+element to <code>NULL</code> to forecast without it again. Available for models with constant
+coefficients and <code>error = "wishart"</code> or <code>"gamma"</code>, and for a grid of quantiles.</p></dd>
+
+
+<dt id="arg-forecast-quantile">forecast_quantile<a class="anchor" aria-label="anchor" href="#arg-forecast-quantile"></a></dt>
+<dd><p>for a grid of quantiles (see <code>quantile_grid</code> in
+<code><a href="create_bvarmodel.html">create_bvarmodel</a></code>), a level in \((0, 1)\) every draw of the forecast is taken
+at, which gives quantile paths rather than draws from the predictive distribution: the
+paths of Chavleishvili and Manganelli (2019), whose difference with and without a
+<code>scenario</code> is an impulse response at that quantile. If <code>NULL</code> (default), the
+value in <code>object$model$forecast_quantile</code> is used, and the levels are drawn at random
+when there is none. Zero removes a stored one.</p></dd>
+
+
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>arguments passed forward to method.</p></dd>
 
@@ -100,6 +126,11 @@ these. <code><a href="predict.bvarmodel.html">predict</a></code> summarises them
 innovations, <code>posterior$u_sigma_inv$sigma</code>, which <code><a href="add_posterior_coefficients.html">add_posterior_coefficients</a></code>
 stores. A stochastic volatility model fitted with an earlier version of the package
 lacks it and stops with an error unless <code>forecast_states = "hold"</code>.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
+    <p>Chavleishvili, S., &amp; Manganelli, S. (2019). Forecasting and stress testing with quantile
+vector autoregression. <em>ECB Working Paper</em>, 2330.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

@@ -54,7 +54,7 @@ the draws of a single estimation of that model."></head><body>
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Test for Time Variation in a VAR or VEC Model</h1>
-      <small class="dont-index">Source: <a href="https://github.com/franzmohr/bvartools/blob/main/R/time_variation_test.R" class="external-link"><code>R/time_variation_test.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/franzmohr/bvartools/blob/main/R/time_variation_test.R" class="external-link"><code>R/time_variation_test.R</code></a>, <a href="https://github.com/franzmohr/bvartools/blob/main/R/time_variation_test.modellist.R" class="external-link"><code>R/time_variation_test.modellist.R</code></a></small>
       <div class="d-none name"><code>time_variation_test.bvarmodel.Rd</code></div>
     </div>
 
@@ -71,7 +71,13 @@ the draws of a single estimation of that model.</p>
 <span><span class="fu"><a href="time_variation_test.html">time_variation_test</a></span><span class="op">(</span><span class="va">object</span>, joint <span class="op">=</span> <span class="cn">TRUE</span>, batches <span class="op">=</span> <span class="fl">20</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'bvecmodel'</span></span>
-<span><span class="fu"><a href="time_variation_test.html">time_variation_test</a></span><span class="op">(</span><span class="va">object</span>, joint <span class="op">=</span> <span class="cn">TRUE</span>, batches <span class="op">=</span> <span class="fl">20</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="time_variation_test.html">time_variation_test</a></span><span class="op">(</span><span class="va">object</span>, joint <span class="op">=</span> <span class="cn">TRUE</span>, batches <span class="op">=</span> <span class="fl">20</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'modellist'</span></span>
+<span><span class="fu"><a href="time_variation_test.html">time_variation_test</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'expandingwindow'</span></span>
+<span><span class="fu"><a href="time_variation_test.html">time_variation_test</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -79,9 +85,8 @@ the draws of a single estimation of that model.</p>
 
 
 <dl><dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
-<dd><p>an object of class <code>"bvarmodel"</code> with <code>tvp = TRUE</code> and
-<code>error = "sv"</code>, <code>"sv+covar"</code>, <code>"gamma"</code> or <code>"gamma+covar"</code>, or
-of class <code>"bvecmodel"</code> with the same, whose priors were set with
+<dd><p>an object of class <code>"bvarmodel"</code> with <code>tvp = TRUE</code>,
+whatever its error term, or of class <code>"bvecmodel"</code> with the same, whose priors were set with
 <code>coef$omega_v</code> or, under stochastic volatility, <code>sigma$omega_v</code> in <code><a href="add_priors.html">add_priors</a></code> and whose
 posterior was drawn by <code><a href="add_posterior_coefficients.html">add_posterior_coefficients</a></code>.</p></dd>
 
@@ -206,26 +211,26 @@ Statistical Association, 90</em>(430), 773–795. <a href="https://doi.org/10.10
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Coefficients:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  equation term      log BF NSE </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  invest   invest.l1 -0.09  0.03</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  income   invest.l1 -1.04  0.10</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  cons     invest.l1 -0.84  0.08</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  invest   invest.l1 -0.16  0.02</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  income   invest.l1 -1.01  0.08</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  cons     invest.l1 -0.95  0.08</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  invest   income.l1 -0.05  0.01</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  income   income.l1 -0.17  0.08</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  cons     income.l1 0.33   0.11</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  invest   cons.l1   -0.03  0.02</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  income   cons.l1   0.70   0.17</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  cons     cons.l1   0.15   0.08</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  income   income.l1 -0.08  0.10</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  cons     income.l1 -0.01  0.10</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  invest   cons.l1   -0.01  0.01</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  income   cons.l1   0.51   0.19</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  cons     cons.l1   -0.02  0.11</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  invest   const     -0.01  0.00</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  income   const     0.34   0.08</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  cons     const     0.16   0.05</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           (joint)   0.71   0.37</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  income   const     0.36   0.07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  cons     const     0.36   0.09</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           (joint)   1.13   0.32</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Volatilities:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  equation term           log BF NSE </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  invest   log-volatility 6.69   0.79</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  income   log-volatility 3.87   0.80</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  cons     log-volatility -0.12  0.51</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           (joint)        24.87  0.98</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  invest   log-volatility 3.72   0.88</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  income   log-volatility 0.84   0.47</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  cons     log-volatility 0.46   0.49</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           (joint)        19.03  0.99</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

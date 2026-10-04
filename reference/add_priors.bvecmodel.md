@@ -8,7 +8,7 @@ function
 
 ``` r
 # S3 method for class 'bvecmodel'
-add_priors(object, coef, coint, sigma, varsel = NULL, ...)
+add_priors(object, coef, coint = NULL, sigma, varsel = NULL, ...)
 ```
 
 ## Arguments
@@ -27,7 +27,11 @@ add_priors(object, coef, coint, sigma, varsel = NULL, ...)
 - coint:
 
   a named list of prior specifications for coefficients determining the
-  cointegration space of VEC models. It has no default. See 'Details'.
+  cointegration space of VEC models. It has no default and is required
+  for a positive cointegration rank. A model of rank zero has no
+  cointegration space and needs none; one that is given is checked and
+  ignored, so that a list of models over several ranks can share the
+  same arguments. See 'Details'.
 
 - sigma:
 
@@ -178,8 +182,7 @@ Argument `coef` can contain the following elements:
   [`add_priors.bvarmodel`](https://franzmohr.github.io/bvartools/reference/add_priors.bvarmodel.md)
   for the model and the draws it adds. The cointegration space keeps its
   state equation. Only for models with time varying parameters,
-  `tvp = TRUE`, and `error = "sv"`, `"sv+covar"`, `"gamma"` or
-  `"gamma+covar"`.
+  `tvp = TRUE`, whatever their `error`.
 
 - `omega_v_alpha`:
 
@@ -591,9 +594,12 @@ analysis* (2nd ed.). Berlin: Springer.
 ## See also
 
 Other model set-up:
+[`add_dummy_variables.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/add_dummy_variables.bvarmodel.md),
 [`add_initial_values.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/add_initial_values.bvarmodel.md),
 [`add_initial_values.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/add_initial_values.bvecmodel.md),
+[`add_prior_options()`](https://franzmohr.github.io/bvartools/reference/add_prior_options.md),
 [`add_priors.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/add_priors.bvarmodel.md),
+[`aggregation_weights()`](https://franzmohr.github.io/bvartools/reference/aggregation_weights.md),
 [`combine_models()`](https://franzmohr.github.io/bvartools/reference/combine_models.md),
 [`create_bvarmodel()`](https://franzmohr.github.io/bvartools/reference/create_bvarmodel.md),
 [`create_bvecmodel()`](https://franzmohr.github.io/bvartools/reference/create_bvecmodel.md),

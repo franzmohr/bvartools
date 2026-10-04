@@ -85,7 +85,11 @@ directly. The layout below is the contract that makes that safe.</p>
   is present only above one, and <code>algorithm</code> names the sampler that will
   draw it. A VEC model adds <code>rank</code>, <code>k_beta</code> and the deterministic
   terms restricted to the cointegration space; a quantile VAR adds
-  <code>quantile</code>. <code><a href="add_seed.html">add_seed</a></code> adds <code>seed</code>,
+  <code>quantile</code>, or <code>quantiles</code> for a grid of them, and
+  <code><a href="add_posterior_forecasts.html">add_posterior_forecasts</a></code> a grid's <code>forecast_quantile</code>.
+  <code><a href="add_dummy_variables.html">add_dummy_variables</a></code> adds
+  <code>dummy_variables</code>, the rule each of its dummies is continued by in a
+  forecast. <code><a href="add_seed.html">add_seed</a></code> adds <code>seed</code>,
   <code><a href="add_forecast_input.html">add_forecast_input</a></code> adds <code>h</code> and
   <code>forecast_states</code>.</p></dd>
 
@@ -102,7 +106,12 @@ directly. The layout below is the contract that makes that safe.</p>
   compact layout, one row per period; <code>z</code> is the same regressors in SUR
   form, <code>kron(x, I_k)</code>, which is what the samplers of a VAR read. A VEC
   model adds <code>w</code>, the lagged levels the cointegration term is formed
-  from.</p></dd>
+  from. A VAR estimated from a panel not observed whole adds
+  <code>constraints</code>, what was observed of it: <code>value</code> and <code>group</code>
+  with one element per observation, and <code>row</code>, <code>period</code>,
+  <code>variable</code> and <code>weight</code> with one per entry of the linear
+  combination each observation is, counted from one. See
+  <code><a href="create_bvarmodel.html">create_bvarmodel</a></code>.</p></dd>
 
 
   <dt><code>data$forecast</code></dt>
@@ -126,7 +135,9 @@ directly. The layout below is the contract that makes that safe.</p>
   hyperparameters, one block per parameter block of the posterior. Prior
   variances are given as precisions. Which elements are needed depends on
   <code>error</code>; the method's own help page, <code><a href="add_priors.bvarmodel.html">add_priors.bvarmodel</a></code>
-  or <code><a href="add_priors.bvecmodel.html">add_priors.bvecmodel</a></code>, lists them.</p></dd>
+  or <code><a href="add_priors.bvecmodel.html">add_priors.bvecmodel</a></code>, lists them. <code>a$shrinkage</code>,
+  <code>mu</code> and <code>constraints</code> are added by
+  <code><a href="add_prior_options.html">add_prior_options</a></code>.</p></dd>
 
 
   <dt><code>initial</code></dt>
@@ -171,7 +182,22 @@ block is a list whose <code>coeffs</code> carries the draws:</p>
 
   <dt><code>u_scale</code></dt>
 <dd><p>The scale of the asymmetric Laplace, \(K\) columns,
-  for a quantile VAR.</p></dd>
+  for a quantile VAR, and \(K\) per level for a grid of quantiles, whose
+  <code>a</code> is stacked the same way and which keeps no <code>u_sigma_inv</code>
+  or <code>u_omega_inv</code>.</p></dd>
+
+  <dt><code>y</code></dt>
+<dd><p>The completed panel of a VAR estimated from one not
+  observed whole, \(TK\) columns stacked by period, and
+  <code>constraints_inv</code> the error precisions of its soft constraints, one
+  column per group.</p></dd>
+
+  <dt><code>mu</code></dt>
+<dd><p>The unconditional means under a steady-state prior,
+  \(K\) columns. Under an adaptive prior <code>a</code> adds <code>shrinkage</code>,
+  the scales of its groups, and for the horseshoe and the normal-gamma prior
+  <code>local</code>, one scale per coefficient, and <code>theta</code> where the
+  normal-gamma prior draws it.</p></dd>
 
   <dt><code>beta</code></dt>
 <dd><p>The cointegration vectors of a VEC model,

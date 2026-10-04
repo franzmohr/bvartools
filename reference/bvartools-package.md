@@ -289,12 +289,12 @@ Useful links:
 ## Author
 
 **Maintainer**: Franz X. Mohr <franz.x.mohr@outlook.com>
-([ORCID](https://orcid.org/0009-0003-8890-7781))
+([ORCID](https://orcid.org/0009-0003-8890-7781)) \[copyright holder\]
 
 Authors:
 
 - Franz X. Mohr <franz.x.mohr@outlook.com>
-  ([ORCID](https://orcid.org/0009-0003-8890-7781))
+  ([ORCID](https://orcid.org/0009-0003-8890-7781)) \[copyright holder\]
 
 ## Examples
 

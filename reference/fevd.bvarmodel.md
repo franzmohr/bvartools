@@ -16,6 +16,8 @@ fevd(
   period = NULL,
   max_groups = NULL,
   impact = NULL,
+  statistic = "mean",
+  ci = NULL,
   ...
 )
 ```
@@ -75,6 +77,15 @@ fevd(
   or a list of such matrices with one entry per draw. Ignored for every
   other value of `type`. See 'Details'.
 
+- statistic:
+
+  the posterior summary of each share, `"mean"` (default) or `"median"`.
+
+- ci:
+
+  an optional probability, the coverage of a credible interval returned
+  alongside, such as `0.68` for the 16th and 84th percentiles.
+
 - ...:
 
   further arguments passed to or from other methods.
@@ -85,7 +96,12 @@ A time-series object of class 'bvarfevd' running from period 0 to
 `n_ahead`, with one column per variable holding the share of the
 forecast error variance of `response` that is due to its shocks. For
 `type = "oir"` the rows sum to one; for `type = "gir"` they do so only
-with `normalise_gir = TRUE`.
+with `normalise_gir = TRUE`. With `ci`, attributes `lower` and `upper`
+hold the bounds of the credible interval of each share in the same
+shape. With `statistic = "median"` or `ci`, a GIR-based decomposition is
+normalised draw by draw rather than after averaging, and the medians
+need not sum to one. `ci` cannot be combined with `max_groups`, since
+the bounds of a pooled column are not the pooled bounds.
 
 ## Details
 
@@ -177,7 +193,10 @@ in linear multivariate models. *Economics Letters, 58*, 17-29.
 
 Other post-estimation analysis:
 [`add_sign_restrictions.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/add_sign_restrictions.bvarmodel.md),
+[`add_sign_zero_restrictions.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/add_sign_zero_restrictions.bvarmodel.md),
 [`fevd.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/fevd.bvecmodel.md),
+[`historical_decomposition()`](https://franzmohr.github.io/bvartools/reference/historical_decomposition.md),
+[`historical_decomposition.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/historical_decomposition.bvarmodel.md),
 [`irf.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/irf.bvarmodel.md),
 [`irf.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/irf.bvecmodel.md),
 [`multipliers()`](https://franzmohr.github.io/bvartools/reference/multipliers.md),
@@ -186,6 +205,7 @@ Other post-estimation analysis:
 [`predict.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/predict.bvarmodel.md),
 [`spillover.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/spillover.bvarmodel.md),
 [`spillover.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/spillover.bvecmodel.md),
+[`split_quantile_grid()`](https://franzmohr.github.io/bvartools/reference/split_quantile_grid.md),
 [`vec_to_var.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/vec_to_var.bvecmodel.md)
 
 ## Examples

@@ -13,16 +13,22 @@ time_variation_test(object, joint = TRUE, batches = 20, ...)
 
 # S3 method for class 'bvecmodel'
 time_variation_test(object, joint = TRUE, batches = 20, ...)
+
+# S3 method for class 'modellist'
+time_variation_test(object, ...)
+
+# S3 method for class 'expandingwindow'
+time_variation_test(object, ...)
 ```
 
 ## Arguments
 
 - object:
 
-  an object of class `"bvarmodel"` with `tvp = TRUE` and `error = "sv"`,
-  `"sv+covar"`, `"gamma"` or `"gamma+covar"`, or of class `"bvecmodel"`
-  with the same, whose priors were set with `coef$omega_v` or, under
-  stochastic volatility, `sigma$omega_v` in
+  an object of class `"bvarmodel"` with `tvp = TRUE`, whatever its error
+  term, or of class `"bvecmodel"` with the same, whose priors were set
+  with `coef$omega_v` or, under stochastic volatility, `sigma$omega_v`
+  in
   [`add_priors`](https://franzmohr.github.io/bvartools/reference/add_priors.md)
   and whose posterior was drawn by
   [`add_posterior_coefficients`](https://franzmohr.github.io/bvartools/reference/add_posterior_coefficients.md).
@@ -162,25 +168,25 @@ time_variation_test(model)
 #> 
 #> Coefficients:
 #>  equation term      log BF NSE 
-#>  invest   invest.l1 -0.09  0.03
-#>  income   invest.l1 -1.04  0.10
-#>  cons     invest.l1 -0.84  0.08
+#>  invest   invest.l1 -0.16  0.02
+#>  income   invest.l1 -1.01  0.08
+#>  cons     invest.l1 -0.95  0.08
 #>  invest   income.l1 -0.05  0.01
-#>  income   income.l1 -0.17  0.08
-#>  cons     income.l1 0.33   0.11
-#>  invest   cons.l1   -0.03  0.02
-#>  income   cons.l1   0.70   0.17
-#>  cons     cons.l1   0.15   0.08
+#>  income   income.l1 -0.08  0.10
+#>  cons     income.l1 -0.01  0.10
+#>  invest   cons.l1   -0.01  0.01
+#>  income   cons.l1   0.51   0.19
+#>  cons     cons.l1   -0.02  0.11
 #>  invest   const     -0.01  0.00
-#>  income   const     0.34   0.08
-#>  cons     const     0.16   0.05
-#>           (joint)   0.71   0.37
+#>  income   const     0.36   0.07
+#>  cons     const     0.36   0.09
+#>           (joint)   1.13   0.32
 #> 
 #> Volatilities:
 #>  equation term           log BF NSE 
-#>  invest   log-volatility 6.69   0.79
-#>  income   log-volatility 3.87   0.80
-#>  cons     log-volatility -0.12  0.51
-#>           (joint)        24.87  0.98
+#>  invest   log-volatility 3.72   0.88
+#>  income   log-volatility 0.84   0.47
+#>  cons     log-volatility 0.46   0.49
+#>           (joint)        19.03  0.99
 #> 
 ```

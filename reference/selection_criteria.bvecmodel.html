@@ -59,7 +59,7 @@
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="co"># S3 method for class 'bvecmodel'</span></span>
-<span><span class="fu"><a href="selection_criteria.html">selection_criteria</a></span><span class="op">(</span><span class="va">object</span>, ci <span class="op">=</span> <span class="fl">0.95</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="selection_criteria.html">selection_criteria</a></span><span class="op">(</span><span class="va">object</span>, ci <span class="op">=</span> <span class="fl">0.95</span>, plugin <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"mean"</span>, <span class="st">"best"</span><span class="op">)</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -73,6 +73,16 @@
 <dt id="arg-ci">ci<a class="anchor" aria-label="anchor" href="#arg-ci"></a></dt>
 <dd><p>a numeric between 0 and 1 specifying the probability of the credible band.
 Defaults to 0.95.</p></dd>
+
+
+<dt id="arg-plugin">plugin<a class="anchor" aria-label="anchor" href="#arg-plugin"></a></dt>
+<dd><p>the point at which the deviance of <code>AIC</code>, <code>BIC</code> and
+<code>HQ</code> is evaluated. <code>"mean"</code>, the default, uses the posterior mean
+of the parameters, for a VEC model the best approximation of the model's rank
+to the posterior mean of \(\Pi\). <code>"best"</code> uses the draw whose
+log-likelihood is the highest the chain visited, which is closer to the
+maximum these corrections are derived for, but grows with the length of the
+chain and is therefore comparable only across models drawn equally long.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -104,6 +114,7 @@ element <code>model</code> and one data frame per criterion, as described in
 <code><a href="open_model.html">open_model()</a></code>,
 <code><a href="open_models.html">open_models()</a></code>,
 <code><a href="plot_forecast_errors_by_period.html">plot_forecast_errors_by_period()</a></code>,
+<code><a href="pool_forecasts.html">pool_forecasts()</a></code>,
 <code><a href="selection_criteria.bvarmodel.html">selection_criteria.bvarmodel()</a></code>,
 <code><a href="selection_criteria.default.html">selection_criteria.default()</a></code>,
 <code><a href="selection_criteria.modellist.html">selection_criteria.modellist()</a></code></p></div>

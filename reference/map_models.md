@@ -19,10 +19,12 @@ map_models(x, f, ..., models = NULL, write = TRUE, cores = 1, export = NULL)
 
 - f:
 
-  a function taking a model – a 'bvarmodel' or a 'bvecmodel' – and
-  returning one. If it has an argument named `index`, the position of
-  the model in the manifest is passed to it, which is what numbers seeds
-  and what lets a caller tell the models apart.
+  a function taking a model – a 'bvarmodel', a 'bvecmodel', or the model
+  of another package that
+  [`read_model_from_hdf5`](https://franzmohr.github.io/bvartools/reference/read_model_from_hdf5.md)
+  reads – and returning one. If it has an argument named `index`, the
+  position of the model in the manifest is passed to it, which is what
+  numbers seeds and what lets a caller tell the models apart.
 
 - ...:
 
@@ -116,6 +118,7 @@ Other model comparison:
 [`open_model()`](https://franzmohr.github.io/bvartools/reference/open_model.md),
 [`open_models()`](https://franzmohr.github.io/bvartools/reference/open_models.md),
 [`plot_forecast_errors_by_period()`](https://franzmohr.github.io/bvartools/reference/plot_forecast_errors_by_period.md),
+[`pool_forecasts()`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md),
 [`selection_criteria.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.bvarmodel.md),
 [`selection_criteria.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.bvecmodel.md),
 [`selection_criteria.default()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.default.md),

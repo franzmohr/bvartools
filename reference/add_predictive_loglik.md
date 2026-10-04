@@ -90,6 +90,21 @@ correction terms that are neither scaled nor centred, or put back with
 [`rescale_error_correction`](https://franzmohr.github.io/bvartools/reference/rescale_error_correction.md)
 first, and structural models are not supported.
 
+The windows need not share their regressors.
+[`use_expanding_window`](https://franzmohr.github.io/bvartools/reference/use_expanding_window.md)
+leaves an impulse, step or data dummy of
+[`add_dummy_variables`](https://franzmohr.github.io/bvartools/reference/add_dummy_variables.md)
+out of the windows that end before its event, so the window just before
+the event has fewer regressors than the observation the next window
+adds. The density of that observation uses only the regressors of the
+window that predicts it: the regressors of the observation are matched
+to the ones of the window by name, and a dummy the window does not have
+is left out, because a forecast made at the end of the window could not
+have known about the event. The event period is therefore scored as an
+ordinary forecast, and the dummy only enters the densities of the
+windows that contain its event. This applies to VAR and VEC models
+alike.
+
 The expression is the normal density of the observation, so the function
 is available for the algorithms whose observation is normal given the
 parameters of a draw, and refuses the others. The asymmetric Laplace
@@ -144,6 +159,7 @@ Other model comparison:
 [`open_model()`](https://franzmohr.github.io/bvartools/reference/open_model.md),
 [`open_models()`](https://franzmohr.github.io/bvartools/reference/open_models.md),
 [`plot_forecast_errors_by_period()`](https://franzmohr.github.io/bvartools/reference/plot_forecast_errors_by_period.md),
+[`pool_forecasts()`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md),
 [`selection_criteria.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.bvarmodel.md),
 [`selection_criteria.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.bvecmodel.md),
 [`selection_criteria.default()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.default.md),

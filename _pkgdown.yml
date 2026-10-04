@@ -94,6 +94,8 @@ reference:
   - folder_steps
   - analysis_of_stored_models
   - map_models
+  - write_bayests_tree
+  - from_bayests_tree
   - map_draws
 
 - title: Building blocks for custom samplers

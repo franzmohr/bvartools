@@ -9,7 +9,8 @@ map_models(x, f, ..., models = NULL, write = TRUE, cores = 1, export = NULL)
 \arguments{
 \item{x}{an object of class 'bvarfolder', from \code{\link{open_models}}.}
 
-\item{f}{a function taking a model -- a 'bvarmodel' or a 'bvecmodel' -- and
+\item{f}{a function taking a model -- a 'bvarmodel', a 'bvecmodel', or the
+model of another package that \code{\link{read_model_from_hdf5}} reads -- and
 returning one. If it has an argument named \code{index}, the position of the
 model in the manifest is passed to it, which is what numbers seeds and what
 lets a caller tell the models apart.}

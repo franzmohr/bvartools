@@ -8,6 +8,33 @@
   those prior means to zero and points to `varsel = "bvs"`, which keeps the prior
   mean and so can select variables around a random walk.
 
+* **Models of other packages can now be stored in BayesTS files and kept in
+  one `modellist` with the VARs and VECs.** `write_bayests_tree()` writes a
+  nested list into a model file. It applies the same rules as
+  `write_to_hdf5()`: a model already there is refused, and a write that fails
+  is undone. `read_bayests_tree()` reads any model file back as such a list,
+  including one written by the BayesTS command line. A package that stores its
+  models this way registers a `from_bayests_tree()` method, and
+  `read_model_from_hdf5()` then returns its object for any file whose
+  `/model/rclass` names that class.
+
+  This is for the dynamic factor models of dfmtools. Their file layout is
+  BayesTS's, but the names and the order of the free loadings differ from
+  those of a `dfmodel`, so that translation belongs to dfmtools. Writing the
+  file belongs here.
+
+  The reader loads the package named in `/model/rpackage`, so its methods are
+  found whether or not it is attached, including in a worker of `map_models()`.
+  A file from the command line has no `rclass` or `rpackage`. A `Dfm*` or
+  `Favar*` model is then read as a dfmtools model. If the package is not
+  installed, the read stops and names it.
+
+  `write_to_hdf5()` on a `modellist` used to treat everything that was not a
+  `bvarmodel` or a `bvecmodel` as a nested list, and tried to write a factor
+  model's `data` and `model` elements as models. It now writes any model
+  through its own method, so `read_models_from_folder()` returns the list it
+  was given. `map_models()` likewise accepts any model it can write back.
+
 * **`use_expanding_window()` and `window()` now cut the observations of a panel
   not observed whole.** For a model created with `missing = "estimate"` or
   `aggregate`, every window used to keep all of `data$train$constraints`,

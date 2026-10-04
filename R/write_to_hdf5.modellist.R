@@ -47,14 +47,23 @@ write_to_hdf5.modellist <- function(object, folder, ...){
 
     for (i in seq_along(object)) {
       
-      if (any(class(object[[i]]) %in% c("bvarmodel", "bvecmodel"))) {
+      # A model of any class -- a dynamic factor model of dfmtools beside the
+      # VARs and VECs of this package, say -- is written on its own by its own
+      # method; only a 'modellist' or an 'expandingwindow' is a collection to
+      # be gone through. Testing for the two classes of this package instead
+      # took every other model for a collection and tried to write its 'data'
+      # and 'model' elements as models.
+      if (!.is_model_container(object[[i]])) {
         
         # Get model type from the first object in the list
         model_type <- object[[i]][["model"]][["algorithm"]]
         
         p <- sprintf(paste0("%0", 2, "d"), object[[i]][["model"]][["p"]])
         model_details <- paste0("p=", p)
-        if (object[[i]][["model"]][["m"]] > 0) {
+        # Only where the model has a lag order of its exogenous variables. A
+        # factor model's 'm' counts its observed series and it has no 's'.
+        if (!is.null(object[[i]][["model"]][["s"]]) &&
+            isTRUE(object[[i]][["model"]][["m"]] > 0)) {
           s <- sprintf(paste0("%0", 2, "d"), object[[i]][["model"]][["s"]])
           model_details <- paste0(model_details, "-s=", s)
         }

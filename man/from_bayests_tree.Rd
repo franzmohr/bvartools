@@ -31,10 +31,13 @@ back by registering a method for its class. The method undoes the
 translation its writer made: names, orderings and shapes that BayesTS
 wants and the package's object does not.
 
-A factor model's file is read with \pkg{dfmtools} loaded, if it is
-installed, so that its methods are registered whether or not it is
-attached. Without a method the default refuses, and names the class it
-found no method for.
+The package named in the file's \code{/model/rpackage} is loaded first,
+if it is installed, so that its methods are registered whether or not it
+is attached. A file of the BayesTS command line carries no such attribute;
+one of a factor model is read with \pkg{dfmtools} loaded.
+
+Without a method the default refuses, and names the class it found no
+method for.
 
 \strong{A method keeps the attributes of \code{/model} it does not know
 in element \code{model} of what it returns.} \code{\link{write_to_hdf5}}

@@ -157,3 +157,13 @@ test_that("a modellist holding another package's model beside a VAR goes through
   expect_identical(back[[3]][["model"]][["n"]], 3L)
   expect_null(back[[2]][["model"]][["rindex_collection"]])
 })
+
+test_that("the package a file names is loaded, and a missing one is named", {
+  path <- temp_h5_file()
+  write_bayests_tree(list("model" = list(".attributes" = list(
+    "algorithm" = "Example", "rclass" = c("orphanmodel", "list"),
+    "rpackage" = "notapackageanywhere"))),
+    filename = path)
+
+  expect_error(read_model_from_hdf5(path), "Install notapackageanywhere")
+})

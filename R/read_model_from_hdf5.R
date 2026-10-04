@@ -374,11 +374,15 @@ read_model_from_hdf5 <- function(filename, group = "", draws = NULL) {
 # package, or NULL when it is one -- or when the file has no specification,
 # which the reader reports in its own words.
 #
-# The class is the one recorded in /model/rclass. A file without it, as the
-# BayesTS command line writes one, is placed by its algorithm: the factor
-# models are dfmtools', whose namespace is loaded for its methods. That is also
-# done for a file that names its class, since a factor model is read the same
-# way whether or not dfmtools is attached -- by a worker of map_models(), say.
+# The class is the one recorded in /model/rclass, and the package that defines
+# it the one in /model/rpackage, which write_bayests_tree() leaves to the model
+# package to record. That package's namespace is loaded for its methods, so a
+# model is read the same way whether or not its package is attached -- by a
+# worker of map_models(), say. A file without them, as the BayesTS command line
+# writes one, is placed by its algorithm in .algorithm_packages.
+#
+# The package is looked up rather than named in a call, so that this package
+# depends on none of the packages whose models it can read.
 .foreign_model_class <- function(h5_root) {
 
   if (!"model" %in% names(h5_root)) {
@@ -387,24 +391,39 @@ read_model_from_hdf5 <- function(filename, group = "", draws = NULL) {
   attrs <- hdf5r::h5attributes(h5_root[["model"]])
   algorithm <- attrs[["algorithm"]]
   rclass <- attrs[["rclass"]]
+  if (any(rclass %in% c("bvarmodel", "bvecmodel"))) {
+    return(NULL)
+  }
 
-  factor_model <- !is.null(algorithm) && grepl("^(Dfm|Favar)", algorithm)
-  if (factor_model && !requireNamespace("dfmtools", quietly = TRUE)) {
-    stop("The file holds a ", algorithm, " model, which is a factor model of ",
-         "package dfmtools. Install dfmtools to read it, or read the raw tree ",
-         "with read_bayests_tree().")
+  known <- NULL
+  if (!is.null(algorithm)) {
+    for (prefix in names(.algorithm_packages)) {
+      if (startsWith(algorithm, prefix)) {
+        known <- .algorithm_packages[[prefix]]
+      }
+    }
+  }
+
+  package <- attrs[["rpackage"]]
+  if (is.null(package)) {
+    package <- known[["package"]]
+  }
+  if (!is.null(package) && !requireNamespace(package, quietly = TRUE)) {
+    stop("The file holds a ", algorithm, " model of package ", package,
+         ". Install ", package, " to read it, or read the raw tree with ",
+         "read_bayests_tree().")
   }
 
   if (!is.null(rclass)) {
-    if (any(rclass %in% c("bvarmodel", "bvecmodel"))) {
-      return(NULL)
-    }
     return(rclass)
   }
-
-  if (factor_model) {
-    return(c(if (startsWith(algorithm, "Dfm")) "dfmodel" else "favarmodel", "list"))
-  }
-
-  NULL
+  known[["class"]]
 }
+
+# The models of other packages that the BayesTS command line writes, by the
+# prefix of their algorithm: the package that reads them and the class they are
+# read as.
+.algorithm_packages <- list(
+  "Dfm" = list("package" = "dfmtools", "class" = c("dfmodel", "list")),
+  "Favar" = list("package" = "dfmtools", "class" = c("favarmodel", "list"))
+)

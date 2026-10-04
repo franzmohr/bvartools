@@ -38,7 +38,8 @@
 #'   as an attribute. This is where \code{/model} keeps the specification --
 #'   \code{algorithm}, \code{k}, \code{p} and the rest -- and where
 #'   \code{rclass}, the class \code{\link{read_model_from_hdf5}} returns,
-#'   belongs.
+#'   belongs, and \code{rpackage}, the package that defines that class,
+#'   whose namespace the reader loads for its methods.
 #'   \item Any other element becomes a dataset. HDF5 stores dimensions in the
 #'   reverse of R's order, so a matrix of \code{tt} rows and \code{k} columns
 #'   is a \code{(k, tt)} dataset, which is what BayesTS calls \code{(tt, k)}
@@ -125,10 +126,13 @@ read_bayests_tree <- function(filename, group = "", draws = NULL) {
 #' translation its writer made: names, orderings and shapes that BayesTS
 #' wants and the package's object does not.
 #'
-#' A factor model's file is read with \pkg{dfmtools} loaded, if it is
-#' installed, so that its methods are registered whether or not it is
-#' attached. Without a method the default refuses, and names the class it
-#' found no method for.
+#' The package named in the file's \code{/model/rpackage} is loaded first,
+#' if it is installed, so that its methods are registered whether or not it
+#' is attached. A file of the BayesTS command line carries no such attribute;
+#' one of a factor model is read with \pkg{dfmtools} loaded.
+#'
+#' Without a method the default refuses, and names the class it found no
+#' method for.
 #'
 #' \strong{A method keeps the attributes of \code{/model} it does not know
 #' in element \code{model} of what it returns.} \code{\link{write_to_hdf5}}

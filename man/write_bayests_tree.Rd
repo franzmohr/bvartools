@@ -55,7 +55,8 @@ The tree is mapped onto the file as follows:
   as an attribute. This is where \code{/model} keeps the specification --
   \code{algorithm}, \code{k}, \code{p} and the rest -- and where
   \code{rclass}, the class \code{\link{read_model_from_hdf5}} returns,
-  belongs.
+  belongs, and \code{rpackage}, the package that defines that class,
+  whose namespace the reader loads for its methods.
   \item Any other element becomes a dataset. HDF5 stores dimensions in the
   reverse of R's order, so a matrix of \code{tt} rows and \code{k} columns
   is a \code{(k, tt)} dataset, which is what BayesTS calls \code{(tt, k)}

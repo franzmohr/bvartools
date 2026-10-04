@@ -15,10 +15,11 @@
   those of a `dfmodel`, so that translation belongs to dfmtools. Writing the
   file belongs here.
 
-  A file of a `Dfm*` or `Favar*` model loads dfmtools when it is read, so its
-  methods are found whether or not it is attached, in a worker of
-  `map_models()` too. A file without `rclass` is classed by its algorithm. If
-  dfmtools is not installed, the read stops and says so.
+  The reader loads the package named in `/model/rpackage`, so its methods are
+  found whether or not it is attached, including in a worker of `map_models()`.
+  A file from the command line has no `rclass` or `rpackage`. A `Dfm*` or
+  `Favar*` model is then read as a dfmtools model. If the package is not
+  installed, the read stops and names it.
 
   `write_to_hdf5()` on a `modellist` used to treat everything that was not a
   `bvarmodel` or a `bvecmodel` as a nested list, and tried to write a factor

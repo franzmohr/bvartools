@@ -58,6 +58,18 @@
 #' \code{\link{rescale_error_correction}} first, and structural models are not
 #' supported.
 #'
+#' The windows need not share their regressors. \code{\link{use_expanding_window}}
+#' leaves an impulse, step or data dummy of \code{\link{add_dummy_variables}} out
+#' of the windows that end before its event, so the window just before the event
+#' has fewer regressors than the observation the next window adds. The density
+#' of that observation uses only the regressors of the window that predicts it:
+#' the regressors of the observation are matched to the ones of the window by
+#' name, and a dummy the window does not have is left out, because a forecast
+#' made at the end of the window could not have known about the event. The
+#' event period is therefore scored as an ordinary forecast, and the dummy only
+#' enters the densities of the windows that contain its event. This applies to
+#' VAR and VEC models alike.
+#'
 #' The expression is the normal density of the observation, so the function is
 #' available for the algorithms whose observation is normal given the parameters
 #' of a draw, and refuses the others. The asymmetric Laplace algorithms of
@@ -148,7 +160,7 @@ add_predictive_loglik.expandingwindow <- function(object, ...) {
     following <- object[[i + 1]]
     .check_predictive_window(current, following, i)
 
-    newdata <- .predictive_observation(following, .predictive_rank(current))
+    newdata <- .predictive_observation(following, .predictive_rank(current), current)
     object[[i]][["predictive"]] <- list(
       loglik = .predictive_log_density(current, newdata),
       period = newdata[["period"]])
@@ -250,12 +262,36 @@ add_predictive_loglik.modellist <- function(object, ...) {
 
 # The observation the following window adds: its last row of the response, of
 # the error correction term and of the other regressors.
-.predictive_observation <- function(model, rank) {
+#
+# 'current' is the window that predicts it. Its regressors need not be the ones
+# of the following window: a dummy variable is left out of the windows that end
+# before its event, so the window just before the event has one regressor fewer
+# than the observation the next window adds. The columns of the following
+# window are matched to the ones of 'current' by name, and a dummy 'current'
+# does not have is left out -- the forecaster did not know about the event.
+.predictive_observation <- function(model, rank, current = NULL) {
 
   y <- model[["data"]][["train"]][["y"]]
   tt <- NROW(y)
   x <- model[["data"]][["train"]][["x"]]
   w <- model[["data"]][["train"]][["w"]]
+
+  if (!is.null(current) && !is.null(x) && NCOL(x) > 0) {
+    x_current <- current[["data"]][["train"]][["x"]]
+    names_current <- colnames(x_current)
+    if (is.null(x_current) || NCOL(x_current) == 0) {
+      x <- NULL
+    } else if (!identical(names_current, colnames(x))) {
+      missing <- setdiff(names_current, colnames(x))
+      if (is.null(names_current) || is.null(colnames(x)) || length(missing) > 0) {
+        stop("The regressors of a window are not among the ones of the window after ",
+             "it, so the observation it predicts cannot be matched to them",
+             if (length(missing) > 0) paste0(": ", paste0("'", missing, "'", collapse = ", ")),
+             ".", call. = FALSE)
+      }
+      x <- x[, names_current, drop = FALSE]
+    }
+  }
 
   list(y = as.numeric(y[tt, ]),
        w = if (rank > 0) as.numeric(w[tt, ]) else NULL,

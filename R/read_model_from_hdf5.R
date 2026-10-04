@@ -39,6 +39,11 @@
 #' model is a plain matrix, since its rows are periods rather than draws.
 #' \code{\link{bvartools_model}} describes the elements one by one.
 #'
+#' A model of another package -- a dynamic factor model of \pkg{dfmtools},
+#' say -- is returned as the object of that package's
+#' \code{\link{from_bayests_tree}} method, so that one 'modellist' can hold
+#' and evaluate models of either.
+#'
 #' @export
 read_model_from_hdf5 <- function(filename, group = "", draws = NULL) {
   
@@ -51,7 +56,19 @@ read_model_from_hdf5 <- function(filename, group = "", draws = NULL) {
   # Every path below is named against this rather than against the file, which
   # is all a group amounts to on the way in.
   h5_root <- .hdf5_model_root(h5_file, group)
-  
+
+  # A model of another package -- a dynamic factor model of dfmtools, which
+  # writes its files with write_bayests_tree() -- is read as a tree and turned
+  # into its object by that package's from_bayests_tree() method. Everything
+  # below is about the layout of the VARs and VECs of this package.
+  foreign <- .foreign_model_class(h5_root)
+  if (!is.null(foreign)) {
+    tree <- .hdf5_read_tree(h5_root, draws, "")
+    h5_file$close_all()
+    class(tree) <- foreign
+    return(from_bayests_tree(tree))
+  }
+
   h5_names <- names(h5_root)
   
   result <- NULL
@@ -351,3 +368,62 @@ read_model_from_hdf5 <- function(filename, group = "", draws = NULL) {
     matrix(dataset[draws], nrow = length(draws), ncol = 1L)
   }
 }
+
+
+# The class a model file is read as when it is not a VAR or a VEC of this
+# package, or NULL when it is one -- or when the file has no specification,
+# which the reader reports in its own words.
+#
+# The class is the one recorded in /model/rclass, and the package that defines
+# it the one in /model/rpackage, which write_bayests_tree() leaves to the model
+# package to record. That package's namespace is loaded for its methods, so a
+# model is read the same way whether or not its package is attached -- by a
+# worker of map_models(), say. A file without them, as the BayesTS command line
+# writes one, is placed by its algorithm in .algorithm_packages.
+#
+# The package is looked up rather than named in a call, so that this package
+# depends on none of the packages whose models it can read.
+.foreign_model_class <- function(h5_root) {
+
+  if (!"model" %in% names(h5_root)) {
+    return(NULL)
+  }
+  attrs <- hdf5r::h5attributes(h5_root[["model"]])
+  algorithm <- attrs[["algorithm"]]
+  rclass <- attrs[["rclass"]]
+  if (any(rclass %in% c("bvarmodel", "bvecmodel"))) {
+    return(NULL)
+  }
+
+  known <- NULL
+  if (!is.null(algorithm)) {
+    for (prefix in names(.algorithm_packages)) {
+      if (startsWith(algorithm, prefix)) {
+        known <- .algorithm_packages[[prefix]]
+      }
+    }
+  }
+
+  package <- attrs[["rpackage"]]
+  if (is.null(package)) {
+    package <- known[["package"]]
+  }
+  if (!is.null(package) && !requireNamespace(package, quietly = TRUE)) {
+    stop("The file holds a ", algorithm, " model of package ", package,
+         ". Install ", package, " to read it, or read the raw tree with ",
+         "read_bayests_tree().")
+  }
+
+  if (!is.null(rclass)) {
+    return(rclass)
+  }
+  known[["class"]]
+}
+
+# The models of other packages that the BayesTS command line writes, by the
+# prefix of their algorithm: the package that reads them and the class they are
+# read as.
+.algorithm_packages <- list(
+  "Dfm" = list("package" = "dfmtools", "class" = c("dfmodel", "list")),
+  "Favar" = list("package" = "dfmtools", "class" = c("favarmodel", "list"))
+)

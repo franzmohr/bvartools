@@ -79,6 +79,18 @@ scaled nor centred, or put back with
 \code{\link{rescale_error_correction}} first, and structural models are not
 supported.
 
+The windows need not share their regressors. \code{\link{use_expanding_window}}
+leaves an impulse, step or data dummy of \code{\link{add_dummy_variables}} out
+of the windows that end before its event, so the window just before the event
+has fewer regressors than the observation the next window adds. The density
+of that observation uses only the regressors of the window that predicts it:
+the regressors of the observation are matched to the ones of the window by
+name, and a dummy the window does not have is left out, because a forecast
+made at the end of the window could not have known about the event. The
+event period is therefore scored as an ordinary forecast, and the dummy only
+enters the densities of the windows that contain its event. This applies to
+VAR and VEC models alike.
+
 The expression is the normal density of the observation, so the function is
 available for the algorithms whose observation is normal given the parameters
 of a draw, and refuses the others. The asymmetric Laplace algorithms of

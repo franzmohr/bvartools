@@ -200,3 +200,129 @@ aggregation_weights <- function(type = c("average", "sum", "growth"), n = 3) {
   list("value" = value, "group" = group, "row" = row,
        "period" = period, "variable" = variable, "weight" = weight)
 }
+
+
+# The panel of a model not observed whole, cut to the periods its training
+# sample keeps. 'periods' are the positions in the sample before the cut that
+# remain, and 'orig_time' its periods. Used to be missing: use_expanding_window()
+# and window() cut the data and left data$train$constraints as it was, so that a
+# window held the observations after its end -- which the sampler refused,
+# since they name periods it does not have -- and started the periods it had
+# not observed from an interpolation towards them.
+#
+# A constraint is kept only if every period it reaches remains, so that an
+# aggregate reaching before the window is left out with a message, as
+# create_bvarmodel() leaves out one reaching before the sample, and one ending
+# after it is left out with the observations it belongs to. Rows and groups are
+# numbered again from one. The starting values of what was not observed, in
+# data$train$y and the lags of data$train$x, are filled again from what was
+# observed up to the end of the window.
+.window_panel <- function(object, periods, orig_time) {
+
+  constraints <- object[["data"]][["train"]][["constraints"]]
+  if (is.null(constraints)) {
+    return(object)
+  }
+
+  object <- .refill_panel(object, constraints, max(orig_time[periods]))
+
+  # Rows that reach only periods that remain, and those of them that reach
+  # before the window rather than after it.
+  inside <- tapply(constraints[["period"]] %in% periods, constraints[["row"]], all)
+  rows <- as.numeric(names(inside))
+  first <- tapply(constraints[["period"]], constraints[["row"]], min)
+  last <- tapply(constraints[["period"]], constraints[["row"]], max)
+  partial <- sum(!inside & last %in% periods & first < min(periods))
+  if (partial > 0) {
+    message(partial, " observation(s) of an aggregated series reach before the window ",
+            "and are left out.")
+  }
+
+  # Value and group are stored once per row, in the order of the rows.
+  kept_rows <- rows[inside]
+  if (length(kept_rows) == 0) {
+    stop("The window holds no observation of the panel.")
+  }
+  keep <- constraints[["row"]] %in% kept_rows
+
+  group <- constraints[["group"]][kept_rows]
+  used <- sort(unique(group[group > 0]))
+  group[group > 0] <- match(group[group > 0], used)
+
+  object[["data"]][["train"]][["constraints"]] <-
+    list("value" = constraints[["value"]][kept_rows],
+         "group" = group,
+         "row" = as.numeric(match(constraints[["row"]][keep], kept_rows)),
+         "period" = as.numeric(match(constraints[["period"]][keep], periods)),
+         "variable" = constraints[["variable"]][keep],
+         "weight" = constraints[["weight"]][keep])
+
+  object
+}
+
+# Fills the gaps of data$train$y and of the lags of the endogenous variables in
+# data$train$x again, as .fill_panel() does, from what data$original$endogen
+# observed up to 'end'. The weights of an aggregated series are read from its
+# constraints, which carry them. A series without a row of its own, or one of
+# the i.i.d. variables, which start at zero, keeps the values it has, as does
+# one that is not observed before 'end' at all.
+.refill_panel <- function(object, constraints, end) {
+
+  observed <- object[["data"]][["original"]][["endogen"]]
+  y <- object[["data"]][["train"]][["y"]]
+  x <- object[["data"]][["train"]][["x"]]
+  if (is.null(observed)) {
+    return(object)
+  }
+
+  k <- ncol(y)
+  freq <- stats::frequency(observed)
+  orig_start <- stats::tsp(observed)[1]
+  times <- as.numeric(stats::time(observed))
+  n_iid <- object[["model"]][["n_iid"]]
+  if (is.null(n_iid)) {
+    n_iid <- 0L
+  }
+  series <- dimnames(y)[[2]]
+  position <- function(t) round((as.numeric(t) - orig_start) * freq) + 1
+  pos_y <- position(stats::time(y))
+  pos_x <- if (is.null(x)) NULL else position(stats::time(x))
+
+  changed_x <- FALSE
+  for (j in setdiff(unique(constraints[["variable"]]), seq_len(n_iid))) {
+    w <- constraints[["weight"]][constraints[["row"]] == min(constraints[["row"]][constraints[["variable"]] == j])]
+    values <- as.numeric(observed[, j]) / sum(w)
+    values[times > end + 0.5 / freq] <- NA
+    index <- which(!is.na(values))
+    if (length(index) == 0) {
+      next
+    }
+    filled <- if (length(index) == 1) {
+      rep(values[index], length(values))
+    } else {
+      stats::approx(index, values[index], xout = seq_along(values), rule = 2)$y
+    }
+
+    y[, j] <- filled[pos_y]
+
+    # The lags of the series, named as create_bvarmodel() names them.
+    if (!is.null(x)) {
+      prefix <- paste0(series[j], ".")
+      for (col in which(startsWith(dimnames(x)[[2]], prefix))) {
+        lag <- suppressWarnings(as.integer(substring(dimnames(x)[[2]][col], nchar(prefix) + 1)))
+        if (is.na(lag) || lag < 1 || any(pos_x - lag < 1)) {
+          next
+        }
+        x[, col] <- filled[pos_x - lag]
+        changed_x <- TRUE
+      }
+    }
+  }
+
+  object[["data"]][["train"]][["y"]] <- y
+  if (changed_x) {
+    object <- .replace_regressors(object, x)
+  }
+
+  object
+}

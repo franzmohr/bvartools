@@ -26,6 +26,11 @@ model has been estimated, \code{posterior}. The draws of a sampler are
 \code{\link[coda]{mcmc}} objects; the per-period posterior of a discounted
 model is a plain matrix, since its rows are periods rather than draws.
 \code{\link{bvartools_model}} describes the elements one by one.
+
+A model of another package -- a dynamic factor model of \pkg{dfmtools},
+say -- is returned as the object of that package's
+\code{\link{from_bayests_tree}} method, so that one 'modellist' can hold
+and evaluate models of either.
 }
 \description{
 Imports model information and posterior draws from an HDF5 file.

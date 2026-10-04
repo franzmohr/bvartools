@@ -58,70 +58,15 @@
 #' 
 #' @export
 write_to_hdf5.bvarmodel <- function(object, filename, group = "", ...) {
-  
-  group <- .normalize_hdf5_group(group)
-  
-  # Check if filename is valid
-  if (dir.exists(filename)) {
-    stop("Argument 'filename' is not a path to a file.")
-  }
-  
-  # What must not already be there is the model, not the file. Without a group a
-  # model is the whole file, so an existing file is still refused; with one,
-  # a file that already holds other models is exactly what is being added to,
-  # and only that group has to be free.
-  file_existed <- file.exists(filename)
-  if (group == "" && file_existed) {
-    stop(paste0("File ", filename, " already exists."))
-  }
-  
-  # Create or open an HDF5 file
-  h5_file <- hdf5r::h5file(filename, mode = "a")
-  
-  # The body below used to sit inside a try() that discarded its result: any
-  # failure -- a full disk, an unwritable path, a malformed element of 'object'
-  # -- was swallowed and the function returned as though it had worked, leaving
-  # a half-written file that looked finished. The error reaches the caller now.
-  #
-  # What has to be undone on the way out of a failure depends on what this call
-  # created. A file it made is removed whole; a group it added to a file that
-  # was already there is unlinked on its own, so the models beside it survive.
-  # Either way the handle is closed, or the file stays locked for the rest of
-  # the session. HDF5 does not reclaim the space of an unlinked group, but the
-  # name is free again, which is what a retry needs.
-  completed <- FALSE
-  group_existed <- FALSE
-  on.exit({
-    if (!completed && group != "" && !group_existed && h5_file$is_valid) {
-      try(h5_file$link_delete(group), silent = TRUE)
-    }
-    if (h5_file$is_valid) {
-      h5_file$close_all()
-    }
-    if (!completed && !file_existed) {
-      unlink(filename)
-    }
-  }, add = TRUE)
-  
-  if (group != "") {
-    group_existed <- .hdf5_exists(h5_file, group)
-    if (group_existed) {
-      stop(paste0("Group ", group, " of file ", filename, " already exists."))
-    }
-  }
-  
-  # Every path below is named against this rather than against the file, which
-  # is all a group amounts to on the way out. What the write opens below it is
-  # collected as it goes, so that it can be closed again without asking the
-  # file what is open.
-  handles <- .hdf5_handles()
-  output <- .create_hdf5_group(h5_file, group)
-  if (inherits(output, "H5Group")) {
-    .hdf5_keep(handles, output)
-  }
+  .hdf5_write_model(filename, group, function(handles, output) {
+    .hdf5_write_bvarmodel(handles, output, object)
+  })
+}
 
-  
-  
+# The tree of a 'bvarmodel' below `output`, which .hdf5_write_model() has opened
+# and closes again, or removes if this fails.
+.hdf5_write_bvarmodel <- function(handles, output, object) {
+
   # Model information ----
   group_model <- .hdf5_group(handles, output, "model")
 
@@ -344,9 +289,5 @@ write_to_hdf5.bvarmodel <- function(object, filename, group = "", ...) {
     }
   }
 
-  # Close file
-  .hdf5_close(handles, h5_file)
-  completed <- TRUE
-
-  invisible(filename)
+  invisible(NULL)
 }

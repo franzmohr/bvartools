@@ -5,7 +5,8 @@
 #' worker rather than of all of them.
 #'
 #' @param x an object of class 'bvarfolder', from \code{\link{open_models}}.
-#' @param f a function taking a model -- a 'bvarmodel' or a 'bvecmodel' -- and
+#' @param f a function taking a model -- a 'bvarmodel', a 'bvecmodel', or the
+#' model of another package that \code{\link{read_model_from_hdf5}} reads -- and
 #' returning one. If it has an argument named \code{index}, the position of the
 #' model in the manifest is passed to it, which is what numbers seeds and what
 #' lets a caller tell the models apart.
@@ -176,7 +177,10 @@ map_models <- function(x, f, ..., models = NULL, write = TRUE, cores = 1,
     return(model)
   }
 
-  if (!inherits(model, "bvarmodel") && !inherits(model, "bvecmodel")) {
+  # A model of any package, as read_model_from_hdf5() returns one: what it was
+  # read as is what it is written back as.
+  if (!is.list(model) || .is_model_container(model) ||
+      is.null(model[["model"]][["algorithm"]])) {
     stop("The function returned an object of class ",
          paste(class(model), collapse = ", "), " for ", task[["file"]],
          " rather than a model.")

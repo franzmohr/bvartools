@@ -66,6 +66,10 @@ use_expanding_window.bvarmodel <- function(object, start, ...) {
       temp[["data"]][["train"]][["z"]] <- temp[["data"]][["train"]][["z"]][1:(k * pos_end[i]), ]
     }
 
+    # What was observed after the end of the window is left out of it, and
+    # what was not observed starts from what was observed up to its end.
+    temp <- .window_panel(temp, seq_len(pos_end[i]), time_y)
+
     # A dummy variable whose period the window does not reach is left out of it.
     temp <- .drop_empty_dummy_variables(temp)
 

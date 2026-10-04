@@ -43,6 +43,10 @@ window.bvarmodel <- function(x, start = NULL, end = NULL, ...) {
     x[["data"]][["train"]][["z"]] <- x[["data"]][["train"]][["z"]][pos,]
   }
 
+  # The observations of a panel not observed whole that the window leaves out,
+  # and the starting values of what it did not observe, follow the cut.
+  x <- .window_panel(x, periods, orig_time)
+
   .warn_empty_dummy_variables(x)
 
   if (!is.null(x[["posterior"]])) {

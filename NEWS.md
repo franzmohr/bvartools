@@ -1,4 +1,4 @@
-# bvartools (development version)
+# bvartools 1.0.0
 
 * **`use_expanding_window()` and `window()` now cut the observations of a panel
   not observed whole.** For a model created with `missing = "estimate"` or
@@ -12,8 +12,6 @@
   values of what was not observed, in `data$train$y` and the lags in
   `data$train$x`, are filled again from what was observed up to the end of the
   window, so that they no longer interpolate towards later observations.
-
-# bvartools 1.0.0
 
 * **`add_predictive_loglik()` no longer fails on expanding windows when a dummy
   variable first enters during the evaluation period.** `use_expanding_window()`

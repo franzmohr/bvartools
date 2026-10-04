@@ -68,7 +68,8 @@ Argument \code{coef} can contain the following elements:
   Not used if \code{minnesota} is given or SSVS is applied.}
   \item{\code{coint_var}}{a logical specifying whether the prior mean of the first own lag of an
   endogenous variable should be set to 1, which is commonly used for cointegrated
-  VAR models. Default is \code{FALSE}.}
+  VAR models. Default is \code{FALSE}. Ignored, with a warning, under SSVS, which centres the
+  prior of every coefficient it selects at zero; BVS keeps the prior mean.}
   \item{\code{const}}{a numeric or character specifying the prior mean of coefficients, which correspond
   to the intercept. If a numeric is provided, all prior means are set to this value.
   If \code{coef$const = "mean"}, the mean of the respective endogenous variable is used as prior mean.

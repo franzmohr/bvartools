@@ -234,6 +234,9 @@ pool_forecasts <- function(...) {
 # The end of the estimation sample of a model, which identifies the information
 # its forecast was made with.
 .pool_sample_end <- function(object) {
+  .refuse_shifted_forecast(object, "pool_forecasts()",
+                           paste0("the forecasts of a pool are matched by the end of the estimation ",
+                                  "samples they follow."))
   y <- object[["data"]][["train"]][["y"]]
   if (is.null(stats::tsp(y))) {
     stop("A member of the pool has training data without a time index, so its forecasts ",

@@ -10,7 +10,9 @@
 \item{object}{an object of class 'expandingwindow' containing objects that can
 be passed on to their respective \code{add_forecast_input} method.}
 
-\item{...}{arguments passed forward to method.}
+\item{...}{arguments passed forward to method. Argument \code{y_start} of
+\code{\link{add_forecast_input.bvarmodel}} is refused, since every window forecasts from
+the end of its own estimation sample.}
 }
 \value{
 The object in \code{object} with forecast input added to each of its models, as

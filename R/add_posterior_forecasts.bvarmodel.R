@@ -42,6 +42,14 @@
 #' stores. A stochastic volatility model fitted with an earlier version of the package
 #' lacks it and stops with an error unless \code{forecast_states = "hold"}.
 #'
+#' @details A forecast that starts after the end of the estimation sample, from argument
+#' \code{y_start} of \code{\link{add_forecast_input}}, takes its lags from the start values
+#' and its coefficients from the sample. \strong{Three things that start from the last period
+#' of the sample are refused for it}: a \code{scenario}, which is drawn from the end of the
+#' sample; \code{forecast_states = "simulate"} for a model with time varying coefficients or
+#' stochastic volatility, which would not step the states through the periods up to the start
+#' values (\code{"hold"} is available); and the discounted model, for the same reason.
+#'
 #' @examples
 #' 
 #' # Load data
@@ -125,7 +133,9 @@ add_posterior_forecasts.bvarmodel <- function(object, forecast_states = NULL, sc
       !is.null(object[["data"]][["train"]][["z"]]) & !object[["model"]][["structural"]]) {
     stop("Model specification does not contain input data. Consider using function add_forecast_input().")
   }
-  
+
+  .check_shifted_forecast(object)
+
   # Drawn i.i.d. from the closed form rather than carried along a chain, so the
   # paths come back unlabelled and return here.
   if (.is_discount(object)) {
@@ -151,6 +161,49 @@ add_posterior_forecasts.bvarmodel <- function(object, forecast_states = NULL, sc
                                                                   start = mcpar_temp[1], end = mcpar_temp[2], thin = mcpar_temp[3])
   
   return(object)
+}
+
+# A forecast from start values after the end of the sample (argument 'y_start'
+# of add_forecast_input()) takes its lags from them and everything else from the
+# sample. Where the samplers carry something else on from the last period of the
+# sample, the forecast would silently start there instead, so it is refused.
+.check_shifted_forecast <- function(object) {
+
+  if (.forecast_gap(object) <= 0) {
+    return(invisible(NULL))
+  }
+
+  if (!is.null(object[["data"]][["forecast"]][["constraints"]])) {
+    .refuse_shifted_forecast(object, "a scenario",
+                             paste0("a conditional forecast is drawn from the end of the estimation ",
+                                    "sample, not from the start values. Add the periods of the start ",
+                                    "values to the data the model is estimated with, or condition on ",
+                                    "unmodelled variables through argument 'exogen'."))
+  }
+
+  if (.is_discount(object)) {
+    .refuse_shifted_forecast(object, "a forecast of the discounted model",
+                             paste0("its coefficients drift from the last period of the sample, one ",
+                                    "step per period, and the periods up to the start values are ",
+                                    "not counted. Estimate the model on a sample that includes them."))
+  }
+
+  algorithm <- object[["model"]][["algorithm"]]
+  states <- object[["model"]][["forecast_states"]]
+  if (is.null(states)) {
+    states <- "simulate"
+  }
+  if (grepl("Tvp|Stochvol", algorithm) && states == "simulate") {
+    .refuse_shifted_forecast(object, "forecast_states = \"simulate\"",
+                             paste0("the time varying coefficients or volatilities would be carried ",
+                                    "forward from the last period of the sample as if the forecast ",
+                                    "started there, without the steps of the periods up to the start ",
+                                    "values. Use forecast_states = \"hold\", which keeps them at the ",
+                                    "last period of the sample, or estimate the model on a sample ",
+                                    "that includes the start values."))
+  }
+
+  invisible(NULL)
 }
 
 # The pins of a conditional forecast, as the constraint set the core reads from

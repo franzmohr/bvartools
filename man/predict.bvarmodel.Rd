@@ -19,7 +19,10 @@ period simulated by \code{\link{add_posterior_forecasts}}, i.e. the horizon give
 An object of class 'bvarprd', a list with element \code{fcst}, an
 \eqn{h \times K \times S} array of the \eqn{S} forecast draws, whose first two
 dimensions are named after the forecast periods and the endogenous variables, and
-element \code{y}, the endogenous variables of the training sample.
+element \code{y}, the endogenous variables of the training sample. For a forecast that
+starts after the end of the sample, from argument \code{y_start} of
+\code{\link{add_forecast_input}}, the forecast periods are those after the start values,
+and \code{y} continues the training sample with the start values that lie after it.
 }
 \description{
 Forecasting a Bayesian VAR object of class 'bvarmodel'.

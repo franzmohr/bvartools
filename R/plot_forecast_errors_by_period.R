@@ -163,7 +163,7 @@ plot_forecast_errors_by_period <- function(x, criterion = "AFE", ci = .95,
 
       result <- rbind(result,
                       data.frame(variable = rep(varnames, max(h)),
-                                 period = tsp_train[2] + h / tsp_train[3],
+                                 period = tsp_train[2] + (.forecast_gap(y[[i]]) + h) / tsp_train[3],
                                  h = h,
                                  mean = temp[, 1],
                                  median = temp[, 2],

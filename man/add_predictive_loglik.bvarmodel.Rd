@@ -69,6 +69,12 @@ observations, so the realised row is not built from its lags alone, and their
 density carries the Jacobian of \eqn{A_0} besides. So are the asymmetric
 Laplace algorithms of quantile estimation, which do not forecast in the first
 place.
+
+A forecast that starts after the end of the estimation sample, from argument
+\code{y_start} of \code{\link{add_forecast_input}}, is refused as well: the score
+of a horizon realised in part is drawn from the end of the sample rather than from
+the start values. Its forecast errors are available from
+\code{\link{add_forecast_errors}}.
 }
 \examples{
 

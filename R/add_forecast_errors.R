@@ -47,7 +47,8 @@ add_forecast_errors <- function (object, test_sample = NULL, ...) {
     stop("Argument 'test_sample' has ", frequency_name(stats::tsp(test_sample)[3]),
          " data, but the forecasts of the model are ", frequency_name(tsp_train[3]), ".")
   }
-  forecast_starts_at <- tsp_train[2] + 1 / tsp_train[3]
+  # Right after the sample, or after the start values of add_forecast_input()
+  forecast_starts_at <- tsp_train[2] + (.forecast_gap(object) + 1) / tsp_train[3]
 
   if (!(forecast_starts_at %in% stats::time(test_sample))) {
     return(NULL)

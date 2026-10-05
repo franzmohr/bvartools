@@ -16,6 +16,11 @@
 #' in levels, and are assembled from the data and specification that
 #' \code{\link{vec_to_var}} builds. The posterior draws are not converted.
 #'
+#' The forecast starts right after the estimation sample. Argument \code{y_start} of
+#' \code{\link{add_forecast_input.bvarmodel}} is refused here; to start a forecast from values
+#' after the sample, convert the model with \code{\link{vec_to_var}} and give them, in levels,
+#' to the resulting 'bvarmodel'.
+#'
 #' @return The object in \code{object} with the forecast horizon in \code{model$h}
 #' and the regressors of the forecast periods, in levels, in \code{data$forecast$x}.
 #'

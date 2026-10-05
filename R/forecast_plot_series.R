@@ -23,11 +23,18 @@ forecast_plot_series <- function(x, n_pre = NULL, ci = 0.95) {
   fcst <- apply(x[["fcst"]], c(1, 2), stats::quantile, probs = c(ci_low, .5, 1 - ci_low))
 
   ts_temp <- stats::tsp(y)
-  fcst_end <- ts_temp[2] + dim(fcst)[2] / ts_temp[3]
+  # Periods between the observed values and the first forecast, which a forecast
+  # from start values after the sample has when they are not part of 'y'
+  gap <- 0
+  fcst_tsp <- attr(x[["fcst"]], "tsp")
+  if (!is.null(fcst_tsp)) {
+    gap <- max(0, round((fcst_tsp[1] - ts_temp[2]) * ts_temp[3]) - 1)
+  }
+  fcst_end <- ts_temp[2] + (gap + dim(fcst)[2]) / ts_temp[3]
 
   result <- list()
   for (i in var_names) {
-    temp <- stats::ts(t(fcst[,, i]), start = ts_temp[2] + 1 / ts_temp[3], frequency = ts_temp[3])
+    temp <- stats::ts(t(fcst[,, i]), start = ts_temp[2] + (gap + 1) / ts_temp[3], frequency = ts_temp[3])
     temp <- cbind(y[, i], temp)
     # Connect the observed series with the forecasts
     temp[tt, 2:4] <- y[tt, i]

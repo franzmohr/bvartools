@@ -9,6 +9,7 @@
   n_ahead = 10,
   deterministic = NULL,
   exogen = NULL,
+  y_start = NULL,
   ...
 )
 }
@@ -27,12 +28,25 @@ the first forecast period, which are the last \code{s} periods of the estimation
 well as the \code{n_ahead} forecast periods, because the regressors of a forecast period
 include the lags of these variables. See \code{\link{prepare_forecast_input}}.}
 
+\item{y_start}{an optional time-series object with the endogenous variables of the model,
+by name and in the units of the estimation sample, that the forecast starts from: the
+forecast periods are the \code{n_ahead} periods after its last observation, and the lags of
+the first one are its last \code{p} observations. It may end after the estimation sample, so
+that a forecast can start from a nowcast or from data that came in after the model was
+estimated; \code{exogen} and \code{deterministic} then have to cover the new forecast
+periods. If \code{NULL} (default), the forecast starts after the end of the estimation
+sample. See 'Details' in \code{\link{prepare_forecast_input}}.}
+
 \item{...}{arguments passed forward to method.}
 }
 \value{
 The object in \code{object} with \code{model$h} set to \code{n_ahead} and
 \code{data$forecast$x} added, the regressors of the forecast periods in the layout of
-\code{data$train$x}, one row per period.
+\code{data$train$x}, one row per period. If \code{y_start} is given,
+\code{model$forecast_start} is the time of the first forecast period, which
+\code{\link[=predict.bvarmodel]{predict}} dates the forecasts by, and \code{data$forecast$y}
+holds the start values after the end of the sample, which it shows as the history the
+forecasts continue.
 }
 \description{
 Generates and adds data matrices for forecast simulation to the elements of
@@ -56,6 +70,18 @@ model <- add_priors(model,
 
 # Add data used for forecast calculation
 model <- add_forecast_input(model, n_ahead = 4)
+
+# A model estimated up to 1978Q4 whose forecast starts from the values
+# of 1979Q1, which it was not estimated with
+short <- create_bvarmodel(window(e1, end = c(1978, 4)), p = 2,
+                          deterministic = "const",
+                          iterations = 20, burnin = 10)
+short <- add_priors(short,
+                    coef = list(v_i = 1, v_i_det = 1 / 10),
+                    sigma = list(df = "k", scale = 1))
+short <- add_forecast_input(short, n_ahead = 4,
+                            y_start = window(e1, end = c(1979, 1)))
+short[["model"]][["forecast_start"]]
 
 }
 \seealso{

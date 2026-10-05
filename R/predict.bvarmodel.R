@@ -15,7 +15,10 @@
 #' @return An object of class 'bvarprd', a list with element \code{fcst}, an
 #' \eqn{h \times K \times S} array of the \eqn{S} forecast draws, whose first two
 #' dimensions are named after the forecast periods and the endogenous variables, and
-#' element \code{y}, the endogenous variables of the training sample.
+#' element \code{y}, the endogenous variables of the training sample. For a forecast that
+#' starts after the end of the sample, from argument \code{y_start} of
+#' \code{\link{add_forecast_input}}, the forecast periods are those after the start values,
+#' and \code{y} continues the training sample with the start values that lie after it.
 #'
 #' @examples
 #' 
@@ -82,8 +85,11 @@ predict.bvarmodel <- function(object, n_ahead = NULL, ...) {
   draws <- nrow(.forecast_draws(object))
   k <- object[["model"]][["k"]]
   
+  # The forecast periods follow the sample, or the start values given to
+  # add_forecast_input(), 'gap' periods after its end.
+  gap <- .forecast_gap(object)
   tsp_temp <- stats::tsp(object[["data"]][["train"]][["y"]])
-  prd_time <- tsp_temp[2] + 1:n_ahead / tsp_temp[3]
+  prd_time <- tsp_temp[2] + (gap + 1:n_ahead) / tsp_temp[3]
   
   result <- array(NA_real_, dim = c(n_ahead, length(varnames), draws))
   dimnames(result) <- list(as.character(prd_time), varnames, NULL)
@@ -96,8 +102,32 @@ predict.bvarmodel <- function(object, n_ahead = NULL, ...) {
   }
   
   result <- list(fcst = result,
-                 y = object[["data"]][["train"]][["y"]])
+                 y = .forecast_history(object))
   
   class(result) <- c("bvarprd", "list")
   return(result)
+}
+
+# The history a forecast continues: the endogenous variables of the training
+# sample and, for a forecast that starts after it, the start values in the
+# periods in between, so that a plot runs from the data through the start values
+# into the forecast. A period the start values do not reach is missing.
+.forecast_history <- function(object) {
+
+  y <- object[["data"]][["train"]][["y"]]
+  gap <- .forecast_gap(object)
+  y_start <- object[["data"]][["forecast"]][["y"]]
+  if (gap <= 0 || is.null(y_start)) {
+    return(y)
+  }
+
+  tsp_y <- stats::tsp(y)
+  tsp_s <- stats::tsp(y_start)
+  y_start <- as.matrix(y_start)
+  after <- matrix(NA_real_, gap, NCOL(y), dimnames = list(NULL, colnames(y)))
+  pos <- round((tsp_y[2] + (1:gap) / tsp_y[3] - tsp_s[1]) * tsp_s[3]) + 1
+  ok <- pos >= 1 & pos <= nrow(y_start)
+  after[ok, ] <- y_start[pos[ok], , drop = FALSE]
+
+  stats::ts(rbind(as.matrix(y), after), start = tsp_y[1], frequency = tsp_y[3])
 }

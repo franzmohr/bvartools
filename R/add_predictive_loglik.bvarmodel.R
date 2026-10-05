@@ -54,6 +54,12 @@
 #' Laplace algorithms of quantile estimation, which do not forecast in the first
 #' place.
 #'
+#' A forecast that starts after the end of the estimation sample, from argument
+#' \code{y_start} of \code{\link{add_forecast_input}}, is refused as well: the score
+#' of a horizon realised in part is drawn from the end of the sample rather than from
+#' the start values. Its forecast errors are available from
+#' \code{\link{add_forecast_errors}}.
+#'
 #' @return The object in \code{object} with \code{posterior$forecast$loglik}
 #' added, a \code{\link[coda]{mcmc}} object with one row per draw and one column
 #' per scored period, and with the values it was scored against in
@@ -99,6 +105,10 @@ add_predictive_loglik.bvarmodel <- function(object, test_sample = NULL, ...) {
     stop("Object does not contain forecasts. Use 'add_posterior_forecasts' first.")
   }
   .check_predictive_algorithm(object)
+  .refuse_shifted_forecast(object, "a predictive log likelihood",
+                           paste0("the score of a horizon realised in part is drawn from the end of ",
+                                  "the estimation sample, not from the start values. Forecast errors ",
+                                  "are available from add_forecast_errors()."))
 
   realised <- if (is.null(test_sample)) {
     .realised_values(object)

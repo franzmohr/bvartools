@@ -61,6 +61,15 @@ lacks it and stops with an error unless \code{forecast_states = "hold"}.
 \description{
 Calculates and adds forecasts to an object of class 'bvarmodel'.
 }
+\details{
+A forecast that starts after the end of the estimation sample, from argument
+\code{y_start} of \code{\link{add_forecast_input}}, takes its lags from the start values
+and its coefficients from the sample. \strong{Three things that start from the last period
+of the sample are refused for it}: a \code{scenario}, which is drawn from the end of the
+sample; \code{forecast_states = "simulate"} for a model with time varying coefficients or
+stochastic volatility, which would not step the states through the periods up to the start
+values (\code{"hold"} is available); and the discounted model, for the same reason.
+}
 \examples{
 
 # Load data

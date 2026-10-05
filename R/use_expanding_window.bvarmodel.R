@@ -111,6 +111,7 @@ use_expanding_window.bvarmodel <- function(object, start, ...) {
     object[["data"]][["forecast"]] <- NULL
     object[["data"]][["test"]] <- NULL
     object[["model"]][["h"]] <- NULL
+    object[["model"]][["forecast_start"]] <- NULL
     dropped <- c(dropped, "the forecast input and test sample")
   }
   if (length(dropped) > 0) {

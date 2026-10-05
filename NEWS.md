@@ -1,5 +1,31 @@
 # bvartools 1.0.0
 
+* **A forecast can now start from values after the end of the estimation
+  sample.** `add_forecast_input()` and `prepare_forecast_input()` take
+  `y_start`, a time series of the endogenous variables whose last `p`
+  observations are the lags of the first forecast period. The forecast periods
+  are the `n_ahead` after its last observation, so a model estimated to August
+  can forecast October onwards from a nowcast for September without being
+  estimated again or simulated by hand. `exogen` and `deterministic` have to
+  cover the new periods, and are refused with the periods they lack when they
+  do not; the automatic deterministic terms count through the periods in
+  between, so that a trend keeps counting and seasonal dummies fall on the right
+  months. `predict()` dates the forecasts by the new periods and shows the start
+  values as the history they continue, and `add_forecast_errors()` scores them
+  against those periods. Start values that end with the sample give the
+  default forecast exactly. Argument `deterministic` given by hand is now
+  checked to cover the forecast periods as well, rather than failing with R's
+  "number of items to replace".
+
+  What starts from the last period of the sample is refused for such a
+  forecast, with the reason: a scenario, `forecast_states = "simulate"` for
+  time varying coefficients or stochastic volatility (`"hold"` is available),
+  the discounted model, `add_predictive_loglik()`, `aggregate_forecasts()` and
+  `pool_forecasts()`. So are models estimated with `missing = "estimate"`,
+  whose forecasts start from each draw's completed panel, a `bvecmodel` (use
+  `vec_to_var()` first) and an `expandingwindow`, whose windows each forecast
+  from their own sample.
+
 * **`add_priors()` now warns when SSVS is combined with `coef$coint_var = TRUE`,
   and the model runs.** SSVS centres both components of its prior at zero, so the
   sampler refuses a prior mean of one on the first own lags, and until now that

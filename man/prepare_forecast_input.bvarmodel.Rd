@@ -9,6 +9,7 @@
   n_ahead = 10,
   deterministic = NULL,
   exogen = NULL,
+  y_start = NULL,
   ...
 )
 }
@@ -24,6 +25,11 @@ automatically. If this is not successful, an error message we be returned.}
 \item{exogen}{a time-series object with the unmodelled, non-deterministic variables of the
 model. Required if the model has such variables. See 'Details'.}
 
+\item{y_start}{an optional time-series object with the values of the endogenous variables
+the forecast starts from. The forecast periods are the \code{n_ahead} periods after its last
+observation, which may lie after the end of the estimation sample. If \code{NULL}
+(default), the forecast starts after the end of the estimation sample. See 'Details'.}
+
 \item{...}{additional arguments.}
 }
 \value{
@@ -36,6 +42,11 @@ The lags of the endogenous variables that the estimation sample does not
 reach are the forecasts of earlier periods, which the forecast fills in as it
 goes; they are zero here, since the samplers refuse a missing value anywhere
 in \code{x}.
+
+If \code{y_start} is given, the list has two more elements: \code{start}, the time of
+the first forecast period, and \code{y}, the observations of \code{y_start} after the end of
+the estimation sample together with the last \code{p} the forecast starts from, a time-series
+object with one column per endogenous variable.
 }
 \description{
 Generates data matrices serving as input for forecasting simulation for objects
@@ -52,6 +63,33 @@ periods it has to cover.
 If \code{deterministic} is not given, the deterministic terms are continued from the estimation
 sample, which works for a constant, a linear trend, seasonal dummies and the dummy variables of
 \code{\link{add_dummy_variables}}.
+
+\strong{Starting a forecast after the end of the estimation sample.} By default the first
+forecast period is the one after the last period of the estimation sample, and its lagged
+regressors are the last \code{p} observations of that sample. Argument \code{y_start} moves
+the start: the first forecast period is then the one after the last observation of
+\code{y_start}, and the lags are its last \code{p} observations. This is how a forecast
+starts from a value that was not part of the estimation, such as a nowcast of the current
+month or a first release that came in after the model was estimated, without estimating the
+model again. \code{y_start} holds the endogenous variables of the model, by name and in the
+units of the estimation sample, at the frequency of the model. It has to end in the last
+period of the estimation sample or after it, and its last \code{p} observations must not be
+missing; values before those are not read. When it ends in the last period of the estimation
+sample and holds the same values, the result is the same as without it.
+
+The other inputs follow the new forecast periods: \code{exogen} has to cover the \code{s}
+periods before the first of them and the \code{n_ahead} periods themselves, and
+\code{deterministic} the forecast periods. The automatic continuation of the deterministic
+terms counts through the periods between the end of the sample and the start of the
+forecast, so that a trend keeps counting and seasonal dummies fall on the calendar months or
+quarters of the forecast periods.
+
+The coefficients, and for models with time varying coefficients or stochastic volatility
+the states, are those estimated on the sample. Nothing is learnt from the start values
+beyond their role as lags. Some uses of a forecast therefore need it to start right after
+the sample: see \code{\link{add_posterior_forecasts}} and
+\code{\link{add_predictive_loglik}}. A model estimated with \code{missing = "estimate"}
+starts each draw's forecast from its own completed panel and does not take \code{y_start}.
 }
 \examples{
 
@@ -71,6 +109,15 @@ model <- add_priors(model,
 
 # Generate forcast input
 fcst_input <- prepare_forecast_input(model, n_ahead = 4)
+
+# Start the forecast two quarters after the end of the sample, from
+# values the model was not estimated with
+short <- create_bvarmodel(window(e1, end = c(1978, 4)), p = 2,
+                          deterministic = "const",
+                          iterations = 20, burnin = 10)
+fcst_input <- prepare_forecast_input(short, n_ahead = 4,
+                                     y_start = window(e1, end = c(1979, 2)))
+fcst_input[["start"]]
 
 
 }

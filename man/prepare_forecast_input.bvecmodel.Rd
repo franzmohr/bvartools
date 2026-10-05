@@ -24,4 +24,10 @@ Prepares the regressors of the forecast periods of a VEC model, in levels.
 A VEC model is forecast in levels, so its forecast regressors are those of its
 VAR representation. They are prepared from the data and specification
 \code{\link{vec_to_var}} builds; the posterior draws are not converted.
+
+The forecast of a VEC model starts right after its estimation sample, and argument
+\code{y_start} of the 'bvarmodel' method is refused: the VEC samplers forecast from their
+own draws and the end of the sample, and a time varying model steps its states from
+there. To start a forecast from values after the sample, convert the model with
+\code{\link{vec_to_var}} and give \code{y_start} to the resulting 'bvarmodel'.
 }

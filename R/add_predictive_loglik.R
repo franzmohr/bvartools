@@ -523,7 +523,7 @@ add_predictive_loglik.modellist <- function(object, ...) {
   periods <- if (is.null(tsp_train)) {
     seq_len(n)
   } else {
-    tsp_train[2] + seq_len(n) / tsp_train[3]
+    tsp_train[2] + (.forecast_gap(object) + seq_len(n)) / tsp_train[3]
   }
 
   return(list(densities = lapply(seq_len(n), function(i) score[, i]),

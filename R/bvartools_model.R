@@ -31,7 +31,8 @@
 #'   \code{dummy_variables}, the rule each of its dummies is continued by in a
 #'   forecast. \code{\link{add_seed}} adds \code{seed},
 #'   \code{\link{add_forecast_input}} adds \code{h} and
-#'   \code{forecast_states}.}
+#'   \code{forecast_states}, and \code{forecast_start}, the time of the first
+#'   forecast period, when it was given start values in \code{y_start}.}
 #'
 #'   \item{\code{data$original}}{The series as given, before any lag was taken:
 #'   \code{endogen}, and \code{exogen} and \code{deterministic} where there are
@@ -52,7 +53,9 @@
 #'   \item{\code{data$forecast}}{Added by \code{\link{add_forecast_input}}: the
 #'   regressors of the forecast periods, \code{x} in the compact layout, one row
 #'   per horizon. A VEC model's are in the layout of its VAR representation,
-#'   which is the form it is forecast in.}
+#'   which is the form it is forecast in. A forecast from start values adds
+#'   \code{y}, those of them that lie after the end of the sample and the ones
+#'   its lags are taken from.}
 #'
 #'   \item{\code{data$test$y}}{Added by \code{\link{add_forecast_errors}}: what
 #'   the horizon realised, one row per period and one column per variable, the

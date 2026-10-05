@@ -212,6 +212,9 @@ aggregate_forecasts <- function(object, code, target = "average", levels = NULL,
   if (is.null(draws)) {
     stop("At least one model in argument 'object' does not contain forecasts. Use\n'add_posterior_forecasts' before this function.")
   }
+  .refuse_shifted_forecast(object, "aggregate_forecasts()",
+                           paste0("the annual figures are built from the observations up to the end ",
+                                  "of the estimation sample and the forecasts right after it."))
 
   # The forecasts of a VEC model are those of the levels, so the data of its
   # VAR representation are the ones they continue

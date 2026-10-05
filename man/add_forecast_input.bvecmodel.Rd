@@ -37,6 +37,11 @@ representation, and the forecast of the differences follows from that of the
 levels. The regressors of the forecast periods are therefore those of the VAR
 in levels, and are assembled from the data and specification that
 \code{\link{vec_to_var}} builds. The posterior draws are not converted.
+
+The forecast starts right after the estimation sample. Argument \code{y_start} of
+\code{\link{add_forecast_input.bvarmodel}} is refused here; to start a forecast from values
+after the sample, convert the model with \code{\link{vec_to_var}} and give them, in levels,
+to the resulting 'bvarmodel'.
 }
 \seealso{
 Other posterior simulation:

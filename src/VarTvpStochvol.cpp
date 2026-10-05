@@ -79,8 +79,8 @@ bayests::VarTvpStochvolInput read_input(const Rcpp::List &object) {
     input.psi_varsel = bayests::var_selection_from_string(
       optional_string(prior_psi, "varsel", "none"));
 
-    if (input.psi_varsel == bayests::VarSelection::bvs) {
-      input.psi_varsel_prior = read_varsel_prior(prior_psi, input.psi_varsel);
+    if (input.psi_selection() == bayests::VarSelection::bvs) {
+      input.psi_varsel_prior = read_varsel_prior(prior_psi, input.psi_selection());
     }
   }
 

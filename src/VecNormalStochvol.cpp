@@ -69,8 +69,16 @@ bayests::VecNormalStochvolInput read_input(const Rcpp::List &object) {
   if (has(priors, "psi")) {
     const Rcpp::List prior_psi = priors["psi"];
     input.psi_prior = read_normal_prior(prior_psi);
-    if (bvs) {
-      input.psi_varsel_prior = read_varsel_prior(prior_psi, input.spec.varsel);
+    // Selection for the covariance block may be declared in its own list, so
+    // that it can differ from the model's. Absent it stays unset and the
+    // model's scheme governs both blocks, which is what a prior written before
+    // this was read has always meant.
+    if (has(prior_psi, "varsel")) {
+      input.psi_varsel = bayests::var_selection_from_string(
+        optional_string(prior_psi, "varsel", "none"));
+    }
+    if (input.uses_psi_varsel()) {
+      input.psi_varsel_prior = read_varsel_prior(prior_psi, input.psi_selection());
     }
   }
   if (has(priors, "u_sigma")) {

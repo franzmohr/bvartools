@@ -68,6 +68,9 @@ VarNormalGammaDraws VarNormalGammaSampler::draw_coefficients(const VarNormalGamm
     const bool use_ssvs = input.spec.varsel == VarSelection::ssvs;
     const bool use_bvs = input.spec.varsel == VarSelection::bvs;
     const bool use_varsel = use_ssvs || use_bvs;
+    const bool use_ssvs_psi = use_psi && input.psi_selection() == VarSelection::ssvs;
+    const bool use_bvs_psi = use_psi && input.psi_selection() == VarSelection::bvs;
+    const bool use_varsel_psi = use_ssvs_psi || use_bvs_psi;
 
     VarNormalGammaDraws out;
 
@@ -141,19 +144,19 @@ VarNormalGammaDraws VarNormalGammaSampler::draw_coefficients(const VarNormalGamm
         Psi_lambda = arma::eye<arma::mat>(k, k);
         out.psi = arma::mat(k * k, iterations);
 
-        if (use_varsel)
+        if (use_varsel_psi)
         {
             out.psi_lambda = arma::mat(k * k, iterations);
 
-            if (use_ssvs)
+            if (use_ssvs_psi)
             {
                 psi_ssvs.emplace(input.initial.psi_lambda, input.psi_varsel_prior);
             }
 
-            if (use_bvs)
+            if (use_bvs_psi)
             {
                 psi_bvs.emplace(input.initial.psi_lambda, input.psi_varsel_prior);
-                report_flat_selection_prior(reporter, input.spec.varsel, "psi", input.psi_varsel_prior,
+                report_flat_selection_prior(reporter, input.psi_selection(), "psi", input.psi_varsel_prior,
                                             input.psi_prior.v_inv);
             }
         }
@@ -355,7 +358,7 @@ VarNormalGammaDraws VarNormalGammaSampler::draw_coefficients(const VarNormalGamm
             }
 
             fill_strict_lower_triangle(Psi, psi);
-            if (use_varsel)
+            if (use_varsel_psi)
             {
                 fill_strict_lower_triangle(Psi_lambda, psi_ssvs ? psi_ssvs->lambda : psi_bvs->lambda);
             }
@@ -408,7 +411,7 @@ VarNormalGammaDraws VarNormalGammaSampler::draw_coefficients(const VarNormalGamm
             if (use_psi)
             {
                 out.psi.col(draw_pos) = arma::vectorise(Psi);
-                if (use_varsel)
+                if (use_varsel_psi)
                 {
                     out.psi_lambda.col(draw_pos) = arma::vectorise(Psi_lambda);
                 }

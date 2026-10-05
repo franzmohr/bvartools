@@ -65,6 +65,7 @@ VarNormalStochvolDraws VarNormalStochvolSampler::draw_coefficients(
     // Only BVS is implemented for this model.
     const bool use_bvs = input.spec.varsel == VarSelection::bvs;
     const bool use_varsel = use_bvs;
+    const bool use_varsel_psi = use_psi && input.psi_selection() == VarSelection::bvs;
 
     VarNormalStochvolDraws out;
 
@@ -128,16 +129,12 @@ VarNormalStochvolDraws VarNormalStochvolSampler::draw_coefficients(
         psi_u_omega_inv_diag = arma::eye<arma::sp_mat>((k - 1) * tt, (k - 1) * tt);
         out.psi = arma::mat(k * k, iterations);
 
-        if (use_varsel)
+        if (use_varsel_psi)
         {
             out.psi_lambda = arma::mat(k * k, iterations);
-
-            if (use_bvs)
-            {
-                psi_bvs.emplace(input.initial.psi_lambda, input.psi_varsel_prior);
-                report_flat_selection_prior(reporter, input.spec.varsel, "psi", input.psi_varsel_prior,
-                                            input.psi_prior.v_inv);
-            }
+            psi_bvs.emplace(input.initial.psi_lambda, input.psi_varsel_prior);
+            report_flat_selection_prior(reporter, input.psi_selection(), "psi", input.psi_varsel_prior,
+                                        input.psi_prior.v_inv);
         }
     }
 
@@ -331,7 +328,7 @@ VarNormalStochvolDraws VarNormalStochvolSampler::draw_coefficients(
             }
 
             fill_strict_lower_triangle(Psi, psi);
-            if (use_varsel)
+            if (use_varsel_psi)
             {
                 fill_strict_lower_triangle(Psi_lambda, psi_bvs->lambda);
             }
@@ -398,7 +395,7 @@ VarNormalStochvolDraws VarNormalStochvolSampler::draw_coefficients(
             if (use_psi)
             {
                 out.psi.col(draw_pos) = arma::vectorise(Psi);
-                if (use_varsel)
+                if (use_varsel_psi)
                 {
                     out.psi_lambda.col(draw_pos) = arma::vectorise(Psi_lambda);
                 }

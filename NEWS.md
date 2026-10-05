@@ -1,5 +1,22 @@
 # bvartools 1.0.0
 
+* **Variable selection can be kept off the error covariances in every model
+  that has them.** `varsel$covar = FALSE` used to be refused for a model with a
+  covariance block and constant coefficients, because that sampler read one
+  selection scheme for the whole model and applied it to both blocks. BayesTS
+  now reads the block's own scheme everywhere, so the combination is allowed and
+  `covar` decides it in the constant coefficient models as it already did in the
+  time varying ones.
+
+  This is worth a thought rather than a default. A generalised impulse response
+  is built from the off-diagonals of the error covariance, so selecting them to
+  zero collapses it towards an orthogonalised response, which removes the very
+  thing that distinguishes the two; and the block is small, `k(k-1)/2` elements
+  against the sample, so there is no dimensionality case for selecting over it
+  the way there is for the coefficients. Nothing changes for a model that does
+  not ask: absence of a covariance scheme still means the model's own governs
+  both blocks, and draws are unchanged.
+
 * **A sound sign and zero restricted sample is no longer reported as
   unreliable.** Two cases gave a Pareto shape above 0.7, and so a warning, for
   importance weights with nothing wrong with them.

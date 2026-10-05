@@ -106,7 +106,8 @@ print.summary.bvarmodel <- function(x, digits = max(3L, getOption("digits") - 3L
       # visible here. Models fitted before this was recorded have no share to
       # print, which is why it is not simply assumed to be there.
       # The shape of the weight tail says more than the largest weight does,
-      # and is absent only for a model whose weights were not smoothed.
+      # and is absent for a model whose weights were not smoothed or had no tail
+      # to fit.
       shape <- arw[["pareto_k"]]
       if (!is.null(shape) && is.finite(shape)) {
         cat("Pareto shape of the weight tail: ",

@@ -559,8 +559,13 @@ ArwSetup read_setup(const Rcpp::List &setup_list) {
 //' @return A list with the accepted k x k rotation in \code{q}, or a 0 x 0
 //'   matrix when the draw fails the sign restrictions, the log of the
 //'   unnormalised importance weight in \code{log_weight}, which is \code{NA}
-//'   when it was not asked for or could not be computed, and the number of
-//'   rotations drawn in \code{tries}.
+//'   when it was not asked for or could not be computed, the log of the
+//'   estimate of \eqn{p} it includes in \code{log_p_hat}, and the number of
+//'   rotations drawn in \code{tries}. The caller needs the two apart because
+//'   they have different tails: the estimate lies between
+//'   \code{1 / max_tries} and one and takes only a handful of values, so the
+//'   tail of the weight is that of the volume elements alone, and a Pareto fit
+//'   to the product would mistake the ties of the estimate for a tail.
 //'
 //' @noRd
 // [[Rcpp::export(.arw_draw_q)]]
@@ -590,6 +595,7 @@ Rcpp::List arw_draw_q(Rcpp::List A, Rcpp::List setup_list, bool weight = true,
 
   Rcpp::List failed = Rcpp::List::create(Rcpp::Named("q") = arma::mat(0, 0),
                                          Rcpp::Named("log_weight") = NA_REAL,
+                                         Rcpp::Named("log_p_hat") = NA_REAL,
                                          Rcpp::Named("tries") = 0);
 
   // Step 2 of Algorithm 2 evaluated at Q = I, where the zero restrictions are
@@ -672,6 +678,7 @@ Rcpp::List arw_draw_q(Rcpp::List A, Rcpp::List setup_list, bool weight = true,
   if (successes == 0) {
     return Rcpp::List::create(Rcpp::Named("q") = arma::mat(0, 0),
                               Rcpp::Named("log_weight") = kNegInf,
+                              Rcpp::Named("log_p_hat") = kNegInf,
                               Rcpp::Named("tries") = tries);
   }
 
@@ -706,5 +713,6 @@ Rcpp::List arw_draw_q(Rcpp::List A, Rcpp::List setup_list, bool weight = true,
 
   return Rcpp::List::create(Rcpp::Named("q") = q,
                             Rcpp::Named("log_weight") = log_weight,
+                            Rcpp::Named("log_p_hat") = log_p_hat,
                             Rcpp::Named("tries") = tries);
 }

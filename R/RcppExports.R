@@ -316,8 +316,13 @@
 #' @return A list with the accepted k x k rotation in \code{q}, or a 0 x 0
 #'   matrix when the draw fails the sign restrictions, the log of the
 #'   unnormalised importance weight in \code{log_weight}, which is \code{NA}
-#'   when it was not asked for or could not be computed, and the number of
-#'   rotations drawn in \code{tries}.
+#'   when it was not asked for or could not be computed, the log of the
+#'   estimate of \eqn{p} it includes in \code{log_p_hat}, and the number of
+#'   rotations drawn in \code{tries}. The caller needs the two apart because
+#'   they have different tails: the estimate lies between
+#'   \code{1 / max_tries} and one and takes only a handful of values, so the
+#'   tail of the weight is that of the volume elements alone, and a Pareto fit
+#'   to the product would mistake the ties of the estimate for a tail.
 #'
 #' @noRd
 .arw_draw_q <- function(A, setup_list, weight = TRUE, epsilon = 1e-6, one_sided = FALSE, max_tries = 1L) {

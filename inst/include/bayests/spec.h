@@ -87,20 +87,21 @@ struct VarSpec
 
     /// Unobserved factors a dynamic factor model carries, the N of
     ///
-    ///     x_t = Lambda f_t + u_t,   f_t = sum_j A_j f_{t-j} + v_t.
+    ///     x_t = Lambda f_t + C d_t + u_t,   f_t = sum_j A_j f_{t-j} + v_t.
     ///
     /// Zero for every model that is not a factor model, exactly as `rank` is
     /// zero for every model that is not a VEC. A factor model reads the rest of
-    /// this struct its own way and only two other fields carry a meaning for
-    /// one: `k` is the number of *observed* series, the M above, and `p` is the
-    /// lag order of the factor transition. `m`, `s`, `n`, `rank` and
-    /// `n_restricted` are all zero.
+    /// this struct its own way and only three other fields carry a meaning for
+    /// one: `k` is the number of *observed* series, the M above, `p` is the
+    /// lag order of the factor transition, and `n` is the number of
+    /// deterministic terms d_t, which enter the measurement rather than a
+    /// regression. `m`, `s`, `rank` and `n_restricted` are all zero.
     int n_factors = 0;
 
     /// Observed factors a factor augmented VAR carries, the Ky of
     ///
-    ///     x_t = Lambda_f f_t + Lambda_y y_t + e_t,
-    ///     s_t = sum_j Phi_j s_{t-j} + v_t,   s_t = (f_t', y_t')'.
+    ///     x_t = Lambda_f f_t + Lambda_y y_t + C d_t + e_t,
+    ///     s_t = sum_j Phi_j s_{t-j} + v_t,   s_t = (f_t', (y_t - C_obs d_t)')'.
     ///
     /// Zero for every model that is not a FAVAR, a dynamic factor model
     /// included -- which is exactly what a FAVAR with none of them would be.

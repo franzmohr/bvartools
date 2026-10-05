@@ -622,7 +622,13 @@ struct DfmNormalGammaDraws
     /// n_factors x iterations; the diagonal of the factor innovation precision.
     arma::mat v_sigma_inv;
 
+    /// (k * n) x iterations, where n is VarSpec::n: each column is vec of the
+    /// k x n matrix C of the deterministic terms of the measurement, one column
+    /// per term. Empty for a model without deterministic terms.
+    arma::mat c;
+
     arma::uword iterations() const { return u_sigma_inv.n_cols; }
+    bool has_c() const { return c.n_elem > 0; }
     bool has_a() const { return a.n_elem > 0; }
     bool has_factors() const { return factors.n_elem > 0; }
 };
@@ -666,7 +672,13 @@ struct DfmNormalStochvolDraws
     arma::mat u_h_sigma;
     arma::mat v_h_sigma;
 
+    /// (k * n) x iterations, where n is VarSpec::n: each column is vec of the
+    /// k x n matrix C of the deterministic terms of the measurement, one column
+    /// per term. Empty for a model without deterministic terms.
+    arma::mat c;
+
     arma::uword iterations() const { return u_sigma_inv.n_cols; }
+    bool has_c() const { return c.n_elem > 0; }
     bool has_a() const { return a.n_elem > 0; }
     bool has_factors() const { return factors.n_elem > 0; }
 };
@@ -718,7 +730,13 @@ struct DfmTvpGammaDraws
     /// n_factors x iterations; the diagonal of the factor innovation precision.
     arma::mat v_sigma_inv;
 
+    /// (k * n) x iterations, where n is VarSpec::n: each column is vec of the
+    /// k x n matrix C of the deterministic terms of the measurement, one column
+    /// per term. Empty for a model without deterministic terms.
+    arma::mat c;
+
     arma::uword iterations() const { return u_sigma_inv.n_cols; }
+    bool has_c() const { return c.n_elem > 0; }
     bool has_a() const { return a.n_elem > 0; }
     bool has_factors() const { return factors.n_elem > 0; }
 };
@@ -773,7 +791,13 @@ struct DfmTvpStochvolDraws
     arma::mat v_h_sigma;
     NoncentredStateDraws v_h_noncentred;
 
+    /// (k * n) x iterations, where n is VarSpec::n: each column is vec of the
+    /// k x n matrix C of the deterministic terms of the measurement, one column
+    /// per term. Empty for a model without deterministic terms.
+    arma::mat c;
+
     arma::uword iterations() const { return u_sigma_inv.n_cols; }
+    bool has_c() const { return c.n_elem > 0; }
     bool has_a() const { return a.n_elem > 0; }
     bool has_factors() const { return factors.n_elem > 0; }
 };
@@ -820,7 +844,18 @@ struct FavarNormalWishartDraws
     /// the point of this member of the family -- see FavarNormalWishartInput.
     arma::mat v_sigma_inv;
 
+    /// (k * n) x iterations, where n is VarSpec::n: each column is vec of the
+    /// k x n matrix C of the deterministic terms of the measurement, one column
+    /// per term. Empty for a model without deterministic terms.
+    arma::mat c;
+
+    /// (n_obs_factors * n) x iterations: each column is vec of the
+    /// n_obs_factors x n matrix C_obs, the deterministic terms the observed
+    /// factors deviate from. Empty for a model without deterministic terms.
+    arma::mat c_obs;
+
     arma::uword iterations() const { return u_sigma_inv.n_cols; }
+    bool has_c() const { return c.n_elem > 0; }
     bool has_a() const { return a.n_elem > 0; }
     bool has_factors() const { return factors.n_elem > 0; }
 };

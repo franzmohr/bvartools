@@ -879,11 +879,11 @@ void VarNormalGammaInput::validate() const
         const arma::uword n_psi = static_cast<arma::uword>(spec.n_psi());
         validate_normal_block(psi_prior, initial.psi, n_psi, "psi");
 
-        if (spec.uses_varsel())
+        if (uses_psi_varsel())
         {
-            validate_varsel(psi_varsel_prior, initial.psi_lambda, n_psi, spec.varsel, "psi");
+            validate_varsel(psi_varsel_prior, initial.psi_lambda, n_psi, psi_selection(), "psi");
         }
-        if (spec.varsel == VarSelection::ssvs)
+        if (psi_selection() == VarSelection::ssvs)
         {
             validate_ssvs_normal_prior(psi_varsel_prior, psi_prior, "psi");
         }
@@ -944,9 +944,9 @@ void VarNormalStochvolInput::validate() const
         const arma::uword n_psi = static_cast<arma::uword>(spec.n_psi());
         validate_normal_block(psi_prior, initial.psi, n_psi, "psi");
 
-        if (spec.uses_varsel())
+        if (uses_psi_varsel())
         {
-            validate_varsel(psi_varsel_prior, initial.psi_lambda, n_psi, spec.varsel, "psi");
+            validate_varsel(psi_varsel_prior, initial.psi_lambda, n_psi, psi_selection(), "psi");
         }
     }
 
@@ -1095,7 +1095,7 @@ void VarTvpGammaInput::validate() const
 
     require_identified_structural(spec, use_psi(), "a covariance block");
 
-    if (spec.varsel == VarSelection::ssvs || psi_varsel == VarSelection::ssvs)
+    if (spec.varsel == VarSelection::ssvs || psi_selection() == VarSelection::ssvs)
     {
         throw std::invalid_argument("SSVS is not implemented for a time-varying parameter model; "
                                     "expected one of none, bvs");
@@ -1128,7 +1128,7 @@ void VarTvpGammaInput::validate() const
 
         if (uses_psi_varsel())
         {
-            validate_varsel(psi_varsel_prior, initial.psi_lambda, n_psi, psi_varsel, "psi");
+            validate_varsel(psi_varsel_prior, initial.psi_lambda, n_psi, psi_selection(), "psi");
         }
     }
 
@@ -1223,7 +1223,7 @@ void VarTvpStochvolInput::validate() const
 
     require_identified_structural(spec, use_psi(), "a covariance block");
 
-    if (spec.varsel == VarSelection::ssvs || psi_varsel == VarSelection::ssvs)
+    if (spec.varsel == VarSelection::ssvs || psi_selection() == VarSelection::ssvs)
     {
         throw std::invalid_argument("SSVS is not implemented for a time-varying parameter model "
                                     "with stochastic volatility; expected one of none, bvs");
@@ -1256,7 +1256,7 @@ void VarTvpStochvolInput::validate() const
 
         if (uses_psi_varsel())
         {
-            validate_varsel(psi_varsel_prior, initial.psi_lambda, n_psi, psi_varsel, "psi");
+            validate_varsel(psi_varsel_prior, initial.psi_lambda, n_psi, psi_selection(), "psi");
         }
     }
 
@@ -1545,6 +1545,70 @@ void VecNormalWishartInput::validate() const
 namespace
 {
 
+/// The deterministic terms of a factor model: a constant, a trend, seasonal
+/// dummies or any other column known in advance, entering the measurement as
+///
+///     x_t = Lambda f_t + C d_t + u_t,
+///
+/// so that the factors are deviations from them. `spec.n` counts them and
+/// `train.x` holds them, tt x n, one period per row. `rows` is the number of
+/// series C has a row for and `block` names it in the messages.
+///
+/// The prior on vec(C) is read row by row, because the rows are drawn one at a
+/// time given the factors -- they are independent given a diagonal U. A
+/// precision coupling two rows would be honoured by none of those draws, so it
+/// is refused rather than ignored.
+///
+/// Exogenous variables are refused here as well: a factor model reads nothing
+/// of `m` and `s`, and a file that sets them describes regressors no factor
+/// model here estimates.
+void validate_factor_deterministic(const VarSpec &spec, const TrainData &train, arma::uword tt,
+                                   const NormalPrior &prior, const arma::vec &initial,
+                                   arma::uword rows, const char *block)
+{
+    if (spec.m != 0 || spec.s != 0)
+    {
+        throw std::invalid_argument("a factor model takes no exogenous variables; expected m and "
+                                    "s to be zero, got m = " + std::to_string(spec.m) +
+                                    " and s = " + std::to_string(spec.s));
+    }
+    const arma::uword n = static_cast<arma::uword>(spec.n);
+    if (n == 0)
+    {
+        if (train.x.n_elem > 0)
+        {
+            throw std::invalid_argument(
+                "the file carries deterministic terms in /data/train/x but n is zero; set n to "
+                "their number, or remove them");
+        }
+        return;
+    }
+
+    if (train.x.n_rows != tt || train.x.n_cols != n)
+    {
+        throw std::invalid_argument(
+            "the deterministic terms /data/train/x must be " + std::to_string(tt) + " x " +
+            std::to_string(n) + ", one row per period and one column per term, got " +
+            std::to_string(train.x.n_rows) + " x " + std::to_string(train.x.n_cols));
+    }
+
+    const std::string what(block);
+    validate_normal_block(prior, initial, rows * n, block);
+
+    for (arma::uword a = 0; a < rows * n; a++)
+    {
+        for (arma::uword b = a + 1; b < rows * n; b++)
+        {
+            if (a % rows != b % rows && prior.v_inv(a, b) != 0.0)
+            {
+                throw std::invalid_argument(
+                    "the prior precision of " + what + " couples two rows of the matrix, which "
+                    "are drawn one at a time; give each row a prior of its own");
+            }
+        }
+    }
+}
+
 /// The checks both dynamic factor models share: what makes the dimensions a
 /// factor model at all, and the two coefficient blocks. Only the error
 /// specification differs between them -- gamma priors on two precisions against
@@ -1695,11 +1759,13 @@ void DfmNormalGammaInput::validate() const
     core::require_supported_constraints(spec, train, test, false, "DfmNormalGamma");
     // Before anything that would read a value: a NaN or an infinity here would
     // otherwise surface as a failed factorisation, or as NaN in the output.
-    core::require_finite_observations(train, test);
+    core::require_finite_observations(train, forecast, test);
 
     const arma::uword k = static_cast<arma::uword>(spec.k);
     const arma::uword tt = checked_periods(spec, train);
     const arma::uword n = static_cast<arma::uword>(spec.n_factors);
+
+    validate_factor_deterministic(spec, train, tt, c_prior, initial.c, k, "c");
 
     validate_dfm_shape(spec, tt, lambda_prior, initial.lambda, a_prior, initial.a, use_a());
 
@@ -1715,11 +1781,13 @@ void DfmTvpGammaInput::validate() const
     core::require_supported_constraints(spec, train, test, false, "DfmTvpGamma");
     // Before anything that would read a value: a NaN or an infinity here would
     // otherwise surface as a failed factorisation, or as NaN in the output.
-    core::require_finite_observations(train, test);
+    core::require_finite_observations(train, forecast, test);
 
     const arma::uword k = static_cast<arma::uword>(spec.k);
     const arma::uword tt = checked_periods(spec, train);
     const arma::uword n = static_cast<arma::uword>(spec.n_factors);
+
+    validate_factor_deterministic(spec, train, tt, c_prior, initial.c, k, "c");
 
     validate_dfm_dimensions(spec, tt);
 
@@ -1760,11 +1828,13 @@ void DfmTvpStochvolInput::validate() const
     core::require_supported_constraints(spec, train, test, false, "DfmTvpStochvol");
     // Before anything that would read a value: a NaN or an infinity here would
     // otherwise surface as a failed factorisation, or as NaN in the output.
-    core::require_finite_observations(train, test);
+    core::require_finite_observations(train, forecast, test);
 
     const arma::uword k = static_cast<arma::uword>(spec.k);
     const arma::uword tt = checked_periods(spec, train);
     const arma::uword n = static_cast<arma::uword>(spec.n_factors);
+
+    validate_factor_deterministic(spec, train, tt, c_prior, initial.c, k, "c");
 
     validate_dfm_dimensions(spec, tt);
 
@@ -1804,11 +1874,13 @@ void DfmNormalStochvolInput::validate() const
     core::require_supported_constraints(spec, train, test, false, "DfmNormalStochvol");
     // Before anything that would read a value: a NaN or an infinity here would
     // otherwise surface as a failed factorisation, or as NaN in the output.
-    core::require_finite_observations(train, test);
+    core::require_finite_observations(train, forecast, test);
 
     const arma::uword k = static_cast<arma::uword>(spec.k);
     const arma::uword tt = checked_periods(spec, train);
     const arma::uword n = static_cast<arma::uword>(spec.n_factors);
+
+    validate_factor_deterministic(spec, train, tt, c_prior, initial.c, k, "c");
 
     validate_dfm_shape(spec, tt, lambda_prior, initial.lambda, a_prior, initial.a, use_a());
 
@@ -1837,7 +1909,7 @@ void FavarNormalWishartInput::validate() const
     core::require_supported_constraints(spec, train, test, false, "FavarNormalWishart");
     // Before anything that would read a value: a NaN or an infinity here would
     // otherwise surface as a failed factorisation, or as NaN in the output.
-    core::require_finite_observations(train, test);
+    core::require_finite_observations(train, forecast, test);
 
     const arma::uword k = static_cast<arma::uword>(spec.k);
     const arma::uword tt = checked_periods(spec, train);
@@ -1865,6 +1937,17 @@ void FavarNormalWishartInput::validate() const
                                     "factor model, and DfmNormalGamma estimates it");
     }
     require_shape(train.f_obs, tt, n_obs, "the observed factors (f_obs)");
+
+    // Deterministic terms enter twice: as the measurement's C, exactly as in a
+    // dynamic factor model, and as C_obs, the mean the observed factors deviate
+    // from. The second is drawn jointly through the transition rather than row
+    // by row, so its prior precision may be anything symmetric.
+    validate_factor_deterministic(spec, train, tt, c_prior, initial.c, k, "c");
+    if (spec.n > 0)
+    {
+        validate_normal_block(c_obs_prior, initial.c_obs,
+                              n_obs * static_cast<arma::uword>(spec.n), "c_obs");
+    }
 
     // The free loadings, in the row-major order the sampler draws them -- the
     // FAVAR count, never n_lambda(). The two agree at more than one dimension
@@ -2001,11 +2084,11 @@ void VecNormalGammaInput::validate() const
         const arma::uword n_psi = static_cast<arma::uword>(spec.n_psi());
         validate_normal_block(psi_prior, initial.psi, n_psi, "psi");
 
-        if (spec.uses_varsel())
+        if (uses_psi_varsel())
         {
-            validate_varsel(psi_varsel_prior, initial.psi_lambda, n_psi, spec.varsel, "psi");
+            validate_varsel(psi_varsel_prior, initial.psi_lambda, n_psi, psi_selection(), "psi");
         }
-        if (spec.varsel == VarSelection::ssvs)
+        if (psi_selection() == VarSelection::ssvs)
         {
             validate_ssvs_normal_prior(psi_varsel_prior, psi_prior, "psi");
         }
@@ -2068,9 +2151,9 @@ void VecNormalStochvolInput::validate() const
         const arma::uword n_psi = static_cast<arma::uword>(spec.n_psi());
         validate_normal_block(psi_prior, initial.psi, n_psi, "psi");
 
-        if (spec.uses_varsel())
+        if (uses_psi_varsel())
         {
-            validate_varsel(psi_varsel_prior, initial.psi_lambda, n_psi, spec.varsel, "psi");
+            validate_varsel(psi_varsel_prior, initial.psi_lambda, n_psi, psi_selection(), "psi");
         }
     }
 
@@ -2140,7 +2223,7 @@ void VecTvpGammaInput::validate() const
 
     require_identified_structural(spec, use_psi(), "a covariance block");
 
-    validate_tvp_preconditions(spec.varsel, psi_varsel, tt);
+    validate_tvp_preconditions(spec.varsel, psi_selection(), tt);
 
     if (use_a())
     {
@@ -2164,7 +2247,7 @@ void VecTvpGammaInput::validate() const
 
         if (uses_psi_varsel())
         {
-            validate_varsel(psi_varsel_prior, initial.psi_lambda, n_psi, psi_varsel, "psi");
+            validate_varsel(psi_varsel_prior, initial.psi_lambda, n_psi, psi_selection(), "psi");
         }
     }
 
@@ -2192,7 +2275,7 @@ void VecTvpStochvolInput::validate() const
 
     require_identified_structural(spec, use_psi(), "a covariance block");
 
-    validate_tvp_preconditions(spec.varsel, psi_varsel, tt);
+    validate_tvp_preconditions(spec.varsel, psi_selection(), tt);
 
     if (use_a())
     {
@@ -2216,7 +2299,7 @@ void VecTvpStochvolInput::validate() const
 
         if (uses_psi_varsel())
         {
-            validate_varsel(psi_varsel_prior, initial.psi_lambda, n_psi, psi_varsel, "psi");
+            validate_varsel(psi_varsel_prior, initial.psi_lambda, n_psi, psi_selection(), "psi");
         }
     }
 

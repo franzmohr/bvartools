@@ -26,6 +26,49 @@
   `vec_to_var()` first) and an `expandingwindow`, whose windows each forecast
   from their own sample.
 
+* **Variable selection can be kept off the error covariances in every model
+  that has them.** `varsel$covar = FALSE` used to be refused for a model with a
+  covariance block and constant coefficients, because that sampler read one
+  selection scheme for the whole model and applied it to both blocks. BayesTS
+  now reads the block's own scheme everywhere, so the combination is allowed and
+  `covar` decides it in the constant coefficient models as it already did in the
+  time varying ones.
+
+  This is worth a thought rather than a default. A generalised impulse response
+  is built from the off-diagonals of the error covariance, so selecting them to
+  zero collapses it towards an orthogonalised response, which removes the very
+  thing that distinguishes the two; and the block is small, `k(k-1)/2` elements
+  against the sample, so there is no dimensionality case for selecting over it
+  the way there is for the coefficients. Nothing changes for a model that does
+  not ask: absence of a covariance scheme still means the model's own governs
+  both blocks, and draws are unchanged.
+
+* **A sound sign and zero restricted sample is no longer reported as
+  unreliable.** Two cases gave a Pareto shape above 0.7, and so a warning, for
+  importance weights with nothing wrong with them.
+  - **Several tries per draw.** With `max_tries` above one a weight is the
+    ratio of the volume elements times an estimate of the probability that a
+    rotation satisfies the signs. That estimate lies between `1 / max_tries`
+    and one and takes only the values 1, 1/2, 1/3 and so on, and the Pareto fit
+    read its ties as a heavy tail: a factor augmented VAR of dfmtools with
+    three signs on one shock gave a shape of 10.3 at `max_tries = 100`, where
+    the largest single weight held 0.15% of the total. The ratio is now
+    smoothed and diagnosed on its own and the estimate multiplied in
+    afterwards. Being bounded, the estimate cannot make the tail heavier, so
+    the shape still detects a heavy-tailed ratio where there are zero
+    restrictions. `arias_rubio_ramirez_waggoner_2018()` keeps the two apart
+    for every caller, `add_sign_zero_restrictions()` included.
+  - **Weights that are equal by construction.** With signs alone the volume
+    elements cancel and the weights are equal, up to the rounding of the
+    numerical derivative in the ninth digit. A Pareto fit to that noise
+    returned whatever shape it suggested, below 0.7 under one seed and above it
+    under another. Weights whose logarithms span less than 1e-6 are now left
+    equal, and `pareto_k` is `NA`, as it is when fewer than 25 draws satisfied
+    the signs.
+
+  The resampled draws change only where smoothing used to act on those ties or
+  that noise; at `max_tries = 1` with any zero restriction, and with
+  `smooth = FALSE`, they are unchanged.
 * **`add_priors()` now warns when SSVS is combined with `coef$coint_var = TRUE`,
   and the model runs.** SSVS centres both components of its prior at zero, so the
   sampler refuses a prior mean of one on the first own lags, and until now that

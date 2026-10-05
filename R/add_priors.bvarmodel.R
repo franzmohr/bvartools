@@ -133,7 +133,12 @@
 #'   \item{\code{inprior}}{a numeric between 0 and 1 specifying the prior probability
 #'   of a variable to be included in the model.}
 #'   \item{\code{covar}}{logical indicating if the variable selection algorithm
-#'   should also be applied to the error covariance matrix.}
+#'   should also be applied to the error covariance matrix. \strong{Worth a
+#'   thought rather than a default.} A generalised impulse response is built
+#'   from the off-diagonals of the error covariance, so selecting them to zero
+#'   collapses it towards an orthogonalised response; and the block carries
+#'   \eqn{k(k-1)/2} elements, so there is rarely the dimensionality case for
+#'   selecting over it that there is for the coefficients.}
 #'   \item{\code{exclude_det}}{logical indicating if deterministic terms should
 #'   be excluded from the variable selection algorithm.}
 #'   \item{\code{minnesota}}{a numeric vector of length 4 containing parameters
@@ -406,21 +411,11 @@ add_priors.bvarmodel <- function(object,
     stop("Error covariances and structural coefficients cannot be estimated at the same time.")
   }
 
-  # A constant coefficient sampler selects over one set of coefficients or over
-  # both: it reads a single selection scheme for the whole model, so a
-  # covariance block it is given goes into the selection with the rest. Only the
-  # time varying samplers take the covariance block's scheme separately, which
-  # is why the same call is allowed there. Left to run, this combination fails
-  # inside the sampler on a prior it was never given.
-  if ((use_ssvs | use_bvs) & covar & !varsel_covar &
-      !object[["model"]][["tvp"]] & k > 1) {
-    stop("Variable selection cannot be restricted to the coefficients when the ",
-         "model has an error covariance block and constant coefficients: this ",
-         "sampler applies one selection scheme to both. Set 'varsel$covar' to ",
-         "TRUE to select over the covariances as well, drop the covariances with ",
-         "an 'error' of \"gamma\" or \"sv\", or use a time varying model, where ",
-         "the two blocks can differ.")
-  }
+  # Selecting over the coefficients and not over the covariances used to be
+  # refused here, because a constant coefficient sampler read one scheme for the
+  # whole model and a covariance block went into the selection with the rest.
+  # Every sampler with such a block now reads the block's own scheme, so the
+  # combination is allowed and 'varsel' decides it in all of them.
 
   n_struct <- 0
   if (structural & k > 1) {

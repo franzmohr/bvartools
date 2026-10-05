@@ -99,6 +99,7 @@ arias_rubio_ramirez_waggoner_2018 <- function(draws, restrictions, variables, la
 
   q <- matrix(NA_real_, store, k * k)
   log_weight <- rep(-Inf, store)
+  log_p_hat <- rep(0, store)
   tries <- 0
   for (i in seq_len(store)) {
     identified <- .arw_draw_q(draws[[i]], setup, weight = TRUE, one_sided = one_sided,
@@ -107,6 +108,7 @@ arias_rubio_ramirez_waggoner_2018 <- function(draws, restrictions, variables, la
     if (length(identified[["q"]]) > 0) {
       q[i, ] <- as.numeric(identified[["q"]])
       log_weight[i] <- identified[["log_weight"]]
+      log_p_hat[i] <- identified[["log_p_hat"]]
     }
   }
 
@@ -136,9 +138,26 @@ arias_rubio_ramirez_waggoner_2018 <- function(draws, restrictions, variables, la
     log_weight[is.na(log_weight)] <- -Inf
   }
 
-  smoothed <- .arw_weights(log_weight, smooth = smooth)
+  # With more than one try a weight is the ratio of the volume elements times
+  # the estimate of the probability that a rotation satisfies the signs. Only
+  # the ratio can have a heavy tail: the estimate lies between 1 / max_tries and
+  # one, so the product has the tail of the ratio. The estimate also takes only
+  # a handful of values -- 1, 1/2, 1/3 and so on -- and a generalised Pareto
+  # fit to a tail of such ties returns a shape far above any threshold however
+  # well behaved the sample is. So the ratio is smoothed and diagnosed on its
+  # own and the estimate is multiplied back afterwards. At max_tries = 1 the
+  # estimate is one throughout and this is the smoothing of the weights
+  # themselves, as before.
+  finite <- is.finite(log_weight)
+  log_volume <- log_weight
+  log_volume[finite] <- log_weight[finite] - log_p_hat[finite]
+  smoothed <- .arw_weights(log_volume, smooth = smooth)
   weights <- smoothed[["weights"]]
   pareto_k <- smoothed[["pareto_k"]]
+  if (any(log_p_hat[finite] != 0)) {
+    weights[finite] <- weights[finite] * exp(log_p_hat[finite])
+    weights <- weights / sum(weights)
+  }
   effective <- max(1L, as.integer(floor(1 / sum(weights^2))))
   largest <- max(weights)
 

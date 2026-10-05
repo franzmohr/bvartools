@@ -7,9 +7,20 @@ project is here -- the core deliberately links neither HDF5 nor HighFive,
 prints nothing and reads no files, which is what makes it embeddable in an R
 package at all.
 
-The copy is **BayesTS `696dc7d`**, which upstream `main` holds unchanged
-since merging `structural-qvar` (`82ac49c`), after the `v0.3.0` release
-(tagged on `18a86c2`). Past the release it carries the fix to
+The copy is **BayesTS `a55585c`**, which upstream `main` holds unchanged
+since merging `psi-selection` (`3521287`), after the `v0.3.0` release
+(tagged on `18a86c2`). Past the release it carries the covariance block's own
+selection scheme (`3521287`): all eight models with such a block now read
+`psi_varsel`, where the four with constant coefficients used to apply the
+model's scheme to both blocks, so a caller may select over the coefficients and
+estimate the covariances freely. It is a `std::optional` in the input structs,
+unset meaning the caller said nothing and `spec.varsel` governing both, so draws
+are unchanged for anything that does not set it; it reaches R through `varsel`
+of the `psi` prior list in `src/VarNormalGamma.cpp`, `src/VarNormalStochvol.cpp`,
+`src/VecNormalGamma.cpp` and `src/VecNormalStochvol.cpp`. The same commit
+corrects `bayests check`, which told the four constant-coefficient models that
+no selection over the covariance block would be made while they were making
+some. Past the release it also carries the fix to
 `core/models/var_tvp_discount.cpp` (`2dc9250`), which is what makes
 `add_predictive_loglik()` score more than the first horizon of a discounted VAR;
 the flat-prior warning for `bvs` (`fa6dd89`, `f2abd4e`), which adds

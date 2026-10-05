@@ -150,7 +150,17 @@ NULL
 #' from an effective sample size: the estimator has a finite variance only for
 #' \eqn{k} below one half, and above about 0.7 neither it nor its effective
 #' sample size means much. It is reported by \code{\link{summary}} and kept in
-#' element \code{pareto_k} of \code{sign_zero_restrictions}.
+#' element \code{pareto_k} of \code{sign_zero_restrictions}. It is \code{NA}
+#' where there is no tail to fit: when fewer than 25 draws satisfied the
+#' signs, and when the weights are equal by construction, as they are where
+#' every restriction is a sign.
+#'
+#' With \code{max_tries} above one, the smoothing and \eqn{k} apply to the
+#' ratio of the volume elements alone, and the estimate of \eqn{p} is
+#' multiplied in afterwards. The estimate lies between \code{1 / max_tries} and
+#' one, so it cannot make the tail heavier, and it takes only the values
+#' \eqn{1, 1/2, 1/3, \ldots}: a Pareto fit to a tail of such ties returns a
+#' shape far above 0.7 for a sample that has nothing wrong with it.
 #'
 #' \strong{The function warns when the importance sample is not fit to
 #' summarise}: when \eqn{k} is 0.7 or above, when the effective sample size is
@@ -520,6 +530,18 @@ add_sign_zero_restrictions.bvarmodel <- function(object, restrictions, draws = N
   # the smoother declines to guess. The raw weights are then what there is.
   if (!smooth || sum(finite) < 25) {
     return(list("weights" = normalise(log_weight), "pareto_k" = NA_real_))
+  }
+
+  # Weights that are equal by construction -- signs alone, where the volume
+  # elements cancel -- come back from the numerical derivative equal only to
+  # about nine digits. A generalised Pareto fit to that rounding noise returns
+  # whatever shape the noise suggests, under one seed well below 0.7 and under
+  # another above it, so it would warn about a sample with nothing wrong with
+  # it. There is no tail to fit, and the weights are left equal.
+  if (diff(range(log_weight[finite])) < 1e-6) {
+    weights <- rep(0, length(log_weight))
+    weights[finite] <- 1 / sum(finite)
+    return(list("weights" = weights, "pareto_k" = NA_real_))
   }
 
   smoothed <- .psis_smooth(log_weight)

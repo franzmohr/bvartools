@@ -67,7 +67,7 @@ VarTvpStochvolDraws VarTvpStochvolSampler::draw_coefficients(const VarTvpStochvo
 
     const bool use_bvs = input.spec.varsel == VarSelection::bvs;
     const bool use_varsel = use_bvs;
-    const bool use_varsel_psi = use_psi && input.psi_varsel == VarSelection::bvs;
+    const bool use_varsel_psi = use_psi && input.psi_selection() == VarSelection::bvs;
 
     // Which random walks are drawn non-centred: each block for itself, by
     // whether its prior names omega_v. See core/models/noncentred_support.h.

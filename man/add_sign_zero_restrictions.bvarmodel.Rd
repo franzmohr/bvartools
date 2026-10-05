@@ -195,7 +195,17 @@ when the sample cannot be trusted rather than leaving that to be guessed
 from an effective sample size: the estimator has a finite variance only for
 \eqn{k} below one half, and above about 0.7 neither it nor its effective
 sample size means much. It is reported by \code{\link{summary}} and kept in
-element \code{pareto_k} of \code{sign_zero_restrictions}.
+element \code{pareto_k} of \code{sign_zero_restrictions}. It is \code{NA}
+where there is no tail to fit: when fewer than 25 draws satisfied the
+signs, and when the weights are equal by construction, as they are where
+every restriction is a sign.
+
+With \code{max_tries} above one, the smoothing and \eqn{k} apply to the
+ratio of the volume elements alone, and the estimate of \eqn{p} is
+multiplied in afterwards. The estimate lies between \code{1 / max_tries} and
+one, so it cannot make the tail heavier, and it takes only the values
+\eqn{1, 1/2, 1/3, \ldots}: a Pareto fit to a tail of such ties returns a
+shape far above 0.7 for a sample that has nothing wrong with it.
 
 \strong{The function warns when the importance sample is not fit to
 summarise}: when \eqn{k} is 0.7 or above, when the effective sample size is

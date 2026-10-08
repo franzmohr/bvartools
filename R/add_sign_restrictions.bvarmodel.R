@@ -65,8 +65,10 @@
 #' posterior draws, from where \code{\link[bayests]{irf}}, \code{\link[bayests]{fevd}} and
 #' \code{\link{spillover}} use them under \code{type = "sign"}.
 #'
-#' The result depends on the state of the random number generator, so
-#' \code{\link{set.seed}} is needed to reproduce it.
+#' The rotations are drawn with a seed derived from the model's own, see
+#' \code{\link[bayests]{add_seed}}, so that a model with a seed gives the same
+#' rotations however R's generator stands. A model without one draws from R's
+#' generator as it stands, and \code{\link{set.seed}} is needed to reproduce it.
 #'
 #' @return The object of class 'bvarmodel' with the accepted rotations in
 #' element \code{q} of its \code{posterior}, one row per posterior draw, and the
@@ -146,13 +148,16 @@ add_sign_restrictions.bvarmodel <- function(object, restrictions, max_tries = 10
 
   positions <- as.matrix(restrictions[, c("impulse", "response", "sign", "horizon")])
 
-  q <- matrix(NA_real_, store, k * k)
-  for (i in seq_len(store)) {
-    rotation <- .draw_sign_restricted_q(A[[i]], positions, max_tries)
-    if (length(rotation) > 0) {
-      q[i, ] <- as.numeric(rotation)
+  q <- .with_stage_seed(object, "structural", {
+    q <- matrix(NA_real_, store, k * k)
+    for (i in seq_len(store)) {
+      rotation <- .draw_sign_restricted_q(A[[i]], positions, max_tries)
+      if (length(rotation) > 0) {
+        q[i, ] <- as.numeric(rotation)
+      }
     }
-  }
+    q
+  })
 
   accepted <- sum(!is.na(q[, 1]))
   if (accepted == 0) {

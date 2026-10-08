@@ -452,7 +452,7 @@ check_discount_specification <- function(k, error = "wishart", varsel = "none",
   }
 
   object <- .with_discount_class(object,
-                                 .with_model_seed(object[["model"]][["seed"]],
+                                 .with_stage_seed(object, "forecast",
                                                   switch(object[["model"]][["algorithm"]],
                                                          VarTvpDiscount = .VarTvpDiscountForecasts(object),
                                                          VecTvpDiscount = .VecTvpDiscountForecasts(object))))
@@ -475,7 +475,7 @@ check_discount_specification <- function(k, error = "wishart", varsel = "none",
 .discount_score <- function(object) {
 
   .with_discount_class(object,
-                       .with_model_seed(object[["model"]][["seed"]],
+                       .with_stage_seed(object, "predictive",
                                         switch(object[["model"]][["algorithm"]],
                                                VarTvpDiscount = .VarTvpDiscountScore(object),
                                                VecTvpDiscount = .VecTvpDiscountScore(object))))

@@ -30,7 +30,15 @@ set the seed with which the posterior is simulated, in element \code{seed} of
 \code{seed} of group \code{/model}, where the BayesTS executable reads it,
 and the internal samplers of \code{\link[bayests]{add_posterior_coefficients}} draw
 with it too, so a model with a given seed gives the same draws however R's
-generator stands. BayesTS and this package use different generators, so the
+generator stands. So do the simulations that follow the coefficients:
+\code{\link[bayests]{add_posterior_forecasts}}, scenarios included,
+\code{\link[bayests]{add_predictive_loglik}}, \code{\link{add_sign_restrictions}}
+and \code{\link{add_sign_zero_restrictions}}. Each of these three stages -- the
+forecast, the predictive score and the rotations -- draws from a seed of its own
+derived from the model's, as the BayesTS command line seeds its stages from
+\code{/model/seed}, so that a forecast repeated gives the same draws and does
+not reuse the random numbers the chain started from. A model without a seed
+draws from R's generator as it stands throughout. BayesTS and this package use different generators, so the
 same seed gives different draws in the two. A list of models is numbered by
 the method of \pkg{bayests}.
 }

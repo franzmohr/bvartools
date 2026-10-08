@@ -96,7 +96,7 @@ add_predictive_loglik.bvecmodel <- function(object, test_sample = NULL, ...) {
   .check_simulated_coint_states(object)
 
   algorithm <- object[["model"]][["algorithm"]]
-  object <- switch(algorithm,
+  object <- .with_stage_seed(object, "predictive", switch(algorithm,
                    VecKlgs2010 = .VecKlgs2010Score(object),
                    VecNormalGamma = .VecNormalGammaScore(object),
                    VecNormalStochvol = .VecNormalStochvolScore(object),
@@ -104,7 +104,7 @@ add_predictive_loglik.bvecmodel <- function(object, test_sample = NULL, ...) {
                    VecTvpGamma = .VecTvpGammaScore(object),
                    VecTvpStochvol = .VecTvpStochvolScore(object),
                    VecTvpWishart = .VecTvpWishartScore(object),
-                   stop("Algorithm '", algorithm, "' cannot be scored."))
+                   stop("Algorithm '", algorithm, "' cannot be scored.")))
 
   mcpar_temp <- coda::mcpar(object[["posterior"]][["u_sigma_inv"]][["coeffs"]])
   object[["posterior"]][["forecast"]][["loglik"]] <-

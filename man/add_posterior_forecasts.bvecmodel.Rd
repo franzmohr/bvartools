@@ -63,6 +63,10 @@ Simulating the volatility forward needs \code{posterior$u_sigma_inv$sigma}, the 
 of the log-volatility innovations, which \code{\link[bayests]{add_posterior_coefficients}}
 stores. A model with stochastic volatility estimated with an earlier version of the
 package lacks it and stops with an error unless \code{forecast_states = "hold"}.
+
+A model with a seed, see \code{\link[bayests]{add_seed}}, draws its forecast from a
+seed derived from its own, so two forecasts of it give the same draws however R's
+generator stands. A model without one draws from R's generator as it stands.
 }
 \seealso{
 Other posterior simulation:

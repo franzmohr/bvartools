@@ -91,8 +91,10 @@ The accepted rotations are added to the object as element \code{q} of its
 posterior draws, from where \code{\link[bayests]{irf}}, \code{\link[bayests]{fevd}} and
 \code{\link{spillover}} use them under \code{type = "sign"}.
 
-The result depends on the state of the random number generator, so
-\code{\link{set.seed}} is needed to reproduce it.
+The rotations are drawn with a seed derived from the model's own, see
+\code{\link[bayests]{add_seed}}, so that a model with a seed gives the same
+rotations however R's generator stands. A model without one draws from R's
+generator as it stands, and \code{\link{set.seed}} is needed to reproduce it.
 }
 \examples{
 

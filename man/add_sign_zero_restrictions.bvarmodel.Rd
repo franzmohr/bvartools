@@ -155,8 +155,10 @@ restrictions have been taken out. A shock carrying many zero restrictions
 therefore has to be named early. The function refuses an ordering that leaves
 a column with nothing to draw and says which shock it was.
 
-The result depends on the state of the random number generator, so
-\code{\link{set.seed}} is needed to reproduce it. It depends on it in two
+The draws are taken with a seed derived from the model's own, see
+\code{\link[bayests]{add_seed}}, so a model with a seed gives the same result
+however R's generator stands; a model without one needs \code{\link{set.seed}}
+to reproduce it. The result depends on the seed in two
 places rather than one: the rotations are drawn at random, and so are the
 matrices that complete each shock's constraints to a square system. Appendix
 A.3 of the paper says any draw of the latter defines a valid algorithm, and

@@ -88,6 +88,10 @@ add_forecast_input.bvecmodel <- function(object, n_ahead = 10, deterministic = N
 #' stores. A model with stochastic volatility estimated with an earlier version of the
 #' package lacks it and stops with an error unless \code{forecast_states = "hold"}.
 #'
+#' A model with a seed, see \code{\link[bayests]{add_seed}}, draws its forecast from a
+#' seed derived from its own, so two forecasts of it give the same draws however R's
+#' generator stands. A model without one draws from R's generator as it stands.
+#'
 #' @return The object in \code{object} with \code{posterior$forecast$forecasts} added, a
 #' \code{\link[coda]{mcmc}} object with one row per draw and \eqn{Kh} columns of forecasts
 #' of the levels, stacked by period. \code{predict} summarises them. A
@@ -122,7 +126,7 @@ add_posterior_forecasts.bvecmodel <- function(object, forecast_states = NULL, ..
 
   class_of_object <- class(object)
 
-  object <- switch(algorithm,
+  object <- .with_stage_seed(object, "forecast", switch(algorithm,
                    VecKlgs2010 = .VecKlgs2010Forecasts(object),
                    VecNormalGamma = .VecNormalGammaForecasts(object),
                    VecNormalStochvol = .VecNormalStochvolForecasts(object),
@@ -130,7 +134,7 @@ add_posterior_forecasts.bvecmodel <- function(object, forecast_states = NULL, ..
                    VecTvpGamma = .VecTvpGammaForecasts(object),
                    VecTvpStochvol = .VecTvpStochvolForecasts(object),
                    VecTvpWishart = .VecTvpWishartForecasts(object),
-                   stop("Algorithm '", algorithm, "' not supported."))
+                   stop("Algorithm '", algorithm, "' not supported.")))
 
   mcpar_temp <- coda::mcpar(object[["posterior"]][["u_sigma_inv"]][["coeffs"]])
   object[["posterior"]][["forecast"]][["forecasts"]] <- coda::mcmc(object[["posterior"]][["forecast"]][["forecasts"]],

@@ -14,7 +14,7 @@
 \arguments{
 \item{object}{an object of class 'bvarmodel', usually, a result of a
 call to \code{\link{create_bvarmodel}} in combination with
-\code{\link{add_priors}} and \code{\link{add_initial_values}}.}
+\code{\link[bayests]{add_priors}} and \code{\link[bayests]{add_initial_values}}.}
 
 \item{posterior_function}{the function to be applied to the model in argument \code{object}.
 If \code{NULL} (default), internal functions are used.}
@@ -24,7 +24,7 @@ If \code{NULL} (default), internal functions are used.}
 same simulation with a seed of its own -- the first with the seed of the model, so that one
 chain draws what it always has -- and the chains are pooled, one after the other, in the
 draws of \code{posterior}, so that every later step uses all of them. Their number, when
-above one, is stored in \code{object$model$chains}, and \code{\link{chain_diagnostics}} compares them. A
+above one, is stored in \code{object$model$chains}, and \code{\link[bayests]{chain_diagnostics}} compares them. A
 \code{posterior_function} is called once per chain. Not available for discounted models,
 whose posterior is not a chain.}
 
@@ -68,13 +68,13 @@ Unless \code{posterior_function} is specified, the function forwards
 the model input to the package's own posterior functions.
 
 The internal samplers draw with the seed in \code{object$model$seed}, which
-\code{\link{add_initial_values}} sets and \code{\link{add_seed}} replaces.
+\code{\link[bayests]{add_initial_values}} sets and \code{\link[bayests]{add_seed}} replaces.
 R's random number generator is set to that seed, with R's default kinds, for
 the simulation and put back as it was afterwards. A call of \code{set.seed()}
 between \code{add_initial_values()} and this function therefore does not
 change the draws. A model without a seed draws from R's generator as it
 stands. A \code{posterior_function} is called as it is and decides itself
-what to do with the seed; see \code{\link{bayests_posterior}}.
+what to do with the seed; see \code{\link[bayests]{bayests_posterior}}.
 
 A sampler that cannot run raises its error rather than returning something.
 The message names what about the input it could not work with. Applied to a
@@ -117,12 +117,9 @@ Other posterior simulation:
 \code{\link[=add_posterior_forecasts.bvecmodel]{add_posterior_forecasts.bvecmodel()}},
 \code{\link[=add_posterior_loglik.bvarmodel]{add_posterior_loglik.bvarmodel()}},
 \code{\link[=add_posterior_loglik.bvecmodel]{add_posterior_loglik.bvecmodel()}},
-\code{\link[=add_seed]{add_seed()}},
-\code{\link[=bayests_files]{bayests_files()}},
-\code{\link[=bayests_posterior]{bayests_posterior()}},
+\code{\link[=add_seed.bvarmodel]{add_seed.bvarmodel()}},
 \code{\link[=bvar]{bvar()}},
 \code{\link[=bvec]{bvec()}},
-\code{\link[=chain_diagnostics]{chain_diagnostics()}},
 \code{\link[=predict.bvecmodel]{predict.bvecmodel()}}
 }
 \concept{posterior simulation}

@@ -179,18 +179,18 @@ discounts, so a grid over any of them can be compared without a chain being
 run for any of it.
 
 The one assumption that separates it from the sampling VEC models is that the
-cointegration space is given rather than estimated. \code{\link{add_initial_values}}
+cointegration space is given rather than estimated. \code{\link[bayests]{add_initial_values}}
 puts Johansen's maximum likelihood estimate at \code{/initial/beta} and the
 model conditions on it, so what drifts is the adjustment to the long-run
 relations and not the relations themselves. That is a different question from
 the one \code{"KLGS2010"} answers, not a cheaper way of answering the same
 one.
 
-\code{\link{add_posterior_coefficients}} estimates it like any other
+\code{\link[bayests]{add_posterior_coefficients}} estimates it like any other
 algorithm, the filter being part of the vendored BayesTS core. It consumes no
 random numbers, so two runs agree to the bit and a model estimated here and
 the same model estimated by the \code{bayests} command line over a file
-written with \code{\link{write_to_hdf5}} give the same numbers rather than
+written with \code{\link[bayests]{write_to_hdf5}} give the same numbers rather than
 merely the same distribution. What comes back is a posterior rather than a
 chain: one row per period under \code{posterior$a$mean},
 \code{posterior$a$cov}, \code{posterior$u_sigma$scale} and
@@ -241,7 +241,6 @@ Other model set-up:
 \code{\link[=add_priors.bvarmodel]{add_priors.bvarmodel()}},
 \code{\link[=add_priors.bvecmodel]{add_priors.bvecmodel()}},
 \code{\link[=aggregation_weights]{aggregation_weights()}},
-\code{\link[=combine_models]{combine_models()}},
 \code{\link[=create_bvarmodel]{create_bvarmodel()}},
 \code{\link[=transform_variables]{transform_variables()}},
 \code{\link[=use_expanding_window.bvarmodel]{use_expanding_window.bvarmodel()}},

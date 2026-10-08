@@ -24,7 +24,7 @@ remaining coefficients and the error term with the elements described in
 }
 \description{
 Adds initial values to a VEC model, which was produced by
-function \code{\link{create_bvecmodel}} in combination with \code{\link{add_priors}}.
+function \code{\link{create_bvecmodel}} in combination with \code{\link[bayests]{add_priors}}.
 }
 \details{
 For argument \code{method} the following specifications are possible:
@@ -57,7 +57,7 @@ whether it is held there or drawn from the prior on it that
 The function also stores the seed of the posterior simulation as element
 \code{seed} of \code{object$model}, unless the model has one already. It is
 drawn from R's random number generator, so \code{set.seed()} before this call
-makes it reproducible. \code{\link{add_seed}} replaces it.
+makes it reproducible. \code{\link[bayests]{add_seed}} replaces it.
 }
 
 \examples{
@@ -91,7 +91,6 @@ Other model set-up:
 \code{\link[=add_priors.bvarmodel]{add_priors.bvarmodel()}},
 \code{\link[=add_priors.bvecmodel]{add_priors.bvecmodel()}},
 \code{\link[=aggregation_weights]{aggregation_weights()}},
-\code{\link[=combine_models]{combine_models()}},
 \code{\link[=create_bvarmodel]{create_bvarmodel()}},
 \code{\link[=create_bvecmodel]{create_bvecmodel()}},
 \code{\link[=transform_variables]{transform_variables()}},

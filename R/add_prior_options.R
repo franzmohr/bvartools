@@ -1,13 +1,13 @@
 #' Adaptive Priors, Stationarity and the Steady State
 #'
 #' Adds the options of the prior that act on top of the one
-#' \code{\link{add_priors}} sets: hyperparameters estimated from the data, a
+#' \code{\link[bayests]{add_priors}} sets: hyperparameters estimated from the data, a
 #' restriction of the coefficients to a stationary model, a prior on the
 #' unconditional mean in place of one on the intercept, and the prior of the
 #' error of soft constraints.
 #'
 #' @param object an object of class 'bvarmodel' or 'modellist', usually the
-#' result of \code{\link{add_priors}}.
+#' result of \code{\link[bayests]{add_priors}}.
 #' @param shrinkage a character, \code{"none"} (default), \code{"minnesota"},
 #' \code{"horseshoe"} or \code{"normal_gamma"}, or a list with element
 #' \code{type} naming one of them and elements \code{group}, \code{shape},
@@ -25,7 +25,7 @@
 #' where the model has soft constraints.
 #'
 #' @details Argument \code{shrinkage} lets the data decide how tightly the prior
-#' of \code{\link{add_priors}} shrinks the coefficients of the lagged endogenous
+#' of \code{\link[bayests]{add_priors}} shrinks the coefficients of the lagged endogenous
 #' variables. Their prior variances are multiplied by scales that are drawn with
 #' the coefficients:
 #' \itemize{

@@ -283,6 +283,17 @@ models are scored by `predictive_score.h` alone -- with realised history their
 regressors do not depend on the draw, so the score is the model's own pointwise
 log likelihood over the scored periods, and no filter is needed.
 
+**The unobserved components models.** Upstream has four --
+`UcNormalGamma`, `UcNormalWishart`, `UcNormalStochvol` and `UcNormalSkew` --
+and they belong to ucmtools. Each is a header in `bayests/` and a source in
+`core/models/`, and the three support headers `uc_support.h`,
+`uc_constant_support.h` and `uc_skew_support.h` go with them, since no other
+sampler includes them. Nothing here includes any of the eleven, so they would
+compile into the shared object unreachable and be listed in
+`inst/COPYRIGHTS` for nothing. As with the DFMs, their `Uc*Input`, `Uc*Initial`
+and `Uc*Draws` types and validators stay, in the shared files copied whole. A new
+UC model upstream has to be added to `skip` by hand.
+
 `core/algorithms/chan_jeliazkov_2009.cpp` is copied and now carries a second
 entry point, `chan_jeliazkov_2009_conditional`, which holds the trailing elements
 of every state column at observed values instead of drawing them. Nothing here

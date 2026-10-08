@@ -13,7 +13,7 @@
 #' 'externalforecast'.
 #' @param n_ahead the maximum forecast horizon that is considered. If \code{NULL}
 #' (default), the forecast horizon of the models in \code{object} is used, which
-#' requires that \code{\link{add_forecast_input}} was already applied to them. For
+#' requires that \code{\link[bayests]{add_forecast_input}} was already applied to them. For
 #' models whose forecasts were aggregated with \code{\link{aggregate_forecasts}}
 #' it is a number of years.
 #' @param period name of the column of \code{forecasts}, which contains the period,
@@ -64,7 +64,7 @@
 #' it of horizon 2, whichever quarter it was published in. The realised values,
 #' against which the forecasts are scored, are the annual figures of the data of
 #' the models, which the aggregated forecasts of the models are scored against,
-#' too, so that \code{\link{add_forecast_errors}} does not need argument
+#' too, so that \code{\link[bayests]{add_forecast_errors}} does not need argument
 #' \code{test_sample}.
 #'
 #' In contrast to a model, an external forecast does not have a training sample.
@@ -85,12 +85,12 @@
 #' (\code{"last"}) or the earliest (\code{"first"}) of those publications is used.
 #'
 #' The resulting object mimics the structure of a model, which was estimated with the
-#' expanding window approach of \code{\link{use_expanding_window}}, where each
+#' expanding window approach of \code{\link[bayests]{use_expanding_window}}, where each
 #' publication corresponds to one estimation window. It can be added to a list of
-#' models with \code{\link{combine_models}} and the functions, which are applied to
+#' models with \code{\link[bayests]{combine_models}} and the functions, which are applied to
 #' obtain posterior draws, are without effect for it. Since external forecasts are
 #' point forecasts, their forecast errors consist of a single draw. Accordingly, the
-#' credible bands of the out-of-sample statistics in \code{\link{selection_criteria}}
+#' credible bands of the out-of-sample statistics in \code{\link[bayests]{selection_criteria}}
 #' are degenerate and in-sample criteria are not available.
 #'
 #' @return A list of class 'externalforecast' or, if argument \code{by} is specified,

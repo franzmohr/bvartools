@@ -1,6 +1,6 @@
 # Working on a folder of models one at a time.
 #
-# What the methods for a 'bvarfolder' have to deliver is what the same steps on
+# What the methods for a 'modelfolder' have to deliver is what the same steps on
 # a list of models in the session deliver: the same priors, the same starting
 # values, the same seeds and so the same draws, with nothing but one model per
 # worker in memory while they run.
@@ -31,7 +31,7 @@ written_folder <- function(object, name) {
   unlink(folder, recursive = TRUE)
   dir.create(folder, recursive = TRUE)
   write_to_hdf5(object, folder = folder)
-  open_models(folder)
+  read_model_folder(folder)
 }
 
 test_that("a folder is opened with a row per model and no draws", {
@@ -39,7 +39,7 @@ test_that("a folder is opened with a row per model and no draws", {
   object <- folder_models("var")
   stored <- written_folder(object, "open")
 
-  expect_s3_class(stored, "bvarfolder")
+  expect_s3_class(stored, "modelfolder")
   manifest <- stored[["manifest"]]
   expect_equal(nrow(manifest), length(object))
   expect_setequal(manifest[["p"]], vapply(object, function(m) m[["model"]][["p"]], numeric(1)))
@@ -54,7 +54,7 @@ test_that("a folder is opened with a row per model and no draws", {
   expect_equal(length(model_files(stored, models = manifest[["model"]][1])), 1)
   expect_error(model_files(stored, models = "nothing"), "does not hold the model")
 
-  expect_error(open_models(file.path(tempdir(), "no-such-folder")), "does not exist")
+  expect_error(read_model_folder(file.path(tempdir(), "no-such-folder")), "does not exist")
 })
 
 test_that("a folder is estimated to the posterior of the models in the session", {
@@ -72,7 +72,7 @@ test_that("a folder is estimated to the posterior of the models in the session",
     on_disk <- add_seed(on_disk, 1234)
     on_disk <- add_posterior_coefficients(on_disk)
     on_disk <- add_posterior_loglik(on_disk)
-    expect_s3_class(on_disk, "bvarfolder")
+    expect_s3_class(on_disk, "modelfolder")
 
     back <- read_models_from_folder(on_disk[["folder"]])
     expect_equal(length(back), length(in_session))
@@ -139,8 +139,8 @@ test_that("a step over one model at a time is the step over all of them", {
     expect_equal(unclass(second[[i]][["posterior"]][["a"]][["coeffs"]]),
                  unclass(first[[i]][["posterior"]][["a"]][["coeffs"]]), info = i)
   }
-  expect_equal(open_models(piecewise[["folder"]])[["manifest"]],
-               open_models(whole[["folder"]])[["manifest"]])
+  expect_equal(read_model_folder(piecewise[["folder"]])[["manifest"]],
+               read_model_folder(whole[["folder"]])[["manifest"]])
 })
 
 test_that("a step leaves the models it was not asked for alone", {

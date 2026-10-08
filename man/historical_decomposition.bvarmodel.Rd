@@ -22,8 +22,8 @@ coefficients and the error covariance.}
 
 \item{type}{the identification: \code{"oir"} (default) for orthogonalised
 shocks from the Choleski factor of each draw's covariance, \code{"sign"} for
-the rotations \code{\link{add_sign_restrictions}} or
-\code{\link{add_sign_zero_restrictions}} stored in the model, and
+the rotations \code{\link[bayests]{add_sign_restrictions}} or
+\code{\link[bayests]{add_sign_zero_restrictions}} stored in the model, and
 \code{"custom"} for impact matrices given in \code{impact}.}
 
 \item{impact}{for \code{type = "custom"}, the impact matrix: one matrix, a

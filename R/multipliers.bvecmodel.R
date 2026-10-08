@@ -24,7 +24,7 @@ NULL
 #' variables, whatever the error correction form has on its left-hand side.
 #'
 #' @return A time-series object of class 'bvarirf', which is what
-#' \code{\link{irf}} returns, so that the same \code{plot} method applies.
+#' \code{\link[bayests]{irf}} returns, so that the same \code{plot} method applies.
 #'
 #' @examples
 #'

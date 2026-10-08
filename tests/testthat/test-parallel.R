@@ -24,7 +24,7 @@ parallel_fixture <- function() {
 }
 
 draws_of <- function(object, element) {
-  lapply(bvartools:::.model_paths(object),
+  lapply(bayests:::.model_paths(object),
          function(path) object[[path]][["posterior"]][[element]])
 }
 
@@ -39,13 +39,13 @@ test_that("models are found through nested lists and external forecasts are kept
   models <- parallel_fixture()
   expect_s3_class(models, "modellist")
   expect_s3_class(models[[1]], "expandingwindow")
-  expect_identical(bvartools:::.model_paths(models),
+  expect_identical(bayests:::.model_paths(models),
                    list(c(1L, 1L), c(1L, 2L), c(1L, 3L), c(2L, 1L), c(2L, 2L), c(2L, 3L)))
 
   external <- structure(list(list(), list()),
                         class = c("externalforecast", "expandingwindow", "list"))
   nested <- structure(list(models[[1]], external), class = c("modellist", "list"))
-  expect_identical(bvartools:::.model_paths(nested),
+  expect_identical(bayests:::.model_paths(nested),
                    list(c(1L, 1L), c(1L, 2L), c(1L, 3L), 2L))
 })
 
@@ -54,7 +54,7 @@ test_that("models are found through nested lists and external forecasts are kept
 # results differently on one thread than on several, and a chain carries that
 # forward, so this session, which may run on several, is no reference.
 on_one_thread <- function(fun, object, ...) {
-  cl <- bvartools:::.start_model_cluster(1)
+  cl <- bayests:::.start_model_cluster(1)
   on.exit(parallel::stopCluster(cl), add = TRUE)
   parallel::clusterCall(cl, fun, object, ...)[[1]]
 }
@@ -131,7 +131,7 @@ test_that("workers run with one BLAS thread and the session keeps its own", {
   result <- add_posterior_coefficients(parallel_fixture(),
                                        posterior_function = report_threads, cores = 2)
 
-  for (path in bvartools:::.model_paths(result)) {
+  for (path in bayests:::.model_paths(result)) {
     expect_identical(unname(result[[path]][["threads"]]), rep("1", 4))
   }
   expect_identical(Sys.getenv("OPENBLAS_NUM_THREADS"), "4")
@@ -149,7 +149,7 @@ test_that("workers load bvartools from the library of this session", {
   result <- add_posterior_coefficients(parallel_fixture(),
                                        posterior_function = report_library, cores = 2)
 
-  for (path in bvartools:::.model_paths(result)) {
+  for (path in bayests:::.model_paths(result)) {
     expect_identical(normalizePath(result[[path]][["library"]]),
                      normalizePath(getNamespaceInfo("bvartools", "path")))
   }
@@ -157,8 +157,8 @@ test_that("workers load bvartools from the library of this session", {
 
 test_that("the packages whose methods the models need are found", {
   models <- parallel_fixture()
-  var_models <- lapply(bvartools:::.model_paths(models), function(path) models[[path]])
-  expect_identical(bvartools:::.method_namespaces("add_posterior_coefficients", var_models),
+  var_models <- lapply(bayests:::.model_paths(models), function(path) models[[path]])
+  expect_identical(bayests:::.method_namespaces("add_posterior_coefficients", var_models),
                    "bvartools")
 
   # A method another package registers for a class of its own, as dfmtools does
@@ -166,14 +166,14 @@ test_that("the packages whose methods the models need are found", {
   method <- function(object, ...) object
   environment(method) <- asNamespace("splines")
   registerS3method("add_posterior_coefficients", "bvartools_parallel_test_model",
-                   method, envir = asNamespace("bvartools"))
+                   method, envir = asNamespace("bayests"))
   other <- structure(list(), class = c("bvartools_parallel_test_model", "list"))
 
-  expect_identical(bvartools:::.method_namespaces("add_posterior_coefficients",
+  expect_identical(bayests:::.method_namespaces("add_posterior_coefficients",
                                                   c(var_models, list(other))),
                    c("bvartools", "splines"))
   # A generic with no method for the class needs nothing loaded.
-  expect_identical(bvartools:::.method_namespaces("add_posterior_loglik", list(other)),
+  expect_identical(bayests:::.method_namespaces("add_posterior_loglik", list(other)),
                    character())
 })
 
@@ -186,7 +186,7 @@ test_that("workers load the packages they are given", {
   # is what the test sees. Which ones a worker starts with is a matter of the
   # installation -- the machines of the continuous integration start with
   # splines -- so it is asked rather than assumed.
-  plain <- bvartools:::.start_model_cluster(1)
+  plain <- bayests:::.start_model_cluster(1)
   on.exit(parallel::stopCluster(plain), add = TRUE)
   candidates <- c("splines", "compiler", "grid", "tools")
   unloaded <- candidates[!vapply(candidates, function(package) {
@@ -195,7 +195,7 @@ test_that("workers load the packages they are given", {
   skip_if(length(unloaded) == 0, "a worker starts with every candidate package loaded")
   package <- unloaded[1]
 
-  cl <- bvartools:::.start_model_cluster(1, packages = package)
+  cl <- bayests:::.start_model_cluster(1, packages = package)
   on.exit(parallel::stopCluster(cl), add = TRUE)
   expect_true(parallel::clusterCall(cl, loaded, package)[[1]])
 })

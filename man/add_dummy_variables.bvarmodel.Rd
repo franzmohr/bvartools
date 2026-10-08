@@ -62,13 +62,13 @@ The dummies are deterministic terms like the constant. They are appended to
 the end of the deterministic terms of the regressors, named after their type
 and period -- \code{impulse.2020Q2}, \code{step.2008M09} -- or after the
 columns of \code{data}, and their coefficients take the prior of the
-deterministic terms, \code{v_i_det} in \code{\link{add_priors}}.
+deterministic terms, \code{v_i_det} in \code{\link[bayests]{add_priors}}.
 \strong{The coefficient of an impulse dummy is estimated from a single
 observation}, so its prior matters more than that of the constant: a tight
 one leaves most of the observation to the other coefficients, which is what
 the dummy was meant to prevent.
 
-\strong{The function has to be called before \code{\link{add_priors}}},
+\strong{The function has to be called before \code{\link[bayests]{add_priors}}},
 since it changes the number of coefficients the priors are given for. A
 dummy variable that is zero in every period of the estimation sample, or
 that the other regressors already span -- a step dummy that is one in every
@@ -79,12 +79,12 @@ zero after its period and a step dummy stays one. The series in \code{data}
 are continued with the values they were given, so for a forecast they have
 to reach the last forecast period, or all deterministic terms of the
 forecast have to be given in argument \code{deterministic} of
-\code{\link{add_forecast_input}}.
+\code{\link[bayests]{add_forecast_input}}.
 
 Of a list of models of class 'expandingwindow', each window gets the dummies
 whose periods it reaches and leaves out the rest: a forecast made at the end
 of a window that ends before a period could not have known about what
-happened in it. \code{\link{use_expanding_window}} applied to a model with
+happened in it. \code{\link[bayests]{use_expanding_window}} applied to a model with
 dummy variables does the same.
 
 In a VEC model the dummies enter the equations of the differences, not the
@@ -123,7 +123,6 @@ Other model set-up:
 \code{\link[=add_priors.bvarmodel]{add_priors.bvarmodel()}},
 \code{\link[=add_priors.bvecmodel]{add_priors.bvecmodel()}},
 \code{\link[=aggregation_weights]{aggregation_weights()}},
-\code{\link[=combine_models]{combine_models()}},
 \code{\link[=create_bvarmodel]{create_bvarmodel()}},
 \code{\link[=create_bvecmodel]{create_bvecmodel()}},
 \code{\link[=transform_variables]{transform_variables()}},

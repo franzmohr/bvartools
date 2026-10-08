@@ -241,7 +241,7 @@ test_that("time_variation_test() reports only the blocks drawn under omega_v", {
                                          sigma = tvp_sigma_prior("sv")))
   centred <- add_posterior_coefficients(add_seed(centred, 215))
   expect_error(time_variation_test(centred), "non-centred prior")
-  expect_error(time_variation_test(list()), "bvarmodel")
+  expect_error(time_variation_test(list()), "class 'list'")
 })
 
 test_that("a TVP VEC with stochastic volatility takes omega_v and reports its test", {
@@ -472,7 +472,7 @@ test_that("time_variation_test() reads a folder of stored models", {
   unlink(folder, recursive = TRUE)
   dir.create(folder, recursive = TRUE)
   write_to_hdf5(models, folder = folder)
-  stored <- open_models(folder)
+  stored <- read_model_folder(folder)
 
   res <- time_variation_test(stored)
 
@@ -482,7 +482,7 @@ test_that("time_variation_test() reads a folder of stored models", {
   expect_named(res, stored[["manifest"]][["model"]])
   expect_s3_class(res[[1]], "bvartimevar")
   expect_equal(res[[1]], time_variation_test(models[[1]]))
-  expect_equal(open_models(folder)[["manifest"]], stored[["manifest"]])
+  expect_equal(read_model_folder(folder)[["manifest"]], stored[["manifest"]])
 
   unlink(folder, recursive = TRUE)
 })

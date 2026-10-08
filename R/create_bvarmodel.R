@@ -139,10 +139,10 @@
 #' variable, the grid describes the whole distribution of each variable given the ones ordered
 #' before it: the estimated quantiles are sorted (Chernozhukov et al., 2010), interpolated linearly
 #' between the levels and continued by exponential tails. That distribution is what
-#' \code{\link{add_posterior_forecasts}} simulates from, variable by variable, so a grid does
+#' \code{\link[bayests]{add_posterior_forecasts}} simulates from, variable by variable, so a grid does
 #' forecast. A scenario given there pins variables in forecast periods, and a
 #' \code{forecast_quantile} takes every draw at one level, which gives the quantile paths the
-#' impulse responses of the model are differences of. \code{\link{add_posterior_loglik}} scores
+#' impulse responses of the model are differences of. \code{\link[bayests]{add_posterior_loglik}} scores
 #' the density the grid describes. Only models with constant coefficients take a grid. Summaries,
 #' plots and impulse responses work on the single levels, which
 #' \code{\link{split_quantile_grid}} returns.
@@ -167,11 +167,11 @@
 #' marginal likelihood of the sample given the two discounts, so a grid over
 #' them can be compared without a chain being run for any of it.
 #'
-#' \code{\link{add_posterior_coefficients}} estimates it like any other
+#' \code{\link[bayests]{add_posterior_coefficients}} estimates it like any other
 #' algorithm, the filter being part of the vendored BayesTS core. It consumes no
 #' random numbers, so two runs agree to the bit and a model estimated here and
 #' the same model estimated by the \code{bayests} command line over a file
-#' written with \code{\link{write_to_hdf5}} give the same numbers rather than
+#' written with \code{\link[bayests]{write_to_hdf5}} give the same numbers rather than
 #' merely the same distribution. What comes back is a posterior rather than a
 #' chain: one row per period under \code{posterior$a$mean},
 #' \code{posterior$a$cov}, \code{posterior$u_sigma$scale} and
@@ -190,7 +190,7 @@
 #' sampler never draws them, so they are zero in every draw. Everything else
 #' treats the model as an ordinary VAR -- the restricted variables are still
 #' regressors in the other equations, the error covariance still covers them,
-#' and \code{\link{irf}} and \code{\link{fevd}} read the draws unchanged.
+#' and \code{\link[bayests]{irf}} and \code{\link[bayests]{fevd}} read the draws unchanged.
 #'
 #' \strong{The variables named in \code{iid} have to be the first columns of
 #' \code{data}}, in any order among themselves. The restriction is carried by a

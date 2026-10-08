@@ -4,7 +4,7 @@
 #' its horizon realised.
 #'
 #' @param object an object of class 'bvarmodel', usually, the result of a call to
-#' \code{\link{add_posterior_forecasts}}.
+#' \code{\link[bayests]{add_posterior_forecasts}}.
 #' @param test_sample a time-series object used as test data. If \code{NULL}
 #' (default), the values in \code{data$test$y} of the object are used, which is
 #' what a model carries after it has been scored once and what a model read from
@@ -25,7 +25,7 @@
 #' known up to that period, and those sum over the columns to
 #' \eqn{\ln p(y_{T+1}, \ldots, y_{T+h} | y_{1}, \ldots, y_{T})}, the log
 #' predictive likelihood of the whole realised stretch, which
-#' \code{\link{selection_criteria}} reports as \code{LPL}. Scoring against a
+#' \code{\link[bayests]{selection_criteria}} reports as \code{LPL}. Scoring against a
 #' simulated history instead would give the marginal density of each period on
 #' its own, which is a different quantity and one whose columns could not be
 #' added up.
@@ -33,12 +33,12 @@
 #' With the history realised rather than simulated, the regressors of the scored
 #' periods do not depend on the draw. The score is then the model's own pointwise
 #' log-likelihood over those periods -- the same expression as
-#' \code{\link{add_posterior_loglik}} evaluates, over a different sample -- so
+#' \code{\link[bayests]{add_posterior_loglik}} evaluates, over a different sample -- so
 #' nothing is written down twice and the two cannot drift apart. What still moves
 #' with the draw is everything that follows a state equation: time varying
 #' coefficients, time varying error covariances and stochastic volatilities take
 #' one step of their random walk per scored period, in the order and subject to
-#' the same \code{model$forecast_states} that \code{\link{add_posterior_forecasts}}
+#' the same \code{model$forecast_states} that \code{\link[bayests]{add_posterior_forecasts}}
 #' steps them in. Under \code{"simulate"} those steps are drawn, so the score is
 #' drawn too and two runs give two answers, exactly as two runs of a forecast do.
 #'
@@ -55,10 +55,10 @@
 #' place.
 #'
 #' A forecast that starts after the end of the estimation sample, from argument
-#' \code{y_start} of \code{\link{add_forecast_input}}, is refused as well: the score
+#' \code{y_start} of \code{\link[bayests]{add_forecast_input}}, is refused as well: the score
 #' of a horizon realised in part is drawn from the end of the sample rather than from
 #' the start values. Its forecast errors are available from
-#' \code{\link{add_forecast_errors}}.
+#' \code{\link[bayests]{add_forecast_errors}}.
 #'
 #' @return The object in \code{object} with \code{posterior$forecast$loglik}
 #' added, a \code{\link[coda]{mcmc}} object with one row per draw and one column

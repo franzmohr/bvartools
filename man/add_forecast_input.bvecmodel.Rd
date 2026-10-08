@@ -14,7 +14,7 @@
 }
 \arguments{
 \item{object}{an object of class 'bvecmodel', usually, the result of a call to
-\code{\link{add_posterior_coefficients}}.}
+\code{\link[bayests]{add_posterior_coefficients}}.}
 
 \item{n_ahead}{an integer of the forecast horizon.}
 
@@ -22,7 +22,7 @@
 unmodelled variables in the forecast periods, as for
 \code{\link{add_forecast_input.bvarmodel}}.}
 
-\item{...}{further arguments passed to \code{\link{prepare_forecast_input}}.}
+\item{...}{further arguments passed to \code{\link[bayests]{prepare_forecast_input}}.}
 }
 \value{
 The object in \code{object} with the forecast horizon in \code{model$h}
@@ -52,12 +52,9 @@ Other posterior simulation:
 \code{\link[=add_posterior_forecasts.bvecmodel]{add_posterior_forecasts.bvecmodel()}},
 \code{\link[=add_posterior_loglik.bvarmodel]{add_posterior_loglik.bvarmodel()}},
 \code{\link[=add_posterior_loglik.bvecmodel]{add_posterior_loglik.bvecmodel()}},
-\code{\link[=add_seed]{add_seed()}},
-\code{\link[=bayests_files]{bayests_files()}},
-\code{\link[=bayests_posterior]{bayests_posterior()}},
+\code{\link[=add_seed.bvarmodel]{add_seed.bvarmodel()}},
 \code{\link[=bvar]{bvar()}},
 \code{\link[=bvec]{bvec()}},
-\code{\link[=chain_diagnostics]{chain_diagnostics()}},
 \code{\link[=predict.bvecmodel]{predict.bvecmodel()}}
 }
 \concept{posterior simulation}

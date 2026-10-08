@@ -1,7 +1,7 @@
 #' Add Initial Values of an MCMC Chain
 #'
 #' Adds initial values to a VEC model, which was produced by
-#' function \code{\link{create_bvecmodel}} in combination with \code{\link{add_priors}}.
+#' function \code{\link{create_bvecmodel}} in combination with \code{\link[bayests]{add_priors}}.
 #'
 #' @param object list of class 'bvecmodel'.
 #' @param method character specifying the method of how initial values are generated.
@@ -45,7 +45,7 @@
 #' The function also stores the seed of the posterior simulation as element
 #' \code{seed} of \code{object$model}, unless the model has one already. It is
 #' drawn from R's random number generator, so \code{set.seed()} before this call
-#' makes it reproducible. \code{\link{add_seed}} replaces it.
+#' makes it reproducible. \code{\link[bayests]{add_seed}} replaces it.
 #'
 #' @examples
 #' 

@@ -31,11 +31,11 @@ directly. The layout below is the contract that makes that safe.
   draw it. A VEC model adds \code{rank}, \code{k_beta} and the deterministic
   terms restricted to the cointegration space; a quantile VAR adds
   \code{quantile}, or \code{quantiles} for a grid of them, and
-  \code{\link{add_posterior_forecasts}} a grid's \code{forecast_quantile}.
+  \code{\link[bayests]{add_posterior_forecasts}} a grid's \code{forecast_quantile}.
   \code{\link{add_dummy_variables}} adds
   \code{dummy_variables}, the rule each of its dummies is continued by in a
-  forecast. \code{\link{add_seed}} adds \code{seed},
-  \code{\link{add_forecast_input}} adds \code{h} and
+  forecast. \code{\link[bayests]{add_seed}} adds \code{seed},
+  \code{\link[bayests]{add_forecast_input}} adds \code{h} and
   \code{forecast_states}, and \code{forecast_start}, the time of the first
   forecast period, when it was given start values in \code{y_start}.}
 
@@ -55,21 +55,21 @@ directly. The layout below is the contract that makes that safe.
   combination each observation is, counted from one. See
   \code{\link{create_bvarmodel}}.}
 
-  \item{\code{data$forecast}}{Added by \code{\link{add_forecast_input}}: the
+  \item{\code{data$forecast}}{Added by \code{\link[bayests]{add_forecast_input}}: the
   regressors of the forecast periods, \code{x} in the compact layout, one row
   per horizon. A VEC model's are in the layout of its VAR representation,
   which is the form it is forecast in. A forecast from start values adds
   \code{y}, those of them that lie after the end of the sample and the ones
   its lags are taken from.}
 
-  \item{\code{data$test$y}}{Added by \code{\link{add_forecast_errors}}: what
+  \item{\code{data$test$y}}{Added by \code{\link[bayests]{add_forecast_errors}}: what
   the horizon realised, one row per period and one column per variable, the
   periods of the horizon and nothing else. The only thing under \code{data}
   that no sampler reads -- it is what a forecast is scored against, not
   anything it is estimated from -- and what lets a model that was written to
   a file be scored again from the file alone.}
 
-  \item{\code{priors}}{Added by \code{\link{add_priors}}: the prior
+  \item{\code{priors}}{Added by \code{\link[bayests]{add_priors}}: the prior
   hyperparameters, one block per parameter block of the posterior. Prior
   variances are given as precisions. Which elements are needed depends on
   \code{error}; the method's own help page, \code{\link{add_priors.bvarmodel}}
@@ -77,11 +77,11 @@ directly. The layout below is the contract that makes that safe.
   \code{mu} and \code{constraints} are added by
   \code{\link{add_prior_options}}.}
 
-  \item{\code{initial}}{Added by \code{\link{add_initial_values}}: the
+  \item{\code{initial}}{Added by \code{\link[bayests]{add_initial_values}}: the
   starting values the sampler begins from.}
 
   \item{\code{posterior}}{Added by
-  \code{\link{add_posterior_coefficients}} and the later
+  \code{\link[bayests]{add_posterior_coefficients}} and the later
   \code{add_posterior_*} functions. The draws; see below.}
 }
 }
@@ -123,15 +123,15 @@ block is a list whose \code{coeffs} carries the draws:
   \eqn{k_\beta r} columns, and \code{rho} where a time-varying cointegration
   space put a prior on its state autoregression.}
   \item{\code{q}}{The rotations of a sign-restricted identification, added by
-  \code{\link{add_sign_restrictions}}.}
+  \code{\link[bayests]{add_sign_restrictions}}.}
   \item{\code{loglik}}{The pointwise log-likelihood of the estimation sample,
-  one column per period, added by \code{\link{add_posterior_loglik}}. A matrix
+  one column per period, added by \code{\link[bayests]{add_posterior_loglik}}. A matrix
   of draws rather than a block with \code{coeffs}, since there is only one
   thing to hold.}
   \item{\code{forecast}}{Everything the forecast periods produce:
   \code{forecasts}, the simulated paths from
-  \code{\link{add_posterior_forecasts}}, and \code{errors}, what
-  \code{\link{add_forecast_errors}} took against \code{data$test$y}. Both have
+  \code{\link[bayests]{add_posterior_forecasts}}, and \code{errors}, what
+  \code{\link[bayests]{add_forecast_errors}} took against \code{data$test$y}. Both have
   \eqn{Kh} columns, stacked by period. The members are named after what they
   hold rather than one of them being \code{draws}, because all of them are
   draws.}
@@ -159,19 +159,19 @@ horizon come first, then those of the second.
 
 Passing a vector to an argument such as \code{p}, \code{r} or \code{quantile}
 gives one model per specification in a list of class \code{'modellist'}, and
-\code{\link{use_expanding_window}} a list of class \code{'expandingwindow'},
+\code{\link[bayests]{use_expanding_window}} a list of class \code{'expandingwindow'},
 one model per window. Every step of the workflow has a method for both and
 applies to each model in turn, so the structure above is what is inside either
-of them. \code{\link{open_models}} is the same idea for a folder too large to
+of them. \code{\link[bayests]{read_model_folder}} is the same idea for a folder too large to
 hold: a handle to the files rather than the models.
 }
 
 \section{The same layout on disk}{
 
-\code{\link{write_to_hdf5}} writes the object to an HDF5 file with the paths
+\code{\link[bayests]{write_to_hdf5}} writes the object to an HDF5 file with the paths
 the elements above are named by -- \code{/data/train/y}, \code{/data/test/y},
 \code{/posterior/a/coeffs}, \code{/posterior/forecast/forecasts} -- and
-\code{\link{read_model_from_hdf5}} reads it back. It is the format the BayesTS
+\code{\link[bayests]{read_model_from_hdf5}} reads it back. It is the format the BayesTS
 command line runs on, which is what makes a model estimated here and a model
 estimated there the same object.
 

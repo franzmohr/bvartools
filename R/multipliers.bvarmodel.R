@@ -58,7 +58,7 @@ NULL
 #' permanently, and the multipliers converge to a level rather than to zero.
 #'
 #' @return A time-series object of class 'bvarirf', which is what
-#' \code{\link{irf}} returns, so that the same \code{plot} method applies.
+#' \code{\link[bayests]{irf}} returns, so that the same \code{plot} method applies.
 #'
 #' @examples
 #'

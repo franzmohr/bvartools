@@ -90,7 +90,7 @@ matrix \eqn{\Sigma}, \eqn{e_j} is a selection vector for the response variable a
 \eqn{e_k} a selection vector for the impulse variable.
 
 If \code{type = "sign"}, the decomposition uses \eqn{P Q}, with \eqn{Q} the rotation that
-\code{\link{add_sign_restrictions}} accepted for that draw, and is otherwise the orthogonalised
+\code{\link[bayests]{add_sign_restrictions}} accepted for that draw, and is otherwise the orthogonalised
 case. A rotation of the Choleski factor still factorises \eqn{\Sigma}, so the shares add up as
 they do there. Draws that no admissible rotation was found for are left out.
 

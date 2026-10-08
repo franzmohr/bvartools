@@ -8,7 +8,7 @@
 }
 \arguments{
 \item{object}{an object of class 'bvecmodel', usually, the result of a call to
-\code{\link{add_posterior_forecasts}}.}
+\code{\link[bayests]{add_posterior_forecasts}}.}
 
 \item{test_sample}{a time-series object of the endogenous variables, in levels, that
 covers the forecast periods. If \code{NULL} (default), the values in
@@ -31,24 +31,15 @@ the levels of \code{test_sample}, exactly as for the VAR representation
 \seealso{
 Other model comparison:
 \code{\link[=add_forecast_errors.bvarmodel]{add_forecast_errors.bvarmodel()}},
-\code{\link[=add_predictive_loglik]{add_predictive_loglik()}},
 \code{\link[=add_predictive_loglik.bvarmodel]{add_predictive_loglik.bvarmodel()}},
 \code{\link[=add_predictive_loglik.bvecmodel]{add_predictive_loglik.bvecmodel()}},
+\code{\link[=add_predictive_loglik.expandingwindow]{add_predictive_loglik.expandingwindow()}},
 \code{\link[=aggregate_forecasts]{aggregate_forecasts()}},
-\code{\link[=align_model_obs.modellist]{align_model_obs.modellist()}},
 \code{\link{analysis_of_stored_models}},
-\code{\link[=choose_best_model.selcritlist]{choose_best_model.selcritlist()}},
 \code{\link[=create_external_forecast]{create_external_forecast()}},
-\code{\link{folder_steps}},
-\code{\link[=map_draws]{map_draws()}},
-\code{\link[=map_models]{map_models()}},
-\code{\link[=open_model]{open_model()}},
-\code{\link[=open_models]{open_models()}},
 \code{\link[=plot_forecast_errors_by_period]{plot_forecast_errors_by_period()}},
 \code{\link[=pool_forecasts]{pool_forecasts()}},
 \code{\link[=selection_criteria.bvarmodel]{selection_criteria.bvarmodel()}},
-\code{\link[=selection_criteria.bvecmodel]{selection_criteria.bvecmodel()}},
-\code{\link[=selection_criteria.default]{selection_criteria.default()}},
-\code{\link[=selection_criteria.modellist]{selection_criteria.modellist()}}
+\code{\link[=selection_criteria.bvecmodel]{selection_criteria.bvecmodel()}}
 }
 \concept{model comparison}

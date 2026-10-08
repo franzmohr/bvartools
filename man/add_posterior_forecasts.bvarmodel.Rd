@@ -14,7 +14,7 @@
 }
 \arguments{
 \item{object}{an object of class 'bvarmodel', usually, the result of a call
-to \code{\link{add_posterior_coefficients}} and \code{\link{add_forecast_input}}.}
+to \code{\link[bayests]{add_posterior_coefficients}} and \code{\link[bayests]{add_forecast_input}}.}
 
 \item{forecast_states}{character, what a model with time varying coefficients or
 stochastic volatility does with them over the forecast horizon. \code{"simulate"}
@@ -49,12 +49,12 @@ The object in \code{object} with \code{posterior$forecast$forecasts} added, a
 \code{\link[coda]{mcmc}} object with one row per draw and \eqn{Kh} columns, stacked by
 period: the \eqn{K} variables of the first forecast period, then those of the second,
 and so on. \code{posterior$forecast} is the group everything the forecast periods
-produce hangs below, the \code{errors} of \code{\link{add_forecast_errors}} beside
+produce hangs below, the \code{errors} of \code{\link[bayests]{add_forecast_errors}} beside
 these. \code{\link[=predict.bvarmodel]{predict}} summarises them. A
 \code{forecast_states} that was given is stored in \code{model$forecast_states}.
 
 Simulating the volatility forward needs the variance of the log-volatility
-innovations, \code{posterior$u_sigma_inv$sigma}, which \code{\link{add_posterior_coefficients}}
+innovations, \code{posterior$u_sigma_inv$sigma}, which \code{\link[bayests]{add_posterior_coefficients}}
 stores. A stochastic volatility model fitted with an earlier version of the package
 lacks it and stops with an error unless \code{forecast_states = "hold"}.
 }
@@ -63,7 +63,7 @@ Calculates and adds forecasts to an object of class 'bvarmodel'.
 }
 \details{
 A forecast that starts after the end of the estimation sample, from argument
-\code{y_start} of \code{\link{add_forecast_input}}, takes its lags from the start values
+\code{y_start} of \code{\link[bayests]{add_forecast_input}}, takes its lags from the start values
 and its coefficients from the sample. \strong{Three things that start from the last period
 of the sample are refused for it}: a \code{scenario}, which is drawn from the end of the
 sample; \code{forecast_states = "simulate"} for a model with time varying coefficients or
@@ -115,12 +115,9 @@ Other posterior simulation:
 \code{\link[=add_posterior_forecasts.bvecmodel]{add_posterior_forecasts.bvecmodel()}},
 \code{\link[=add_posterior_loglik.bvarmodel]{add_posterior_loglik.bvarmodel()}},
 \code{\link[=add_posterior_loglik.bvecmodel]{add_posterior_loglik.bvecmodel()}},
-\code{\link[=add_seed]{add_seed()}},
-\code{\link[=bayests_files]{bayests_files()}},
-\code{\link[=bayests_posterior]{bayests_posterior()}},
+\code{\link[=add_seed.bvarmodel]{add_seed.bvarmodel()}},
 \code{\link[=bvar]{bvar()}},
 \code{\link[=bvec]{bvec()}},
-\code{\link[=chain_diagnostics]{chain_diagnostics()}},
 \code{\link[=predict.bvecmodel]{predict.bvecmodel()}}
 }
 \concept{posterior simulation}

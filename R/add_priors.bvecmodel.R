@@ -78,7 +78,7 @@
 #'   deviation of the state innovations of the coefficients, loadings included unless
 #'   \code{omega_v_alpha} is given, and of the
 #'   covariance coefficients -- the non-centred parameterisation that lets the posterior carry
-#'   the test for time variation of \code{\link{time_variation_test}}; see
+#'   the test for time variation of \code{\link[bayests]{time_variation_test}}; see
 #'   \code{\link{add_priors.bvarmodel}} for the model and the draws it adds. The cointegration
 #'   space keeps its state equation. Only for models with time varying parameters,
 #'   \code{tvp = TRUE}, whatever their \code{error}.}
@@ -87,7 +87,7 @@
 #'   \code{omega_v} is used. The loadings multiply the levels in the error correction term, so
 #'   a standard deviation of their innovations that is small for a coefficient on a differenced
 #'   regressor moves the fitted value by much more, and the test for time variation of
-#'   \code{\link{time_variation_test}} compares each loading's posterior at zero with its own
+#'   \code{\link[bayests]{time_variation_test}} compares each loading's posterior at zero with its own
 #'   prior: a prior on the wrong scale makes the Bayes factor of a loading say more about the
 #'   prior than about the loading. Only used with \code{omega_v} and a positive rank.}
 #' }

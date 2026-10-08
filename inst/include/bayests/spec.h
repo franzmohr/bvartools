@@ -69,6 +69,76 @@ ForecastStates forecast_states_from_string(const std::string &name);
 /// Inverse of forecast_states_from_string.
 const char *to_string(ForecastStates states);
 
+/// How the trend of an unobserved components model moves.
+///
+///     random_walk:  tau_t = tau_{t-1} + C d_t + u^tau_t,
+///     smooth:       tau_t = 2 tau_{t-1} - tau_{t-2} + C d_t + u^tau_t.
+///
+/// The first is the trend of Clark (1987) and of Morley, Nelson and Zivot
+/// (2003), with the drift C d_t -- a constant, or a constant that breaks at a
+/// known date -- in the deterministic terms. The second is the integrated
+/// random walk, whose *slope* is the random walk: the smooth trend of the
+/// Hodrick-Prescott filter, and of the output gap model in Chan, Koop, Poirier
+/// and Tobias (2019, ch. 18).
+enum class UcTrend
+{
+    random_walk, ///< "rw": first differences of the trend are the shocks.
+    smooth       ///< "smooth": second differences of the trend are the shocks.
+};
+
+/// Parses the spelling used on disk. An empty name is the default,
+/// `random_walk`; anything else that is not `rw` or `smooth` throws.
+UcTrend uc_trend_from_string(const std::string &name);
+
+/// Inverse of uc_trend_from_string.
+const char *to_string(UcTrend trend);
+
+/// Which lags the cycle of an unobserved components model regresses on.
+enum class UcCycle
+{
+    var, ///< "var": each cycle on p lags of every cycle, a VAR(p).
+    own  ///< "own": each cycle on p lags of itself only, k separate AR(p)s.
+};
+
+/// Parses the spelling used on disk. An empty name is the default, `var`;
+/// anything else that is not `var` or `own` throws.
+UcCycle uc_cycle_from_string(const std::string &name);
+
+/// Inverse of uc_cycle_from_string.
+const char *to_string(UcCycle cycle);
+
+/// The asymmetric distribution of UcNormalSkew's skewed shocks, after Huang,
+/// Luo and Wang (2026).
+enum class UcSkew
+{
+    /// "snd": the skew normal, v_t - u_t with v_t ~ N(0, sigma_v^2) and u_t
+    /// half normal of scale sigma_u -- skewed to the left.
+    snd,
+    /// "ald": the asymmetric Laplace, r_t - w_t with r_t and w_t exponential of
+    /// means lambda_r and lambda_w -- skewed to either side.
+    ald
+};
+
+/// "snd" (or empty) or "ald"; throws otherwise.
+UcSkew uc_skew_from_string(const std::string &name);
+
+/// Inverse of uc_skew_from_string.
+const char *to_string(UcSkew skew);
+
+/// Which of UcNormalSkew's shocks is skewed: the cycle's, which is where Huang,
+/// Luo and Wang find the asymmetry of US output, or the trend's.
+enum class UcSkewShock
+{
+    cycle, ///< "cycle"
+    trend  ///< "trend"
+};
+
+/// "cycle" (or empty) or "trend"; throws otherwise.
+UcSkewShock uc_skew_shock_from_string(const std::string &name);
+
+/// Inverse of uc_skew_shock_from_string.
+const char *to_string(UcSkewShock shock);
+
 /// The shape of the model, independent of the data and the priors.
 struct VarSpec
 {
@@ -140,7 +210,8 @@ struct VarSpec
 
     /// Whether every draw of the coefficients has to describe a stationary VAR:
     /// a draw whose companion matrix has an eigenvalue of modulus one or more is
-    /// drawn again. Read by the same three algorithms and refused by the rest.
+    /// drawn again. Read by the same three algorithms, and by UcNormalGamma for
+    /// its cycle, and refused by the rest.
     bool stationary = false;
 
     /// Whether the prior is on the unconditional mean rather than the intercept
@@ -190,7 +261,7 @@ struct VarSpec
     /// forecasts of every model with something that drifts: VarTvpWishart,
     /// VarTvpGamma, VarTvpStochvol, VarNormalStochvol, VecTvpWishart,
     /// VecTvpGamma, VecTvpStochvol, VecNormalStochvol, DfmNormalStochvol,
-    /// DfmTvpGamma and DfmTvpStochvol. A model whose coefficients and precision
+    /// DfmTvpGamma, DfmTvpStochvol and UcNormalStochvol. A model whose coefficients and precision
     /// are constant has nothing to carry, and the two values coincide for it.
     ForecastStates forecast_states = ForecastStates::simulate;
 
@@ -234,6 +305,35 @@ struct VarSpec
     /// at a time rather than approximated.
     double delta_beta = 1.0;
     double delta_sigma = 1.0;
+
+    /// The trend and the cycle of an unobserved components model,
+    ///
+    ///     y_t = tau_t + c_t,   c_t = sum_{j=1..p} Phi_j c_{t-j} + u^c_t,
+    ///
+    /// with tau_t as UcTrend says. Every other model ignores both, as every
+    /// model but the discounted pair ignores `delta_beta`. An unobserved
+    /// components model reads the rest of this struct its own way: `k` is the
+    /// number of series, each with a trend and a cycle of its own, `p` the order
+    /// of the cycle -- zero leaves it white noise, which is the local level model
+    /// -- and `n` the number of deterministic terms d_t, which enter the trend's
+    /// *increment* as its drift rather than the level. `m`, `s`, `rank` and the
+    /// factor counts are all zero.
+    UcTrend trend = UcTrend::random_walk;
+    UcCycle cycle = UcCycle::var;
+
+    /// Whether an unobserved components model has an irregular component,
+    /// y_t = tau_t + c_t + eps_t with eps_t ~ N(0, diag(sigma_eps^2)) independent
+    /// of the trend and cycle shocks -- the third component of Harvey's (1989)
+    /// basic structural model and of Huang, Luo and Wang (2026). The cycle is
+    /// then a state of its own rather than y minus the trend. It needs a cycle
+    /// with lags: at p = 0 the cycle is white noise too, and the two cannot be
+    /// told apart. Every other model ignores it.
+    bool irregular = false;
+
+    /// UcNormalSkew's distribution and which shock it applies to; every other
+    /// model ignores both.
+    UcSkew skew = UcSkew::snd;
+    UcSkewShock skew_shock = UcSkewShock::cycle;
 
     /// Total length of the chain: the burn-in, then `thin` draws for every one
     /// kept.
@@ -433,6 +533,34 @@ struct VarSpec
     /// same pairing with n_factor_a(), and the same reason: the transition is a
     /// VAR over the whole state, not over the factors alone.
     int n_favar_a() const { return n_state() * n_state() * p; }
+
+    /// How many periods before the sample an unobserved components trend has to
+    /// start from: one for a random walk, two for a smooth trend. They are
+    /// parameters with a prior of their own (`tau0`), as in Grant and Chan
+    /// (2017), rather than a diffuse initialisation.
+    int uc_trend_order() const { return trend == UcTrend::smooth ? 2 : 1; }
+
+    /// Free coefficients of an unobserved components cycle: the whole of
+    /// [Phi_1 .. Phi_p], k^2 p, or its diagonals alone under UcCycle::own, k p.
+    ///
+    /// Paired with n_factor_a() and n_favar_a() rather than read off either, for
+    /// the reason those two are paired: which count applies is a property of the
+    /// model, and the two coincide at k = 1, where a file laid out for the wrong
+    /// one would be read without complaint.
+    int n_uc_a() const { return cycle == UcCycle::own ? k * p : k * k * p; }
+
+    /// The shocks of an unobserved components model, one to each cycle and one
+    /// to each trend: 2k, cycle shocks first. That is the width of its error
+    /// precision, and the order its covariance block is triangular in.
+    int n_uc_shocks() const { return 2 * k; }
+
+    /// Free elements of the covariance block over those 2k shocks, (2k)(2k-1)/2
+    /// with "+covar" and zero without. Not n_psi(), which counts the k(k-1)/2 of
+    /// a k-equation VAR: an unobserved components model has a block over twice
+    /// as many shocks as it has series, and one series already has one free
+    /// element -- the trend shock's loading on the cycle shock, the correlation
+    /// Morley, Nelson and Zivot (2003) estimate.
+    int n_uc_psi() const { return covar ? k * (2 * k - 1) : 0; }
 
     /// Throws std::invalid_argument if the counts cannot describe a model.
     /// Cheap, and the message is far better than the failure it prevents --

@@ -26,7 +26,7 @@ automatically. If this is not successful, an error message we be returned.}
 model. Required if the model has such variables. It has to cover the \code{s} periods before
 the first forecast period, which are the last \code{s} periods of the estimation sample, as
 well as the \code{n_ahead} forecast periods, because the regressors of a forecast period
-include the lags of these variables. See \code{\link{prepare_forecast_input}}.}
+include the lags of these variables. See \code{\link[bayests]{prepare_forecast_input}}.}
 
 \item{y_start}{an optional time-series object with the endogenous variables of the model,
 by name and in the units of the estimation sample, that the forecast starts from: the
@@ -35,7 +35,7 @@ the first one are its last \code{p} observations. It may end after the estimatio
 that a forecast can start from a nowcast or from data that came in after the model was
 estimated; \code{exogen} and \code{deterministic} then have to cover the new forecast
 periods. If \code{NULL} (default), the forecast starts after the end of the estimation
-sample. See 'Details' in \code{\link{prepare_forecast_input}}.}
+sample. See 'Details' in \code{\link[bayests]{prepare_forecast_input}}.}
 
 \item{...}{arguments passed forward to method.}
 }
@@ -93,12 +93,9 @@ Other posterior simulation:
 \code{\link[=add_posterior_forecasts.bvecmodel]{add_posterior_forecasts.bvecmodel()}},
 \code{\link[=add_posterior_loglik.bvarmodel]{add_posterior_loglik.bvarmodel()}},
 \code{\link[=add_posterior_loglik.bvecmodel]{add_posterior_loglik.bvecmodel()}},
-\code{\link[=add_seed]{add_seed()}},
-\code{\link[=bayests_files]{bayests_files()}},
-\code{\link[=bayests_posterior]{bayests_posterior()}},
+\code{\link[=add_seed.bvarmodel]{add_seed.bvarmodel()}},
 \code{\link[=bvar]{bvar()}},
 \code{\link[=bvec]{bvec()}},
-\code{\link[=chain_diagnostics]{chain_diagnostics()}},
 \code{\link[=predict.bvecmodel]{predict.bvecmodel()}}
 }
 \concept{posterior simulation}

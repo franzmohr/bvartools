@@ -15,14 +15,14 @@ local({
                                        list("rclass" = class(object)))),
       "data" = list("train" = list("y" = object[["data"]][["x"]]))
     ), filename = filename, group = group)
-  }, envir = asNamespace("bvartools"))
+  }, envir = asNamespace("bayests"))
   registerS3method("from_bayests_tree", "testmodel", function(tree, ...) {
     model <- tree[["model"]][[".attributes"]]
     model[["rclass"]] <- NULL
     structure(list("data" = list("x" = tree[["data"]][["train"]][["y"]]),
                    "model" = model),
               class = class(tree))
-  }, envir = asNamespace("bvartools"))
+  }, envir = asNamespace("bayests"))
 })
 
 test_model <- function(n = 2L) {
@@ -84,7 +84,7 @@ test_that("the writer refuses an existing model and keeps the models beside a ne
   expect_error(write_bayests_tree(tree, filename = path, group = "/one"),
                "already exists")
   write_bayests_tree(tree, filename = path, group = "two")
-  expect_identical(list_models_in_hdf5(path), c("/one", "/two"))
+  expect_identical(read_model_groups(path), c("/one", "/two"))
 
   expect_error(write_bayests_tree(tree, filename = path), "already exists")
 })
@@ -99,7 +99,7 @@ test_that("a write that fails leaves nothing behind", {
   good <- list("model" = list(".attributes" = list("algorithm" = "Example")))
   write_bayests_tree(good, filename = path, group = "/kept")
   expect_error(write_bayests_tree(bad, filename = path, group = "/failed"))
-  expect_identical(list_models_in_hdf5(path), "/kept")
+  expect_identical(read_model_groups(path), "/kept")
 })
 
 test_that("a tree must be named all the way down", {

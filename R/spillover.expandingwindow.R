@@ -8,7 +8,7 @@
 #' @param ... arguments passed forward to \code{\link{spillover.bvarmodel}}.
 #'
 #' @details The index over a moving sample is the chart this literature is built
-#' around, and \code{\link{use_expanding_window}} already produces the models it
+#' around, and \code{\link[bayests]{use_expanding_window}} already produces the models it
 #' needs. Each window contributes one value, dated at its own last observation,
 #' so the result reads as the connectedness of the system as it was known up to
 #' that date.

@@ -7,13 +7,13 @@
 #' single-quantile model would have drawn. The models returned hold those draws with the
 #' specification of that model, so that everything written for a single quantile --
 #' \code{\link[=summary.bvarmodel]{summary}}, \code{\link[=plot.bvarmodel]{plot}},
-#' \code{\link{add_posterior_loglik}} -- reads them as such. What describes the grid as a
+#' \code{\link[bayests]{add_posterior_loglik}} -- reads them as such. What describes the grid as a
 #' whole, its forecasts and its log likelihood, is not carried over. The impulse responses of
 #' a structural grid are differences of forecasts at a fixed level with and without a
-#' scenario; see \code{forecast_quantile} in \code{\link{add_posterior_forecasts}}.
+#' scenario; see \code{forecast_quantile} in \code{\link[bayests]{add_posterior_forecasts}}.
 #'
 #' @param object an object of class 'bvarmodel' holding a grid of quantiles, usually the
-#' result of a call to \code{\link{add_posterior_coefficients}}.
+#' result of a call to \code{\link[bayests]{add_posterior_coefficients}}.
 #'
 #' @return A list of class 'modellist' with one object of class 'bvarmodel' per quantile, in
 #' increasing order.

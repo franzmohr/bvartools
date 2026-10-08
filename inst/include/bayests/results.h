@@ -940,6 +940,141 @@ struct VecTvpDiscountPosterior
     bool has_beta() const { return beta.n_elem > 0; }
 };
 
+/// Posterior draws of an unobserved components model with gamma priors on the
+/// precisions of its shocks.
+///
+/// The trend is unobserved, so like a factor model's factors it is drawn whole
+/// every sweep and kept beside the parameters. The cycle is not kept: it is
+/// y - trend, exactly, and storing it would be storing the data twice.
+struct UcNormalGammaDraws
+{
+    /// (k * tt) x iterations; each column is vec of the k x tt trend path,
+    /// periods along the columns of that matrix.
+    arma::mat trend;
+
+    /// (k * k * p) x iterations; each column is vec([Phi_1 .. Phi_p]), the
+    /// whole k x kp matrix, the zeros off the diagonal under UcCycle::own
+    /// included -- as DfmNormalGammaDraws::lambda keeps the fixed part of the
+    /// loadings, so that reshaping gives the matrix without knowing the rule.
+    /// Empty when the cycle has no lags.
+    arma::mat a;
+
+    /// (k * n) x iterations, vec(C). Empty for a model without deterministic
+    /// terms.
+    arma::mat c;
+
+    /// (k * uc_trend_order()) x iterations: tau_0, and tau_{-1} after it for a
+    /// smooth trend.
+    arma::mat tau0;
+
+    /// (2k * 2k) x iterations; each column a vectorised lower-triangular Psi.
+    /// Empty without a covariance block.
+    arma::mat psi;
+
+    /// 2k x iterations, the diagonal of Omega.
+    arma::mat u_omega_inv;
+
+    /// (2k * 2k) x iterations, the precision of the shocks, Psi' Omega Psi.
+    arma::mat u_sigma_inv;
+
+    /// With an irregular component (VarSpec::irregular): the cycle path, (k *
+    /// tt) x iterations like `trend` -- no longer y minus the trend, so drawn
+    /// and kept -- and the irregular precisions, k x iterations. Both empty
+    /// without one.
+    arma::mat cycle;
+    arma::mat irregular_inv;
+
+    arma::uword iterations() const { return u_sigma_inv.n_cols; }
+    bool has_a() const { return a.n_elem > 0; }
+    bool has_c() const { return c.n_elem > 0; }
+    bool has_psi() const { return psi.n_elem > 0; }
+    bool has_trend() const { return trend.n_elem > 0; }
+};
+
+/// Posterior draws of an unobserved components model with a Wishart prior on
+/// the shock precision: UcNormalGammaDraws without the covariance block and its
+/// diagonal, the precision being drawn whole.
+struct UcNormalWishartDraws
+{
+    arma::mat trend; ///< (k * tt) x iterations, vec of the k x tt trend path.
+    arma::mat cycle; ///< (k * tt) x iterations with an irregular component; empty without.
+    arma::mat a;     ///< (k * k * p) x iterations, vec([Phi_1 .. Phi_p]). Empty at p = 0.
+    arma::mat c;     ///< (k * n) x iterations, vec(C). Empty without deterministic terms.
+    arma::mat tau0;  ///< (k * uc_trend_order()) x iterations.
+
+    /// (2k * 2k) x iterations, the precision of the shocks.
+    arma::mat u_sigma_inv;
+
+    arma::mat irregular_inv; ///< k x iterations with an irregular component; empty without.
+
+    arma::uword iterations() const { return u_sigma_inv.n_cols; }
+    bool has_trend() const { return trend.n_elem > 0; }
+};
+
+/// Posterior draws of an unobserved components model with stochastic
+/// volatility on its shocks. The precision is a path, so like
+/// VarNormalStochvolDraws a draw of it is one matrix per period.
+struct UcNormalStochvolDraws
+{
+    arma::mat trend; ///< (k * tt) x iterations.
+    arma::mat cycle; ///< (k * tt) x iterations with an irregular component; empty without.
+    arma::mat a;     ///< (k * k * p) x iterations. Empty at p = 0.
+    arma::mat c;     ///< (k * n) x iterations. Empty without deterministic terms.
+    arma::mat tau0;  ///< (k * uc_trend_order()) x iterations.
+
+    /// (2k * 2k) x iterations, the constant Psi. Empty without a covariance block.
+    arma::mat psi;
+
+    /// (2k * tt) x iterations: exp(-h_t), the diagonal of Omega_t, period by
+    /// period.
+    arma::mat u_omega_inv;
+
+    /// (2k * 2k * tt) x iterations: Psi' Omega_t Psi, one precision per period.
+    arma::mat u_sigma_inv;
+
+    /// 2k x iterations, the variance of the log-volatility innovations -- the
+    /// square of `h_noncentred.omega` under the non-centred parameterisation.
+    arma::mat h_sigma;
+
+    /// The non-centred parameterisation's omega and Savage-Dickey ordinates.
+    /// Empty under the centred one.
+    NoncentredStateDraws h_noncentred;
+
+    arma::mat irregular_inv; ///< k x iterations with an irregular component; empty without.
+
+    arma::uword iterations() const { return u_sigma_inv.n_cols; }
+    bool has_trend() const { return trend.n_elem > 0; }
+    bool has_psi() const { return psi.n_elem > 0; }
+};
+
+/// Posterior draws of an unobserved components model with skewed shocks.
+struct UcNormalSkewDraws
+{
+    arma::mat trend; ///< (k * tt) x iterations.
+    arma::mat cycle; ///< (k * tt) x iterations with an irregular component; empty without.
+    arma::mat a;     ///< (k * k * p) x iterations. Empty at p = 0.
+    arma::mat c;     ///< (k * n) x iterations. Empty without deterministic terms.
+    arma::mat tau0;  ///< (k * uc_trend_order()) x iterations.
+
+    /// (k * 2 (1 + n_skew)) x iterations: the scale coefficients, laid out as
+    /// UcNormalSkewInitial::skew.
+    arma::mat skew;
+
+    /// (k * tt) x iterations: each skewed shock's latent variate, the half
+    /// normal of the skew normal or the unit exponential of the asymmetric
+    /// Laplace, by period. Part of the posterior because the log likelihood
+    /// conditions on it.
+    arma::mat skew_latent;
+
+    /// k x iterations, the precision of the shock that is not skewed.
+    arma::mat u_omega_inv;
+
+    arma::mat irregular_inv; ///< k x iterations with an irregular component; empty without.
+
+    arma::uword iterations() const { return u_omega_inv.n_cols; }
+    bool has_trend() const { return trend.n_elem > 0; }
+};
+
 } // namespace bayests
 
 #endif // BAYESTS_RESULTS_H

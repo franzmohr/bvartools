@@ -21,7 +21,7 @@
 \item{n_ahead}{the forecast horizon \eqn{H} of the decomposed forecast error
 variance, which is made of the impulse responses of periods 0 to \eqn{H - 1}.
 Defaults to 10, the horizon of Diebold and Yilmaz (2012). The table therefore
-corresponds to the rows of period \eqn{H - 1} of \code{\link{fevd}}, which counts
+corresponds to the rows of period \eqn{H - 1} of \code{\link[bayests]{fevd}}, which counts
 its periods from the impact period.}
 
 \item{type}{type of the impulse responses the decomposition is based on.
@@ -85,7 +85,7 @@ Under \code{type = "oir"} the decomposition uses the Choleski factor of
 \eqn{\Sigma}, adds up by construction and depends on the ordering of the
 variables, which is what the generalised version of Diebold and Yilmaz (2012)
 avoids. Under \code{type = "sign"} it uses the Choleski factor rotated by
-what \code{\link{add_sign_restrictions}} accepted for that draw, leaving out
+what \code{\link[bayests]{add_sign_restrictions}} accepted for that draw, leaving out
 the draws no rotation was found for. Under \code{type = "custom"} it uses the
 matrix supplied in argument
 \code{impact} in place of that factor and is otherwise the orthogonalised
@@ -117,7 +117,7 @@ index. It is also what gives the index a credible interval, which the
 original point estimate based version does not have.
 
 Objects of class \code{'bvecmodel'} have to be transformed with
-\code{\link{vec_to_var}} first, as for \code{\link{fevd}}.
+\code{\link{vec_to_var}} first, as for \code{\link[bayests]{fevd}}.
 }
 \examples{
 

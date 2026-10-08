@@ -3,7 +3,7 @@
 #' Adds initial values to a VAR model.
 #'
 #' @param object list of class 'bvarmodel', usually, the result of a call to
-#' \code{\link{create_bvarmodel}} in combination with \code{\link{add_priors}}.
+#' \code{\link{create_bvarmodel}} in combination with \code{\link[bayests]{add_priors}}.
 #' @param method character specifying the method of how initial values are generated.
 #' Default is \code{"ols"}. See 'Details'.
 #' @param ... further arguments passed to or from other methods.
@@ -55,7 +55,7 @@
 #' The function also stores the seed of the posterior simulation as element
 #' \code{seed} of \code{object$model}, unless the model has one already. It is
 #' drawn from R's random number generator, so \code{set.seed()} before this call
-#' makes it reproducible. \code{\link{add_seed}} replaces it.
+#' makes it reproducible. \code{\link[bayests]{add_seed}} replaces it.
 #'
 #' @examples 
 #' 

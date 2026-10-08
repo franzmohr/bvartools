@@ -47,7 +47,7 @@ test_that("the plotted groups are the largest contributions plus 'Other'", {
 
   # The bars are drawn from the same matrix the legend is labelled with, so the
   # pooling is checked on that matrix rather than on the device.
-  pooled <- bvartools:::.limit_fevd_groups(unclass(decomposition), 2)
+  pooled <- bayests::.limit_fevd_groups(unclass(decomposition), 2)
 
   expect_identical(colnames(pooled), c(largest, "Other"))
   expect_equal(as.numeric(rowSums(pooled)),

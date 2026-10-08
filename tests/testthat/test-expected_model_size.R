@@ -180,7 +180,7 @@ test_that("drawing a model that is too large warns once, before it starts", {
   models <- add_initial_values(add_priors(models, coef = list(v_i = 0, v_i_det = 0),
                                           sigma = list(df = 1, scale = 0.0001)))
 
-  old <- options(bvartools.size_warning = 1000)
+  old <- options(bayests.size_warning = 1000)
   on.exit(options(old), add = TRUE)
 
   warnings <- character(0)
@@ -191,9 +191,9 @@ test_that("drawing a model that is too large warns once, before it starts", {
                       })
   expect_length(warnings, 1)
   expect_match(warnings, "list of models")
-  expect_match(warnings, "bvartools.size_warning = Inf")
+  expect_match(warnings, "bayests.size_warning = Inf")
 
-  options(bvartools.size_warning = Inf)
+  options(bayests.size_warning = Inf)
   expect_no_warning(add_posterior_coefficients(models[[1]]))
 })
 
@@ -203,7 +203,7 @@ test_that("writing an object that is too large warns once", {
   dir.create(folder)
   on.exit(unlink(folder, recursive = TRUE), add = TRUE)
 
-  old <- options(bvartools.size_warning = 1000)
+  old <- options(bayests.size_warning = 1000)
   on.exit(options(old), add = TRUE)
 
   warnings <- character(0)

@@ -7,7 +7,7 @@ NULL
 #' object of class 'bvecmodel'.
 #'
 #' @param object an object of class 'bvecmodel', usually, the result of a call
-#' to \code{\link{add_posterior_coefficients}}.
+#' to \code{\link[bayests]{add_posterior_coefficients}}.
 #' @param n_ahead the number of horizons the profile is followed over.
 #' @param ci a numeric between 0 and 1 specifying the probability of the
 #' credible band. Defaults to 0.95.
@@ -32,7 +32,7 @@ NULL
 #' stationary combinations exist, and the profile is the check on it. How
 #' quickly the profile falls is the speed of convergence to equilibrium.
 #'
-#' Unlike \code{\link{irf}} and \code{\link{fevd}}, which a VEC model reaches
+#' Unlike \code{\link[bayests]{irf}} and \code{\link[bayests]{fevd}}, which a VEC model reaches
 #' through \code{\link{vec_to_var}}, this statistic cannot be taken from the
 #' level VAR alone: \code{vec_to_var} drops \code{beta}, and the profile is a
 #' statement about the cointegrating vectors themselves. The level form is used

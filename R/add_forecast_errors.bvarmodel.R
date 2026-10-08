@@ -10,7 +10,7 @@
 #' @return The object in \code{object} with \code{posterior$forecast$errors} added, a
 #' \code{\link[coda]{mcmc}} object with one row per draw and \eqn{Kh} columns in the
 #' order of \code{posterior$forecast$forecasts}, which it is stored beside.
-#' \code{\link{selection_criteria}} summarises them.
+#' \code{\link[bayests]{selection_criteria}} summarises them.
 #'
 #' @examples
 #' 

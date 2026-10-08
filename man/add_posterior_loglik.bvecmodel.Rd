@@ -8,7 +8,7 @@
 }
 \arguments{
 \item{object}{an object of class 'bvecmodel', usually, the result of a call to
-\code{\link{add_posterior_coefficients}}.}
+\code{\link[bayests]{add_posterior_coefficients}}.}
 
 \item{...}{additional arguments.}
 }
@@ -16,7 +16,7 @@
 The object in \code{object} with \code{posterior$loglik} added, a
 \code{\link[coda]{mcmc}} object with one row per draw and one column per period of the
 training sample, holding the pointwise log-likelihood that
-\code{\link{selection_criteria}} uses.
+\code{\link[bayests]{selection_criteria}} uses.
 }
 \description{
 Calculates and adds posterior log-likelihoods to an object of class 'bvecmodel'.
@@ -59,12 +59,9 @@ Other posterior simulation:
 \code{\link[=add_posterior_forecasts.bvarmodel]{add_posterior_forecasts.bvarmodel()}},
 \code{\link[=add_posterior_forecasts.bvecmodel]{add_posterior_forecasts.bvecmodel()}},
 \code{\link[=add_posterior_loglik.bvarmodel]{add_posterior_loglik.bvarmodel()}},
-\code{\link[=add_seed]{add_seed()}},
-\code{\link[=bayests_files]{bayests_files()}},
-\code{\link[=bayests_posterior]{bayests_posterior()}},
+\code{\link[=add_seed.bvarmodel]{add_seed.bvarmodel()}},
 \code{\link[=bvar]{bvar()}},
 \code{\link[=bvec]{bvec()}},
-\code{\link[=chain_diagnostics]{chain_diagnostics()}},
 \code{\link[=predict.bvecmodel]{predict.bvecmodel()}}
 }
 \concept{posterior simulation}

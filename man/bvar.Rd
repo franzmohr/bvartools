@@ -135,7 +135,7 @@ The draws of the different coefficient matrices provided in \code{A0}, \code{A},
 
 The result is the same kind of object as the output of
 \code{\link{create_bvarmodel}} in combination with
-\code{\link{add_posterior_coefficients}}, so it can be used with the methods of class
+\code{\link[bayests]{add_posterior_coefficients}}, so it can be used with the methods of class
 'bvarmodel' such as \code{\link{irf.bvarmodel}},
 \code{\link{predict.bvarmodel}} or \code{\link{summary.bvarmodel}}.
 Accordingly, the draws are stored in the parameterisation those methods
@@ -147,8 +147,8 @@ diagonal, which are the elements that are estimated.
 
 Since a model that is constructed from posterior draws does not contain the
 specification of its priors, the elements \code{priors} and \code{initial} of
-the resulting object are empty. Use \code{\link{add_priors}} and
-\code{\link{add_initial_values}} if the model should be re-estimated.
+the resulting object are empty. Use \code{\link[bayests]{add_priors}} and
+\code{\link[bayests]{add_initial_values}} if the model should be re-estimated.
 }
 \examples{
 
@@ -228,11 +228,8 @@ Other posterior simulation:
 \code{\link[=add_posterior_forecasts.bvecmodel]{add_posterior_forecasts.bvecmodel()}},
 \code{\link[=add_posterior_loglik.bvarmodel]{add_posterior_loglik.bvarmodel()}},
 \code{\link[=add_posterior_loglik.bvecmodel]{add_posterior_loglik.bvecmodel()}},
-\code{\link[=add_seed]{add_seed()}},
-\code{\link[=bayests_files]{bayests_files()}},
-\code{\link[=bayests_posterior]{bayests_posterior()}},
+\code{\link[=add_seed.bvarmodel]{add_seed.bvarmodel()}},
 \code{\link[=bvec]{bvec()}},
-\code{\link[=chain_diagnostics]{chain_diagnostics()}},
 \code{\link[=predict.bvecmodel]{predict.bvecmodel()}}
 }
 \concept{posterior simulation}

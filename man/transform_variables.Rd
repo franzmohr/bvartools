@@ -71,7 +71,6 @@ Other model set-up:
 \code{\link[=add_priors.bvarmodel]{add_priors.bvarmodel()}},
 \code{\link[=add_priors.bvecmodel]{add_priors.bvecmodel()}},
 \code{\link[=aggregation_weights]{aggregation_weights()}},
-\code{\link[=combine_models]{combine_models()}},
 \code{\link[=create_bvarmodel]{create_bvarmodel()}},
 \code{\link[=create_bvecmodel]{create_bvecmodel()}},
 \code{\link[=use_expanding_window.bvarmodel]{use_expanding_window.bvarmodel()}},

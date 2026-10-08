@@ -84,7 +84,7 @@
 #' The cointegration matrix is normalised so that its first \eqn{r} rows are an identity
 #' matrix. Its other rows for endogenous variables are drawn from \code{range_beta}, and
 #' its rows for a restricted constant or trend from \code{range_const} and
-#' \code{range_trend}. Since \code{\link{add_posterior_coefficients}} may use another
+#' \code{range_trend}. Since \code{\link[bayests]{add_posterior_coefficients}} may use another
 #' normalisation, estimates are best compared with the true parameters through
 #' \eqn{\Pi_t}, which does not depend on it.
 #'

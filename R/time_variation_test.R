@@ -1,34 +1,3 @@
-#' Test for Time Variation
-#'
-#' Generic function used to compute Bayes factors for time variation in the
-#' coefficients and volatilities of a model with time varying parameters.
-#'
-#' @param object an object with suitable posterior draws passed forward to method.
-#' @param ... arguments passed forward to method.
-#'
-#' @return The value returned by the method for the class of \code{object},
-#' as described on the pages of the methods.
-#'
-#' @seealso Methods: \code{\link{time_variation_test.bvarmodel}},
-#' \code{\link{time_variation_test.bvecmodel}}, and for a list of models, the
-#' windows of an expanding window comparison or a folder of stored models,
-#' \code{\link{time_variation_test.modellist}},
-#' \code{\link{time_variation_test.expandingwindow}} and
-#' \code{\link[=folder_steps]{time_variation_test.bvarfolder}}.
-#'
-#' @export
-time_variation_test <- function(object, ...) {
-  UseMethod("time_variation_test")
-}
-
-
-#' @export
-time_variation_test.default <- function(object, ...) {
-  stop("time_variation_test() is available for 'bvarmodel' and 'bvecmodel' objects with ",
-       "time varying parameters, estimated with the prior 'omega_v' in add_priors(), ",
-       "and for the 'modellist', 'expandingwindow' and 'bvarfolder' objects that hold ",
-       "them.", call. = FALSE)
-}
 
 
 #' Test for Time Variation in a VAR or VEC Model
@@ -40,8 +9,8 @@ time_variation_test.default <- function(object, ...) {
 #'
 #' @param object an object of class \code{"bvarmodel"} with \code{tvp = TRUE},
 #' whatever its error term, or of class \code{"bvecmodel"} with the same, whose priors were set with
-#' \code{coef$omega_v} or, under stochastic volatility, \code{sigma$omega_v} in \code{\link{add_priors}} and whose
-#' posterior was drawn by \code{\link{add_posterior_coefficients}}.
+#' \code{coef$omega_v} or, under stochastic volatility, \code{sigma$omega_v} in \code{\link[bayests]{add_priors}} and whose
+#' posterior was drawn by \code{\link[bayests]{add_posterior_coefficients}}.
 #' @param joint logical. Should the Bayes factor for the time variation of every
 #' state of a block at once be reported as well? Default is \code{TRUE}.
 #' @param batches integer. The number of batches the draws are split into for
@@ -85,7 +54,7 @@ time_variation_test.default <- function(object, ...) {
 #' of the chain. Where it is large, more draws are needed before the value is
 #' read as more than its sign.
 #'
-#' Each block chooses its prior separately in \code{\link{add_priors}}, and only
+#' Each block chooses its prior separately in \code{\link[bayests]{add_priors}}, and only
 #' the blocks estimated under \code{omega_v} are reported.
 #'
 #' For a VEC model the coefficients are the loadings, labelled by the error
@@ -298,26 +267,4 @@ time_variation_test.bvecmodel <- function(object, joint = TRUE, batches = 20, ..
   rows <- unlist(lapply(2:k, function(i) rep(i, i - 1)))
   cols <- unlist(lapply(2:k, function(i) seq_len(i - 1)))
   list(equation = y_names[rows], term = y_names[cols])
-}
-
-
-#' @export
-print.bvartimevar <- function(x, digits = 2, ...) {
-
-  cat("Bayes factors for time variation (Savage-Dickey, Chan 2018)\n")
-  cat("log BF > 0 favours time variation; |log BF| > 3 is strong evidence\n\n")
-
-  for (b in unique(x[["block"]])) {
-    rows <- x[x[["block"]] == b, , drop = FALSE]
-    out <- data.frame(equation = ifelse(is.na(rows[["equation"]]), "", rows[["equation"]]),
-                      term = rows[["term"]],
-                      `log BF` = formatC(rows[["log_bf"]], format = "f", digits = digits),
-                      NSE = formatC(rows[["nse"]], format = "f", digits = digits),
-                      check.names = FALSE, stringsAsFactors = FALSE)
-    cat(toupper(substring(b, 1, 1)), substring(b, 2), ":\n", sep = "")
-    print(out, row.names = FALSE, right = FALSE)
-    cat("\n")
-  }
-
-  invisible(x)
 }

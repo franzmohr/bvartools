@@ -1,6 +1,3 @@
-#' @include add_sign_restrictions.R
-NULL
-
 #' Sign Restrictions
 #'
 #' Identifies the shocks of an object of class 'bvarmodel' by the signs of the
@@ -61,11 +58,11 @@ NULL
 #' Only sign restrictions are supported. A zero restriction cannot be imposed by
 #' rejection, because the set of rotations that satisfies one has probability
 #' zero, so no number of tries finds a member of it. Use
-#' \code{\link{add_sign_zero_restrictions}}, which draws rotations that satisfy
+#' \code{\link[bayests]{add_sign_zero_restrictions}}, which draws rotations that satisfy
 #' the zero restrictions by construction and reweights them.
 #'
 #' The accepted rotations are added to the object as element \code{q} of its
-#' posterior draws, from where \code{\link{irf}}, \code{\link{fevd}} and
+#' posterior draws, from where \code{\link[bayests]{irf}}, \code{\link[bayests]{fevd}} and
 #' \code{\link{spillover}} use them under \code{type = "sign"}.
 #'
 #' The result depends on the state of the random number generator, so

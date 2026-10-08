@@ -8,7 +8,7 @@ aggregate_forecasts(object, code, target = "average", levels = NULL, scale = 1)
 }
 \arguments{
 \item{object}{an object of class 'bvarmodel', 'bvecmodel', 'expandingwindow' or
-'modellist', whose models contain forecasts, i.e. \code{\link{add_posterior_forecasts}}
+'modellist', whose models contain forecasts, i.e. \code{\link[bayests]{add_posterior_forecasts}}
 was already applied to them.}
 
 \item{code}{a named integer vector of the transformation codes of FRED-MD and
@@ -85,7 +85,7 @@ model, which forecasts eight quarters, provides the current and the next year.
 The realised annual figures, against which the aggregated forecasts are
 scored, are obtained from \code{levels} or, without it, from the data of the
 models in the same way, and are put in \code{data$test$y}.
-\code{\link{add_forecast_errors}} uses them, if its argument
+\code{\link[bayests]{add_forecast_errors}} uses them, if its argument
 \code{test_sample} is omitted. Otherwise, \code{test_sample} must be an annual
 time series, for example of official annual figures.
 
@@ -97,7 +97,7 @@ scored against the same realised annual figures as the models.
 
 The aggregated models only contain the forecasts and the data, which are
 required to evaluate them. Therefore, aggregation is the last step before
-\code{\link{add_forecast_errors}} and \code{\link{selection_criteria}}, which
+\code{\link[bayests]{add_forecast_errors}} and \code{\link[bayests]{selection_criteria}}, which
 only provides out-of-sample statistics for them. Aggregated VEC models become
 objects of class 'bvarmodel', because their forecasts are those of the levels.
 }
@@ -144,23 +144,14 @@ macroeconomic research. \emph{Federal Reserve Bank of St. Louis Review,
 Other model comparison:
 \code{\link[=add_forecast_errors.bvarmodel]{add_forecast_errors.bvarmodel()}},
 \code{\link[=add_forecast_errors.bvecmodel]{add_forecast_errors.bvecmodel()}},
-\code{\link[=add_predictive_loglik]{add_predictive_loglik()}},
 \code{\link[=add_predictive_loglik.bvarmodel]{add_predictive_loglik.bvarmodel()}},
 \code{\link[=add_predictive_loglik.bvecmodel]{add_predictive_loglik.bvecmodel()}},
-\code{\link[=align_model_obs.modellist]{align_model_obs.modellist()}},
+\code{\link[=add_predictive_loglik.expandingwindow]{add_predictive_loglik.expandingwindow()}},
 \code{\link{analysis_of_stored_models}},
-\code{\link[=choose_best_model.selcritlist]{choose_best_model.selcritlist()}},
 \code{\link[=create_external_forecast]{create_external_forecast()}},
-\code{\link{folder_steps}},
-\code{\link[=map_draws]{map_draws()}},
-\code{\link[=map_models]{map_models()}},
-\code{\link[=open_model]{open_model()}},
-\code{\link[=open_models]{open_models()}},
 \code{\link[=plot_forecast_errors_by_period]{plot_forecast_errors_by_period()}},
 \code{\link[=pool_forecasts]{pool_forecasts()}},
 \code{\link[=selection_criteria.bvarmodel]{selection_criteria.bvarmodel()}},
-\code{\link[=selection_criteria.bvecmodel]{selection_criteria.bvecmodel()}},
-\code{\link[=selection_criteria.default]{selection_criteria.default()}},
-\code{\link[=selection_criteria.modellist]{selection_criteria.modellist()}}
+\code{\link[=selection_criteria.bvecmodel]{selection_criteria.bvecmodel()}}
 }
 \concept{model comparison}

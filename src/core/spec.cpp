@@ -99,6 +99,78 @@ const char *to_string(ForecastStates states)
     return states == ForecastStates::hold ? "hold" : "simulate";
 }
 
+UcTrend uc_trend_from_string(const std::string &name)
+{
+    if (name == "rw" || name.empty())
+    {
+        return UcTrend::random_walk;
+    }
+    if (name == "smooth")
+    {
+        return UcTrend::smooth;
+    }
+    throw std::invalid_argument("unknown trend '" + name + "'; expected one of rw, smooth");
+}
+
+const char *to_string(UcTrend trend)
+{
+    return trend == UcTrend::smooth ? "smooth" : "rw";
+}
+
+UcCycle uc_cycle_from_string(const std::string &name)
+{
+    if (name == "var" || name.empty())
+    {
+        return UcCycle::var;
+    }
+    if (name == "own")
+    {
+        return UcCycle::own;
+    }
+    throw std::invalid_argument("unknown cycle '" + name + "'; expected one of var, own");
+}
+
+const char *to_string(UcCycle cycle)
+{
+    return cycle == UcCycle::own ? "own" : "var";
+}
+
+UcSkew uc_skew_from_string(const std::string &name)
+{
+    if (name == "snd" || name.empty())
+    {
+        return UcSkew::snd;
+    }
+    if (name == "ald")
+    {
+        return UcSkew::ald;
+    }
+    throw std::invalid_argument("unknown skew '" + name + "'; expected one of snd, ald");
+}
+
+const char *to_string(UcSkew skew)
+{
+    return skew == UcSkew::ald ? "ald" : "snd";
+}
+
+UcSkewShock uc_skew_shock_from_string(const std::string &name)
+{
+    if (name == "cycle" || name.empty())
+    {
+        return UcSkewShock::cycle;
+    }
+    if (name == "trend")
+    {
+        return UcSkewShock::trend;
+    }
+    throw std::invalid_argument("unknown skew_shock '" + name + "'; expected one of cycle, trend");
+}
+
+const char *to_string(UcSkewShock shock)
+{
+    return shock == UcSkewShock::trend ? "trend" : "cycle";
+}
+
 void VarSpec::validate() const
 {
     if (k <= 0)

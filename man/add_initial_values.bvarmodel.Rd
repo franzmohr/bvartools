@@ -8,7 +8,7 @@
 }
 \arguments{
 \item{object}{list of class 'bvarmodel', usually, the result of a call to
-\code{\link{create_bvarmodel}} in combination with \code{\link{add_priors}}.}
+\code{\link{create_bvarmodel}} in combination with \code{\link[bayests]{add_priors}}.}
 
 \item{method}{character specifying the method of how initial values are generated.
 Default is \code{"ols"}. See 'Details'.}
@@ -67,7 +67,7 @@ seed set after \code{add_initial_values} fixes the posterior draws.
 The function also stores the seed of the posterior simulation as element
 \code{seed} of \code{object$model}, unless the model has one already. It is
 drawn from R's random number generator, so \code{set.seed()} before this call
-makes it reproducible. \code{\link{add_seed}} replaces it.
+makes it reproducible. \code{\link[bayests]{add_seed}} replaces it.
 }
 
 \examples{
@@ -98,7 +98,6 @@ Other model set-up:
 \code{\link[=add_priors.bvarmodel]{add_priors.bvarmodel()}},
 \code{\link[=add_priors.bvecmodel]{add_priors.bvecmodel()}},
 \code{\link[=aggregation_weights]{aggregation_weights()}},
-\code{\link[=combine_models]{combine_models()}},
 \code{\link[=create_bvarmodel]{create_bvarmodel()}},
 \code{\link[=create_bvecmodel]{create_bvecmodel()}},
 \code{\link[=transform_variables]{transform_variables()}},

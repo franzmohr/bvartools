@@ -169,5 +169,5 @@ bayests::write_to_hdf5
 
 # What this package's methods need of bayests beyond its generics: seeds,
 # the HDF5 writers and readers, and the pieces of the selection criteria.
-#' @importFrom bayests draw_error_bars .check_seed .draw_model_seed .offset_seed .draws_matrix .hdf5_draws_attrs .hdf5_series_attrs .hdf5_read_matrix .hdf5_read_value .hdf5_restore_class .hdf5_write_model .hdf5_group .hdf5_write .hdf5_write_attr .log_mean_exp .nse_log_mean_exp .lpl_entry .loo_data_frame .waic_data_frame .read_posterior_block
+#' @importFrom bayests draw_error_bars forecast_plot_series .check_max_groups .limit_fevd_groups .check_seed .draw_model_seed .offset_seed .draws_matrix .hdf5_draws_attrs .hdf5_series_attrs .hdf5_read_matrix .hdf5_read_value .hdf5_restore_class .hdf5_write_model .hdf5_group .hdf5_write .hdf5_write_attr .log_mean_exp .nse_log_mean_exp .lpl_entry .loo_data_frame .waic_data_frame .read_posterior_block
 NULL

@@ -268,25 +268,3 @@ time_variation_test.bvecmodel <- function(object, joint = TRUE, batches = 20, ..
   cols <- unlist(lapply(2:k, function(i) seq_len(i - 1)))
   list(equation = y_names[rows], term = y_names[cols])
 }
-
-
-#' @export
-print.bvartimevar <- function(x, digits = 2, ...) {
-
-  cat("Bayes factors for time variation (Savage-Dickey, Chan 2018)\n")
-  cat("log BF > 0 favours time variation; |log BF| > 3 is strong evidence\n\n")
-
-  for (b in unique(x[["block"]])) {
-    rows <- x[x[["block"]] == b, , drop = FALSE]
-    out <- data.frame(equation = ifelse(is.na(rows[["equation"]]), "", rows[["equation"]]),
-                      term = rows[["term"]],
-                      `log BF` = formatC(rows[["log_bf"]], format = "f", digits = digits),
-                      NSE = formatC(rows[["nse"]], format = "f", digits = digits),
-                      check.names = FALSE, stringsAsFactors = FALSE)
-    cat(toupper(substring(b, 1, 1)), substring(b, 2), ":\n", sep = "")
-    print(out, row.names = FALSE, right = FALSE)
-    cat("\n")
-  }
-
-  invisible(x)
-}

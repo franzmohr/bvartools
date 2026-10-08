@@ -8,8 +8,10 @@
   objects, reached under the same names, and the methods for 'modellist' and
   'expandingwindow' come with them. What stays here is what is particular to
   VAR and VEC models: their constructors, priors, methods, analysis, forecast
-  pooling and external forecasts. dfmtools and ucmtools build on bayests the
-  same way, which is what lets a 'modellist' hold models of all three. Draws
+  pooling and external forecasts. The plots of forecasts, impulse responses
+  and variance decompositions and the print of a time variation test moved
+  too, since dfmtools returns the same classes. dfmtools and ucmtools build on
+  bayests the same way, which is what lets a 'modellist' hold models of all three. Draws
   are unchanged.
 
   Renames came with the move, none of them of anything in a CRAN release.

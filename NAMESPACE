@@ -74,12 +74,8 @@ S3method(persistence_profiles,bvarmodel)
 S3method(persistence_profiles,bvecmodel)
 S3method(persistence_profiles,expandingwindow)
 S3method(persistence_profiles,modellist)
-S3method(plot,bvarfevd)
 S3method(plot,bvarhd)
-S3method(plot,bvarirf)
 S3method(plot,bvarmodel)
-S3method(plot,bvarprd)
-S3method(plot,bvarprdlist)
 S3method(plot,bvarspillover)
 S3method(plot,bvarspilloverts)
 S3method(plot,bvecmodel)
@@ -92,7 +88,6 @@ S3method(prepare_forecast_input,bvarmodel)
 S3method(prepare_forecast_input,bvecmodel)
 S3method(print,bvarmodel)
 S3method(print,bvarspillover)
-S3method(print,bvartimevar)
 S3method(print,bvecmodel)
 S3method(print,externalforecast)
 S3method(print,forecastpool)
@@ -225,6 +220,7 @@ import(methods)
 importFrom(Matrix,Matrix)
 importFrom(Rcpp,sourceCpp)
 importFrom(bayests,
+  .check_max_groups,
   .check_seed,
   .draw_model_seed,
   .draws_matrix,
@@ -237,6 +233,7 @@ importFrom(bayests,
   .hdf5_write,
   .hdf5_write_attr,
   .hdf5_write_model,
+  .limit_fevd_groups,
   .log_mean_exp,
   .loo_data_frame,
   .lpl_entry,
@@ -264,6 +261,7 @@ importFrom(bayests,
   draw_error_bars,
   expected_model_size,
   fevd,
+  forecast_plot_series,
   from_bayests_tree,
   get_forecast_errors,
   get_model_specifications,

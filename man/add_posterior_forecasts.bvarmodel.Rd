@@ -62,6 +62,10 @@ lacks it and stops with an error unless \code{forecast_states = "hold"}.
 Calculates and adds forecasts to an object of class 'bvarmodel'.
 }
 \details{
+A model with a seed, see \code{\link[bayests]{add_seed}}, draws its forecast
+from a seed derived from its own, so two forecasts of it give the same draws however
+R's generator stands. A model without one draws from R's generator as it stands.
+
 A forecast that starts after the end of the estimation sample, from argument
 \code{y_start} of \code{\link[bayests]{add_forecast_input}}, takes its lags from the start values
 and its coefficients from the sample. \strong{Three things that start from the last period

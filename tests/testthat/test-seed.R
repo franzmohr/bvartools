@@ -323,3 +323,126 @@ test_that("BayesTS runs several paths at once and reports the ones that fail", {
 
   unlink(root, recursive = TRUE)
 })
+
+# --- the simulations that follow the coefficients ----------------------------
+
+# Runs 'f' on 'object' twice, under two different states of R's generator.
+twice <- function(object, f) {
+  set.seed(1)
+  first <- f(object)
+  set.seed(2)
+  list(first, f(object))
+}
+
+test_that("each stage after the coefficients has a seed of its own", {
+  stages <- vapply(c("forecast", "predictive", "structural"),
+                   function(stage) .stage_seed(7L, stage), integer(1))
+  expect_false(anyDuplicated(c(7L, stages)) > 0)
+  # Neither the seed of the model next to it in a list.
+  expect_false(any(stages == vapply(c("forecast", "predictive", "structural"),
+                                    function(stage) .stage_seed(8L, stage), integer(1))))
+  expect_null(.stage_seed(NULL, "forecast"))
+  expect_error(.stage_seed(7L, "coefficients"))
+})
+
+test_that("two forecasts of a seeded VAR are identical", {
+  object <- add_forecast_input(fx_var_fitted(), n_ahead = 4)
+  forecast <- function(x) add_posterior_forecasts(x)[["posterior"]][["forecast"]][["forecasts"]]
+
+  set.seed(3)
+  state <- get(".Random.seed", envir = globalenv())
+  runs <- twice(object, forecast)
+  expect_identical(runs[[1]], runs[[2]])
+
+  # And the generator is left as it was.
+  set.seed(3)
+  forecast(object)
+  expect_identical(get(".Random.seed", envir = globalenv()), state)
+
+  # Another seed, other draws.
+  expect_false(identical(forecast(add_seed(object, 1)), runs[[1]]))
+})
+
+test_that("two forecasts of a seeded VEC model are identical", {
+  object <- add_forecast_input(fx_vec_fitted(), n_ahead = 4)
+  runs <- twice(object, function(x) {
+    add_posterior_forecasts(x)[["posterior"]][["forecast"]][["forecasts"]]
+  })
+  expect_identical(runs[[1]], runs[[2]])
+})
+
+test_that("two forecasts of a seeded grid of quantiles with exogenous regressors are identical", {
+  data <- var_data()
+  end_sample <- stats::time(data)[nrow(data) - 4]
+  endogen <- stats::window(data[, c("y", "Dp")], end = end_sample)
+  exogen <- data[, "r", drop = FALSE]
+  model <- create_bvarmodel(endogen, p = 0, exogen = stats::window(exogen, end = end_sample),
+                            s = 0, structural = TRUE, error = "ald", quantile = c(0.05, 0.5, 0.95),
+                            quantile_grid = TRUE, iterations = fx_iterations,
+                            burnin = fx_burnin)
+  model <- add_priors(model, coef = list(v_i = 1), sigma = list(shape = 3, rate = 0.01))
+  model <- add_seed(add_initial_values(model), 20261008)
+  model <- add_posterior_coefficients(model)
+  model <- add_forecast_input(model, n_ahead = 4,
+                              exogen = stats::window(exogen, start = stats::time(data)[nrow(data) - 3]))
+
+  runs <- twice(model, function(x) {
+    add_posterior_forecasts(x)[["posterior"]][["forecast"]][["forecasts"]]
+  })
+  expect_identical(runs[[1]], runs[[2]])
+
+  # A scenario is a forecast too.
+  scenario <- data.frame(period = 1, variable = "y", value = 0)
+  runs <- twice(model, function(x) {
+    add_posterior_forecasts(x, scenario = scenario)[["posterior"]][["forecast"]][["forecasts"]]
+  })
+  expect_identical(runs[[1]], runs[[2]])
+})
+
+test_that("an unseeded model forecasts from R's generator as it stands", {
+  object <- add_forecast_input(fx_var_fitted(), n_ahead = 4)
+  object[["model"]][["seed"]] <- NULL
+  forecast <- function(state) {
+    set.seed(state)
+    add_posterior_forecasts(object)[["posterior"]][["forecast"]][["forecasts"]]
+  }
+  expect_identical(forecast(5), forecast(5))
+  expect_false(identical(forecast(5), forecast(6)))
+})
+
+test_that("the forecasts of a seeded list of models are identical", {
+  object <- add_forecast_input(fx_var_modellist(), n_ahead = 4)
+  runs <- twice(object, function(x) {
+    lapply(add_posterior_forecasts(x), function(m) m[["posterior"]][["forecast"]][["forecasts"]])
+  })
+  expect_identical(runs[[1]], runs[[2]])
+})
+
+test_that("two scores of a seeded model whose states drift are identical", {
+  object <- add_posterior_forecasts(add_forecast_input(fx_var_tvp_fitted("sv"), n_ahead = 4))
+  levels <- at_domestic()
+  test_sample <- stats::ts.intersect(y = diff(levels[, "y"]), Dp = levels[, "Dp"],
+                                     r = diff(levels[, "r"])) * 100
+  runs <- twice(object, function(x) {
+    add_predictive_loglik(x, test_sample = test_sample)[["posterior"]][["forecast"]][["loglik"]]
+  })
+  expect_identical(runs[[1]], runs[[2]])
+})
+
+test_that("the rotations of a seeded model are identical", {
+  object <- fx_var_fitted()
+  runs <- twice(object, function(x) {
+    add_sign_restrictions(x, fx_sign_restrictions())[["posterior"]][["q"]][["coeffs"]]
+  })
+  expect_identical(runs[[1]], runs[[2]])
+
+  restrictions <- data.frame(impulse = "y", response = c("Dp", "r"), sign = c(0, 1),
+                             horizon = 0)
+  runs <- twice(object, function(x) {
+    # Too few candidate draws for a reliable importance sample, which is not what
+    # is tested here.
+    result <- suppressWarnings(add_sign_zero_restrictions(x, restrictions, draws = 20))
+    list(result[["posterior"]][["q"]][["coeffs"]], result[["posterior"]][["a"]][["coeffs"]])
+  })
+  expect_identical(runs[[1]], runs[[2]])
+})

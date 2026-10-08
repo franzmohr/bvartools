@@ -115,8 +115,10 @@
 #' therefore has to be named early. The function refuses an ordering that leaves
 #' a column with nothing to draw and says which shock it was.
 #'
-#' The result depends on the state of the random number generator, so
-#' \code{\link{set.seed}} is needed to reproduce it. It depends on it in two
+#' The draws are taken with a seed derived from the model's own, see
+#' \code{\link[bayests]{add_seed}}, so a model with a seed gives the same result
+#' however R's generator stands; a model without one needs \code{\link{set.seed}}
+#' to reproduce it. The result depends on the seed in two
 #' places rather than one: the rotations are drawn at random, and so are the
 #' matrices that complete each shock's constraints to a square system. Appendix
 #' A.3 of the paper says any draw of the latter defines a valid algorithm, and
@@ -264,19 +266,7 @@ add_sign_zero_restrictions.bvarmodel <- function(object, restrictions, draws = N
                       all_regressors = TRUE)
   store <- length(A)
 
-  identified <- arias_rubio_ramirez_waggoner_2018(A, restrictions, endogen,
-                                                  object[["model"]][["p"]],
-                                                  max_tries = max_tries, smooth = smooth,
-                                                  one_sided = one_sided)
-  q <- identified[["q"]]
-  weights <- identified[["weights"]]
-  effective <- identified[["effective_sample_size"]]
-  restrictions <- identified[["restrictions"]]
-  max_tries <- as.integer(max_tries)
-
-  if (is.null(draws)) {
-    draws <- effective
-  } else {
+  if (!is.null(draws)) {
     if (!is.numeric(draws) || length(draws) != 1 || is.na(draws) ||
         draws < 1 || draws != round(draws)) {
       stop("Argument 'draws' must be a single positive integer.")
@@ -284,7 +274,26 @@ add_sign_zero_restrictions.bvarmodel <- function(object, restrictions, draws = N
     draws <- as.integer(draws)
   }
 
-  index <- sample.int(store, size = draws, replace = TRUE, prob = weights)
+  # The rotations, the completions and the resample are one stream, so that the
+  # resample of a seeded model is as repeatable as its rotations.
+  identified <- .with_stage_seed(object, "structural", {
+    identified <- arias_rubio_ramirez_waggoner_2018(A, restrictions, endogen,
+                                                    object[["model"]][["p"]],
+                                                    max_tries = max_tries, smooth = smooth,
+                                                    one_sided = one_sided)
+    if (is.null(draws)) {
+      draws <- identified[["effective_sample_size"]]
+    }
+    identified[["index"]] <- sample.int(store, size = draws, replace = TRUE,
+                                        prob = identified[["weights"]])
+    identified
+  })
+  q <- identified[["q"]]
+  effective <- identified[["effective_sample_size"]]
+  restrictions <- identified[["restrictions"]]
+  max_tries <- as.integer(max_tries)
+  index <- identified[["index"]]
+  draws <- length(index)
 
   object[["posterior"]] <- .resample_draws(object[["posterior"]], index, store)
   object[["posterior"]][["q"]] <- list(

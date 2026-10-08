@@ -1,6 +1,6 @@
 # The exported identification step, arias_rubio_ramirez_waggoner_2018(). It is
 # what add_sign_zero_restrictions() runs, so the checks are that the two agree
-# under the same seed, and that what only the exported function allows -- a
+# under the same seed -- the model's, for the method -- and that what only the exported function allows -- a
 # table of signs alone, draws that did not come from a 'bvarmodel' -- works.
 
 ex_model <- function() {
@@ -23,10 +23,10 @@ test_that("it identifies the draws add_sign_zero_restrictions() identifies", {
   object <- ex_model()
   restrictions <- data.frame(impulse = "y", response = c("Dp", "r"), sign = c(0, 1))
 
-  set.seed(99)
-  direct <- arias_rubio_ramirez_waggoner_2018(ex_draws(object), restrictions,
-                                              object[["model"]][["endogen"]], lags = 1)
-  set.seed(99)
+  # The method draws with the seed of the model's structural stage.
+  direct <- bvartools:::.with_stage_seed(object, "structural",
+    arias_rubio_ramirez_waggoner_2018(ex_draws(object), restrictions,
+                                      object[["model"]][["endogen"]], lags = 1))
   method <- add_sign_zero_restrictions(object, restrictions)
   record <- method[["model"]][["sign_zero_restrictions"]]
 

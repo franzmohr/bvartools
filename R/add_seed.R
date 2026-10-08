@@ -14,7 +14,15 @@
 #' \code{seed} of group \code{/model}, where the BayesTS executable reads it,
 #' and the internal samplers of \code{\link[bayests]{add_posterior_coefficients}} draw
 #' with it too, so a model with a given seed gives the same draws however R's
-#' generator stands. BayesTS and this package use different generators, so the
+#' generator stands. So do the simulations that follow the coefficients:
+#' \code{\link[bayests]{add_posterior_forecasts}}, scenarios included,
+#' \code{\link[bayests]{add_predictive_loglik}}, \code{\link{add_sign_restrictions}}
+#' and \code{\link{add_sign_zero_restrictions}}. Each of these three stages -- the
+#' forecast, the predictive score and the rotations -- draws from a seed of its own
+#' derived from the model's, as the BayesTS command line seeds its stages from
+#' \code{/model/seed}, so that a forecast repeated gives the same draws and does
+#' not reuse the random numbers the chain started from. A model without a seed
+#' draws from R's generator as it stands throughout. BayesTS and this package use different generators, so the
 #' same seed gives different draws in the two. A list of models is numbered by
 #' the method of \pkg{bayests}.
 #'
@@ -76,4 +84,32 @@ add_seed.bvecmodel <- function(object, seed, ...) {
   set.seed(seed, kind = "Mersenne-Twister", normal.kind = "Inversion",
            sample.kind = "Rejection")
   expr
+}
+
+# The seed of a stage of the simulation that follows the coefficients: the
+# forecast, the predictive score, the rotations of a sign restricted
+# identification. The BayesTS command line seeds each stage of a model as its own
+# stream derived from /model/seed, so that a forecast run twice gives the same
+# draws and does not start from the numbers the chain began with; this is the
+# same rule with R's generator. The coefficients keep the seed itself, which is
+# what add_posterior_coefficients() has always drawn with. The stage seeds are
+# the first draws of R's generator set to the model's seed, which keeps the
+# streams of the neighbouring seeds that add_seed() gives a list of models apart.
+# A model without a seed has no stage seeds, and its stages draw from R's
+# generator as it stands.
+.model_stages <- c("forecast", "predictive", "structural")
+
+.stage_seed <- function(seed, stage) {
+  if (is.null(seed)) {
+    return(NULL)
+  }
+  stage <- match.arg(stage, .model_stages)
+  seeds <- .with_model_seed(seed, sample.int(.Machine$integer.max, length(.model_stages)))
+  seeds[match(stage, .model_stages)]
+}
+
+# Evaluates 'expr' with R's generator set to the seed of 'stage' of 'object',
+# and as it stands where the model has no seed.
+.with_stage_seed <- function(object, stage, expr) {
+  .with_model_seed(.stage_seed(object[["model"]][["seed"]], stage), expr)
 }

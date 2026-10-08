@@ -49,15 +49,12 @@ test_that("add_posterior_loglik leaves an error correction model unchanged", {
 test_that("forecasting an object that already carries a forecast replaces it", {
   object <- add_forecast_input(fx_var_fitted(), n_ahead = 2)
 
-  set.seed(1)
   first <- add_posterior_forecasts(object)
-  set.seed(2)
-  second <- add_posterior_forecasts(first)
-  set.seed(2)
-  fresh <- add_posterior_forecasts(object)
+  second <- add_posterior_forecasts(add_seed(first, 2))
+  fresh <- add_posterior_forecasts(add_seed(object, 2))
 
   expect_identical(sum(names(second[["posterior"]]) == "forecast"), 1L)
-  # The draws follow the seed: the second forecast is not the first one
+  # The draws follow the model's seed: the second forecast is not the first one
   # returned again, and it is what the same seed produces from scratch.
   expect_false(identical(unclass(first[["posterior"]][["forecast"]][["forecasts"]]),
                          unclass(second[["posterior"]][["forecast"]][["forecasts"]])))

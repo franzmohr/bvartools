@@ -343,6 +343,11 @@ vec_to_var.bvecmodel <- function(object, ...) {
     }
   }
 
+  # The seed travels with the draws it belongs to, so that the representation
+  # forecasts, scores and rotates with the streams the VEC model would, and the
+  # two routes to a forecast of a constant model give the same draws.
+  result[["model"]][["seed"]] <- specs[["seed"]]
+
   # Data for forecast simulation is generated in the layout of the VAR
   # representation already, since that is the form a VEC model is forecast in.
   if (!is.null(object[["data"]][["forecast"]])) {

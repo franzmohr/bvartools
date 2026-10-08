@@ -134,14 +134,14 @@ add_predictive_loglik.bvarmodel <- function(object, test_sample = NULL, ...) {
   }
 
   algorithm <- object[["model"]][["algorithm"]]
-  object <- switch(algorithm,
+  object <- .with_stage_seed(object, "predictive", switch(algorithm,
                    VarNormalGamma = .VarNormalGammaScore(object),
                    VarNormalStochvol = .VarNormalStochvolScore(object),
                    VarNormalWishart = .VarNormalWishartScore(object),
                    VarTvpGamma = .VarTvpGammaScore(object),
                    VarTvpStochvol = .VarTvpStochvolScore(object),
                    VarTvpWishart = .VarTvpWishartScore(object),
-                   stop("Algorithm '", algorithm, "' cannot be scored."))
+                   stop("Algorithm '", algorithm, "' cannot be scored.")))
 
   mcpar_temp <- coda::mcpar(object[["posterior"]][["u_sigma_inv"]][["coeffs"]])
   object[["posterior"]][["forecast"]][["loglik"]] <-

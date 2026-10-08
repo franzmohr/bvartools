@@ -157,7 +157,8 @@ add_predictive_loglik.expandingwindow <- function(object, ...) {
 
     newdata <- .predictive_observation(following, .predictive_rank(current), current)
     object[[i]][["predictive"]] <- list(
-      loglik = .predictive_log_density(current, newdata),
+      loglik = .with_stage_seed(current, "predictive",
+                                .predictive_log_density(current, newdata)),
       period = newdata[["period"]])
   }
 

@@ -42,7 +42,11 @@
 #' stores. A stochastic volatility model fitted with an earlier version of the package
 #' lacks it and stops with an error unless \code{forecast_states = "hold"}.
 #'
-#' @details A forecast that starts after the end of the estimation sample, from argument
+#' @details A model with a seed, see \code{\link[bayests]{add_seed}}, draws its forecast
+#' from a seed derived from its own, so two forecasts of it give the same draws however
+#' R's generator stands. A model without one draws from R's generator as it stands.
+#'
+#' A forecast that starts after the end of the estimation sample, from argument
 #' \code{y_start} of \code{\link[bayests]{add_forecast_input}}, takes its lags from the start values
 #' and its coefficients from the sample. \strong{Three things that start from the last period
 #' of the sample are refused for it}: a \code{scenario}, which is drawn from the end of the
@@ -144,14 +148,14 @@ add_posterior_forecasts.bvarmodel <- function(object, forecast_states = NULL, sc
 
   if (algorithm %in% c("VarNormalAld", "VarNormalGamma", "VarNormalStochvol", "VarNormalWishart",
                        "VarTvpGamma", "VarTvpStochvol", "VarTvpWishart")) {
-    object <- switch(algorithm,
+    object <- .with_stage_seed(object, "forecast", switch(algorithm,
                      VarNormalAld = .VarNormalAldForecasts(object),
                      VarNormalGamma = .VarNormalGammaForecasts(object),
                      VarNormalStochvol = .VarNormalStochvolForecasts(object),
                      VarNormalWishart = .VarNormalWishartForecasts(object),
                      VarTvpGamma = .VarTvpGammaForecasts(object),
                      VarTvpStochvol = .VarTvpStochvolForecasts(object),
-                     VarTvpWishart = .VarTvpWishartForecasts(object))
+                     VarTvpWishart = .VarTvpWishartForecasts(object)))
   } else {
     stop("Algorithm not implemented yet.")
   }

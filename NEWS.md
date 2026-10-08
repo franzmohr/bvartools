@@ -25,6 +25,25 @@
   new `read_hdf5_model()` methods for 'bvarmodel' and 'bvecmodel', which hold
   the reader `read_model_from_hdf5()` used to be.
 
+* **A model with a seed now draws the same forecast every time.**
+  `add_posterior_forecasts()` drew from R's generator as it stood, so two
+  forecasts of one fitted model differed even after `add_seed()`, and only
+  `set.seed()` before the call repeated them. The simulations that follow the
+  coefficients now draw from seeds derived from `object$model$seed`, one per
+  stage, as the BayesTS command line seeds its forecast stage from a stream
+  derived from `/model/seed` rather than from the seed itself: the forecast of
+  `add_posterior_forecasts()` (scenarios and quantile paths included, VAR and VEC,
+  and so the 'modellist' and 'expandingwindow' methods of bayests, on one core or
+  several), the score of `add_predictive_loglik()`, and the rotations of
+  `add_sign_restrictions()` and `add_sign_zero_restrictions()`, whose resample
+  shares their stream. A forecast therefore does not reuse the random numbers the
+  chain started from, and repeating a stage no longer moves the draws of the next.
+  **Draws change for every model with a seed**: forecasts, predictive scores and
+  rotations, and the forecasts and score of the discounted models, which used the
+  model's seed itself. A model without a seed draws from R's generator as it
+  stands and gives the draws it gave before. Coefficient draws are unchanged.
+  Forecast pools have no seed and still need `set.seed()`.
+
 * The vendored BayesTS core moves to `75d35c6`, which adds the four unobserved
   components models. They belong to ucmtools and are skipped, with their three
   support headers; what arrives here is their structs and validators in the

@@ -60,7 +60,24 @@ skip <- c(
   ## compile, since it reaches for nothing but predictive_score.h, which is
   ## copied. It is skipped anyway rather than carried as dead weight a CRAN
   ## reviewer would find listed in inst/COPYRIGHTS with nothing including it.
-  "models/factor_score.h"            # src/core/
+  "models/factor_score.h",           # src/core/
+
+  ## The unobserved components models are ucmtools'. They are not VARs, and
+  ## nothing here includes them, so they would compile into the shared object
+  ## with nothing able to reach them. The three support headers go with them:
+  ## no other sampler includes them. Every UC model upstream adds has to be
+  ## listed here. Upstream has four of them.
+  "uc_normal_gamma.h",               # inst/include/bayests/
+  "models/uc_normal_gamma.cpp",      # src/core/
+  "uc_normal_wishart.h",             # inst/include/bayests/
+  "models/uc_normal_wishart.cpp",    # src/core/
+  "uc_normal_stochvol.h",            # inst/include/bayests/
+  "models/uc_normal_stochvol.cpp",   # src/core/
+  "uc_normal_skew.h",                # inst/include/bayests/
+  "models/uc_normal_skew.cpp",       # src/core/
+  "models/uc_support.h",             # src/core/
+  "models/uc_constant_support.h",    # src/core/
+  "models/uc_skew_support.h"         # src/core/
 )
 
 

@@ -1,5 +1,14 @@
 # bvartools 1.0.0
 
+* The vendored BayesTS core moves to `75d35c6`, which adds the four unobserved
+  components models. They belong to ucmtools and are skipped, with their three
+  support headers; what arrives here is their structs and validators in the
+  shared files and a third entry point of the band sampler,
+  `chan_jeliazkov_2009_precision()`, which nothing here calls. Draws are
+  unchanged: ten blocks of draws from VAR, SVAR, stochastic volatility, time
+  varying, VEC, model list and forecast runs with fixed seeds are identical to
+  those of a clean build of the previous version.
+
 * **A forecast can now start from values after the end of the estimation
   sample.** `add_forecast_input()` and `prepare_forecast_input()` take
   `y_start`, a time series of the endogenous variables whose last `p`

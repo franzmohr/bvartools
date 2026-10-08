@@ -9,6 +9,7 @@
 #include <cstring>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 /**
@@ -683,4 +684,59 @@ arma::mat chan_jeliazkov_2009_conditional(const arma::mat &y, const arma::mat &z
 
   BandSystem conditional = conditioned_on(joint, known);
   return draw_from_band(conditional);
+}
+
+/**
+ * @brief Draws a path from a block banded Gaussian posterior given by its
+ *        precision.
+ *
+ * The third entry point, and the second half of the other two on its own: the
+ * caller assembles \f$K\f$ and \f$b\f$, and this draws \f$x \sim N(K^{-1}b,
+ * K^{-1})\f$ by the same block Cholesky. It exists for a path whose posterior is
+ * block banded without being the posterior of a measurement and a transition
+ * in the form `chan_jeliazkov_2009` takes -- an unobserved components trend,
+ * whose cycle is a regression on the trend's own lags, is one: its precision is
+ * a sum of quadratic forms in several lags at once, which no choice of `z` and
+ * `B` there spells.
+ *
+ * @param blocks the upper triangle of K, N(bandwidth + 1) matrices of M x M:
+ *   position \f$i(\text{bandwidth} + 1) + d\f$ holds the block at row i and
+ *   column i + d. Diagonal blocks whole rather than as a triangle, and blocks
+ *   past the last column ignored. Taken by value, being factorised in place.
+ * @param rhs M x N, b one column per block.
+ * @param bandwidth how many block columns apart K reaches; zero for a block
+ *   diagonal K.
+ *
+ * @return M x N, one column per block.
+ *
+ * @throws std::invalid_argument if the blocks do not describe an N-column band
+ *   of M x M blocks or `rhs` is not finite.
+ * @throws std::runtime_error if K is not positive definite or the draw is not
+ *   finite.
+ *
+ * @warning The draw depends on the global Armadillo random number generator.
+ */
+arma::mat chan_jeliazkov_2009_precision(std::vector<arma::mat> blocks, const arma::mat &rhs,
+                                        const arma::uword bandwidth)
+{
+  const arma::uword m = rhs.n_rows;
+  const arma::uword n = rhs.n_cols;
+  require(m > 0 && n > 0, "'rhs' must have at least one row and one column, got " + dims(rhs));
+  require(all_finite(rhs), "'rhs' contains NaN or infinite values");
+  require(blocks.size() == n * (bandwidth + 1),
+          "'blocks' must hold " + std::to_string(n * (bandwidth + 1)) +
+              " blocks, bandwidth + 1 per column, got " + std::to_string(blocks.size()));
+  for (const arma::mat &b : blocks) {
+    require(b.n_rows == m && b.n_cols == m,
+            "every block must be " + std::to_string(m) + "x" + std::to_string(m) + ", got " +
+                dims(b));
+  }
+
+  BandSystem sys;
+  sys.m = m;
+  sys.n = n;
+  sys.p = bandwidth;
+  sys.blocks = std::move(blocks);
+  sys.rhs = rhs;
+  return draw_from_band(sys);
 }

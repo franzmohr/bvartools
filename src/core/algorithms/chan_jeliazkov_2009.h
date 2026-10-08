@@ -6,6 +6,8 @@
 
 #include "bayests/arma.h"
 
+#include <vector>
+
 arma::mat chan_jeliazkov_2009(const arma::mat &y, const arma::mat &z,
                               const arma::mat &sigma_u, const arma::mat &sigma_v,
                               const arma::mat &B,
@@ -20,5 +22,13 @@ arma::mat chan_jeliazkov_2009_conditional(const arma::mat &y, const arma::mat &z
                                           const arma::mat &B,
                                           const arma::vec &a_init, const arma::mat &P_init,
                                           const arma::mat &known);
+
+/// The draw alone, from a precision the caller has already assembled: for a
+/// model that is not a state space model in the form the two above take, but
+/// whose path still has a block banded posterior precision. `blocks` is the
+/// upper triangle, block (i, d) at position i * (bandwidth + 1) + d, each
+/// M x M; `rhs` is M x N. Returns the M x N path.
+arma::mat chan_jeliazkov_2009_precision(std::vector<arma::mat> blocks, const arma::mat &rhs,
+                                        arma::uword bandwidth);
 
 #endif // CHAN_JELIAZKOV_2009_H

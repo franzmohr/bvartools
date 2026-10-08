@@ -221,7 +221,7 @@ struct RandomWalkPrior
     /// src/core/models/noncentred_support.h. Every sampler whose coefficients
     /// drift reads it: the time-varying VARs and VECs under all four error
     /// terms, and the two dynamic factor models, for whichever of their blocks
-    /// the file sets it on.
+    /// the file sets it on -- and UcNormalStochvol, for its log-volatilities.
     arma::vec omega_v;
 
     /// Normal on the state of the period before the sample.

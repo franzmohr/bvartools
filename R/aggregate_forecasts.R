@@ -6,7 +6,7 @@
 #' same annual basis.
 #'
 #' @param object an object of class 'bvarmodel', 'bvecmodel', 'expandingwindow' or
-#' 'modellist', whose models contain forecasts, i.e. \code{\link{add_posterior_forecasts}}
+#' 'modellist', whose models contain forecasts, i.e. \code{\link[bayests]{add_posterior_forecasts}}
 #' was already applied to them.
 #' @param code a named integer vector of the transformation codes of FRED-MD and
 #' FRED-QD, \code{1:7}, which were applied to the variables of the models -- see
@@ -69,7 +69,7 @@
 #' The realised annual figures, against which the aggregated forecasts are
 #' scored, are obtained from \code{levels} or, without it, from the data of the
 #' models in the same way, and are put in \code{data$test$y}.
-#' \code{\link{add_forecast_errors}} uses them, if its argument
+#' \code{\link[bayests]{add_forecast_errors}} uses them, if its argument
 #' \code{test_sample} is omitted. Otherwise, \code{test_sample} must be an annual
 #' time series, for example of official annual figures.
 #'
@@ -81,7 +81,7 @@
 #'
 #' The aggregated models only contain the forecasts and the data, which are
 #' required to evaluate them. Therefore, aggregation is the last step before
-#' \code{\link{add_forecast_errors}} and \code{\link{selection_criteria}}, which
+#' \code{\link[bayests]{add_forecast_errors}} and \code{\link[bayests]{selection_criteria}}, which
 #' only provides out-of-sample statistics for them. Aggregated VEC models become
 #' objects of class 'bvarmodel', because their forecasts are those of the levels.
 #'

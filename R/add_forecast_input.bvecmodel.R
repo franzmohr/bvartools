@@ -3,12 +3,12 @@
 #' Prepares the input data of the forecast periods of a VEC model.
 #'
 #' @param object an object of class 'bvecmodel', usually, the result of a call to
-#' \code{\link{add_posterior_coefficients}}.
+#' \code{\link[bayests]{add_posterior_coefficients}}.
 #' @param n_ahead an integer of the forecast horizon.
 #' @param deterministic,exogen the values of the deterministic terms and of the
 #' unmodelled variables in the forecast periods, as for
 #' \code{\link{add_forecast_input.bvarmodel}}.
-#' @param ... further arguments passed to \code{\link{prepare_forecast_input}}.
+#' @param ... further arguments passed to \code{\link[bayests]{prepare_forecast_input}}.
 #'
 #' @details A VEC model is forecast in levels: it is the same model as its VAR
 #' representation, and the forecast of the differences follows from that of the
@@ -44,7 +44,7 @@ add_forecast_input.bvecmodel <- function(object, n_ahead = 10, deterministic = N
 #' Simulates forecasts of a VEC model, in levels, from its posterior draws.
 #'
 #' @param object an object of class 'bvecmodel', usually, the result of a call to
-#' \code{\link{add_posterior_coefficients}} and \code{\link{add_forecast_input}}.
+#' \code{\link[bayests]{add_posterior_coefficients}} and \code{\link[bayests]{add_forecast_input}}.
 #' @param forecast_states character, what a VEC model with time varying coefficients or
 #' stochastic volatility does with them over the forecast horizon. \code{"simulate"}
 #' carries each draw's random walks forward, one step per period -- the loadings and
@@ -84,7 +84,7 @@ add_forecast_input.bvecmodel <- function(object, n_ahead = 10, deterministic = N
 #' constant of the last sample period only.
 #'
 #' Simulating the volatility forward needs \code{posterior$u_sigma_inv$sigma}, the variance
-#' of the log-volatility innovations, which \code{\link{add_posterior_coefficients}}
+#' of the log-volatility innovations, which \code{\link[bayests]{add_posterior_coefficients}}
 #' stores. A model with stochastic volatility estimated with an earlier version of the
 #' package lacks it and stops with an error unless \code{forecast_states = "hold"}.
 #'
@@ -149,9 +149,9 @@ add_posterior_forecasts.bvecmodel <- function(object, forecast_states = NULL, ..
 #' Summarises the forecasts of a VEC model, in levels.
 #'
 #' @param object an object of class 'bvecmodel', usually, the result of a call to
-#' \code{\link{add_posterior_forecasts}}.
+#' \code{\link[bayests]{add_posterior_forecasts}}.
 #' @param n_ahead number of steps ahead at which to predict. If \code{NULL} (default), every
-#' period simulated by \code{\link{add_posterior_forecasts}}.
+#' period simulated by \code{\link[bayests]{add_posterior_forecasts}}.
 #' @param ... additional arguments passed to \code{\link{predict.bvarmodel}}.
 #'
 #' @details The forecasts are of the levels, and so is the history they are shown with: it
@@ -277,7 +277,7 @@ predict.bvecmodel <- function(object, n_ahead = NULL, ...){
 #'
 #' @return Nothing. The method raises an error, since impulse responses of a VEC model are
 #' obtained from its VAR representation: apply \code{\link{vec_to_var}} first and then
-#' \code{\link{irf}} to the resulting 'bvarmodel'.
+#' \code{\link[bayests]{irf}} to the resulting 'bvarmodel'.
 #'
 #' @family post-estimation analysis
 #' @export
@@ -297,7 +297,7 @@ irf.bvecmodel <- function(x, ...){
 #'
 #' @return Nothing. The method raises an error, since variance decompositions of a VEC model
 #' are obtained from its VAR representation: apply \code{\link{vec_to_var}} first and then
-#' \code{\link{fevd}} to the resulting 'bvarmodel'.
+#' \code{\link[bayests]{fevd}} to the resulting 'bvarmodel'.
 #'
 #' @family post-estimation analysis
 #' @export

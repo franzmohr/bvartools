@@ -87,8 +87,8 @@ quarters of the forecast periods.
 The coefficients, and for models with time varying coefficients or stochastic volatility
 the states, are those estimated on the sample. Nothing is learnt from the start values
 beyond their role as lags. Some uses of a forecast therefore need it to start right after
-the sample: see \code{\link{add_posterior_forecasts}} and
-\code{\link{add_predictive_loglik}}. A model estimated with \code{missing = "estimate"}
+the sample: see \code{\link[bayests]{add_posterior_forecasts}} and
+\code{\link[bayests]{add_predictive_loglik}}. A model estimated with \code{missing = "estimate"}
 starts each draw's forecast from its own completed panel and does not take \code{y_start}.
 }
 \examples{

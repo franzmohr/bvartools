@@ -96,7 +96,7 @@
 #'
 #' The result is the same kind of object as the output of
 #' \code{\link{create_bvecmodel}} in combination with
-#' \code{\link{add_posterior_coefficients}}, so it can be used with the methods of class
+#' \code{\link[bayests]{add_posterior_coefficients}}, so it can be used with the methods of class
 #' 'bvecmodel' such as \code{\link{vec_to_var.bvecmodel}} or
 #' \code{\link{summary.bvecmodel}}. Accordingly, the draws are stored in the
 #' parameterisation those methods expect. The error correction term is described
@@ -111,8 +111,8 @@
 #'
 #' Since a model that is constructed from posterior draws does not contain the
 #' specification of its priors, the elements \code{priors} and \code{initial} of
-#' the resulting object are empty. Use \code{\link{add_priors}} and
-#' \code{\link{add_initial_values}} if the model should be re-estimated.
+#' the resulting object are empty. Use \code{\link[bayests]{add_priors}} and
+#' \code{\link[bayests]{add_initial_values}} if the model should be re-estimated.
 #'
 #' @return An object of class \code{"bvecmodel"} containing the following components:
 #' \item{model}{a list containing information on the model specification.}

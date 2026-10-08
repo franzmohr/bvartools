@@ -4,7 +4,7 @@
 #' horizon realised.
 #'
 #' @param object an object of class 'bvecmodel', usually, the result of a call to
-#' \code{\link{add_posterior_forecasts}}.
+#' \code{\link[bayests]{add_posterior_forecasts}}.
 #' @param test_sample a time-series object of the endogenous variables, in
 #' levels, that covers the forecast periods. If \code{NULL} (default), the values
 #' in \code{data$test$y} of the object are used.

@@ -64,7 +64,7 @@ test_that("a list seeds the models of other packages that have an add_seed() met
                      object[["model"]][["seed"]] <- as.integer(seed)
                      object
                    },
-                   envir = asNamespace("bvartools"))
+                   envir = asNamespace("bayests"))
   other <- structure(list(model = list()),
                      class = c("bvartools_seed_test_model", "list"))
   unknown <- structure(list(model = list()),
@@ -155,7 +155,7 @@ test_that("expanding windows count a model's seed up from window to window", {
 })
 
 test_that("bayests_posterior() needs an executable that exists", {
-  old_option <- options(bvartools.bayests_executable = NULL)
+  old_option <- options(bayests.executable = NULL)
   old_env <- Sys.getenv("BAYESTS_EXECUTABLE", unset = NA)
   Sys.unsetenv("BAYESTS_EXECUTABLE")
 
@@ -217,7 +217,7 @@ test_that("BayesTS draws with the model's seed and gives an unseeded model one",
 })
 
 test_that("bayests_files() needs an executable and a path that exist", {
-  old_option <- options(bvartools.bayests_executable = NULL)
+  old_option <- options(bayests.executable = NULL)
   old_env <- Sys.getenv("BAYESTS_EXECUTABLE", unset = NA)
   Sys.unsetenv("BAYESTS_EXECUTABLE")
 

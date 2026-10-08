@@ -36,9 +36,9 @@
 #' message. Single models and expanding windows cannot be pooled with each
 #' other, and external forecasts, which are point forecasts rather than
 #' predictive distributions, cannot be pooled at all: they are compared beside a
-#' pool, by combining both with \code{\link{combine_models}}.
+#' pool, by combining both with \code{\link[bayests]{combine_models}}.
 #'
-#' The log predictive densities that \code{\link{add_predictive_loglik}} and
+#' The log predictive densities that \code{\link[bayests]{add_predictive_loglik}} and
 #' the forecasts of BayesTS provide are pooled as the forecasts are, which gives
 #' the log of the average predictive density of the members -- the score of the
 #' mixture, not of its draws. They are kept only if every member carries them
@@ -51,8 +51,8 @@
 #'
 #' \strong{A pool is formed after the members' forecasts are drawn}, and the
 #' functions that estimate a model leave it unchanged. It can be passed to
-#' \code{\link{add_forecast_errors}} and \code{\link{selection_criteria}}, and
-#' included in a list of models with \code{\link{combine_models}}. It cannot be
+#' \code{\link[bayests]{add_forecast_errors}} and \code{\link[bayests]{selection_criteria}}, and
+#' included in a list of models with \code{\link[bayests]{combine_models}}. It cannot be
 #' written to a file: write its members and form the pool again after reading
 #' them back.
 #'

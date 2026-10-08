@@ -8,7 +8,7 @@
 }
 \arguments{
 \item{object}{an object of class 'bvecmodel', usually, the result of a call to
-\code{\link{add_posterior_coefficients}} and \code{\link{add_forecast_input}}.}
+\code{\link[bayests]{add_posterior_coefficients}} and \code{\link[bayests]{add_forecast_input}}.}
 
 \item{forecast_states}{character, what a VEC model with time varying coefficients or
 stochastic volatility does with them over the forecast horizon. \code{"simulate"}
@@ -60,7 +60,7 @@ has put the vectors back on the scale of the data and moved the means into the
 constant of the last sample period only.
 
 Simulating the volatility forward needs \code{posterior$u_sigma_inv$sigma}, the variance
-of the log-volatility innovations, which \code{\link{add_posterior_coefficients}}
+of the log-volatility innovations, which \code{\link[bayests]{add_posterior_coefficients}}
 stores. A model with stochastic volatility estimated with an earlier version of the
 package lacks it and stops with an error unless \code{forecast_states = "hold"}.
 }
@@ -73,12 +73,9 @@ Other posterior simulation:
 \code{\link[=add_posterior_forecasts.bvarmodel]{add_posterior_forecasts.bvarmodel()}},
 \code{\link[=add_posterior_loglik.bvarmodel]{add_posterior_loglik.bvarmodel()}},
 \code{\link[=add_posterior_loglik.bvecmodel]{add_posterior_loglik.bvecmodel()}},
-\code{\link[=add_seed]{add_seed()}},
-\code{\link[=bayests_files]{bayests_files()}},
-\code{\link[=bayests_posterior]{bayests_posterior()}},
+\code{\link[=add_seed.bvarmodel]{add_seed.bvarmodel()}},
 \code{\link[=bvar]{bvar()}},
 \code{\link[=bvec]{bvec()}},
-\code{\link[=chain_diagnostics]{chain_diagnostics()}},
 \code{\link[=predict.bvecmodel]{predict.bvecmodel()}}
 }
 \concept{posterior simulation}

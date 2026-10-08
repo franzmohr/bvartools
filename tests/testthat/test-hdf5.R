@@ -231,20 +231,20 @@ test_that("an existing file is refused and left untouched", {
 # command line addresses them.
 
 test_that("group names are normalised the way BayesTS spells them", {
-  expect_equal(bvartools:::.normalize_hdf5_group(""), "")
-  expect_equal(bvartools:::.normalize_hdf5_group("/"), "")
-  expect_equal(bvartools:::.normalize_hdf5_group(NULL), "")
-  expect_equal(bvartools:::.normalize_hdf5_group("/models/3"), "/models/3")
-  expect_equal(bvartools:::.normalize_hdf5_group("models/3"), "/models/3")
-  expect_equal(bvartools:::.normalize_hdf5_group("/models/3/"), "/models/3")
+  expect_equal(bayests:::.normalize_hdf5_group(""), "")
+  expect_equal(bayests:::.normalize_hdf5_group("/"), "")
+  expect_equal(bayests:::.normalize_hdf5_group(NULL), "")
+  expect_equal(bayests:::.normalize_hdf5_group("/models/3"), "/models/3")
+  expect_equal(bayests:::.normalize_hdf5_group("models/3"), "/models/3")
+  expect_equal(bayests:::.normalize_hdf5_group("/models/3/"), "/models/3")
   # Idempotent, so a name that has been through it can go through again.
-  expect_equal(bvartools:::.normalize_hdf5_group(
-    bvartools:::.normalize_hdf5_group("models/3/")), "/models/3")
+  expect_equal(bayests:::.normalize_hdf5_group(
+    bayests:::.normalize_hdf5_group("models/3/")), "/models/3")
 
   for (bad in c("/models//3", "/models/./3", "/models/../3", "//")) {
-    expect_error(bvartools:::.normalize_hdf5_group(bad), info = bad)
+    expect_error(bayests:::.normalize_hdf5_group(bad), info = bad)
   }
-  expect_error(bvartools:::.normalize_hdf5_group(c("a", "b")))
+  expect_error(bayests:::.normalize_hdf5_group(c("a", "b")))
 })
 
 test_that("a model survives a round trip through a group", {
@@ -799,16 +799,16 @@ test_that("the writer's explicit types are the ones hdf5r would guess", {
   for (name in names(values)) {
     value <- values[[name]]
     guessed <- hdf5r::guess_dtype(value, scalar = FALSE, string_len = Inf)
-    expect_equal(.hdf5_dtype(value)$to_text(), guessed$to_text(), info = name)
+    expect_equal(bayests:::.hdf5_dtype(value)$to_text(), guessed$to_text(), info = name)
     expected <- hdf5r::guess_space(value, dtype = guessed, chunked = FALSE)
-    expect_equal(.hdf5_attr_space(value)$get_simple_extent_dims(),
+    expect_equal(bayests:::.hdf5_attr_space(value)$get_simple_extent_dims(),
                  expected$get_simple_extent_dims(), info = name)
   }
 
   # What it has no type for is left to hdf5r.
-  expect_null(.hdf5_dtype(factor("a")))
-  expect_null(.hdf5_dtype(list(1)))
-  expect_null(.hdf5_attr_space(list(1)))
+  expect_null(bayests:::.hdf5_dtype(factor("a")))
+  expect_null(bayests:::.hdf5_dtype(list(1)))
+  expect_null(bayests:::.hdf5_attr_space(list(1)))
 })
 
 test_that("a matrix of one row keeps its shape through a file", {

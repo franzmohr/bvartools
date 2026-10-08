@@ -1,5 +1,25 @@
 # bvartools 1.0.0
 
+* **The generics and the infrastructure every model package shares moved to
+  the new package bayests, which bvartools imports and re-exports.** Code
+  written against bvartools keeps working unchanged: `add_priors()`,
+  `add_posterior_coefficients()`, `write_to_hdf5()`, `read_model_from_hdf5()`,
+  `selection_criteria()`, `open_models()`, `map_models()`, `bayests_files()`
+  and the other moved functions are the same function objects, reached under
+  the same names, and the methods for 'modellist' and 'expandingwindow' come
+  with them. What stays here is what is particular to VAR and VEC models:
+  their constructors, priors, methods, analysis, forecast pooling and external
+  forecasts. dfmtools and ucmtools build on bayests the same way, which is
+  what lets a 'modellist' hold models of all three.
+
+  Three renames came with the move, none of them of anything in a CRAN
+  release: the class of `open_model()` is `modelfile` (was `bvarfile`), that
+  of `open_models()` is `modelfolder` (was `bvarfolder`), and the options are
+  `bayests.executable` (was `bvartools.bayests_executable`) and
+  `bayests.size_warning` (was `bvartools.size_warning`). A file is read by
+  the new `from_hdf5()` methods for 'bvarmodel' and 'bvecmodel', which hold
+  the reader `read_model_from_hdf5()` used to be. Draws are unchanged.
+
 * The vendored BayesTS core moves to `75d35c6`, which adds the four unobserved
   components models. They belong to ucmtools and are skipped, with their three
   support headers; what arrives here is their structs and validators in the

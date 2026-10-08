@@ -24,8 +24,8 @@ historical_decomposition <- function(x, ...) {
 #' @param response name of the variable whose path is decomposed.
 #' @param type the identification: \code{"oir"} (default) for orthogonalised
 #' shocks from the Choleski factor of each draw's covariance, \code{"sign"} for
-#' the rotations \code{\link{add_sign_restrictions}} or
-#' \code{\link{add_sign_zero_restrictions}} stored in the model, and
+#' the rotations \code{\link[bayests]{add_sign_restrictions}} or
+#' \code{\link[bayests]{add_sign_zero_restrictions}} stored in the model, and
 #' \code{"custom"} for impact matrices given in \code{impact}.
 #' @param impact for \code{type = "custom"}, the impact matrix: one matrix, a
 #' list of one matrix per draw, or a function of a draw, as in

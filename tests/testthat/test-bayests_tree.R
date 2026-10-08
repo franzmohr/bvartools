@@ -15,14 +15,14 @@ local({
                                        list("rclass" = class(object)))),
       "data" = list("train" = list("y" = object[["data"]][["x"]]))
     ), filename = filename, group = group)
-  }, envir = asNamespace("bvartools"))
+  }, envir = asNamespace("bayests"))
   registerS3method("from_bayests_tree", "testmodel", function(tree, ...) {
     model <- tree[["model"]][[".attributes"]]
     model[["rclass"]] <- NULL
     structure(list("data" = list("x" = tree[["data"]][["train"]][["y"]]),
                    "model" = model),
               class = class(tree))
-  }, envir = asNamespace("bvartools"))
+  }, envir = asNamespace("bayests"))
 })
 
 test_model <- function(n = 2L) {

@@ -67,7 +67,7 @@ are matched. For the methods of the estimation workflow an object of class
 
 \item{n_ahead}{the maximum forecast horizon that is considered. If \code{NULL}
 (default), the forecast horizon of the models in \code{object} is used, which
-requires that \code{\link{add_forecast_input}} was already applied to them. For
+requires that \code{\link[bayests]{add_forecast_input}} was already applied to them. For
 models whose forecasts were aggregated with \code{\link{aggregate_forecasts}}
 it is a number of years.}
 
@@ -144,7 +144,7 @@ year of its publication is a forecast of horizon 1 and one for the year after
 it of horizon 2, whichever quarter it was published in. The realised values,
 against which the forecasts are scored, are the annual figures of the data of
 the models, which the aggregated forecasts of the models are scored against,
-too, so that \code{\link{add_forecast_errors}} does not need argument
+too, so that \code{\link[bayests]{add_forecast_errors}} does not need argument
 \code{test_sample}.
 
 In contrast to a model, an external forecast does not have a training sample.
@@ -165,12 +165,12 @@ for the same period. Argument \code{select} controls whether the latest
 (\code{"last"}) or the earliest (\code{"first"}) of those publications is used.
 
 The resulting object mimics the structure of a model, which was estimated with the
-expanding window approach of \code{\link{use_expanding_window}}, where each
+expanding window approach of \code{\link[bayests]{use_expanding_window}}, where each
 publication corresponds to one estimation window. It can be added to a list of
-models with \code{\link{combine_models}} and the functions, which are applied to
+models with \code{\link[bayests]{combine_models}} and the functions, which are applied to
 obtain posterior draws, are without effect for it. Since external forecasts are
 point forecasts, their forecast errors consist of a single draw. Accordingly, the
-credible bands of the out-of-sample statistics in \code{\link{selection_criteria}}
+credible bands of the out-of-sample statistics in \code{\link[bayests]{selection_criteria}}
 are degenerate and in-sample criteria are not available.
 
 External forecasts do not have to be estimated, so the functions, which add priors,
@@ -214,23 +214,14 @@ selection_criteria(ext)
 Other model comparison:
 \code{\link[=add_forecast_errors.bvarmodel]{add_forecast_errors.bvarmodel()}},
 \code{\link[=add_forecast_errors.bvecmodel]{add_forecast_errors.bvecmodel()}},
-\code{\link[=add_predictive_loglik]{add_predictive_loglik()}},
 \code{\link[=add_predictive_loglik.bvarmodel]{add_predictive_loglik.bvarmodel()}},
 \code{\link[=add_predictive_loglik.bvecmodel]{add_predictive_loglik.bvecmodel()}},
+\code{\link[=add_predictive_loglik.expandingwindow]{add_predictive_loglik.expandingwindow()}},
 \code{\link[=aggregate_forecasts]{aggregate_forecasts()}},
-\code{\link[=align_model_obs.modellist]{align_model_obs.modellist()}},
 \code{\link{analysis_of_stored_models}},
-\code{\link[=choose_best_model.selcritlist]{choose_best_model.selcritlist()}},
-\code{\link{folder_steps}},
-\code{\link[=map_draws]{map_draws()}},
-\code{\link[=map_models]{map_models()}},
-\code{\link[=open_model]{open_model()}},
-\code{\link[=open_models]{open_models()}},
 \code{\link[=plot_forecast_errors_by_period]{plot_forecast_errors_by_period()}},
 \code{\link[=pool_forecasts]{pool_forecasts()}},
 \code{\link[=selection_criteria.bvarmodel]{selection_criteria.bvarmodel()}},
-\code{\link[=selection_criteria.bvecmodel]{selection_criteria.bvecmodel()}},
-\code{\link[=selection_criteria.default]{selection_criteria.default()}},
-\code{\link[=selection_criteria.modellist]{selection_criteria.modellist()}}
+\code{\link[=selection_criteria.bvecmodel]{selection_criteria.bvecmodel()}}
 }
 \concept{model comparison}

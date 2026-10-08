@@ -7,7 +7,7 @@
 \method{plot}{bvarfevd}(x, max_groups = NULL, ...)
 }
 \arguments{
-\item{x}{an object of class "bvarfevd", usually, a result of a call to \code{\link{fevd}}.}
+\item{x}{an object of class "bvarfevd", usually, a result of a call to \code{\link[bayests]{fevd}}.}
 
 \item{max_groups}{integer. Maximum number of variables shown in the plot. The
 \code{max_groups - 1} variables with the largest contributions across the whole horizon

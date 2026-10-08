@@ -8,7 +8,7 @@
 }
 \arguments{
 \item{object}{an object of class 'bvarmodel', usually, the result of a call to
-\code{\link{add_posterior_forecasts}}.}
+\code{\link[bayests]{add_posterior_forecasts}}.}
 
 \item{test_sample}{a time-series object used as test data. If \code{NULL}
 (default), the values in \code{data$test$y} of the object are used, which is
@@ -41,7 +41,7 @@ column is therefore the one step ahead predictive density given everything
 known up to that period, and those sum over the columns to
 \eqn{\ln p(y_{T+1}, \ldots, y_{T+h} | y_{1}, \ldots, y_{T})}, the log
 predictive likelihood of the whole realised stretch, which
-\code{\link{selection_criteria}} reports as \code{LPL}. Scoring against a
+\code{\link[bayests]{selection_criteria}} reports as \code{LPL}. Scoring against a
 simulated history instead would give the marginal density of each period on
 its own, which is a different quantity and one whose columns could not be
 added up.
@@ -49,12 +49,12 @@ added up.
 With the history realised rather than simulated, the regressors of the scored
 periods do not depend on the draw. The score is then the model's own pointwise
 log-likelihood over those periods -- the same expression as
-\code{\link{add_posterior_loglik}} evaluates, over a different sample -- so
+\code{\link[bayests]{add_posterior_loglik}} evaluates, over a different sample -- so
 nothing is written down twice and the two cannot drift apart. What still moves
 with the draw is everything that follows a state equation: time varying
 coefficients, time varying error covariances and stochastic volatilities take
 one step of their random walk per scored period, in the order and subject to
-the same \code{model$forecast_states} that \code{\link{add_posterior_forecasts}}
+the same \code{model$forecast_states} that \code{\link[bayests]{add_posterior_forecasts}}
 steps them in. Under \code{"simulate"} those steps are drawn, so the score is
 drawn too and two runs give two answers, exactly as two runs of a forecast do.
 
@@ -71,10 +71,10 @@ Laplace algorithms of quantile estimation, which do not forecast in the first
 place.
 
 A forecast that starts after the end of the estimation sample, from argument
-\code{y_start} of \code{\link{add_forecast_input}}, is refused as well: the score
+\code{y_start} of \code{\link[bayests]{add_forecast_input}}, is refused as well: the score
 of a horizon realised in part is drawn from the end of the sample rather than from
 the start values. Its forecast errors are available from
-\code{\link{add_forecast_errors}}.
+\code{\link[bayests]{add_forecast_errors}}.
 }
 \examples{
 
@@ -113,23 +113,14 @@ selection_criteria(model)[["LPL"]]
 Other model comparison:
 \code{\link[=add_forecast_errors.bvarmodel]{add_forecast_errors.bvarmodel()}},
 \code{\link[=add_forecast_errors.bvecmodel]{add_forecast_errors.bvecmodel()}},
-\code{\link[=add_predictive_loglik]{add_predictive_loglik()}},
 \code{\link[=add_predictive_loglik.bvecmodel]{add_predictive_loglik.bvecmodel()}},
+\code{\link[=add_predictive_loglik.expandingwindow]{add_predictive_loglik.expandingwindow()}},
 \code{\link[=aggregate_forecasts]{aggregate_forecasts()}},
-\code{\link[=align_model_obs.modellist]{align_model_obs.modellist()}},
 \code{\link{analysis_of_stored_models}},
-\code{\link[=choose_best_model.selcritlist]{choose_best_model.selcritlist()}},
 \code{\link[=create_external_forecast]{create_external_forecast()}},
-\code{\link{folder_steps}},
-\code{\link[=map_draws]{map_draws()}},
-\code{\link[=map_models]{map_models()}},
-\code{\link[=open_model]{open_model()}},
-\code{\link[=open_models]{open_models()}},
 \code{\link[=plot_forecast_errors_by_period]{plot_forecast_errors_by_period()}},
 \code{\link[=pool_forecasts]{pool_forecasts()}},
 \code{\link[=selection_criteria.bvarmodel]{selection_criteria.bvarmodel()}},
-\code{\link[=selection_criteria.bvecmodel]{selection_criteria.bvecmodel()}},
-\code{\link[=selection_criteria.default]{selection_criteria.default()}},
-\code{\link[=selection_criteria.modellist]{selection_criteria.modellist()}}
+\code{\link[=selection_criteria.bvecmodel]{selection_criteria.bvecmodel()}}
 }
 \concept{model comparison}

@@ -1,12 +1,13 @@
-#' Add Predictive Log-Likelihood
+
+#' Predictive Log-Likelihood of an Expanding Window of VAR or VEC Models
 #'
 #' Adds the draws of the one-step-ahead log predictive density to the windows of
-#' an expanding window exercise, which \code{\link{selection_criteria}} sums to
+#' an expanding window exercise, which \code{\link[bayests]{selection_criteria}} sums to
 #' the log predictive likelihood.
 #'
 #' @param object an object of class \code{"expandingwindow"} whose windows hold
 #' posterior draws, or a \code{"modellist"} of such objects, as returned by
-#' \code{\link{use_expanding_window}}.
+#' \code{\link[bayests]{use_expanding_window}}.
 #' @param ... further arguments passed to or from other methods.
 #'
 #' @details
@@ -40,7 +41,7 @@
 #' \code{priors$u_sigma}.
 #' }
 #'
-#' Unlike the pointwise log-likelihood of \code{\link{add_posterior_loglik}},
+#' Unlike the pointwise log-likelihood of \code{\link[bayests]{add_posterior_loglik}},
 #' whose states have seen the observation they are evaluated at, the predictive
 #' density conditions only on the data before period \eqn{t}. This is what makes
 #' it the criterion for models whose coefficients or variances follow a state
@@ -58,7 +59,7 @@
 #' \code{\link{rescale_error_correction}} first, and structural models are not
 #' supported.
 #'
-#' The windows need not share their regressors. \code{\link{use_expanding_window}}
+#' The windows need not share their regressors. \code{\link[bayests]{use_expanding_window}}
 #' leaves an impulse, step or data dummy of \code{\link{add_dummy_variables}} out
 #' of the windows that end before its event, so the window just before the event
 #' has fewer regressors than the observation the next window adds. The density
@@ -134,12 +135,6 @@
 #'
 #' @family model comparison
 #' @export
-add_predictive_loglik <- function(object, ...) {
-  UseMethod("add_predictive_loglik")
-}
-
-#' @rdname add_predictive_loglik
-#' @export
 add_predictive_loglik.expandingwindow <- function(object, ...) {
 
   n_windows <- length(object)
@@ -165,17 +160,6 @@ add_predictive_loglik.expandingwindow <- function(object, ...) {
       loglik = .predictive_log_density(current, newdata),
       period = newdata[["period"]])
   }
-
-  return(object)
-}
-
-#' @rdname add_predictive_loglik
-#' @export
-add_predictive_loglik.modellist <- function(object, ...) {
-
-  orig_class <- class(object)
-  object <- lapply(object, add_predictive_loglik, ...)
-  class(object) <- orig_class
 
   return(object)
 }
@@ -454,54 +438,6 @@ add_predictive_loglik.modellist <- function(object, ...) {
   return(matrix(1 / precision, nd, k))
 }
 
-# Log of the mean of exp(x), and its numerical standard error by the delta
-# method, with batch means for the autocorrelation of the chain.
-.log_mean_exp <- function(x) {
-  m <- max(x)
-  m + log(mean(exp(x - m)))
-}
-
-# The 'LPL' entry of a set of criteria, built from a sequence of one step ahead
-# predictive densities.
-#
-# 'densities' is a list of draws of the log predictive density, one element per
-# period, and 'periods' the times of the observations they score. The log of the
-# mean of exp() of each is that period's log predictive density, and their sum
-# is the log predictive likelihood.
-#
-# Both sources reach this. An expanding window exercise has one density per
-# window, taken by add_predictive_loglik() from the draws of that window; a
-# single model has one per horizon of its forecast, taken by BayesTS against the
-# values in data$test$y and read back from posterior$forecast$loglik. They are
-# the same quantity computed two ways, and going through one function is what
-# makes them agree by construction rather than by coincidence.
-#
-# The band treats the terms as independent, which they are not -- consecutive
-# windows share all but one observation, and consecutive horizons share a
-# forecast origin -- so it is a rough guide to how much of the total is sampling
-# noise rather than an interval to test with. The numerical standard error
-# beside it is a different thing: what the length of the chain contributes, which
-# more draws would shrink and more data would not.
-.lpl_entry <- function(densities, periods, ci_low, ci_high) {
-
-  terms <- data.frame(
-    period = as.numeric(periods),
-    lpd = vapply(densities, .log_mean_exp, numeric(1)),
-    nse = vapply(densities, .nse_log_mean_exp, numeric(1)))
-
-  n_terms <- nrow(terms)
-  lpl <- sum(terms[["lpd"]])
-  se <- if (n_terms > 1) sqrt(n_terms * stats::var(terms[["lpd"]])) else NA_real_
-  z <- stats::qnorm(ci_high)
-
-  entry <- data.frame(mean = lpl, median = NA_real_,
-                      qlower = lpl - z * se, qupper = lpl + z * se)
-  attr(entry, "terms") <- terms
-  attr(entry, "nse") <- sqrt(sum(terms[["nse"]]^2))
-
-  return(entry)
-}
-
 
 # The draws of the log predictive density a model carries, one element per
 # scored period, with the times of the periods they score. NULL where the model
@@ -528,15 +464,4 @@ add_predictive_loglik.modellist <- function(object, ...) {
 
   return(list(densities = lapply(seq_len(n), function(i) score[, i]),
               periods = periods))
-}
-
-
-.nse_log_mean_exp <- function(x, batches = 20) {
-  batches <- min(batches, floor(length(x) / 2))
-  if (batches < 2) {
-    return(NA_real_)
-  }
-  e <- exp(x - max(x))
-  means <- vapply(split(e, cut(seq_along(e), batches, labels = FALSE)), mean, numeric(1))
-  sqrt(stats::var(means) / batches) / mean(e)
 }

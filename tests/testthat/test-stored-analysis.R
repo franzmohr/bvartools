@@ -20,7 +20,7 @@ test_that("a stored model says what it holds", {
   pair <- stored_pair()
   stored <- pair[["file"]]
 
-  expect_s3_class(stored, "bvarfile")
+  expect_s3_class(stored, "modelfile")
   expect_identical(stored[["draws"]],
                    nrow(pair[["memory"]][["posterior"]][["u_sigma_inv"]][["coeffs"]]))
   expect_identical(stored[["model"]][["k"]], pair[["memory"]][["model"]][["k"]])
@@ -39,7 +39,7 @@ test_that("map_draws walks the chain in pieces", {
   expect_gt(length(sums), 1)
   expect_equal(Reduce(`+`, sums),
                colSums(unclass(pair[["memory"]][["posterior"]][["a"]][["coeffs"]])))
-  expect_error(map_draws(pair[["memory"]], function(model) model), "'bvarfile'")
+  expect_error(map_draws(pair[["memory"]], function(model) model), "'modelfile'")
 })
 
 test_that("the impulse responses of a stored model are those of the model", {

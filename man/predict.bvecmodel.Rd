@@ -8,10 +8,10 @@
 }
 \arguments{
 \item{object}{an object of class 'bvecmodel', usually, the result of a call to
-\code{\link{add_posterior_forecasts}}.}
+\code{\link[bayests]{add_posterior_forecasts}}.}
 
 \item{n_ahead}{number of steps ahead at which to predict. If \code{NULL} (default), every
-period simulated by \code{\link{add_posterior_forecasts}}.}
+period simulated by \code{\link[bayests]{add_posterior_forecasts}}.}
 
 \item{...}{additional arguments passed to \code{\link{predict.bvarmodel}}.}
 }
@@ -37,11 +37,8 @@ Other posterior simulation:
 \code{\link[=add_posterior_forecasts.bvecmodel]{add_posterior_forecasts.bvecmodel()}},
 \code{\link[=add_posterior_loglik.bvarmodel]{add_posterior_loglik.bvarmodel()}},
 \code{\link[=add_posterior_loglik.bvecmodel]{add_posterior_loglik.bvecmodel()}},
-\code{\link[=add_seed]{add_seed()}},
-\code{\link[=bayests_files]{bayests_files()}},
-\code{\link[=bayests_posterior]{bayests_posterior()}},
+\code{\link[=add_seed.bvarmodel]{add_seed.bvarmodel()}},
 \code{\link[=bvar]{bvar()}},
-\code{\link[=bvec]{bvec()}},
-\code{\link[=chain_diagnostics]{chain_diagnostics()}}
+\code{\link[=bvec]{bvec()}}
 }
 \concept{posterior simulation}

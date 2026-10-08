@@ -14,7 +14,7 @@
 \value{
 Nothing. The method raises an error, since variance decompositions of a VEC model
 are obtained from its VAR representation: apply \code{\link{vec_to_var}} first and then
-\code{\link{fevd}} to the resulting 'bvarmodel'.
+\code{\link[bayests]{fevd}} to the resulting 'bvarmodel'.
 }
 \description{
 Guard method for objects of class 'bvecmodel'.

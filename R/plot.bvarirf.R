@@ -2,7 +2,7 @@
 #' 
 #' A plot function for objects of class "bvarirf".
 #' 
-#' @param x an object of class "bvarirf", usually, a result of a call to \code{\link{irf}}.
+#' @param x an object of class "bvarirf", usually, a result of a call to \code{\link[bayests]{irf}}.
 #' @param ... further graphical parameters.
 #' 
 #' @examples

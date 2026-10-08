@@ -9,7 +9,7 @@
 \arguments{
 \item{object}{an object of class \code{'bvecmodel'}, usually, the result of a
 call to \code{\link{create_bvecmodel}}, optionally already estimated with
-\code{\link{add_posterior_coefficients}}.}
+\code{\link[bayests]{add_posterior_coefficients}}.}
 
 \item{...}{arguments passed forward to method.}
 }
@@ -65,7 +65,7 @@ transformation, since both parameterisations describe the same error term.
 
 Note also that the elements \code{priors} and \code{initial} of the input
 object are not carried over, because they describe the coefficients of the
-VEC model. Use \code{\link{add_priors}} and \code{\link{add_initial_values}}
+VEC model. Use \code{\link[bayests]{add_priors}} and \code{\link[bayests]{add_initial_values}}
 if the resulting model should be estimated in its VAR form. The same applies
 to the results of variable selection algorithms: a coefficient of the VAR
 representation is the sum of multiple coefficients of the VEC model, so no

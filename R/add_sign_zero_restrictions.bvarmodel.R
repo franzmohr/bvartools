@@ -1,6 +1,3 @@
-#' @include add_sign_zero_restrictions.R
-NULL
-
 #' Sign and Zero Restrictions
 #'
 #' Identifies the shocks of an object of class 'bvarmodel' by the signs of the
@@ -32,7 +29,7 @@ NULL
 #'
 #' @details A sign restriction can be imposed by trying rotations until one of
 #' them carries the signs that were asked for, which is what
-#' \code{\link{add_sign_restrictions}} does. A zero restriction cannot: the
+#' \code{\link[bayests]{add_sign_restrictions}} does. A zero restriction cannot: the
 #' rotations that satisfy one form a set of probability zero, so no number of
 #' tries finds a single member of it. This function uses the algorithms of
 #' Arias, Rubio-Ramirez and Waggoner (2018) instead, and needs at least one zero
@@ -64,7 +61,7 @@ NULL
 #' With many sign restrictions that can leave nothing: when one rotation in
 #' tens of thousands satisfies them all, a few thousand posterior draws produce
 #' no admissible rotation, and the function stops. \code{max_tries} draws more
-#' rotations per draw, but not the way \code{\link{add_sign_restrictions}}
+#' rotations per draw, but not the way \code{\link[bayests]{add_sign_restrictions}}
 #' does. Stopping at the first rotation that satisfies the signs would bias an
 #' importance sampler: the single try is what weights each posterior draw by the
 #' probability \eqn{p} that its rotations satisfy the signs, and a draw whose
@@ -191,9 +188,9 @@ NULL
 #' single largest draw, the shape \code{pareto_k} of the distribution fitted to
 #' the tail of the weights and whether they were \code{smooth}ed. Element
 #' \code{sign_restrictions} is set alongside
-#' it, so that \code{\link{irf}}, \code{\link{fevd}} and \code{\link{spillover}}
+#' it, so that \code{\link[bayests]{irf}}, \code{\link[bayests]{fevd}} and \code{\link{spillover}}
 #' read the rotations under \code{type = "sign"} as they do for
-#' \code{\link{add_sign_restrictions}}.
+#' \code{\link[bayests]{add_sign_restrictions}}.
 #'
 #' @examples
 #'

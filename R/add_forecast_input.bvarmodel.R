@@ -12,7 +12,7 @@
 #' model. Required if the model has such variables. It has to cover the \code{s} periods before
 #' the first forecast period, which are the last \code{s} periods of the estimation sample, as
 #' well as the \code{n_ahead} forecast periods, because the regressors of a forecast period
-#' include the lags of these variables. See \code{\link{prepare_forecast_input}}.
+#' include the lags of these variables. See \code{\link[bayests]{prepare_forecast_input}}.
 #' @param y_start an optional time-series object with the endogenous variables of the model,
 #' by name and in the units of the estimation sample, that the forecast starts from: the
 #' forecast periods are the \code{n_ahead} periods after its last observation, and the lags of
@@ -20,7 +20,7 @@
 #' that a forecast can start from a nowcast or from data that came in after the model was
 #' estimated; \code{exogen} and \code{deterministic} then have to cover the new forecast
 #' periods. If \code{NULL} (default), the forecast starts after the end of the estimation
-#' sample. See 'Details' in \code{\link{prepare_forecast_input}}.
+#' sample. See 'Details' in \code{\link[bayests]{prepare_forecast_input}}.
 #' @param ... arguments passed forward to method.
 #'
 #' @return The object in \code{object} with \code{model$h} set to \code{n_ahead} and

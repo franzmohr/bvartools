@@ -118,11 +118,11 @@ test_that("the default criterion is the one that stays defined for every model",
   # specification, so it is what a comparison defaults to.
   expect_equal(choose_best_model(criteria),
                choose_best_model(criteria, criterion = "WAIC"))
-  expect_identical(formals(choose_best_model.selcritlist)[["criterion"]], "WAIC")
+  expect_identical(formals(bayests:::choose_best_model.selcritlist)[["criterion"]], "WAIC")
 
   # Choosing and plotting should not disagree about what they show by default
-  expect_identical(formals(plot.selcritlist)[["criterion"]],
-                   formals(choose_best_model.selcritlist)[["criterion"]])
+  expect_identical(formals(bayests:::plot.selcritlist)[["criterion"]],
+                   formals(bayests:::choose_best_model.selcritlist)[["criterion"]])
 })
 
 test_that("get_model_specifications describes the underlying model", {
@@ -300,7 +300,7 @@ test_that("LOOIC reweights the posterior towards the data it has not seen", {
   criteria <- selection_criteria(model)
   loglik <- as.matrix(model[["posterior"]][["loglik"]])
 
-  loo <- .psis_loo(loglik)
+  loo <- bayests:::.psis_loo(loglik)
   expect_equal(criteria[["LOOIC"]][["mean"]], loo[["looic"]])
   expect_equal(criteria[["LOOIC"]][["median"]], criteria[["LOOIC"]][["mean"]])
 
@@ -313,7 +313,7 @@ test_that("LOOIC reweights the posterior towards the data it has not seen", {
   # from, and it estimates the same effective number of parameters that WAIC
   # penalises with.
   expect_gt(loo[["looic"]], -2 * sum(apply(loglik, 2, function(z) {
-    .log_sum_exp(z) - log(nrow(loglik))
+    bayests:::.log_sum_exp(z) - log(nrow(loglik))
   })))
   expect_equal(loo[["p_loo"]], sum(apply(loglik, 2, stats::var)), tolerance = 0.3)
 })
@@ -323,7 +323,7 @@ test_that("the importance weights are smoothed and normalised", {
 
   # A heavy tailed set of ratios is what the smoothing exists for: the largest
   # weights are pulled in, so the sum stays one and no single draw dominates.
-  smoothed <- .psis_weights(rt(2000, df = 2), tail_len = 134)
+  smoothed <- bayests:::.psis_weights(rt(2000, df = 2), tail_len = 134)
   weights <- exp(smoothed[["log_weights"]])
 
   expect_equal(sum(weights), 1)
@@ -332,8 +332,8 @@ test_that("the importance weights are smoothed and normalised", {
 
   # A tail with nothing to fit is left alone rather than smoothed into noise,
   # and is flagged by an infinite shape parameter.
-  expect_identical(.psis_weights(rep(0, 500), tail_len = 100)[["pareto_k"]], Inf)
-  expect_identical(.psis_weights(stats::rnorm(20), tail_len = 4)[["pareto_k"]], Inf)
+  expect_identical(bayests:::.psis_weights(rep(0, 500), tail_len = 100)[["pareto_k"]], Inf)
+  expect_identical(bayests:::.psis_weights(stats::rnorm(20), tail_len = 4)[["pareto_k"]], Inf)
 })
 
 test_that("the Pareto fit recovers the shape of a known tail", {
@@ -341,7 +341,7 @@ test_that("the Pareto fit recovers the shape of a known tail", {
   rgpd <- function(n, k, sigma) sigma * expm1(-k * log1p(-stats::runif(n))) / k
 
   for (shape in c(0.2, 0.7)) {
-    estimates <- replicate(20, .gpd_fit(rgpd(500, shape, 2))[["k"]])
+    estimates <- replicate(20, bayests:::.gpd_fit(rgpd(500, shape, 2))[["k"]])
     expect_lt(abs(mean(estimates) - shape), 0.05)
   }
 })
@@ -444,7 +444,7 @@ test_that("both sources of an LPL give the same entry for the same densities", {
   periods <- attr(selection_criteria(model)[["LPL"]], "terms")[["period"]]
 
   as_windows <- lapply(seq_len(ncol(score)), function(i) score[, i])
-  from_windows <- bvartools:::.lpl_entry(as_windows, periods, 0.025, 0.975)
+  from_windows <- bayests:::.lpl_entry(as_windows, periods, 0.025, 0.975)
 
   expect_equal(unclass(selection_criteria(model)[["LPL"]]), unclass(from_windows))
   expect_equal(attr(selection_criteria(model)[["LPL"]], "nse"), attr(from_windows, "nse"))

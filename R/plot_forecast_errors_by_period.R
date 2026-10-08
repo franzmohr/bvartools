@@ -5,7 +5,7 @@
 #'
 #' @param x an object of class 'bvarmodel', 'bvecmodel', 'expandingwindow' or
 #' 'modellist', which contains forecast errors. Usually, a result of a call to
-#' \code{\link{add_forecast_errors}}.
+#' \code{\link[bayests]{add_forecast_errors}}.
 #' @param criterion the statistic that should be plotted. Available choices are
 #' \code{"FE"} for forecast errors, \code{"AFE"} (default) for absolute forecast
 #' errors and \code{"RSFE"} for root squared forecast errors.
@@ -31,7 +31,7 @@
 #' model in \code{x} is added above its error bar. For \code{criterion = "FE"} a
 #' horizontal reference line is added at zero.
 #'
-#' In contrast to \code{\link{plot.selcritlist}}, which plots statistics that are
+#' In contrast to \code{\link[bayests]{plot.selcritlist}}, which plots statistics that are
 #' calculated across all periods of the evaluation sample, this function plots the
 #' statistics of each period separately. Thus, it is most useful for forecast errors,
 #' which were obtained for multiple periods as, for example, in the case of

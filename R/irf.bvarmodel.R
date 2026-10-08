@@ -56,7 +56,7 @@
 #' 
 #' Sign restricted impulse responses \eqn{\Theta^r_i} are calculated as
 #' \eqn{\Theta^r_i = \Phi_i P Q}, where \eqn{P} is the lower triangular Choleski decomposition of
-#' \eqn{\Sigma} and \eqn{Q} the rotation that \code{\link{add_sign_restrictions}} accepted for that
+#' \eqn{\Sigma} and \eqn{Q} the rotation that \code{\link[bayests]{add_sign_restrictions}} accepted for that
 #' draw. Draws for which no admissible rotation was found are left out, so the responses cover
 #' fewer draws than the posterior holds and the credible interval is one over the set of models the
 #' restrictions admit rather than over a single identified model.

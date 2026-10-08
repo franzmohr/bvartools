@@ -153,7 +153,7 @@ test_that("chains are refused where they cannot be compared", {
   expect_error(add_posterior_coefficients(chains_var(), chains = 0), "whole number")
   expect_error(add_posterior_coefficients(chains_var(), chains = 1.5), "whole number")
   expect_error(chain_diagnostics(add_posterior_coefficients(chains_var())), "single chain")
-  expect_error(chain_diagnostics(list()), "bvarmodel")
+  expect_error(chain_diagnostics(list()), "model object")
 
   discount <- create_bvarmodel(var_data(), p = 1, deterministic = "const", algorithm = "discount",
                                iterations = 10, burnin = 0)

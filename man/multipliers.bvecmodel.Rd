@@ -15,7 +15,7 @@ work.}
 }
 \value{
 A time-series object of class 'bvarirf', which is what
-\code{\link{irf}} returns, so that the same \code{plot} method applies.
+\code{\link[bayests]{irf}} returns, so that the same \code{plot} method applies.
 }
 \description{
 Computes the response of an endogenous variable to a change in a weakly

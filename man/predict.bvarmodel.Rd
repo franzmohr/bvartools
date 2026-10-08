@@ -10,8 +10,8 @@
 \item{object}{an object of class 'bvarmodel'.}
 
 \item{n_ahead}{number of steps ahead at which to predict. If \code{NULL} (default), every
-period simulated by \code{\link{add_posterior_forecasts}}, i.e. the horizon given to
-\code{\link{add_forecast_input}}.}
+period simulated by \code{\link[bayests]{add_posterior_forecasts}}, i.e. the horizon given to
+\code{\link[bayests]{add_forecast_input}}.}
 
 \item{...}{additional arguments.}
 }
@@ -21,7 +21,7 @@ An object of class 'bvarprd', a list with element \code{fcst}, an
 dimensions are named after the forecast periods and the endogenous variables, and
 element \code{y}, the endogenous variables of the training sample. For a forecast that
 starts after the end of the sample, from argument \code{y_start} of
-\code{\link{add_forecast_input}}, the forecast periods are those after the start values,
+\code{\link[bayests]{add_forecast_input}}, the forecast periods are those after the start values,
 and \code{y} continues the training sample with the start values that lie after it.
 }
 \description{

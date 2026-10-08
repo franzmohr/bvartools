@@ -14,7 +14,7 @@ add_prior_options(
 }
 \arguments{
 \item{object}{an object of class 'bvarmodel' or 'modellist', usually the
-result of \code{\link{add_priors}}.}
+result of \code{\link[bayests]{add_priors}}.}
 
 \item{shrinkage}{a character, \code{"none"} (default), \code{"minnesota"},
 \code{"horseshoe"} or \code{"normal_gamma"}, or a list with element
@@ -43,14 +43,14 @@ the priors in \code{priors$a$shrinkage}, \code{priors$mu} and
 }
 \description{
 Adds the options of the prior that act on top of the one
-\code{\link{add_priors}} sets: hyperparameters estimated from the data, a
+\code{\link[bayests]{add_priors}} sets: hyperparameters estimated from the data, a
 restriction of the coefficients to a stationary model, a prior on the
 unconditional mean in place of one on the intercept, and the prior of the
 error of soft constraints.
 }
 \details{
 Argument \code{shrinkage} lets the data decide how tightly the prior
-of \code{\link{add_priors}} shrinks the coefficients of the lagged endogenous
+of \code{\link[bayests]{add_priors}} shrinks the coefficients of the lagged endogenous
 variables. Their prior variances are multiplied by scales that are drawn with
 the coefficients:
 \itemize{
@@ -141,7 +141,6 @@ Other model set-up:
 \code{\link[=add_priors.bvarmodel]{add_priors.bvarmodel()}},
 \code{\link[=add_priors.bvecmodel]{add_priors.bvecmodel()}},
 \code{\link[=aggregation_weights]{aggregation_weights()}},
-\code{\link[=combine_models]{combine_models()}},
 \code{\link[=create_bvarmodel]{create_bvarmodel()}},
 \code{\link[=create_bvecmodel]{create_bvecmodel()}},
 \code{\link[=transform_variables]{transform_variables()}},

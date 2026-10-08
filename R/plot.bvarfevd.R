@@ -2,7 +2,7 @@
 #' 
 #' A plot function for objects of class "bvarfevd".
 #' 
-#' @param x an object of class "bvarfevd", usually, a result of a call to \code{\link{fevd}}.
+#' @param x an object of class "bvarfevd", usually, a result of a call to \code{\link[bayests]{fevd}}.
 #' @param max_groups integer. Maximum number of variables shown in the plot. The
 #' \code{max_groups - 1} variables with the largest contributions across the whole horizon
 #' are kept and the contributions of the remaining variables are added up in a further bar

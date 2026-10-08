@@ -241,7 +241,7 @@ test_that("time_variation_test() reports only the blocks drawn under omega_v", {
                                          sigma = tvp_sigma_prior("sv")))
   centred <- add_posterior_coefficients(add_seed(centred, 215))
   expect_error(time_variation_test(centred), "non-centred prior")
-  expect_error(time_variation_test(list()), "bvarmodel")
+  expect_error(time_variation_test(list()), "class 'list'")
 })
 
 test_that("a TVP VEC with stochastic volatility takes omega_v and reports its test", {

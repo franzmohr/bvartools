@@ -9,7 +9,7 @@
 #' or a list of such models of class 'modellist' or 'expandingwindow'.
 #' @param chains the number of chains that will be simulated. If \code{NULL}
 #' (default), the value in \code{object$model$chains} is used, and one chain when
-#' there is none. See \code{\link{add_posterior_coefficients}}.
+#' there is none. See \code{\link[bayests]{add_posterior_coefficients}}.
 #' @param ... further arguments passed to or from other methods.
 #'
 #' @details Every block of posterior draws is a matrix of numbers with one row per
@@ -24,12 +24,12 @@
 #' A few blocks depend on the priors: the inclusion indicators of the covariance
 #' block, the draws of a non-centred prior (\code{omega_v}) and a drawn
 #' autocorrelation of the cointegration space (\code{rho_min}). They are counted
-#' once \code{\link{add_priors}} has added the priors. Forecast draws are counted
-#' once \code{\link{add_forecast_input}} has set a horizon.
+#' once \code{\link[bayests]{add_priors}} has added the priors. Forecast draws are counted
+#' once \code{\link[bayests]{add_forecast_input}} has set a horizon.
 #'
 #' The numbers are what the object will hold in memory. R may briefly hold a
 #' second copy while a step modifies it, so the memory a session needs can be up
-#' to twice as large. \code{\link{write_to_hdf5}} compresses what it writes, but
+#' to twice as large. \code{\link[bayests]{write_to_hdf5}} compresses what it writes, but
 #' posterior draws compress poorly, so the size of the file is usually a little
 #' below the size in memory.
 #'
@@ -41,7 +41,7 @@
 #'   \code{posterior$a$coeffs}. The first row of each model is everything that is
 #'   there already, the data, the priors and the initial values.}
 #'   \item{\code{step}}{the function that adds the block, empty for the first row.
-#'   The warning of \code{\link{add_posterior_coefficients}} counts the first row
+#'   The warning of \code{\link[bayests]{add_posterior_coefficients}} counts the first row
 #'   and the blocks that function adds itself.}
 #'   \item{\code{draws}, \code{columns}}{the dimensions of the block.}
 #'   \item{\code{bytes}}{the size of the block in bytes.}
@@ -69,7 +69,7 @@
 #' # The total in bytes
 #' sum(expected_model_size(model)$bytes)
 #'
-#' @seealso \code{\link{expected_model_size}} for the warnings that are based on it, and
+#' @seealso \code{\link[bayests]{expected_model_size}} for the warnings that are based on it, and
 #' \code{\link{bvartools_model}} for the blocks of the object.
 #' @include expected_model_size.R
 #' @export

@@ -106,7 +106,7 @@ Argument \code{coef} can contain the following elements:
   deviation of the state innovations of the coefficients, loadings included unless
   \code{omega_v_alpha} is given, and of the
   covariance coefficients -- the non-centred parameterisation that lets the posterior carry
-  the test for time variation of \code{\link{time_variation_test}}; see
+  the test for time variation of \code{\link[bayests]{time_variation_test}}; see
   \code{\link{add_priors.bvarmodel}} for the model and the draws it adds. The cointegration
   space keeps its state equation. Only for models with time varying parameters,
   \code{tvp = TRUE}, whatever their \code{error}.}
@@ -115,7 +115,7 @@ Argument \code{coef} can contain the following elements:
   \code{omega_v} is used. The loadings multiply the levels in the error correction term, so
   a standard deviation of their innovations that is small for a coefficient on a differenced
   regressor moves the fitted value by much more, and the test for time variation of
-  \code{\link{time_variation_test}} compares each loading's posterior at zero with its own
+  \code{\link[bayests]{time_variation_test}} compares each loading's posterior at zero with its own
   prior: a prior on the wrong scale makes the Bayes factor of a loading say more about the
   prior than about the loading. Only used with \code{omega_v} and a positive rank.}
 }
@@ -253,7 +253,7 @@ volatility the covariance differs from period to period, so \eqn{G} is fixed
 for the whole run instead: \eqn{G^{-1}} is \code{g_i} if it is given, and
 otherwise the error precision implied by the starting values of the
 log-volatilities, averaged over the sample once before the first draw. That
-fallback depends on \code{\link{add_initial_values}}, so giving \code{g_i}
+fallback depends on \code{\link[bayests]{add_initial_values}}, so giving \code{g_i}
 makes the prior independent of how the chain is started. \code{g_i = "ml"}
 uses Johansen's (1995) estimate of the error covariance, the same one
 \code{v_i = "ml"} is based on.
@@ -287,7 +287,7 @@ For a model with time varying cointegration parameters the state equation is
 the prior on the state before the sample is that equation's own stationary
 distribution, \eqn{N(0, I / (1 - \rho^2))}. This is what makes the prior
 proper, so a \eqn{\rho} close to one is intended and one further from it draws
-a warning. \code{\link{add_priors}} gives the loadings the compensating scale:
+a warning. \code{\link[bayests]{add_priors}} gives the loadings the compensating scale:
 only the product \eqn{\alpha \beta^{\prime}} is identified, so their prior
 variance is shrunk by \eqn{1 - \rho^2}, leaving the product on the scale
 \code{coef$v_i} asks for.
@@ -295,7 +295,7 @@ variance is shrunk by \eqn{1 - \rho^2}, leaving the product on the scale
 When \eqn{\rho} is drawn, those last two are computed from \code{coint$rho}
 once and do not follow the draw: the state before the sample keeps the normal
 prior built here, and the loadings keep the shrinkage of
-\code{\link{add_priors}}. This is a deliberate departure from Koop et al.
+\code{\link[bayests]{add_priors}}. This is a deliberate departure from Koop et al.
 (2011), in whom the state before the sample is the stationary distribution of
 whatever \eqn{\rho} currently is. It is also what makes the draw an exact
 Gibbs block rather than their Metropolis-within-Gibbs step: with the state
@@ -477,7 +477,6 @@ Other model set-up:
 \code{\link[=add_prior_options]{add_prior_options()}},
 \code{\link[=add_priors.bvarmodel]{add_priors.bvarmodel()}},
 \code{\link[=aggregation_weights]{aggregation_weights()}},
-\code{\link[=combine_models]{combine_models()}},
 \code{\link[=create_bvarmodel]{create_bvarmodel()}},
 \code{\link[=create_bvecmodel]{create_bvecmodel()}},
 \code{\link[=transform_variables]{transform_variables()}},

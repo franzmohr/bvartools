@@ -7,7 +7,7 @@
 \method{plot}{bvarirf}(x, ...)
 }
 \arguments{
-\item{x}{an object of class "bvarirf", usually, a result of a call to \code{\link{irf}}.}
+\item{x}{an object of class "bvarirf", usually, a result of a call to \code{\link[bayests]{irf}}.}
 
 \item{...}{further graphical parameters.}
 }

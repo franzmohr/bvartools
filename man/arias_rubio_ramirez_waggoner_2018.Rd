@@ -21,7 +21,7 @@ elements \code{A}, the \eqn{K \times M} coefficient matrix with the
 \code{Sigma}, the \eqn{K \times K} error covariance.}
 
 \item{restrictions}{a data frame of the restrictions, as in
-\code{\link{add_sign_zero_restrictions}}: columns \code{impulse},
+\code{\link[bayests]{add_sign_zero_restrictions}}: columns \code{impulse},
 \code{response}, \code{sign} and optionally \code{horizon}, the first two
 naming elements of \code{variables}. A table without a zero restriction is
 accepted here; the rotations are then drawn uniformly and the weights are
@@ -34,7 +34,7 @@ this order.}
 \item{lags}{the lag order \eqn{p}.}
 
 \item{max_tries}{integer. The largest number of rotations drawn for each
-posterior draw. See 'Details' of \code{\link{add_sign_zero_restrictions}}.}
+posterior draw. See 'Details' of \code{\link[bayests]{add_sign_zero_restrictions}}.}
 
 \item{smooth}{logical. Should the importance weights be Pareto smoothed?}
 
@@ -50,11 +50,11 @@ A list with
 \item{tries}{the number of rotations drawn in all;}
 \item{accepted}{the number of draws with an admissible rotation;}
 \item{effective_sample_size, max_weight_share, pareto_k}{the diagnostics of
-the importance sample, as \code{\link{add_sign_zero_restrictions}} records
+the importance sample, as \code{\link[bayests]{add_sign_zero_restrictions}} records
 them.}
 }
 \description{
-The identification step of \code{\link{add_sign_zero_restrictions}} on its
+The identification step of \code{\link[bayests]{add_sign_zero_restrictions}} on its
 own: rotations of the reduced-form draws of a VAR that satisfy sign and zero
 restrictions on the impulse responses, with the importance weights of Arias,
 Rubio-Ramirez and Waggoner (2018). It is exported for packages that estimate
@@ -67,7 +67,7 @@ The rotation \eqn{Q} of a draw maps into the impact matrix
 response of the variables to the shocks on impact.
 
 The function draws from the random number generator in the order
-\code{\link{add_sign_zero_restrictions}} does, so the same seed gives the
+\code{\link[bayests]{add_sign_zero_restrictions}} does, so the same seed gives the
 same rotations through either. It warns when the importance sample is not
 fit to summarise, and stops when no draw has an admissible rotation.
 }
@@ -77,6 +77,6 @@ autoregressions identified with sign and zero restrictions: Theory and applicati
 \emph{Econometrica, 86}(2), 685-720. \doi{10.3982/ECTA14468}
 }
 \seealso{
-\code{\link{add_sign_zero_restrictions}}, which applies it to a
+\code{\link[bayests]{add_sign_zero_restrictions}}, which applies it to a
 'bvarmodel' and resamples the draws.
 }

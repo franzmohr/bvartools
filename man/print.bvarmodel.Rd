@@ -15,7 +15,7 @@
 }
 \value{
 A data frame of the model's specification, as printed, invisibly. It
-is the result of \code{\link{get_model_specifications}} with the columns
+is the result of \code{\link[bayests]{get_model_specifications}} with the columns
 renamed for display and, where the model has no unmodelled variables, the
 columns \code{m} and \code{s} dropped.
 }

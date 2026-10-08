@@ -1,7 +1,7 @@
 #' Build the Prior on the Cointegration Space
 #'
 #' Checks the specification of the prior on the cointegration space of a VEC
-#' model and builds it, in the form in which \code{\link{add_priors}} stores it
+#' model and builds it, in the form in which \code{\link[bayests]{add_priors}} stores it
 #' as element \code{priors$beta}.
 #'
 #' @param object a list of class 'bvecmodel', or any model with the same layout:
@@ -12,7 +12,7 @@
 #' 'Prior on the cointegration space'.
 #'
 #' @details
-#' \code{\link{add_priors}} calls this function for VEC models, so it rarely
+#' \code{\link[bayests]{add_priors}} calls this function for VEC models, so it rarely
 #' needs to be called directly. It is exported for packages that build VEC
 #' models of their own layout, such as the sub-models of a global VEC model,
 #' whose error correction term also holds weakly exogenous and global
@@ -76,7 +76,7 @@
 #' for the whole run instead: \eqn{G^{-1}} is \code{g_i} if it is given, and
 #' otherwise the error precision implied by the starting values of the
 #' log-volatilities, averaged over the sample once before the first draw. That
-#' fallback depends on \code{\link{add_initial_values}}, so giving \code{g_i}
+#' fallback depends on \code{\link[bayests]{add_initial_values}}, so giving \code{g_i}
 #' makes the prior independent of how the chain is started. \code{g_i = "ml"}
 #' uses Johansen's (1995) estimate of the error covariance, the same one
 #' \code{v_i = "ml"} is based on.
@@ -110,7 +110,7 @@
 #' the prior on the state before the sample is that equation's own stationary
 #' distribution, \eqn{N(0, I / (1 - \rho^2))}. This is what makes the prior
 #' proper, so a \eqn{\rho} close to one is intended and one further from it draws
-#' a warning. \code{\link{add_priors}} gives the loadings the compensating scale:
+#' a warning. \code{\link[bayests]{add_priors}} gives the loadings the compensating scale:
 #' only the product \eqn{\alpha \beta^{\prime}} is identified, so their prior
 #' variance is shrunk by \eqn{1 - \rho^2}, leaving the product on the scale
 #' \code{coef$v_i} asks for.
@@ -118,7 +118,7 @@
 #' When \eqn{\rho} is drawn, those last two are computed from \code{coint$rho}
 #' once and do not follow the draw: the state before the sample keeps the normal
 #' prior built here, and the loadings keep the shrinkage of
-#' \code{\link{add_priors}}. This is a deliberate departure from Koop et al.
+#' \code{\link[bayests]{add_priors}}. This is a deliberate departure from Koop et al.
 #' (2011), in whom the state before the sample is the stationary distribution of
 #' whatever \eqn{\rho} currently is. It is also what makes the draw an exact
 #' Gibbs block rather than their Metropolis-within-Gibbs step: with the state

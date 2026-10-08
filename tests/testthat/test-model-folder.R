@@ -31,7 +31,7 @@ written_folder <- function(object, name) {
   unlink(folder, recursive = TRUE)
   dir.create(folder, recursive = TRUE)
   write_to_hdf5(object, folder = folder)
-  open_models(folder)
+  read_model_folder(folder)
 }
 
 test_that("a folder is opened with a row per model and no draws", {
@@ -54,7 +54,7 @@ test_that("a folder is opened with a row per model and no draws", {
   expect_equal(length(model_files(stored, models = manifest[["model"]][1])), 1)
   expect_error(model_files(stored, models = "nothing"), "does not hold the model")
 
-  expect_error(open_models(file.path(tempdir(), "no-such-folder")), "does not exist")
+  expect_error(read_model_folder(file.path(tempdir(), "no-such-folder")), "does not exist")
 })
 
 test_that("a folder is estimated to the posterior of the models in the session", {
@@ -139,8 +139,8 @@ test_that("a step over one model at a time is the step over all of them", {
     expect_equal(unclass(second[[i]][["posterior"]][["a"]][["coeffs"]]),
                  unclass(first[[i]][["posterior"]][["a"]][["coeffs"]]), info = i)
   }
-  expect_equal(open_models(piecewise[["folder"]])[["manifest"]],
-               open_models(whole[["folder"]])[["manifest"]])
+  expect_equal(read_model_folder(piecewise[["folder"]])[["manifest"]],
+               read_model_folder(whole[["folder"]])[["manifest"]])
 })
 
 test_that("a step leaves the models it was not asked for alone", {

@@ -283,7 +283,7 @@ test_that("several models live side by side in one file", {
   write_to_hdf5(fx_var_fitted(), filename = path, group = "/submodels/JP")
   write_to_hdf5(fx_vec_fitted(), filename = path, group = "/submodels/CA")
 
-  expect_equal(list_models_in_hdf5(path),
+  expect_equal(read_model_groups(path),
                c("/submodels/CA", "/submodels/JP", "/submodels/US"))
 
   # Each is read back as the model it is, VEC included.
@@ -313,7 +313,7 @@ test_that("a failed write into a group leaves the models beside it alone", {
   # The file is still there, the model that was already in it is intact, and
   # the half-written group is gone so the name can be used again.
   expect_true(file.exists(path))
-  expect_equal(list_models_in_hdf5(path), "/submodels/US")
+  expect_equal(read_model_groups(path), "/submodels/US")
   expect_s3_class(read_model_from_hdf5(path, "/submodels/US"), "bvarmodel")
   expect_no_error(write_to_hdf5(fx_var_fitted(), filename = path,
                                 group = "/submodels/JP"))
@@ -325,18 +325,18 @@ test_that("reading a group that is not there is an error", {
 
   expect_error(read_model_from_hdf5(path, group = "/models/9"),
                "does not contain group")
-  expect_error(list_models_in_hdf5(path, group = "/models/9"),
+  expect_error(read_model_groups(path, group = "/models/9"),
                "does not contain group")
 })
 
-test_that("list_models_in_hdf5 finds models and nothing else", {
+test_that("read_model_groups finds models and nothing else", {
   path <- temp_h5_file()
   write_to_hdf5(fx_var_fitted(), filename = path, group = "/submodels/US")
 
   # A model at the root of its own file is reported as the root.
   root_path <- temp_h5_file()
   write_to_hdf5(fx_var_fitted(), filename = root_path)
-  expect_equal(list_models_in_hdf5(root_path), "")
+  expect_equal(read_model_groups(root_path), "")
 
   # A group that is not a model is not reported, and the walk does not descend
   # into a model's own subtree.
@@ -344,13 +344,13 @@ test_that("list_models_in_hdf5 finds models and nothing else", {
   h5$create_group("global")
   h5$close_all()
 
-  found <- list_models_in_hdf5(path)
+  found <- read_model_groups(path)
   expect_equal(found, "/submodels/US")
   expect_false(any(grepl("/data|/priors|/posterior", found)))
 
   # A root that restricts the walk.
-  expect_equal(list_models_in_hdf5(path, group = "/submodels"), "/submodels/US")
-  expect_equal(list_models_in_hdf5(path, group = "/global"), character(0))
+  expect_equal(read_model_groups(path, group = "/submodels"), "/submodels/US")
+  expect_equal(read_model_groups(path, group = "/global"), character(0))
 })
 
 test_that("read_models_from_folder names every model it returns", {

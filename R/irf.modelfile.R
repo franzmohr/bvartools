@@ -3,7 +3,7 @@
 #' Impulse response functions and forecast error variance decompositions of a
 #' model in an HDF5 file, computed a piece of the chain at a time.
 #'
-#' @param x an object of class 'modelfile', from \code{\link[bayests]{open_model}}.
+#' @param x an object of class 'modelfile', from \code{\link[bayests]{read_model_file}}.
 #' @param chunk how many draws are read at a time. Defaults to 100.
 #' @param ... arguments of \code{\link{irf.bvarmodel}} or
 #' \code{\link{fevd.bvarmodel}}, which do the work on each piece.
@@ -40,7 +40,7 @@
 #' file <- file.path(tempdir(), "bvartools-example-irf.h5")
 #' unlink(file)
 #' write_to_hdf5(model, filename = file)
-#' stored <- open_model(file)
+#' stored <- read_model_file(file)
 #'
 #' ir <- irf(stored, impulse = "invest", response = "income", n_ahead = 5,
 #'           chunk = 25)

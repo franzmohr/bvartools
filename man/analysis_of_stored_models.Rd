@@ -11,7 +11,7 @@
 \method{fevd}{modelfile}(x, ..., chunk = 100)
 }
 \arguments{
-\item{x}{an object of class 'modelfile', from \code{\link[bayests]{open_model}}.}
+\item{x}{an object of class 'modelfile', from \code{\link[bayests]{read_model_file}}.}
 
 \item{...}{arguments of \code{\link{irf.bvarmodel}} or
 \code{\link{fevd.bvarmodel}}, which do the work on each piece.}
@@ -55,7 +55,7 @@ model <- add_posterior_coefficients(add_initial_values(model))
 file <- file.path(tempdir(), "bvartools-example-irf.h5")
 unlink(file)
 write_to_hdf5(model, filename = file)
-stored <- open_model(file)
+stored <- read_model_file(file)
 
 ir <- irf(stored, impulse = "invest", response = "income", n_ahead = 5,
           chunk = 25)

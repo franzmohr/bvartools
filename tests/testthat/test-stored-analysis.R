@@ -13,7 +13,7 @@ stored_pair <- function() {
   unlink(file)
   write_to_hdf5(model, filename = file)
 
-  list(memory = model, file = open_model(file))
+  list(memory = model, file = read_model_file(file))
 }
 
 test_that("a stored model says what it holds", {
@@ -26,7 +26,7 @@ test_that("a stored model says what it holds", {
   expect_identical(stored[["model"]][["k"]], pair[["memory"]][["model"]][["k"]])
   expect_equal(stored[["data"]], pair[["memory"]][["data"]])
   expect_output(print(stored), "draws of a")
-  expect_error(open_model(file.path(tempdir(), "no-such-model.h5")), "does not exist")
+  expect_error(read_model_file(file.path(tempdir(), "no-such-model.h5")), "does not exist")
 })
 
 test_that("map_draws walks the chain in pieces", {

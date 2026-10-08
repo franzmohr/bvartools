@@ -1,24 +1,27 @@
 # bvartools 1.0.0
 
 * **The generics and the infrastructure every model package shares moved to
-  the new package bayests, which bvartools imports and re-exports.** Code
-  written against bvartools keeps working unchanged: `add_priors()`,
-  `add_posterior_coefficients()`, `write_to_hdf5()`, `read_model_from_hdf5()`,
-  `selection_criteria()`, `open_models()`, `map_models()`, `bayests_files()`
-  and the other moved functions are the same function objects, reached under
-  the same names, and the methods for 'modellist' and 'expandingwindow' come
-  with them. What stays here is what is particular to VAR and VEC models:
-  their constructors, priors, methods, analysis, forecast pooling and external
-  forecasts. dfmtools and ucmtools build on bayests the same way, which is
-  what lets a 'modellist' hold models of all three.
+  the new package bayests, which bvartools imports and re-exports.**
+  `add_priors()`, `add_posterior_coefficients()`, `write_to_hdf5()`,
+  `read_model_from_hdf5()`, `selection_criteria()`, `map_models()`,
+  `bayests_files()` and the other moved functions are the same function
+  objects, reached under the same names, and the methods for 'modellist' and
+  'expandingwindow' come with them. What stays here is what is particular to
+  VAR and VEC models: their constructors, priors, methods, analysis, forecast
+  pooling and external forecasts. dfmtools and ucmtools build on bayests the
+  same way, which is what lets a 'modellist' hold models of all three. Draws
+  are unchanged.
 
-  Three renames came with the move, none of them of anything in a CRAN
-  release: the class of `open_model()` is `modelfile` (was `bvarfile`), that
-  of `open_models()` is `modelfolder` (was `bvarfolder`), and the options are
-  `bayests.executable` (was `bvartools.bayests_executable`) and
-  `bayests.size_warning` (was `bvartools.size_warning`). A file is read by
-  the new `from_hdf5()` methods for 'bvarmodel' and 'bvecmodel', which hold
-  the reader `read_model_from_hdf5()` used to be. Draws are unchanged.
+  Renames came with the move, none of them of anything in a CRAN release.
+  Functions that read from disk start with `read_`: `read_model_file()` (was
+  `open_model()`), `read_model_folder()` (was `open_models()`) and
+  `read_model_groups()` (was `list_models_in_hdf5()`). The class of
+  `read_model_file()` is `modelfile` (was `bvarfile`), that of
+  `read_model_folder()` is `modelfolder` (was `bvarfolder`), and the options
+  are `bayests.executable` (was `bvartools.bayests_executable`) and
+  `bayests.size_warning` (was `bvartools.size_warning`). A file is read by the
+  new `read_hdf5_model()` methods for 'bvarmodel' and 'bvecmodel', which hold
+  the reader `read_model_from_hdf5()` used to be.
 
 * The vendored BayesTS core moves to `75d35c6`, which adds the four unobserved
   components models. They belong to ucmtools and are skipped, with their three
@@ -1089,7 +1092,7 @@ take the new model objects. `add_priors()` no longer has defaults for `coef` and
     `algorithm = "KLGS2010"` answers rather than a cheaper way of answering the
     same one.
 
-    `open_models()` reports `delta_beta` and `delta_sigma` in the manifest, at 1
+    `read_model_folder()` reports `delta_beta` and `delta_sigma` in the manifest, at 1
     for every model that has no discounts, which is what 1 means.
 
 * **`read_model_from_hdf5()` reads a posterior block of one row as one row.**
@@ -1224,7 +1227,7 @@ take the new model objects. `add_priors()` no longer has defaults for `coef` and
   in a session is migrated the same way, by `add_posterior_forecasts()`, and
   says so rather than being read as one that was never forecast.
 
-* **A folder of models is worked on without holding it.** `open_models()`
+* **A folder of models is worked on without holding it.** `read_model_folder()`
   returns a handle to a folder written with `write_to_hdf5()`, carrying a row
   per model -- where it is and what it is -- and none of the draws.
   `map_models()` reads one model, applies a function, writes it back and drops
@@ -1249,7 +1252,7 @@ take the new model objects. `add_priors()` no longer has defaults for `coef` and
   draws are the same either way, since a model is drawn with the seed in its
   file.
 
-* **A model can be analysed from its file.** `open_model()` returns a handle to
+* **A model can be analysed from its file.** `read_model_file()` returns a handle to
   a model written with `write_to_hdf5()`, carrying its specification, its data
   and the length of its chain but none of its draws. `map_draws()` reads the
   chain in pieces and applies a function to each, and `irf()` and `fevd()` have
@@ -2552,7 +2555,7 @@ take the new model objects. `add_priors()` no longer has defaults for `coef` and
 
 * **A model can be addressed by group, so one HDF5 file can hold several.**
   `write_to_hdf5()` and `read_model_from_hdf5()` take a `group` argument, and
-  the new `list_models_in_hdf5()` reports which groups of a file hold a model.
+  the new `read_model_groups()` reports which groups of a file hold a model.
   Without a `group` nothing changes: the model is the whole file, and an
   existing file is still refused.
 

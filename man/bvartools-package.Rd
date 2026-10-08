@@ -136,7 +136,7 @@ the rest of the workflow applies.
 
 \code{\link[bayests]{write_to_hdf5}} and \code{\link[bayests]{read_model_from_hdf5}} save and
 restore a model with its draws, one per file or several side by side in
-groups listed by \code{\link[bayests]{list_models_in_hdf5}}. The files follow the
+groups listed by \code{\link[bayests]{read_model_groups}}. The files follow the
 format of the BayesTS command line, so a model can also be estimated there
 and read back. \code{\link[bayests]{read_models_from_folder}} and
 \code{\link[bayests]{read_expanding_window_model_from_folder}} read a whole folder.

@@ -162,7 +162,7 @@ gives one model per specification in a list of class \code{'modellist'}, and
 \code{\link[bayests]{use_expanding_window}} a list of class \code{'expandingwindow'},
 one model per window. Every step of the workflow has a method for both and
 applies to each model in turn, so the structure above is what is inside either
-of them. \code{\link[bayests]{open_models}} is the same idea for a folder too large to
+of them. \code{\link[bayests]{read_model_folder}} is the same idea for a folder too large to
 hold: a handle to the files rather than the models.
 }
 

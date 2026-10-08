@@ -83,9 +83,9 @@ bayests::fevd
 #' @export
 bayests::from_bayests_tree
 
-#' @importFrom bayests from_hdf5
+#' @importFrom bayests read_hdf5_model
 #' @export
-bayests::from_hdf5
+bayests::read_hdf5_model
 
 #' @importFrom bayests get_forecast_errors
 #' @export
@@ -99,9 +99,9 @@ bayests::get_model_specifications
 #' @export
 bayests::irf
 
-#' @importFrom bayests list_models_in_hdf5
+#' @importFrom bayests read_model_groups
 #' @export
-bayests::list_models_in_hdf5
+bayests::read_model_groups
 
 #' @importFrom bayests map_draws
 #' @export
@@ -115,13 +115,13 @@ bayests::map_models
 #' @export
 bayests::model_files
 
-#' @importFrom bayests open_model
+#' @importFrom bayests read_model_file
 #' @export
-bayests::open_model
+bayests::read_model_file
 
-#' @importFrom bayests open_models
+#' @importFrom bayests read_model_folder
 #' @export
-bayests::open_models
+bayests::read_model_folder
 
 #' @importFrom bayests plot_predictive_loglik
 #' @export

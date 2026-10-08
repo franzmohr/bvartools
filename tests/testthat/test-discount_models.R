@@ -508,7 +508,7 @@ test_that("BayesTS estimates a grid of ranks and scores it exactly", {
   models <- add_initial_values(models)
   write_to_hdf5(models, folder = folder)
 
-  stored <- open_models(folder)
+  stored <- read_model_folder(folder)
   expect_equal(nrow(stored[["manifest"]]), 6L)
   expect_equal(sort(unique(stored[["manifest"]][["rank"]])), 0:2)
   expect_setequal(stored[["manifest"]][["delta_beta"]], c(0.98, 1))

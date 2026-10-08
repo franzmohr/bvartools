@@ -28,7 +28,7 @@ With a \code{group} every path is written under it instead of at the root,
 so one file can hold several models side by side. The spelling is the one the
 BayesTS command line uses for its \code{--group} flag: a leading slash and no
 trailing slash, with \code{""} for the root. Intermediate groups are created
-as needed, and \code{\link[bayests]{list_models_in_hdf5}} reports which groups of a
+as needed, and \code{\link[bayests]{read_model_groups}} reports which groups of a
 file hold a model.
 
 What must not already be there is the model rather than the file. Without a

@@ -1,6 +1,6 @@
 #' Read a VAR or VEC Model from an Open File
 #'
-#' The methods of \code{\link[bayests]{from_hdf5}} that
+#' The methods of \code{\link[bayests]{read_hdf5_model}} that
 #' \code{\link[bayests]{read_model_from_hdf5}} reaches for a file of a VAR or VEC model:
 #' one written by \code{\link[bayests]{write_to_hdf5}}, which records the class in
 #' \code{/model/rclass}, or by the BayesTS command line, whose algorithm names
@@ -27,13 +27,13 @@
 #' draws. \code{\link{bvartools_model}} describes the elements one by one.
 #'
 #' @export
-from_hdf5.bvarmodel <- function(x, h5_root, draws = NULL, ...) {
+read_hdf5_model.bvarmodel <- function(x, h5_root, draws = NULL, ...) {
   .read_var_layout(x, h5_root, draws)
 }
 
-#' @rdname from_hdf5.bvarmodel
+#' @rdname read_hdf5_model.bvarmodel
 #' @export
-from_hdf5.bvecmodel <- function(x, h5_root, draws = NULL, ...) {
+read_hdf5_model.bvecmodel <- function(x, h5_root, draws = NULL, ...) {
   .read_var_layout(x, h5_root, draws)
 }
 

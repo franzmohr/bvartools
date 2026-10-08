@@ -24,7 +24,7 @@ test_that("it identifies the draws add_sign_zero_restrictions() identifies", {
   restrictions <- data.frame(impulse = "y", response = c("Dp", "r"), sign = c(0, 1))
 
   # The method draws with the seed of the model's structural stage.
-  direct <- bvartools:::.with_stage_seed(object, "structural",
+  direct <- bayests::.with_stage_seed(object, "structural",
     arias_rubio_ramirez_waggoner_2018(ex_draws(object), restrictions,
                                       object[["model"]][["endogen"]], lags = 1))
   method <- add_sign_zero_restrictions(object, restrictions)

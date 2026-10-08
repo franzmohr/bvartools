@@ -54,62 +54,6 @@ add_seed.bvecmodel <- function(object, seed, ...) {
   object
 }
 
-# Evaluates 'expr' with R's generator set to 'seed', with R's default kinds so
-# that a model draws the same on a cluster worker running L'Ecuyer-CMRG as in a
-# plain session, and puts the generator back afterwards, kinds included. Without
-# a seed 'expr' is evaluated with the generator as it stands. 'expr' is a
-# promise and is only forced after set.seed().
-.with_model_seed <- function(seed, expr) {
-  if (is.null(seed)) {
-    return(expr)
-  }
-  seed <- .check_seed(seed)
-
-  global <- globalenv()
-  # Before RNGkind(), which initialises the generator when it has no state yet.
-  had_state <- exists(".Random.seed", envir = global, inherits = FALSE)
-  if (had_state) {
-    old_state <- get(".Random.seed", envir = global, inherits = FALSE)
-  }
-  old_kind <- RNGkind()
-  on.exit({
-    suppressWarnings(RNGkind(old_kind[1], old_kind[2], old_kind[3]))
-    if (had_state) {
-      assign(".Random.seed", old_state, envir = global)
-    } else if (exists(".Random.seed", envir = global, inherits = FALSE)) {
-      rm(".Random.seed", envir = global)
-    }
-  }, add = TRUE)
-
-  set.seed(seed, kind = "Mersenne-Twister", normal.kind = "Inversion",
-           sample.kind = "Rejection")
-  expr
-}
-
-# The seed of a stage of the simulation that follows the coefficients: the
-# forecast, the predictive score, the rotations of a sign restricted
-# identification. The BayesTS command line seeds each stage of a model as its own
-# stream derived from /model/seed, so that a forecast run twice gives the same
-# draws and does not start from the numbers the chain began with; this is the
-# same rule with R's generator. The coefficients keep the seed itself, which is
-# what add_posterior_coefficients() has always drawn with. The stage seeds are
-# the first draws of R's generator set to the model's seed, which keeps the
-# streams of the neighbouring seeds that add_seed() gives a list of models apart.
-# A model without a seed has no stage seeds, and its stages draw from R's
-# generator as it stands.
-.model_stages <- c("forecast", "predictive", "structural")
-
-.stage_seed <- function(seed, stage) {
-  if (is.null(seed)) {
-    return(NULL)
-  }
-  stage <- match.arg(stage, .model_stages)
-  seeds <- .with_model_seed(seed, sample.int(.Machine$integer.max, length(.model_stages)))
-  seeds[match(stage, .model_stages)]
-}
-
-# Evaluates 'expr' with R's generator set to the seed of 'stage' of 'object',
-# and as it stands where the model has no seed.
-.with_stage_seed <- function(object, stage, expr) {
-  .with_model_seed(.stage_seed(object[["model"]][["seed"]], stage), expr)
-}
+# .with_model_seed(), .stage_seed() and .with_stage_seed() come from bayests,
+# which dfmtools takes them from too, so that the models of both packages are
+# seeded alike.

@@ -42,7 +42,8 @@
   rotations, and the forecasts and score of the discounted models, which used the
   model's seed itself. A model without a seed draws from R's generator as it
   stands and gives the draws it gave before. Coefficient draws are unchanged.
-  Forecast pools have no seed and still need `set.seed()`.
+  Forecast pools have no seed and still need `set.seed()`. The seeding
+  functions come from bayests, which dfmtools uses too.
 
 * The vendored BayesTS core moves to `75d35c6`, which adds the four unobserved
   components models. They belong to ucmtools and are skipped, with their three

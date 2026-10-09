@@ -8,7 +8,7 @@ License: GPL (>= 2)
 Depends: 
     R (>= 4.0.0),
     coda
-Imports: bayests, grDevices, graphics, hdf5r, Matrix, methods, Rcpp (>= 1.0.12), stats, utils
+Imports: bayests (>= 0.0.0.9001), grDevices, graphics, hdf5r, Matrix, methods, Rcpp (>= 1.0.12), stats, utils
 LinkingTo: Rcpp, RcppArmadillo
 SystemRequirements: GNU make
 Encoding: UTF-8

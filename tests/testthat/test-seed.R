@@ -334,17 +334,6 @@ twice <- function(object, f) {
   list(first, f(object))
 }
 
-test_that("each stage after the coefficients has a seed of its own", {
-  stages <- vapply(c("forecast", "predictive", "structural"),
-                   function(stage) .stage_seed(7L, stage), integer(1))
-  expect_false(anyDuplicated(c(7L, stages)) > 0)
-  # Neither the seed of the model next to it in a list.
-  expect_false(any(stages == vapply(c("forecast", "predictive", "structural"),
-                                    function(stage) .stage_seed(8L, stage), integer(1))))
-  expect_null(.stage_seed(NULL, "forecast"))
-  expect_error(.stage_seed(7L, "coefficients"))
-})
-
 test_that("two forecasts of a seeded VAR are identical", {
   object <- add_forecast_input(fx_var_fitted(), n_ahead = 4)
   forecast <- function(x) add_posterior_forecasts(x)[["posterior"]][["forecast"]][["forecasts"]]

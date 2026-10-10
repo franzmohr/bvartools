@@ -318,33 +318,8 @@ test_that("LOOIC reweights the posterior towards the data it has not seen", {
   expect_equal(loo[["p_loo"]], sum(apply(loglik, 2, stats::var)), tolerance = 0.3)
 })
 
-test_that("the importance weights are smoothed and normalised", {
-  set.seed(20240101)
-
-  # A heavy tailed set of ratios is what the smoothing exists for: the largest
-  # weights are pulled in, so the sum stays one and no single draw dominates.
-  smoothed <- bayests:::.psis_weights(rt(2000, df = 2), tail_len = 134)
-  weights <- exp(smoothed[["log_weights"]])
-
-  expect_equal(sum(weights), 1)
-  expect_true(is.finite(smoothed[["pareto_k"]]))
-  expect_lt(max(weights), 1)
-
-  # A tail with nothing to fit is left alone rather than smoothed into noise,
-  # and is flagged by an infinite shape parameter.
-  expect_identical(bayests:::.psis_weights(rep(0, 500), tail_len = 100)[["pareto_k"]], Inf)
-  expect_identical(bayests:::.psis_weights(stats::rnorm(20), tail_len = 4)[["pareto_k"]], Inf)
-})
-
-test_that("the Pareto fit recovers the shape of a known tail", {
-  set.seed(20240102)
-  rgpd <- function(n, k, sigma) sigma * expm1(-k * log1p(-stats::runif(n))) / k
-
-  for (shape in c(0.2, 0.7)) {
-    estimates <- replicate(20, bayests:::.gpd_fit(rgpd(500, shape, 2))[["k"]])
-    expect_lt(abs(mean(estimates) - shape), 0.05)
-  }
-})
+# The smoothing of the importance weights and its Pareto fit are tested in
+# bayests, which holds them (tests/testthat/test-psis.R there).
 
 test_that("a single draw leaves the cross validated criteria out", {
   model <- fx_var_fitted()

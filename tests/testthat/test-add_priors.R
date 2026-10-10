@@ -596,3 +596,20 @@ test_that("an error correction term of one series can be scaled", {
   scaled <- scale_error_correction(model)
   expect_length(attr(scaled[["data"]][["train"]][["w"]], "scale"), 2)
 })
+
+test_that("a VEC model refuses a coef$const it cannot use rather than ignoring it", {
+  coint <- list(v_i = 0, p_tau_i = 1)
+  sigma <- list(df = "k", scale = 1)
+
+  unrestricted <- create_bvecmodel(vec_data(), p = 2, r = 1, const = "unrestricted")
+  expect_error(add_priors(unrestricted, coef = list(v_i = 1, const = "firts"),
+                          coint = coint, sigma = sigma), "coef[$]const")
+  mean_prior <- add_priors(unrestricted, coef = list(v_i = 1, const = "mean"),
+                           coint = coint, sigma = sigma)
+  expect_true(any(mean_prior[["priors"]][["a"]][["mu"]] != 0))
+
+  restricted <- create_bvecmodel(vec_data(), p = 2, r = 1, const = "restricted")
+  expect_error(add_priors(restricted, coef = list(v_i = 1, const = "mean"),
+                          coint = coint, sigma = sigma), "restricted")
+  expect_no_error(add_priors(restricted, coef = list(v_i = 1), coint = coint, sigma = sigma))
+})

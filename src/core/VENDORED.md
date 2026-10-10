@@ -7,7 +7,17 @@ project is here -- the core deliberately links neither HDF5 nor HighFive,
 prints nothing and reads no files, which is what makes it embeddable in an R
 package at all.
 
-The copy is **BayesTS `4808dff`**, the tip of upstream's `uc-cycle-init`
+The copy is **BayesTS `02a41de`**, BayesTS `main` after merging `bc27dfe` and `02a41de`. `bc27dfe` adds the damped
+trend and the signal equations to UcNormalGamma and UcNormalWishart, the
+European Commission's output gap models nested in them; `02a41de` moves
+`require_uc_signal_data()` from `uc_support.h` to `model_support.h`, so that
+`inputs.cpp` no longer includes the unobserved components support header. Of the files here it
+changes `spec.h`, `inputs.h`, `results.h`, `spec.cpp`, `inputs.cpp` and
+`model_support.h`, and the unobserved components models stay skipped. Without
+`02a41de` this package could not have taken `bc27dfe`: `inputs.cpp` would have
+included a header the skip list leaves out. No draw of a model here moves.
+
+Before that the copy was **BayesTS `4808dff`**, the tip of upstream's `uc-cycle-init`
 branch off `main` at `22b3488`, which reaches this package only through the
 shared files: `spec.h` gains `UcCycleInit` and `VarSpec::cycle_init`,
 `results.h` a `cycle0` member in two unobserved components draws structs, and

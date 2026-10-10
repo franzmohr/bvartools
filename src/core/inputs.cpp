@@ -2416,6 +2416,39 @@ arma::uword validate_uc_common(const VarSpec &spec, const TrainData &train,
         }
     }
 
+    // The damped trend and the signal equations are read by the two models with
+    // one shock precision per draw; the other two have no Gibbs block for them.
+    const bool reads_extensions = name == "UcNormalGamma" || name == "UcNormalWishart";
+    if (spec.trend == UcTrend::damped && !reads_extensions)
+    {
+        throw std::invalid_argument(name + " does not read /model/trend damped: only "
+                                           "UcNormalGamma and UcNormalWishart draw its rho; use "
+                                           "rw or smooth");
+    }
+    if (spec.n_signals > 0)
+    {
+        if (!reads_extensions)
+        {
+            throw std::invalid_argument(name + " does not read signal equations "
+                                               "(/model/n_signals): only UcNormalGamma and "
+                                               "UcNormalWishart draw them; set n_signals to zero");
+        }
+        // A signal reaching back past the sample reads the cycle there as zero,
+        // which is not what a drawn pre-sample cycle says it was.
+        if (spec.cycle_init == UcCycleInit::stationary)
+        {
+            throw std::invalid_argument(
+                "signal equations (/model/n_signals) are not combined with /model/cycle_init "
+                "stationary: the signals read the cycle before the sample as zero; use "
+                "cycle_init zero");
+        }
+    }
+    else if (spec.signal_lags != 0 || spec.n_signal_x != 0)
+    {
+        throw std::invalid_argument("signal_lags and n_signal_x describe signal equations, and "
+                                    "n_signals is zero; set n_signals, or remove them");
+    }
+
     if (spec.p > 0)
     {
         validate_normal_block(a_prior, initial_a, static_cast<arma::uword>(spec.n_uc_a()), "a");
@@ -2473,11 +2506,75 @@ arma::uword validate_uc_common(const VarSpec &spec, const TrainData &train,
 
 } // namespace
 
+namespace
+{
+
+/// The damped trend's rho and the signal equations of UcNormalGamma and
+/// UcNormalWishart, where the spec asks for them. `tt` is the sample's length.
+void validate_uc_extension(const VarSpec &spec, const arma::uword tt,
+                           const arma::mat &train_signal, const arma::mat &train_signal_x,
+                           const NormalPrior &rho_prior, const arma::vec &initial_rho,
+                           const NormalPrior &signal_prior, const arma::vec &initial_signal,
+                           const GammaPrior &signal_noise_prior,
+                           const arma::vec &initial_signal_noise_inv)
+{
+    const arma::uword k = static_cast<arma::uword>(spec.k);
+    if (spec.trend == UcTrend::damped)
+    {
+        validate_normal_block(rho_prior, initial_rho, k, "rho");
+        for (arma::uword i = 0; i < k; i++)
+        {
+            if (!(std::abs(initial_rho(i)) < 1.0))
+            {
+                throw std::invalid_argument(
+                    "the initial damped trend coefficients /initial/rho must lie in (-1, 1): the "
+                    "slope is a stationary AR(1), and at one the trend is the smooth one");
+            }
+        }
+    }
+
+    if (spec.n_signals <= 0)
+    {
+        if (train_signal.n_elem > 0 || train_signal_x.n_elem > 0)
+        {
+            throw std::invalid_argument("the file carries signals in /data/train/signal but "
+                                        "n_signals is zero; set n_signals to their number, or "
+                                        "remove them");
+        }
+        return;
+    }
+    const arma::uword m = static_cast<arma::uword>(spec.n_signals);
+    core::require_finite(train_signal, "the signals /data/train/signal");
+    core::require_finite(train_signal_x, "the signals' regressors /data/train/signal_x");
+    core::require_uc_signal_data(spec, train_signal, train_signal_x, tt);
+    // Each signal equation regresses on its own regressors and k(q + 1) cycle
+    // values; the q-th lag of the cycle needs a period after it.
+    if (static_cast<arma::uword>(spec.signal_lags) >= tt)
+    {
+        throw std::invalid_argument("signals loading on " + std::to_string(spec.signal_lags) +
+                                    " lags of the cycle need more than that many periods, and the "
+                                    "sample has " + std::to_string(tt));
+    }
+    validate_normal_block(signal_prior, initial_signal,
+                          static_cast<arma::uword>(spec.n_uc_signal()), "signal");
+    require_length(signal_noise_prior.shape, m, "gamma prior shape of the signal noise precision");
+    require_length(signal_noise_prior.rate, m, "gamma prior rate of the signal noise precision");
+    require_gamma_values(signal_noise_prior, "the signal noise precision");
+    require_length(initial_signal_noise_inv, m, "initial signal noise precision");
+    require_above(initial_signal_noise_inv, 0.0, true, "initial signal noise precision");
+}
+
+} // namespace
+
 void UcNormalGammaInput::validate() const
 {
-    validate_uc_common(spec, train, forecast, test, a_prior, initial.a, c_prior, initial.c,
-                       tau0_prior, initial.tau0, irregular_prior, initial.irregular_inv,
-                       "UcNormalGamma");
+    const arma::uword tt =
+        validate_uc_common(spec, train, forecast, test, a_prior, initial.a, c_prior, initial.c,
+                           tau0_prior, initial.tau0, irregular_prior, initial.irregular_inv,
+                           "UcNormalGamma");
+    validate_uc_extension(spec, tt, train_signal, train_signal_x, rho_prior, initial.rho,
+                          signal_prior, initial.signal, signal_noise_prior,
+                          initial.signal_noise_inv);
 
     if (use_psi())
     {
@@ -2499,6 +2596,9 @@ void UcNormalWishartInput::validate() const
         validate_uc_common(spec, train, forecast, test, a_prior, initial.a, c_prior, initial.c,
                            tau0_prior, initial.tau0, irregular_prior, initial.irregular_inv,
                            "UcNormalWishart");
+    validate_uc_extension(spec, tt, train_signal, train_signal_x, rho_prior, initial.rho,
+                          signal_prior, initial.signal, signal_noise_prior,
+                          initial.signal_noise_inv);
 
     if (spec.covar)
     {

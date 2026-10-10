@@ -279,6 +279,28 @@ add_priors.bvecmodel <- function(object,
   if (!is.null(coef)) {
     .add_priors_check_coef(object, coef)
 
+    # Checked here for every model, as the VAR method does: a misspelt value
+    # used to leave the prior mean at zero without a word, and so did any value
+    # given for a constant restricted to the cointegration space, which has no
+    # coefficient of its own for it to set.
+    const <- coef[["const"]]
+    if (!is.null(const)) {
+      if (is.character(const)) {
+        if (length(const) != 1 || !const %in% c("first", "mean")) {
+          stop("Argument 'coef$const' must be \"first\", \"mean\" or a number.")
+        }
+      } else if (!is.numeric(const) || anyNA(const)) {
+        stop("Argument 'coef$const' must be \"first\", \"mean\" or a number.")
+      }
+      if (!"const" %in% colnames(object[["data"]][["train"]][["x"]]) &&
+          "const" %in% colnames(object[["data"]][["train"]][["w"]])) {
+        stop("Argument 'coef$const' sets the prior mean of an unrestricted constant, and the ",
+             "constant of this model is restricted to the cointegration space, where the prior ",
+             "on beta in argument 'coint' covers it. Remove 'coef$const', or estimate the model ",
+             "with const = \"unrestricted\".")
+      }
+    }
+
     if (is.null(coef[["v_i_det"]])) {
       coef[["v_i_det"]] <- coef[["v_i"]]
     }

@@ -53,6 +53,7 @@ window.bvecmodel <- function(x, start = NULL, end = NULL, ...) {
     x[["posterior"]] <- .window_posterior(x[["posterior"]], periods, length(orig_time),
                                           .path_widths(x, k), .is_discount(x))
   }
+  x <- .window_forecast(x, periods, length(orig_time))
   
   return(x)
 }

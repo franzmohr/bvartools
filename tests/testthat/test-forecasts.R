@@ -253,3 +253,40 @@ test_that("predict returns every simulated period by default", {
   expect_no_warning(forecast <- stats::predict(fx_var_forecast()))
   expect_identical(dim(forecast[["fcst"]])[1], fx_var_forecast()[["model"]][["h"]])
 })
+
+test_that("a univariate model scored against a multivariate test sample reads its own column", {
+  # An AR benchmark scored against the data set of the VARs beside it: the
+  # realised values used to be read off the whole of it, the first column, then
+  # the second, period after period.
+  data <- var_data()
+  train <- stats::window(data[, "Dp", drop = FALSE], end = c(1997, 1))
+  model <- create_bvarmodel(train, p = 1, deterministic = "const",
+                            iterations = 10, burnin = 5)
+  model <- add_priors(model, coef = list(v_i = 0, v_i_det = 0),
+                      sigma = list(df = 1, scale = 0.0001))
+  model <- add_posterior_coefficients(add_seed(add_initial_values(model), 31))
+  model <- add_posterior_forecasts(add_forecast_input(model, n_ahead = 4))
+  model <- add_forecast_errors(model, test_sample = stats::window(data, start = c(1997, 2)))
+
+  expect_equal(as.numeric(model[["data"]][["test"]][["y"]]),
+               as.numeric(stats::window(data[, "Dp"], start = c(1997, 2), end = c(1998, 1))))
+  expect_error(add_forecast_errors(model, test_sample = data[, c("y", "r")]), "'Dp'")
+})
+
+test_that("a new forecast replaces the errors and scores of the previous one", {
+  model <- scored_var_model(n_ahead = 4)
+  expect_false(is.null(model[["posterior"]][["forecast"]][["errors"]]))
+
+  # Forecast again over a longer horizon: the errors of the four-period forecast
+  # used to stay beside the eight-period one.
+  again <- add_forecast_input(model, n_ahead = 8)
+  expect_null(again[["posterior"]][["forecast"]])
+  expect_error(predict(again), "add_posterior_forecasts")
+  again <- add_posterior_forecasts(again)
+  expect_named(again[["posterior"]][["forecast"]], "forecasts")
+  expect_identical(ncol(again[["posterior"]][["forecast"]][["forecasts"]]),
+                   8L * model[["model"]][["k"]])
+
+  redrawn <- add_posterior_forecasts(model)
+  expect_null(redrawn[["posterior"]][["forecast"]][["errors"]])
+})

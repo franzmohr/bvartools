@@ -12,12 +12,18 @@
 #' sample are cut to the periods that remain, so that they still refer to the
 #' same observations as the data. These are the coefficients of a model with
 #' time varying parameters, the draws of the error term that vary by period --
-#' as under stochastic volatility -- and the pointwise log-likelihood. Draws that
+#' as under stochastic volatility -- the panel completed by a model with
+#' \code{missing = "estimate"}, and the pointwise log-likelihood. Draws that
 #' do not vary by period are left as they are. The posterior of a discounted
 #' model, which holds the moments of every period rather than draws, is cut to
 #' the same periods. In either case the draws or moments that remain were
 #' estimated from the whole sample; re-estimate the model to condition on the
 #' window alone.
+#'
+#' \strong{A window that ends before the sample drops the forecast input, the
+#' forecasts and the realised values they were scored against}, with a warning:
+#' they start after the original end, from its last observations. Call
+#' \code{add_forecast_input()} again to forecast from the end of the window.
 #'
 #' @return An object of class 'bvarmodel'.
 #'
@@ -53,6 +59,7 @@ window.bvarmodel <- function(x, start = NULL, end = NULL, ...) {
     x[["posterior"]] <- .window_posterior(x[["posterior"]], periods, length(orig_time),
                                           .path_widths(x, k), .is_discount(x))
   }
+  x <- .window_forecast(x, periods, length(orig_time))
 
   # A sign restricted identification holds for the period it was found in,
   # which is an index into the sample and so moves with it. The last period is
@@ -92,6 +99,9 @@ window.bvarmodel <- function(x, start = NULL, end = NULL, ...) {
                  "u_sigma_inv$coeffs" = k * k,
                  "u_omega_inv$coeffs" = k,
                  "u_scale$coeffs" = k,
+                 # The panel completed by a model with missing = "estimate",
+                 # one draw per row, k values per period.
+                 "y$coeffs" = k,
                  "loglik" = 1)
   if (isTRUE(x[["model"]][["rank"]] > 0) && !is.null(x[["data"]][["train"]][["w"]])) {
     widths[["beta$coeffs"]] <- NCOL(x[["data"]][["train"]][["w"]]) * x[["model"]][["rank"]]
@@ -122,6 +132,12 @@ window.bvarmodel <- function(x, start = NULL, end = NULL, ...) {
         posterior[[path]] <- block[periods, , drop = FALSE]
       }
     }
+    # The log predictive density of each period, one column per period. Left
+    # whole, the marginal likelihood summed from it covered the original sample.
+    loglik <- posterior[["loglik"]]
+    if (!is.null(loglik) && NCOL(loglik) == tt) {
+      posterior[["loglik"]] <- loglik[, periods, drop = FALSE]
+    }
     return(posterior)
   }
 
@@ -142,4 +158,29 @@ window.bvarmodel <- function(x, start = NULL, end = NULL, ...) {
   }
 
   return(posterior)
+}
+
+# Drops what belongs to the end of the original sample when the window moves
+# it: the forecast input, whose lags are the last observations, the horizon,
+# the realised values, and the forecasts and their scores. Kept, they described
+# forecasts made from periods the window no longer ends in -- predict() dated
+# them after the window and they started from the old last observations.
+.window_forecast <- function(x, periods, tt) {
+  if (length(periods) == 0 || max(periods) == tt) {
+    return(x)
+  }
+  had <- !is.null(x[["data"]][["forecast"]]) || !is.null(x[["data"]][["test"]]) ||
+    !is.null(x[["model"]][["h"]]) || !is.null(x[["posterior"]][["forecast"]])
+  if (!had) {
+    return(x)
+  }
+  x[["data"]][["forecast"]] <- NULL
+  x[["data"]][["test"]] <- NULL
+  x[["model"]][["h"]] <- NULL
+  x[["model"]][["forecast_start"]] <- NULL
+  x[["posterior"]][["forecast"]] <- NULL
+  warning("The window ends before the original sample, so the forecast input, the ",
+          "forecasts and their test values, which start after the original end, were ",
+          "dropped. Use add_forecast_input() again.", call. = FALSE)
+  x
 }

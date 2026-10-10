@@ -116,10 +116,14 @@ persistence_profiles.bvecmodel <- function(object, n_ahead = 20, ci = 0.95,
   }
 
   # The level VAR of the model supplies the moving average coefficients, and the
-  # model itself the cointegrating vectors, which vec_to_var() drops.
-  level <- vec_to_var(object, period = period)
-  a <- .draws_matrix(level[["posterior"]][["a"]][["coeffs"]])
-  sigma <- .draws_matrix(level[["posterior"]][["u_sigma_inv"]][["coeffs"]])
+  # model itself the cointegrating vectors, which vec_to_var() drops. The
+  # coefficients and the covariance of the period are read the way irf() and
+  # fevd() read them. vec_to_var() has no 'period': passing it one used to leave
+  # the lag blocks of the first period of a time varying model beside the beta
+  # of the period asked for, and the per-period precisions of a stochastic
+  # volatility model were taken for one covariance.
+  level <- vec_to_var(object)
+  level_draws <- .collect_draws(level, period = period, need_Sigma = TRUE)
   beta <- .draws_matrix(object[["posterior"]][["beta"]][["coeffs"]])
 
   # A time varying model has one beta per period, and the level VAR was taken at
@@ -135,13 +139,13 @@ persistence_profiles.bvecmodel <- function(object, n_ahead = 20, ci = 0.95,
   }
 
   p <- level[["model"]][["p"]]
-  draws <- nrow(a)
+  draws <- length(level_draws)
   profiles <- array(NA_real_, c(draws, n_ahead + 1, rank))
 
   for (d in seq_len(draws)) {
 
-    coefficients <- matrix(a[d, ], k)
-    covariance <- solve(matrix(sigma[d, ], k))
+    coefficients <- level_draws[[d]][["A"]]
+    covariance <- level_draws[[d]][["Sigma"]]
     vectors <- matrix(beta[d, ], k_w, rank)[seq_len(k), , drop = FALSE]
 
     # Psi_0 = I and Psi_h = sum_j A_j Psi_{h-j}. Written out rather than taken

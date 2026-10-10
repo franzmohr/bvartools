@@ -33,6 +33,7 @@ add_forecast_input.bvecmodel <- function(object, n_ahead = 10, deterministic = N
                                        exogen = exogen, ...)
   object[["model"]][["h"]] <- fcst_input[["h"]]
   object[["data"]][["forecast"]] <- list("x" = fcst_input[["x"]])
+  object <- .drop_forecast_results(object)
 
   return(object)
 }
@@ -55,6 +56,8 @@ add_forecast_input.bvecmodel <- function(object, n_ahead = 10, deterministic = N
 #' period. If \code{NULL} (default), the value in \code{object$model$forecast_states} is
 #' used, and \code{"simulate"} when there is none. Models with constant coefficients and
 #' volatility are unaffected.
+#' @param scenario,forecast_quantile not available for a VEC model and refused;
+#' see Details.
 #' @param ... further arguments passed to or from other methods.
 #'
 #' @details The forecasts are those of the VAR in levels the VEC model implies. For a model
@@ -92,6 +95,15 @@ add_forecast_input.bvecmodel <- function(object, n_ahead = 10, deterministic = N
 #' seed derived from its own, so two forecasts of it give the same draws however R's
 #' generator stands. A model without one draws from R's generator as it stands.
 #'
+#' A new forecast replaces the forecast errors and predictive scores of the previous
+#' one, which belong to the forecasts they were computed from.
+#'
+#' \strong{A VEC model takes no \code{scenario} and no \code{forecast_quantile}}:
+#' no VEC sampler conditions its forecast on pinned values, and none estimates a
+#' grid of quantiles. Both are refused rather than ignored, so a model list mixing
+#' VAR and VEC models does not return unconditional forecasts for its VEC members
+#' beside the conditional ones of its VARs.
+#'
 #' @return The object in \code{object} with \code{posterior$forecast$forecasts} added, a
 #' \code{\link[coda]{mcmc}} object with one row per draw and \eqn{Kh} columns of forecasts
 #' of the levels, stacked by period. \code{predict} summarises them. A
@@ -100,7 +112,18 @@ add_forecast_input.bvecmodel <- function(object, n_ahead = 10, deterministic = N
 #' @family posterior simulation
 #' @export
 #' @method add_posterior_forecasts bvecmodel
-add_posterior_forecasts.bvecmodel <- function(object, forecast_states = NULL, ...){
+add_posterior_forecasts.bvecmodel <- function(object, forecast_states = NULL, scenario = NULL,
+                                              forecast_quantile = NULL, ...){
+
+  if (!is.null(scenario)) {
+    stop("A VEC model does not forecast conditional on a scenario: none of its samplers ",
+         "pins forecast values. Convert it with vec_to_var() and forecast the VAR, or ",
+         "forecast without 'scenario'.")
+  }
+  if (!is.null(forecast_quantile)) {
+    stop("Argument 'forecast_quantile' needs a grid of quantiles, which only a VAR ",
+         "estimates; see 'quantile_grid' in create_bvarmodel().")
+  }
 
   if (!is.null(forecast_states)) {
     object[["model"]][["forecast_states"]] <- match.arg(forecast_states, c("simulate", "hold"))
@@ -123,6 +146,7 @@ add_posterior_forecasts.bvecmodel <- function(object, forecast_states = NULL, ..
   }
 
   .check_simulated_coint_states(object)
+  object <- .drop_forecast_results(object)
 
   class_of_object <- class(object)
 

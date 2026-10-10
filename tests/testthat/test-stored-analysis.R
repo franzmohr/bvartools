@@ -89,3 +89,20 @@ test_that("the variance decomposition of a stored model is that of the model", {
                fevd(pair[["memory"]], response = variables[2], n_ahead = 4, type = "oir",
                     max_groups = 2))
 })
+
+test_that("a median and a credible interval of a stored decomposition are over the whole chain", {
+  # An average of the chunks' own medians and quantiles is neither, and used to
+  # be what a stored model returned.
+  pair <- stored_pair()
+  variables <- pair[["memory"]][["model"]][["endogen"]]
+  for (type in c("oir", "gir")) {
+    from_memory <- fevd(pair[["memory"]], response = variables[2], n_ahead = 4, type = type,
+                        normalise_gir = TRUE, statistic = "median", ci = 0.9)
+    from_file <- fevd(pair[["file"]], response = variables[2], n_ahead = 4, type = type,
+                      normalise_gir = TRUE, statistic = "median", ci = 0.9, chunk = 7)
+    expect_equal(from_file, from_memory, info = type)
+    expect_equal(attr(from_file, "upper"), attr(from_memory, "upper"), info = type)
+  }
+  expect_error(fevd(pair[["file"]], response = variables[2], ci = 0.9, max_groups = 2,
+                    chunk = 7), "cannot be combined")
+})

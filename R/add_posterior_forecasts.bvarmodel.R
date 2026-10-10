@@ -139,6 +139,7 @@ add_posterior_forecasts.bvarmodel <- function(object, forecast_states = NULL, sc
   }
 
   .check_shifted_forecast(object)
+  object <- .drop_forecast_results(object)
 
   # Drawn i.i.d. from the closed form rather than carried along a chain, so the
   # paths come back unlabelled and return here.
@@ -165,6 +166,19 @@ add_posterior_forecasts.bvarmodel <- function(object, forecast_states = NULL, sc
                                                                   start = mcpar_temp[1], end = mcpar_temp[2], thin = mcpar_temp[3])
   
   return(object)
+}
+
+# Removes the forecasts of a model and what was computed from them -- the
+# forecast errors and the predictive scores in posterior$forecast -- before a new
+# forecast input or a new forecast replaces them. The samplers only ever add
+# 'forecasts' to that group, so the errors and scores of the previous forecast
+# stayed beside the new one and selection_criteria() reported them as its own.
+# The realised values in data$test are data and stay.
+.drop_forecast_results <- function(object) {
+  if (!is.null(object[["posterior"]])) {
+    object[["posterior"]][["forecast"]] <- NULL
+  }
+  object
 }
 
 # A forecast from start values after the end of the sample (argument 'y_start'

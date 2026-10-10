@@ -184,6 +184,23 @@ read_hdf5_model.bvecmodel <- function(x, h5_root, draws = NULL, ...) {
       }
     }
   }
+
+  # The selection scheme of the covariance block is the attribute 'varsel' of
+  # /model/priors/psi, which is where BayesTS reads it; write_to_hdf5() also
+  # writes it as the dataset /priors/psi/varsel, but a file written by BayesTS,
+  # Python or by hand has only the attribute. Without this its scheme was lost
+  # on the way into R.
+  if ("model" %in% h5_names && "priors" %in% names(h5_root[["model"]])) {
+    group_priors <- h5_root[["model"]][["priors"]]
+    if ("psi" %in% names(group_priors) &&
+        "varsel" %in% hdf5r::h5attr_names(group_priors[["psi"]]) &&
+        is.null(result[["priors"]][["psi"]][["varsel"]])) {
+      if (is.null(result[["priors"]])) {
+        result[["priors"]] <- list()
+      }
+      result[["priors"]][["psi"]][["varsel"]] <- hdf5r::h5attr(group_priors[["psi"]], "varsel")
+    }
+  }
   
   
   if ("initial" %in% h5_names) {

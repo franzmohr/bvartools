@@ -280,3 +280,21 @@ test_that("the cointegration starting values are real, not complex", {
   m[1, 2] <- m[2, 1] + 1e-15
   expect_false(is.complex(.mroot(m)))
 })
+
+test_that("a starting path of the wrong length is refused rather than padded or cut", {
+  # arma::reshape() pads a short path with zeros and cuts a long one, so a path
+  # left from a longer sample used to run from the wrong periods without a word.
+  model <- create_bvarmodel(var_data(), p = 1, deterministic = "const", tvp = TRUE,
+                            error = "gamma", iterations = 10, burnin = 5)
+  model <- add_priors(model, coef = list(v_i = 1, v_i_det = 0.1, shape = 3, rate = 1e-4),
+                      sigma = list(shape = 3, rate = 0.01))
+  model <- add_initial_values(model)
+
+  short <- model
+  short[["initial"]][["a"]] <- short[["initial"]][["a"]][-1]
+  expect_error(add_posterior_coefficients(short), "initial[$]a.*add_initial_values")
+
+  windowed <- window(model, start = c(1990, 1))
+  expect_error(add_posterior_coefficients(windowed), "add_initial_values")
+  expect_no_error(add_posterior_coefficients(add_initial_values(windowed)))
+})

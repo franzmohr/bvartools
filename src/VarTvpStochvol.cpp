@@ -74,10 +74,14 @@ bayests::VarTvpStochvolInput read_input(const Rcpp::List &object) {
     input.psi_prior.initial_state = read_normal_prior(prior_psi);
     read_vec_if_present(prior_psi, "omega_v", input.psi_prior.omega_v);
 
-    // Selection for the covariance block is declared in its own group, so it
-    // can differ from the model's.
-    input.psi_varsel = bayests::var_selection_from_string(
-      optional_string(prior_psi, "varsel", "none"));
+    // Selection for the covariance block is declared in its own list, so it
+    // can differ from the model's. Absent it stays unset and the model's
+    // scheme governs both blocks, as BayesTS reads a file that says nothing;
+    // reading it as "none" ran a model that asked for selection without any.
+    if (has(prior_psi, "varsel")) {
+      input.psi_varsel = bayests::var_selection_from_string(
+        optional_string(prior_psi, "varsel", "none"));
+    }
 
     if (input.psi_selection() == bayests::VarSelection::bvs) {
       input.psi_varsel_prior = read_varsel_prior(prior_psi, input.psi_selection());

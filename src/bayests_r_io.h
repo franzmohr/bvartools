@@ -9,6 +9,7 @@
 #include "bayests/spec.h"
 
 #include <cmath>
+#include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <utility>
@@ -145,11 +146,25 @@ inline Rcpp::List with_noncentred(Rcpp::List block, const bayests::NoncentredSta
 
 /// A time-varying starting value. R stores the whole path flat; the core wants
 /// it `width` by `tt`, one column per period.
+///
+/// The length is counted before the reshape, as BayesTS's own reader does:
+/// arma::reshape() pads a short path with zeros and cuts a long one, so the
+/// core's shape check never saw the difference. A path left from a longer
+/// sample -- after window(), say -- ran from the wrong periods without a word.
 inline void read_path_if_present(const Rcpp::List &list, const char *name,
                                  arma::uword width, arma::uword tt, arma::mat &out)
 {
   if (has(list, name)) {
-    out = arma::reshape(Rcpp::as<arma::vec>(list[name]), width, tt);
+    const arma::vec values = Rcpp::as<arma::vec>(list[name]);
+    if (values.n_elem != width * tt) {
+      throw std::invalid_argument(
+        std::string("the starting path initial$") + name + " has " +
+        std::to_string(values.n_elem) + " values, and the model needs " +
+        std::to_string(width) + " per period over " + std::to_string(tt) +
+        " periods, " + std::to_string(width * tt) +
+        "; use add_initial_values() after changing the sample");
+    }
+    out = arma::reshape(values, width, tt);
   }
 }
 

@@ -94,6 +94,10 @@ multipliers.bvarmodel <- function(x, impulse = NULL, response = NULL,
                                   type = "permanent", cumulative = FALSE,
                                   keep_draws = FALSE, period = NULL, ...) {
 
+  # The draws of a grid are stacked level by level, so the coefficients read
+  # below were those of the lowest quantile, returned as if they were the model's.
+  .refuse_quantile_grid(x, "Dynamic multipliers")
+
   if (!type %in% c("permanent", "transitory")) {
     stop("Argument 'type' must be \"permanent\" or \"transitory\".")
   }

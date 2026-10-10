@@ -98,6 +98,8 @@ test_that("the single levels work where the grid is refused", {
   expect_error(summary(object), "split_quantile_grid")
   expect_error(plot(object), "split_quantile_grid")
   expect_error(irf(object, impulse = "y", response = "r"), "split_quantile_grid")
+  # Used to return the multipliers of the lowest quantile without a word.
+  expect_error(multipliers(object, impulse = "y", response = "r"), "split_quantile_grid")
 
   level <- split_quantile_grid(object)[[2]]
   expect_identical(level[["model"]][["quantile"]], 0.25)

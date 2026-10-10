@@ -371,9 +371,9 @@ round(band_width(model_ml) / band_width(model), 2)
 
 A ratio below one means that the prior centred on the maximum likelihood
 estimate narrows the band of that element. Here it does so for all elements but
-one, most for the adjustment to the lagged long-term rate, while the band of the
-adjustment of inflation to its own level is about five percent wider than under the
-noninformative prior. It need not narrow every band,
+two, most in the equation of the long-term rate. The band of the adjustment of
+inflation to the lagged long-term rate is unchanged, and that of inflation to its
+own level is about eight percent wider than under the noninformative prior. It need not narrow every band,
 and that is a property of how the prior is built rather than a failure of it: a
 larger `weight` makes the prior tighter by lowering $T$, but $T$ is also how
 much of the position of the space carries over from one period to the next. In

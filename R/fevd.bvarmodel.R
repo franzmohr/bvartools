@@ -215,6 +215,27 @@ fevd.bvarmodel <- function(x, response = NULL, n_ahead = 5, type = "oir", normal
   
   draws <- matrix(unlist(phi), (n_ahead + 1) * k)
 
+  # The shares of every draw, unsummarised, for fevd.modelfile(), which pools
+  # them over the chunks of a stored chain before taking a median or quantiles.
+  if (isTRUE(list(...)[[".return_draws"]])) {
+    return(draws)
+  }
+
+  .summarise_fevd_draws(draws, n_ahead, varnames, type, normalise_gir, statistic, ci,
+                        max_groups)
+}
+
+
+# The decomposition from the shares of every draw: 'draws' has one column per
+# draw and (n_ahead + 1) * k rows, the shares of each variable at every horizon
+# stacked variable by variable. Shared by fevd.bvarmodel() and fevd.modelfile(),
+# so that a stored chain read in chunks is summarised over all of its draws at
+# once, exactly as the chain held in memory is.
+.summarise_fevd_draws <- function(draws, n_ahead, varnames, type, normalise_gir,
+                                  statistic, ci, max_groups) {
+
+  k <- length(varnames)
+
   if (statistic == "mean" && is.null(ci)) {
     # The decomposition as it always was: the mean over the draws, normalised
     # afterwards where asked for.

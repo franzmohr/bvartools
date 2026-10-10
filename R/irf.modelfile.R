@@ -90,6 +90,36 @@ fevd.modelfile <- function(x, ..., chunk = 100) {
   max_groups <- arguments[["max_groups"]]
   arguments[["normalise_gir"]] <- NULL
   arguments[["max_groups"]] <- NULL
+  type <- if (is.null(arguments[["type"]])) "oir" else arguments[["type"]]
+
+  # A median or a credible interval is a statistic of all the draws at once,
+  # which no average of the chunks' own medians and quantiles is. The chunks
+  # hand back the shares of their draws instead, and the decomposition is
+  # summarised over the whole chain as fevd() does for a model in memory.
+  statistic <- if (is.null(arguments[["statistic"]])) "mean" else arguments[["statistic"]]
+  ci <- arguments[["ci"]]
+  if (statistic != "mean" || !is.null(ci)) {
+    if (!statistic %in% c("mean", "median")) {
+      stop("Argument 'statistic' must be \"mean\" or \"median\".")
+    }
+    .check_ci(ci)
+    max_groups <- .check_max_groups(max_groups)
+    if (!is.null(ci) && !is.null(max_groups)) {
+      stop("Arguments 'ci' and 'max_groups' cannot be combined: the bounds of a pooled column ",
+           "are not the pooled bounds.")
+    }
+    arguments[["statistic"]] <- NULL
+    arguments[["ci"]] <- NULL
+    pieces <- map_draws(x, function(model) {
+      do.call(fevd, c(list(model), arguments,
+                      list(normalise_gir = FALSE, max_groups = NULL, .return_draws = TRUE)))
+    }, chunk = chunk)
+    draws <- do.call(cbind, pieces)
+    varnames <- x[["model"]][["endogen"]]
+    n_ahead <- nrow(draws) / length(varnames) - 1
+    return(.summarise_fevd_draws(draws, n_ahead, varnames, type, normalise_gir, statistic,
+                                 ci, max_groups))
+  }
 
   # A decomposition is the mean of the decompositions of the draws, so a piece
   # contributes its own mean and its weight. Normalising or collapsing groups
@@ -115,7 +145,6 @@ fevd.modelfile <- function(x, ..., chunk = 100) {
   result <- Reduce(`+`, Map(function(piece, weight) piece[["shares"]] * weight,
                             pieces, weights)) / sum(weights)
 
-  type <- if (is.null(arguments[["type"]])) "oir" else arguments[["type"]]
   if (type %in% c("gir", "sgir") && normalise_gir) {
     result <- t(apply(result, 1, function(z) z / sum(z)))
   }

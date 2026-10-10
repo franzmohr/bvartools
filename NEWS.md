@@ -1,5 +1,20 @@
 # bvartools 1.0.0
 
+* **A starting path of the wrong length is refused rather than padded or cut.**
+  The time varying models read `initial$a`, `initial$psi` and `initial$beta`
+  as paths, and a path of the wrong length used to be padded with zeros or cut
+  short without a word -- a model cut with `window()` and estimated without
+  `add_initial_values()` started from the periods of the old sample. It now
+  stops and says to call `add_initial_values()`, as BayesTS does on a model
+  file. **A time varying covariance block without a selection scheme of its own
+  follows the model's**, as in BayesTS: the gamma and stochastic volatility
+  models with time varying coefficients read a missing `priors$psi$varsel` as
+  no selection, so a model selecting with `varsel = "bvs"` ran without
+  selection over the covariances. `read_model_from_hdf5()` now also reads the
+  scheme from the attribute of `/model/priors/psi`, where BayesTS writes it, so
+  a file written outside R keeps it. Draws of a model set up with
+  `add_priors()`, which always states the scheme, are unchanged.
+
 * **The generics and the infrastructure every model package shares moved to
   the new package bayests, which bvartools imports and re-exports.**
   `add_priors()`, `add_posterior_coefficients()`, `write_to_hdf5()`,

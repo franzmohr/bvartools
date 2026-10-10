@@ -126,3 +126,32 @@ test_that("the covariances are estimated rather than switched off when unselecte
   expect_true(any(selected[["posterior"]][["psi"]][["coeffs"]][, drawn] == 0))
   expect_false(any(unselected[["posterior"]][["psi"]][["coeffs"]][, drawn] == 0))
 })
+
+test_that("a file with the scheme only where BayesTS reads it keeps it in R", {
+  model <- tvp_covar_model(covar = TRUE)
+
+  path <- temp_h5_file()
+  write_to_hdf5(model, filename = path)
+  # What a file written by BayesTS, Python or by hand holds: the attribute of
+  # /model/priors/psi and no dataset /priors/psi/varsel.
+  h5 <- hdf5r::h5file(path, mode = "r+")
+  h5[["priors/psi"]]$link_delete("varsel")
+  h5$close_all()
+
+  restored <- read_model_from_hdf5(path)
+  expect_equal(restored[["priors"]][["psi"]][["varsel"]], "bvs")
+})
+
+test_that("a time varying covariance block without its own scheme follows the model's", {
+  # The model selects with bvs and the covariance block's list says nothing, as
+  # in a file whose /model/priors/psi has no 'varsel'. BayesTS then selects over
+  # both blocks; R used to read the silence as "none" and select over neither.
+  model <- tvp_covar_model(covar = TRUE)
+  model[["priors"]][["psi"]][["varsel"]] <- NULL
+  fit <- add_posterior_coefficients(add_seed(model, 1))
+  expect_false(is.null(fit[["posterior"]][["psi"]][["lambda"]]))
+
+  model <- tvp_covar_model(covar = FALSE)
+  fit <- add_posterior_coefficients(add_seed(model, 1))
+  expect_null(fit[["posterior"]][["psi"]][["lambda"]])
+})

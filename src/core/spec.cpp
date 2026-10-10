@@ -153,6 +153,25 @@ const char *to_string(UcSkew skew)
     return skew == UcSkew::ald ? "ald" : "snd";
 }
 
+UcCycleInit uc_cycle_init_from_string(const std::string &name)
+{
+    if (name == "zero" || name.empty())
+    {
+        return UcCycleInit::zero;
+    }
+    if (name == "stationary")
+    {
+        return UcCycleInit::stationary;
+    }
+    throw std::invalid_argument("unknown cycle_init '" + name +
+                                "'; expected one of zero, stationary");
+}
+
+const char *to_string(UcCycleInit init)
+{
+    return init == UcCycleInit::stationary ? "stationary" : "zero";
+}
+
 UcSkewShock uc_skew_shock_from_string(const std::string &name)
 {
     if (name == "cycle" || name.empty())

@@ -2424,6 +2424,32 @@ arma::uword validate_uc_common(const VarSpec &spec, const TrainData &train,
     validate_normal_block(tau0_prior, initial_tau0,
                           k * static_cast<arma::uword>(spec.uc_trend_order()), "tau0");
 
+    // The cycle before the sample drawn from its stationary distribution needs a
+    // cycle with lags, drawn stationary, and one shock covariance per draw to take
+    // that distribution under. Stochastic volatility has a covariance per period
+    // and the skewed shocks no normal one, so the two refuse it.
+    if (spec.cycle_init == UcCycleInit::stationary)
+    {
+        if (name != "UcNormalGamma" && name != "UcNormalWishart")
+        {
+            throw std::invalid_argument(
+                name + " does not read /model/cycle_init stationary: the stationary "
+                       "distribution of the cycle is taken under one shock covariance per draw, "
+                       "which only UcNormalGamma and UcNormalWishart have; use cycle_init zero");
+        }
+        if (spec.p == 0)
+        {
+            throw std::invalid_argument("/model/cycle_init stationary needs a cycle with lags: at "
+                                        "p = 0 nothing reaches back before the sample");
+        }
+        if (!spec.stationary)
+        {
+            throw std::invalid_argument(
+                "/model/cycle_init stationary needs /model/stationary: the cycle has a "
+                "stationary distribution to start from only if every draw of it is stationary");
+        }
+    }
+
     if (spec.irregular)
     {
         // A white noise cycle and a white noise irregular component add up to

@@ -984,6 +984,12 @@ struct UcNormalGammaDraws
     arma::mat cycle;
     arma::mat irregular_inv;
 
+    /// Under UcCycleInit::stationary, the cycle before the sample, (k * p) x
+    /// iterations: (c_0', c_-1', .., c_1-p')', drawn from its stationary
+    /// distribution and the first p periods. Empty under UcCycleInit::zero,
+    /// where it is zero.
+    arma::mat cycle0;
+
     arma::uword iterations() const { return u_sigma_inv.n_cols; }
     bool has_a() const { return a.n_elem > 0; }
     bool has_c() const { return c.n_elem > 0; }
@@ -1006,6 +1012,9 @@ struct UcNormalWishartDraws
     arma::mat u_sigma_inv;
 
     arma::mat irregular_inv; ///< k x iterations with an irregular component; empty without.
+
+    /// (k * p) x iterations under UcCycleInit::stationary; see UcNormalGammaDraws.
+    arma::mat cycle0;
 
     arma::uword iterations() const { return u_sigma_inv.n_cols; }
     bool has_trend() const { return trend.n_elem > 0; }

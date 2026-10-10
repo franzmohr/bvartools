@@ -107,6 +107,26 @@ UcCycle uc_cycle_from_string(const std::string &name);
 /// Inverse of uc_cycle_from_string.
 const char *to_string(UcCycle cycle);
 
+/// Where an unobserved components model's cycle starts, the p values before
+/// the sample that its first lags reach back to.
+enum class UcCycleInit
+{
+    /// "zero": the cycle is zero before the sample, as in Grant and Chan
+    /// (2017). It pins the first estimates of the cycle near zero.
+    zero,
+    /// "stationary": the values before the sample are drawn as part of the
+    /// posterior, from the stationary distribution of the cycle under the
+    /// draw's coefficients and shock covariance -- the exact initialisation of
+    /// a stationary AR(p) or VAR(p). Needs a stationary cycle with lags.
+    stationary
+};
+
+/// "zero" (or empty) or "stationary"; throws otherwise.
+UcCycleInit uc_cycle_init_from_string(const std::string &name);
+
+/// Inverse of uc_cycle_init_from_string.
+const char *to_string(UcCycleInit init);
+
 /// The asymmetric distribution of UcNormalSkew's skewed shocks, after Huang,
 /// Luo and Wang (2026).
 enum class UcSkew
@@ -320,6 +340,12 @@ struct VarSpec
     /// factor counts are all zero.
     UcTrend trend = UcTrend::random_walk;
     UcCycle cycle = UcCycle::var;
+
+    /// How the cycle starts: zero before the sample, or drawn from its
+    /// stationary distribution. Read by UcNormalGamma, which draws the cycle
+    /// stationary; refused by the other three unobserved components models and
+    /// ignored by every other model.
+    UcCycleInit cycle_init = UcCycleInit::zero;
 
     /// Whether an unobserved components model has an irregular component,
     /// y_t = tau_t + c_t + eps_t with eps_t ~ N(0, diag(sigma_eps^2)) independent

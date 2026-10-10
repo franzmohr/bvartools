@@ -7,8 +7,17 @@ project is here -- the core deliberately links neither HDF5 nor HighFive,
 prints nothing and reads no files, which is what makes it embeddable in an R
 package at all.
 
-The copy is **BayesTS `a55585c`**, which upstream `main` holds unchanged
-since merging `psi-selection` (`3521287`), after the `v0.3.0` release
+The copy is **BayesTS `4808dff`**, the tip of upstream's `uc-cycle-init`
+branch off `main` at `22b3488`, which reaches this package only through the
+shared files: `spec.h` gains `UcCycleInit` and `VarSpec::cycle_init`,
+`results.h` a `cycle0` member in two unobserved components draws structs, and
+`spec.cpp` and `inputs.cpp` its parser and refusals. The unobserved components
+models themselves are skipped, as they have been since `75d35c6`, which added
+them and the band sampler's third entry point `chan_jeliazkov_2009_precision()`
+that nothing here calls. Neither moves a draw of a model here.
+
+Before those two the copy was **BayesTS `a55585c`**, which upstream `main` held
+unchanged since merging `psi-selection` (`3521287`), after the `v0.3.0` release
 (tagged on `18a86c2`). Past the release it carries the covariance block's own
 selection scheme (`3521287`): all eight models with such a block now read
 `psi_varsel`, where the four with constant coefficients used to apply the

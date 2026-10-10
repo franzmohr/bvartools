@@ -7,13 +7,23 @@
 .align_test_sample <- function(object, test_sample) {
 
   k <- object[["model"]][["k"]]
-  if (k == 1) {
-    tsp_test_sample <- stats::tsp(test_sample)
-    test_sample <- stats::ts(as.matrix(test_sample), class = c("mts", "ts", "matrix"))
-    stats::tsp(test_sample) <- tsp_test_sample
-  } else {
-    test_sample <- test_sample[, object[["model"]][["endogen"]]]
+  endogen <- object[["model"]][["endogen"]]
+  tsp_test_sample <- stats::tsp(test_sample)
+  test_sample <- as.matrix(test_sample)
+  # The model's variables, by name, whenever the test sample has more than one
+  # column. A univariate model used to take the whole of it, so an AR benchmark
+  # scored against the data set of the VARs beside it read its realised values
+  # off the first column, then the second, and so on, period after period.
+  if (ncol(test_sample) > 1 || k > 1) {
+    absent <- setdiff(endogen, colnames(test_sample))
+    if (length(absent) > 0) {
+      stop("Argument 'test_sample' has no column for the variable(s) ",
+           paste0("'", absent, "'", collapse = ", "), " of the model.")
+    }
+    test_sample <- test_sample[, endogen, drop = FALSE]
   }
+  test_sample <- stats::ts(test_sample, class = c("mts", "ts", "matrix"))
+  stats::tsp(test_sample) <- tsp_test_sample
   test_sample <- stats::na.omit(test_sample)
 
   # Determine when the forecasts start

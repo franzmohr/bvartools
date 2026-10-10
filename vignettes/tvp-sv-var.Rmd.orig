@@ -401,7 +401,7 @@ round(rbind(simulated = interval_width(model), held = interval_width(held)), 2)
 ```
 
 Eight quarters ahead, carrying the drift forward leaves the interval of output
-growth almost unchanged, widens that of inflation by about a quarter and makes
+growth almost unchanged, widens that of inflation by about a third and makes
 that of the short-term rate two and a half times as wide. A forecast that holds
 the coefficients at the end of the sample understates the uncertainty this model
 implies.

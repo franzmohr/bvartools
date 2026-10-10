@@ -145,3 +145,10 @@ test_that("rescaling a constant VEC model leaves its forecasts free", {
   expect_null(model[["model"]][["ect_rescaled"]])
   expect_no_warning(add_posterior_forecasts(add_forecast_input(model, n_ahead = 2)))
 })
+
+test_that("a VEC model refuses a scenario and a forecast quantile rather than ignoring them", {
+  model <- add_forecast_input(fx_vec_fitted(), n_ahead = 4)
+  scenario <- data.frame(period = 1:4, variable = 1, value = 999)
+  expect_error(add_posterior_forecasts(model, scenario = scenario), "vec_to_var")
+  expect_error(add_posterior_forecasts(model, forecast_quantile = 0.5), "quantile_grid")
+})

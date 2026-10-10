@@ -272,3 +272,21 @@ test_that("a univariate model scored against a multivariate test sample reads it
                as.numeric(stats::window(data[, "Dp"], start = c(1997, 2), end = c(1998, 1))))
   expect_error(add_forecast_errors(model, test_sample = data[, c("y", "r")]), "'Dp'")
 })
+
+test_that("a new forecast replaces the errors and scores of the previous one", {
+  model <- scored_var_model(n_ahead = 4)
+  expect_false(is.null(model[["posterior"]][["forecast"]][["errors"]]))
+
+  # Forecast again over a longer horizon: the errors of the four-period forecast
+  # used to stay beside the eight-period one.
+  again <- add_forecast_input(model, n_ahead = 8)
+  expect_null(again[["posterior"]][["forecast"]])
+  expect_error(predict(again), "add_posterior_forecasts")
+  again <- add_posterior_forecasts(again)
+  expect_named(again[["posterior"]][["forecast"]], "forecasts")
+  expect_identical(ncol(again[["posterior"]][["forecast"]][["forecasts"]]),
+                   8L * model[["model"]][["k"]])
+
+  redrawn <- add_posterior_forecasts(model)
+  expect_null(redrawn[["posterior"]][["forecast"]][["errors"]])
+})

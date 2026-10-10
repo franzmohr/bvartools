@@ -4,7 +4,13 @@
 \alias{add_posterior_forecasts.bvecmodel}
 \title{Add Forecasts}
 \usage{
-\method{add_posterior_forecasts}{bvecmodel}(object, forecast_states = NULL, ...)
+\method{add_posterior_forecasts}{bvecmodel}(
+  object,
+  forecast_states = NULL,
+  scenario = NULL,
+  forecast_quantile = NULL,
+  ...
+)
 }
 \arguments{
 \item{object}{an object of class 'bvecmodel', usually, the result of a call to
@@ -20,6 +26,9 @@ of the estimated model. \code{"hold"} keeps them at their values in the last sam
 period. If \code{NULL} (default), the value in \code{object$model$forecast_states} is
 used, and \code{"simulate"} when there is none. Models with constant coefficients and
 volatility are unaffected.}
+
+\item{scenario, forecast_quantile}{not available for a VEC model and refused;
+see Details.}
 
 \item{...}{further arguments passed to or from other methods.}
 }
@@ -67,6 +76,15 @@ package lacks it and stops with an error unless \code{forecast_states = "hold"}.
 A model with a seed, see \code{\link[bayests]{add_seed}}, draws its forecast from a
 seed derived from its own, so two forecasts of it give the same draws however R's
 generator stands. A model without one draws from R's generator as it stands.
+
+A new forecast replaces the forecast errors and predictive scores of the previous
+one, which belong to the forecasts they were computed from.
+
+\strong{A VEC model takes no \code{scenario} and no \code{forecast_quantile}}:
+no VEC sampler conditions its forecast on pinned values, and none estimates a
+grid of quantiles. Both are refused rather than ignored, so a model list mixing
+VAR and VEC models does not return unconditional forecasts for its VEC members
+beside the conditional ones of its VARs.
 }
 \seealso{
 Other posterior simulation:

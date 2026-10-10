@@ -72,6 +72,7 @@ add_forecast_input.bvarmodel <- function(object, n_ahead = 10, deterministic = N
                                        exogen = exogen, y_start = y_start, ...)
   object[["model"]][["h"]] <- fcst_input[["h"]]
   object[["data"]][["forecast"]] <- list("x" = fcst_input[["x"]])
+  object <- .drop_forecast_results(object)
 
   # Where the forecast starts, if not right after the sample. Removed otherwise,
   # so that a model given start values once forecasts from the sample again.

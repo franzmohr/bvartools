@@ -78,3 +78,31 @@ test_that("the method refuses where there is no relation to follow", {
   expect_error(persistence_profiles(fx_vec_fitted(), ci = 0), "'ci'")
   expect_error(persistence_profiles(fx_vec_fitted(), n_ahead = 0), "'n_ahead'")
 })
+
+test_that("a time varying profile is taken at one period throughout", {
+  # The lag blocks and beta come from the same period. The level VAR used to be
+  # taken at the first period whatever 'period' said, while beta was cut at it.
+  model <- fx_vec_tvp_fitted("gamma")
+  k <- model[["model"]][["k"]]
+  level <- vec_to_var(model)
+  nparams <- ncol(level[["data"]][["train"]][["z"]])
+  beta <- as.matrix(model[["posterior"]][["beta"]][["coeffs"]])
+  k_w <- ncol(model[["data"]][["train"]][["w"]])
+  tt <- ncol(beta) / k_w
+
+  for (at in c(1, tt)) {
+    pp <- persistence_profiles(model, n_ahead = 1, keep_draws = TRUE, period = at)[[1]]
+    a <- as.matrix(level[["posterior"]][["a"]][["coeffs"]])[1, (at - 1) * nparams + 1:(k * k)]
+    sigma <- solve(matrix(as.matrix(level[["posterior"]][["u_sigma_inv"]][["coeffs"]])[1, ], k))
+    b <- beta[1, (at - 1) * k_w + seq_len(k_w)][seq_len(k)]
+    m <- crossprod(b, matrix(a, k))
+    expected <- as.numeric(m %*% sigma %*% t(m)) / as.numeric(crossprod(b, sigma %*% b))
+    expect_equal(unname(pp[1, 2]), expected, info = paste("period", at))
+  }
+})
+
+test_that("a stochastic volatility profile reads the covariance of its period", {
+  pp <- persistence_profiles(fx_vec_tvp_fitted("sv"), n_ahead = 4, keep_draws = TRUE)
+  expect_equal(unname(pp[[1]][, 1]), rep(1, nrow(pp[[1]])))
+  expect_true(all(is.finite(pp[[1]])))
+})

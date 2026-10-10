@@ -1,5 +1,36 @@
 # bvartools 1.0.0
 
+* **Results that came back wrong without an error are corrected.** Each case
+  ran to completion and returned plausible numbers:
+
+  - A univariate model scored against a test sample of several series --
+    an AR benchmark beside the VARs it is ranked against -- read its realised
+    values off every column in turn. It now reads its own, by name.
+  - `window()` left three things at the length of the original sample: the
+    panel completed by `missing = "estimate"`, which
+    `historical_decomposition()` then labelled with the window's dates; the
+    forecast input, forecasts and realised values, which start after the
+    original end and are now dropped, with a warning, when the window moves
+    the end; and the log likelihood of a discounted model, whose sum still
+    covered the whole sample.
+  - A new forecast input or forecast left the forecast errors and predictive
+    scores of the previous forecast beside the new one, and
+    `selection_criteria()` reported them as its own. Both now clear them.
+  - `persistence_profiles()` of a time varying VEC model took the lag
+    coefficients of the first period beside the cointegrating vectors of the
+    period asked for; under stochastic volatility it stopped on a non-square
+    matrix. It now reads one period throughout.
+  - `fevd()` on a stored model with `statistic = "median"` or a `ci` averaged
+    the medians and quantiles of its chunks. It now summarises all draws at
+    once and equals the call on the model in memory.
+
+  Refused rather than ignored: `scenario` and `forecast_quantile` in
+  `add_posterior_forecasts()` of a VEC model, which no VEC sampler supports
+  and which a model list mixing VAR and VEC models applied to its VARs alone;
+  `multipliers()` of a grid of quantiles, which returned the lowest quantile's;
+  and a misspelt `coef$const` in `add_priors()` of a VEC model, or one given for
+  a constant restricted to the cointegration space. Draws are unchanged.
+
 * **A starting path of the wrong length is refused rather than padded or cut.**
   The time varying models read `initial$a`, `initial$psi` and `initial$beta`
   as paths, and a path of the wrong length used to be padded with zeros or cut

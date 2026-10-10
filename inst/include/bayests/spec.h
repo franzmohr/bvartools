@@ -72,22 +72,28 @@ const char *to_string(ForecastStates states);
 /// How the trend of an unobserved components model moves.
 ///
 ///     random_walk:  tau_t = tau_{t-1} + C d_t + u^tau_t,
-///     smooth:       tau_t = 2 tau_{t-1} - tau_{t-2} + C d_t + u^tau_t.
+///     smooth:       tau_t = 2 tau_{t-1} - tau_{t-2} + C d_t + u^tau_t,
+///     damped:       tau_t - tau_{t-1} = rho (tau_{t-1} - tau_{t-2}) + C d_t + u^tau_t.
 ///
 /// The first is the trend of Clark (1987) and of Morley, Nelson and Zivot
 /// (2003), with the drift C d_t -- a constant, or a constant that breaks at a
 /// known date -- in the deterministic terms. The second is the integrated
 /// random walk, whose *slope* is the random walk: the smooth trend of the
 /// Hodrick-Prescott filter, and of the output gap model in Chan, Koop, Poirier
-/// and Tobias (2019, ch. 18).
+/// and Tobias (2019, ch. 18). The third is the damped trend of the European
+/// Commission's production function method (Havik et al. 2014): the slope is
+/// an AR(1) with one coefficient per series, |rho| < 1, drawn, around the mean
+/// C d_t / (1 - rho). At rho = 1 it would be the smooth trend, which is why the
+/// two share a trend order of two and the same layout of `tau0`.
 enum class UcTrend
 {
     random_walk, ///< "rw": first differences of the trend are the shocks.
-    smooth       ///< "smooth": second differences of the trend are the shocks.
+    smooth,      ///< "smooth": second differences of the trend are the shocks.
+    damped       ///< "damped": the slope is a stationary AR(1); see /priors/rho.
 };
 
 /// Parses the spelling used on disk. An empty name is the default,
-/// `random_walk`; anything else that is not `rw` or `smooth` throws.
+/// `random_walk`; anything else that is not `rw`, `smooth` or `damped` throws.
 UcTrend uc_trend_from_string(const std::string &name);
 
 /// Inverse of uc_trend_from_string.
@@ -356,6 +362,24 @@ struct VarSpec
     /// told apart. Every other model ignores it.
     bool irregular = false;
 
+    /// The signal equations of an unobserved components model: `n_signals`
+    /// further observed series, each a regression on `n_signal_x` regressors of
+    /// its own and on the cycle at lags 0 .. `signal_lags`,
+    ///
+    ///     s_t = B x^s_t + sum_{j=0..q} Lambda_j c_{t-j} + v_t,
+    ///     v_t ~ N(0, diag(signal_noise_inv)^-1),
+    ///
+    /// independent of the trend and cycle shocks. They are what the European
+    /// Commission's production function method hangs on a trend-cycle model:
+    /// the capacity utilisation indicator on the TFP cycle, and the wage
+    /// Phillips curve on the unemployment gap (Havik et al. 2014). A signal
+    /// informs the cycle and through it the trend; it never feeds back into the
+    /// series. Zero `n_signals`, the default, is the model without them, and
+    /// every other model ignores all three.
+    int n_signals = 0;
+    int signal_lags = 0;
+    int n_signal_x = 0;
+
     /// UcNormalSkew's distribution and which shock it applies to; every other
     /// model ignores both.
     UcSkew skew = UcSkew::snd;
@@ -564,7 +588,7 @@ struct VarSpec
     /// start from: one for a random walk, two for a smooth trend. They are
     /// parameters with a prior of their own (`tau0`), as in Grant and Chan
     /// (2017), rather than a diffuse initialisation.
-    int uc_trend_order() const { return trend == UcTrend::smooth ? 2 : 1; }
+    int uc_trend_order() const { return trend == UcTrend::random_walk ? 1 : 2; }
 
     /// Free coefficients of an unobserved components cycle: the whole of
     /// [Phi_1 .. Phi_p], k^2 p, or its diagonals alone under UcCycle::own, k p.
@@ -587,6 +611,17 @@ struct VarSpec
     /// element -- the trend shock's loading on the cycle shock, the correlation
     /// Morley, Nelson and Zivot (2003) estimate.
     int n_uc_psi() const { return covar ? k * (2 * k - 1) : 0; }
+
+    /// Regressors of each signal equation: its `n_signal_x` own, then the k
+    /// cycles at each of the `signal_lags + 1` lags. Zero without signals.
+    int n_uc_signal_regressors() const
+    {
+        return n_signals > 0 ? n_signal_x + k * (signal_lags + 1) : 0;
+    }
+
+    /// Free coefficients of the signal equations, vec([B Lambda_0 .. Lambda_q])
+    /// of the n_signals x n_uc_signal_regressors() matrix.
+    int n_uc_signal() const { return n_signals * n_uc_signal_regressors(); }
 
     /// Throws std::invalid_argument if the counts cannot describe a model.
     /// Cheap, and the message is far better than the failure it prevents --

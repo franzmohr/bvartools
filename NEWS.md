@@ -45,10 +45,10 @@
   Forecast pools have no seed and still need `set.seed()`. The seeding
   functions come from bayests, which dfmtools uses too.
 
-* The vendored BayesTS core moves to `4808dff`, past `75d35c6`, which adds the
-  four unobserved components models, and past the cycle start of `4808dff`,
-  which reaches this package only as a new field and its refusals in the shared
-  files. They belong to ucmtools and are skipped, with their three
+* The vendored BayesTS core moves to `02a41de`, past `75d35c6`, which adds the
+  four unobserved components models, and past the cycle start of `4808dff` and
+  the damped trend and signal equations of `bc27dfe`, which reach this package
+  only as new fields and their refusals in the shared files. They belong to ucmtools and are skipped, with their three
   support headers; what arrives here is their structs and validators in the
   shared files and a third entry point of the band sampler,
   `chan_jeliazkov_2009_precision()`, which nothing here calls. Draws are
@@ -56,7 +56,8 @@
   varying, VEC, model list and forecast runs with fixed seeds are identical to
   those of a clean build of the previous version, and past `4808dff` the
   coefficients and forecasts of a Wishart, a correlated gamma, a stochastic
-  volatility and a time varying VAR are identical again.
+  volatility and a time varying VAR are identical again, and again past
+  `02a41de`.
 
 * **A forecast can now start from values after the end of the estimation
   sample.** `add_forecast_input()` and `prepare_forecast_input()` take

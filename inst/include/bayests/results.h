@@ -990,6 +990,16 @@ struct UcNormalGammaDraws
     /// where it is zero.
     arma::mat cycle0;
 
+    /// k x iterations, the damped trend's rho. Empty unless VarSpec::trend is
+    /// damped.
+    arma::mat rho;
+
+    /// VarSpec::n_uc_signal() x iterations, vec([B Lambda_0 .. Lambda_q]), and
+    /// n_signals x iterations, the signal noise precisions. Both empty without
+    /// signals.
+    arma::mat signal;
+    arma::mat signal_noise_inv;
+
     arma::uword iterations() const { return u_sigma_inv.n_cols; }
     bool has_a() const { return a.n_elem > 0; }
     bool has_c() const { return c.n_elem > 0; }
@@ -1015,6 +1025,11 @@ struct UcNormalWishartDraws
 
     /// (k * p) x iterations under UcCycleInit::stationary; see UcNormalGammaDraws.
     arma::mat cycle0;
+
+    /// The damped trend and the signal equations; see UcNormalGammaDraws.
+    arma::mat rho;
+    arma::mat signal;
+    arma::mat signal_noise_inv;
 
     arma::uword iterations() const { return u_sigma_inv.n_cols; }
     bool has_trend() const { return trend.n_elem > 0; }

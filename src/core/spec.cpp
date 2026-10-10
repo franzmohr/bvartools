@@ -109,12 +109,24 @@ UcTrend uc_trend_from_string(const std::string &name)
     {
         return UcTrend::smooth;
     }
-    throw std::invalid_argument("unknown trend '" + name + "'; expected one of rw, smooth");
+    if (name == "damped")
+    {
+        return UcTrend::damped;
+    }
+    throw std::invalid_argument("unknown trend '" + name + "'; expected one of rw, smooth, damped");
 }
 
 const char *to_string(UcTrend trend)
 {
-    return trend == UcTrend::smooth ? "smooth" : "rw";
+    switch (trend)
+    {
+    case UcTrend::smooth:
+        return "smooth";
+    case UcTrend::damped:
+        return "damped";
+    default:
+        return "rw";
+    }
 }
 
 UcCycle uc_cycle_from_string(const std::string &name)
@@ -203,6 +215,11 @@ void VarSpec::validate() const
     if (rank < 0)
     {
         throw std::invalid_argument("cointegration rank cannot be negative");
+    }
+    if (n_signals < 0 || signal_lags < 0 || n_signal_x < 0)
+    {
+        throw std::invalid_argument("the signal equations' dimensions (n_signals, signal_lags, "
+                                    "n_signal_x) cannot be negative");
     }
     if (n_restricted < 0)
     {

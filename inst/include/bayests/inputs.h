@@ -1596,6 +1596,19 @@ struct UcNormalGammaInitial
     /// k, the precision of each series' irregular component. Empty without
     /// one (VarSpec::irregular).
     arma::vec irregular_inv;
+
+    /// k, the damped trend's slope coefficients, each in (-1, 1). Empty unless
+    /// VarSpec::trend is damped.
+    arma::vec rho;
+
+    /// VarSpec::n_uc_signal(), vec([B Lambda_0 .. Lambda_q]) of the signal
+    /// equations' n_signals x n_uc_signal_regressors() coefficients: column by
+    /// column, the n_signal_x own regressors first, then the k cycles at lag 0,
+    /// 1, .., q. Empty without signals.
+    arma::vec signal;
+
+    /// n_signals, the precision of each signal's noise. Empty without signals.
+    arma::vec signal_noise_inv;
 };
 
 /// Unobserved components model with a normal prior on the cycle, the drift and
@@ -1644,6 +1657,22 @@ struct UcNormalGammaInput
     /// Unused without one.
     GammaPrior irregular_prior;
 
+    /// The signal equations' data, read only with VarSpec::n_signals > 0: the
+    /// signals, tt x n_signals, and their own regressors, tt x n_signal_x or
+    /// empty -- one row per period of the sample, as `train.y`. Signals are not
+    /// forecast, so neither has a horizon counterpart.
+    arma::mat train_signal;
+    arma::mat train_signal_x;
+
+    /// Over the k slope coefficients of a damped trend, truncated to (-1, 1).
+    /// Unused unless VarSpec::trend is damped.
+    NormalPrior rho_prior;
+
+    /// Over vec([B Lambda_0 .. Lambda_q]), and n_signals independent gamma
+    /// priors on the noise precisions. Unused without signals.
+    NormalPrior signal_prior;
+    GammaPrior signal_noise_prior;
+
     UcNormalGammaInitial initial;
 
     bool use_a() const { return spec.p > 0; }
@@ -1669,6 +1698,10 @@ struct UcNormalWishartInitial
 
     /// k, the irregular component's precisions. Empty without one.
     arma::vec irregular_inv;
+
+    arma::vec rho;              ///< k under a damped trend; see UcNormalGammaInitial::rho.
+    arma::vec signal;           ///< See UcNormalGammaInitial::signal. Empty without signals.
+    arma::vec signal_noise_inv; ///< n_signals. Empty without signals.
 };
 
 /// Unobserved components model with a Wishart prior on the precision of its
@@ -1693,6 +1726,13 @@ struct UcNormalWishartInput
 
     /// k independent gamma priors on the irregular component's precisions.
     GammaPrior irregular_prior;
+
+    /// The signal equations and the damped trend; see UcNormalGammaInput.
+    arma::mat train_signal;
+    arma::mat train_signal_x;
+    NormalPrior rho_prior;
+    NormalPrior signal_prior;
+    GammaPrior signal_noise_prior;
 
     UcNormalWishartInitial initial;
 

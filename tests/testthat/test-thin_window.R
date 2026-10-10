@@ -286,3 +286,50 @@ test_that("a discounted model says there is nothing to thin", {
   model <- add_posterior_coefficients(add_initial_values(model))
   expect_error(thin(model, thin = 2), "nothing to thin")
 })
+
+test_that("window() cuts the completed panel of a model with missing values", {
+  data <- var_data()
+  data[1:6, "Dp"] <- NA
+  model <- create_bvarmodel(data, p = 1, missing = "estimate", iterations = 10, burnin = 5)
+  model <- add_priors(model, coef = list(v_i = 1, v_i_det = 0.1), sigma = list(df = "k", scale = 1))
+  model <- add_posterior_coefficients(add_seed(add_initial_values(model), 32))
+  y <- model[["data"]][["train"]][["y"]]
+  w <- window(model, start = stats::time(y)[11])
+
+  tt <- nrow(w[["data"]][["train"]][["y"]])
+  completed <- as.matrix(model[["posterior"]][["y"]][["coeffs"]])
+  expect_identical(ncol(w[["posterior"]][["y"]][["coeffs"]]), 3L * tt)
+  expect_equal(unname(as.matrix(w[["posterior"]][["y"]][["coeffs"]])),
+               unname(completed[, -(1:30), drop = FALSE]))
+})
+
+test_that("window() drops the forecasts of a sample whose end it moves", {
+  model <- add_posterior_forecasts(add_forecast_input(fx_var_fitted(), n_ahead = 2))
+  y <- model[["data"]][["train"]][["y"]]
+
+  same_end <- window(model, start = stats::time(y)[5])
+  expect_false(is.null(same_end[["posterior"]][["forecast"]][["forecasts"]]))
+  expect_identical(same_end[["model"]][["h"]], model[["model"]][["h"]])
+
+  expect_warning(earlier <- window(model, end = stats::time(y)[nrow(y) - 4]),
+                 "add_forecast_input")
+  expect_null(earlier[["posterior"]][["forecast"]])
+  expect_null(earlier[["data"]][["forecast"]])
+  expect_null(earlier[["model"]][["h"]])
+  expect_error(predict(earlier))
+})
+
+test_that("window() cuts the log likelihood of a discounted model", {
+  model <- create_bvarmodel(var_data(), p = 1, deterministic = "const",
+                            algorithm = "discount", delta_beta = 0.99, delta_sigma = 0.98,
+                            iterations = 10, burnin = 0)
+  model <- add_priors(model, coef = list(v_i = 1, v_i_det = 1 / 10),
+                      sigma = list(df = "k", scale = 1))
+  model <- add_posterior_loglik(add_posterior_coefficients(add_initial_values(model)))
+  y <- model[["data"]][["train"]][["y"]]
+  keep <- nrow(y) - 5L
+  w <- window(model, end = stats::time(y)[keep])
+  expect_identical(NCOL(w[["posterior"]][["loglik"]]), keep)
+  expect_equal(as.numeric(w[["posterior"]][["loglik"]]),
+               as.numeric(as.matrix(model[["posterior"]][["loglik"]])[, seq_len(keep)]))
+})

@@ -1,6 +1,6 @@
 # Check Gibbs Sampler Input
 # 
-# Checks if the input to function \code{\link{bvecpost}} is suitable for the
+# Checks if the input to add_posterior_coefficients() is suitable for the
 # package's own Gibbs sampling algorithms.
 # 
 # @param object a list containing the necesseary data objects required for
@@ -9,7 +9,6 @@
 # and \code{\link{add_initial_values}}.
 # 
 # 
-# @export
 .check_bvecpost_input <- function(object){
 
   # The prior on how far a random walk moves: 'shape' and 'rate', or the
@@ -41,7 +40,7 @@
     
     # Initial values
     if (is.null(object[["initial"]][["a"]])) {
-      stop("Missing element 'object$inital$a'.")
+      stop("Missing element 'object$initial$a'.")
     }
     if (object[["model"]][["tvp"]]) {
       for (i in c("a_init", "a_sigma_inv")) {
@@ -74,7 +73,7 @@
     
     # Initial values
     if (is.null(object[["initial"]][["psi"]])) {
-      stop("Missing element 'object$inital$psi'.")
+      stop("Missing element 'object$initial$psi'.")
     }
     if (object[["model"]][["tvp"]]) {
       for (i in c("psi_init", "psi_sigma_inv")) {

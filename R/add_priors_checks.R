@@ -12,8 +12,6 @@
 
 .add_priors_check_bvs <- function(object, bvs) {
 
-  use_bvs_error <- FALSE
-
   if (object[["model"]][["varsel"]] == "bvs") {
 
     if (is.null(bvs)) {
@@ -24,12 +22,6 @@
 
     if (is.null(bvs[["inprior"]])) {
       stop("Argument 'bvs$inprior' must be specified for BVS")
-    }
-    
-    if (!is.null(bvs[["covar"]])) {
-      if (bvs[["covar"]]) {
-        use_bvs_error <- TRUE 
-      }
     }
   }
 }

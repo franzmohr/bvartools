@@ -106,3 +106,12 @@ test_that("a stochastic volatility profile reads the covariance of its period", 
   expect_equal(unname(pp[[1]][, 1]), rep(1, nrow(pp[[1]])))
   expect_true(all(is.finite(pp[[1]])))
 })
+
+test_that("a restricted constant is not taken for a variable of another system", {
+  model <- create_bvecmodel(vec_data(), p = 2, r = 1, const = "restricted",
+                            iterations = 20, burnin = 10)
+  model <- add_priors(model, coef = list(v_i = 0, v_i_det = 0),
+                      coint = list(v_i = 0, p_tau_i = 1), sigma = list(df = "k", scale = 1))
+  model <- add_posterior_coefficients(add_seed(add_initial_values(model), 7))
+  expect_no_warning(persistence_profiles(model, n_ahead = 4))
+})

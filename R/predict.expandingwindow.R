@@ -43,19 +43,10 @@
 #' @method predict expandingwindow
 predict.expandingwindow <- function(object, ...) {
   
+  # predict() of a model returns its forecasts or stops, so every window has
+  # an element; the loop that dropped NULL elements here never had one to drop.
   result <- lapply(object, predict, ...)
-  
-  # If output contains list elements, which are NULL, those are dropped
-  pos_null <- which(unlist(lapply(result, function(x) {is.null(x)})))
-  check_null <- length(pos_null) > 0
-  warn <- check_null
-  warn_pos <- pos_null
-  while (check_null) {
-    result[[pos_null[1]]] <- NULL
-    pos_null <- which(unlist(lapply(result, function(x) {is.null(x)})))
-    check_null <- length(pos_null) > 0
-  }
-  
+
   class(result) <- c("expandwindbvarprdlist", class(result))
   return(result)
 }

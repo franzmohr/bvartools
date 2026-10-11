@@ -14,8 +14,8 @@ draws.}
 }
 \value{
 A time-series object of class 'bvarspilloverts' with the median of the
-total index and the bounds of its credible interval, one row per window.
-Windows whose estimation failed are \code{NA}.
+total index and the bounds of its credible interval, one row per window. An
+error in one window stops the call and names the window.
 }
 \description{
 Produces the total spillover index of Diebold and Yilmaz (2012) over the

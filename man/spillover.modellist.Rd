@@ -12,8 +12,8 @@
 \item{...}{arguments passed forward to \code{\link{spillover.bvarmodel}}.}
 }
 \value{
-A list of objects of class 'bvarspillover'. Elements belonging to
-models whose estimation failed are \code{NULL}.
+A list of objects of class 'bvarspillover', one per model. An error
+in one model stops the call and names the model.
 }
 \description{
 Produces the connectedness measures of Diebold and Yilmaz (2012) for every

@@ -360,3 +360,12 @@ test_that("a model identified by sign and zero restrictions survives its model f
   expect_equal(irf(back, impulse = "y", response = "r", type = "sign"),
                irf(object, impulse = "y", response = "r", type = "sign"), ignore_attr = TRUE)
 })
+
+test_that("window() moves the period of a sign and zero identification with the sample", {
+  object <- add_sign_zero_restrictions(szr_model(), szr_restrictions(), period = 70)
+  y <- object[["data"]][["train"]][["y"]]
+  w <- window(object, start = stats::time(y)[11])
+  expect_identical(w[["model"]][["sign_zero_restrictions"]][["period"]],
+                   w[["model"]][["sign_restrictions"]][["period"]])
+  expect_identical(w[["model"]][["sign_restrictions"]][["period"]], 60L)
+})

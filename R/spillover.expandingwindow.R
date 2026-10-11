@@ -19,8 +19,8 @@
 #' amount of information per point.
 #'
 #' @return A time-series object of class 'bvarspilloverts' with the median of the
-#' total index and the bounds of its credible interval, one row per window.
-#' Windows whose estimation failed are \code{NA}.
+#' total index and the bounds of its credible interval, one row per window. An
+#' error in one window stops the call and names the window.
 #'
 #' @examples
 #'
@@ -76,13 +76,11 @@ spillover.expandingwindow <- function(object, ...) {
       dates[i] <- i
     }
 
-    if (isTRUE(window_i[["error"]])) {
-      next
-    }
-    out <- try(spillover(window_i, ...), silent = TRUE)
-    if (inherits(out, "try-error")) {
-      next
-    }
+    # Every error used to become a row of NA, under a guard for an 'error' flag
+    # nothing sets, so a misspelt argument returned a chart of nothing.
+    out <- withCallingHandlers(spillover(window_i, ...), error = function(e) {
+      stop("spillover() of window ", i, ": ", conditionMessage(e), call. = FALSE)
+    })
 
     total <- out[["total"]]
     if (is.matrix(total) && !is.null(rownames(total))) {

@@ -613,3 +613,12 @@ test_that("a VEC model refuses a coef$const it cannot use rather than ignoring i
                           coint = coint, sigma = sigma), "restricted")
   expect_no_error(add_priors(restricted, coef = list(v_i = 1), coint = coint, sigma = sigma))
 })
+
+test_that("selection over a covariance block a model does not have is warned about", {
+  model <- create_bvarmodel(var_data(), p = 1, deterministic = "const", error = "gamma",
+                            varsel = "bvs")
+  expect_warning(add_priors(model, coef = list(v_i = 1, v_i_det = 0.1),
+                            sigma = list(shape = 3, rate = 0.01),
+                            varsel = list(inprior = 0.5, covar = TRUE)),
+                 "covar")
+})

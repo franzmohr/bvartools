@@ -70,12 +70,18 @@ window.bvarmodel <- function(x, start = NULL, end = NULL, ...) {
     moved <- match(stored, periods)
     if (is.na(moved)) {
       x[["model"]][["sign_restrictions"]] <- NULL
+      x[["model"]][["sign_zero_restrictions"]] <- NULL
       x[["posterior"]][["q"]] <- NULL
       warning("The sign restrictions were imposed in a period the window leaves out, so ",
               "the identification was dropped. Run add_sign_restrictions() again.",
               call. = FALSE)
     } else {
       x[["model"]][["sign_restrictions"]][["period"]] <- as.integer(moved)
+      # The record of add_sign_zero_restrictions() names the same period, and
+      # was left pointing into the original sample.
+      if (!is.null(x[["model"]][["sign_zero_restrictions"]])) {
+        x[["model"]][["sign_zero_restrictions"]][["period"]] <- as.integer(moved)
+      }
     }
   }
 

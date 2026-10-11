@@ -6,22 +6,13 @@
 #' @param object an object of class 'modellist'.
 #' @param ... arguments passed forward to \code{\link{spillover.bvarmodel}}.
 #'
-#' @return A list of objects of class 'bvarspillover'. Elements belonging to
-#' models whose estimation failed are \code{NULL}.
+#' @return A list of objects of class 'bvarspillover', one per model. An error
+#' in one model stops the call and names the model.
 #'
 #' @export
 spillover.modellist <- function(object, ...) {
-
-  result <- lapply(object, function(model_i, ...) {
-    if (isTRUE(model_i[["error"]])) {
-      return(NULL)
-    }
-    out <- try(spillover(model_i, ...), silent = TRUE)
-    if (inherits(out, "try-error")) {
-      return(NULL)
-    }
-    out
-  }, ...)
-
-  return(result)
+  # Every error used to become a NULL element, under a guard for an 'error'
+  # flag nothing sets: a misspelt argument returned a list of NULLs without a
+  # word.
+  .analyse_collection(object, spillover, "spillover", ...)
 }

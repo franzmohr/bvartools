@@ -25,8 +25,14 @@ print.bvarspillover <- function(x, digits = 1, ...) {
 
   cat("Spillover index (Diebold and Yilmaz, 2012)\n\n")
   cat("Horizon:      ", spec[["n_ahead"]], "\n")
-  cat("Decomposition:",
-      if (spec[["type"]] == "gir") "generalised" else "orthogonalised", "\n")
+  # Named for each identification; "sign" and "custom" used to print as
+  # orthogonalised, which is only what "oir" is.
+  cat("Decomposition:", switch(spec[["type"]],
+                               gir = "generalised",
+                               oir = "orthogonalised",
+                               sign = "sign restricted",
+                               custom = "custom impact matrix",
+                               spec[["type"]]), "\n")
   if (!is.null(spec[["period"]])) {
     cat("Period:       ", spec[["period"]], "\n")
   }

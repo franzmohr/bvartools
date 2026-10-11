@@ -8,7 +8,9 @@
 #' @param object an object of class \code{"expandingwindow"} whose windows hold
 #' posterior draws, or a \code{"modellist"} of such objects, as returned by
 #' \code{\link[bayests]{use_expanding_window}}.
-#' @param ... further arguments passed to or from other methods.
+#' @param ... further arguments passed to or from other methods. For windows of
+#' discounted models, \code{test_sample}: the realised values their forecasts
+#' are scored against; see Details.
 #'
 #' @details
 #' The windows of an expanding window exercise grow by one period at a time, so
@@ -87,6 +89,15 @@
 #' than the R code here. It is stored in \code{posterior$forecast$loglik}, beside
 #' the forecasts it scores, rather than in \code{predictive}.
 #'
+#' \strong{The windows of discounted models are scored through their forecasts.}
+#' Their posterior is in closed form rather than a set of draws, so the density
+#' above cannot be evaluated over it. Forecast each window with
+#' \code{add_forecast_input()} and \code{add_posterior_forecasts()} and give the
+#' realised values in \code{test_sample}: the score of each window's forecast of
+#' the period after it is stored in \code{predictive}, which
+#' \code{\link[bayests]{selection_criteria}} reads as it reads that of a sampled
+#' window.
+#'
 #' @return The object in \code{object}, with element \code{predictive} added to
 #' every window but the last. It is a list with \code{loglik}, the draws of the
 #' log predictive density, and \code{period}, the time of the predicted
@@ -148,6 +159,15 @@ add_predictive_loglik.expandingwindow <- function(object, ...) {
       stop("Predictive log-likelihoods are available for VAR and VEC models only.")
     }
     .check_predictive_algorithm(object[[i]], i)
+  }
+
+  # The density below is evaluated draw by draw, and a discounted model has a
+  # closed-form posterior rather than draws: it was told that its window held no
+  # posterior draws and to estimate it, which it was. Its one-step predictive
+  # density is the score of its forecast of the next period instead, which its
+  # own method takes in closed form against a test sample.
+  if (any(vapply(object, .is_discount, logical(1)))) {
+    return(.discount_window_scores(object, list(...)[["test_sample"]]))
   }
 
   for (i in seq_len(n_windows - 1)) {
@@ -465,4 +485,30 @@ add_predictive_loglik.expandingwindow <- function(object, ...) {
 
   return(list(densities = lapply(seq_len(n), function(i) score[, i]),
               periods = periods))
+}
+
+# The one-step predictive densities of an expanding window of discounted
+# models: each window's forecast of the period after it, scored against
+# 'test_sample' by the model's own method and stored where
+# selection_criteria() reads the predictive densities of the sampled windows.
+.discount_window_scores <- function(object, test_sample) {
+  if (is.null(test_sample)) {
+    stop("The windows are discounted models, whose one-step predictive density is the ",
+         "score of their forecast of the next period. Forecast with ",
+         "add_forecast_input() and add_posterior_forecasts(), then give the realised ",
+         "values in argument 'test_sample'.")
+  }
+  for (i in seq_along(object)) {
+    window_i <- add_predictive_loglik(object[[i]], test_sample = test_sample)
+    score <- window_i[["posterior"]][["forecast"]][["loglik"]]
+    if (is.null(score)) {
+      next
+    }
+    y <- window_i[["data"]][["train"]][["y"]]
+    start <- stats::tsp(y)[2] + (.forecast_gap(window_i) + 1) / stats::frequency(y)
+    window_i[["predictive"]] <- list(loglik = as.numeric(as.matrix(score)[, 1]),
+                                     period = start)
+    object[[i]] <- window_i
+  }
+  object
 }

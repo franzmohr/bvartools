@@ -11,7 +11,9 @@
 posterior draws, or a \code{"modellist"} of such objects, as returned by
 \code{\link[bayests]{use_expanding_window}}.}
 
-\item{...}{further arguments passed to or from other methods.}
+\item{...}{further arguments passed to or from other methods. For windows of
+discounted models, \code{test_sample}: the realised values their forecasts
+are scored against; see Details.}
 }
 \value{
 The object in \code{object}, with element \code{predictive} added to
@@ -100,6 +102,15 @@ a different set of periods -- one step ahead densities, each conditioning on
 the realised history before it -- and it is BayesTS that computes it rather
 than the R code here. It is stored in \code{posterior$forecast$loglik}, beside
 the forecasts it scores, rather than in \code{predictive}.
+
+\strong{The windows of discounted models are scored through their forecasts.}
+Their posterior is in closed form rather than a set of draws, so the density
+above cannot be evaluated over it. Forecast each window with
+\code{add_forecast_input()} and \code{add_posterior_forecasts()} and give the
+realised values in \code{test_sample}: the score of each window's forecast of
+the period after it is stored in \code{predictive}, which
+\code{\link[bayests]{selection_criteria}} reads as it reads that of a sampled
+window.
 }
 \examples{
 

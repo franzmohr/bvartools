@@ -25,6 +25,22 @@
 #' and the regressors of the forecast periods, in levels, in \code{data$forecast$x}.
 #'
 #' @family posterior simulation
+#' @examples
+#'
+#' data("e6")
+#' model <- create_bvecmodel(e6 * 100, p = 1, r = 1, const = "unrestricted",
+#'                           iterations = 20, burnin = 10)
+#' # Number of iterations and burn-in should be much higher.
+#' model <- add_priors(model,
+#'                     coef = list(v_i = 0, v_i_det = 0),
+#'                     coint = list(v_i = 0, p_tau_i = 1),
+#'                     sigma = list(df = "k", scale = 1))
+#' model <- add_posterior_coefficients(add_initial_values(model))
+#'
+#' model <- add_forecast_input(model, n_ahead = 4)
+#' model <- add_posterior_forecasts(model)
+#' plot(predict(model))
+#'
 #' @export
 #' @method add_forecast_input bvecmodel
 add_forecast_input.bvecmodel <- function(object, n_ahead = 10, deterministic = NULL, exogen = NULL, ...){
@@ -110,6 +126,23 @@ add_forecast_input.bvecmodel <- function(object, n_ahead = 10, deterministic = N
 #' \code{forecast_states} that was given is stored in \code{model$forecast_states}.
 #'
 #' @family posterior simulation
+#' @examples
+#'
+#' data("e6")
+#' model <- create_bvecmodel(e6 * 100, p = 1, r = 1, const = "unrestricted",
+#'                           iterations = 20, burnin = 10)
+#' # Number of iterations and burn-in should be much higher.
+#' model <- add_priors(model,
+#'                     coef = list(v_i = 0, v_i_det = 0),
+#'                     coint = list(v_i = 0, p_tau_i = 1),
+#'                     sigma = list(df = "k", scale = 1))
+#' model <- add_posterior_coefficients(add_initial_values(model))
+#'
+#' # Forecasts of the levels, from the VAR in levels the model implies
+#' model <- add_forecast_input(model, n_ahead = 4)
+#' model <- add_posterior_forecasts(model)
+#' predict(model)
+#'
 #' @export
 #' @method add_posterior_forecasts bvecmodel
 add_posterior_forecasts.bvecmodel <- function(object, forecast_states = NULL, scenario = NULL,
@@ -190,6 +223,22 @@ add_posterior_forecasts.bvecmodel <- function(object, forecast_states = NULL, sc
 #' \code{\link{predict.bvarmodel}}.
 #'
 #' @family posterior simulation
+#' @examples
+#'
+#' data("e6")
+#' model <- create_bvecmodel(e6 * 100, p = 1, r = 1, const = "unrestricted",
+#'                           iterations = 20, burnin = 10)
+#' # Number of iterations and burn-in should be much higher.
+#' model <- add_priors(model,
+#'                     coef = list(v_i = 0, v_i_det = 0),
+#'                     coint = list(v_i = 0, p_tau_i = 1),
+#'                     sigma = list(df = "k", scale = 1))
+#' model <- add_posterior_coefficients(add_initial_values(model))
+#'
+#' model <- add_posterior_forecasts(add_forecast_input(model, n_ahead = 4))
+#' prd <- predict(model)
+#' plot(prd)
+#'
 #' @export
 #' @method predict bvecmodel
 predict.bvecmodel <- function(object, n_ahead = NULL, ...){

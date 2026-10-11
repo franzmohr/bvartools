@@ -56,6 +56,35 @@
 #' @seealso \code{\link[bayests]{add_sign_zero_restrictions}}, which applies it to a
 #' 'bvarmodel' and resamples the draws.
 #'
+#' @examples
+#'
+#' data("e1")
+#' e1 <- diff(log(e1)) * 100
+#' model <- create_bvarmodel(e1, p = 2, deterministic = "const",
+#'                           iterations = 20, burnin = 10)
+#' # Number of iterations and burn-in should be much higher.
+#' model <- add_priors(model,
+#'                     coef = list(v_i = 0, v_i_det = 0),
+#'                     sigma = list(df = "k", scale = 1))
+#' model <- add_posterior_coefficients(add_initial_values(model))
+#'
+#' # One list element per draw: the coefficients, lag blocks first, and the
+#' # error covariance
+#' a <- as.matrix(model$posterior$a$coeffs)
+#' s <- as.matrix(model$posterior$u_sigma_inv$coeffs)
+#' draws <- lapply(seq_len(nrow(a)), function(i) {
+#'   list(A = matrix(a[i, ], 3), Sigma = solve(matrix(s[i, ], 3)))
+#' })
+#'
+#' # An investment shock that leaves income unchanged on impact and raises
+#' # consumption
+#' restrictions <- data.frame(impulse = "invest", response = c("income", "cons"),
+#'                            sign = c(0, 1), horizon = 0)
+#' set.seed(1)
+#' id <- suppressWarnings(arias_rubio_ramirez_waggoner_2018(
+#'   draws, restrictions, variables = c("invest", "income", "cons"), lags = 2))
+#' id$accepted
+#'
 #' @export
 arias_rubio_ramirez_waggoner_2018 <- function(draws, restrictions, variables, lags,
                                               max_tries = 1, smooth = TRUE,

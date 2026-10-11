@@ -40,3 +40,20 @@ forecasts and the realised values they were scored against}, with a warning:
 they start after the original end, from its last observations. Call
 \code{add_forecast_input()} again to forecast from the end of the window.
 }
+\examples{
+
+data("e1")
+e1 <- diff(log(e1)) * 100
+model <- create_bvarmodel(e1, p = 2, deterministic = "const",
+                          iterations = 20, burnin = 10)
+# Number of iterations and burn-in should be much higher.
+model <- add_priors(model,
+                    coef = list(v_i = 0, v_i_det = 0),
+                    sigma = list(df = "k", scale = 1))
+model <- add_posterior_coefficients(add_initial_values(model))
+
+# The last ten years of the sample
+recent <- window(model, start = c(1972, 1))
+start(recent$data$train$y)
+
+}

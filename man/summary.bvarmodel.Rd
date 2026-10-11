@@ -39,3 +39,18 @@ draws of the variance-covariance matrix.}
 \description{
 summary method for class 'bvarmodel'.
 }
+\examples{
+
+data("e1")
+e1 <- diff(log(e1)) * 100
+model <- create_bvarmodel(e1, p = 2, deterministic = "const",
+                          iterations = 20, burnin = 10)
+# Number of iterations and burn-in should be much higher.
+model <- add_priors(model,
+                    coef = list(v_i = 0, v_i_det = 0),
+                    sigma = list(df = "k", scale = 1))
+model <- add_posterior_coefficients(add_initial_values(model))
+
+summary(model)
+
+}

@@ -1,5 +1,20 @@
 # bvartools 1.0.0
 
+* **Smaller corrections.** `minnesota_prior()` of a VEC model returns its
+  prior precision as `v_inv`, as the VAR method does, where it said `v_i`.
+  `spillover()` over a model list or an expanding window stops on an error and
+  names the model, where it returned `NULL` elements or rows of `NA`.
+  `varsel$covar = TRUE` on a model without a covariance block is warned about
+  rather than dropped. `create_bvecmodel()` names a single unnamed series `"y"`,
+  as `create_bvarmodel()` does. `persistence_profiles()` no longer takes a
+  restricted constant for a variable of another system. `window()` moves the
+  period of a sign and zero identification with the sample, and
+  `use_expanding_window()` drops an identification along with the draws it
+  rotated. Error messages name `priors$u_sigma` and `initial`, which they
+  misspelt, and the print of a spillover index names a sign restricted or custom
+  identification. Eleven functions without an example have one, and
+  `inst/CITATION` cites the BayesTS library. Draws are unchanged.
+
 * **Calls that stopped, or were refused for the wrong reason, now work.**
 
   - `write_to_hdf5()` writes a model identified with

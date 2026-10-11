@@ -187,7 +187,7 @@ test_that("add_priors caps the Minnesota prior variances of a VEC model at max_v
   direct <- minnesota_prior(model, kappa1 = 0.5, kappa2 = 0.1, kappa4 = 5,
                             max_var = max_var)
 
-  expect_equal(capped[["priors"]][["a"]][["v_inv"]], direct[["v_i"]])
+  expect_equal(capped[["priors"]][["a"]][["v_inv"]], direct[["v_inv"]])
   expect_false(isTRUE(all.equal(capped[["priors"]][["a"]][["v_inv"]],
                                 uncapped[["priors"]][["a"]][["v_inv"]])))
 })

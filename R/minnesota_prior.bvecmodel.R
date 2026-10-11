@@ -42,8 +42,11 @@
 #' residual standard errors \eqn{\sigma_i} are based on an unrestricted LS regression of the
 #' endogenous variables on the error correction term and the non-cointegration regressors.
 #' 
-#' @return A list containing a matrix of prior means and the precision matrix of the coefficients and the
-#' inverse variance-covariance matrix of the error term, which was obtained by an LS estimation.
+#' @return A list with the prior means of the coefficients in \code{mu}, their prior
+#' precision matrix in \code{v_inv} -- the name \code{add_priors()} and the model file
+#' use -- and, where there are regressors, the
+#' inverse variance-covariance matrix of the error term, which was obtained by an LS estimation,
+#' in \code{sigma_inv}.
 #' 
 #' @references
 #' 
@@ -270,7 +273,7 @@ minnesota_prior.bvecmodel <- function(object, kappa1 = 2, kappa2 = 1, kappa3 = N
     v_i <- diag(c(1 / V))
     
     result <- list("mu" = mu,
-                   "v_i" = v_i)
+                   "v_inv" = v_i)
     
     if (!is.null(object[["data"]][["train"]][["x"]])) {
       if (sigma == "AR") {

@@ -531,7 +531,7 @@ add_priors.bvecmodel <- function(object,
                               max_var = coef[["max_var"]],
                               sigma = "AR")
       
-      object[["priors"]][["a"]][["v_inv"]] <- minn[["v_i"]]
+      object[["priors"]][["a"]][["v_inv"]] <- minn[["v_inv"]]
     }
     
     # SSVS prior ----

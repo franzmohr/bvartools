@@ -48,8 +48,11 @@ if they appear in the model.}
 \item{...}{further arguments passed to or from other methods.}
 }
 \value{
-A list containing a matrix of prior means and the precision matrix of the coefficients and the
-inverse variance-covariance matrix of the error term, which was obtained by an LS estimation.
+A list with the prior means of the coefficients in \code{mu}, their prior
+precision matrix in \code{v_inv} -- the name \code{add_priors()} and the model file
+use -- and, where there are regressors, the
+inverse variance-covariance matrix of the error term, which was obtained by an LS estimation,
+in \code{sigma_inv}.
 }
 \description{
 Calculates the Minnesota prior for a VAR model.

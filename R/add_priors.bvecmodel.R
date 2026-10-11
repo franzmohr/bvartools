@@ -325,6 +325,8 @@ add_priors.bvecmodel <- function(object,
   
   ## sigma ----
   error_prior <- .add_priors_check_sigma(object, sigma)
+  # A VEC model has normal errors only; a prior for Student t ones is refused.
+  .add_priors_student_t(object, sigma)
   
   ## Minnesota ----
   minnesota <- FALSE # Minnesota prior?

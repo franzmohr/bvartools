@@ -64,6 +64,9 @@
 #' @param quantile_grid logical. If \code{TRUE}, the quantiles in \code{quantile} are
 #' estimated as one structural quantile VAR rather than as one model each. Needs
 #' \code{error = "ald"} and constant coefficients. Defaults to \code{FALSE}. See 'Details'.
+#' @param student_t logical. If \code{TRUE}, the errors are multivariate Student t
+#' rather than normal. Needs \code{error = "wishart"} and constant coefficients.
+#' Defaults to \code{FALSE}. See 'Details'.
 #'
 #' @details The function produces the data matrices for vector autoregressive (VAR)
 #' models, which can also include unmodelled, non-deterministic variables:
@@ -234,6 +237,21 @@
 #' scenario in \code{data$forecast$constraints} only by models with constant
 #' coefficients and \code{error = "wishart"} or \code{"gamma"}.
 #'
+#' \strong{Student t errors weight down the periods with large shocks without
+#' anyone dating them.} With \code{student_t = TRUE} each period's shock vector is
+#' \eqn{u_t \sim N(0, \lambda_t \Sigma)} with
+#' \eqn{\lambda_t \sim IG(\nu / 2, \nu / 2)}: a period whose shocks are large gets
+#' a large \eqn{\lambda_t}, and its observations count for less in the estimate of
+#' the coefficients and of \eqn{\Sigma}. The scale is common to every equation, so
+#' the Wishart prior stays conjugate. The degrees of freedom \eqn{\nu} are held
+#' fixed or drawn under a gamma prior, as \code{sigma$student_t} in
+#' \code{\link{add_priors.bvarmodel}} says, and the draws of \eqn{\nu} and of every
+#' \eqn{\lambda_t} are \code{posterior$student_t$df} and
+#' \code{posterior$student_t$lambda}. The log likelihood and the predictive
+#' density are the Student t ones, with \eqn{\lambda_t} integrated out, and a
+#' forecast draws each period's \eqn{\lambda} from its prior. A scenario and a
+#' steady-state prior are refused.
+#'
 #' @return An object of class 'bvarmodel' or, if a vector is given in \code{p}, \code{s}
 #' or \code{quantile}, a list of class 'modellist' with one such object per
 #' specification. A 'bvarmodel' is a list with the elements
@@ -286,6 +304,10 @@
 #' restrictions. \emph{Journal of Econometrics, 142}(1), 553--580.
 #' \doi{10.1016/j.jeconom.2007.08.017}
 #' 
+#' Juarez, M. A., & Steel, M. F. J. (2010). Model-based clustering of non-Gaussian
+#' panel data based on skew-t distributions. \emph{Journal of Business & Economic
+#' Statistics, 28}(1), 52--66. \doi{10.1198/jbes.2009.07145}
+#'
 #' Korobilis, D. (2013). VAR forecasting using Bayesian variable selection.
 #' \emph{Journal of Applied Econometrics, 28}(2), 204--230. \doi{10.1002/jae.1271}
 #' 
@@ -327,7 +349,8 @@ create_bvarmodel <- function(data, p = 2,
                              missing = "omit",
                              aggregate = NULL,
                              soft = NULL,
-                             quantile_grid = FALSE) {
+                             quantile_grid = FALSE,
+                             student_t = FALSE) {
   
   # Input checks ----
   if (!"ts" %in% class(data)) {
@@ -659,6 +682,23 @@ create_bvarmodel <- function(data, p = 2,
     model[["tvp"]] <- tvp
   } else {
     stop("Argument 'tvp' must be of class 'logical'.")
+  }
+
+  ## Student t errors ----
+  # Only the constant-coefficient Wishart sampler draws them: the mixing scale
+  # is common to every equation, which is what keeps the Wishart block
+  # conjugate. Recorded only when asked for, so that a model without them is
+  # the model it always was, in memory and in its file.
+  if (!is.logical(student_t) || length(student_t) != 1 || is.na(student_t)) {
+    stop("Argument 'student_t' must be TRUE or FALSE.")
+  }
+  if (student_t) {
+    if (!identical(model_type, "VarNormalWishart")) {
+      stop("Student t errors are available for a VAR with constant coefficients and ",
+           "error = \"wishart\", whose sampler draws them; this model would be estimated ",
+           "with ", model_type, ".")
+    }
+    model[["student_t"]] <- TRUE
   }
   
   # Iterations, burnin and thinning ----

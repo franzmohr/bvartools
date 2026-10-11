@@ -66,6 +66,14 @@ bayests::VarNormalWishartInput read_input(const Rcpp::List &object) {
       input.u_sigma_prior.df = optional_int(prior_u_sigma, "df", 0);
       read_mat_if_present(prior_u_sigma, "scale", input.u_sigma_prior.scale);
     }
+    // Student t errors: a fixed nu in 'df', or a gamma prior on it in 'shape'
+    // and 'rate' -- the names of /priors/student_t in a model file.
+    if (has(priors, "student_t")) {
+      const Rcpp::List prior_t = priors["student_t"];
+      input.student_t_prior.df = optional_double(prior_t, "df", 0.0);
+      input.student_t_prior.shape = optional_double(prior_t, "shape", 0.0);
+      input.student_t_prior.rate = optional_double(prior_t, "rate", 0.0);
+    }
   }
 
   if (has(object, "initial")) {
@@ -73,6 +81,8 @@ bayests::VarNormalWishartInput read_input(const Rcpp::List &object) {
     read_vec_if_present(initial, "a", input.initial.a);
     read_vec_if_present(initial, "a_lambda", input.initial.a_lambda);
     read_mat_if_present(initial, "u_sigma_inv", input.initial.u_sigma_inv);
+    // Where nu starts; absent, the core starts it at the prior mean.
+    input.initial.student_t_df = optional_double(initial, "student_t_df", 0.0);
   }
 
   read_extensions(object, input);
@@ -100,6 +110,13 @@ bayests::VarNormalWishartDraws read_draws(const Rcpp::List &object) {
     const Rcpp::List posterior_u_sigma_inv = posterior["u_sigma_inv"];
     read_draws_if_present(posterior_u_sigma_inv, "coeffs", draws.u_sigma_inv);
   }
+  // nu is what the log likelihood and the forecast read; lambda integrates out
+  // of both, and is read back only so that a round trip keeps it.
+  if (has(posterior, "student_t")) {
+    const Rcpp::List posterior_t = posterior["student_t"];
+    read_draws_if_present(posterior_t, "df", draws.student_t_df);
+    read_draws_if_present(posterior_t, "lambda", draws.student_t_lambda);
+  }
 
   read_draw_extensions(object, draws);
   return draws;
@@ -121,6 +138,13 @@ Rcpp::List write_draws(const bayests::VarNormalWishartDraws &draws) {
     }
   }
   posteriors["u_sigma_inv"] = Rcpp::List::create(Rcpp::Named("coeffs") = draws_to_r(draws.u_sigma_inv));
+  // One row per draw: nu, and each period's mixing scale lambda_t, the factor
+  // that period's covariance was inflated by.
+  if (draws.has_student_t()) {
+    posteriors.push_back(Rcpp::List::create(Rcpp::Named("df") = draws_to_r(draws.student_t_df),
+                                            Rcpp::Named("lambda") = draws_to_r(draws.student_t_lambda)),
+                         "student_t");
+  }
 
   write_draw_extensions(posteriors, draws);
   return posteriors;

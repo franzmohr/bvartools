@@ -26,7 +26,8 @@ create_bvarmodel(
   missing = "omit",
   aggregate = NULL,
   soft = NULL,
-  quantile_grid = FALSE
+  quantile_grid = FALSE,
+  student_t = FALSE
 )
 }
 \arguments{
@@ -112,6 +113,10 @@ series with an error variance of its own. See 'Details'.}
 \item{quantile_grid}{logical. If \code{TRUE}, the quantiles in \code{quantile} are
 estimated as one structural quantile VAR rather than as one model each. Needs
 \code{error = "ald"} and constant coefficients. Defaults to \code{FALSE}. See 'Details'.}
+
+\item{student_t}{logical. If \code{TRUE}, the errors are multivariate Student t
+rather than normal. Needs \code{error = "wishart"} and constant coefficients.
+Defaults to \code{FALSE}. See 'Details'.}
 }
 \value{
 An object of class 'bvarmodel' or, if a vector is given in \code{p}, \code{s}
@@ -308,6 +313,21 @@ start at zero rather than at an interpolation. Forecasts start from
 each draw's completed panel. Forecasts are scored and conditioned on a
 scenario in \code{data$forecast$constraints} only by models with constant
 coefficients and \code{error = "wishart"} or \code{"gamma"}.
+
+\strong{Student t errors weight down the periods with large shocks without
+anyone dating them.} With \code{student_t = TRUE} each period's shock vector is
+\eqn{u_t \sim N(0, \lambda_t \Sigma)} with
+\eqn{\lambda_t \sim IG(\nu / 2, \nu / 2)}: a period whose shocks are large gets
+a large \eqn{\lambda_t}, and its observations count for less in the estimate of
+the coefficients and of \eqn{\Sigma}. The scale is common to every equation, so
+the Wishart prior stays conjugate. The degrees of freedom \eqn{\nu} are held
+fixed or drawn under a gamma prior, as \code{sigma$student_t} in
+\code{\link{add_priors.bvarmodel}} says, and the draws of \eqn{\nu} and of every
+\eqn{\lambda_t} are \code{posterior$student_t$df} and
+\code{posterior$student_t$lambda}. The log likelihood and the predictive
+density are the Student t ones, with \eqn{\lambda_t} integrated out, and a
+forecast draws each period's \eqn{\lambda} from its prior. A scenario and a
+steady-state prior are refused.
 }
 \examples{
 
@@ -338,6 +358,10 @@ without crossing. \emph{Econometrica, 78}(3), 1093--1125.
 George, E. I., Sun, D., & Ni, S. (2008). Bayesian stochastic search for VAR model
 restrictions. \emph{Journal of Econometrics, 142}(1), 553--580.
 \doi{10.1016/j.jeconom.2007.08.017}
+
+Juarez, M. A., & Steel, M. F. J. (2010). Model-based clustering of non-Gaussian
+panel data based on skew-t distributions. \emph{Journal of Business & Economic
+Statistics, 28}(1), 52--66. \doi{10.1198/jbes.2009.07145}
 
 Korobilis, D. (2013). VAR forecasting using Bayesian variable selection.
 \emph{Journal of Applied Econometrics, 28}(2), 204--230. \doi{10.1002/jae.1271}

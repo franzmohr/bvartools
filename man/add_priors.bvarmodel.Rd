@@ -43,6 +43,8 @@ The object in \code{object} with the element \code{priors} added, a list with
   Not present for \code{error = "ald"}.}
   \item{\code{u_scale}}{for \code{error = "ald"}, the prior of the scales of the
   asymmetric Laplace distribution with \code{type}, \code{shape} and \code{rate}.}
+  \item{\code{student_t}}{for Student t errors, \code{df}, or \code{shape} and
+  \code{rate}, as given in \code{sigma$student_t}.}
 }
 }
 \description{
@@ -111,6 +113,7 @@ Argument \code{sigma} must contain the elements that belong to the
 \code{error} of the model:
 \itemize{
   \item \code{"wishart"}: \code{df} and \code{scale}. Not available for structural models.
+  A model created with \code{student_t = TRUE} also needs \code{student_t}.
   \item \code{"gamma"} and \code{"gamma+covar"}: \code{shape} and \code{rate}.
   \item \code{"sv"} and \code{"sv+covar"}: \code{mu}, \code{v_i}, \code{shape}, \code{rate},
   \code{state_variance} and \code{offset}; with \code{tvp = TRUE}, \code{omega_v} may take the
@@ -124,6 +127,11 @@ The elements are
   freedom of the inverse Wishart prior.}
   \item{\code{scale}}{a positive numeric specifying the prior error variance of the endogenous
   variables in the inverse Wishart prior.}
+  \item{\code{student_t}}{for a model with Student t errors, the prior of their degrees of
+  freedom \eqn{\nu}: \code{list(df = 5)} holds them fixed at five, and
+  \code{list(shape = 2, rate = 0.1)} draws them under a gamma prior with that shape and
+  rate -- the prior of Juarez and Steel (2010), whose mean of 20 leaves room for tails
+  anywhere from heavy to nearly normal. Refused for a model with normal errors.}
   \item{\code{shape}}{for \code{"gamma"} and \code{"gamma+covar"} a non-negative numeric, or a
   character expression in \code{k} as for \code{df}, specifying the shape of the gamma prior on
   the error precisions, the inverse error variances, whose mean is \code{shape / rate}. For
@@ -233,6 +241,10 @@ Gaussian and partial non-Gaussian state space models. \emph{Journal of Econometr
 George, E. I., Sun, D., & Ni, S. (2008). Bayesian stochastic search for VAR model
 restrictions. \emph{Journal of Econometrics, 142}(1), 553--580.
 \doi{10.1016/j.jeconom.2007.08.017}
+
+Juarez, M. A., & Steel, M. F. J. (2010). Model-based clustering of non-Gaussian
+panel data based on skew-t distributions. \emph{Journal of Business & Economic
+Statistics, 28}(1), 52--66. \doi{10.1198/jbes.2009.07145}
 
 Korobilis, D. (2013). VAR forecasting using Bayesian variable selection.
 \emph{Journal of Applied Econometrics, 28}(2), 204--230. \doi{10.1002/jae.1271}

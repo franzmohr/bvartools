@@ -41,6 +41,11 @@ inline int optional_int(const Rcpp::List &list, const char *name, int fallback)
   return has(list, name) ? Rcpp::as<int>(list[name]) : fallback;
 }
 
+inline double optional_double(const Rcpp::List &list, const char *name, double fallback)
+{
+  return has(list, name) ? Rcpp::as<double>(list[name]) : fallback;
+}
+
 inline bool optional_bool(const Rcpp::List &list, const char *name, bool fallback)
 {
   return has(list, name) ? Rcpp::as<bool>(list[name]) : fallback;
@@ -245,6 +250,9 @@ inline bayests::VarSpec read_spec(const Rcpp::List &model, const char *covar_err
   spec.shrinkage = bayests::shrinkage_from_string(optional_string(model, "shrinkage", "none"));
   spec.stationary = optional_bool(model, "stationary", false);
   spec.steady_state = optional_bool(model, "steady_state", false);
+  // Student t errors, read for every model so that the core refuses them by
+  // name wherever they are not offered (VarSpec::student_t).
+  spec.student_t = optional_bool(model, "student_t", false);
   // Whether a time-varying model's forecast carries its random walks over the
   // horizon or holds them at the last sample period. Absent unless
   // add_posterior_forecasts() was given one, and `simulate` then, which is the

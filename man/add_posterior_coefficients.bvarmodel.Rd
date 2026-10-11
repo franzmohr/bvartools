@@ -82,6 +82,11 @@ list of models -- a 'modellist', an 'expandingwindow' or, in \pkg{bgvars}, a
 'gvarmodel' -- that ends the run on the first specification that fails,
 rather than leaving that one without a posterior and carrying it into
 whatever reads the results.
+
+With Student t errors (\code{student_t = TRUE} in \code{\link{create_bvarmodel}}),
+\code{posterior$student_t} holds \code{df}, the draws of the degrees of freedom,
+and \code{lambda}, the draws of each period's mixing scale: one column per
+period, large where the period's shocks were.
 }
 \examples{
 

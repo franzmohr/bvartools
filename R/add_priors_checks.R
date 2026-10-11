@@ -187,7 +187,7 @@
   }
 
   allowed_sigma_arguments <- c("df", "scale", "shape", "rate", "mu", "v_i",
-                               "state_variance", "offset", "omega_v")
+                               "state_variance", "offset", "omega_v", "student_t")
   for (i in names(sigma)) {
     if (!i %in% allowed_sigma_arguments) {
       stop(paste0("Element '", i, "' in argument 'sigma' is not recognised."))
@@ -313,4 +313,48 @@
       stop("Argument 'varsel$semiautomatic' must be a numeric vector with two elements.")
     }
   }
+}
+
+# The prior of Student t errors, from 'sigma$student_t': a fixed number of
+# degrees of freedom in 'df', or a gamma prior on them in 'shape' and 'rate'.
+# NULL for a model without Student t errors, which is refused a prior for them
+# rather than left to ignore it. Like every other hyperparameter, it has no
+# default.
+.add_priors_student_t <- function(object, sigma) {
+  prior <- sigma[["student_t"]]
+  if (!isTRUE(object[["model"]][["student_t"]])) {
+    if (!is.null(prior)) {
+      stop("Element 'student_t' of argument 'sigma' is the prior of Student t errors, and ",
+           "this model has normal ones. Create it with student_t = TRUE.")
+    }
+    return(NULL)
+  }
+  if (is.null(prior)) {
+    stop("A model with Student t errors needs a prior on their degrees of freedom in ",
+         "'sigma$student_t': list(df = 5) holds them fixed, and list(shape = 2, rate = 0.1), ",
+         "the gamma prior of Juarez and Steel (2010), draws them.")
+  }
+  if (!is.list(prior) || length(setdiff(names(prior), c("df", "shape", "rate"))) > 0) {
+    stop("Argument 'sigma$student_t' must be a list with element 'df', or with elements ",
+         "'shape' and 'rate'.")
+  }
+  positive <- function(x) is.numeric(x) && length(x) == 1 && !is.na(x) && x > 0
+  fixed <- !is.null(prior[["df"]])
+  drawn <- !is.null(prior[["shape"]]) || !is.null(prior[["rate"]])
+  if (fixed == drawn) {
+    stop("Argument 'sigma$student_t' must give either 'df', which holds the degrees of ",
+         "freedom fixed, or 'shape' and 'rate' of a gamma prior on them -- not both, and ",
+         "not neither.")
+  }
+  if (fixed) {
+    if (!positive(prior[["df"]])) {
+      stop("Argument 'sigma$student_t$df' must be a single positive number.")
+    }
+    return(list(df = as.numeric(prior[["df"]])))
+  }
+  if (!positive(prior[["shape"]]) || !positive(prior[["rate"]])) {
+    stop("Arguments 'sigma$student_t$shape' and 'sigma$student_t$rate' must both be ",
+         "single positive numbers.")
+  }
+  list(shape = as.numeric(prior[["shape"]]), rate = as.numeric(prior[["rate"]]))
 }

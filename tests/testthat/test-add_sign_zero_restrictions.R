@@ -338,3 +338,25 @@ test_that("the summary reports the shape of the weight tail", {
   printed <- utils::capture.output(print(summary(object)))
   expect_false(any(grepl("Pareto shape", printed)))
 })
+
+test_that("a model identified by sign and zero restrictions survives its model file", {
+  # write_to_hdf5() used to stop on the max_tries the identification does not
+  # leave in 'sign_restrictions', and skipped its own record entirely.
+  object <- add_sign_zero_restrictions(szr_model(), szr_restrictions())
+  path <- temp_h5_file()
+  write_to_hdf5(object, filename = path)
+  back <- read_model_from_hdf5(path)
+
+  record <- object[["model"]][["sign_zero_restrictions"]]
+  restored <- back[["model"]][["sign_zero_restrictions"]]
+  expect_equal(as.matrix(restored[["restrictions"]]), as.matrix(record[["restrictions"]]),
+               ignore_attr = TRUE)
+  for (i in c("one_sided", "max_tries", "candidates", "accepted", "effective_sample_size",
+              "smooth", "pareto_k")) {
+    expect_equal(restored[[i]], record[[i]], ignore_attr = TRUE, info = i)
+  }
+  expect_equal(unname(as.matrix(back[["posterior"]][["q"]][["coeffs"]])),
+               unname(as.matrix(object[["posterior"]][["q"]][["coeffs"]])))
+  expect_equal(irf(back, impulse = "y", response = "r", type = "sign"),
+               irf(object, impulse = "y", response = "r", type = "sign"), ignore_attr = TRUE)
+})

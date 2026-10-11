@@ -106,9 +106,34 @@ write_to_hdf5.bvarmodel <- function(object, filename, group = "", ...) {
     restrictions <- as.matrix(sign_restrictions[["restrictions"]])
     .hdf5_write(group_sign, "restrictions", restrictions,
                 list("columns" = colnames(restrictions)))
-    .hdf5_write_attr(group_sign, "max_tries", sign_restrictions[["max_tries"]])
+    # add_sign_zero_restrictions() leaves no max_tries here -- its own is kept
+    # with the rest of that identification below -- and writing the NULL
+    # stopped hdf5r, so a model identified that way could not be written.
+    if (!is.null(sign_restrictions[["max_tries"]])) {
+      .hdf5_write_attr(group_sign, "max_tries", sign_restrictions[["max_tries"]])
+    }
     if (!is.null(sign_restrictions[["period"]])) {
       .hdf5_write_attr(group_sign, "period", sign_restrictions[["period"]])
+    }
+  }
+
+  ## Sign and zero restrictions ----
+  #
+  # The table and the record of the importance sample add_sign_zero_restrictions()
+  # drew it from: the counts, the effective sample size and the Pareto shape.
+  # Being a list, it used to be skipped by the loop above, so the record of how
+  # reliable the identification was did not survive a round trip.
+  sign_zero <- object[["model"]][["sign_zero_restrictions"]]
+  if (!is.null(sign_zero)) {
+    group_sz <- .hdf5_group(handles, group_model, "sign_zero_restrictions")
+    restrictions <- as.matrix(sign_zero[["restrictions"]])
+    .hdf5_write(group_sz, "restrictions", restrictions,
+                list("columns" = colnames(restrictions)))
+    for (i in setdiff(names(sign_zero), "restrictions")) {
+      value <- sign_zero[[i]]
+      if (!is.null(value)) {
+        .hdf5_write_attr(group_sz, i, if (is.logical(value) && is.na(value)) NA_real_ else value)
+      }
     }
   }
 

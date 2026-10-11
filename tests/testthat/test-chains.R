@@ -66,6 +66,8 @@ test_that("chain_diagnostics reports R-hat near one for chains that agree", {
 })
 
 test_that("R-hat stays meaningful where the plain one stops being defined", {
+  # posterior is a suggested package, reached here by name.
+  skip_if_not_installed("posterior")
   # This is the reason for preferring the rank-normalised statistic. The plain
   # split version is built on variances, so on a posterior heavy-tailed enough
   # to have none it is estimating something that does not exist and wanders

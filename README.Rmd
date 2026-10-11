@@ -407,4 +407,4 @@ Uhlig, H. (2005). What are the effects of monetary policy on output? Results fro
 
 [^cpp]: `RcppArmadillo` is the `Rcpp` bridge to the open source 'Armadillo' library of Sanderson and Curtin (2016).
 
-[^tvpvec]: The autocorrelation coefficient of the time varying cointegration space is drawn along with the other parameters once `add_priors` is given the bounds `coint$rho_min` and `coint$rho_max` of a uniform prior on it. Name neither and it is held fixed at `coint$rho`, which is what versions up to 0.2.1 always did. The draw is an exact Gibbs block rather than the Metropolis-within-Gibbs step of Koop et al. (2011); `?add_priors` explains where the two models differ.
+[^tvpvec]: The autocorrelation coefficient of the time varying cointegration space is drawn along with the other parameters once `add_priors` is given the bounds `coint$rho_min` and `coint$rho_max` of a uniform prior on it. Name neither and it is held fixed at `coint$rho`, which is what versions up to 0.2.1 always did. The draw is an exact Gibbs block rather than the Metropolis-within-Gibbs step of Koop et al. (2011); `?add_priors.bvecmodel` explains where the two models differ.

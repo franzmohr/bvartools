@@ -289,7 +289,7 @@
 
   Like `persistence_profiles()` and `selection_criteria()`, the new methods read
   rather than write: `modellist` and `expandingwindow` return a list of results of
-  the same class as the object, and `bvarfolder` returns a named list with one
+  the same class as the object, and `modelfolder` returns a named list with one
   entry per stored model and leaves the folder untouched. Arguments such as
   `joint` and `batches` reach every element, and the folder method takes `cores`.
 
@@ -555,7 +555,7 @@ take the new model objects. `add_priors()` no longer has defaults for `coef` and
   their own classes, so the workflow is the same in all three packages.
 
   Two functions now warn before they start when the result would exceed
-  `options(bvartools.size_warning)`, which is one gigabyte unless set
+  `options(bayests.size_warning)`, which is one gigabyte unless set
   otherwise. `add_posterior_coefficients()` checks what
   `expected_model_size()` predicts for the draws it is about to simulate, and
   `write_to_hdf5()` checks the size of the object it is about to write, which is about the disk space

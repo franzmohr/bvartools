@@ -9,7 +9,7 @@ object of class 'bvecmodel'."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -87,7 +87,7 @@ object of class 'bvecmodel'.</p>
 
 <dl><dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
 <dd><p>an object of class 'bvecmodel', usually, the result of a call
-to <code><a href="add_posterior_coefficients.html">add_posterior_coefficients</a></code>.</p></dd>
+to <code><a href="https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html" class="external-link">add_posterior_coefficients</a></code>.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -133,7 +133,7 @@ cointegrating, whatever the rank says.</strong> That is what the statistic is fo
 rank chosen by a test or a criterion is an assertion about how many
 stationary combinations exist, and the profile is the check on it. How
 quickly the profile falls is the speed of convergence to equilibrium.</p>
-<p>Unlike <code><a href="irf.html">irf</a></code> and <code><a href="fevd.html">fevd</a></code>, which a VEC model reaches
+<p>Unlike <code><a href="https://rdrr.io/pkg/bayests/man/irf.html" class="external-link">irf</a></code> and <code><a href="https://rdrr.io/pkg/bayests/man/fevd.html" class="external-link">fevd</a></code>, which a VEC model reaches
 through <code><a href="vec_to_var.html">vec_to_var</a></code>, this statistic cannot be taken from the
 level VAR alone: <code>vec_to_var</code> drops <code>beta</code>, and the profile is a
 statement about the cointegrating vectors themselves. The level form is used
@@ -170,22 +170,22 @@ equilibrium. <em>Journal of Econometrics, 71</em>(1-2), 117–143.
 <span class="r-in"><span>                          iterations <span class="op">=</span> <span class="fl">20</span>, burnin <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="co"># Number of iterations and burnin should be much higher.</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_priors.html">add_priors</a></span><span class="op">(</span><span class="va">model</span>,</span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_priors.html" class="external-link">add_priors</a></span><span class="op">(</span><span class="va">model</span>,</span></span>
 <span class="r-in"><span>                    coef <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>v_i <span class="op">=</span> <span class="fl">0</span>, v_i_det <span class="op">=</span> <span class="fl">0</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                    coint <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>v_i <span class="op">=</span> <span class="fl">0</span>, p_tau_i <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                    sigma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>df <span class="op">=</span> <span class="st">"k"</span>, scale <span class="op">=</span> <span class="fl">0.0001</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_initial_values.html">add_initial_values</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_posterior_coefficients.html">add_posterior_coefficients</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_initial_values.html" class="external-link">add_initial_values</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html" class="external-link">add_posterior_coefficients</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">profiles</span> <span class="op">&lt;-</span> <span class="fu"><a href="persistence_profiles.html">persistence_profiles</a></span><span class="op">(</span><span class="va">model</span>, n_ahead <span class="op">=</span> <span class="fl">12</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">profiles</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span>, <span class="op">]</span>, <span class="fl">3</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   median lower upper</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 0  1.000 1.000 1.000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1  0.170 0.099 0.357</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2  0.112 0.001 0.176</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3  0.075 0.027 0.219</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4  0.003 0.000 0.020</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1  0.177 0.060 0.266</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2  0.108 0.041 0.223</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3  0.104 0.026 0.192</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4  0.003 0.001 0.028</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

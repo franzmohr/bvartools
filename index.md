@@ -15,8 +15,8 @@ coverage](https://codecov.io/gh/franzmohr/bvartools/graph/badge.svg)](https://ap
 
 [![GitHub
 Sponsors](https://img.shields.io/badge/Sponsor-%E2%9D%A4-ea4aaa?logo=github-sponsors&logoColor=white)](https://github.com/sponsors/franzmohr)
-[![Buy Me a
-Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-FFDD00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/franzmohr)
+[![Buy me coffee & AI
+tokens](https://img.shields.io/badge/Buy%20me%20coffee%20%26%20AI%20tokens-FFDD00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/franzmohr)
 
 ## Overview
 
@@ -126,9 +126,15 @@ install.packages("bvartools")
 
 ### Development version
 
+The development version needs the development version of
+[bayests](https://github.com/franzmohr/bayests-r), the layer of generics
+and model files it shares with dfmtools and ucmtools, which is not on
+CRAN yet:
+
 ``` r
 
 # install.packages("devtools")
+devtools::install_github("franzmohr/bayests-r")
 devtools::install_github("franzmohr/bvartools")
 ```
 
@@ -140,7 +146,7 @@ with many Linux builds is slow, and switching R to an optimised BLAS
 such as OpenBLAS speeds up estimation far more than any compiler
 setting. For a time varying parameter VAR with three variables and two
 lags, OpenBLAS halved the time of
-[`add_posterior_coefficients()`](https://franzmohr.github.io/bvartools/reference/add_posterior_coefficients.md)
+[`add_posterior_coefficients()`](https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html)
 and brought it level with the standalone BayesTS executable, while
 compiling with `-O3` instead of R’s default `-O2` made no difference.
 The BLAS belongs to the R installation rather than to the package, so it
@@ -186,15 +192,15 @@ the variable before R starts,
 e.g. `OPENBLAS_NUM_THREADS=1 Rscript script.R`.
 
 For lists of models none of this is needed:
-[`add_posterior_coefficients()`](https://franzmohr.github.io/bvartools/reference/add_posterior_coefficients.md),
-[`add_posterior_forecasts()`](https://franzmohr.github.io/bvartools/reference/add_posterior_forecasts.md)
+[`add_posterior_coefficients()`](https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html),
+[`add_posterior_forecasts()`](https://rdrr.io/pkg/bayests/man/add_posterior_forecasts.html)
 and
-[`add_posterior_loglik()`](https://franzmohr.github.io/bvartools/reference/add_posterior_loglik.md)
+[`add_posterior_loglik()`](https://rdrr.io/pkg/bayests/man/add_posterior_loglik.html)
 take an argument `cores` for objects of class ‘modellist’ and
 ‘expandingwindow’, start that many workers with one BLAS thread each and
 stop them again. For 16 TVP models, two lag orders over eight expanding
 windows, eight workers cut the time of
-[`add_posterior_coefficients()`](https://franzmohr.github.io/bvartools/reference/add_posterior_coefficients.md)
+[`add_posterior_coefficients()`](https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html)
 from 21 to 5 seconds.
 
 ``` r
@@ -700,5 +706,5 @@ Economics, 52*(2), 381-419.
     is what versions up to 0.2.1 always did. The draw is an exact Gibbs
     block rather than the Metropolis-within-Gibbs step of Koop et
     al. (2011);
-    [`?add_priors`](https://franzmohr.github.io/bvartools/reference/add_priors.md)
+    [`?add_priors.bvecmodel`](https://franzmohr.github.io/bvartools/reference/add_priors.bvecmodel.md)
     explains where the two models differ.

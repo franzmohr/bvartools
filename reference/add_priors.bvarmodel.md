@@ -74,6 +74,16 @@ The object in `object` with the element `priors` added, a list with
   for `error = "ald"`, the prior of the scales of the asymmetric Laplace
   distribution with `type`, `shape` and `rate`.
 
+- `student_t`:
+
+  for Student t errors, `df`, or `shape` and `rate`, as given in
+  `sigma$student_t`.
+
+- `volatility`:
+
+  for a volatility break, `shape`, `rho_shape1` and `rho_shape2`, as
+  given in `sigma$volatility`.
+
 ## Details
 
 None of the arguments `coef`, `sigma` and `varsel` provides default
@@ -177,7 +187,9 @@ Argument `coef` can contain the following elements:
 Argument `sigma` must contain the elements that belong to the `error` of
 the model:
 
-- `"wishart"`: `df` and `scale`. Not available for structural models.
+- `"wishart"`: `df` and `scale`. Not available for structural models. A
+  model created with `student_t = TRUE` also needs `student_t`, and one
+  created with `volatility_break` needs `volatility`.
 
 - `"gamma"` and `"gamma+covar"`: `shape` and `rate`.
 
@@ -199,6 +211,26 @@ The elements are
 
   a positive numeric specifying the prior error variance of the
   endogenous variables in the inverse Wishart prior.
+
+- `student_t`:
+
+  for a model with Student t errors, the prior of their degrees of
+  freedom \\\nu\\: `list(df = 5)` holds them fixed at five, and
+  `list(shape = 2, rate = 0.1)` draws them under a gamma prior with that
+  shape and rate – the prior of Juarez and Steel (2010), whose mean of
+  20 leaves room for tails anywhere from heavy to nearly normal. Refused
+  for a model with normal errors.
+
+- `volatility`:
+
+  for a model with a volatility break, the prior of its scales and
+  decay, `list(shape = , rho_shape1 = , rho_shape2 = )`: a Pareto prior
+  with shape `shape` on every free scale, which puts no mass below one,
+  and a beta prior with shapes `rho_shape1` and `rho_shape2` on the rate
+  \\\rho\\ the break decays at. Lenza and Primiceri (2022) use
+  `list(shape = 1, rho_shape1 = 3.04, rho_shape2 = 1.51)`, a beta with
+  mode 0.8 and standard deviation 0.2. Refused for a model without a
+  break.
 
 - `shape`:
 
@@ -273,7 +305,12 @@ Argument `varsel` can contain the following elements:
 - `covar`:
 
   logical indicating if the variable selection algorithm should also be
-  applied to the error covariance matrix.
+  applied to the error covariance matrix. **Worth a thought rather than
+  a default.** A generalised impulse response is built from the
+  off-diagonals of the error covariance, so selecting them to zero
+  collapses it towards an orthogonalised response; and the block carries
+  \\k(k-1)/2\\ elements, so there is rarely the dimensionality case for
+  selecting over it that there is for the coefficients.
 
 - `exclude_det`:
 
@@ -336,9 +373,19 @@ George, E. I., Sun, D., & Ni, S. (2008). Bayesian stochastic search for
 VAR model restrictions. *Journal of Econometrics, 142*(1), 553–580.
 [doi:10.1016/j.jeconom.2007.08.017](https://doi.org/10.1016/j.jeconom.2007.08.017)
 
+Juarez, M. A., & Steel, M. F. J. (2010). Model-based clustering of
+non-Gaussian panel data based on skew-t distributions. *Journal of
+Business & Economic Statistics, 28*(1), 52–66.
+[doi:10.1198/jbes.2009.07145](https://doi.org/10.1198/jbes.2009.07145)
+
 Korobilis, D. (2013). VAR forecasting using Bayesian variable selection.
 *Journal of Applied Econometrics, 28*(2), 204–230.
 [doi:10.1002/jae.1271](https://doi.org/10.1002/jae.1271)
+
+Lenza, M., & Primiceri, G. E. (2022). How to estimate a vector
+autoregression after March 2020. *Journal of Applied Econometrics,
+37*(4), 688–699.
+[doi:10.1002/jae.2895](https://doi.org/10.1002/jae.2895)
 
 Lütkepohl, H. (2006). *New introduction to multiple time series
 analysis* (2nd ed.). Berlin: Springer.
@@ -352,7 +399,6 @@ Other model set-up:
 [`add_prior_options()`](https://franzmohr.github.io/bvartools/reference/add_prior_options.md),
 [`add_priors.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/add_priors.bvecmodel.md),
 [`aggregation_weights()`](https://franzmohr.github.io/bvartools/reference/aggregation_weights.md),
-[`combine_models()`](https://franzmohr.github.io/bvartools/reference/combine_models.md),
 [`create_bvarmodel()`](https://franzmohr.github.io/bvartools/reference/create_bvarmodel.md),
 [`create_bvecmodel()`](https://franzmohr.github.io/bvartools/reference/create_bvecmodel.md),
 [`transform_variables()`](https://franzmohr.github.io/bvartools/reference/transform_variables.md),

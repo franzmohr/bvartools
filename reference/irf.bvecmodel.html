@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -48,7 +48,7 @@
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Impulse Response Function</h1>
-      <small class="dont-index">Source: <a href="https://github.com/franzmohr/bvartools/blob/main/R/add_forecast_input.bvecmodel.R" class="external-link"><code>R/add_forecast_input.bvecmodel.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/franzmohr/bvartools/blob/main/R/vec_guards.bvecmodel.R" class="external-link"><code>R/vec_guards.bvecmodel.R</code></a></small>
       <div class="d-none name"><code>irf.bvecmodel.Rd</code></div>
     </div>
 
@@ -59,7 +59,7 @@
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="co"># S3 method for class 'bvecmodel'</span></span>
-<span><span class="fu"><a href="irf.html">irf</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/pkg/bayests/man/irf.html" class="external-link">irf</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -78,7 +78,7 @@
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>Nothing. The method raises an error, since impulse responses of a VEC model are
 obtained from its VAR representation: apply <code><a href="vec_to_var.html">vec_to_var</a></code> first and then
-<code><a href="irf.html">irf</a></code> to the resulting 'bvarmodel'.</p>
+<code><a href="https://rdrr.io/pkg/bayests/man/irf.html" class="external-link">irf</a></code> to the resulting 'bvarmodel'.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

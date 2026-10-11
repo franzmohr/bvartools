@@ -40,7 +40,7 @@ one file can hold several models side by side. The spelling is the one
 the BayesTS command line uses for its `--group` flag: a leading slash
 and no trailing slash, with `""` for the root. Intermediate groups are
 created as needed, and
-[`list_models_in_hdf5`](https://franzmohr.github.io/bvartools/reference/list_models_in_hdf5.md)
+[`read_model_groups`](https://rdrr.io/pkg/bayests/man/read_model_groups.html)
 reports which groups of a file hold a model.
 
 What must not already be there is the model rather than the file.

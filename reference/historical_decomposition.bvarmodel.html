@@ -9,7 +9,7 @@ contributions of the identified structural shocks and a baseline."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -50,7 +50,7 @@ contributions of the identified structural shocks and a baseline."></head><body>
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Historical Decomposition of a Vector Autoregressive Model</h1>
-      <small class="dont-index">Source: <a href="https://github.com/franzmohr/bvartools/blob/main/R/historical_decomposition.R" class="external-link"><code>R/historical_decomposition.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/franzmohr/bvartools/blob/main/R/historical_decomposition.R" class="external-link"><code>R/historical_decomposition.R</code></a>, <a href="https://github.com/franzmohr/bvartools/blob/main/R/historical_decomposition.expandingwindow.R" class="external-link"><code>R/historical_decomposition.expandingwindow.R</code></a>, <a href="https://github.com/franzmohr/bvartools/blob/main/R/historical_decomposition.modellist.R" class="external-link"><code>R/historical_decomposition.modellist.R</code></a></small>
       <div class="d-none name"><code>historical_decomposition.bvarmodel.Rd</code></div>
     </div>
 
@@ -70,7 +70,13 @@ contributions of the identified structural shocks and a baseline.</p>
 <span>  statistic <span class="op">=</span> <span class="st">"mean"</span>,</span>
 <span>  ci <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">...</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'expandingwindow'</span></span>
+<span><span class="fu"><a href="historical_decomposition.html">historical_decomposition</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'modellist'</span></span>
+<span><span class="fu"><a href="historical_decomposition.html">historical_decomposition</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -89,8 +95,8 @@ coefficients and the error covariance.</p></dd>
 <dt id="arg-type">type<a class="anchor" aria-label="anchor" href="#arg-type"></a></dt>
 <dd><p>the identification: <code>"oir"</code> (default) for orthogonalised
 shocks from the Choleski factor of each draw's covariance, <code>"sign"</code> for
-the rotations <code><a href="add_sign_restrictions.html">add_sign_restrictions</a></code> or
-<code><a href="add_sign_zero_restrictions.html">add_sign_zero_restrictions</a></code> stored in the model, and
+the rotations <code><a href="https://rdrr.io/pkg/bayests/man/add_sign_restrictions.html" class="external-link">add_sign_restrictions</a></code> or
+<code><a href="https://rdrr.io/pkg/bayests/man/add_sign_zero_restrictions.html" class="external-link">add_sign_zero_restrictions</a></code> stored in the model, and
 <code>"custom"</code> for impact matrices given in <code>impact</code>.</p></dd>
 
 
@@ -144,6 +150,8 @@ nobody observed are decomposed as the model filled them.</p>
 and a covariance that does not change over the sample; that excludes
 time-varying parameters and stochastic volatility, whose impact matrix would
 differ from period to period, and structural models.</p>
+<p>For an object of class 'modellist' or 'expandingwindow' the decomposition of
+every model is returned in a list named after the models.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -170,9 +178,9 @@ differ from period to period, and structural models.</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"e1"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">e1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/diff.html" class="external-link">diff</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">e1</span><span class="op">)</span><span class="op">)</span> <span class="op">*</span> <span class="fl">100</span></span></span>
 <span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="create_bvarmodel.html">create_bvarmodel</a></span><span class="op">(</span><span class="va">e1</span>, p <span class="op">=</span> <span class="fl">2</span>, iterations <span class="op">=</span> <span class="fl">100</span>, burnin <span class="op">=</span> <span class="fl">50</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_priors.html">add_priors</a></span><span class="op">(</span><span class="va">model</span>, coef <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>v_i <span class="op">=</span> <span class="fl">1</span>, v_i_det <span class="op">=</span> <span class="fl">1</span> <span class="op">/</span> <span class="fl">10</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_priors.html" class="external-link">add_priors</a></span><span class="op">(</span><span class="va">model</span>, coef <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>v_i <span class="op">=</span> <span class="fl">1</span>, v_i_det <span class="op">=</span> <span class="fl">1</span> <span class="op">/</span> <span class="fl">10</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                    sigma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>df <span class="op">=</span> <span class="st">"k"</span>, scale <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_posterior_coefficients.html">add_posterior_coefficients</a></span><span class="op">(</span><span class="fu"><a href="add_initial_values.html">add_initial_values</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html" class="external-link">add_posterior_coefficients</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_initial_values.html" class="external-link">add_initial_values</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">hd</span> <span class="op">&lt;-</span> <span class="fu"><a href="historical_decomposition.html">historical_decomposition</a></span><span class="op">(</span><span class="va">model</span>, response <span class="op">=</span> <span class="st">"cons"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">hd</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="historical_decomposition.bvarmodel-1.png" alt="" width="700" height="433"></span>

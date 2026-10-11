@@ -17,7 +17,7 @@ augmented VAR, for example – and want to identify it the same way."></head><bo
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -63,7 +63,7 @@ augmented VAR, for example – and want to identify it the same way."></head><bo
     </div>
 
     <div class="ref-description section level2">
-    <p>The identification step of <code><a href="add_sign_zero_restrictions.html">add_sign_zero_restrictions</a></code> on its
+    <p>The identification step of <code><a href="https://rdrr.io/pkg/bayests/man/add_sign_zero_restrictions.html" class="external-link">add_sign_zero_restrictions</a></code> on its
 own: rotations of the reduced-form draws of a VAR that satisfy sign and zero
 restrictions on the impulse responses, with the importance weights of Arias,
 Rubio-Ramirez and Waggoner (2018). It is exported for packages that estimate
@@ -97,7 +97,7 @@ elements <code>A</code>, the \(K \times M\) coefficient matrix with the
 
 <dt id="arg-restrictions">restrictions<a class="anchor" aria-label="anchor" href="#arg-restrictions"></a></dt>
 <dd><p>a data frame of the restrictions, as in
-<code><a href="add_sign_zero_restrictions.html">add_sign_zero_restrictions</a></code>: columns <code>impulse</code>,
+<code><a href="https://rdrr.io/pkg/bayests/man/add_sign_zero_restrictions.html" class="external-link">add_sign_zero_restrictions</a></code>: columns <code>impulse</code>,
 <code>response</code>, <code>sign</code> and optionally <code>horizon</code>, the first two
 naming elements of <code>variables</code>. A table without a zero restriction is
 accepted here; the rotations are then drawn uniformly and the weights are
@@ -116,7 +116,7 @@ this order.</p></dd>
 
 <dt id="arg-max-tries">max_tries<a class="anchor" aria-label="anchor" href="#arg-max-tries"></a></dt>
 <dd><p>integer. The largest number of rotations drawn for each
-posterior draw. See 'Details' of <code><a href="add_sign_zero_restrictions.html">add_sign_zero_restrictions</a></code>.</p></dd>
+posterior draw. See 'Details' of <code><a href="https://rdrr.io/pkg/bayests/man/add_sign_zero_restrictions.html" class="external-link">add_sign_zero_restrictions</a></code>.</p></dd>
 
 
 <dt id="arg-smooth">smooth<a class="anchor" aria-label="anchor" href="#arg-smooth"></a></dt>
@@ -149,7 +149,7 @@ importance weights be taken on one side only?</p></dd>
 
 <dt>effective_sample_size, max_weight_share, pareto_k</dt>
 <dd><p>the diagnostics of
-the importance sample, as <code><a href="add_sign_zero_restrictions.html">add_sign_zero_restrictions</a></code> records
+the importance sample, as <code><a href="https://rdrr.io/pkg/bayests/man/add_sign_zero_restrictions.html" class="external-link">add_sign_zero_restrictions</a></code> records
 them.</p></dd>
 
 </dl></div>
@@ -159,7 +159,7 @@ them.</p></dd>
 \(L Q\), with \(L\) the lower Cholesky factor of <code>Sigma</code>: the
 response of the variables to the shocks on impact.</p>
 <p>The function draws from the random number generator in the order
-<code><a href="add_sign_zero_restrictions.html">add_sign_zero_restrictions</a></code> does, so the same seed gives the
+<code><a href="https://rdrr.io/pkg/bayests/man/add_sign_zero_restrictions.html" class="external-link">add_sign_zero_restrictions</a></code> does, so the same seed gives the
 same rotations through either. It warns when the importance sample is not
 fit to summarise, and stops when no draw has an admissible rotation.</p>
     </div>
@@ -171,10 +171,43 @@ autoregressions identified with sign and zero restrictions: Theory and applicati
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="add_sign_zero_restrictions.html">add_sign_zero_restrictions</a></code>, which applies it to a
+    <div class="dont-index"><p><code><a href="https://rdrr.io/pkg/bayests/man/add_sign_zero_restrictions.html" class="external-link">add_sign_zero_restrictions</a></code>, which applies it to a
 'bvarmodel' and resamples the draws.</p></div>
     </div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"e1"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">e1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/diff.html" class="external-link">diff</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">e1</span><span class="op">)</span><span class="op">)</span> <span class="op">*</span> <span class="fl">100</span></span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="create_bvarmodel.html">create_bvarmodel</a></span><span class="op">(</span><span class="va">e1</span>, p <span class="op">=</span> <span class="fl">2</span>, deterministic <span class="op">=</span> <span class="st">"const"</span>,</span></span>
+<span class="r-in"><span>                          iterations <span class="op">=</span> <span class="fl">20</span>, burnin <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># Number of iterations and burn-in should be much higher.</span></span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_priors.html" class="external-link">add_priors</a></span><span class="op">(</span><span class="va">model</span>,</span></span>
+<span class="r-in"><span>                    coef <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>v_i <span class="op">=</span> <span class="fl">0</span>, v_i_det <span class="op">=</span> <span class="fl">0</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                    sigma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>df <span class="op">=</span> <span class="st">"k"</span>, scale <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html" class="external-link">add_posterior_coefficients</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_initial_values.html" class="external-link">add_initial_values</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># One list element per draw: the coefficients, lag blocks first, and the</span></span></span>
+<span class="r-in"><span><span class="co"># error covariance</span></span></span>
+<span class="r-in"><span><span class="va">a</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">model</span><span class="op">$</span><span class="va">posterior</span><span class="op">$</span><span class="va">a</span><span class="op">$</span><span class="va">coeffs</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">s</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">model</span><span class="op">$</span><span class="va">posterior</span><span class="op">$</span><span class="va">u_sigma_inv</span><span class="op">$</span><span class="va">coeffs</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">draws</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">a</span><span class="op">)</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">i</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>A <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="va">a</span><span class="op">[</span><span class="va">i</span>, <span class="op">]</span>, <span class="fl">3</span><span class="op">)</span>, Sigma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/solve.html" class="external-link">solve</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="va">s</span><span class="op">[</span><span class="va">i</span>, <span class="op">]</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># An investment shock that leaves income unchanged on impact and raises</span></span></span>
+<span class="r-in"><span><span class="co"># consumption</span></span></span>
+<span class="r-in"><span><span class="va">restrictions</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>impulse <span class="op">=</span> <span class="st">"invest"</span>, response <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"income"</span>, <span class="st">"cons"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                           sign <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>, horizon <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">id</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/warning.html" class="external-link">suppressWarnings</a></span><span class="op">(</span><span class="fu">arias_rubio_ramirez_waggoner_2018</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="va">draws</span>, <span class="va">restrictions</span>, variables <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"invest"</span>, <span class="st">"income"</span>, <span class="st">"cons"</span><span class="op">)</span>, lags <span class="op">=</span> <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">id</span><span class="op">$</span><span class="va">accepted</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 10</span>
+<span class="r-in"><span></span></span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 

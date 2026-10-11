@@ -9,7 +9,7 @@ an object of class 'bvarmodel'."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -225,7 +225,7 @@ error covariance matrix of the above model are assumed to be time varying, respe
 <code>B</code>, <code>C</code> and <code>Sigma</code> have to correspond to the same MCMC iterations.</p>
 <p>The result is the same kind of object as the output of
 <code><a href="create_bvarmodel.html">create_bvarmodel</a></code> in combination with
-<code><a href="add_posterior_coefficients.html">add_posterior_coefficients</a></code>, so it can be used with the methods of class
+<code><a href="https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html" class="external-link">add_posterior_coefficients</a></code>, so it can be used with the methods of class
 'bvarmodel' such as <code><a href="irf.bvarmodel.html">irf.bvarmodel</a></code>,
 <code><a href="predict.bvarmodel.html">predict.bvarmodel</a></code> or <code><a href="summary.bvarmodel.html">summary.bvarmodel</a></code>.
 Accordingly, the draws are stored in the parameterisation those methods
@@ -236,8 +236,8 @@ and the draws of the error term are stored as draws of the inverse of
 diagonal, which are the elements that are estimated.</p>
 <p>Since a model that is constructed from posterior draws does not contain the
 specification of its priors, the elements <code>priors</code> and <code>initial</code> of
-the resulting object are empty. Use <code><a href="add_priors.html">add_priors</a></code> and
-<code><a href="add_initial_values.html">add_initial_values</a></code> if the model should be re-estimated.</p>
+the resulting object are empty. Use <code><a href="https://rdrr.io/pkg/bayests/man/add_priors.html" class="external-link">add_priors</a></code> and
+<code><a href="https://rdrr.io/pkg/bayests/man/add_initial_values.html" class="external-link">add_initial_values</a></code> if the model should be re-estimated.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -250,11 +250,8 @@ the resulting object are empty. Use <code><a href="add_priors.html">add_priors</
 <code><a href="add_posterior_forecasts.bvecmodel.html">add_posterior_forecasts.bvecmodel()</a></code>,
 <code><a href="add_posterior_loglik.bvarmodel.html">add_posterior_loglik.bvarmodel()</a></code>,
 <code><a href="add_posterior_loglik.bvecmodel.html">add_posterior_loglik.bvecmodel()</a></code>,
-<code><a href="add_seed.html">add_seed()</a></code>,
-<code><a href="bayests_files.html">bayests_files()</a></code>,
-<code><a href="bayests_posterior.html">bayests_posterior()</a></code>,
+<code><a href="add_seed.bvarmodel.html">add_seed.bvarmodel()</a></code>,
 <code><a href="bvec.html">bvec()</a></code>,
-<code><a href="chain_diagnostics.html">chain_diagnostics()</a></code>,
 <code><a href="predict.bvecmodel.html">predict.bvecmodel()</a></code></p></div>
     </div>
 
@@ -270,7 +267,7 @@ the resulting object are empty. Use <code><a href="add_priors.html">add_priors</
 <span class="r-in"><span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="create_bvarmodel.html">create_bvarmodel</a></span><span class="op">(</span><span class="va">e1</span>, p <span class="op">=</span> <span class="fl">2</span>, deterministic <span class="op">=</span> <span class="st">"const"</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Add priors</span></span></span>
-<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_priors.html">add_priors</a></span><span class="op">(</span><span class="va">data</span>,</span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_priors.html" class="external-link">add_priors</a></span><span class="op">(</span><span class="va">data</span>,</span></span>
 <span class="r-in"><span>                    coef <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>v_i <span class="op">=</span> <span class="fl">0</span>, v_i_det <span class="op">=</span> <span class="fl">0</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                    sigma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>df <span class="op">=</span> <span class="fl">1</span>, scale <span class="op">=</span> <span class="fl">.00001</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>

@@ -11,7 +11,7 @@ as element priors$beta."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -58,7 +58,7 @@ as element priors$beta."></head><body>
 
     <div class="ref-description section level2">
     <p>Checks the specification of the prior on the cointegration space of a VEC
-model and builds it, in the form in which <code><a href="add_priors.html">add_priors</a></code> stores it
+model and builds it, in the form in which <code><a href="https://rdrr.io/pkg/bayests/man/add_priors.html" class="external-link">add_priors</a></code> stores it
 as element <code>priors$beta</code>.</p>
     </div>
 
@@ -96,7 +96,7 @@ transition <code>p_tau</code> added by <code>p_tau_i = "ml"</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p><code><a href="add_priors.html">add_priors</a></code> calls this function for VEC models, so it rarely
+    <p><code><a href="https://rdrr.io/pkg/bayests/man/add_priors.html" class="external-link">add_priors</a></code> calls this function for VEC models, so it rarely
 needs to be called directly. It is exported for packages that build VEC
 models of their own layout, such as the sub-models of a global VEC model,
 whose error correction term also holds weakly exogenous and global
@@ -171,7 +171,7 @@ volatility the covariance differs from period to period, so \(G\) is fixed
 for the whole run instead: \(G^{-1}\) is <code>g_i</code> if it is given, and
 otherwise the error precision implied by the starting values of the
 log-volatilities, averaged over the sample once before the first draw. That
-fallback depends on <code><a href="add_initial_values.html">add_initial_values</a></code>, so giving <code>g_i</code>
+fallback depends on <code><a href="https://rdrr.io/pkg/bayests/man/add_initial_values.html" class="external-link">add_initial_values</a></code>, so giving <code>g_i</code>
 makes the prior independent of how the chain is started. <code>g_i = "ml"</code>
 uses Johansen's (1995) estimate of the error covariance, the same one
 <code>v_i = "ml"</code> is based on.</p>
@@ -202,14 +202,14 @@ likelihood estimate. It can be combined with a numeric <code>p_tau_i</code>.</p>
 the prior on the state before the sample is that equation's own stationary
 distribution, \(N(0, I / (1 - \rho^2))\). This is what makes the prior
 proper, so a \(\rho\) close to one is intended and one further from it draws
-a warning. <code><a href="add_priors.html">add_priors</a></code> gives the loadings the compensating scale:
+a warning. <code><a href="https://rdrr.io/pkg/bayests/man/add_priors.html" class="external-link">add_priors</a></code> gives the loadings the compensating scale:
 only the product \(\alpha \beta^{\prime}\) is identified, so their prior
 variance is shrunk by \(1 - \rho^2\), leaving the product on the scale
 <code>coef$v_i</code> asks for.</p>
 <p>When \(\rho\) is drawn, those last two are computed from <code>coint$rho</code>
 once and do not follow the draw: the state before the sample keeps the normal
 prior built here, and the loadings keep the shrinkage of
-<code><a href="add_priors.html">add_priors</a></code>. This is a deliberate departure from Koop et al.
+<code><a href="https://rdrr.io/pkg/bayests/man/add_priors.html" class="external-link">add_priors</a></code>. This is a deliberate departure from Koop et al.
 (2011), in whom the state before the sample is the stationary distribution of
 whatever \(\rho\) currently is. It is also what makes the draw an exact
 Gibbs block rather than their Metropolis-within-Gibbs step: with the state

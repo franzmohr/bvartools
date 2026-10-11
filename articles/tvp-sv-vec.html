@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -165,7 +165,7 @@ to be rescaled after estimation either.</p>
 <h2 id="priors">Priors<a class="anchor" aria-label="anchor" href="#priors"></a>
 </h2>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_priors.html">add_priors</a></span><span class="op">(</span><span class="va">model</span>,</span>
+<code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_priors.html" class="external-link">add_priors</a></span><span class="op">(</span><span class="va">model</span>,</span>
 <span>                    coef <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>v_i <span class="op">=</span> <span class="fl">1</span>, v_i_det <span class="op">=</span> <span class="fl">1</span> <span class="op">/</span> <span class="fl">10</span>,</span>
 <span>                                shape <span class="op">=</span> <span class="fl">3</span>, rate <span class="op">=</span> <span class="fl">0.000001</span>, rate_det <span class="op">=</span> <span class="fl">0.01</span><span class="op">)</span>,</span>
 <span>                    coint <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>rho <span class="op">=</span> <span class="fl">0.999</span><span class="op">)</span>,</span>
@@ -228,9 +228,9 @@ it as well.</p>
 their priors, so the seed is set before them.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">20260912</span><span class="op">)</span></span>
-<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_initial_values.html">add_initial_values</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_initial_values.html" class="external-link">add_initial_values</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_posterior_coefficients.html">add_posterior_coefficients</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html" class="external-link">add_posterior_coefficients</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="evaluation">Evaluation<a class="anchor" aria-label="anchor" href="#evaluation"></a>
@@ -262,77 +262,77 @@ transformation while their product is not.</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Variable: r </span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;                  Mean         SD     Naive SD Time-series SD        2.5%</span></span>
-<span><span class="co">#&gt; l.r      -0.002498654 0.02045598 0.0003734734   0.0009380368 -0.05054164</span></span>
-<span><span class="co">#&gt; l.lr     -0.002775249 0.02110438 0.0003853115   0.0006605850 -0.05339489</span></span>
-<span><span class="co">#&gt; l.Dp      0.009239946 0.04651781 0.0008492951   0.0019721790 -0.08252893</span></span>
-<span><span class="co">#&gt; d.r.l01   0.003389352 0.03545343 0.0006472881   0.0017520944 -0.05356195</span></span>
-<span><span class="co">#&gt; d.lr.l01  0.202578621 0.07661494 0.0013987910   0.0036999522  0.00000000</span></span>
-<span><span class="co">#&gt; d.Dp.l01 -0.002548845 0.01088882 0.0001988017   0.0012879152 -0.04381623</span></span>
-<span><span class="co">#&gt; const     0.012968736 0.02375067 0.0004336258   0.0011102930 -0.04037986</span></span>
+<span><span class="co">#&gt;                  Mean          SD     Naive SD Time-series SD        2.5%</span></span>
+<span><span class="co">#&gt; l.r      -0.001848429 0.019240098 0.0003512745   0.0003992379 -0.04400914</span></span>
+<span><span class="co">#&gt; l.lr     -0.002341233 0.020134146 0.0003675975   0.0004830594 -0.04946484</span></span>
+<span><span class="co">#&gt; l.Dp      0.007965832 0.046001288 0.0008398648   0.0014310419 -0.08317439</span></span>
+<span><span class="co">#&gt; d.r.l01   0.002956491 0.030085886 0.0005492906   0.0010748096 -0.01888376</span></span>
+<span><span class="co">#&gt; d.lr.l01  0.202364073 0.076911049 0.0014041972   0.0043759480  0.00000000</span></span>
+<span><span class="co">#&gt; d.Dp.l01 -0.001789576 0.008846161 0.0001615081   0.0008554777 -0.03693315</span></span>
+<span><span class="co">#&gt; const     0.013097995 0.023981803 0.0004378458   0.0009208237 -0.03839760</span></span>
 <span><span class="co">#&gt;                    50%      97.5% Incl. prob. </span></span>
-<span><span class="co">#&gt; l.r      -0.0004160284 0.03767029   1.0000000 </span></span>
-<span><span class="co">#&gt; l.lr     -0.0006078286 0.04158929   1.0000000 </span></span>
-<span><span class="co">#&gt; l.Dp      0.0077881922 0.11013957   1.0000000 </span></span>
-<span><span class="co">#&gt; d.r.l01   0.0000000000 0.11304485   0.1020000 </span></span>
-<span><span class="co">#&gt; d.lr.l01  0.2065857662 0.34351616   0.9693333 </span></span>
-<span><span class="co">#&gt; d.Dp.l01  0.0000000000 0.00000000   0.0720000 </span></span>
-<span><span class="co">#&gt; const     0.0149747008 0.05598934   1.0000000 </span></span>
+<span><span class="co">#&gt; l.r      -0.0003989906 0.03718636  1.00000000 </span></span>
+<span><span class="co">#&gt; l.lr     -0.0004764675 0.04044824  1.00000000 </span></span>
+<span><span class="co">#&gt; l.Dp      0.0068156107 0.10483619  1.00000000 </span></span>
+<span><span class="co">#&gt; d.r.l01   0.0000000000 0.08725826  0.08233333 </span></span>
+<span><span class="co">#&gt; d.lr.l01  0.2067874132 0.34234393  0.96533333 </span></span>
+<span><span class="co">#&gt; d.Dp.l01  0.0000000000 0.00000000  0.05666667 </span></span>
+<span><span class="co">#&gt; const     0.0146934733 0.05779979  1.00000000 </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Variable: lr </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;                   Mean          SD     Naive SD Time-series SD        2.5%</span></span>
-<span><span class="co">#&gt; l.r      -7.314892e-04 0.025952633 4.738281e-04   5.721513e-04 -0.06071701</span></span>
-<span><span class="co">#&gt; l.lr     -8.463268e-03 0.030936850 5.648270e-04   1.643052e-03 -0.08791141</span></span>
-<span><span class="co">#&gt; l.Dp      1.722778e-02 0.062409379 1.139434e-03   1.648010e-03 -0.10883931</span></span>
-<span><span class="co">#&gt; d.r.l01   2.286392e-03 0.017083117 3.118936e-04   6.509040e-04  0.00000000</span></span>
-<span><span class="co">#&gt; d.lr.l01  2.543608e-02 0.068193781 1.245042e-03   4.566388e-03  0.00000000</span></span>
-<span><span class="co">#&gt; d.Dp.l01 -9.506516e-05 0.002314801 4.226228e-05   7.264354e-05  0.00000000</span></span>
-<span><span class="co">#&gt; const    -2.154395e-02 0.043378138 7.919728e-04   1.067755e-03 -0.10600798</span></span>
+<span><span class="co">#&gt; l.r      -1.048360e-03 0.025729465 4.697536e-04   5.621982e-04 -0.06045351</span></span>
+<span><span class="co">#&gt; l.lr     -7.936845e-03 0.029745478 5.430756e-04   1.435499e-03 -0.08242263</span></span>
+<span><span class="co">#&gt; l.Dp      1.677572e-02 0.063645912 1.162010e-03   1.738439e-03 -0.11298987</span></span>
+<span><span class="co">#&gt; d.r.l01   2.117568e-03 0.016714946 3.051718e-04   6.229977e-04  0.00000000</span></span>
+<span><span class="co">#&gt; d.lr.l01  2.796428e-02 0.071553362 1.306380e-03   5.072217e-03  0.00000000</span></span>
+<span><span class="co">#&gt; d.Dp.l01 -6.403832e-05 0.002118884 3.868536e-05   5.198422e-05  0.00000000</span></span>
+<span><span class="co">#&gt; const    -2.124139e-02 0.043697645 7.978062e-04   1.310558e-03 -0.10771068</span></span>
 <span><span class="co">#&gt;                    50%      97.5% Incl. prob. </span></span>
-<span><span class="co">#&gt; l.r      -5.783027e-05 0.05376886   1.0000000 </span></span>
-<span><span class="co">#&gt; l.lr     -2.379598e-03 0.04318360   1.0000000 </span></span>
-<span><span class="co">#&gt; l.Dp      1.555078e-02 0.14475878   1.0000000 </span></span>
-<span><span class="co">#&gt; d.r.l01   0.000000e+00 0.04804089   0.0780000 </span></span>
-<span><span class="co">#&gt; d.lr.l01  0.000000e+00 0.24977720   0.1843333 </span></span>
-<span><span class="co">#&gt; d.Dp.l01  0.000000e+00 0.00000000   0.0100000 </span></span>
-<span><span class="co">#&gt; const    -2.086259e-02 0.06176590   1.0000000 </span></span>
+<span><span class="co">#&gt; l.r      -0.0000500699 0.05239768 1.000000000 </span></span>
+<span><span class="co">#&gt; l.lr     -0.0020780602 0.04031086 1.000000000 </span></span>
+<span><span class="co">#&gt; l.Dp      0.0148151450 0.14794691 1.000000000 </span></span>
+<span><span class="co">#&gt; d.r.l01   0.0000000000 0.04725873 0.075333333 </span></span>
+<span><span class="co">#&gt; d.lr.l01  0.0000000000 0.25816385 0.197666667 </span></span>
+<span><span class="co">#&gt; d.Dp.l01  0.0000000000 0.00000000 0.008666667 </span></span>
+<span><span class="co">#&gt; const    -0.0203602721 0.06214006 1.000000000 </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Variable: Dp </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;                 Mean         SD     Naive SD Time-series SD        2.5%</span></span>
-<span><span class="co">#&gt; l.r       0.01551050 0.35092524 0.0064069890    0.022891321 -0.69245441</span></span>
-<span><span class="co">#&gt; l.lr      0.21359443 0.30835903 0.0056298398    0.027875870 -0.37945527</span></span>
-<span><span class="co">#&gt; l.Dp     -0.82804085 0.23206010 0.0042368184    0.012514884 -1.29892873</span></span>
-<span><span class="co">#&gt; d.r.l01   0.48389659 0.32607282 0.0059532480    0.016788728  0.00000000</span></span>
-<span><span class="co">#&gt; d.lr.l01  0.01357624 0.17896592 0.0032674556    0.004513047 -0.39130970</span></span>
-<span><span class="co">#&gt; d.Dp.l01  0.01254822 0.04552313 0.0008311348    0.002353052  0.00000000</span></span>
-<span><span class="co">#&gt; const     0.33472474 0.14041238 0.0025635675    0.008738602  0.06544187</span></span>
+<span><span class="co">#&gt; l.r       0.02866077 0.34263081 0.0062555542    0.020175861 -0.66064268</span></span>
+<span><span class="co">#&gt; l.lr      0.19784602 0.30161969 0.0055067970    0.025502965 -0.38650661</span></span>
+<span><span class="co">#&gt; l.Dp     -0.83470370 0.23211174 0.0042377613    0.011922120 -1.31360281</span></span>
+<span><span class="co">#&gt; d.r.l01   0.47786606 0.32720551 0.0059739279    0.016750042  0.00000000</span></span>
+<span><span class="co">#&gt; d.lr.l01  0.01663549 0.17614079 0.0032158761    0.004014099 -0.38438498</span></span>
+<span><span class="co">#&gt; d.Dp.l01  0.01288475 0.04675904 0.0008536994    0.002532061  0.00000000</span></span>
+<span><span class="co">#&gt; const     0.34086449 0.13958206 0.0025484080    0.007434376  0.06485793</span></span>
 <span><span class="co">#&gt;                  50%      97.5% Incl. prob.  </span></span>
-<span><span class="co">#&gt; l.r       0.02792628  0.6652067   1.0000000  </span></span>
-<span><span class="co">#&gt; l.lr      0.21122375  0.8318072   1.0000000  </span></span>
-<span><span class="co">#&gt; l.Dp     -0.81862910 -0.4091824   1.0000000 *</span></span>
-<span><span class="co">#&gt; d.r.l01   0.52046963  1.0621197   0.8116667  </span></span>
-<span><span class="co">#&gt; d.lr.l01  0.00000000  0.4803338   0.2746667  </span></span>
-<span><span class="co">#&gt; d.Dp.l01  0.00000000  0.1732222   0.1430000  </span></span>
-<span><span class="co">#&gt; const     0.32998103  0.6064128   1.0000000 *</span></span>
+<span><span class="co">#&gt; l.r       0.04382958  0.6659260   1.0000000  </span></span>
+<span><span class="co">#&gt; l.lr      0.19752692  0.8024446   1.0000000  </span></span>
+<span><span class="co">#&gt; l.Dp     -0.82270787 -0.4112662   1.0000000 *</span></span>
+<span><span class="co">#&gt; d.r.l01   0.50983476  1.0718300   0.8060000  </span></span>
+<span><span class="co">#&gt; d.lr.l01  0.00000000  0.4850410   0.2723333  </span></span>
+<span><span class="co">#&gt; d.Dp.l01  0.00000000  0.1769038   0.1433333  </span></span>
+<span><span class="co">#&gt; const     0.33906181  0.6103480   1.0000000 *</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Variance-covariance matrix:</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;               Mean           SD     Naive SD Time-series SD         2.5%</span></span>
-<span><span class="co">#&gt; r_r   0.0004006287 0.0006519833 1.190353e-05   4.643144e-05 3.908238e-07</span></span>
-<span><span class="co">#&gt; r_lr  0.0000927324 0.0001510870 2.758459e-06   1.076273e-05 7.384997e-08</span></span>
-<span><span class="co">#&gt; r_Dp  0.0004687951 0.0007442306 1.358773e-05   5.572635e-05 4.244548e-07</span></span>
-<span><span class="co">#&gt; lr_lr 0.0026949518 0.0011332436 2.069010e-05   9.061756e-05 9.806436e-04</span></span>
-<span><span class="co">#&gt; lr_Dp 0.0029027804 0.0017870810 3.262749e-05   9.990530e-05 2.311158e-04</span></span>
-<span><span class="co">#&gt; Dp_Dp 0.0511828476 0.0184742867 3.372928e-04   1.009279e-03 2.414547e-02</span></span>
+<span><span class="co">#&gt; r_r   0.0004424237 0.0009411751 1.718343e-05   4.295791e-05 6.110585e-07</span></span>
+<span><span class="co">#&gt; r_lr  0.0001009317 0.0001920165 3.505725e-06   1.016780e-05 1.274708e-07</span></span>
+<span><span class="co">#&gt; r_Dp  0.0005157273 0.0010637404 1.942115e-05   5.017812e-05 6.073661e-07</span></span>
+<span><span class="co">#&gt; lr_lr 0.0027242863 0.0011591587 2.116325e-05   9.604966e-05 9.962846e-04</span></span>
+<span><span class="co">#&gt; lr_Dp 0.0029118933 0.0018269186 3.335482e-05   9.827043e-05 1.852222e-04</span></span>
+<span><span class="co">#&gt; Dp_Dp 0.0513290548 0.0185101136 3.379469e-04   1.017208e-03 2.411791e-02</span></span>
 <span><span class="co">#&gt;                50%        97.5%  </span></span>
-<span><span class="co">#&gt; r_r   1.884831e-04 0.0020620257 *</span></span>
-<span><span class="co">#&gt; r_lr  4.002893e-05 0.0004874886 *</span></span>
-<span><span class="co">#&gt; r_Dp  2.101437e-04 0.0024302265 *</span></span>
-<span><span class="co">#&gt; lr_lr 2.525613e-03 0.0053977892 *</span></span>
-<span><span class="co">#&gt; lr_Dp 2.604870e-03 0.0071282121 *</span></span>
-<span><span class="co">#&gt; Dp_Dp 4.816964e-02 0.0961273539 *</span></span></code></pre></div>
+<span><span class="co">#&gt; r_r   2.231408e-04 0.0020215943 *</span></span>
+<span><span class="co">#&gt; r_lr  4.853952e-05 0.0004861096 *</span></span>
+<span><span class="co">#&gt; r_Dp  2.503330e-04 0.0023855942 *</span></span>
+<span><span class="co">#&gt; lr_lr 2.576446e-03 0.0054485960 *</span></span>
+<span><span class="co">#&gt; lr_Dp 2.615767e-03 0.0070700934 *</span></span>
+<span><span class="co">#&gt; Dp_Dp 4.847440e-02 0.0951584246 *</span></span></code></pre></div>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">period_of</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">object</span>, <span class="va">year</span>, <span class="va">quarter</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/time.html" class="external-link">time</a></span><span class="op">(</span><span class="va">object</span><span class="op">[[</span><span class="st">"data"</span><span class="op">]</span><span class="op">]</span><span class="op">[[</span><span class="st">"train"</span><span class="op">]</span><span class="op">]</span><span class="op">[[</span><span class="st">"y"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span> <span class="op">==</span> <span class="va">year</span> <span class="op">+</span> <span class="op">(</span><span class="va">quarter</span> <span class="op">-</span> <span class="fl">1</span><span class="op">)</span> <span class="op">/</span> <span class="fl">4</span><span class="op">)</span></span>
@@ -350,77 +350,77 @@ transformation while their product is not.</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Variable: r </span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;                  Mean         SD     Naive SD Time-series SD         2.5%</span></span>
-<span><span class="co">#&gt; l.r      -0.024727489 0.03063389 0.0005592958    0.003479470 -0.101048536</span></span>
-<span><span class="co">#&gt; l.lr     -0.030201496 0.03017514 0.0005509201    0.003084038 -0.104114477</span></span>
-<span><span class="co">#&gt; l.Dp      0.115201420 0.06266083 0.0011440250    0.002585367 -0.001300008</span></span>
-<span><span class="co">#&gt; d.r.l01   0.003408164 0.03553712 0.0006488161    0.001757510 -0.048960191</span></span>
-<span><span class="co">#&gt; d.lr.l01  0.202567497 0.07671751 0.0014006637    0.003703166  0.000000000</span></span>
-<span><span class="co">#&gt; d.Dp.l01 -0.002615366 0.01113142 0.0002032310    0.001388843 -0.044910971</span></span>
-<span><span class="co">#&gt; const    -0.021736091 0.06560893 0.0011978497    0.005818083 -0.149932518</span></span>
+<span><span class="co">#&gt;                  Mean          SD     Naive SD Time-series SD         2.5%</span></span>
+<span><span class="co">#&gt; l.r      -0.024510001 0.029120490 0.0005316650    0.002981496 -0.096477722</span></span>
+<span><span class="co">#&gt; l.lr     -0.029279724 0.029492119 0.0005384500    0.002977153 -0.103557632</span></span>
+<span><span class="co">#&gt; l.Dp      0.113811013 0.061782139 0.0011279824    0.002135183 -0.004177071</span></span>
+<span><span class="co">#&gt; d.r.l01   0.002944663 0.029981331 0.0005473817    0.001076070 -0.019801107</span></span>
+<span><span class="co">#&gt; d.lr.l01  0.202371107 0.077048369 0.0014067043    0.004379585  0.000000000</span></span>
+<span><span class="co">#&gt; d.Dp.l01 -0.001814200 0.008923727 0.0001629242    0.000868795 -0.037130585</span></span>
+<span><span class="co">#&gt; const    -0.022459142 0.065090082 0.0011883769    0.005643279 -0.152284444</span></span>
 <span><span class="co">#&gt;                  50%      97.5% Incl. prob. </span></span>
-<span><span class="co">#&gt; l.r      -0.01831887 0.02067567   1.0000000 </span></span>
-<span><span class="co">#&gt; l.lr     -0.02464811 0.01464793   1.0000000 </span></span>
-<span><span class="co">#&gt; l.Dp      0.11307566 0.24326960   1.0000000 </span></span>
-<span><span class="co">#&gt; d.r.l01   0.00000000 0.11362155   0.1020000 </span></span>
-<span><span class="co">#&gt; d.lr.l01  0.20650861 0.34236350   0.9693333 </span></span>
-<span><span class="co">#&gt; d.Dp.l01  0.00000000 0.00000000   0.0720000 </span></span>
-<span><span class="co">#&gt; const    -0.02189295 0.10821392   1.0000000 </span></span>
+<span><span class="co">#&gt; l.r      -0.01845502 0.01961815  1.00000000 </span></span>
+<span><span class="co">#&gt; l.lr     -0.02409280 0.01415477  1.00000000 </span></span>
+<span><span class="co">#&gt; l.Dp      0.11275107 0.23919694  1.00000000 </span></span>
+<span><span class="co">#&gt; d.r.l01   0.00000000 0.08297552  0.08233333 </span></span>
+<span><span class="co">#&gt; d.lr.l01  0.20731106 0.34322304  0.96533333 </span></span>
+<span><span class="co">#&gt; d.Dp.l01  0.00000000 0.00000000  0.05666667 </span></span>
+<span><span class="co">#&gt; const    -0.02261960 0.10686633  1.00000000 </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Variable: lr </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;                   Mean          SD     Naive SD Time-series SD        2.5%</span></span>
-<span><span class="co">#&gt; l.r      -7.022402e-03 0.012573656 2.295625e-04   7.716274e-04 -0.03656391</span></span>
-<span><span class="co">#&gt; l.lr     -1.036862e-02 0.014801274 2.702330e-04   1.294448e-03 -0.04649749</span></span>
-<span><span class="co">#&gt; l.Dp      3.745882e-02 0.036910212 6.738852e-04   7.855834e-04 -0.03290696</span></span>
-<span><span class="co">#&gt; d.r.l01   2.377112e-03 0.016936882 3.092237e-04   6.487778e-04  0.00000000</span></span>
-<span><span class="co">#&gt; d.lr.l01  2.553780e-02 0.068357597 1.248033e-03   4.595080e-03  0.00000000</span></span>
-<span><span class="co">#&gt; d.Dp.l01 -9.806079e-05 0.002361541 4.311564e-05   6.406874e-05  0.00000000</span></span>
-<span><span class="co">#&gt; const    -9.201111e-03 0.036213469 6.611645e-04   1.367843e-03 -0.08113406</span></span>
+<span><span class="co">#&gt; l.r      -7.100208e-03 0.012467029 2.276158e-04   7.238598e-04 -0.03629710</span></span>
+<span><span class="co">#&gt; l.lr     -1.008772e-02 0.014564890 2.659173e-04   1.239595e-03 -0.04498621</span></span>
+<span><span class="co">#&gt; l.Dp      3.722972e-02 0.037213669 6.794255e-04   7.948822e-04 -0.03443994</span></span>
+<span><span class="co">#&gt; d.r.l01   2.197954e-03 0.016585911 3.028159e-04   6.662399e-04  0.00000000</span></span>
+<span><span class="co">#&gt; d.lr.l01  2.803078e-02 0.071644324 1.308040e-03   5.091790e-03  0.00000000</span></span>
+<span><span class="co">#&gt; d.Dp.l01 -7.776189e-05 0.002219762 4.052712e-05   5.075608e-05  0.00000000</span></span>
+<span><span class="co">#&gt; const    -9.455487e-03 0.036147879 6.599670e-04   1.348269e-03 -0.08080780</span></span>
 <span><span class="co">#&gt;                   50%      97.5% Incl. prob. </span></span>
-<span><span class="co">#&gt; l.r      -0.004546849 0.01435386   1.0000000 </span></span>
-<span><span class="co">#&gt; l.lr     -0.006911344 0.01117245   1.0000000 </span></span>
-<span><span class="co">#&gt; l.Dp      0.037284501 0.10924475   1.0000000 </span></span>
-<span><span class="co">#&gt; d.r.l01   0.000000000 0.05234066   0.0780000 </span></span>
-<span><span class="co">#&gt; d.lr.l01  0.000000000 0.25437243   0.1843333 </span></span>
-<span><span class="co">#&gt; d.Dp.l01  0.000000000 0.00000000   0.0100000 </span></span>
-<span><span class="co">#&gt; const    -0.009138791 0.06249934   1.0000000 </span></span>
+<span><span class="co">#&gt; l.r      -0.004736040 0.01396778 1.000000000 </span></span>
+<span><span class="co">#&gt; l.lr     -0.006851734 0.01107162 1.000000000 </span></span>
+<span><span class="co">#&gt; l.Dp      0.037153433 0.11059108 1.000000000 </span></span>
+<span><span class="co">#&gt; d.r.l01   0.000000000 0.05100137 0.075333333 </span></span>
+<span><span class="co">#&gt; d.lr.l01  0.000000000 0.25817701 0.197666667 </span></span>
+<span><span class="co">#&gt; d.Dp.l01  0.000000000 0.00000000 0.008666667 </span></span>
+<span><span class="co">#&gt; const    -0.009573793 0.06266561 1.000000000 </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Variable: Dp </span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;                 Mean         SD     Naive SD Time-series SD        2.5%</span></span>
-<span><span class="co">#&gt; l.r       0.19829265 0.19696738 0.0035961158    0.023079824 -0.19371389</span></span>
-<span><span class="co">#&gt; l.lr      0.27701483 0.21458603 0.0039177870    0.037041415 -0.09939393</span></span>
-<span><span class="co">#&gt; l.Dp     -1.02426330 0.17632114 0.0032191688    0.008967970 -1.40841504</span></span>
-<span><span class="co">#&gt; d.r.l01   0.48364279 0.32604041 0.0059526562    0.016782942  0.00000000</span></span>
-<span><span class="co">#&gt; d.lr.l01  0.01357996 0.17894439 0.0032670627    0.004513039 -0.39392692</span></span>
-<span><span class="co">#&gt; d.Dp.l01  0.01261751 0.04563327 0.0008331458    0.002300732  0.00000000</span></span>
-<span><span class="co">#&gt; const     0.01258847 0.29199929 0.0053311533    0.049141454 -0.57819240</span></span>
+<span><span class="co">#&gt;                 Mean        SD     Naive SD Time-series SD       2.5%</span></span>
+<span><span class="co">#&gt; l.r       0.20163356 0.1932672 0.0035285598    0.022481920 -0.1833285</span></span>
+<span><span class="co">#&gt; l.lr      0.26913654 0.2088513 0.0038130852    0.034326130 -0.1027361</span></span>
+<span><span class="co">#&gt; l.Dp     -1.02154926 0.1769649 0.0032309230    0.008685228 -1.4089087</span></span>
+<span><span class="co">#&gt; d.r.l01   0.47757712 0.3271194 0.0059723567    0.016742929  0.0000000</span></span>
+<span><span class="co">#&gt; d.lr.l01  0.01663580 0.1761289 0.0032156588    0.004013375 -0.3838768</span></span>
+<span><span class="co">#&gt; d.Dp.l01  0.01289159 0.0466729 0.0008521266    0.002348725  0.0000000</span></span>
+<span><span class="co">#&gt; const     0.02008127 0.2871357 0.0052423575    0.047240068 -0.5602479</span></span>
 <span><span class="co">#&gt;                  50%      97.5% Incl. prob.  </span></span>
-<span><span class="co">#&gt; l.r       0.20618031  0.5638109   1.0000000  </span></span>
-<span><span class="co">#&gt; l.lr      0.26190785  0.7212998   1.0000000  </span></span>
-<span><span class="co">#&gt; l.Dp     -1.01661609 -0.6978181   1.0000000 *</span></span>
-<span><span class="co">#&gt; d.r.l01   0.52073128  1.0673605   0.8116667  </span></span>
-<span><span class="co">#&gt; d.lr.l01  0.00000000  0.4815487   0.2746667  </span></span>
-<span><span class="co">#&gt; d.Dp.l01  0.00000000  0.1736515   0.1430000  </span></span>
-<span><span class="co">#&gt; const     0.03404646  0.5515325   1.0000000  </span></span>
+<span><span class="co">#&gt; l.r       0.20816605  0.5624278   1.0000000  </span></span>
+<span><span class="co">#&gt; l.lr      0.25804082  0.7002838   1.0000000  </span></span>
+<span><span class="co">#&gt; l.Dp     -1.01415607 -0.6951284   1.0000000 *</span></span>
+<span><span class="co">#&gt; d.r.l01   0.51133094  1.0712156   0.8060000  </span></span>
+<span><span class="co">#&gt; d.lr.l01  0.00000000  0.4874602   0.2723333  </span></span>
+<span><span class="co">#&gt; d.Dp.l01  0.00000000  0.1761074   0.1433333  </span></span>
+<span><span class="co">#&gt; const     0.03632376  0.5700426   1.0000000  </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Variance-covariance matrix:</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;              Mean          SD     Naive SD Time-series SD        2.5%</span></span>
-<span><span class="co">#&gt; r_r   0.027415701 0.017852707 3.259444e-04   0.0006748980 0.007492173</span></span>
-<span><span class="co">#&gt; r_lr  0.006194967 0.004368520 7.975789e-05   0.0001599025 0.001376332</span></span>
-<span><span class="co">#&gt; r_Dp  0.032525923 0.024160024 4.410997e-04   0.0011223228 0.007088188</span></span>
-<span><span class="co">#&gt; lr_lr 0.003870373 0.001551034 2.831788e-05   0.0001294902 0.001787518</span></span>
-<span><span class="co">#&gt; lr_Dp 0.009884457 0.006179528 1.128222e-04   0.0002391376 0.002994233</span></span>
-<span><span class="co">#&gt; Dp_Dp 0.164531632 0.053639847 9.793251e-04   0.0042006867 0.087772035</span></span>
+<span><span class="co">#&gt; r_r   0.027121225 0.016836170 3.073850e-04   0.0006385262 0.007721146</span></span>
+<span><span class="co">#&gt; r_lr  0.006149327 0.004163403 7.601299e-05   0.0001511844 0.001388687</span></span>
+<span><span class="co">#&gt; r_Dp  0.031995143 0.022415127 4.092424e-04   0.0008642580 0.007055610</span></span>
+<span><span class="co">#&gt; lr_lr 0.003874753 0.001507750 2.752762e-05   0.0001235440 0.001788588</span></span>
+<span><span class="co">#&gt; lr_Dp 0.009767837 0.005775801 1.054512e-04   0.0002130866 0.003048780</span></span>
+<span><span class="co">#&gt; Dp_Dp 0.164504174 0.051028038 9.316403e-04   0.0033452324 0.090111642</span></span>
 <span><span class="co">#&gt;               50%       97.5%  </span></span>
-<span><span class="co">#&gt; r_r   0.023089770 0.073534158 *</span></span>
-<span><span class="co">#&gt; r_lr  0.005170804 0.017456977 *</span></span>
-<span><span class="co">#&gt; r_Dp  0.026819258 0.092845246 *</span></span>
-<span><span class="co">#&gt; lr_lr 0.003550990 0.007686343 *</span></span>
-<span><span class="co">#&gt; lr_Dp 0.008373436 0.025435736 *</span></span>
-<span><span class="co">#&gt; Dp_Dp 0.156124730 0.288342413 *</span></span></code></pre></div>
+<span><span class="co">#&gt; r_r   0.023037869 0.072000643 *</span></span>
+<span><span class="co">#&gt; r_lr  0.005155673 0.016924510 *</span></span>
+<span><span class="co">#&gt; r_Dp  0.026573953 0.088195955 *</span></span>
+<span><span class="co">#&gt; lr_lr 0.003567705 0.007465279 *</span></span>
+<span><span class="co">#&gt; lr_Dp 0.008326149 0.024483211 *</span></span>
+<span><span class="co">#&gt; Dp_Dp 0.156306332 0.288355787 *</span></span></code></pre></div>
 <p>The inclusion probabilities of the
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="normal">Π</mi><annotation encoding="application/x-tex">\Pi</annotation></semantics></math>
 columns are one by construction, as explained above, and the inclusion
@@ -610,7 +610,7 @@ scale of the data.</p>
 <span>                             tvp <span class="op">=</span> <span class="cn">TRUE</span>, error <span class="op">=</span> <span class="st">"sv+covar"</span>, varsel <span class="op">=</span> <span class="st">"bvs"</span>,</span>
 <span>                             iterations <span class="op">=</span> <span class="fl">3000</span>, burnin <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">model_ml</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_priors.html">add_priors</a></span><span class="op">(</span><span class="va">model_ml</span>,</span>
+<span><span class="va">model_ml</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_priors.html" class="external-link">add_priors</a></span><span class="op">(</span><span class="va">model_ml</span>,</span>
 <span>                       coef <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>v_i <span class="op">=</span> <span class="fl">1</span>, v_i_det <span class="op">=</span> <span class="fl">1</span> <span class="op">/</span> <span class="fl">10</span>,</span>
 <span>                                   shape <span class="op">=</span> <span class="fl">3</span>, rate <span class="op">=</span> <span class="fl">0.000001</span>, rate_det <span class="op">=</span> <span class="fl">0.01</span><span class="op">)</span>,</span>
 <span>                       coint <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>rho <span class="op">=</span> <span class="fl">0.999</span>, p_tau_i <span class="op">=</span> <span class="st">"ml"</span>, weight <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span>
@@ -640,8 +640,8 @@ itself, and one for each direction off it:</p>
 <span><span class="co">#&gt; [1] 1.000 0.989 0.168</span></span></code></pre></div>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">20260913</span><span class="op">)</span></span>
-<span><span class="va">model_ml</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_initial_values.html">add_initial_values</a></span><span class="op">(</span><span class="va">model_ml</span><span class="op">)</span></span>
-<span><span class="va">model_ml</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_posterior_coefficients.html">add_posterior_coefficients</a></span><span class="op">(</span><span class="va">model_ml</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">model_ml</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_initial_values.html" class="external-link">add_initial_values</a></span><span class="op">(</span><span class="va">model_ml</span><span class="op">)</span></span>
+<span><span class="va">model_ml</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html" class="external-link">add_posterior_coefficients</a></span><span class="op">(</span><span class="va">model_ml</span><span class="op">)</span></span></code></pre></div>
 <p>The same element of
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi mathvariant="normal">Π</mi><mi>t</mi></msub><annotation encoding="application/x-tex">\Pi_t</annotation></semantics></math>
 as above, with the bands under the noninformative prior in grey:</p>
@@ -678,17 +678,18 @@ term, columns the equations:</p>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu">band_width</span><span class="op">(</span><span class="va">model_ml</span><span class="op">)</span> <span class="op">/</span> <span class="fu">band_width</span><span class="op">(</span><span class="va">model</span><span class="op">)</span>, <span class="fl">2</span><span class="op">)</span></span>
 <span><span class="co">#&gt;         r   lr   Dp</span></span>
-<span><span class="co">#&gt; l.r  0.72 0.71 0.85</span></span>
-<span><span class="co">#&gt; l.lr 0.81 0.70 0.97</span></span>
-<span><span class="co">#&gt; l.Dp 0.81 0.82 1.07</span></span></code></pre></div>
+<span><span class="co">#&gt; l.r  0.76 0.72 0.86</span></span>
+<span><span class="co">#&gt; l.lr 0.83 0.72 1.00</span></span>
+<span><span class="co">#&gt; l.Dp 0.82 0.82 1.08</span></span></code></pre></div>
 <p>A ratio below one means that the prior centred on the maximum
 likelihood estimate narrows the band of that element. Here it does so
-for all elements but one, most for the adjustment to the lagged
-long-term rate, while the band of the adjustment of inflation to its own
-level is about five percent wider than under the noninformative prior.
-It need not narrow every band, and that is a property of how the prior
-is built rather than a failure of it: a larger <code>weight</code> makes
-the prior tighter by lowering
+for all elements but two, most in the equation of the long-term rate.
+The band of the adjustment of inflation to the lagged long-term rate is
+unchanged, and that of inflation to its own level is about eight percent
+wider than under the noninformative prior. It need not narrow every
+band, and that is a property of how the prior is built rather than a
+failure of it: a larger <code>weight</code> makes the prior tighter by
+lowering
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>,
 but
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>
@@ -740,7 +741,7 @@ those of one period, which argument <code>period</code> selects, the
 last period being the default. The response of inflation to a shock to
 the short-term interest rate in 1985Q1:</p>
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">feir</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/irf.html">irf</a></span><span class="op">(</span><span class="va">bvar_form</span>, impulse <span class="op">=</span> <span class="st">"r"</span>, response <span class="op">=</span> <span class="st">"Dp"</span>, n_ahead <span class="op">=</span> <span class="fl">20</span>,</span>
+<code class="sourceCode R"><span><span class="va">feir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/irf.html" class="external-link">irf</a></span><span class="op">(</span><span class="va">bvar_form</span>, impulse <span class="op">=</span> <span class="st">"r"</span>, response <span class="op">=</span> <span class="st">"Dp"</span>, n_ahead <span class="op">=</span> <span class="fl">20</span>,</span>
 <span>            period <span class="op">=</span> <span class="fu">period_of</span><span class="op">(</span><span class="va">model</span>, <span class="fl">1985</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">feir</span>, main <span class="op">=</span> <span class="st">"Forecast error impulse response, 1985Q1"</span>,</span>
@@ -761,8 +762,8 @@ The bands therefore reflect both the uncertainty about where the
 coefficients are at the end of the sample and the drift the model allows
 after it.</p>
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_forecast_input.html">add_forecast_input</a></span><span class="op">(</span><span class="va">model</span>, n_ahead <span class="op">=</span> <span class="fl">8</span><span class="op">)</span></span>
-<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_posterior_forecasts.html">add_posterior_forecasts</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_forecast_input.html" class="external-link">add_forecast_input</a></span><span class="op">(</span><span class="va">model</span>, n_ahead <span class="op">=</span> <span class="fl">8</span><span class="op">)</span></span>
+<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_posterior_forecasts.html" class="external-link">add_posterior_forecasts</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">model</span>, n_ahead <span class="op">=</span> <span class="fl">8</span><span class="op">)</span>, n_pre <span class="op">=</span> <span class="fl">20</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
@@ -786,7 +787,7 @@ last period. <code>forecast_states = "hold"</code> gives that forecast
 from the VEC model as well. The width of the 90% intervals eight
 quarters ahead shows what the drift adds:</p>
 <div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">held</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_posterior_forecasts.html">add_posterior_forecasts</a></span><span class="op">(</span><span class="va">model</span>, forecast_states <span class="op">=</span> <span class="st">"hold"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">held</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_posterior_forecasts.html" class="external-link">add_posterior_forecasts</a></span><span class="op">(</span><span class="va">model</span>, forecast_states <span class="op">=</span> <span class="st">"hold"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">interval_width</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">object</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">fcst</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">object</span>, n_ahead <span class="op">=</span> <span class="fl">8</span><span class="op">)</span><span class="op">[[</span><span class="st">"fcst"</span><span class="op">]</span><span class="op">]</span></span>
@@ -795,8 +796,8 @@ quarters ahead shows what the drift adds:</p>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span>simulated <span class="op">=</span> <span class="fu">interval_width</span><span class="op">(</span><span class="va">model</span><span class="op">)</span>, held <span class="op">=</span> <span class="fu">interval_width</span><span class="op">(</span><span class="va">held</span><span class="op">)</span><span class="op">)</span>, <span class="fl">2</span><span class="op">)</span></span>
 <span><span class="co">#&gt;              r   lr   Dp</span></span>
-<span><span class="co">#&gt; simulated 1.83 2.44 1.67</span></span>
-<span><span class="co">#&gt; held      0.60 1.19 1.10</span></span></code></pre></div>
+<span><span class="co">#&gt; simulated 1.82 2.40 1.69</span></span>
+<span><span class="co">#&gt; held      0.61 1.19 1.07</span></span></code></pre></div>
 <p>Eight quarters ahead, carrying the drift forward about doubles the
 interval of the long-term rate, widens that of inflation by half and
 makes that of the short-term rate between two and three times as wide. A

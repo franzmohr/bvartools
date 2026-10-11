@@ -6,6 +6,9 @@ respective method.
 ## Usage
 
 ``` r
+# S3 method for class 'expandingwindow'
+minnesota_prior(object, ...)
+
 # S3 method for class 'modellist'
 minnesota_prior(object, ...)
 ```
@@ -19,6 +22,9 @@ minnesota_prior(object, ...)
 - ...:
 
   further arguments passed to or from other methods.
+
+  The same for an object of class 'expandingwindow', each window getting
+  the prior of its own sample.
 
 ## Value
 

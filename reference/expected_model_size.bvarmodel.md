@@ -12,12 +12,6 @@ expected_model_size(object, chains = NULL, ...)
 
 # S3 method for class 'bvecmodel'
 expected_model_size(object, chains = NULL, ...)
-
-# S3 method for class 'expandingwindow'
-expected_model_size(object, ...)
-
-# S3 method for class 'modellist'
-expected_model_size(object, ...)
 ```
 
 ## Arguments
@@ -36,7 +30,7 @@ expected_model_size(object, ...)
   the number of chains that will be simulated. If `NULL` (default), the
   value in `object$model$chains` is used, and one chain when there is
   none. See
-  [`add_posterior_coefficients`](https://franzmohr.github.io/bvartools/reference/add_posterior_coefficients.md).
+  [`add_posterior_coefficients`](https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html).
 
 - ...:
 
@@ -61,7 +55,7 @@ and the columns
 
   the function that adds the block, empty for the first row. The warning
   of
-  [`add_posterior_coefficients`](https://franzmohr.github.io/bvartools/reference/add_posterior_coefficients.md)
+  [`add_posterior_coefficients`](https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html)
   counts the first row and the blocks that function adds itself.
 
 - `draws`, `columns`:
@@ -90,21 +84,21 @@ A few blocks depend on the priors: the inclusion indicators of the
 covariance block, the draws of a non-centred prior (`omega_v`) and a
 drawn autocorrelation of the cointegration space (`rho_min`). They are
 counted once
-[`add_priors`](https://franzmohr.github.io/bvartools/reference/add_priors.md)
-has added the priors. Forecast draws are counted once
-[`add_forecast_input`](https://franzmohr.github.io/bvartools/reference/add_forecast_input.md)
+[`add_priors`](https://rdrr.io/pkg/bayests/man/add_priors.html) has
+added the priors. Forecast draws are counted once
+[`add_forecast_input`](https://rdrr.io/pkg/bayests/man/add_forecast_input.html)
 has set a horizon.
 
 The numbers are what the object will hold in memory. R may briefly hold
 a second copy while a step modifies it, so the memory a session needs
 can be up to twice as large.
-[`write_to_hdf5`](https://franzmohr.github.io/bvartools/reference/write_to_hdf5.md)
+[`write_to_hdf5`](https://rdrr.io/pkg/bayests/man/write_to_hdf5.html)
 compresses what it writes, but posterior draws compress poorly, so the
 size of the file is usually a little below the size in memory.
 
 ## See also
 
-[`expected_model_size`](https://franzmohr.github.io/bvartools/reference/expected_model_size.md)
+[`expected_model_size`](https://rdrr.io/pkg/bayests/man/expected_model_size.html)
 for the warnings that are based on it, and
 [`bvartools_model`](https://franzmohr.github.io/bvartools/reference/bvartools_model.md)
 for the blocks of the object.

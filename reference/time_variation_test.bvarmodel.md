@@ -13,12 +13,6 @@ time_variation_test(object, joint = TRUE, batches = 20, ...)
 
 # S3 method for class 'bvecmodel'
 time_variation_test(object, joint = TRUE, batches = 20, ...)
-
-# S3 method for class 'modellist'
-time_variation_test(object, ...)
-
-# S3 method for class 'expandingwindow'
-time_variation_test(object, ...)
 ```
 
 ## Arguments
@@ -28,10 +22,9 @@ time_variation_test(object, ...)
   an object of class `"bvarmodel"` with `tvp = TRUE`, whatever its error
   term, or of class `"bvecmodel"` with the same, whose priors were set
   with `coef$omega_v` or, under stochastic volatility, `sigma$omega_v`
-  in
-  [`add_priors`](https://franzmohr.github.io/bvartools/reference/add_priors.md)
-  and whose posterior was drawn by
-  [`add_posterior_coefficients`](https://franzmohr.github.io/bvartools/reference/add_posterior_coefficients.md).
+  in [`add_priors`](https://rdrr.io/pkg/bayests/man/add_priors.html) and
+  whose posterior was drawn by
+  [`add_posterior_coefficients`](https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html).
 
 - joint:
 
@@ -115,8 +108,8 @@ the length of the chain. Where it is large, more draws are needed before
 the value is read as more than its sign.
 
 Each block chooses its prior separately in
-[`add_priors`](https://franzmohr.github.io/bvartools/reference/add_priors.md),
-and only the blocks estimated under `omega_v` are reported.
+[`add_priors`](https://rdrr.io/pkg/bayests/man/add_priors.html), and
+only the blocks estimated under `omega_v` are reported.
 
 For a VEC model the coefficients are the loadings, labelled by the error
 correction term they load on (`ect1`, `ect2`, ...), followed by the
@@ -168,25 +161,25 @@ time_variation_test(model)
 #> 
 #> Coefficients:
 #>  equation term      log BF NSE 
-#>  invest   invest.l1 -0.16  0.02
-#>  income   invest.l1 -1.01  0.08
-#>  cons     invest.l1 -0.95  0.08
-#>  invest   income.l1 -0.05  0.01
-#>  income   income.l1 -0.08  0.10
-#>  cons     income.l1 -0.01  0.10
-#>  invest   cons.l1   -0.01  0.01
-#>  income   cons.l1   0.51   0.19
-#>  cons     cons.l1   -0.02  0.11
-#>  invest   const     -0.01  0.00
-#>  income   const     0.36   0.07
-#>  cons     const     0.36   0.09
-#>           (joint)   1.13   0.32
+#>  invest   invest.l1 -0.13  0.03
+#>  income   invest.l1 -1.01  0.09
+#>  cons     invest.l1 -0.86  0.09
+#>  invest   income.l1 -0.04  0.02
+#>  income   income.l1 -0.09  0.08
+#>  cons     income.l1 -0.08  0.12
+#>  invest   cons.l1   -0.03  0.01
+#>  income   cons.l1   0.23   0.13
+#>  cons     cons.l1   -0.04  0.08
+#>  invest   const     -0.02  0.00
+#>  income   const     0.10   0.04
+#>  cons     const     0.34   0.10
+#>           (joint)   -0.87  0.34
 #> 
 #> Volatilities:
 #>  equation term           log BF NSE 
-#>  invest   log-volatility 3.72   0.88
-#>  income   log-volatility 0.84   0.47
-#>  cons     log-volatility 0.46   0.49
-#>           (joint)        19.03  0.99
+#>  invest   log-volatility 2.20   0.96
+#>  income   log-volatility 0.67   0.56
+#>  cons     log-volatility -0.94  0.33
+#>           (joint)        9.04   0.98
 #> 
 ```

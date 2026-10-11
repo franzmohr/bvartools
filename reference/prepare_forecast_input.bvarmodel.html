@@ -9,7 +9,7 @@ of class 'bvarmodel'."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -62,11 +62,12 @@ of class 'bvarmodel'.</p>
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="co"># S3 method for class 'bvarmodel'</span></span>
-<span><span class="fu"><a href="prepare_forecast_input.html">prepare_forecast_input</a></span><span class="op">(</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/bayests/man/prepare_forecast_input.html" class="external-link">prepare_forecast_input</a></span><span class="op">(</span></span>
 <span>  <span class="va">object</span>,</span>
 <span>  n_ahead <span class="op">=</span> <span class="fl">10</span>,</span>
 <span>  deterministic <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  exogen <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  y_start <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -94,6 +95,13 @@ automatically. If this is not successful, an error message we be returned.</p></
 model. Required if the model has such variables. See 'Details'.</p></dd>
 
 
+<dt id="arg-y-start">y_start<a class="anchor" aria-label="anchor" href="#arg-y-start"></a></dt>
+<dd><p>an optional time-series object with the values of the endogenous variables
+the forecast starts from. The forecast periods are the <code>n_ahead</code> periods after its last
+observation, which may lie after the end of the estimation sample. If <code>NULL</code>
+(default), the forecast starts after the end of the estimation sample. See 'Details'.</p></dd>
+
+
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>additional arguments.</p></dd>
 
@@ -109,6 +117,10 @@ The lags of the endogenous variables that the estimation sample does not
 reach are the forecasts of earlier periods, which the forecast fills in as it
 goes; they are zero here, since the samplers refuse a missing value anywhere
 in <code>x</code>.</p>
+<p>If <code>y_start</code> is given, the list has two more elements: <code>start</code>, the time of
+the first forecast period, and <code>y</code>, the observations of <code>y_start</code> after the end of
+the estimation sample together with the last <code>p</code> the forecast starts from, a time-series
+object with one column per endogenous variable.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -121,6 +133,30 @@ periods it has to cover.</p>
 <p>If <code>deterministic</code> is not given, the deterministic terms are continued from the estimation
 sample, which works for a constant, a linear trend, seasonal dummies and the dummy variables of
 <code><a href="add_dummy_variables.html">add_dummy_variables</a></code>.</p>
+<p><strong>Starting a forecast after the end of the estimation sample.</strong> By default the first
+forecast period is the one after the last period of the estimation sample, and its lagged
+regressors are the last <code>p</code> observations of that sample. Argument <code>y_start</code> moves
+the start: the first forecast period is then the one after the last observation of
+<code>y_start</code>, and the lags are its last <code>p</code> observations. This is how a forecast
+starts from a value that was not part of the estimation, such as a nowcast of the current
+month or a first release that came in after the model was estimated, without estimating the
+model again. <code>y_start</code> holds the endogenous variables of the model, by name and in the
+units of the estimation sample, at the frequency of the model. It has to end in the last
+period of the estimation sample or after it, and its last <code>p</code> observations must not be
+missing; values before those are not read. When it ends in the last period of the estimation
+sample and holds the same values, the result is the same as without it.</p>
+<p>The other inputs follow the new forecast periods: <code>exogen</code> has to cover the <code>s</code>
+periods before the first of them and the <code>n_ahead</code> periods themselves, and
+<code>deterministic</code> the forecast periods. The automatic continuation of the deterministic
+terms counts through the periods between the end of the sample and the start of the
+forecast, so that a trend keeps counting and seasonal dummies fall on the calendar months or
+quarters of the forecast periods.</p>
+<p>The coefficients, and for models with time varying coefficients or stochastic volatility
+the states, are those estimated on the sample. Nothing is learnt from the start values
+beyond their role as lags. Some uses of a forecast therefore need it to start right after
+the sample: see <code><a href="https://rdrr.io/pkg/bayests/man/add_posterior_forecasts.html" class="external-link">add_posterior_forecasts</a></code> and
+<code><a href="https://rdrr.io/pkg/bayests/man/add_predictive_loglik.html" class="external-link">add_predictive_loglik</a></code>. A model estimated with <code>missing = "estimate"</code>
+starts each draw's forecast from its own completed panel and does not take <code>y_start</code>.</p>
     </div>
 
     <div class="section level2">
@@ -136,12 +172,22 @@ sample, which works for a constant, a linear trend, seasonal dummies and the dum
 <span class="r-in"><span><span class="co"># Number of iterations and burnin should be much higher.</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Add priors</span></span></span>
-<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_priors.html">add_priors</a></span><span class="op">(</span><span class="va">model</span>,</span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_priors.html" class="external-link">add_priors</a></span><span class="op">(</span><span class="va">model</span>,</span></span>
 <span class="r-in"><span>                    coef <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>v_i <span class="op">=</span> <span class="fl">1</span>, v_i_det <span class="op">=</span> <span class="fl">1</span> <span class="op">/</span> <span class="fl">10</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                    sigma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>df <span class="op">=</span> <span class="st">"k"</span>, scale <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Generate forcast input</span></span></span>
-<span class="r-in"><span><span class="va">fcst_input</span> <span class="op">&lt;-</span> <span class="fu"><a href="prepare_forecast_input.html">prepare_forecast_input</a></span><span class="op">(</span><span class="va">model</span>, n_ahead <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">fcst_input</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/prepare_forecast_input.html" class="external-link">prepare_forecast_input</a></span><span class="op">(</span><span class="va">model</span>, n_ahead <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Start the forecast two quarters after the end of the sample, from</span></span></span>
+<span class="r-in"><span><span class="co"># values the model was not estimated with</span></span></span>
+<span class="r-in"><span><span class="va">short</span> <span class="op">&lt;-</span> <span class="fu"><a href="create_bvarmodel.html">create_bvarmodel</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/window.html" class="external-link">window</a></span><span class="op">(</span><span class="va">e1</span>, end <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1978</span>, <span class="fl">4</span><span class="op">)</span><span class="op">)</span>, p <span class="op">=</span> <span class="fl">2</span>,</span></span>
+<span class="r-in"><span>                          deterministic <span class="op">=</span> <span class="st">"const"</span>,</span></span>
+<span class="r-in"><span>                          iterations <span class="op">=</span> <span class="fl">20</span>, burnin <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">fcst_input</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/prepare_forecast_input.html" class="external-link">prepare_forecast_input</a></span><span class="op">(</span><span class="va">short</span>, n_ahead <span class="op">=</span> <span class="fl">4</span>,</span></span>
+<span class="r-in"><span>                                     y_start <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/window.html" class="external-link">window</a></span><span class="op">(</span><span class="va">e1</span>, end <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1979</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">fcst_input</span><span class="op">[[</span><span class="st">"start"</span><span class="op">]</span><span class="op">]</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1979.5</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

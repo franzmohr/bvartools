@@ -13,7 +13,7 @@ same annual basis."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -76,7 +76,7 @@ same annual basis.</p>
 
 <dl><dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
 <dd><p>an object of class 'bvarmodel', 'bvecmodel', 'expandingwindow' or
-'modellist', whose models contain forecasts, i.e. <code><a href="add_posterior_forecasts.html">add_posterior_forecasts</a></code>
+'modellist', whose models contain forecasts, i.e. <code><a href="https://rdrr.io/pkg/bayests/man/add_posterior_forecasts.html" class="external-link">add_posterior_forecasts</a></code>
 was already applied to them.</p></dd>
 
 
@@ -156,7 +156,7 @@ model, which forecasts eight quarters, provides the current and the next year.</
 <p>The realised annual figures, against which the aggregated forecasts are
 scored, are obtained from <code>levels</code> or, without it, from the data of the
 models in the same way, and are put in <code>data$test$y</code>.
-<code><a href="add_forecast_errors.html">add_forecast_errors</a></code> uses them, if its argument
+<code><a href="https://rdrr.io/pkg/bayests/man/add_forecast_errors.html" class="external-link">add_forecast_errors</a></code> uses them, if its argument
 <code>test_sample</code> is omitted. Otherwise, <code>test_sample</code> must be an annual
 time series, for example of official annual figures.</p>
 <p>The result can be passed as argument <code>object</code> to
@@ -166,7 +166,7 @@ samples of the models at the frequency of the data. The external forecasts are
 scored against the same realised annual figures as the models.</p>
 <p>The aggregated models only contain the forecasts and the data, which are
 required to evaluate them. Therefore, aggregation is the last step before
-<code><a href="add_forecast_errors.html">add_forecast_errors</a></code> and <code><a href="selection_criteria.html">selection_criteria</a></code>, which
+<code><a href="https://rdrr.io/pkg/bayests/man/add_forecast_errors.html" class="external-link">add_forecast_errors</a></code> and <code><a href="https://rdrr.io/pkg/bayests/man/selection_criteria.html" class="external-link">selection_criteria</a></code>, which
 only provides out-of-sample statistics for them. Aggregated VEC models become
 objects of class 'bvarmodel', because their forecasts are those of the levels.</p>
     </div>
@@ -181,24 +181,15 @@ macroeconomic research. <em>Federal Reserve Bank of St. Louis Review,
     <div class="dont-index"><p>Other model comparison:
 <code><a href="add_forecast_errors.bvarmodel.html">add_forecast_errors.bvarmodel()</a></code>,
 <code><a href="add_forecast_errors.bvecmodel.html">add_forecast_errors.bvecmodel()</a></code>,
-<code><a href="add_predictive_loglik.html">add_predictive_loglik()</a></code>,
 <code><a href="add_predictive_loglik.bvarmodel.html">add_predictive_loglik.bvarmodel()</a></code>,
 <code><a href="add_predictive_loglik.bvecmodel.html">add_predictive_loglik.bvecmodel()</a></code>,
-<code><a href="align_model_obs.modellist.html">align_model_obs.modellist()</a></code>,
+<code><a href="add_predictive_loglik.expandingwindow.html">add_predictive_loglik.expandingwindow()</a></code>,
 <code><a href="analysis_of_stored_models.html">analysis_of_stored_models</a></code>,
-<code><a href="choose_best_model.selcritlist.html">choose_best_model.selcritlist()</a></code>,
 <code><a href="create_external_forecast.html">create_external_forecast()</a></code>,
-<code><a href="folder_steps.html">folder_steps</a></code>,
-<code><a href="map_draws.html">map_draws()</a></code>,
-<code><a href="map_models.html">map_models()</a></code>,
-<code><a href="open_model.html">open_model()</a></code>,
-<code><a href="open_models.html">open_models()</a></code>,
 <code><a href="plot_forecast_errors_by_period.html">plot_forecast_errors_by_period()</a></code>,
 <code><a href="pool_forecasts.html">pool_forecasts()</a></code>,
 <code><a href="selection_criteria.bvarmodel.html">selection_criteria.bvarmodel()</a></code>,
-<code><a href="selection_criteria.bvecmodel.html">selection_criteria.bvecmodel()</a></code>,
-<code><a href="selection_criteria.default.html">selection_criteria.default()</a></code>,
-<code><a href="selection_criteria.modellist.html">selection_criteria.modellist()</a></code></p></div>
+<code><a href="selection_criteria.bvecmodel.html">selection_criteria.bvecmodel()</a></code></p></div>
     </div>
 
     <div class="section level2">
@@ -211,13 +202,13 @@ macroeconomic research. <em>Federal Reserve Bank of St. Louis Review,
 <span class="r-in"><span>                          iterations <span class="op">=</span> <span class="fl">10</span>, burnin <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="co"># Chosen number of iterations and burn-in draws should be much higher.</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="use_expanding_window.html">use_expanding_window</a></span><span class="op">(</span><span class="va">model</span>, start <span class="op">=</span> <span class="fl">2005</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_priors.html">add_priors</a></span><span class="op">(</span><span class="va">model</span>, coef <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>v_i <span class="op">=</span> <span class="fl">0.1</span>, v_i_det <span class="op">=</span> <span class="fl">0.01</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/use_expanding_window.html" class="external-link">use_expanding_window</a></span><span class="op">(</span><span class="va">model</span>, start <span class="op">=</span> <span class="fl">2005</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_priors.html" class="external-link">add_priors</a></span><span class="op">(</span><span class="va">model</span>, coef <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>v_i <span class="op">=</span> <span class="fl">0.1</span>, v_i_det <span class="op">=</span> <span class="fl">0.01</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                    sigma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>df <span class="op">=</span> <span class="st">"k"</span>, scale <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_initial_values.html">add_initial_values</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_posterior_coefficients.html">add_posterior_coefficients</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_forecast_input.html">add_forecast_input</a></span><span class="op">(</span><span class="va">model</span>, n_ahead <span class="op">=</span> <span class="fl">8</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_posterior_forecasts.html">add_posterior_forecasts</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_initial_values.html" class="external-link">add_initial_values</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html" class="external-link">add_posterior_coefficients</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_forecast_input.html" class="external-link">add_forecast_input</a></span><span class="op">(</span><span class="va">model</span>, n_ahead <span class="op">=</span> <span class="fl">8</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_posterior_forecasts.html" class="external-link">add_posterior_forecasts</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Annual averages of inflation and the interest rate</span></span></span>
 <span class="r-in"><span><span class="va">annual</span> <span class="op">&lt;-</span> <span class="fu">aggregate_forecasts</span><span class="op">(</span><span class="va">model</span>, code <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>Dp <span class="op">=</span> <span class="fl">1</span>, r <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
@@ -232,8 +223,8 @@ macroeconomic research. <em>Federal Reserve Bank of St. Louis Review,
 <span class="r-in"><span><span class="va">ext</span> <span class="op">&lt;-</span> <span class="fu"><a href="create_external_forecast.html">create_external_forecast</a></span><span class="op">(</span><span class="va">fcst</span>, <span class="va">annual</span>, data_lag <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Both are scored against the annual averages of the data</span></span></span>
-<span class="r-in"><span><span class="va">models</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_forecast_errors.html">add_forecast_errors</a></span><span class="op">(</span><span class="fu"><a href="combine_models.html">combine_models</a></span><span class="op">(</span><span class="va">annual</span>, <span class="va">ext</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="selection_criteria.html">selection_criteria</a></span><span class="op">(</span><span class="va">models</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">models</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_forecast_errors.html" class="external-link">add_forecast_errors</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/bayests/man/combine_models.html" class="external-link">combine_models</a></span><span class="op">(</span><span class="va">annual</span>, <span class="va">ext</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/pkg/bayests/man/selection_criteria.html" class="external-link">selection_criteria</a></span><span class="op">(</span><span class="va">models</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ------------------------------------------</span>
@@ -243,19 +234,19 @@ macroeconomic research. <em>Federal Reserve Bank of St. Louis Review,
 <span class="r-out co"><span class="r-pr">#&gt;</span> Mean absolute forecast errors (MAFE)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Variable h Model 1 Model 2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        Dp 1  0.3579   1.306</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         r 1  0.6508   2.090</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        Dp 2  0.5152   1.263</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         r 2  1.9153   2.994</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        Dp 1  0.3319   1.306</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         r 1  0.5680   2.090</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        Dp 2  0.5584   1.263</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         r 2  1.5291   2.994</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Root mean squared forecast errors (RMSFE)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Variable h Model 1 Model 2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        Dp 1  0.4683   1.322</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         r 1  0.9632   2.267</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        Dp 2  0.6790   1.287</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         r 2  2.3931   2.994</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        Dp 1  0.4214   1.322</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         r 1  0.7878   2.267</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        Dp 2  0.6831   1.287</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         r 2  1.9177   2.994</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

@@ -254,7 +254,7 @@ The cointegration matrix is normalised so that its first \\r\\ rows are
 an identity matrix. Its other rows for endogenous variables are drawn
 from `range_beta`, and its rows for a restricted constant or trend from
 `range_const` and `range_trend`. Since
-[`add_posterior_coefficients`](https://franzmohr.github.io/bvartools/reference/add_posterior_coefficients.md)
+[`add_posterior_coefficients`](https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html)
 may use another normalisation, estimates are best compared with the true
 parameters through \\\Pi_t\\, which does not depend on it.
 

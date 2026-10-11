@@ -75,31 +75,31 @@ to the end of the deterministic terms of the regressors, named after
 their type and period – `impulse.2020Q2`, `step.2008M09` – or after the
 columns of `data`, and their coefficients take the prior of the
 deterministic terms, `v_i_det` in
-[`add_priors`](https://franzmohr.github.io/bvartools/reference/add_priors.md).
-**The coefficient of an impulse dummy is estimated from a single
+[`add_priors`](https://rdrr.io/pkg/bayests/man/add_priors.html). **The
+coefficient of an impulse dummy is estimated from a single
 observation**, so its prior matters more than that of the constant: a
 tight one leaves most of the observation to the other coefficients,
 which is what the dummy was meant to prevent.
 
 **The function has to be called before
-[`add_priors`](https://franzmohr.github.io/bvartools/reference/add_priors.md)**,
-since it changes the number of coefficients the priors are given for. A
-dummy variable that is zero in every period of the estimation sample, or
-that the other regressors already span – a step dummy that is one in
-every period is the constant again – is refused.
+[`add_priors`](https://rdrr.io/pkg/bayests/man/add_priors.html)**, since
+it changes the number of coefficients the priors are given for. A dummy
+variable that is zero in every period of the estimation sample, or that
+the other regressors already span – a step dummy that is one in every
+period is the constant again – is refused.
 
 A forecast continues the dummies by their definition: an impulse dummy
 is zero after its period and a step dummy stays one. The series in
 `data` are continued with the values they were given, so for a forecast
 they have to reach the last forecast period, or all deterministic terms
 of the forecast have to be given in argument `deterministic` of
-[`add_forecast_input`](https://franzmohr.github.io/bvartools/reference/add_forecast_input.md).
+[`add_forecast_input`](https://rdrr.io/pkg/bayests/man/add_forecast_input.html).
 
 Of a list of models of class 'expandingwindow', each window gets the
 dummies whose periods it reaches and leaves out the rest: a forecast
 made at the end of a window that ends before a period could not have
 known about what happened in it.
-[`use_expanding_window`](https://franzmohr.github.io/bvartools/reference/use_expanding_window.md)
+[`use_expanding_window`](https://rdrr.io/pkg/bayests/man/use_expanding_window.html)
 applied to a model with dummy variables does the same.
 
 In a VEC model the dummies enter the equations of the differences, not
@@ -119,7 +119,6 @@ Other model set-up:
 [`add_priors.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/add_priors.bvarmodel.md),
 [`add_priors.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/add_priors.bvecmodel.md),
 [`aggregation_weights()`](https://franzmohr.github.io/bvartools/reference/aggregation_weights.md),
-[`combine_models()`](https://franzmohr.github.io/bvartools/reference/combine_models.md),
 [`create_bvarmodel()`](https://franzmohr.github.io/bvartools/reference/create_bvarmodel.md),
 [`create_bvecmodel()`](https://franzmohr.github.io/bvartools/reference/create_bvecmodel.md),
 [`transform_variables()`](https://franzmohr.github.io/bvartools/reference/transform_variables.md),

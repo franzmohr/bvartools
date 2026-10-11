@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -162,7 +162,7 @@ Argument <code>sigma</code> specifies the inverse gamma prior of the
 scale of the asymmetric Laplace, one scale per equation, through its
 shape and rate.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_priors.html">add_priors</a></span><span class="op">(</span><span class="va">model</span>,</span>
+<code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_priors.html" class="external-link">add_priors</a></span><span class="op">(</span><span class="va">model</span>,</span>
 <span>                    coef <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>v_i <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span>
 <span>                    sigma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>shape <span class="op">=</span> <span class="fl">3</span>, rate <span class="op">=</span> <span class="fl">.01</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 </div>
@@ -171,7 +171,7 @@ shape and rate.</p>
 </h3>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1234567</span><span class="op">)</span></span>
-<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_initial_values.html">add_initial_values</a></span><span class="op">(</span><span class="va">model</span>, method <span class="op">=</span> <span class="st">"ols"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_initial_values.html" class="external-link">add_initial_values</a></span><span class="op">(</span><span class="va">model</span>, method <span class="op">=</span> <span class="st">"ols"</span><span class="op">)</span></span></code></pre></div>
 <p>The initial value of each scale is the mean of the check function of
 the LS residuals, which is the maximum likelihood scale of an asymmetric
 Laplace given those residuals. The latent scales are redrawn in the
@@ -182,7 +182,7 @@ first sweep and only have to be positive to weight it.</p>
 <h2 id="obtaining-posterior-draws">Obtaining posterior draws<a class="anchor" aria-label="anchor" href="#obtaining-posterior-draws"></a>
 </h2>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_posterior_coefficients.html">add_posterior_coefficients</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html" class="external-link">add_posterior_coefficients</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="evaluation">Evaluation<a class="anchor" aria-label="anchor" href="#evaluation"></a>
@@ -299,12 +299,12 @@ orders does, and that list runs through the same functions:</p>
 <span>                           error <span class="op">=</span> <span class="st">"ald"</span>, quantile <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">0.5</span>, <span class="fl">0.9</span><span class="op">)</span>,</span>
 <span>                           iterations <span class="op">=</span> <span class="fl">2000</span>, burnin <span class="op">=</span> <span class="fl">500</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">models</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_priors.html">add_priors</a></span><span class="op">(</span><span class="va">models</span>,</span>
+<span><span class="va">models</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_priors.html" class="external-link">add_priors</a></span><span class="op">(</span><span class="va">models</span>,</span>
 <span>                     coef <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>v_i <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span>
 <span>                     sigma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>shape <span class="op">=</span> <span class="fl">3</span>, rate <span class="op">=</span> <span class="fl">.01</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1234567</span><span class="op">)</span></span>
-<span><span class="va">models</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_initial_values.html">add_initial_values</a></span><span class="op">(</span><span class="va">models</span><span class="op">)</span></span>
-<span><span class="va">models</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_posterior_coefficients.html">add_posterior_coefficients</a></span><span class="op">(</span><span class="va">models</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">models</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_initial_values.html" class="external-link">add_initial_values</a></span><span class="op">(</span><span class="va">models</span><span class="op">)</span></span>
+<span><span class="va">models</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html" class="external-link">add_posterior_coefficients</a></span><span class="op">(</span><span class="va">models</span><span class="op">)</span></span></code></pre></div>
 <p>Each model estimates its own quantile:</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>quantile <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="va">models</span>, <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">{</span><span class="va">x</span><span class="op">[[</span><span class="st">"model"</span><span class="op">]</span><span class="op">]</span><span class="op">[[</span><span class="st">"quantile"</span><span class="op">]</span><span class="op">]</span><span class="op">}</span><span class="op">)</span>,</span>
@@ -356,12 +356,12 @@ varying models.</p>
 <span>                              error <span class="op">=</span> <span class="st">"ald"</span>, quantile <span class="op">=</span> <span class="fl">0.25</span>, tvp <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>                              iterations <span class="op">=</span> <span class="fl">2000</span>, burnin <span class="op">=</span> <span class="fl">500</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">tvp_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_priors.html">add_priors</a></span><span class="op">(</span><span class="va">tvp_model</span>,</span>
+<span><span class="va">tvp_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_priors.html" class="external-link">add_priors</a></span><span class="op">(</span><span class="va">tvp_model</span>,</span>
 <span>                        coef <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>v_i <span class="op">=</span> <span class="fl">1</span>, shape <span class="op">=</span> <span class="fl">3</span>, rate <span class="op">=</span> <span class="fl">.0001</span><span class="op">)</span>,</span>
 <span>                        sigma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>shape <span class="op">=</span> <span class="fl">3</span>, rate <span class="op">=</span> <span class="fl">.01</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1234567</span><span class="op">)</span></span>
-<span><span class="va">tvp_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_initial_values.html">add_initial_values</a></span><span class="op">(</span><span class="va">tvp_model</span><span class="op">)</span></span>
-<span><span class="va">tvp_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_posterior_coefficients.html">add_posterior_coefficients</a></span><span class="op">(</span><span class="va">tvp_model</span><span class="op">)</span></span>
+<span><span class="va">tvp_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_initial_values.html" class="external-link">add_initial_values</a></span><span class="op">(</span><span class="va">tvp_model</span><span class="op">)</span></span>
+<span><span class="va">tvp_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html" class="external-link">add_posterior_coefficients</a></span><span class="op">(</span><span class="va">tvp_model</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">tvp_model</span><span class="op">[[</span><span class="st">"model"</span><span class="op">]</span><span class="op">]</span><span class="op">[[</span><span class="st">"algorithm"</span><span class="op">]</span><span class="op">]</span></span>
 <span><span class="co">#&gt; [1] "VarTvpAld"</span></span></code></pre></div>
@@ -384,9 +384,9 @@ quantiles.</p>
 <p><strong>No forecasts.</strong> <code>add_posterior_forecasts</code>
 refuses a quantile model:</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/add_posterior_forecasts.html">add_posterior_forecasts</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_posterior_forecasts.html" class="external-link">add_posterior_forecasts</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Error in `add_posterior_forecasts.bvarmodel()`:</span></span>
-<span><span class="co">#&gt; ! A quantile regression model does not forecast: the h step ahead quantile is not the quantile of the iterated one step ahead quantiles, so a simulated path could not be read as a quantile of anything.</span></span></code></pre></div>
+<span><span class="co">#&gt; ! A quantile regression model does not forecast: the h step ahead quantile is not the quantile of the iterated one step ahead quantiles, so a simulated path could not be read as a quantile of anything. A grid of quantiles does; see 'quantile_grid' in create_bvarmodel().</span></span></code></pre></div>
 <p>The reason is not a missing algorithm. The
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>h</mi><annotation encoding="application/x-tex">h</annotation></semantics></math>
 step ahead quantile is not the quantile of the iterated one step ahead

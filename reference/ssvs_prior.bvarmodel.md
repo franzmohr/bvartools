@@ -8,6 +8,12 @@ search variable selection (SSVS).
 ``` r
 # S3 method for class 'bvarmodel'
 ssvs_prior(object, tau = c(0.05, 10), semiautomatic = NULL, ...)
+
+# S3 method for class 'expandingwindow'
+ssvs_prior(object, ...)
+
+# S3 method for class 'modellist'
+ssvs_prior(object, ...)
 ```
 
 ## Arguments
@@ -38,6 +44,10 @@ ssvs_prior(object, tau = c(0.05, 10), semiautomatic = NULL, ...)
 - ...:
 
   arguments passed forward to method.
+
+  For an object of class 'modellist' or 'expandingwindow' the prior of
+  every model is returned in the shape of the collection, each of its
+  own dimensions.
 
 ## Value
 

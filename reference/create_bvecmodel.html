@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -76,7 +76,9 @@
 <span>  delta_sigma <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  iterations <span class="op">=</span> <span class="fl">20000</span>,</span>
 <span>  burnin <span class="op">=</span> <span class="fl">2000</span>,</span>
-<span>  thin <span class="op">=</span> <span class="fl">1</span></span>
+<span>  thin <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  volatility_break <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  volatility_scales <span class="op">=</span> <span class="fl">3</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -182,6 +184,19 @@ the burn-in the sampler keeps the last of every <code>thin</code> draws, so it r
 <code><a href="thin.bvecmodel.html">thin</a></code>, which thins draws already made, the draws
 that are not kept are never held in memory.</p></dd>
 
+
+<dt id="arg-volatility-break">volatility_break<a class="anchor" aria-label="anchor" href="#arg-volatility-break"></a></dt>
+<dd><p>an optional date of <code>data</code>, <code>c(year, period)</code>
+such as <code>c(2020, 3)</code> or a single time such as <code>2020.167</code>: the first
+period of a break in the volatility of every shock. Needs <code>error = "wishart"</code>
+and constant coefficients. Defaults to <code>NULL</code>, no break. See 'Details'.</p></dd>
+
+
+<dt id="arg-volatility-scales">volatility_scales<a class="anchor" aria-label="anchor" href="#arg-volatility-scales"></a></dt>
+<dd><p>a whole number of at least one, how many periods from
+<code>volatility_break</code> on get a scale of their own before the excess decays
+(defaults to 3). Used only with <code>volatility_break</code>.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -257,22 +272,33 @@ likelihood of the sample given the rank, the cointegration matrix and the two
 discounts, so a grid over any of them can be compared without a chain being
 run for any of it.</p>
 <p>The one assumption that separates it from the sampling VEC models is that the
-cointegration space is given rather than estimated. <code><a href="add_initial_values.html">add_initial_values</a></code>
+cointegration space is given rather than estimated. <code><a href="https://rdrr.io/pkg/bayests/man/add_initial_values.html" class="external-link">add_initial_values</a></code>
 puts Johansen's maximum likelihood estimate at <code>/initial/beta</code> and the
 model conditions on it, so what drifts is the adjustment to the long-run
 relations and not the relations themselves. That is a different question from
 the one <code>"KLGS2010"</code> answers, not a cheaper way of answering the same
 one.</p>
-<p><code><a href="add_posterior_coefficients.html">add_posterior_coefficients</a></code> estimates it like any other
+<p><code><a href="https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html" class="external-link">add_posterior_coefficients</a></code> estimates it like any other
 algorithm, the filter being part of the vendored BayesTS core. It consumes no
 random numbers, so two runs agree to the bit and a model estimated here and
 the same model estimated by the <code>bayests</code> command line over a file
-written with <code><a href="write_to_hdf5.html">write_to_hdf5</a></code> give the same numbers rather than
+written with <code><a href="https://rdrr.io/pkg/bayests/man/write_to_hdf5.html" class="external-link">write_to_hdf5</a></code> give the same numbers rather than
 merely the same distribution. What comes back is a posterior rather than a
 chain: one row per period under <code>posterior$a$mean</code>,
 <code>posterior$a$cov</code>, <code>posterior$u_sigma$scale</code> and
 <code>posterior$df</code>, and no <code>coeffs</code> anywhere, because joining one
 draw per period would look like a sampled path and is not one.</p>
+<p><strong>A volatility break scales every shock from a known period on.</strong> With
+<code>volatility_break</code> the error covariance of period \(t\) is
+\(s_t^2 \Sigma\), as described for <code><a href="create_bvarmodel.html">create_bvarmodel</a></code> after Lenza and
+Primiceri (2022), and is available for constant coefficients and
+<code>error = "wishart"</code>. The differenced variables, the short-run regressors and
+the levels the cointegration term is built from are all divided by \(s_t\), which
+keeps the loadings, the cointegration space and the Wishart prior conjugate. The
+prior is <code>sigma$volatility</code> in <code><a href="add_priors.bvecmodel.html">add_priors.bvecmodel</a></code>, the draws are
+<code>posterior$volatility$coeffs</code>, and <code><a href="vec_to_var.html">vec_to_var</a></code> carries both the
+break and its draws over to the VAR in levels, whose log likelihood and forecasts
+are the VEC model's.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
@@ -285,6 +311,9 @@ simulation for cointegrated models with priors on the cointegration space.
 <a href="https://doi.org/10.1080/07474930903382208" class="external-link">doi:10.1080/07474930903382208</a></p>
 <p>Korobilis, D. (2013). VAR forecasting using Bayesian variable selection.
 <em>Journal of Applied Econometrics, 28</em>(2), 204–230. <a href="https://doi.org/10.1002/jae.1271" class="external-link">doi:10.1002/jae.1271</a></p>
+<p>Lenza, M., &amp; Primiceri, G. E. (2022). How to estimate a vector autoregression after
+March 2020. <em>Journal of Applied Econometrics, 37</em>(4), 688–699.
+<a href="https://doi.org/10.1002/jae.2895" class="external-link">doi:10.1002/jae.2895</a></p>
 <p>Lütkepohl, H. (2006). <em>New introduction to multiple time series analysis</em> (2nd ed.). Berlin: Springer.</p>
 <p>Uhlig, H. (1997). Bayesian vector autoregressions with stochastic volatility.
 <em>Econometrica, 65</em>(1), 59–73. <a href="https://doi.org/10.2307/2171813" class="external-link">doi:10.2307/2171813</a></p>
@@ -302,7 +331,6 @@ simulation for cointegrated models with priors on the cointegration space.
 <code><a href="add_priors.bvarmodel.html">add_priors.bvarmodel()</a></code>,
 <code><a href="add_priors.bvecmodel.html">add_priors.bvecmodel()</a></code>,
 <code><a href="aggregation_weights.html">aggregation_weights()</a></code>,
-<code><a href="combine_models.html">combine_models()</a></code>,
 <code><a href="create_bvarmodel.html">create_bvarmodel()</a></code>,
 <code><a href="transform_variables.html">transform_variables()</a></code>,
 <code><a href="use_expanding_window.bvarmodel.html">use_expanding_window.bvarmodel()</a></code>,

@@ -323,7 +323,7 @@ quantile of a combination is not the combination of $`q`$-th quantiles.
 
 add_posterior_forecasts(model)
 #> Error in `add_posterior_forecasts.bvarmodel()`:
-#> ! A quantile regression model does not forecast: the h step ahead quantile is not the quantile of the iterated one step ahead quantiles, so a simulated path could not be read as a quantile of anything.
+#> ! A quantile regression model does not forecast: the h step ahead quantile is not the quantile of the iterated one step ahead quantiles, so a simulated path could not be read as a quantile of anything. A grid of quantiles does; see 'quantile_grid' in create_bvarmodel().
 ```
 
 The reason is not a missing algorithm. The $`h`$ step ahead quantile is

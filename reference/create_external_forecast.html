@@ -9,7 +9,7 @@ and compared with the forecasts of Bayesian VAR and VEC models."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -75,25 +75,25 @@ and compared with the forecasts of Bayesian VAR and VEC models.</p>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'externalforecast'</span></span>
-<span><span class="fu"><a href="add_priors.html">add_priors</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_priors.html" class="external-link">add_priors</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'externalforecast'</span></span>
-<span><span class="fu"><a href="add_initial_values.html">add_initial_values</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_initial_values.html" class="external-link">add_initial_values</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'externalforecast'</span></span>
-<span><span class="fu"><a href="add_seed.html">add_seed</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">seed</span>, <span class="va">...</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_seed.html" class="external-link">add_seed</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">seed</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'externalforecast'</span></span>
-<span><span class="fu"><a href="add_posterior_coefficients.html">add_posterior_coefficients</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html" class="external-link">add_posterior_coefficients</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'externalforecast'</span></span>
-<span><span class="fu"><a href="add_posterior_loglik.html">add_posterior_loglik</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_posterior_loglik.html" class="external-link">add_posterior_loglik</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'externalforecast'</span></span>
-<span><span class="fu"><a href="add_forecast_input.html">add_forecast_input</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_forecast_input.html" class="external-link">add_forecast_input</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'externalforecast'</span></span>
-<span><span class="fu"><a href="add_posterior_forecasts.html">add_posterior_forecasts</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_posterior_forecasts.html" class="external-link">add_posterior_forecasts</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'externalforecast'</span></span>
 <span><span class="fu"><a href="minnesota_prior.html">minnesota_prior</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
@@ -132,7 +132,7 @@ are matched. For the methods of the estimation workflow an object of class
 <dt id="arg-n-ahead">n_ahead<a class="anchor" aria-label="anchor" href="#arg-n-ahead"></a></dt>
 <dd><p>the maximum forecast horizon that is considered. If <code>NULL</code>
 (default), the forecast horizon of the models in <code>object</code> is used, which
-requires that <code><a href="add_forecast_input.html">add_forecast_input</a></code> was already applied to them. For
+requires that <code><a href="https://rdrr.io/pkg/bayests/man/add_forecast_input.html" class="external-link">add_forecast_input</a></code> was already applied to them. For
 models whose forecasts were aggregated with <code><a href="aggregate_forecasts.html">aggregate_forecasts</a></code>
 it is a number of years.</p></dd>
 
@@ -230,7 +230,7 @@ year of its publication is a forecast of horizon 1 and one for the year after
 it of horizon 2, whichever quarter it was published in. The realised values,
 against which the forecasts are scored, are the annual figures of the data of
 the models, which the aggregated forecasts of the models are scored against,
-too, so that <code><a href="add_forecast_errors.html">add_forecast_errors</a></code> does not need argument
+too, so that <code><a href="https://rdrr.io/pkg/bayests/man/add_forecast_errors.html" class="external-link">add_forecast_errors</a></code> does not need argument
 <code>test_sample</code>.</p>
 <p>In contrast to a model, an external forecast does not have a training sample.
 Therefore, each publication is matched to the training sample, which ends closest
@@ -248,12 +248,12 @@ is used, because otherwise a forecaster would enter the comparison multiple time
 for the same period. Argument <code>select</code> controls whether the latest
 (<code>"last"</code>) or the earliest (<code>"first"</code>) of those publications is used.</p>
 <p>The resulting object mimics the structure of a model, which was estimated with the
-expanding window approach of <code><a href="use_expanding_window.html">use_expanding_window</a></code>, where each
+expanding window approach of <code><a href="https://rdrr.io/pkg/bayests/man/use_expanding_window.html" class="external-link">use_expanding_window</a></code>, where each
 publication corresponds to one estimation window. It can be added to a list of
-models with <code><a href="combine_models.html">combine_models</a></code> and the functions, which are applied to
+models with <code><a href="https://rdrr.io/pkg/bayests/man/combine_models.html" class="external-link">combine_models</a></code> and the functions, which are applied to
 obtain posterior draws, are without effect for it. Since external forecasts are
 point forecasts, their forecast errors consist of a single draw. Accordingly, the
-credible bands of the out-of-sample statistics in <code><a href="selection_criteria.html">selection_criteria</a></code>
+credible bands of the out-of-sample statistics in <code><a href="https://rdrr.io/pkg/bayests/man/selection_criteria.html" class="external-link">selection_criteria</a></code>
 are degenerate and in-sample criteria are not available.</p>
 <p>External forecasts do not have to be estimated, so the functions, which add priors,
 initial values or posterior draws to a model are without effect for objects of
@@ -265,24 +265,15 @@ of class 'modellist' and to apply the usual workflow to all elements of that lis
     <div class="dont-index"><p>Other model comparison:
 <code><a href="add_forecast_errors.bvarmodel.html">add_forecast_errors.bvarmodel()</a></code>,
 <code><a href="add_forecast_errors.bvecmodel.html">add_forecast_errors.bvecmodel()</a></code>,
-<code><a href="add_predictive_loglik.html">add_predictive_loglik()</a></code>,
 <code><a href="add_predictive_loglik.bvarmodel.html">add_predictive_loglik.bvarmodel()</a></code>,
 <code><a href="add_predictive_loglik.bvecmodel.html">add_predictive_loglik.bvecmodel()</a></code>,
+<code><a href="add_predictive_loglik.expandingwindow.html">add_predictive_loglik.expandingwindow()</a></code>,
 <code><a href="aggregate_forecasts.html">aggregate_forecasts()</a></code>,
-<code><a href="align_model_obs.modellist.html">align_model_obs.modellist()</a></code>,
 <code><a href="analysis_of_stored_models.html">analysis_of_stored_models</a></code>,
-<code><a href="choose_best_model.selcritlist.html">choose_best_model.selcritlist()</a></code>,
-<code><a href="folder_steps.html">folder_steps</a></code>,
-<code><a href="map_draws.html">map_draws()</a></code>,
-<code><a href="map_models.html">map_models()</a></code>,
-<code><a href="open_model.html">open_model()</a></code>,
-<code><a href="open_models.html">open_models()</a></code>,
 <code><a href="plot_forecast_errors_by_period.html">plot_forecast_errors_by_period()</a></code>,
 <code><a href="pool_forecasts.html">pool_forecasts()</a></code>,
 <code><a href="selection_criteria.bvarmodel.html">selection_criteria.bvarmodel()</a></code>,
-<code><a href="selection_criteria.bvecmodel.html">selection_criteria.bvecmodel()</a></code>,
-<code><a href="selection_criteria.default.html">selection_criteria.default()</a></code>,
-<code><a href="selection_criteria.modellist.html">selection_criteria.modellist()</a></code></p></div>
+<code><a href="selection_criteria.bvecmodel.html">selection_criteria.bvecmodel()</a></code></p></div>
     </div>
 
     <div class="section level2">
@@ -295,7 +286,7 @@ of class 'modellist' and to apply the usual workflow to all elements of that lis
 <span class="r-in"><span>                          error <span class="op">=</span> <span class="st">"gamma"</span>, iterations <span class="op">=</span> <span class="fl">10</span>, burnin <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="co"># Chosen number of iterations and burn-in draws should be much higher.</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="use_expanding_window.html">use_expanding_window</a></span><span class="op">(</span><span class="va">model</span>, start <span class="op">=</span> <span class="fl">2007</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/use_expanding_window.html" class="external-link">use_expanding_window</a></span><span class="op">(</span><span class="va">model</span>, start <span class="op">=</span> <span class="fl">2007</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Artificial external forecasts of two forecasters</span></span></span>
 <span class="r-in"><span><span class="va">fcst</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/expand.grid.html" class="external-link">expand.grid</a></span><span class="op">(</span>origin <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2007</span>, <span class="fl">2007.25</span><span class="op">)</span>,</span></span>
@@ -312,10 +303,10 @@ of class 'modellist' and to apply the usual workflow to all elements of that lis
 <span class="r-in"><span>                                by <span class="op">=</span> <span class="st">"forecaster"</span>, data_lag <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Calculate forecast errors</span></span></span>
-<span class="r-in"><span><span class="va">ext</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_forecast_errors.html">add_forecast_errors</a></span><span class="op">(</span><span class="va">ext</span>, test_sample <span class="op">=</span> <span class="va">us_macrodata</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">ext</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_forecast_errors.html" class="external-link">add_forecast_errors</a></span><span class="op">(</span><span class="va">ext</span>, test_sample <span class="op">=</span> <span class="va">us_macrodata</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Compare the forecast performance</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="selection_criteria.html">selection_criteria</a></span><span class="op">(</span><span class="va">ext</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/pkg/bayests/man/selection_criteria.html" class="external-link">selection_criteria</a></span><span class="op">(</span><span class="va">ext</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ------------------------------------------</span>

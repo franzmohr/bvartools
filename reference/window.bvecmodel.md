@@ -41,3 +41,22 @@ vectors of a model with time varying parameters, the draws of the error
 term that vary by period – as under stochastic volatility – and the
 pointwise log-likelihood. Draws that do not vary by period, such as
 those of \\\rho\\, are left as they are.
+
+## Examples
+
+``` r
+
+data("e6")
+model <- create_bvecmodel(e6 * 100, p = 1, r = 1, const = "unrestricted",
+                          iterations = 20, burnin = 10)
+# Number of iterations and burn-in should be much higher.
+model <- add_priors(model,
+                    coef = list(v_i = 0, v_i_det = 0),
+                    coint = list(v_i = 0, p_tau_i = 1),
+                    sigma = list(df = "k", scale = 1))
+model <- add_posterior_coefficients(add_initial_values(model))
+
+recent <- window(model, start = c(1980, 1))
+start(recent$data$train$y)
+#> [1] 1980    1
+```

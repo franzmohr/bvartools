@@ -24,9 +24,8 @@ fevd(x, ...)
 Nothing. The method raises an error, since variance decompositions of a
 VEC model are obtained from its VAR representation: apply
 [`vec_to_var`](https://franzmohr.github.io/bvartools/reference/vec_to_var.md)
-first and then
-[`fevd`](https://franzmohr.github.io/bvartools/reference/fevd.md) to the
-resulting 'bvarmodel'.
+first and then [`fevd`](https://rdrr.io/pkg/bayests/man/fevd.html) to
+the resulting 'bvarmodel'.
 
 ## See also
 

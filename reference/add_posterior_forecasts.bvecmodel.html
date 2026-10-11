@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -59,7 +59,13 @@
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="co"># S3 method for class 'bvecmodel'</span></span>
-<span><span class="fu"><a href="add_posterior_forecasts.html">add_posterior_forecasts</a></span><span class="op">(</span><span class="va">object</span>, forecast_states <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_posterior_forecasts.html" class="external-link">add_posterior_forecasts</a></span><span class="op">(</span></span>
+<span>  <span class="va">object</span>,</span>
+<span>  forecast_states <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  scenario <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  forecast_quantile <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -68,7 +74,7 @@
 
 <dl><dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
 <dd><p>an object of class 'bvecmodel', usually, the result of a call to
-<code><a href="add_posterior_coefficients.html">add_posterior_coefficients</a></code> and <code><a href="add_forecast_input.html">add_forecast_input</a></code>.</p></dd>
+<code><a href="https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html" class="external-link">add_posterior_coefficients</a></code> and <code><a href="https://rdrr.io/pkg/bayests/man/add_forecast_input.html" class="external-link">add_forecast_input</a></code>.</p></dd>
 
 
 <dt id="arg-forecast-states">forecast_states<a class="anchor" aria-label="anchor" href="#arg-forecast-states"></a></dt>
@@ -82,6 +88,11 @@ of the estimated model. <code>"hold"</code> keeps them at their values in the la
 period. If <code>NULL</code> (default), the value in <code>object$model$forecast_states</code> is
 used, and <code>"simulate"</code> when there is none. Models with constant coefficients and
 volatility are unaffected.</p></dd>
+
+
+<dt id="arg-scenario-forecast-quantile">scenario, forecast_quantile<a class="anchor" aria-label="anchor" href="#arg-scenario-forecast-quantile"></a></dt>
+<dd><p>not available for a VEC model and refused;
+see Details.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -121,9 +132,19 @@ belongs to the transformed series, while <code><a href="rescale_error_correction
 has put the vectors back on the scale of the data and moved the means into the
 constant of the last sample period only.</p>
 <p>Simulating the volatility forward needs <code>posterior$u_sigma_inv$sigma</code>, the variance
-of the log-volatility innovations, which <code><a href="add_posterior_coefficients.html">add_posterior_coefficients</a></code>
+of the log-volatility innovations, which <code><a href="https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html" class="external-link">add_posterior_coefficients</a></code>
 stores. A model with stochastic volatility estimated with an earlier version of the
 package lacks it and stops with an error unless <code>forecast_states = "hold"</code>.</p>
+<p>A model with a seed, see <code><a href="https://rdrr.io/pkg/bayests/man/add_seed.html" class="external-link">add_seed</a></code>, draws its forecast from a
+seed derived from its own, so two forecasts of it give the same draws however R's
+generator stands. A model without one draws from R's generator as it stands.</p>
+<p>A new forecast replaces the forecast errors and predictive scores of the previous
+one, which belong to the forecasts they were computed from.</p>
+<p><strong>A VEC model takes no <code>scenario</code> and no <code>forecast_quantile</code></strong>:
+no VEC sampler conditions its forecast on pinned values, and none estimates a
+grid of quantiles. Both are refused rather than ignored, so a model list mixing
+VAR and VEC models does not return unconditional forecasts for its VEC members
+beside the conditional ones of its VARs.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -135,15 +156,307 @@ package lacks it and stops with an error unless <code>forecast_states = "hold"</
 <code><a href="add_posterior_forecasts.bvarmodel.html">add_posterior_forecasts.bvarmodel()</a></code>,
 <code><a href="add_posterior_loglik.bvarmodel.html">add_posterior_loglik.bvarmodel()</a></code>,
 <code><a href="add_posterior_loglik.bvecmodel.html">add_posterior_loglik.bvecmodel()</a></code>,
-<code><a href="add_seed.html">add_seed()</a></code>,
-<code><a href="bayests_files.html">bayests_files()</a></code>,
-<code><a href="bayests_posterior.html">bayests_posterior()</a></code>,
+<code><a href="add_seed.bvarmodel.html">add_seed.bvarmodel()</a></code>,
 <code><a href="bvar.html">bvar()</a></code>,
 <code><a href="bvec.html">bvec()</a></code>,
-<code><a href="chain_diagnostics.html">chain_diagnostics()</a></code>,
 <code><a href="predict.bvecmodel.html">predict.bvecmodel()</a></code></p></div>
     </div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"e6"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="create_bvecmodel.html">create_bvecmodel</a></span><span class="op">(</span><span class="va">e6</span> <span class="op">*</span> <span class="fl">100</span>, p <span class="op">=</span> <span class="fl">1</span>, r <span class="op">=</span> <span class="fl">1</span>, const <span class="op">=</span> <span class="st">"unrestricted"</span>,</span></span>
+<span class="r-in"><span>                          iterations <span class="op">=</span> <span class="fl">20</span>, burnin <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># Number of iterations and burn-in should be much higher.</span></span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_priors.html" class="external-link">add_priors</a></span><span class="op">(</span><span class="va">model</span>,</span></span>
+<span class="r-in"><span>                    coef <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>v_i <span class="op">=</span> <span class="fl">0</span>, v_i_det <span class="op">=</span> <span class="fl">0</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                    coint <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>v_i <span class="op">=</span> <span class="fl">0</span>, p_tau_i <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                    sigma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>df <span class="op">=</span> <span class="st">"k"</span>, scale <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html" class="external-link">add_posterior_coefficients</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_initial_values.html" class="external-link">add_initial_values</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Forecasts of the levels, from the VAR in levels the model implies</span></span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_forecast_input.html" class="external-link">add_forecast_input</a></span><span class="op">(</span><span class="va">model</span>, n_ahead <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_posterior_forecasts.html" class="external-link">add_posterior_forecasts</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $fcst</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> , , 1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                R        Dp</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999    3.655367 -1.271014</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.25 3.085074 -2.750534</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.5  2.552895 -2.027443</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.75 2.824815 -3.880204</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> , , 2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                R        Dp</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999    2.673092 -3.020136</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.25 1.501671  1.421143</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.5  1.547385 -2.051648</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.75 1.882097 -3.590834</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> , , 3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                R        Dp</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999    4.271828 -6.428048</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.25 3.890905  3.032415</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.5  4.098821 -3.864877</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.75 4.658305  2.148712</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> , , 4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                R        Dp</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999    4.737414 -3.196932</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.25 5.007170  1.991408</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.5  5.324390 -4.171923</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.75 4.603192  1.583578</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> , , 5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                R         Dp</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999    3.856632 -0.9303352</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.25 4.580785  1.8045613</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.5  4.021135  0.2615851</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.75 3.638846 -2.2893103</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> , , 6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                R         Dp</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999    3.731086 -1.3562816</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.25 3.982091  0.6305008</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.5  3.300781  0.2365912</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.75 4.288331 -1.5775657</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> , , 7</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                R          Dp</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999    3.766183 -2.87378762</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.25 4.060227  0.04331362</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.5  3.885991  1.25332589</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.75 4.348217 -1.17391502</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> , , 8</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                R        Dp</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999    3.565818 -3.493270</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.25 3.053308  3.675179</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.5  3.612821 -4.520807</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.75 2.191187  1.147281</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> , , 9</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                R         Dp</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999    3.338786 -0.4907707</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.25 2.758686  0.7939842</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.5  2.179595 -1.6797164</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.75 2.554385  0.4129800</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> , , 10</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                R         Dp</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999    4.193201 -0.5971363</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.25 4.081350 -0.5478286</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.5  4.638542 -0.4378599</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.75 4.896127 -0.4650664</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> , , 11</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                R        Dp</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999    4.386899  1.700942</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.25 3.577985  1.147479</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.5  4.024083  1.456880</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.75 3.574097 -1.195071</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> , , 12</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                R         Dp</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999    3.404396  0.6184863</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.25 3.422758  1.9191751</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.5  2.532881 -0.2115203</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.75 1.796116  0.2389027</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> , , 13</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                R        Dp</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999    3.290271  1.317320</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.25 3.021228 -2.912794</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.5  2.583503  2.058786</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.75 3.512652 -4.382557</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> , , 14</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                R         Dp</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999    4.507624  0.4792462</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.25 3.488846  0.6529822</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.5  3.781655  0.9667271</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.75 2.868592 -1.6141604</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> , , 15</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                R         Dp</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999    3.715280 -0.6014293</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.25 3.689269 -2.1667627</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.5  3.364906  4.4015014</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.75 2.728422 -2.8117527</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> , , 16</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                R         Dp</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999    4.080714  0.4971180</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.25 4.176871 -0.9897213</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.5  4.112166 -1.1320953</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.75 3.738722  2.3682833</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> , , 17</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                R         Dp</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999    3.272646  1.9711302</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.25 3.360333 -2.3865117</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.5  4.113068  1.8663872</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.75 2.908896 -0.9709844</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> , , 18</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                R        Dp</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999    3.924119 -1.825495</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.25 4.565946  1.923481</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.5  3.546124  1.926384</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.75 3.171424 -2.491988</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> , , 19</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                R           Dp</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999    2.982711  2.010761555</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.25 3.198782 -2.844700052</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.5  3.439477 -0.002557912</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.75 3.599131 -2.779284532</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> , , 20</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                R         Dp</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999    3.588307 -0.3848582</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.25 3.084089  2.5135480</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.5  3.776709 -0.6006800</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1999.75 3.766162  3.6386282</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"tsp")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1999.00 1999.75    4.00</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $y</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            R         Dp</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1972 Q3  8.3  1.8871300</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1972 Q4  8.7  2.4803600</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1973 Q1  8.7  1.6277600</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1973 Q2 10.2  0.0289679</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1973 Q3  9.8  1.6829000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1973 Q4  9.7  3.8583500</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1974 Q1 10.7 -0.1443860</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1974 Q2 10.9  1.2723900</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1974 Q3 10.8  2.3897200</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1974 Q4  9.9  4.2772800</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1975 Q1  8.9 -1.0377900</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1975 Q2  8.4  0.5584240</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1975 Q3  8.7  0.8706090</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1975 Q4  8.6  3.8919900</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1976 Q1  7.8 -1.9617600</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1976 Q2  8.3  0.7319930</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1976 Q3  8.1  1.8076400</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1976 Q4  7.4  2.3777500</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1977 Q1  7.0 -1.4437700</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1977 Q2  6.4  1.1005900</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1977 Q3  6.0  1.0401700</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1977 Q4  6.0  3.5464800</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1978 Q1  5.6 -1.5759900</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1978 Q2  6.0  1.0019300</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1978 Q3  6.4  1.8062100</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1978 Q4  6.6  2.5691500</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1979 Q1  7.1 -1.7068900</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1979 Q2  8.0  0.3504750</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1979 Q3  7.8  2.5643800</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1979 Q4  8.0  3.1507500</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1980 Q1  9.5 -1.3277500</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1980 Q2  8.3  1.3096800</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1980 Q3  8.3  1.5145800</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1980 Q4  9.1  3.1211900</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1981 Q1 10.4 -2.0789600</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1981 Q2 11.1  1.0448900</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1981 Q3 11.3  1.8106000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1981 Q4  9.9  4.0500200</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1982 Q1  9.6 -2.0148300</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1982 Q2  9.2  0.3808020</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1982 Q3  8.8  2.1556900</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1982 Q4  8.0  3.2710600</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1983 Q1  7.4 -2.0172600</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1983 Q2  8.1 -0.3331660</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1983 Q3  8.4  1.9287100</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1983 Q4  8.3  3.4547300</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1984 Q1  7.9 -2.6215600</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1984 Q2  8.1 -0.5197530</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1984 Q3  7.7  1.3231800</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1984 Q4  7.0  3.7427900</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1985 Q1  7.7 -2.9194800</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1985 Q2  7.0 -0.2613540</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1985 Q3  6.4  1.7235300</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1985 Q4  6.6  3.7638700</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1986 Q1  6.0 -2.0476300</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1986 Q2  6.0  0.0900269</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1986 Q3  5.8  1.2573200</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1986 Q4  6.0  3.4467700</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1987 Q1  5.6 -2.2039400</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1987 Q2  5.5 -0.2027030</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1987 Q3  6.2  0.1734260</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1987 Q4  5.8  3.6590100</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1988 Q1  5.6 -2.5255700</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1988 Q2  6.0  0.0922680</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1988 Q3  6.3  0.4513740</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1988 Q4  6.2  3.8327200</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1989 Q1  7.0 -2.1136800</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1989 Q2  7.1 -0.0533104</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1989 Q3  7.1  0.9810920</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1989 Q4  7.8  3.7354900</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1990 Q1  9.0 -1.6232000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1990 Q2  9.0  0.1971240</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1990 Q3  9.1  0.6873610</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1990 Q4  9.0  2.7458200</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1991 Q1  8.6 -1.4078600</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1991 Q2  8.6  1.6649700</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1991 Q3  8.8  1.4468200</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1991 Q4  8.7  4.3004000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1992 Q1  8.2 -1.2776900</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1992 Q2  8.4  0.9273530</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1992 Q3  8.2  1.7915700</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1992 Q4  7.4  3.0508000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1993 Q1  6.5 -1.0590600</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1993 Q2  6.7  0.7471080</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1993 Q3  6.1  0.4675870</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1993 Q4  5.6  3.1067800</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1994 Q1  6.2 -1.5368500</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1994 Q2  6.9  0.0810146</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1994 Q3  7.4  0.8064750</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1994 Q4  7.4  2.8765700</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1995 Q1  7.1 -1.8378300</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1995 Q2  6.4  0.4494670</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1995 Q3  6.1  0.9886740</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1995 Q4  5.5  2.4594800</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1996 Q1  5.8 -1.8518900</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1996 Q2  5.9 -0.5901810</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1996 Q3  5.5  0.5815030</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1996 Q4  5.1  2.4365400</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1997 Q1  5.1 -1.5748500</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1997 Q2  5.0 -0.7492540</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1997 Q3  5.1  0.3882880</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1997 Q4  5.1  2.4244800</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1998 Q1  4.7 -1.4647000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1998 Q2  4.7 -0.2048970</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1998 Q3  4.1  0.2475260</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1998 Q4  3.8  2.3923400</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "bvarprd" "list"   </span>
+<span class="r-in"><span></span></span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 

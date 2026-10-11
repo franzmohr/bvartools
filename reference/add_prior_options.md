@@ -1,8 +1,8 @@
 # Adaptive Priors, Stationarity and the Steady State
 
 Adds the options of the prior that act on top of the one
-[`add_priors`](https://franzmohr.github.io/bvartools/reference/add_priors.md)
-sets: hyperparameters estimated from the data, a restriction of the
+[`add_priors`](https://rdrr.io/pkg/bayests/man/add_priors.html) sets:
+hyperparameters estimated from the data, a restriction of the
 coefficients to a stationary model, a prior on the unconditional mean in
 place of one on the intercept, and the prior of the error of soft
 constraints.
@@ -24,7 +24,7 @@ add_prior_options(
 - object:
 
   an object of class 'bvarmodel' or 'modellist', usually the result of
-  [`add_priors`](https://franzmohr.github.io/bvartools/reference/add_priors.md).
+  [`add_priors`](https://rdrr.io/pkg/bayests/man/add_priors.html).
 
 - shrinkage:
 
@@ -62,8 +62,8 @@ The object in `object` with `model$shrinkage`, `model$stationary` and
 ## Details
 
 Argument `shrinkage` lets the data decide how tightly the prior of
-[`add_priors`](https://franzmohr.github.io/bvartools/reference/add_priors.md)
-shrinks the coefficients of the lagged endogenous variables. Their prior
+[`add_priors`](https://rdrr.io/pkg/bayests/man/add_priors.html) shrinks
+the coefficients of the lagged endogenous variables. Their prior
 variances are multiplied by scales that are drawn with the coefficients:
 
 - `"minnesota"`: one scale per group of coefficients with an inverse
@@ -148,7 +148,6 @@ Other model set-up:
 [`add_priors.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/add_priors.bvarmodel.md),
 [`add_priors.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/add_priors.bvecmodel.md),
 [`aggregation_weights()`](https://franzmohr.github.io/bvartools/reference/aggregation_weights.md),
-[`combine_models()`](https://franzmohr.github.io/bvartools/reference/combine_models.md),
 [`create_bvarmodel()`](https://franzmohr.github.io/bvartools/reference/create_bvarmodel.md),
 [`create_bvecmodel()`](https://franzmohr.github.io/bvartools/reference/create_bvecmodel.md),
 [`transform_variables()`](https://franzmohr.github.io/bvartools/reference/transform_variables.md),

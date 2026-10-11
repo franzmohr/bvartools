@@ -561,10 +561,11 @@ bvar_est_two <- bvar(y = y,
                      Sigma = draws_sigma)
 ```
 
-Since the output of function `draw_posterior` is an object of class
-`bvarmodel` as well, the calculation of summary statistics, forecasts,
-impulse responses and forecast error variance decompositions is
-performed as described above.
+Since the output of
+[`add_posterior_coefficients()`](https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html)
+is an object of class `bvarmodel` as well, the calculation of summary
+statistics, forecasts, impulse responses and forecast error variance
+decompositions is performed as described above.
 
 ``` r
 

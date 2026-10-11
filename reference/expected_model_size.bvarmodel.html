@@ -11,7 +11,7 @@ called before a long estimation is started."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -52,7 +52,7 @@ called before a long estimation is started."></head><body>
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Expected Size of a Model</h1>
-      <small class="dont-index">Source: <a href="https://github.com/franzmohr/bvartools/blob/main/R/expected_model_size.bvarmodel.R" class="external-link"><code>R/expected_model_size.bvarmodel.R</code></a>, <a href="https://github.com/franzmohr/bvartools/blob/main/R/expected_model_size.bvecmodel.R" class="external-link"><code>R/expected_model_size.bvecmodel.R</code></a>, <a href="https://github.com/franzmohr/bvartools/blob/main/R/expected_model_size.expandingwindow.R" class="external-link"><code>R/expected_model_size.expandingwindow.R</code></a>, and 1 more</small>
+      <small class="dont-index">Source: <a href="https://github.com/franzmohr/bvartools/blob/main/R/expected_model_size.bvarmodel.R" class="external-link"><code>R/expected_model_size.bvarmodel.R</code></a>, <a href="https://github.com/franzmohr/bvartools/blob/main/R/expected_model_size.bvecmodel.R" class="external-link"><code>R/expected_model_size.bvecmodel.R</code></a></small>
       <div class="d-none name"><code>expected_model_size.bvarmodel.Rd</code></div>
     </div>
 
@@ -65,16 +65,10 @@ called before a long estimation is started.</p>
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="co"># S3 method for class 'bvarmodel'</span></span>
-<span><span class="fu"><a href="expected_model_size.html">expected_model_size</a></span><span class="op">(</span><span class="va">object</span>, chains <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/bayests/man/expected_model_size.html" class="external-link">expected_model_size</a></span><span class="op">(</span><span class="va">object</span>, chains <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'bvecmodel'</span></span>
-<span><span class="fu"><a href="expected_model_size.html">expected_model_size</a></span><span class="op">(</span><span class="va">object</span>, chains <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># S3 method for class 'expandingwindow'</span></span>
-<span><span class="fu"><a href="expected_model_size.html">expected_model_size</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># S3 method for class 'modellist'</span></span>
-<span><span class="fu"><a href="expected_model_size.html">expected_model_size</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/pkg/bayests/man/expected_model_size.html" class="external-link">expected_model_size</a></span><span class="op">(</span><span class="va">object</span>, chains <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -90,7 +84,7 @@ or a list of such models of class 'modellist' or 'expandingwindow'.</p></dd>
 <dt id="arg-chains">chains<a class="anchor" aria-label="anchor" href="#arg-chains"></a></dt>
 <dd><p>the number of chains that will be simulated. If <code>NULL</code>
 (default), the value in <code>object$model$chains</code> is used, and one chain when
-there is none. See <code><a href="add_posterior_coefficients.html">add_posterior_coefficients</a></code>.</p></dd>
+there is none. See <code><a href="https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html" class="external-link">add_posterior_coefficients</a></code>.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -110,7 +104,7 @@ object and the columns</p><dl><dt><code>model</code></dt>
 
   <dt><code>step</code></dt>
 <dd><p>the function that adds the block, empty for the first row.
-  The warning of <code><a href="add_posterior_coefficients.html">add_posterior_coefficients</a></code> counts the first row
+  The warning of <code><a href="https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html" class="external-link">add_posterior_coefficients</a></code> counts the first row
   and the blocks that function adds itself.</p></dd>
 
   <dt><code>draws</code>, <code>columns</code></dt>
@@ -136,17 +130,17 @@ coefficient model can need gigabytes.</p>
 <p>A few blocks depend on the priors: the inclusion indicators of the covariance
 block, the draws of a non-centred prior (<code>omega_v</code>) and a drawn
 autocorrelation of the cointegration space (<code>rho_min</code>). They are counted
-once <code><a href="add_priors.html">add_priors</a></code> has added the priors. Forecast draws are counted
-once <code><a href="add_forecast_input.html">add_forecast_input</a></code> has set a horizon.</p>
+once <code><a href="https://rdrr.io/pkg/bayests/man/add_priors.html" class="external-link">add_priors</a></code> has added the priors. Forecast draws are counted
+once <code><a href="https://rdrr.io/pkg/bayests/man/add_forecast_input.html" class="external-link">add_forecast_input</a></code> has set a horizon.</p>
 <p>The numbers are what the object will hold in memory. R may briefly hold a
 second copy while a step modifies it, so the memory a session needs can be up
-to twice as large. <code><a href="write_to_hdf5.html">write_to_hdf5</a></code> compresses what it writes, but
+to twice as large. <code><a href="https://rdrr.io/pkg/bayests/man/write_to_hdf5.html" class="external-link">write_to_hdf5</a></code> compresses what it writes, but
 posterior draws compress poorly, so the size of the file is usually a little
 below the size in memory.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="expected_model_size.html">expected_model_size</a></code> for the warnings that are based on it, and
+    <div class="dont-index"><p><code><a href="https://rdrr.io/pkg/bayests/man/expected_model_size.html" class="external-link">expected_model_size</a></code> for the warnings that are based on it, and
 <code><a href="bvartools_model.html">bvartools_model</a></code> for the blocks of the object.</p></div>
     </div>
 
@@ -161,7 +155,7 @@ below the size in memory.</p>
 <span class="r-in"><span><span class="co"># and stochastic volatility</span></span></span>
 <span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="create_bvarmodel.html">create_bvarmodel</a></span><span class="op">(</span><span class="va">e1</span>, p <span class="op">=</span> <span class="fl">2</span>, deterministic <span class="op">=</span> <span class="st">"const"</span>,</span></span>
 <span class="r-in"><span>                          iterations <span class="op">=</span> <span class="fl">5000</span>, burnin <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="expected_model_size.html">expected_model_size</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/pkg/bayests/man/expected_model_size.html" class="external-link">expected_model_size</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Expected size of the model once its posterior is complete: 4.8 MB </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                  size   </span>
@@ -177,7 +171,7 @@ below the size in memory.</p>
 <span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="create_bvarmodel.html">create_bvarmodel</a></span><span class="op">(</span><span class="va">e1</span>, p <span class="op">=</span> <span class="fl">2</span>, deterministic <span class="op">=</span> <span class="st">"const"</span>,</span></span>
 <span class="r-in"><span>                          tvp <span class="op">=</span> <span class="cn">TRUE</span>, error <span class="op">=</span> <span class="st">"sv"</span>,</span></span>
 <span class="r-in"><span>                          iterations <span class="op">=</span> <span class="fl">5000</span>, burnin <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="expected_model_size.html">expected_model_size</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/pkg/bayests/man/expected_model_size.html" class="external-link">expected_model_size</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Expected size of the model once its posterior is complete: 122.1 MB </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                  size    </span>
@@ -194,7 +188,7 @@ below the size in memory.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  posterior$loglik             5000    89    3.6 MB </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># The total in bytes</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="fu"><a href="expected_model_size.html">expected_model_size</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span><span class="op">$</span><span class="va">bytes</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/bayests/man/expected_model_size.html" class="external-link">expected_model_size</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span><span class="op">$</span><span class="va">bytes</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 122064264</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

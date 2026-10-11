@@ -9,7 +9,7 @@ part comes from and how the numbers in it are laid out."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -86,12 +86,13 @@ directly. The layout below is the contract that makes that safe.</p>
   draw it. A VEC model adds <code>rank</code>, <code>k_beta</code> and the deterministic
   terms restricted to the cointegration space; a quantile VAR adds
   <code>quantile</code>, or <code>quantiles</code> for a grid of them, and
-  <code><a href="add_posterior_forecasts.html">add_posterior_forecasts</a></code> a grid's <code>forecast_quantile</code>.
+  <code><a href="https://rdrr.io/pkg/bayests/man/add_posterior_forecasts.html" class="external-link">add_posterior_forecasts</a></code> a grid's <code>forecast_quantile</code>.
   <code><a href="add_dummy_variables.html">add_dummy_variables</a></code> adds
   <code>dummy_variables</code>, the rule each of its dummies is continued by in a
-  forecast. <code><a href="add_seed.html">add_seed</a></code> adds <code>seed</code>,
-  <code><a href="add_forecast_input.html">add_forecast_input</a></code> adds <code>h</code> and
-  <code>forecast_states</code>.</p></dd>
+  forecast. <code><a href="https://rdrr.io/pkg/bayests/man/add_seed.html" class="external-link">add_seed</a></code> adds <code>seed</code>,
+  <code><a href="https://rdrr.io/pkg/bayests/man/add_forecast_input.html" class="external-link">add_forecast_input</a></code> adds <code>h</code> and
+  <code>forecast_states</code>, and <code>forecast_start</code>, the time of the first
+  forecast period, when it was given start values in <code>y_start</code>.</p></dd>
 
 
   <dt><code>data$original</code></dt>
@@ -115,14 +116,16 @@ directly. The layout below is the contract that makes that safe.</p>
 
 
   <dt><code>data$forecast</code></dt>
-<dd><p>Added by <code><a href="add_forecast_input.html">add_forecast_input</a></code>: the
+<dd><p>Added by <code><a href="https://rdrr.io/pkg/bayests/man/add_forecast_input.html" class="external-link">add_forecast_input</a></code>: the
   regressors of the forecast periods, <code>x</code> in the compact layout, one row
   per horizon. A VEC model's are in the layout of its VAR representation,
-  which is the form it is forecast in.</p></dd>
+  which is the form it is forecast in. A forecast from start values adds
+  <code>y</code>, those of them that lie after the end of the sample and the ones
+  its lags are taken from.</p></dd>
 
 
   <dt><code>data$test$y</code></dt>
-<dd><p>Added by <code><a href="add_forecast_errors.html">add_forecast_errors</a></code>: what
+<dd><p>Added by <code><a href="https://rdrr.io/pkg/bayests/man/add_forecast_errors.html" class="external-link">add_forecast_errors</a></code>: what
   the horizon realised, one row per period and one column per variable, the
   periods of the horizon and nothing else. The only thing under <code>data</code>
   that no sampler reads – it is what a forecast is scored against, not
@@ -131,7 +134,7 @@ directly. The layout below is the contract that makes that safe.</p>
 
 
   <dt><code>priors</code></dt>
-<dd><p>Added by <code><a href="add_priors.html">add_priors</a></code>: the prior
+<dd><p>Added by <code><a href="https://rdrr.io/pkg/bayests/man/add_priors.html" class="external-link">add_priors</a></code>: the prior
   hyperparameters, one block per parameter block of the posterior. Prior
   variances are given as precisions. Which elements are needed depends on
   <code>error</code>; the method's own help page, <code><a href="add_priors.bvarmodel.html">add_priors.bvarmodel</a></code>
@@ -141,13 +144,13 @@ directly. The layout below is the contract that makes that safe.</p>
 
 
   <dt><code>initial</code></dt>
-<dd><p>Added by <code><a href="add_initial_values.html">add_initial_values</a></code>: the
+<dd><p>Added by <code><a href="https://rdrr.io/pkg/bayests/man/add_initial_values.html" class="external-link">add_initial_values</a></code>: the
   starting values the sampler begins from.</p></dd>
 
 
   <dt><code>posterior</code></dt>
 <dd><p>Added by
-  <code><a href="add_posterior_coefficients.html">add_posterior_coefficients</a></code> and the later
+  <code><a href="https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html" class="external-link">add_posterior_coefficients</a></code> and the later
   <code>add_posterior_*</code> functions. The draws; see below.</p></dd>
 
 
@@ -206,19 +209,19 @@ block is a list whose <code>coeffs</code> carries the draws:</p>
 
   <dt><code>q</code></dt>
 <dd><p>The rotations of a sign-restricted identification, added by
-  <code><a href="add_sign_restrictions.html">add_sign_restrictions</a></code>.</p></dd>
+  <code><a href="https://rdrr.io/pkg/bayests/man/add_sign_restrictions.html" class="external-link">add_sign_restrictions</a></code>.</p></dd>
 
   <dt><code>loglik</code></dt>
 <dd><p>The pointwise log-likelihood of the estimation sample,
-  one column per period, added by <code><a href="add_posterior_loglik.html">add_posterior_loglik</a></code>. A matrix
+  one column per period, added by <code><a href="https://rdrr.io/pkg/bayests/man/add_posterior_loglik.html" class="external-link">add_posterior_loglik</a></code>. A matrix
   of draws rather than a block with <code>coeffs</code>, since there is only one
   thing to hold.</p></dd>
 
   <dt><code>forecast</code></dt>
 <dd><p>Everything the forecast periods produce:
   <code>forecasts</code>, the simulated paths from
-  <code><a href="add_posterior_forecasts.html">add_posterior_forecasts</a></code>, and <code>errors</code>, what
-  <code><a href="add_forecast_errors.html">add_forecast_errors</a></code> took against <code>data$test$y</code>. Both have
+  <code><a href="https://rdrr.io/pkg/bayests/man/add_posterior_forecasts.html" class="external-link">add_posterior_forecasts</a></code>, and <code>errors</code>, what
+  <code><a href="https://rdrr.io/pkg/bayests/man/add_forecast_errors.html" class="external-link">add_forecast_errors</a></code> took against <code>data$test$y</code>. Both have
   \(Kh\) columns, stacked by period. The members are named after what they
   hold rather than one of them being <code>draws</code>, because all of them are
   draws.</p></dd>
@@ -248,20 +251,20 @@ horizon come first, then those of the second.</p>
 
 <p>Passing a vector to an argument such as <code>p</code>, <code>r</code> or <code>quantile</code>
 gives one model per specification in a list of class <code>'modellist'</code>, and
-<code><a href="use_expanding_window.html">use_expanding_window</a></code> a list of class <code>'expandingwindow'</code>,
+<code><a href="https://rdrr.io/pkg/bayests/man/use_expanding_window.html" class="external-link">use_expanding_window</a></code> a list of class <code>'expandingwindow'</code>,
 one model per window. Every step of the workflow has a method for both and
 applies to each model in turn, so the structure above is what is inside either
-of them. <code><a href="open_models.html">open_models</a></code> is the same idea for a folder too large to
+of them. <code><a href="https://rdrr.io/pkg/bayests/man/read_model_folder.html" class="external-link">read_model_folder</a></code> is the same idea for a folder too large to
 hold: a handle to the files rather than the models.</p>
     </div>
     <div class="section level2">
     <h2 id="the-same-layout-on-disk">The same layout on disk<a class="anchor" aria-label="anchor" href="#the-same-layout-on-disk"></a></h2>
 
 
-<p><code><a href="write_to_hdf5.html">write_to_hdf5</a></code> writes the object to an HDF5 file with the paths
+<p><code><a href="https://rdrr.io/pkg/bayests/man/write_to_hdf5.html" class="external-link">write_to_hdf5</a></code> writes the object to an HDF5 file with the paths
 the elements above are named by – <code>/data/train/y</code>, <code>/data/test/y</code>,
 <code>/posterior/a/coeffs</code>, <code>/posterior/forecast/forecasts</code> – and
-<code><a href="read_model_from_hdf5.html">read_model_from_hdf5</a></code> reads it back. It is the format the BayesTS
+<code><a href="https://rdrr.io/pkg/bayests/man/read_model_from_hdf5.html" class="external-link">read_model_from_hdf5</a></code> reads it back. It is the format the BayesTS
 command line runs on, which is what makes a model estimated here and a model
 estimated there the same object.</p>
 <p>In the file every dataset is one row per quantity and one column per draw.
@@ -285,10 +288,10 @@ draws itself.</p></div>
 <span class="r-in"><span>                          iterations <span class="op">=</span> <span class="fl">20</span>, burnin <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="co"># Number of iterations and burn-in should be much higher.</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_priors.html">add_priors</a></span><span class="op">(</span><span class="va">model</span>,</span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_priors.html" class="external-link">add_priors</a></span><span class="op">(</span><span class="va">model</span>,</span></span>
 <span class="r-in"><span>                    coef <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>v_i <span class="op">=</span> <span class="fl">0</span>, v_i_det <span class="op">=</span> <span class="fl">0</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                    sigma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>df <span class="op">=</span> <span class="fl">1</span>, scale <span class="op">=</span> <span class="fl">.0001</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_posterior_coefficients.html">add_posterior_coefficients</a></span><span class="op">(</span><span class="fu"><a href="add_initial_values.html">add_initial_values</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html" class="external-link">add_posterior_coefficients</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_initial_values.html" class="external-link">add_initial_values</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># The specification and the sample</span></span></span>
 <span class="r-in"><span><span class="va">model</span><span class="op">[[</span><span class="st">"model"</span><span class="op">]</span><span class="op">]</span><span class="op">[[</span><span class="st">"k"</span><span class="op">]</span><span class="op">]</span></span></span>
@@ -301,10 +304,11 @@ draws itself.</p></div>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">draws</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 20 21</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">colMeans</a></span><span class="op">(</span><span class="va">draws</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] -0.26365467  0.04831701  0.00212573  0.35563815 -0.11413328  0.28436300</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [7]  0.58286268  0.25100450 -0.30652402 -0.11336451  0.05873395  0.04542951</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [13]  0.21783670  0.02085566  0.35602898  0.34210749  0.01624599 -0.12885921</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [19] -0.45810779  1.41104285  1.33671998</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] -0.315677166  0.046276402 -0.005564804  0.405078374 -0.112761778</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [6]  0.313988738  0.626108751  0.281361730 -0.295181564 -0.104920230</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [11]  0.062717043  0.047044044  0.198905313  0.062599422  0.395176450</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [16]  0.653924678  0.031826307 -0.121553204 -1.176046498  1.244121060</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [21]  1.203886017</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

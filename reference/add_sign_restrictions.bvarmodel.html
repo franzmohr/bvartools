@@ -9,7 +9,7 @@ impulse responses they produce."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -50,7 +50,7 @@ impulse responses they produce."></head><body>
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Sign Restrictions</h1>
-      <small class="dont-index">Source: <a href="https://github.com/franzmohr/bvartools/blob/main/R/add_sign_restrictions.bvarmodel.R" class="external-link"><code>R/add_sign_restrictions.bvarmodel.R</code></a>, <a href="https://github.com/franzmohr/bvartools/blob/main/R/add_sign_restrictions.expandingwindow.R" class="external-link"><code>R/add_sign_restrictions.expandingwindow.R</code></a>, <a href="https://github.com/franzmohr/bvartools/blob/main/R/add_sign_restrictions.modellist.R" class="external-link"><code>R/add_sign_restrictions.modellist.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/franzmohr/bvartools/blob/main/R/add_sign_restrictions.bvarmodel.R" class="external-link"><code>R/add_sign_restrictions.bvarmodel.R</code></a></small>
       <div class="d-none name"><code>add_sign_restrictions.bvarmodel.Rd</code></div>
     </div>
 
@@ -62,19 +62,13 @@ impulse responses they produce.</p>
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="co"># S3 method for class 'bvarmodel'</span></span>
-<span><span class="fu"><a href="add_sign_restrictions.html">add_sign_restrictions</a></span><span class="op">(</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_sign_restrictions.html" class="external-link">add_sign_restrictions</a></span><span class="op">(</span></span>
 <span>  <span class="va">object</span>,</span>
 <span>  <span class="va">restrictions</span>,</span>
 <span>  max_tries <span class="op">=</span> <span class="fl">1000</span>,</span>
 <span>  period <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">...</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># S3 method for class 'expandingwindow'</span></span>
-<span><span class="fu"><a href="add_sign_restrictions.html">add_sign_restrictions</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># S3 method for class 'modellist'</span></span>
-<span><span class="fu"><a href="add_sign_restrictions.html">add_sign_restrictions</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -162,13 +156,15 @@ restricted shocks should be interpreted.</p>
 <p>Only sign restrictions are supported. A zero restriction cannot be imposed by
 rejection, because the set of rotations that satisfies one has probability
 zero, so no number of tries finds a member of it. Use
-<code><a href="add_sign_zero_restrictions.html">add_sign_zero_restrictions</a></code>, which draws rotations that satisfy
+<code><a href="https://rdrr.io/pkg/bayests/man/add_sign_zero_restrictions.html" class="external-link">add_sign_zero_restrictions</a></code>, which draws rotations that satisfy
 the zero restrictions by construction and reweights them.</p>
 <p>The accepted rotations are added to the object as element <code>q</code> of its
-posterior draws, from where <code><a href="irf.html">irf</a></code>, <code><a href="fevd.html">fevd</a></code> and
+posterior draws, from where <code><a href="https://rdrr.io/pkg/bayests/man/irf.html" class="external-link">irf</a></code>, <code><a href="https://rdrr.io/pkg/bayests/man/fevd.html" class="external-link">fevd</a></code> and
 <code><a href="spillover.html">spillover</a></code> use them under <code>type = "sign"</code>.</p>
-<p>The result depends on the state of the random number generator, so
-<code><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></code> is needed to reproduce it.</p>
+<p>The rotations are drawn with a seed derived from the model's own, see
+<code><a href="https://rdrr.io/pkg/bayests/man/add_seed.html" class="external-link">add_seed</a></code>, so that a model with a seed gives the same
+rotations however R's generator stands. A model without one draws from R's
+generator as it stands, and <code><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></code> is needed to reproduce it.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
@@ -215,15 +211,15 @@ identification procedure. <em>Journal of Monetary Economics, 52</em>(2), 381-419
 <span class="r-in"><span><span class="co"># Number of iterations and burnin should be much higher.</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Add priors</span></span></span>
-<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_priors.html">add_priors</a></span><span class="op">(</span><span class="va">model</span>,</span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_priors.html" class="external-link">add_priors</a></span><span class="op">(</span><span class="va">model</span>,</span></span>
 <span class="r-in"><span>                    coef <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>v_i <span class="op">=</span> <span class="fl">1</span>, v_i_det <span class="op">=</span> <span class="fl">1</span> <span class="op">/</span> <span class="fl">10</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                    sigma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>df <span class="op">=</span> <span class="st">"k"</span>, scale <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Add initial values</span></span></span>
-<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_initial_values.html">add_initial_values</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_initial_values.html" class="external-link">add_initial_values</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Obtain posterior draws</span></span></span>
-<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_posterior_coefficients.html">add_posterior_coefficients</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html" class="external-link">add_posterior_coefficients</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># A demand shock raises investment and consumption on impact</span></span></span>
 <span class="r-in"><span><span class="va">restrictions</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>impulse <span class="op">=</span> <span class="st">"invest"</span>,</span></span>
@@ -232,10 +228,10 @@ identification procedure. <em>Journal of Monetary Economics, 52</em>(2), 381-419
 <span class="r-in"><span>                           horizon <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1234</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_sign_restrictions.html">add_sign_restrictions</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">restrictions</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_sign_restrictions.html" class="external-link">add_sign_restrictions</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">restrictions</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Obtain the identified impulse response</span></span></span>
-<span class="r-in"><span><span class="va">ir</span> <span class="op">&lt;-</span> <span class="fu"><a href="irf.html">irf</a></span><span class="op">(</span><span class="va">model</span>, impulse <span class="op">=</span> <span class="st">"invest"</span>, response <span class="op">=</span> <span class="st">"cons"</span>, type <span class="op">=</span> <span class="st">"sign"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">ir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/irf.html" class="external-link">irf</a></span><span class="op">(</span><span class="va">model</span>, impulse <span class="op">=</span> <span class="st">"invest"</span>, response <span class="op">=</span> <span class="st">"cons"</span>, type <span class="op">=</span> <span class="st">"sign"</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

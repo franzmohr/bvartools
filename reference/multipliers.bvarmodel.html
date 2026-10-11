@@ -9,7 +9,7 @@ exogenous variable of an object of class 'bvarmodel'."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -50,7 +50,7 @@ exogenous variable of an object of class 'bvarmodel'."></head><body>
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Dynamic Multipliers of a VAR Model with Exogenous Variables</h1>
-      <small class="dont-index">Source: <a href="https://github.com/franzmohr/bvartools/blob/main/R/multipliers.bvarmodel.R" class="external-link"><code>R/multipliers.bvarmodel.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/franzmohr/bvartools/blob/main/R/multipliers.bvarmodel.R" class="external-link"><code>R/multipliers.bvarmodel.R</code></a>, <a href="https://github.com/franzmohr/bvartools/blob/main/R/multipliers.expandingwindow.R" class="external-link"><code>R/multipliers.expandingwindow.R</code></a>, <a href="https://github.com/franzmohr/bvartools/blob/main/R/multipliers.modellist.R" class="external-link"><code>R/multipliers.modellist.R</code></a></small>
       <div class="d-none name"><code>multipliers.bvarmodel.Rd</code></div>
     </div>
 
@@ -74,7 +74,13 @@ exogenous variable of an object of class 'bvarmodel'.</p>
 <span>  keep_draws <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  period <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">...</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'expandingwindow'</span></span>
+<span><span class="fu"><a href="multipliers.html">multipliers</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'modellist'</span></span>
+<span><span class="fu"><a href="multipliers.html">multipliers</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -139,7 +145,7 @@ so that the draws of the last period are used.</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A time-series object of class 'bvarirf', which is what
-<code><a href="irf.html">irf</a></code> returns, so that the same <code>plot</code> method applies.</p>
+<code><a href="https://rdrr.io/pkg/bayests/man/irf.html" class="external-link">irf</a></code> returns, so that the same <code>plot</code> method applies.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -167,6 +173,8 @@ alone. If the companion matrix of the \(A_l\) has a root on or outside the
 unit circle – which is the normal case for a model in levels whose variables
 are integrated – a permanent change moves the endogenous variables
 permanently, and the multipliers converge to a level rather than to zero.</p>
+<p>For an object of class 'modellist' or 'expandingwindow' the multipliers of
+every model are returned in a list named after the models.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
@@ -207,10 +215,10 @@ interdependencies using a global error-correcting macroeconometric model.
 <span class="r-in"><span>                          iterations <span class="op">=</span> <span class="fl">100</span>, burnin <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="co"># Number of iterations and burn-in should be much higher.</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_priors.html">add_priors</a></span><span class="op">(</span><span class="va">model</span>,</span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_priors.html" class="external-link">add_priors</a></span><span class="op">(</span><span class="va">model</span>,</span></span>
 <span class="r-in"><span>                    coef <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>v_i <span class="op">=</span> <span class="fl">1</span>, v_i_det <span class="op">=</span> <span class="fl">1</span> <span class="op">/</span> <span class="fl">10</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                    sigma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>df <span class="op">=</span> <span class="st">"k"</span>, scale <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_posterior_coefficients.html">add_posterior_coefficients</a></span><span class="op">(</span><span class="fu"><a href="add_initial_values.html">add_initial_values</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html" class="external-link">add_posterior_coefficients</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_initial_values.html" class="external-link">add_initial_values</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">dm</span> <span class="op">&lt;-</span> <span class="fu"><a href="multipliers.html">multipliers</a></span><span class="op">(</span><span class="va">model</span>, impulse <span class="op">=</span> <span class="st">"cons"</span>, response <span class="op">=</span> <span class="st">"income"</span>, n_ahead <span class="op">=</span> <span class="fl">8</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">dm</span><span class="op">)</span></span></span>

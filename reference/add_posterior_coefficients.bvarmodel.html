@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -59,7 +59,7 @@
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="co"># S3 method for class 'bvarmodel'</span></span>
-<span><span class="fu"><a href="add_posterior_coefficients.html">add_posterior_coefficients</a></span><span class="op">(</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html" class="external-link">add_posterior_coefficients</a></span><span class="op">(</span></span>
 <span>  <span class="va">object</span>,</span>
 <span>  posterior_function <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  chains <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -74,7 +74,7 @@
 <dl><dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
 <dd><p>an object of class 'bvarmodel', usually, a result of a
 call to <code><a href="create_bvarmodel.html">create_bvarmodel</a></code> in combination with
-<code><a href="add_priors.html">add_priors</a></code> and <code><a href="add_initial_values.html">add_initial_values</a></code>.</p></dd>
+<code><a href="https://rdrr.io/pkg/bayests/man/add_priors.html" class="external-link">add_priors</a></code> and <code><a href="https://rdrr.io/pkg/bayests/man/add_initial_values.html" class="external-link">add_initial_values</a></code>.</p></dd>
 
 
 <dt id="arg-posterior-function">posterior_function<a class="anchor" aria-label="anchor" href="#arg-posterior-function"></a></dt>
@@ -88,7 +88,7 @@ If <code>NULL</code> (default), internal functions are used.</p></dd>
 same simulation with a seed of its own – the first with the seed of the model, so that one
 chain draws what it always has – and the chains are pooled, one after the other, in the
 draws of <code>posterior</code>, so that every later step uses all of them. Their number, when
-above one, is stored in <code>object$model$chains</code>, and <code><a href="chain_diagnostics.html">chain_diagnostics</a></code> compares them. A
+above one, is stored in <code>object$model$chains</code>, and <code><a href="https://rdrr.io/pkg/bayests/man/chain_diagnostics.html" class="external-link">chain_diagnostics</a></code> compares them. A
 <code>posterior_function</code> is called once per chain. Not available for discounted models,
 whose posterior is not a chain.</p></dd>
 
@@ -145,19 +145,27 @@ elements is a list whose element <code>coeffs</code> holds the draws after burn-
     <p>Unless <code>posterior_function</code> is specified, the function forwards
 the model input to the package's own posterior functions.</p>
 <p>The internal samplers draw with the seed in <code>object$model$seed</code>, which
-<code><a href="add_initial_values.html">add_initial_values</a></code> sets and <code><a href="add_seed.html">add_seed</a></code> replaces.
+<code><a href="https://rdrr.io/pkg/bayests/man/add_initial_values.html" class="external-link">add_initial_values</a></code> sets and <code><a href="https://rdrr.io/pkg/bayests/man/add_seed.html" class="external-link">add_seed</a></code> replaces.
 R's random number generator is set to that seed, with R's default kinds, for
 the simulation and put back as it was afterwards. A call of <code><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed()</a></code>
-between <code><a href="add_initial_values.html">add_initial_values()</a></code> and this function therefore does not
+between <code><a href="https://rdrr.io/pkg/bayests/man/add_initial_values.html" class="external-link">add_initial_values()</a></code> and this function therefore does not
 change the draws. A model without a seed draws from R's generator as it
 stands. A <code>posterior_function</code> is called as it is and decides itself
-what to do with the seed; see <code><a href="bayests_posterior.html">bayests_posterior</a></code>.</p>
+what to do with the seed; see <code><a href="https://rdrr.io/pkg/bayests/man/bayests_posterior.html" class="external-link">bayests_posterior</a></code>.</p>
 <p>A sampler that cannot run raises its error rather than returning something.
 The message names what about the input it could not work with. Applied to a
 list of models – a 'modellist', an 'expandingwindow' or, in <span class="pkg">bgvars</span>, a
 'gvarmodel' – that ends the run on the first specification that fails,
 rather than leaving that one without a posterior and carrying it into
 whatever reads the results.</p>
+<p>With Student t errors (<code>student_t = TRUE</code> in <code><a href="create_bvarmodel.html">create_bvarmodel</a></code>),
+<code>posterior$student_t</code> holds <code>df</code>, the draws of the degrees of freedom,
+and <code>lambda</code>, the draws of each period's mixing scale: one column per
+period, large where the period's shocks were.</p>
+<p>With a volatility break (<code>volatility_break</code> in <code><a href="create_bvarmodel.html">create_bvarmodel</a></code>
+or <code><a href="create_bvecmodel.html">create_bvecmodel</a></code>), <code>posterior$volatility$coeffs</code> holds the
+draws of the free scales, columns <code>s1</code>, <code>s2</code>, ..., one per period from the
+break on, and of <code>rho</code>, the rate their excess over one decays at after them.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -170,12 +178,9 @@ whatever reads the results.</p>
 <code><a href="add_posterior_forecasts.bvecmodel.html">add_posterior_forecasts.bvecmodel()</a></code>,
 <code><a href="add_posterior_loglik.bvarmodel.html">add_posterior_loglik.bvarmodel()</a></code>,
 <code><a href="add_posterior_loglik.bvecmodel.html">add_posterior_loglik.bvecmodel()</a></code>,
-<code><a href="add_seed.html">add_seed()</a></code>,
-<code><a href="bayests_files.html">bayests_files()</a></code>,
-<code><a href="bayests_posterior.html">bayests_posterior()</a></code>,
+<code><a href="add_seed.bvarmodel.html">add_seed.bvarmodel()</a></code>,
 <code><a href="bvar.html">bvar()</a></code>,
 <code><a href="bvec.html">bvec()</a></code>,
-<code><a href="chain_diagnostics.html">chain_diagnostics()</a></code>,
 <code><a href="predict.bvecmodel.html">predict.bvecmodel()</a></code></p></div>
     </div>
 
@@ -192,15 +197,15 @@ whatever reads the results.</p>
 <span class="r-in"><span><span class="co"># Number of iterations and burnin should be much higher.</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Add priors</span></span></span>
-<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_priors.html">add_priors</a></span><span class="op">(</span><span class="va">model</span>,</span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_priors.html" class="external-link">add_priors</a></span><span class="op">(</span><span class="va">model</span>,</span></span>
 <span class="r-in"><span>                    coef <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>v_i <span class="op">=</span> <span class="fl">1</span>, v_i_det <span class="op">=</span> <span class="fl">1</span> <span class="op">/</span> <span class="fl">10</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                    sigma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>df <span class="op">=</span> <span class="st">"k"</span>, scale <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Add initial values</span></span></span>
-<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_initial_values.html">add_initial_values</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_initial_values.html" class="external-link">add_initial_values</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Obtain posterior draws </span></span></span>
-<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_posterior_coefficients.html">add_posterior_coefficients</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html" class="external-link">add_posterior_coefficients</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

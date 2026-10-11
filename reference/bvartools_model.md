@@ -30,15 +30,16 @@ directly. The layout below is the contract that makes that safe.
   draw it. A VEC model adds `rank`, `k_beta` and the deterministic terms
   restricted to the cointegration space; a quantile VAR adds `quantile`,
   or `quantiles` for a grid of them, and
-  [`add_posterior_forecasts`](https://franzmohr.github.io/bvartools/reference/add_posterior_forecasts.md)
+  [`add_posterior_forecasts`](https://rdrr.io/pkg/bayests/man/add_posterior_forecasts.html)
   a grid's `forecast_quantile`.
   [`add_dummy_variables`](https://franzmohr.github.io/bvartools/reference/add_dummy_variables.md)
   adds `dummy_variables`, the rule each of its dummies is continued by
   in a forecast.
-  [`add_seed`](https://franzmohr.github.io/bvartools/reference/add_seed.md)
-  adds `seed`,
-  [`add_forecast_input`](https://franzmohr.github.io/bvartools/reference/add_forecast_input.md)
-  adds `h` and `forecast_states`.
+  [`add_seed`](https://rdrr.io/pkg/bayests/man/add_seed.html) adds
+  `seed`,
+  [`add_forecast_input`](https://rdrr.io/pkg/bayests/man/add_forecast_input.html)
+  adds `h` and `forecast_states`, and `forecast_start`, the time of the
+  first forecast period, when it was given start values in `y_start`.
 
 - `data$original`:
 
@@ -62,15 +63,17 @@ directly. The layout below is the contract that makes that safe.
 - `data$forecast`:
 
   Added by
-  [`add_forecast_input`](https://franzmohr.github.io/bvartools/reference/add_forecast_input.md):
+  [`add_forecast_input`](https://rdrr.io/pkg/bayests/man/add_forecast_input.html):
   the regressors of the forecast periods, `x` in the compact layout, one
   row per horizon. A VEC model's are in the layout of its VAR
-  representation, which is the form it is forecast in.
+  representation, which is the form it is forecast in. A forecast from
+  start values adds `y`, those of them that lie after the end of the
+  sample and the ones its lags are taken from.
 
 - `data$test$y`:
 
   Added by
-  [`add_forecast_errors`](https://franzmohr.github.io/bvartools/reference/add_forecast_errors.md):
+  [`add_forecast_errors`](https://rdrr.io/pkg/bayests/man/add_forecast_errors.html):
   what the horizon realised, one row per period and one column per
   variable, the periods of the horizon and nothing else. The only thing
   under `data` that no sampler reads – it is what a forecast is scored
@@ -80,10 +83,10 @@ directly. The layout below is the contract that makes that safe.
 - `priors`:
 
   Added by
-  [`add_priors`](https://franzmohr.github.io/bvartools/reference/add_priors.md):
-  the prior hyperparameters, one block per parameter block of the
-  posterior. Prior variances are given as precisions. Which elements are
-  needed depends on `error`; the method's own help page,
+  [`add_priors`](https://rdrr.io/pkg/bayests/man/add_priors.html): the
+  prior hyperparameters, one block per parameter block of the posterior.
+  Prior variances are given as precisions. Which elements are needed
+  depends on `error`; the method's own help page,
   [`add_priors.bvarmodel`](https://franzmohr.github.io/bvartools/reference/add_priors.bvarmodel.md)
   or
   [`add_priors.bvecmodel`](https://franzmohr.github.io/bvartools/reference/add_priors.bvecmodel.md),
@@ -93,13 +96,13 @@ directly. The layout below is the contract that makes that safe.
 - `initial`:
 
   Added by
-  [`add_initial_values`](https://franzmohr.github.io/bvartools/reference/add_initial_values.md):
+  [`add_initial_values`](https://rdrr.io/pkg/bayests/man/add_initial_values.html):
   the starting values the sampler begins from.
 
 - `posterior`:
 
   Added by
-  [`add_posterior_coefficients`](https://franzmohr.github.io/bvartools/reference/add_posterior_coefficients.md)
+  [`add_posterior_coefficients`](https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html)
   and the later `add_posterior_*` functions. The draws; see below.
 
 ## The draws
@@ -161,13 +164,13 @@ block is a list whose `coeffs` carries the draws:
 - `q`:
 
   The rotations of a sign-restricted identification, added by
-  [`add_sign_restrictions`](https://franzmohr.github.io/bvartools/reference/add_sign_restrictions.md).
+  [`add_sign_restrictions`](https://rdrr.io/pkg/bayests/man/add_sign_restrictions.html).
 
 - `loglik`:
 
   The pointwise log-likelihood of the estimation sample, one column per
   period, added by
-  [`add_posterior_loglik`](https://franzmohr.github.io/bvartools/reference/add_posterior_loglik.md).
+  [`add_posterior_loglik`](https://rdrr.io/pkg/bayests/man/add_posterior_loglik.html).
   A matrix of draws rather than a block with `coeffs`, since there is
   only one thing to hold.
 
@@ -175,9 +178,9 @@ block is a list whose `coeffs` carries the draws:
 
   Everything the forecast periods produce: `forecasts`, the simulated
   paths from
-  [`add_posterior_forecasts`](https://franzmohr.github.io/bvartools/reference/add_posterior_forecasts.md),
+  [`add_posterior_forecasts`](https://rdrr.io/pkg/bayests/man/add_posterior_forecasts.html),
   and `errors`, what
-  [`add_forecast_errors`](https://franzmohr.github.io/bvartools/reference/add_forecast_errors.md)
+  [`add_forecast_errors`](https://rdrr.io/pkg/bayests/man/add_forecast_errors.html)
   took against `data$test$y`. Both have \\Kh\\ columns, stacked by
   period. The members are named after what they hold rather than one of
   them being `draws`, because all of them are draws.
@@ -206,21 +209,21 @@ horizon come first, then those of the second.
 
 Passing a vector to an argument such as `p`, `r` or `quantile` gives one
 model per specification in a list of class `'modellist'`, and
-[`use_expanding_window`](https://franzmohr.github.io/bvartools/reference/use_expanding_window.md)
+[`use_expanding_window`](https://rdrr.io/pkg/bayests/man/use_expanding_window.html)
 a list of class `'expandingwindow'`, one model per window. Every step of
 the workflow has a method for both and applies to each model in turn, so
 the structure above is what is inside either of them.
-[`open_models`](https://franzmohr.github.io/bvartools/reference/open_models.md)
+[`read_model_folder`](https://rdrr.io/pkg/bayests/man/read_model_folder.html)
 is the same idea for a folder too large to hold: a handle to the files
 rather than the models.
 
 ## The same layout on disk
 
-[`write_to_hdf5`](https://franzmohr.github.io/bvartools/reference/write_to_hdf5.md)
+[`write_to_hdf5`](https://rdrr.io/pkg/bayests/man/write_to_hdf5.html)
 writes the object to an HDF5 file with the paths the elements above are
 named by – `/data/train/y`, `/data/test/y`, `/posterior/a/coeffs`,
 `/posterior/forecast/forecasts` – and
-[`read_model_from_hdf5`](https://franzmohr.github.io/bvartools/reference/read_model_from_hdf5.md)
+[`read_model_from_hdf5`](https://rdrr.io/pkg/bayests/man/read_model_from_hdf5.html)
 reads it back. It is the format the BayesTS command line runs on, which
 is what makes a model estimated here and a model estimated there the
 same object.
@@ -263,8 +266,9 @@ draws <- model[["posterior"]][["a"]][["coeffs"]]
 dim(draws)
 #> [1] 20 21
 colMeans(draws)
-#>  [1] -0.26365467  0.04831701  0.00212573  0.35563815 -0.11413328  0.28436300
-#>  [7]  0.58286268  0.25100450 -0.30652402 -0.11336451  0.05873395  0.04542951
-#> [13]  0.21783670  0.02085566  0.35602898  0.34210749  0.01624599 -0.12885921
-#> [19] -0.45810779  1.41104285  1.33671998
+#>  [1] -0.315677166  0.046276402 -0.005564804  0.405078374 -0.112761778
+#>  [6]  0.313988738  0.626108751  0.281361730 -0.295181564 -0.104920230
+#> [11]  0.062717043  0.047044044  0.198905313  0.062599422  0.395176450
+#> [16]  0.653924678  0.031826307 -0.121553204 -1.176046498  1.244121060
+#> [21]  1.203886017
 ```

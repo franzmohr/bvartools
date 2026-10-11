@@ -25,8 +25,8 @@ multipliers(x, ...)
 ## Value
 
 A time-series object of class 'bvarirf', which is what
-[`irf`](https://franzmohr.github.io/bvartools/reference/irf.md) returns,
-so that the same `plot` method applies.
+[`irf`](https://rdrr.io/pkg/bayests/man/irf.html) returns, so that the
+same `plot` method applies.
 
 ## Details
 

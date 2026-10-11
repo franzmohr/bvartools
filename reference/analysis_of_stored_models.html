@@ -9,7 +9,7 @@ model in an HDF5 file, computed a piece of the chain at a time."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -50,7 +50,7 @@ model in an HDF5 file, computed a piece of the chain at a time."></head><body>
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Impulse Responses and Variance Decompositions of a Stored Model</h1>
-      <small class="dont-index">Source: <a href="https://github.com/franzmohr/bvartools/blob/main/R/irf.bvarfile.R" class="external-link"><code>R/irf.bvarfile.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/franzmohr/bvartools/blob/main/R/irf.modelfile.R" class="external-link"><code>R/irf.modelfile.R</code></a></small>
       <div class="d-none name"><code>analysis_of_stored_models.Rd</code></div>
     </div>
 
@@ -61,11 +61,11 @@ model in an HDF5 file, computed a piece of the chain at a time.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="co"># S3 method for class 'bvarfile'</span></span>
-<span><span class="fu"><a href="irf.html">irf</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span>, chunk <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="co"># S3 method for class 'modelfile'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/bayests/man/irf.html" class="external-link">irf</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span>, chunk <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># S3 method for class 'bvarfile'</span></span>
-<span><span class="fu"><a href="fevd.html">fevd</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span>, chunk <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span></code></pre></div>
+<span><span class="co"># S3 method for class 'modelfile'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/bayests/man/fevd.html" class="external-link">fevd</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span>, chunk <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -73,7 +73,7 @@ model in an HDF5 file, computed a piece of the chain at a time.</p>
 
 
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
-<dd><p>an object of class 'bvarfile', from <code><a href="open_model.html">open_model</a></code>.</p></dd>
+<dd><p>an object of class 'modelfile', from <code><a href="https://rdrr.io/pkg/bayests/man/read_model_file.html" class="external-link">read_model_file</a></code>.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -98,34 +98,30 @@ Neither needs the draws together, so the chain is read in pieces of
 <code>chunk</code>, each piece contributes what it has, and the pieces are put
 together at the end. What comes out is what the same call on the model in
 memory gives.</p>
-<p>For a variance decomposition the pieces are combined before the shares are
-normalised and before groups are collapsed, so <code>normalise_gir</code> and
-<code>max_groups</code> describe the whole chain rather than the piece they were
-applied to.</p>
+<p>For a variance decomposition the pieces hand back the shares of each of
+their draws, and the decomposition is summarised once over all of them, so
+<code>statistic</code>, <code>ci</code>, <code>normalise_gir</code> and <code>max_groups</code>
+describe the whole chain rather than the piece they were applied to.</p>
+<p>An identification given per draw is read at the draw's position in the
+whole chain: a list of impact matrices is cut to each piece's draws, and an
+impact function is called with the draw's number in the chain. A piece in
+which no draw is identified – under <code>type = "sign"</code>, or an impact
+function that declines all of its draws – contributes nothing.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p>Other model comparison:
 <code><a href="add_forecast_errors.bvarmodel.html">add_forecast_errors.bvarmodel()</a></code>,
 <code><a href="add_forecast_errors.bvecmodel.html">add_forecast_errors.bvecmodel()</a></code>,
-<code><a href="add_predictive_loglik.html">add_predictive_loglik()</a></code>,
 <code><a href="add_predictive_loglik.bvarmodel.html">add_predictive_loglik.bvarmodel()</a></code>,
 <code><a href="add_predictive_loglik.bvecmodel.html">add_predictive_loglik.bvecmodel()</a></code>,
+<code><a href="add_predictive_loglik.expandingwindow.html">add_predictive_loglik.expandingwindow()</a></code>,
 <code><a href="aggregate_forecasts.html">aggregate_forecasts()</a></code>,
-<code><a href="align_model_obs.modellist.html">align_model_obs.modellist()</a></code>,
-<code><a href="choose_best_model.selcritlist.html">choose_best_model.selcritlist()</a></code>,
 <code><a href="create_external_forecast.html">create_external_forecast()</a></code>,
-<code><a href="folder_steps.html">folder_steps</a></code>,
-<code><a href="map_draws.html">map_draws()</a></code>,
-<code><a href="map_models.html">map_models()</a></code>,
-<code><a href="open_model.html">open_model()</a></code>,
-<code><a href="open_models.html">open_models()</a></code>,
 <code><a href="plot_forecast_errors_by_period.html">plot_forecast_errors_by_period()</a></code>,
 <code><a href="pool_forecasts.html">pool_forecasts()</a></code>,
 <code><a href="selection_criteria.bvarmodel.html">selection_criteria.bvarmodel()</a></code>,
-<code><a href="selection_criteria.bvecmodel.html">selection_criteria.bvecmodel()</a></code>,
-<code><a href="selection_criteria.default.html">selection_criteria.default()</a></code>,
-<code><a href="selection_criteria.modellist.html">selection_criteria.modellist()</a></code></p></div>
+<code><a href="selection_criteria.bvecmodel.html">selection_criteria.bvecmodel()</a></code></p></div>
     </div>
 
     <div class="section level2">
@@ -137,19 +133,19 @@ applied to.</p>
 <span class="r-in"><span>                          iterations <span class="op">=</span> <span class="fl">100</span>, burnin <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="co"># Number of iterations and burn-in should be much higher.</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_priors.html">add_priors</a></span><span class="op">(</span><span class="va">model</span>,</span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_priors.html" class="external-link">add_priors</a></span><span class="op">(</span><span class="va">model</span>,</span></span>
 <span class="r-in"><span>                    coef <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>v_i <span class="op">=</span> <span class="fl">0</span>, v_i_det <span class="op">=</span> <span class="fl">0</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                    sigma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>df <span class="op">=</span> <span class="fl">1</span>, scale <span class="op">=</span> <span class="fl">.0001</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_posterior_coefficients.html">add_posterior_coefficients</a></span><span class="op">(</span><span class="fu"><a href="add_initial_values.html">add_initial_values</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html" class="external-link">add_posterior_coefficients</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_initial_values.html" class="external-link">add_initial_values</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"bvartools-example-irf.h5"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="va">file</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="write_to_hdf5.html">write_to_hdf5</a></span><span class="op">(</span><span class="va">model</span>, filename <span class="op">=</span> <span class="va">file</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">stored</span> <span class="op">&lt;-</span> <span class="fu"><a href="open_model.html">open_model</a></span><span class="op">(</span><span class="va">file</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/pkg/bayests/man/write_to_hdf5.html" class="external-link">write_to_hdf5</a></span><span class="op">(</span><span class="va">model</span>, filename <span class="op">=</span> <span class="va">file</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">stored</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/read_model_file.html" class="external-link">read_model_file</a></span><span class="op">(</span><span class="va">file</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">ir</span> <span class="op">&lt;-</span> <span class="fu"><a href="irf.html">irf</a></span><span class="op">(</span><span class="va">stored</span>, impulse <span class="op">=</span> <span class="st">"invest"</span>, response <span class="op">=</span> <span class="st">"income"</span>, n_ahead <span class="op">=</span> <span class="fl">5</span>,</span></span>
+<span class="r-in"><span><span class="va">ir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/irf.html" class="external-link">irf</a></span><span class="op">(</span><span class="va">stored</span>, impulse <span class="op">=</span> <span class="st">"invest"</span>, response <span class="op">=</span> <span class="st">"income"</span>, n_ahead <span class="op">=</span> <span class="fl">5</span>,</span></span>
 <span class="r-in"><span>          chunk <span class="op">=</span> <span class="fl">25</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">shares</span> <span class="op">&lt;-</span> <span class="fu"><a href="fevd.html">fevd</a></span><span class="op">(</span><span class="va">stored</span>, response <span class="op">=</span> <span class="st">"income"</span>, n_ahead <span class="op">=</span> <span class="fl">5</span>, chunk <span class="op">=</span> <span class="fl">25</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">shares</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/fevd.html" class="external-link">fevd</a></span><span class="op">(</span><span class="va">stored</span>, response <span class="op">=</span> <span class="st">"income"</span>, n_ahead <span class="op">=</span> <span class="fl">5</span>, chunk <span class="op">=</span> <span class="fl">25</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

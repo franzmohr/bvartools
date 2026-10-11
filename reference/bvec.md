@@ -255,7 +255,7 @@ have to correspond to the same MCMC iteration.
 The result is the same kind of object as the output of
 [`create_bvecmodel`](https://franzmohr.github.io/bvartools/reference/create_bvecmodel.md)
 in combination with
-[`add_posterior_coefficients`](https://franzmohr.github.io/bvartools/reference/add_posterior_coefficients.md),
+[`add_posterior_coefficients`](https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html),
 so it can be used with the methods of class 'bvecmodel' such as
 [`vec_to_var.bvecmodel`](https://franzmohr.github.io/bvartools/reference/vec_to_var.bvecmodel.md)
 or
@@ -274,9 +274,8 @@ estimated.
 Since a model that is constructed from posterior draws does not contain
 the specification of its priors, the elements `priors` and `initial` of
 the resulting object are empty. Use
-[`add_priors`](https://franzmohr.github.io/bvartools/reference/add_priors.md)
-and
-[`add_initial_values`](https://franzmohr.github.io/bvartools/reference/add_initial_values.md)
+[`add_priors`](https://rdrr.io/pkg/bayests/man/add_priors.html) and
+[`add_initial_values`](https://rdrr.io/pkg/bayests/man/add_initial_values.html)
 if the model should be re-estimated.
 
 ## See also
@@ -290,11 +289,8 @@ Other posterior simulation:
 [`add_posterior_forecasts.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/add_posterior_forecasts.bvecmodel.md),
 [`add_posterior_loglik.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/add_posterior_loglik.bvarmodel.md),
 [`add_posterior_loglik.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/add_posterior_loglik.bvecmodel.md),
-[`add_seed()`](https://franzmohr.github.io/bvartools/reference/add_seed.md),
-[`bayests_files()`](https://franzmohr.github.io/bvartools/reference/bayests_files.md),
-[`bayests_posterior()`](https://franzmohr.github.io/bvartools/reference/bayests_posterior.md),
+[`add_seed.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/add_seed.bvarmodel.md),
 [`bvar()`](https://franzmohr.github.io/bvartools/reference/bvar.md),
-[`chain_diagnostics()`](https://franzmohr.github.io/bvartools/reference/chain_diagnostics.md),
 [`predict.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/predict.bvecmodel.md)
 
 ## Examples

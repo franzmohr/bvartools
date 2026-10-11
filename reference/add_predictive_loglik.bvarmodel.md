@@ -15,7 +15,7 @@ add_predictive_loglik(object, test_sample = NULL, ...)
 - object:
 
   an object of class 'bvarmodel', usually, the result of a call to
-  [`add_posterior_forecasts`](https://franzmohr.github.io/bvartools/reference/add_posterior_forecasts.md).
+  [`add_posterior_forecasts`](https://rdrr.io/pkg/bayests/man/add_posterior_forecasts.html).
 
 - test_sample:
 
@@ -50,7 +50,7 @@ the draws of a column is therefore the one step ahead predictive density
 given everything known up to that period, and those sum over the columns
 to \\\ln p(y\_{T+1}, \ldots, y\_{T+h} \| y\_{1}, \ldots, y\_{T})\\, the
 log predictive likelihood of the whole realised stretch, which
-[`selection_criteria`](https://franzmohr.github.io/bvartools/reference/selection_criteria.md)
+[`selection_criteria`](https://rdrr.io/pkg/bayests/man/selection_criteria.html)
 reports as `LPL`. Scoring against a simulated history instead would give
 the marginal density of each period on its own, which is a different
 quantity and one whose columns could not be added up.
@@ -58,14 +58,14 @@ quantity and one whose columns could not be added up.
 With the history realised rather than simulated, the regressors of the
 scored periods do not depend on the draw. The score is then the model's
 own pointwise log-likelihood over those periods – the same expression as
-[`add_posterior_loglik`](https://franzmohr.github.io/bvartools/reference/add_posterior_loglik.md)
+[`add_posterior_loglik`](https://rdrr.io/pkg/bayests/man/add_posterior_loglik.html)
 evaluates, over a different sample – so nothing is written down twice
 and the two cannot drift apart. What still moves with the draw is
 everything that follows a state equation: time varying coefficients,
 time varying error covariances and stochastic volatilities take one step
 of their random walk per scored period, in the order and subject to the
 same `model$forecast_states` that
-[`add_posterior_forecasts`](https://franzmohr.github.io/bvartools/reference/add_posterior_forecasts.md)
+[`add_posterior_forecasts`](https://rdrr.io/pkg/bayests/man/add_posterior_forecasts.html)
 steps them in. Under `"simulate"` those steps are drawn, so the score is
 drawn too and two runs give two answers, exactly as two runs of a
 forecast do.
@@ -82,6 +82,14 @@ lags alone, and their density carries the Jacobian of \\A_0\\ besides.
 So are the asymmetric Laplace algorithms of quantile estimation, which
 do not forecast in the first place.
 
+A forecast that starts after the end of the estimation sample, from
+argument `y_start` of
+[`add_forecast_input`](https://rdrr.io/pkg/bayests/man/add_forecast_input.html),
+is refused as well: the score of a horizon realised in part is drawn
+from the end of the sample rather than from the start values. Its
+forecast errors are available from
+[`add_forecast_errors`](https://rdrr.io/pkg/bayests/man/add_forecast_errors.html).
+
 ## See also
 
 [`bvartools_model`](https://franzmohr.github.io/bvartools/reference/bvartools_model.md)
@@ -90,24 +98,15 @@ describes the object this returns, element by element.
 Other model comparison:
 [`add_forecast_errors.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/add_forecast_errors.bvarmodel.md),
 [`add_forecast_errors.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/add_forecast_errors.bvecmodel.md),
-[`add_predictive_loglik()`](https://franzmohr.github.io/bvartools/reference/add_predictive_loglik.md),
 [`add_predictive_loglik.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/add_predictive_loglik.bvecmodel.md),
+[`add_predictive_loglik.expandingwindow()`](https://franzmohr.github.io/bvartools/reference/add_predictive_loglik.expandingwindow.md),
 [`aggregate_forecasts()`](https://franzmohr.github.io/bvartools/reference/aggregate_forecasts.md),
-[`align_model_obs.modellist()`](https://franzmohr.github.io/bvartools/reference/align_model_obs.modellist.md),
 [`analysis_of_stored_models`](https://franzmohr.github.io/bvartools/reference/analysis_of_stored_models.md),
-[`choose_best_model.selcritlist()`](https://franzmohr.github.io/bvartools/reference/choose_best_model.selcritlist.md),
 [`create_external_forecast()`](https://franzmohr.github.io/bvartools/reference/create_external_forecast.md),
-[`folder_steps`](https://franzmohr.github.io/bvartools/reference/folder_steps.md),
-[`map_draws()`](https://franzmohr.github.io/bvartools/reference/map_draws.md),
-[`map_models()`](https://franzmohr.github.io/bvartools/reference/map_models.md),
-[`open_model()`](https://franzmohr.github.io/bvartools/reference/open_model.md),
-[`open_models()`](https://franzmohr.github.io/bvartools/reference/open_models.md),
 [`plot_forecast_errors_by_period()`](https://franzmohr.github.io/bvartools/reference/plot_forecast_errors_by_period.md),
 [`pool_forecasts()`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md),
 [`selection_criteria.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.bvarmodel.md),
-[`selection_criteria.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.bvecmodel.md),
-[`selection_criteria.default()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.default.md),
-[`selection_criteria.modellist()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.modellist.md)
+[`selection_criteria.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.bvecmodel.md)
 
 ## Examples
 
@@ -141,6 +140,6 @@ dim(model[["posterior"]][["forecast"]][["loglik"]])
 
 # The log predictive likelihood is criterion "LPL"
 selection_criteria(model)[["LPL"]]
-#>        mean median    qlower   qupper
-#> 1 -25.05172     NA -31.19764 -18.9058
+#>        mean median    qlower    qupper
+#> 1 -24.43603     NA -29.81078 -19.06128
 ```

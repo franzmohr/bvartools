@@ -23,5 +23,5 @@ spillover(object, ...)
 
 ## Value
 
-A list of objects of class 'bvarspillover'. Elements belonging to models
-whose estimation failed are `NULL`.
+A list of objects of class 'bvarspillover', one per model. An error in
+one model stops the call and names the model.

@@ -27,7 +27,7 @@ plot_forecast_errors_by_period(
   an object of class 'bvarmodel', 'bvecmodel', 'expandingwindow' or
   'modellist', which contains forecast errors. Usually, a result of a
   call to
-  [`add_forecast_errors`](https://franzmohr.github.io/bvartools/reference/add_forecast_errors.md).
+  [`add_forecast_errors`](https://rdrr.io/pkg/bayests/man/add_forecast_errors.html).
 
 - criterion:
 
@@ -87,7 +87,7 @@ errors. The position of a model in `x` is added above its error bar. For
 `criterion = "FE"` a horizontal reference line is added at zero.
 
 In contrast to
-[`plot.selcritlist`](https://franzmohr.github.io/bvartools/reference/plot.selcritlist.md),
+[`plot.selcritlist`](https://rdrr.io/pkg/bayests/man/plot.selcritlist.html),
 which plots statistics that are calculated across all periods of the
 evaluation sample, this function plots the statistics of each period
 separately. Thus, it is most useful for forecast errors, which were
@@ -102,24 +102,15 @@ the respective window.
 Other model comparison:
 [`add_forecast_errors.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/add_forecast_errors.bvarmodel.md),
 [`add_forecast_errors.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/add_forecast_errors.bvecmodel.md),
-[`add_predictive_loglik()`](https://franzmohr.github.io/bvartools/reference/add_predictive_loglik.md),
 [`add_predictive_loglik.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/add_predictive_loglik.bvarmodel.md),
 [`add_predictive_loglik.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/add_predictive_loglik.bvecmodel.md),
+[`add_predictive_loglik.expandingwindow()`](https://franzmohr.github.io/bvartools/reference/add_predictive_loglik.expandingwindow.md),
 [`aggregate_forecasts()`](https://franzmohr.github.io/bvartools/reference/aggregate_forecasts.md),
-[`align_model_obs.modellist()`](https://franzmohr.github.io/bvartools/reference/align_model_obs.modellist.md),
 [`analysis_of_stored_models`](https://franzmohr.github.io/bvartools/reference/analysis_of_stored_models.md),
-[`choose_best_model.selcritlist()`](https://franzmohr.github.io/bvartools/reference/choose_best_model.selcritlist.md),
 [`create_external_forecast()`](https://franzmohr.github.io/bvartools/reference/create_external_forecast.md),
-[`folder_steps`](https://franzmohr.github.io/bvartools/reference/folder_steps.md),
-[`map_draws()`](https://franzmohr.github.io/bvartools/reference/map_draws.md),
-[`map_models()`](https://franzmohr.github.io/bvartools/reference/map_models.md),
-[`open_model()`](https://franzmohr.github.io/bvartools/reference/open_model.md),
-[`open_models()`](https://franzmohr.github.io/bvartools/reference/open_models.md),
 [`pool_forecasts()`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md),
 [`selection_criteria.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.bvarmodel.md),
-[`selection_criteria.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.bvecmodel.md),
-[`selection_criteria.default()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.default.md),
-[`selection_criteria.modellist()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.modellist.md)
+[`selection_criteria.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.bvecmodel.md)
 
 ## Examples
 

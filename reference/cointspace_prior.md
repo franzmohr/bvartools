@@ -2,8 +2,8 @@
 
 Checks the specification of the prior on the cointegration space of a
 VEC model and builds it, in the form in which
-[`add_priors`](https://franzmohr.github.io/bvartools/reference/add_priors.md)
-stores it as element `priors$beta`.
+[`add_priors`](https://rdrr.io/pkg/bayests/man/add_priors.html) stores
+it as element `priors$beta`.
 
 ## Usage
 
@@ -37,12 +37,12 @@ transition `p_tau` added by `p_tau_i = "ml"`.
 
 ## Details
 
-[`add_priors`](https://franzmohr.github.io/bvartools/reference/add_priors.md)
-calls this function for VEC models, so it rarely needs to be called
-directly. It is exported for packages that build VEC models of their own
-layout, such as the sub-models of a global VEC model, whose error
-correction term also holds weakly exogenous and global variables.
-Calling it gives them the same checks and the same prior.
+[`add_priors`](https://rdrr.io/pkg/bayests/man/add_priors.html) calls
+this function for VEC models, so it rarely needs to be called directly.
+It is exported for packages that build VEC models of their own layout,
+such as the sub-models of a global VEC model, whose error correction
+term also holds weakly exogenous and global variables. Calling it gives
+them the same checks and the same prior.
 
 All dimensions are taken from the regressors, not from the model
 specification: the prior has one row and column for each series in the
@@ -123,7 +123,7 @@ stochastic volatility the covariance differs from period to period, so
 given, and otherwise the error precision implied by the starting values
 of the log-volatilities, averaged over the sample once before the first
 draw. That fallback depends on
-[`add_initial_values`](https://franzmohr.github.io/bvartools/reference/add_initial_values.md),
+[`add_initial_values`](https://rdrr.io/pkg/bayests/man/add_initial_values.html),
 so giving `g_i` makes the prior independent of how the chain is started.
 `g_i = "ml"` uses Johansen's (1995) estimate of the error covariance,
 the same one `v_i = "ml"` is based on.
@@ -159,22 +159,22 @@ N(0, I)\\, and the prior on the state before the sample is that
 equation's own stationary distribution, \\N(0, I / (1 - \rho^2))\\. This
 is what makes the prior proper, so a \\\rho\\ close to one is intended
 and one further from it draws a warning.
-[`add_priors`](https://franzmohr.github.io/bvartools/reference/add_priors.md)
-gives the loadings the compensating scale: only the product \\\alpha
+[`add_priors`](https://rdrr.io/pkg/bayests/man/add_priors.html) gives
+the loadings the compensating scale: only the product \\\alpha
 \beta^{\prime}\\ is identified, so their prior variance is shrunk by
 \\1 - \rho^2\\, leaving the product on the scale `coef$v_i` asks for.
 
 When \\\rho\\ is drawn, those last two are computed from `coint$rho`
 once and do not follow the draw: the state before the sample keeps the
 normal prior built here, and the loadings keep the shrinkage of
-[`add_priors`](https://franzmohr.github.io/bvartools/reference/add_priors.md).
-This is a deliberate departure from Koop et al. (2011), in whom the
-state before the sample is the stationary distribution of whatever
-\\\rho\\ currently is. It is also what makes the draw an exact Gibbs
-block rather than their Metropolis-within-Gibbs step: with the state
-before the sample free of \\\rho\\, the conditional posterior of
-\\\rho\\ is a normal truncated to the prior's support. Draws of \\\rho\\
-are returned in `object$posterior$beta$rho`.
+[`add_priors`](https://rdrr.io/pkg/bayests/man/add_priors.html). This is
+a deliberate departure from Koop et al. (2011), in whom the state before
+the sample is the stationary distribution of whatever \\\rho\\ currently
+is. It is also what makes the draw an exact Gibbs block rather than
+their Metropolis-within-Gibbs step: with the state before the sample
+free of \\\rho\\, the conditional posterior of \\\rho\\ is a normal
+truncated to the prior's support. Draws of \\\rho\\ are returned in
+`object$posterior$beta$rho`.
 
 How far the space moves is not set by the prior on any variance. The
 steps \\\eta_t\\ have unit variance whatever `coef$rate` and

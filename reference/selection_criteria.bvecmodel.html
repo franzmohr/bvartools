@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -59,7 +59,7 @@
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="co"># S3 method for class 'bvecmodel'</span></span>
-<span><span class="fu"><a href="selection_criteria.html">selection_criteria</a></span><span class="op">(</span><span class="va">object</span>, ci <span class="op">=</span> <span class="fl">0.95</span>, plugin <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"mean"</span>, <span class="st">"best"</span><span class="op">)</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/pkg/bayests/man/selection_criteria.html" class="external-link">selection_criteria</a></span><span class="op">(</span><span class="va">object</span>, ci <span class="op">=</span> <span class="fl">0.95</span>, plugin <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"mean"</span>, <span class="st">"best"</span><span class="op">)</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -100,24 +100,15 @@ element <code>model</code> and one data frame per criterion, as described in
     <div class="dont-index"><p>Other model comparison:
 <code><a href="add_forecast_errors.bvarmodel.html">add_forecast_errors.bvarmodel()</a></code>,
 <code><a href="add_forecast_errors.bvecmodel.html">add_forecast_errors.bvecmodel()</a></code>,
-<code><a href="add_predictive_loglik.html">add_predictive_loglik()</a></code>,
 <code><a href="add_predictive_loglik.bvarmodel.html">add_predictive_loglik.bvarmodel()</a></code>,
 <code><a href="add_predictive_loglik.bvecmodel.html">add_predictive_loglik.bvecmodel()</a></code>,
+<code><a href="add_predictive_loglik.expandingwindow.html">add_predictive_loglik.expandingwindow()</a></code>,
 <code><a href="aggregate_forecasts.html">aggregate_forecasts()</a></code>,
-<code><a href="align_model_obs.modellist.html">align_model_obs.modellist()</a></code>,
 <code><a href="analysis_of_stored_models.html">analysis_of_stored_models</a></code>,
-<code><a href="choose_best_model.selcritlist.html">choose_best_model.selcritlist()</a></code>,
 <code><a href="create_external_forecast.html">create_external_forecast()</a></code>,
-<code><a href="folder_steps.html">folder_steps</a></code>,
-<code><a href="map_draws.html">map_draws()</a></code>,
-<code><a href="map_models.html">map_models()</a></code>,
-<code><a href="open_model.html">open_model()</a></code>,
-<code><a href="open_models.html">open_models()</a></code>,
 <code><a href="plot_forecast_errors_by_period.html">plot_forecast_errors_by_period()</a></code>,
 <code><a href="pool_forecasts.html">pool_forecasts()</a></code>,
-<code><a href="selection_criteria.bvarmodel.html">selection_criteria.bvarmodel()</a></code>,
-<code><a href="selection_criteria.default.html">selection_criteria.default()</a></code>,
-<code><a href="selection_criteria.modellist.html">selection_criteria.modellist()</a></code></p></div>
+<code><a href="selection_criteria.bvarmodel.html">selection_criteria.bvarmodel()</a></code></p></div>
     </div>
 
     <div class="section level2">
@@ -135,22 +126,22 @@ element <code>model</code> and one data frame per criterion, as described in
 <span class="r-in"><span><span class="co"># Number of iterations and burnin should be much higher.</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Add priors</span></span></span>
-<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_priors.html">add_priors</a></span><span class="op">(</span><span class="va">model</span>,</span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_priors.html" class="external-link">add_priors</a></span><span class="op">(</span><span class="va">model</span>,</span></span>
 <span class="r-in"><span>                    coef <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>v_i <span class="op">=</span> <span class="fl">1</span>, v_i_det <span class="op">=</span> <span class="fl">1</span> <span class="op">/</span> <span class="fl">10</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                    coint <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>v_i <span class="op">=</span> <span class="fl">0</span>, p_tau_i <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                    sigma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>df <span class="op">=</span> <span class="st">"k"</span>, scale <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Add initial values</span></span></span>
-<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_initial_values.html">add_initial_values</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_initial_values.html" class="external-link">add_initial_values</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Obtain posterior draws </span></span></span>
-<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_posterior_coefficients.html">add_posterior_coefficients</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html" class="external-link">add_posterior_coefficients</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Add log-likelihoods</span></span></span>
-<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_posterior_loglik.html">add_posterior_loglik</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_posterior_loglik.html" class="external-link">add_posterior_loglik</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Calculate selection criteria</span></span></span>
-<span class="r-in"><span><span class="va">sel</span> <span class="op">&lt;-</span> <span class="fu"><a href="selection_criteria.html">selection_criteria</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">sel</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/selection_criteria.html" class="external-link">selection_criteria</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">sel</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ------------------------------------------</span>
@@ -160,43 +151,43 @@ element <code>model</code> and one data frame per criterion, as described in
 <span class="r-out co"><span class="r-pr">#&gt;</span> Log-likelihood</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           Mean Median Quantile (2.5%) Quantile (97.5%)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Model 1 280.0  281.2           266.8            297.6</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Model 2 276.4  275.4           259.3            295.0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Model 1 277.4  277.0           254.7            300.8</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Model 2 273.3  273.2           255.3            292.3</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Akaike Information Criterion (AIC)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Mean Median Quantile (2.5%) Quantile (97.5%)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Model 1 -528.1 -528.1                                 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Model 2 -515.2 -515.2                                 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Model 1 -523.1 -523.1                                 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Model 2 -512.1 -512.1                                 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Bayesian Information Criterion (BIC)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Mean Median Quantile (2.5%) Quantile (97.5%)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Model 1 -467.5 -467.5                                 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Model 2 -446.7 -446.7                                 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Model 1 -462.5 -462.5                                 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Model 2 -443.6 -443.6                                 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Hannan-Quinn Criterion (HQ)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Mean Median Quantile (2.5%) Quantile (97.5%)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Model 1 -503.6 -503.6                                 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Model 2 -487.5 -487.5                                 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Model 1 -498.5 -498.5                                 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Model 2 -484.4 -484.4                                 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Widely Applicable Information Criterion (WAIC)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Mean Median Quantile (2.5%) Quantile (97.5%)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Model 1 -558.8 -558.8          -560.1           -557.5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Model 2 -551.1 -551.1          -552.4           -549.8</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Model 1 -552.5 -552.5          -553.5           -551.5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Model 2 -544.7 -544.7          -545.9           -543.6</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Leave-One-Out Information Criterion (LOOIC)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Mean Median Quantile (2.5%) Quantile (97.5%)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Model 1 -558.9 -558.9          -560.2           -557.7</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Model 2 -551.3 -551.3          -552.6           -550.0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Model 1 -552.7 -552.7          -553.7           -551.7</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Model 2 -544.9 -544.9          -546.1           -543.8</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Influential periods, whose importance sampling is unreliable, in models 1 (103), 2 (103), counted as a Pareto k above 0.23.</span>
 <span class="r-in"><span></span></span>

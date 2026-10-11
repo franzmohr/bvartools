@@ -19,9 +19,9 @@ predict(object, n_ahead = NULL, ...)
 
   number of steps ahead at which to predict. If `NULL` (default), every
   period simulated by
-  [`add_posterior_forecasts`](https://franzmohr.github.io/bvartools/reference/add_posterior_forecasts.md),
+  [`add_posterior_forecasts`](https://rdrr.io/pkg/bayests/man/add_posterior_forecasts.html),
   i.e. the horizon given to
-  [`add_forecast_input`](https://franzmohr.github.io/bvartools/reference/add_forecast_input.md).
+  [`add_forecast_input`](https://rdrr.io/pkg/bayests/man/add_forecast_input.html).
 
 - ...:
 
@@ -33,7 +33,11 @@ An object of class 'bvarprd', a list with element `fcst`, an \\h \times
 K \times S\\ array of the \\S\\ forecast draws, whose first two
 dimensions are named after the forecast periods and the endogenous
 variables, and element `y`, the endogenous variables of the training
-sample.
+sample. For a forecast that starts after the end of the sample, from
+argument `y_start` of
+[`add_forecast_input`](https://rdrr.io/pkg/bayests/man/add_forecast_input.html),
+the forecast periods are those after the start values, and `y` continues
+the training sample with the start values that lie after it.
 
 ## Details
 

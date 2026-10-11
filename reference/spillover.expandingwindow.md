@@ -26,13 +26,13 @@ spillover(object, ...)
 
 A time-series object of class 'bvarspilloverts' with the median of the
 total index and the bounds of its credible interval, one row per window.
-Windows whose estimation failed are `NA`.
+An error in one window stops the call and names the window.
 
 ## Details
 
 The index over a moving sample is the chart this literature is built
 around, and
-[`use_expanding_window`](https://franzmohr.github.io/bvartools/reference/use_expanding_window.md)
+[`use_expanding_window`](https://rdrr.io/pkg/bayests/man/use_expanding_window.html)
 already produces the models it needs. Each window contributes one value,
 dated at its own last observation, so the result reads as the
 connectedness of the system as it was known up to that date.

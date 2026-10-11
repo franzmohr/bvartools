@@ -18,12 +18,6 @@ add_sign_zero_restrictions(
   max_tries = 1,
   ...
 )
-
-# S3 method for class 'expandingwindow'
-add_sign_zero_restrictions(object, ...)
-
-# S3 method for class 'modellist'
-add_sign_zero_restrictions(object, ...)
 ```
 
 ## Arguments
@@ -87,17 +81,17 @@ importance sampler and the share of the total weight held by its single
 largest draw, the shape `pareto_k` of the distribution fitted to the
 tail of the weights and whether they were `smooth`ed. Element
 `sign_restrictions` is set alongside it, so that
-[`irf`](https://franzmohr.github.io/bvartools/reference/irf.md),
-[`fevd`](https://franzmohr.github.io/bvartools/reference/fevd.md) and
+[`irf`](https://rdrr.io/pkg/bayests/man/irf.html),
+[`fevd`](https://rdrr.io/pkg/bayests/man/fevd.html) and
 [`spillover`](https://franzmohr.github.io/bvartools/reference/spillover.md)
 read the rotations under `type = "sign"` as they do for
-[`add_sign_restrictions`](https://franzmohr.github.io/bvartools/reference/add_sign_restrictions.md).
+[`add_sign_restrictions`](https://rdrr.io/pkg/bayests/man/add_sign_restrictions.html).
 
 ## Details
 
 A sign restriction can be imposed by trying rotations until one of them
 carries the signs that were asked for, which is what
-[`add_sign_restrictions`](https://franzmohr.github.io/bvartools/reference/add_sign_restrictions.md)
+[`add_sign_restrictions`](https://rdrr.io/pkg/bayests/man/add_sign_restrictions.html)
 does. A zero restriction cannot: the rotations that satisfy one form a
 set of probability zero, so no number of tries finds a single member of
 it. This function uses the algorithms of Arias, Rubio-Ramirez and
@@ -131,7 +125,7 @@ With many sign restrictions that can leave nothing: when one rotation in
 tens of thousands satisfies them all, a few thousand posterior draws
 produce no admissible rotation, and the function stops. `max_tries`
 draws more rotations per draw, but not the way
-[`add_sign_restrictions`](https://franzmohr.github.io/bvartools/reference/add_sign_restrictions.md)
+[`add_sign_restrictions`](https://rdrr.io/pkg/bayests/man/add_sign_restrictions.html)
 does. Stopping at the first rotation that satisfies the signs would bias
 an importance sampler: the single try is what weights each posterior
 draw by the probability \\p\\ that its rotations satisfy the signs, and
@@ -195,17 +189,19 @@ restrictions therefore has to be named early. The function refuses an
 ordering that leaves a column with nothing to draw and says which shock
 it was.
 
-The result depends on the state of the random number generator, so
-[`set.seed`](https://rdrr.io/r/base/Random.html) is needed to reproduce
-it. It depends on it in two places rather than one: the rotations are
-drawn at random, and so are the matrices that complete each shock's
-constraints to a square system. Appendix A.3 of the paper says any draw
-of the latter defines a valid algorithm, and that is true – but not that
-any draw defines an equally efficient one. Holding a model, its
-posterior draws and every rotation fixed, different completions have
-moved the effective sample size by a factor of four. A run reporting a
-poor effective sample size is therefore worth repeating under a
-different seed before the restrictions themselves are blamed.
+The draws are taken with a seed derived from the model's own, see
+[`add_seed`](https://rdrr.io/pkg/bayests/man/add_seed.html), so a model
+with a seed gives the same result however R's generator stands; a model
+without one needs [`set.seed`](https://rdrr.io/r/base/Random.html) to
+reproduce it. The result depends on the seed in two places rather than
+one: the rotations are drawn at random, and so are the matrices that
+complete each shock's constraints to a square system. Appendix A.3 of
+the paper says any draw of the latter defines a valid algorithm, and
+that is true – but not that any draw defines an equally efficient one.
+Holding a model, its posterior draws and every rotation fixed, different
+completions have moved the effective sample size by a factor of four. A
+run reporting a poor effective sample size is therefore worth repeating
+under a different seed before the restrictions themselves are blamed.
 
 **The weights are Pareto smoothed before they are used.** Nothing in the
 algorithm bounds the ratio of two volume elements, so a draw landing
@@ -229,7 +225,17 @@ guessed from an effective sample size: the estimator has a finite
 variance only for \\k\\ below one half, and above about 0.7 neither it
 nor its effective sample size means much. It is reported by
 [`summary`](https://rdrr.io/r/base/summary.html) and kept in element
-`pareto_k` of `sign_zero_restrictions`.
+`pareto_k` of `sign_zero_restrictions`. It is `NA` where there is no
+tail to fit: when fewer than 25 draws satisfied the signs, and when the
+weights are equal by construction, as they are where every restriction
+is a sign.
+
+With `max_tries` above one, the smoothing and \\k\\ apply to the ratio
+of the volume elements alone, and the estimate of \\p\\ is multiplied in
+afterwards. The estimate lies between `1 / max_tries` and one, so it
+cannot make the tail heavier, and it takes only the values \\1, 1/2,
+1/3, \ldots\\: a Pareto fit to a tail of such ties returns a shape far
+above 0.7 for a sample that has nothing wrong with it.
 
 **The function warns when the importance sample is not fit to
 summarise**: when \\k\\ is 0.7 or above, when the effective sample size

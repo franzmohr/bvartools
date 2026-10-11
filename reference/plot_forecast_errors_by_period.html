@@ -9,7 +9,7 @@ period, for which a forecast was made."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -82,7 +82,7 @@ period, for which a forecast was made.</p>
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
 <dd><p>an object of class 'bvarmodel', 'bvecmodel', 'expandingwindow' or
 'modellist', which contains forecast errors. Usually, a result of a call to
-<code><a href="add_forecast_errors.html">add_forecast_errors</a></code>.</p></dd>
+<code><a href="https://rdrr.io/pkg/bayests/man/add_forecast_errors.html" class="external-link">add_forecast_errors</a></code>.</p></dd>
 
 
 <dt id="arg-criterion">criterion<a class="anchor" aria-label="anchor" href="#arg-criterion"></a></dt>
@@ -142,7 +142,7 @@ the credible band of the respective statistic and which is marked by the median
 and the mean of the posterior draws of its forecast errors. The position of a
 model in <code>x</code> is added above its error bar. For <code>criterion = "FE"</code> a
 horizontal reference line is added at zero.</p>
-<p>In contrast to <code><a href="plot.selcritlist.html">plot.selcritlist</a></code>, which plots statistics that are
+<p>In contrast to <code><a href="https://rdrr.io/pkg/bayests/man/plot.selcritlist.html" class="external-link">plot.selcritlist</a></code>, which plots statistics that are
 calculated across all periods of the evaluation sample, this function plots the
 statistics of each period separately. Thus, it is most useful for forecast errors,
 which were obtained for multiple periods as, for example, in the case of
@@ -155,24 +155,15 @@ error is obtained from the end of the training sample of the respective window.<
     <div class="dont-index"><p>Other model comparison:
 <code><a href="add_forecast_errors.bvarmodel.html">add_forecast_errors.bvarmodel()</a></code>,
 <code><a href="add_forecast_errors.bvecmodel.html">add_forecast_errors.bvecmodel()</a></code>,
-<code><a href="add_predictive_loglik.html">add_predictive_loglik()</a></code>,
 <code><a href="add_predictive_loglik.bvarmodel.html">add_predictive_loglik.bvarmodel()</a></code>,
 <code><a href="add_predictive_loglik.bvecmodel.html">add_predictive_loglik.bvecmodel()</a></code>,
+<code><a href="add_predictive_loglik.expandingwindow.html">add_predictive_loglik.expandingwindow()</a></code>,
 <code><a href="aggregate_forecasts.html">aggregate_forecasts()</a></code>,
-<code><a href="align_model_obs.modellist.html">align_model_obs.modellist()</a></code>,
 <code><a href="analysis_of_stored_models.html">analysis_of_stored_models</a></code>,
-<code><a href="choose_best_model.selcritlist.html">choose_best_model.selcritlist()</a></code>,
 <code><a href="create_external_forecast.html">create_external_forecast()</a></code>,
-<code><a href="folder_steps.html">folder_steps</a></code>,
-<code><a href="map_draws.html">map_draws()</a></code>,
-<code><a href="map_models.html">map_models()</a></code>,
-<code><a href="open_model.html">open_model()</a></code>,
-<code><a href="open_models.html">open_models()</a></code>,
 <code><a href="pool_forecasts.html">pool_forecasts()</a></code>,
 <code><a href="selection_criteria.bvarmodel.html">selection_criteria.bvarmodel()</a></code>,
-<code><a href="selection_criteria.bvecmodel.html">selection_criteria.bvecmodel()</a></code>,
-<code><a href="selection_criteria.default.html">selection_criteria.default()</a></code>,
-<code><a href="selection_criteria.modellist.html">selection_criteria.modellist()</a></code></p></div>
+<code><a href="selection_criteria.bvecmodel.html">selection_criteria.bvecmodel()</a></code></p></div>
     </div>
 
     <div class="section level2">
@@ -190,27 +181,27 @@ error is obtained from the end of the training sample of the respective window.<
 <span class="r-in"><span><span class="co"># Chosen number of iterations and burn-in draws should be much higher.</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Obtain objects for expanding window estimation</span></span></span>
-<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="use_expanding_window.html">use_expanding_window</a></span><span class="op">(</span><span class="va">model</span>, start <span class="op">=</span> <span class="fl">2007</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/use_expanding_window.html" class="external-link">use_expanding_window</a></span><span class="op">(</span><span class="va">model</span>, start <span class="op">=</span> <span class="fl">2007</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Add priors</span></span></span>
-<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_priors.html">add_priors</a></span><span class="op">(</span><span class="va">model</span>,</span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_priors.html" class="external-link">add_priors</a></span><span class="op">(</span><span class="va">model</span>,</span></span>
 <span class="r-in"><span>                    coef <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>v_i <span class="op">=</span> <span class="fl">1</span>, v_i_det <span class="op">=</span> <span class="fl">1</span> <span class="op">/</span> <span class="fl">10</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                    sigma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>shape <span class="op">=</span> <span class="fl">3</span>, rate <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Add initial values</span></span></span>
-<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_initial_values.html">add_initial_values</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_initial_values.html" class="external-link">add_initial_values</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Obtain posterior draws</span></span></span>
-<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_posterior_coefficients.html">add_posterior_coefficients</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html" class="external-link">add_posterior_coefficients</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Add data used for forecast calculation</span></span></span>
-<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_forecast_input.html">add_forecast_input</a></span><span class="op">(</span><span class="va">model</span>, n_ahead <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_forecast_input.html" class="external-link">add_forecast_input</a></span><span class="op">(</span><span class="va">model</span>, n_ahead <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Add forecasts</span></span></span>
-<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_posterior_forecasts.html">add_posterior_forecasts</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_posterior_forecasts.html" class="external-link">add_posterior_forecasts</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Add forecast errors</span></span></span>
-<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_forecast_errors.html">add_forecast_errors</a></span><span class="op">(</span><span class="va">model</span>, test_sample <span class="op">=</span> <span class="va">us_macrodata</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_forecast_errors.html" class="external-link">add_forecast_errors</a></span><span class="op">(</span><span class="va">model</span>, test_sample <span class="op">=</span> <span class="va">us_macrodata</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Plot absolute forecast errors of each period</span></span></span>
 <span class="r-in"><span><span class="fu">plot_forecast_errors_by_period</span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></span>

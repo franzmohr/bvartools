@@ -68,9 +68,12 @@ minnesota_prior(
 
 ## Value
 
-A list containing a matrix of prior means and the precision matrix of
-the coefficients and the inverse variance-covariance matrix of the error
-term, which was obtained by an LS estimation.
+A list with the prior means of the coefficients in `mu`, their prior
+precision matrix in `v_inv` – the name
+[`add_priors()`](https://rdrr.io/pkg/bayests/man/add_priors.html) and
+the model file use – and, where there are regressors, the inverse
+variance-covariance matrix of the error term, which was obtained by an
+LS estimation, in `sigma_inv`.
 
 ## Details
 

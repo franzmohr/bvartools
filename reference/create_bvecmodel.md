@@ -24,7 +24,9 @@ create_bvecmodel(
   delta_sigma = 1,
   iterations = 20000,
   burnin = 2000,
-  thin = 1
+  thin = 1,
+  volatility_break = NULL,
+  volatility_scales = 3
 )
 ```
 
@@ -136,6 +138,19 @@ create_bvecmodel(
   which thins draws already made, the draws that are not kept are never
   held in memory.
 
+- volatility_break:
+
+  an optional date of `data`, `c(year, period)` such as `c(2020, 3)` or
+  a single time such as `2020.167`: the first period of a break in the
+  volatility of every shock. Needs `error = "wishart"` and constant
+  coefficients. Defaults to `NULL`, no break. See 'Details'.
+
+- volatility_scales:
+
+  a whole number of at least one, how many periods from
+  `volatility_break` on get a scale of their own before the excess
+  decays (defaults to 3). Used only with `volatility_break`.
+
 ## Value
 
 An object of class 'bvecmodel' or, if a vector is given in `p`, `s` or
@@ -239,24 +254,40 @@ chain being run for any of it.
 
 The one assumption that separates it from the sampling VEC models is
 that the cointegration space is given rather than estimated.
-[`add_initial_values`](https://franzmohr.github.io/bvartools/reference/add_initial_values.md)
+[`add_initial_values`](https://rdrr.io/pkg/bayests/man/add_initial_values.html)
 puts Johansen's maximum likelihood estimate at `/initial/beta` and the
 model conditions on it, so what drifts is the adjustment to the long-run
 relations and not the relations themselves. That is a different question
 from the one `"KLGS2010"` answers, not a cheaper way of answering the
 same one.
 
-[`add_posterior_coefficients`](https://franzmohr.github.io/bvartools/reference/add_posterior_coefficients.md)
+[`add_posterior_coefficients`](https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html)
 estimates it like any other algorithm, the filter being part of the
 vendored BayesTS core. It consumes no random numbers, so two runs agree
 to the bit and a model estimated here and the same model estimated by
 the `bayests` command line over a file written with
-[`write_to_hdf5`](https://franzmohr.github.io/bvartools/reference/write_to_hdf5.md)
+[`write_to_hdf5`](https://rdrr.io/pkg/bayests/man/write_to_hdf5.html)
 give the same numbers rather than merely the same distribution. What
 comes back is a posterior rather than a chain: one row per period under
 `posterior$a$mean`, `posterior$a$cov`, `posterior$u_sigma$scale` and
 `posterior$df`, and no `coeffs` anywhere, because joining one draw per
 period would look like a sampled path and is not one.
+
+**A volatility break scales every shock from a known period on.** With
+`volatility_break` the error covariance of period \\t\\ is \\s_t^2
+\Sigma\\, as described for
+[`create_bvarmodel`](https://franzmohr.github.io/bvartools/reference/create_bvarmodel.md)
+after Lenza and Primiceri (2022), and is available for constant
+coefficients and `error = "wishart"`. The differenced variables, the
+short-run regressors and the levels the cointegration term is built from
+are all divided by \\s_t\\, which keeps the loadings, the cointegration
+space and the Wishart prior conjugate. The prior is `sigma$volatility`
+in
+[`add_priors.bvecmodel`](https://franzmohr.github.io/bvartools/reference/add_priors.bvecmodel.md),
+the draws are `posterior$volatility$coeffs`, and
+[`vec_to_var`](https://franzmohr.github.io/bvartools/reference/vec_to_var.md)
+carries both the break and its draws over to the VAR in levels, whose
+log likelihood and forecasts are the VEC model's.
 
 ## References
 
@@ -272,6 +303,11 @@ cointegration space. *Econometric Reviews, 29*(2), 224–242.
 Korobilis, D. (2013). VAR forecasting using Bayesian variable selection.
 *Journal of Applied Econometrics, 28*(2), 204–230.
 [doi:10.1002/jae.1271](https://doi.org/10.1002/jae.1271)
+
+Lenza, M., & Primiceri, G. E. (2022). How to estimate a vector
+autoregression after March 2020. *Journal of Applied Econometrics,
+37*(4), 688–699.
+[doi:10.1002/jae.2895](https://doi.org/10.1002/jae.2895)
 
 Lütkepohl, H. (2006). *New introduction to multiple time series
 analysis* (2nd ed.). Berlin: Springer.
@@ -296,7 +332,6 @@ Other model set-up:
 [`add_priors.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/add_priors.bvarmodel.md),
 [`add_priors.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/add_priors.bvecmodel.md),
 [`aggregation_weights()`](https://franzmohr.github.io/bvartools/reference/aggregation_weights.md),
-[`combine_models()`](https://franzmohr.github.io/bvartools/reference/combine_models.md),
 [`create_bvarmodel()`](https://franzmohr.github.io/bvartools/reference/create_bvarmodel.md),
 [`transform_variables()`](https://franzmohr.github.io/bvartools/reference/transform_variables.md),
 [`use_expanding_window.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/use_expanding_window.bvarmodel.md),

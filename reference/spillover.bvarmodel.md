@@ -31,8 +31,8 @@ spillover(
   which is made of the impulse responses of periods 0 to \\H - 1\\.
   Defaults to 10, the horizon of Diebold and Yilmaz (2012). The table
   therefore corresponds to the rows of period \\H - 1\\ of
-  [`fevd`](https://franzmohr.github.io/bvartools/reference/fevd.md),
-  which counts its periods from the impact period.
+  [`fevd`](https://rdrr.io/pkg/bayests/man/fevd.html), which counts its
+  periods from the impact period.
 
 - type:
 
@@ -121,7 +121,7 @@ Choleski factor of \\\Sigma\\, adds up by construction and depends on
 the ordering of the variables, which is what the generalised version of
 Diebold and Yilmaz (2012) avoids. Under `type = "sign"` it uses the
 Choleski factor rotated by what
-[`add_sign_restrictions`](https://franzmohr.github.io/bvartools/reference/add_sign_restrictions.md)
+[`add_sign_restrictions`](https://rdrr.io/pkg/bayests/man/add_sign_restrictions.html)
 accepted for that draw, leaving out the draws no rotation was found for.
 Under `type = "custom"` it uses the matrix supplied in argument `impact`
 in place of that factor and is otherwise the orthogonalised case, the
@@ -167,8 +167,7 @@ interval, which the original point estimate based version does not have.
 
 Objects of class `'bvecmodel'` have to be transformed with
 [`vec_to_var`](https://franzmohr.github.io/bvartools/reference/vec_to_var.md)
-first, as for
-[`fevd`](https://franzmohr.github.io/bvartools/reference/fevd.md).
+first, as for [`fevd`](https://rdrr.io/pkg/bayests/man/fevd.html).
 
 ## References
 
@@ -240,10 +239,10 @@ sp
 #> Draws:         100 
 #> 
 #>        invest income cons from
-#> invest   82.9    6.6 10.5  5.7
-#> income    8.6   66.4 25.0 11.2
-#> cons     11.5   28.4 60.1 13.3
-#> to        6.7   11.7 11.8 30.2
+#> invest   84.0    6.3  9.7  5.3
+#> income    7.6   67.5 24.9 10.8
+#> cons     10.3   28.7 61.0 13.0
+#> to        6.0   11.7 11.5 29.2
 #> 
 #> Rows are responses, columns are shocks. The corner is the total index.
 #> Means only; see $total, $from, $to and $net for credible intervals.

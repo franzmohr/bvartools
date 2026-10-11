@@ -46,24 +46,15 @@ in
 Other model comparison:
 [`add_forecast_errors.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/add_forecast_errors.bvarmodel.md),
 [`add_forecast_errors.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/add_forecast_errors.bvecmodel.md),
-[`add_predictive_loglik()`](https://franzmohr.github.io/bvartools/reference/add_predictive_loglik.md),
 [`add_predictive_loglik.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/add_predictive_loglik.bvarmodel.md),
 [`add_predictive_loglik.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/add_predictive_loglik.bvecmodel.md),
+[`add_predictive_loglik.expandingwindow()`](https://franzmohr.github.io/bvartools/reference/add_predictive_loglik.expandingwindow.md),
 [`aggregate_forecasts()`](https://franzmohr.github.io/bvartools/reference/aggregate_forecasts.md),
-[`align_model_obs.modellist()`](https://franzmohr.github.io/bvartools/reference/align_model_obs.modellist.md),
 [`analysis_of_stored_models`](https://franzmohr.github.io/bvartools/reference/analysis_of_stored_models.md),
-[`choose_best_model.selcritlist()`](https://franzmohr.github.io/bvartools/reference/choose_best_model.selcritlist.md),
 [`create_external_forecast()`](https://franzmohr.github.io/bvartools/reference/create_external_forecast.md),
-[`folder_steps`](https://franzmohr.github.io/bvartools/reference/folder_steps.md),
-[`map_draws()`](https://franzmohr.github.io/bvartools/reference/map_draws.md),
-[`map_models()`](https://franzmohr.github.io/bvartools/reference/map_models.md),
-[`open_model()`](https://franzmohr.github.io/bvartools/reference/open_model.md),
-[`open_models()`](https://franzmohr.github.io/bvartools/reference/open_models.md),
 [`plot_forecast_errors_by_period()`](https://franzmohr.github.io/bvartools/reference/plot_forecast_errors_by_period.md),
 [`pool_forecasts()`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md),
-[`selection_criteria.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.bvarmodel.md),
-[`selection_criteria.default()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.default.md),
-[`selection_criteria.modellist()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.modellist.md)
+[`selection_criteria.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.bvarmodel.md)
 
 ## Examples
 
@@ -106,43 +97,43 @@ sel
 #> Log-likelihood
 #> 
 #>           Mean Median Quantile (2.5%) Quantile (97.5%)
-#>  Model 1 280.0  281.2           266.8            297.6
-#>  Model 2 276.4  275.4           259.3            295.0
+#>  Model 1 277.4  277.0           254.7            300.8
+#>  Model 2 273.3  273.2           255.3            292.3
 #> 
 #> 
 #> Akaike Information Criterion (AIC)
 #> 
 #>            Mean Median Quantile (2.5%) Quantile (97.5%)
-#>  Model 1 -528.1 -528.1                                 
-#>  Model 2 -515.2 -515.2                                 
+#>  Model 1 -523.1 -523.1                                 
+#>  Model 2 -512.1 -512.1                                 
 #> 
 #> 
 #> Bayesian Information Criterion (BIC)
 #> 
 #>            Mean Median Quantile (2.5%) Quantile (97.5%)
-#>  Model 1 -467.5 -467.5                                 
-#>  Model 2 -446.7 -446.7                                 
+#>  Model 1 -462.5 -462.5                                 
+#>  Model 2 -443.6 -443.6                                 
 #> 
 #> 
 #> Hannan-Quinn Criterion (HQ)
 #> 
 #>            Mean Median Quantile (2.5%) Quantile (97.5%)
-#>  Model 1 -503.6 -503.6                                 
-#>  Model 2 -487.5 -487.5                                 
+#>  Model 1 -498.5 -498.5                                 
+#>  Model 2 -484.4 -484.4                                 
 #> 
 #> 
 #> Widely Applicable Information Criterion (WAIC)
 #> 
 #>            Mean Median Quantile (2.5%) Quantile (97.5%)
-#>  Model 1 -558.8 -558.8          -560.1           -557.5
-#>  Model 2 -551.1 -551.1          -552.4           -549.8
+#>  Model 1 -552.5 -552.5          -553.5           -551.5
+#>  Model 2 -544.7 -544.7          -545.9           -543.6
 #> 
 #> 
 #> Leave-One-Out Information Criterion (LOOIC)
 #> 
 #>            Mean Median Quantile (2.5%) Quantile (97.5%)
-#>  Model 1 -558.9 -558.9          -560.2           -557.7
-#>  Model 2 -551.3 -551.3          -552.6           -550.0
+#>  Model 1 -552.7 -552.7          -553.7           -551.7
+#>  Model 2 -544.9 -544.9          -546.1           -543.8
 #> 
 #> Influential periods, whose importance sampling is unreliable, in models 1 (103), 2 (103), counted as a Pareto k above 0.23.
 

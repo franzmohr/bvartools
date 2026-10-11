@@ -16,6 +16,12 @@ historical_decomposition(
   ci = NULL,
   ...
 )
+
+# S3 method for class 'expandingwindow'
+historical_decomposition(x, ...)
+
+# S3 method for class 'modellist'
+historical_decomposition(x, ...)
 ```
 
 ## Arguments
@@ -34,9 +40,9 @@ historical_decomposition(
   the identification: `"oir"` (default) for orthogonalised shocks from
   the Choleski factor of each draw's covariance, `"sign"` for the
   rotations
-  [`add_sign_restrictions`](https://franzmohr.github.io/bvartools/reference/add_sign_restrictions.md)
+  [`add_sign_restrictions`](https://rdrr.io/pkg/bayests/man/add_sign_restrictions.html)
   or
-  [`add_sign_zero_restrictions`](https://franzmohr.github.io/bvartools/reference/add_sign_zero_restrictions.md)
+  [`add_sign_zero_restrictions`](https://rdrr.io/pkg/bayests/man/add_sign_zero_restrictions.html)
   stored in the model, and `"custom"` for impact matrices given in
   `impact`.
 
@@ -93,6 +99,10 @@ Available for models with constant coefficients, a lag order of at least
 one and a covariance that does not change over the sample; that excludes
 time-varying parameters and stochastic volatility, whose impact matrix
 would differ from period to period, and structural models.
+
+For an object of class 'modellist' or 'expandingwindow' the
+decomposition of every model is returned in a list named after the
+models.
 
 ## See also
 

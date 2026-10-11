@@ -133,7 +133,7 @@ structural types not for any other.
 Sign restricted impulse responses \\\Theta^r_i\\ are calculated as
 \\\Theta^r_i = \Phi_i P Q\\, where \\P\\ is the lower triangular
 Choleski decomposition of \\\Sigma\\ and \\Q\\ the rotation that
-[`add_sign_restrictions`](https://franzmohr.github.io/bvartools/reference/add_sign_restrictions.md)
+[`add_sign_restrictions`](https://rdrr.io/pkg/bayests/man/add_sign_restrictions.html)
 accepted for that draw. Draws for which no admissible rotation was found
 are left out, so the responses cover fewer draws than the posterior
 holds and the credible interval is one over the set of models the

@@ -19,6 +19,12 @@ inclusion_prior(
   kappa4 = 0.8,
   ...
 )
+
+# S3 method for class 'expandingwindow'
+inclusion_prior(object, ...)
+
+# S3 method for class 'modellist'
+inclusion_prior(object, ...)
 ```
 
 ## Arguments
@@ -90,6 +96,10 @@ If `minnesota_like = TRUE`, prior inclusion probabilities
 | \\\frac{\kappa_3}{1 + r}\\ | for unmodelled exogenous variables, |
 | \\\kappa_2\\ | for contemporaneous endogenous variables of a structural model, |
 | \\\kappa\_{4}\\ | for deterministic variables. |
+
+For an object of class 'modellist' or 'expandingwindow' the prior of
+every model is returned in the shape of the collection, each of its own
+dimensions.
 
 ## Examples
 

@@ -31,7 +31,7 @@ persistence_profiles(object, ...)
 - object:
 
   an object of class 'bvecmodel', usually, the result of a call to
-  [`add_posterior_coefficients`](https://franzmohr.github.io/bvartools/reference/add_posterior_coefficients.md).
+  [`add_posterior_coefficients`](https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html).
 
 - ...:
 
@@ -80,9 +80,9 @@ many stationary combinations exist, and the profile is the check on it.
 How quickly the profile falls is the speed of convergence to
 equilibrium.
 
-Unlike [`irf`](https://franzmohr.github.io/bvartools/reference/irf.md)
-and [`fevd`](https://franzmohr.github.io/bvartools/reference/fevd.md),
-which a VEC model reaches through
+Unlike [`irf`](https://rdrr.io/pkg/bayests/man/irf.html) and
+[`fevd`](https://rdrr.io/pkg/bayests/man/fevd.html), which a VEC model
+reaches through
 [`vec_to_var`](https://franzmohr.github.io/bvartools/reference/vec_to_var.md),
 this statistic cannot be taken from the level VAR alone: `vec_to_var`
 drops `beta`, and the profile is a statement about the cointegrating
@@ -133,8 +133,8 @@ profiles <- persistence_profiles(model, n_ahead = 12)
 round(profiles[[1]][1:5, ], 3)
 #>   median lower upper
 #> 0  1.000 1.000 1.000
-#> 1  0.170 0.099 0.357
-#> 2  0.112 0.001 0.176
-#> 3  0.075 0.027 0.219
-#> 4  0.003 0.000 0.020
+#> 1  0.177 0.060 0.266
+#> 2  0.108 0.041 0.223
+#> 3  0.104 0.026 0.192
+#> 4  0.003 0.001 0.028
 ```

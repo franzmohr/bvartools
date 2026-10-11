@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -597,21 +597,21 @@ based on the semiautomatic approach of George et al. (2008) and
 deterministic terms from the SSVS algorithm.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Obtain priors</span></span>
-<span><span class="va">model_with_priors</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_priors.html">add_priors</a></span><span class="op">(</span><span class="va">data</span>,</span>
+<span><span class="va">model_with_priors</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_priors.html" class="external-link">add_priors</a></span><span class="op">(</span><span class="va">data</span>,</span>
 <span>                                coef <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>v_i <span class="op">=</span> <span class="fl">0</span><span class="op">)</span>,</span>
 <span>                                sigma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>df <span class="op">=</span> <span class="fl">1</span>, scale <span class="op">=</span> <span class="fl">0.00001</span><span class="op">)</span>,</span>
 <span>                                varsel <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>inprior <span class="op">=</span> <span class="fl">0.5</span>, semiautomatic <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.01</span>, <span class="fl">10</span><span class="op">)</span>, exclude_det <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>Initial values can be added to the model by using function
 <code>add_initial_values</code>.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">model_with_priors</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_initial_values.html">add_initial_values</a></span><span class="op">(</span><span class="va">model_with_priors</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">model_with_priors</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_initial_values.html" class="external-link">add_initial_values</a></span><span class="op">(</span><span class="va">model_with_priors</span><span class="op">)</span></span></code></pre></div>
 <p>Posterior draws can be obtained using function
 <code>add_posterior_coefficients</code>. It will recognise the
 specifications of the model based on the content of object
 <code>model_with_priors</code> and produce the respective draws from the
 posterior.</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">ssvs_est</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_posterior_coefficients.html">add_posterior_coefficients</a></span><span class="op">(</span><span class="va">model_with_priors</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">ssvs_est</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html" class="external-link">add_posterior_coefficients</a></span><span class="op">(</span><span class="va">model_with_priors</span><span class="op">)</span></span></code></pre></div>
 <p>The output of <code>add_posterior_coefficients</code> is an object of
 class <code>bvarmodel</code>. Thus, further analytical steps can be done
 as described above.</p>

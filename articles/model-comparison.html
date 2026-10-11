@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -139,7 +139,7 @@ selection.</p>
 <p>Function <code>add_priors</code> can be used to produce priors for
 each of the models in object <code>models</code>.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">models</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_priors.html">add_priors</a></span><span class="op">(</span><span class="va">models</span>,</span>
+<code class="sourceCode R"><span><span class="va">models</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_priors.html" class="external-link">add_priors</a></span><span class="op">(</span><span class="va">models</span>,</span>
 <span>                     coef <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>v_i <span class="op">=</span> <span class="fl">0</span>, v_i_det <span class="op">=</span> <span class="fl">0</span><span class="op">)</span>,</span>
 <span>                     sigma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>df <span class="op">=</span> <span class="st">"k"</span>, scale <span class="op">=</span> <span class="fl">0.0001</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 </div>
@@ -150,7 +150,7 @@ each of the models in object <code>models</code>.</p>
 initial values of the Gibbs sampler for each of the models in object
 <code>models</code>.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">models</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_initial_values.html">add_initial_values</a></span><span class="op">(</span><span class="va">models</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">models</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_initial_values.html" class="external-link">add_initial_values</a></span><span class="op">(</span><span class="va">models</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="posterior-simulation">Posterior simulation<a class="anchor" aria-label="anchor" href="#posterior-simulation"></a>
@@ -158,13 +158,13 @@ initial values of the Gibbs sampler for each of the models in object
 <p>Posterior draws can be obtained using function
 <code>add_posterior_coefficients</code>.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">models</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_posterior_coefficients.html">add_posterior_coefficients</a></span><span class="op">(</span><span class="va">models</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">models</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html" class="external-link">add_posterior_coefficients</a></span><span class="op">(</span><span class="va">models</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="model-selection">Model selection<a class="anchor" aria-label="anchor" href="#model-selection"></a>
 </h2>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">models</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_posterior_loglik.html">add_posterior_loglik</a></span><span class="op">(</span><span class="va">models</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">models</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_posterior_loglik.html" class="external-link">add_posterior_loglik</a></span><span class="op">(</span><span class="va">models</span><span class="op">)</span></span></code></pre></div>
 <p>If function <code>selection_criteria</code> is applied to an object
 of class <code>modellist</code>, it produces an object of class
 <code>selcritlist</code>. Its elements are of class <code>selcrit</code>
@@ -268,7 +268,7 @@ not describe a shrinkage prior, which buys back degrees of freedom that
 does not see. WAIC and LOOIC penalise by the flexibility the fit
 actually used and remain defined in those cases.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">selcrit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/selection_criteria.html">selection_criteria</a></span><span class="op">(</span><span class="va">models</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">selcrit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/selection_criteria.html" class="external-link">selection_criteria</a></span><span class="op">(</span><span class="va">models</span><span class="op">)</span></span></code></pre></div>
 <p>Method <code>print.selcritlist</code> gives a table with model
 selection criteria for each model</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
@@ -355,7 +355,7 @@ errors, and the criteria that count parameters as single values.</p>
 <img src="figures/model-comparison-looic-1.png" alt="plot of chunk looic"><div class="figcaption">plot of chunk looic</div>
 </div>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">pos</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/choose_best_model.html">choose_best_model</a></span><span class="op">(</span><span class="va">selcrit</span>, criterion <span class="op">=</span> <span class="st">"AIC"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">pos</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/choose_best_model.html" class="external-link">choose_best_model</a></span><span class="op">(</span><span class="va">selcrit</span>, criterion <span class="op">=</span> <span class="st">"AIC"</span><span class="op">)</span></span>
 <span><span class="va">pos</span></span>
 <span><span class="co">#&gt; [1] 3</span></span></code></pre></div>
 <p>AIC, HQ, WAIC and LOOIC have their lowest value for the model with
@@ -372,7 +372,7 @@ table also points out periods whose log-likelihood varies strongly
 across the draws, and that number increases with the lag order. The
 third element of <code>models</code> is used for further analysis.</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="../reference/irf.html">irf</a></span><span class="op">(</span><span class="va">models</span><span class="op">[[</span><span class="va">pos</span><span class="op">]</span><span class="op">]</span>, impulse <span class="op">=</span> <span class="st">"r"</span>, response <span class="op">=</span> <span class="st">"dy"</span>, n_ahead <span class="op">=</span> <span class="fl">10</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/bayests/man/irf.html" class="external-link">irf</a></span><span class="op">(</span><span class="va">models</span><span class="op">[[</span><span class="va">pos</span><span class="op">]</span><span class="op">]</span>, impulse <span class="op">=</span> <span class="st">"r"</span>, response <span class="op">=</span> <span class="st">"dy"</span>, n_ahead <span class="op">=</span> <span class="fl">10</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <div class="float">
 <img src="figures/model-comparison-irf-1.png" alt="plot of chunk irf"><div class="figcaption">plot of chunk irf</div>
 </div>

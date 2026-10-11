@@ -20,9 +20,9 @@ add_posterior_forecasts(
 - object:
 
   an object of class 'bvarmodel', usually, the result of a call to
-  [`add_posterior_coefficients`](https://franzmohr.github.io/bvartools/reference/add_posterior_coefficients.md)
+  [`add_posterior_coefficients`](https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html)
   and
-  [`add_forecast_input`](https://franzmohr.github.io/bvartools/reference/add_forecast_input.md).
+  [`add_forecast_input`](https://rdrr.io/pkg/bayests/man/add_forecast_input.html).
 
 - forecast_states:
 
@@ -72,7 +72,7 @@ draw and \\Kh\\ columns, stacked by period: the \\K\\ variables of the
 first forecast period, then those of the second, and so on.
 `posterior$forecast` is the group everything the forecast periods
 produce hangs below, the `errors` of
-[`add_forecast_errors`](https://franzmohr.github.io/bvartools/reference/add_forecast_errors.md)
+[`add_forecast_errors`](https://rdrr.io/pkg/bayests/man/add_forecast_errors.html)
 beside these.
 [`predict`](https://franzmohr.github.io/bvartools/reference/predict.bvarmodel.md)
 summarises them. A `forecast_states` that was given is stored in
@@ -80,10 +80,29 @@ summarises them. A `forecast_states` that was given is stored in
 
 Simulating the volatility forward needs the variance of the
 log-volatility innovations, `posterior$u_sigma_inv$sigma`, which
-[`add_posterior_coefficients`](https://franzmohr.github.io/bvartools/reference/add_posterior_coefficients.md)
+[`add_posterior_coefficients`](https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html)
 stores. A stochastic volatility model fitted with an earlier version of
 the package lacks it and stops with an error unless
 `forecast_states = "hold"`.
+
+## Details
+
+A model with a seed, see
+[`add_seed`](https://rdrr.io/pkg/bayests/man/add_seed.html), draws its
+forecast from a seed derived from its own, so two forecasts of it give
+the same draws however R's generator stands. A model without one draws
+from R's generator as it stands.
+
+A forecast that starts after the end of the estimation sample, from
+argument `y_start` of
+[`add_forecast_input`](https://rdrr.io/pkg/bayests/man/add_forecast_input.html),
+takes its lags from the start values and its coefficients from the
+sample. **Three things that start from the last period of the sample are
+refused for it**: a `scenario`, which is drawn from the end of the
+sample; `forecast_states = "simulate"` for a model with time varying
+coefficients or stochastic volatility, which would not step the states
+through the periods up to the start values (`"hold"` is available); and
+the discounted model, for the same reason.
 
 ## References
 
@@ -103,12 +122,9 @@ Other posterior simulation:
 [`add_posterior_forecasts.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/add_posterior_forecasts.bvecmodel.md),
 [`add_posterior_loglik.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/add_posterior_loglik.bvarmodel.md),
 [`add_posterior_loglik.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/add_posterior_loglik.bvecmodel.md),
-[`add_seed()`](https://franzmohr.github.io/bvartools/reference/add_seed.md),
-[`bayests_files()`](https://franzmohr.github.io/bvartools/reference/bayests_files.md),
-[`bayests_posterior()`](https://franzmohr.github.io/bvartools/reference/bayests_posterior.md),
+[`add_seed.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/add_seed.bvarmodel.md),
 [`bvar()`](https://franzmohr.github.io/bvartools/reference/bvar.md),
 [`bvec()`](https://franzmohr.github.io/bvartools/reference/bvec.md),
-[`chain_diagnostics()`](https://franzmohr.github.io/bvartools/reference/chain_diagnostics.md),
 [`predict.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/predict.bvecmodel.md)
 
 ## Examples

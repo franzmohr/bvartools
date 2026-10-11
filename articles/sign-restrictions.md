@@ -135,7 +135,7 @@ restrictions:
 
 summary(model)[["model"]][["sign_restrictions"]][c("accepted", "draws")]
 #> $accepted
-#> [1] 737
+#> [1] 743
 #> 
 #> $draws
 #> [1] 10000

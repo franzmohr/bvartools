@@ -12,6 +12,7 @@ add_forecast_input(
   n_ahead = 10,
   deterministic = NULL,
   exogen = NULL,
+  y_start = NULL,
   ...
 )
 ```
@@ -40,7 +41,20 @@ add_forecast_input(
   last `s` periods of the estimation sample, as well as the `n_ahead`
   forecast periods, because the regressors of a forecast period include
   the lags of these variables. See
-  [`prepare_forecast_input`](https://franzmohr.github.io/bvartools/reference/prepare_forecast_input.md).
+  [`prepare_forecast_input`](https://rdrr.io/pkg/bayests/man/prepare_forecast_input.html).
+
+- y_start:
+
+  an optional time-series object with the endogenous variables of the
+  model, by name and in the units of the estimation sample, that the
+  forecast starts from: the forecast periods are the `n_ahead` periods
+  after its last observation, and the lags of the first one are its last
+  `p` observations. It may end after the estimation sample, so that a
+  forecast can start from a nowcast or from data that came in after the
+  model was estimated; `exogen` and `deterministic` then have to cover
+  the new forecast periods. If `NULL` (default), the forecast starts
+  after the end of the estimation sample. See 'Details' in
+  [`prepare_forecast_input`](https://rdrr.io/pkg/bayests/man/prepare_forecast_input.html).
 
 - ...:
 
@@ -50,7 +64,12 @@ add_forecast_input(
 
 The object in `object` with `model$h` set to `n_ahead` and
 `data$forecast$x` added, the regressors of the forecast periods in the
-layout of `data$train$x`, one row per period.
+layout of `data$train$x`, one row per period. If `y_start` is given,
+`model$forecast_start` is the time of the first forecast period, which
+[`predict`](https://franzmohr.github.io/bvartools/reference/predict.bvarmodel.md)
+dates the forecasts by, and `data$forecast$y` holds the start values
+after the end of the sample, which it shows as the history the forecasts
+continue.
 
 ## See also
 
@@ -62,12 +81,9 @@ Other posterior simulation:
 [`add_posterior_forecasts.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/add_posterior_forecasts.bvecmodel.md),
 [`add_posterior_loglik.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/add_posterior_loglik.bvarmodel.md),
 [`add_posterior_loglik.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/add_posterior_loglik.bvecmodel.md),
-[`add_seed()`](https://franzmohr.github.io/bvartools/reference/add_seed.md),
-[`bayests_files()`](https://franzmohr.github.io/bvartools/reference/bayests_files.md),
-[`bayests_posterior()`](https://franzmohr.github.io/bvartools/reference/bayests_posterior.md),
+[`add_seed.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/add_seed.bvarmodel.md),
 [`bvar()`](https://franzmohr.github.io/bvartools/reference/bvar.md),
 [`bvec()`](https://franzmohr.github.io/bvartools/reference/bvec.md),
-[`chain_diagnostics()`](https://franzmohr.github.io/bvartools/reference/chain_diagnostics.md),
 [`predict.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/predict.bvecmodel.md)
 
 ## Examples
@@ -90,4 +106,17 @@ model <- add_priors(model,
 
 # Add data used for forecast calculation
 model <- add_forecast_input(model, n_ahead = 4)
+
+# A model estimated up to 1978Q4 whose forecast starts from the values
+# of 1979Q1, which it was not estimated with
+short <- create_bvarmodel(window(e1, end = c(1978, 4)), p = 2,
+                          deterministic = "const",
+                          iterations = 20, burnin = 10)
+short <- add_priors(short,
+                    coef = list(v_i = 1, v_i_det = 1 / 10),
+                    sigma = list(df = "k", scale = 1))
+short <- add_forecast_input(short, n_ahead = 4,
+                            y_start = window(e1, end = c(1979, 1)))
+short[["model"]][["forecast_start"]]
+#> [1] 1979.25
 ```

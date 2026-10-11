@@ -9,7 +9,7 @@ George et al. (2008) and Bayesian variable selection (BVS) à la Korobilis (2013
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -50,7 +50,7 @@ George et al. (2008) and Bayesian variable selection (BVS) à la Korobilis (2013
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Prior Inclusion Probabilities</h1>
-      <small class="dont-index">Source: <a href="https://github.com/franzmohr/bvartools/blob/main/R/inclusion_prior.bvarmodel.R" class="external-link"><code>R/inclusion_prior.bvarmodel.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/franzmohr/bvartools/blob/main/R/inclusion_prior.bvarmodel.R" class="external-link"><code>R/inclusion_prior.bvarmodel.R</code></a>, <a href="https://github.com/franzmohr/bvartools/blob/main/R/inclusion_prior.expandingwindow.R" class="external-link"><code>R/inclusion_prior.expandingwindow.R</code></a>, <a href="https://github.com/franzmohr/bvartools/blob/main/R/inclusion_prior.modellist.R" class="external-link"><code>R/inclusion_prior.modellist.R</code></a></small>
       <div class="d-none name"><code>inclusion_prior.bvarmodel.Rd</code></div>
     </div>
 
@@ -72,7 +72,13 @@ George et al. (2008) and Bayesian variable selection (BVS) à la Korobilis (2013
 <span>  kappa3 <span class="op">=</span> <span class="fl">0.5</span>,</span>
 <span>  kappa4 <span class="op">=</span> <span class="fl">0.8</span>,</span>
 <span>  <span class="va">...</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'expandingwindow'</span></span>
+<span><span class="fu"><a href="inclusion_prior.html">inclusion_prior</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'modellist'</span></span>
+<span><span class="fu"><a href="inclusion_prior.html">inclusion_prior</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -133,7 +139,9 @@ specifying the positions of variables, which should be included in the variable 
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>If <code>minnesota_like = TRUE</code>, prior inclusion probabilities \(\underline{\pi}_1\)
-are calculated as</p><table class="table table"><tr><td>\(\frac{\kappa_1}{r}\)</td><td>for own lags of endogenous variables,</td></tr><tr><td>\(\frac{\kappa_2}{r}\)</td><td>for other endogenous variables,</td></tr><tr><td>\(\frac{\kappa_3}{1 + r}\)</td><td>for unmodelled exogenous variables,</td></tr><tr><td>\(\kappa_2\)</td><td>for contemporaneous endogenous variables of a structural model,</td></tr><tr><td>\(\kappa_{4}\)</td><td>for deterministic variables.</td></tr></table></div>
+are calculated as</p><table class="table table"><tr><td>\(\frac{\kappa_1}{r}\)</td><td>for own lags of endogenous variables,</td></tr><tr><td>\(\frac{\kappa_2}{r}\)</td><td>for other endogenous variables,</td></tr><tr><td>\(\frac{\kappa_3}{1 + r}\)</td><td>for unmodelled exogenous variables,</td></tr><tr><td>\(\kappa_2\)</td><td>for contemporaneous endogenous variables of a structural model,</td></tr><tr><td>\(\kappa_{4}\)</td><td>for deterministic variables.</td></tr></table><p>For an object of class 'modellist' or 'expandingwindow' the prior of every
+model is returned in the shape of the collection, each of its own dimensions.</p>
+    </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>

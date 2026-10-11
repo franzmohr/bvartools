@@ -142,10 +142,10 @@ has are left out, with a message. Single models and expanding windows
 cannot be pooled with each other, and external forecasts, which are
 point forecasts rather than predictive distributions, cannot be pooled
 at all: they are compared beside a pool, by combining both with
-[`combine_models`](https://franzmohr.github.io/bvartools/reference/combine_models.md).
+[`combine_models`](https://rdrr.io/pkg/bayests/man/combine_models.html).
 
 The log predictive densities that
-[`add_predictive_loglik`](https://franzmohr.github.io/bvartools/reference/add_predictive_loglik.md)
+[`add_predictive_loglik`](https://rdrr.io/pkg/bayests/man/add_predictive_loglik.html)
 and the forecasts of BayesTS provide are pooled as the forecasts are,
 which gives the log of the average predictive density of the members –
 the score of the mixture, not of its draws. They are kept only if every
@@ -159,11 +159,11 @@ flatter the pool with information it did not have.
 
 **A pool is formed after the members' forecasts are drawn**, and the
 functions that estimate a model leave it unchanged. It can be passed to
-[`add_forecast_errors`](https://franzmohr.github.io/bvartools/reference/add_forecast_errors.md)
+[`add_forecast_errors`](https://rdrr.io/pkg/bayests/man/add_forecast_errors.html)
 and
-[`selection_criteria`](https://franzmohr.github.io/bvartools/reference/selection_criteria.md),
+[`selection_criteria`](https://rdrr.io/pkg/bayests/man/selection_criteria.html),
 and included in a list of models with
-[`combine_models`](https://franzmohr.github.io/bvartools/reference/combine_models.md).
+[`combine_models`](https://rdrr.io/pkg/bayests/man/combine_models.html).
 It cannot be written to a file: write its members and form the pool
 again after reading them back.
 
@@ -192,24 +192,15 @@ Hall, S. G., & Mitchell, J. (2007). Combining density forecasts.
 Other model comparison:
 [`add_forecast_errors.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/add_forecast_errors.bvarmodel.md),
 [`add_forecast_errors.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/add_forecast_errors.bvecmodel.md),
-[`add_predictive_loglik()`](https://franzmohr.github.io/bvartools/reference/add_predictive_loglik.md),
 [`add_predictive_loglik.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/add_predictive_loglik.bvarmodel.md),
 [`add_predictive_loglik.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/add_predictive_loglik.bvecmodel.md),
+[`add_predictive_loglik.expandingwindow()`](https://franzmohr.github.io/bvartools/reference/add_predictive_loglik.expandingwindow.md),
 [`aggregate_forecasts()`](https://franzmohr.github.io/bvartools/reference/aggregate_forecasts.md),
-[`align_model_obs.modellist()`](https://franzmohr.github.io/bvartools/reference/align_model_obs.modellist.md),
 [`analysis_of_stored_models`](https://franzmohr.github.io/bvartools/reference/analysis_of_stored_models.md),
-[`choose_best_model.selcritlist()`](https://franzmohr.github.io/bvartools/reference/choose_best_model.selcritlist.md),
 [`create_external_forecast()`](https://franzmohr.github.io/bvartools/reference/create_external_forecast.md),
-[`folder_steps`](https://franzmohr.github.io/bvartools/reference/folder_steps.md),
-[`map_draws()`](https://franzmohr.github.io/bvartools/reference/map_draws.md),
-[`map_models()`](https://franzmohr.github.io/bvartools/reference/map_models.md),
-[`open_model()`](https://franzmohr.github.io/bvartools/reference/open_model.md),
-[`open_models()`](https://franzmohr.github.io/bvartools/reference/open_models.md),
 [`plot_forecast_errors_by_period()`](https://franzmohr.github.io/bvartools/reference/plot_forecast_errors_by_period.md),
 [`selection_criteria.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.bvarmodel.md),
-[`selection_criteria.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.bvecmodel.md),
-[`selection_criteria.default()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.default.md),
-[`selection_criteria.modellist()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.modellist.md)
+[`selection_criteria.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.bvecmodel.md)
 
 ## Examples
 
@@ -249,21 +240,21 @@ selection_criteria(all_models)
 #> Mean absolute forecast errors (MAFE)
 #> 
 #>  Variable h Model 1 Model 2 Model 3
-#>    invest 1   3.662  4.0380   3.850
-#>    income 1   1.143  1.1740   1.159
-#>      cons 1   1.302  0.9985   1.150
-#>    invest 2   4.363  4.9460   4.655
-#>    income 2   1.343  1.1702   1.257
-#>      cons 2   1.146  1.1920   1.169
+#>    invest 1   4.030  3.9610   3.996
+#>    income 1   1.193  1.2269   1.210
+#>      cons 1   1.071  0.9597   1.015
+#>    invest 2   4.114  5.5136   4.814
+#>    income 2   1.205  1.2186   1.212
+#>      cons 2   1.282  1.0935   1.188
 #> 
 #> 
 #> Root mean squared forecast errors (RMSFE)
 #> 
 #>  Variable h Model 1 Model 2 Model 3
-#>    invest 1   4.914   4.992   4.953
-#>    income 1   1.394   1.427   1.411
-#>      cons 1   1.560   1.254   1.415
-#>    invest 2   5.558   6.563   6.081
-#>    income 2   1.613   1.495   1.555
-#>      cons 2   1.440   1.466   1.454
+#>    invest 1   4.918   5.045   4.982
+#>    income 1   1.443   1.508   1.476
+#>      cons 1   1.305   1.233   1.270
+#>    invest 2   5.257   6.886   6.126
+#>    income 2   1.490   1.492   1.491
+#>      cons 2   1.597   1.369   1.488
 ```

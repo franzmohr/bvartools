@@ -1,0 +1,48 @@
+# Objects exported from other packages
+
+These objects are imported from other packages. Follow the links below
+to see their documentation.
+
+- bayests:
+
+  [`add_forecast_errors()`](https://rdrr.io/pkg/bayests/man/add_forecast_errors.html),
+  [`add_forecast_input()`](https://rdrr.io/pkg/bayests/man/add_forecast_input.html),
+  [`add_initial_values()`](https://rdrr.io/pkg/bayests/man/add_initial_values.html),
+  [`add_posterior_coefficients()`](https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html),
+  [`add_posterior_forecasts()`](https://rdrr.io/pkg/bayests/man/add_posterior_forecasts.html),
+  [`add_posterior_loglik()`](https://rdrr.io/pkg/bayests/man/add_posterior_loglik.html),
+  [`add_predictive_loglik()`](https://rdrr.io/pkg/bayests/man/add_predictive_loglik.html),
+  [`add_priors()`](https://rdrr.io/pkg/bayests/man/add_priors.html),
+  [`add_seed()`](https://rdrr.io/pkg/bayests/man/add_seed.html),
+  [`add_sign_restrictions()`](https://rdrr.io/pkg/bayests/man/add_sign_restrictions.html),
+  [`add_sign_zero_restrictions()`](https://rdrr.io/pkg/bayests/man/add_sign_zero_restrictions.html),
+  [`align_model_obs()`](https://rdrr.io/pkg/bayests/man/align_model_obs.html),
+  [`bayests_files()`](https://rdrr.io/pkg/bayests/man/bayests_files.html),
+  [`bayests_posterior()`](https://rdrr.io/pkg/bayests/man/bayests_posterior.html),
+  [`chain_diagnostics()`](https://rdrr.io/pkg/bayests/man/chain_diagnostics.html),
+  [`choose_best_model()`](https://rdrr.io/pkg/bayests/man/choose_best_model.html),
+  [`combine_models()`](https://rdrr.io/pkg/bayests/man/combine_models.html),
+  [`expected_model_size()`](https://rdrr.io/pkg/bayests/man/expected_model_size.html),
+  [`fevd()`](https://rdrr.io/pkg/bayests/man/fevd.html),
+  [`from_bayests_tree()`](https://rdrr.io/pkg/bayests/man/from_bayests_tree.html),
+  [`get_forecast_errors()`](https://rdrr.io/pkg/bayests/man/get_forecast_errors.html),
+  [`get_model_specifications()`](https://rdrr.io/pkg/bayests/man/get_model_specifications.html),
+  [`irf()`](https://rdrr.io/pkg/bayests/man/irf.html),
+  [`map_draws()`](https://rdrr.io/pkg/bayests/man/map_draws.html),
+  [`map_models()`](https://rdrr.io/pkg/bayests/man/map_models.html),
+  [`model_files()`](https://rdrr.io/pkg/bayests/man/read_model_folder.html),
+  [`plot_predictive_loglik()`](https://rdrr.io/pkg/bayests/man/plot_predictive_loglik.html),
+  [`prepare_forecast_input()`](https://rdrr.io/pkg/bayests/man/prepare_forecast_input.html),
+  [`read_bayests_tree()`](https://rdrr.io/pkg/bayests/man/write_bayests_tree.html),
+  [`read_expanding_window_model_from_folder()`](https://rdrr.io/pkg/bayests/man/read_expanding_window_model_from_folder.html),
+  [`read_hdf5_model()`](https://rdrr.io/pkg/bayests/man/read_hdf5_model.html),
+  [`read_model_file()`](https://rdrr.io/pkg/bayests/man/read_model_file.html),
+  [`read_model_folder()`](https://rdrr.io/pkg/bayests/man/read_model_folder.html),
+  [`read_model_from_hdf5()`](https://rdrr.io/pkg/bayests/man/read_model_from_hdf5.html),
+  [`read_model_groups()`](https://rdrr.io/pkg/bayests/man/read_model_groups.html),
+  [`read_models_from_folder()`](https://rdrr.io/pkg/bayests/man/read_models_from_folder.html),
+  [`selection_criteria()`](https://rdrr.io/pkg/bayests/man/selection_criteria.html),
+  [`time_variation_test()`](https://rdrr.io/pkg/bayests/man/time_variation_test.html),
+  [`use_expanding_window()`](https://rdrr.io/pkg/bayests/man/use_expanding_window.html),
+  [`write_bayests_tree()`](https://rdrr.io/pkg/bayests/man/write_bayests_tree.html),
+  [`write_to_hdf5()`](https://rdrr.io/pkg/bayests/man/write_to_hdf5.html)

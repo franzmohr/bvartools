@@ -78,7 +78,7 @@ print(x, digits = max(3L, getOption("digits") - 3L), ...)
   the maximum forecast horizon that is considered. If `NULL` (default),
   the forecast horizon of the models in `object` is used, which requires
   that
-  [`add_forecast_input`](https://franzmohr.github.io/bvartools/reference/add_forecast_input.md)
+  [`add_forecast_input`](https://rdrr.io/pkg/bayests/man/add_forecast_input.html)
   was already applied to them. For models whose forecasts were
   aggregated with
   [`aggregate_forecasts`](https://franzmohr.github.io/bvartools/reference/aggregate_forecasts.md)
@@ -184,7 +184,7 @@ horizon 2, whichever quarter it was published in. The realised values,
 against which the forecasts are scored, are the annual figures of the
 data of the models, which the aggregated forecasts of the models are
 scored against, too, so that
-[`add_forecast_errors`](https://franzmohr.github.io/bvartools/reference/add_forecast_errors.md)
+[`add_forecast_errors`](https://rdrr.io/pkg/bayests/man/add_forecast_errors.html)
 does not need argument `test_sample`.
 
 In contrast to a model, an external forecast does not have a training
@@ -208,15 +208,15 @@ those publications is used.
 
 The resulting object mimics the structure of a model, which was
 estimated with the expanding window approach of
-[`use_expanding_window`](https://franzmohr.github.io/bvartools/reference/use_expanding_window.md),
+[`use_expanding_window`](https://rdrr.io/pkg/bayests/man/use_expanding_window.html),
 where each publication corresponds to one estimation window. It can be
 added to a list of models with
-[`combine_models`](https://franzmohr.github.io/bvartools/reference/combine_models.md)
+[`combine_models`](https://rdrr.io/pkg/bayests/man/combine_models.html)
 and the functions, which are applied to obtain posterior draws, are
 without effect for it. Since external forecasts are point forecasts,
 their forecast errors consist of a single draw. Accordingly, the
 credible bands of the out-of-sample statistics in
-[`selection_criteria`](https://franzmohr.github.io/bvartools/reference/selection_criteria.md)
+[`selection_criteria`](https://rdrr.io/pkg/bayests/man/selection_criteria.html)
 are degenerate and in-sample criteria are not available.
 
 External forecasts do not have to be estimated, so the functions, which
@@ -230,24 +230,15 @@ usual workflow to all elements of that list.
 Other model comparison:
 [`add_forecast_errors.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/add_forecast_errors.bvarmodel.md),
 [`add_forecast_errors.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/add_forecast_errors.bvecmodel.md),
-[`add_predictive_loglik()`](https://franzmohr.github.io/bvartools/reference/add_predictive_loglik.md),
 [`add_predictive_loglik.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/add_predictive_loglik.bvarmodel.md),
 [`add_predictive_loglik.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/add_predictive_loglik.bvecmodel.md),
+[`add_predictive_loglik.expandingwindow()`](https://franzmohr.github.io/bvartools/reference/add_predictive_loglik.expandingwindow.md),
 [`aggregate_forecasts()`](https://franzmohr.github.io/bvartools/reference/aggregate_forecasts.md),
-[`align_model_obs.modellist()`](https://franzmohr.github.io/bvartools/reference/align_model_obs.modellist.md),
 [`analysis_of_stored_models`](https://franzmohr.github.io/bvartools/reference/analysis_of_stored_models.md),
-[`choose_best_model.selcritlist()`](https://franzmohr.github.io/bvartools/reference/choose_best_model.selcritlist.md),
-[`folder_steps`](https://franzmohr.github.io/bvartools/reference/folder_steps.md),
-[`map_draws()`](https://franzmohr.github.io/bvartools/reference/map_draws.md),
-[`map_models()`](https://franzmohr.github.io/bvartools/reference/map_models.md),
-[`open_model()`](https://franzmohr.github.io/bvartools/reference/open_model.md),
-[`open_models()`](https://franzmohr.github.io/bvartools/reference/open_models.md),
 [`plot_forecast_errors_by_period()`](https://franzmohr.github.io/bvartools/reference/plot_forecast_errors_by_period.md),
 [`pool_forecasts()`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md),
 [`selection_criteria.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.bvarmodel.md),
-[`selection_criteria.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.bvecmodel.md),
-[`selection_criteria.default()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.default.md),
-[`selection_criteria.modellist()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.modellist.md)
+[`selection_criteria.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.bvecmodel.md)
 
 ## Examples
 

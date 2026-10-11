@@ -28,7 +28,10 @@ create_bvarmodel(
   missing = "omit",
   aggregate = NULL,
   soft = NULL,
-  quantile_grid = FALSE
+  quantile_grid = FALSE,
+  student_t = FALSE,
+  volatility_break = NULL,
+  volatility_scales = 3
 )
 ```
 
@@ -166,6 +169,25 @@ create_bvarmodel(
   `error = "ald"` and constant coefficients. Defaults to `FALSE`. See
   'Details'.
 
+- student_t:
+
+  logical. If `TRUE`, the errors are multivariate Student t rather than
+  normal. Needs `error = "wishart"` and constant coefficients. Defaults
+  to `FALSE`. See 'Details'.
+
+- volatility_break:
+
+  an optional date of `data`, `c(year, period)` such as `c(2020, 3)` or
+  a single time such as `2020.167`: the first period of a break in the
+  volatility of every shock. Needs `error = "wishart"` and constant
+  coefficients. Defaults to `NULL`, no break. See 'Details'.
+
+- volatility_scales:
+
+  a whole number of at least one, how many periods from
+  `volatility_break` on get a scale of their own before the excess
+  decays (defaults to 3). Used only with `volatility_break`.
+
 ## Value
 
 An object of class 'bvarmodel' or, if a vector is given in `p`, `s` or
@@ -284,12 +306,12 @@ variable, the grid describes the whole distribution of each variable
 given the ones ordered before it: the estimated quantiles are sorted
 (Chernozhukov et al., 2010), interpolated linearly between the levels
 and continued by exponential tails. That distribution is what
-[`add_posterior_forecasts`](https://franzmohr.github.io/bvartools/reference/add_posterior_forecasts.md)
+[`add_posterior_forecasts`](https://rdrr.io/pkg/bayests/man/add_posterior_forecasts.html)
 simulates from, variable by variable, so a grid does forecast. A
 scenario given there pins variables in forecast periods, and a
 `forecast_quantile` takes every draw at one level, which gives the
 quantile paths the impulse responses of the model are differences of.
-[`add_posterior_loglik`](https://franzmohr.github.io/bvartools/reference/add_posterior_loglik.md)
+[`add_posterior_loglik`](https://rdrr.io/pkg/bayests/man/add_posterior_loglik.html)
 scores the density the grid describes. Only models with constant
 coefficients take a grid. Summaries, plots and impulse responses work on
 the single levels, which
@@ -318,12 +340,12 @@ marginal likelihood: the sum of `/posterior/loglik` is the log marginal
 likelihood of the sample given the two discounts, so a grid over them
 can be compared without a chain being run for any of it.
 
-[`add_posterior_coefficients`](https://franzmohr.github.io/bvartools/reference/add_posterior_coefficients.md)
+[`add_posterior_coefficients`](https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html)
 estimates it like any other algorithm, the filter being part of the
 vendored BayesTS core. It consumes no random numbers, so two runs agree
 to the bit and a model estimated here and the same model estimated by
 the `bayests` command line over a file written with
-[`write_to_hdf5`](https://franzmohr.github.io/bvartools/reference/write_to_hdf5.md)
+[`write_to_hdf5`](https://rdrr.io/pkg/bayests/man/write_to_hdf5.html)
 give the same numbers rather than merely the same distribution. What
 comes back is a posterior rather than a chain: one row per period under
 `posterior$a$mean`, `posterior$a$cov`, `posterior$u_sigma$scale` and
@@ -343,9 +365,9 @@ coefficients: the sampler never draws them, so they are zero in every
 draw. Everything else treats the model as an ordinary VAR – the
 restricted variables are still regressors in the other equations, the
 error covariance still covers them, and
-[`irf`](https://franzmohr.github.io/bvartools/reference/irf.md) and
-[`fevd`](https://franzmohr.github.io/bvartools/reference/fevd.md) read
-the draws unchanged.
+[`irf`](https://rdrr.io/pkg/bayests/man/irf.html) and
+[`fevd`](https://rdrr.io/pkg/bayests/man/fevd.html) read the draws
+unchanged.
 
 **The variables named in `iid` have to be the first columns of `data`**,
 in any order among themselves. The restriction is carried by a
@@ -391,6 +413,44 @@ completed panel. Forecasts are scored and conditioned on a scenario in
 `data$forecast$constraints` only by models with constant coefficients
 and `error = "wishart"` or `"gamma"`.
 
+**Student t errors weight down the periods with large shocks without
+anyone dating them.** With `student_t = TRUE` each period's shock vector
+is \\u_t \sim N(0, \lambda_t \Sigma)\\ with \\\lambda_t \sim IG(\nu / 2,
+\nu / 2)\\: a period whose shocks are large gets a large \\\lambda_t\\,
+and its observations count for less in the estimate of the coefficients
+and of \\\Sigma\\. The scale is common to every equation, so the Wishart
+prior stays conjugate. The degrees of freedom \\\nu\\ are held fixed or
+drawn under a gamma prior, as `sigma$student_t` in
+[`add_priors.bvarmodel`](https://franzmohr.github.io/bvartools/reference/add_priors.bvarmodel.md)
+says, and the draws of \\\nu\\ and of every \\\lambda_t\\ are
+`posterior$student_t$df` and `posterior$student_t$lambda`. The log
+likelihood and the predictive density are the Student t ones, with
+\\\lambda_t\\ integrated out, and a forecast draws each period's
+\\\lambda\\ from its prior. A scenario and a steady-state prior are
+refused.
+
+**A volatility break scales every shock from a known period on, and lets
+the data say by how much and for how long.** With `volatility_break` the
+error covariance of period \\t\\ is \\s_t^2 \Sigma\\, the model of Lenza
+and Primiceri (2022) for the pandemic months: \\s_t = 1\\ before the
+break, a free scale of at least one in each of the first
+`volatility_scales` periods from it, and after them \\s_t = 1 +
+(s_m - 1) \rho^j\\ in the \\j\\-th period past the last free scale
+\\s_m\\, so that the excess decays at the rate \\\rho\\. Without it, a
+few months of enormous shocks pull the coefficients towards whatever
+explains them and widen every forecast band; with it, those periods
+count for less in the estimate of the coefficients and of \\\Sigma\\.
+The scale is common to every equation, which keeps the Wishart prior
+conjugate. The prior of the scales and of \\\rho\\ is `sigma$volatility`
+in
+[`add_priors.bvarmodel`](https://franzmohr.github.io/bvartools/reference/add_priors.bvarmodel.md),
+and their draws are `posterior$volatility$coeffs`, columns `s1`, `s2`,
+... and `rho`. The log likelihood and the forecasts use each period's
+scale, so a forecast made shortly after the break is drawn with the
+larger shocks the decay implies. Only the timing is known, and no scale
+goes below one: the break is a period of larger shocks. It can be
+combined with Student t errors; a steady-state prior is refused.
+
 ## References
 
 Chan, J. C. C., Poon, A., & Zhu, D. (2023). High-dimensional
@@ -411,9 +471,19 @@ George, E. I., Sun, D., & Ni, S. (2008). Bayesian stochastic search for
 VAR model restrictions. *Journal of Econometrics, 142*(1), 553–580.
 [doi:10.1016/j.jeconom.2007.08.017](https://doi.org/10.1016/j.jeconom.2007.08.017)
 
+Juarez, M. A., & Steel, M. F. J. (2010). Model-based clustering of
+non-Gaussian panel data based on skew-t distributions. *Journal of
+Business & Economic Statistics, 28*(1), 52–66.
+[doi:10.1198/jbes.2009.07145](https://doi.org/10.1198/jbes.2009.07145)
+
 Korobilis, D. (2013). VAR forecasting using Bayesian variable selection.
 *Journal of Applied Econometrics, 28*(2), 204–230.
 [doi:10.1002/jae.1271](https://doi.org/10.1002/jae.1271)
+
+Lenza, M., & Primiceri, G. E. (2022). How to estimate a vector
+autoregression after March 2020. *Journal of Applied Econometrics,
+37*(4), 688–699.
+[doi:10.1002/jae.2895](https://doi.org/10.1002/jae.2895)
 
 Kozumi, H., & Kobayashi, G. (2011). Gibbs sampling methods for Bayesian
 quantile regression. *Journal of Statistical Computation and Simulation,
@@ -448,7 +518,6 @@ Other model set-up:
 [`add_priors.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/add_priors.bvarmodel.md),
 [`add_priors.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/add_priors.bvecmodel.md),
 [`aggregation_weights()`](https://franzmohr.github.io/bvartools/reference/aggregation_weights.md),
-[`combine_models()`](https://franzmohr.github.io/bvartools/reference/combine_models.md),
 [`create_bvecmodel()`](https://franzmohr.github.io/bvartools/reference/create_bvecmodel.md),
 [`transform_variables()`](https://franzmohr.github.io/bvartools/reference/transform_variables.md),
 [`use_expanding_window.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/use_expanding_window.bvarmodel.md),

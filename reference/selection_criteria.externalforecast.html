@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -59,7 +59,7 @@
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="co"># S3 method for class 'externalforecast'</span></span>
-<span><span class="fu"><a href="selection_criteria.html">selection_criteria</a></span><span class="op">(</span><span class="va">object</span>, ci <span class="op">=</span> <span class="fl">0.95</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/pkg/bayests/man/selection_criteria.html" class="external-link">selection_criteria</a></span><span class="op">(</span><span class="va">object</span>, ci <span class="op">=</span> <span class="fl">0.95</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -100,7 +100,7 @@ value to the statistics of a variable and forecast horizon.</p>
 <span class="r-in"><span>                          error <span class="op">=</span> <span class="st">"gamma"</span>, iterations <span class="op">=</span> <span class="fl">10</span>, burnin <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="co"># Chosen number of iterations and burn-in draws should be much higher.</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="use_expanding_window.html">use_expanding_window</a></span><span class="op">(</span><span class="va">model</span>, start <span class="op">=</span> <span class="fl">2007</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/use_expanding_window.html" class="external-link">use_expanding_window</a></span><span class="op">(</span><span class="va">model</span>, start <span class="op">=</span> <span class="fl">2007</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Artificial external forecasts</span></span></span>
 <span class="r-in"><span><span class="va">fcst</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/expand.grid.html" class="external-link">expand.grid</a></span><span class="op">(</span>origin <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2007</span>, <span class="fl">2007.25</span><span class="op">)</span>,</span></span>
@@ -113,10 +113,10 @@ value to the statistics of a variable and forecast horizon.</p>
 <span class="r-in"><span><span class="va">ext</span> <span class="op">&lt;-</span> <span class="fu"><a href="create_external_forecast.html">create_external_forecast</a></span><span class="op">(</span><span class="va">fcst</span>, <span class="va">model</span>, n_ahead <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Calculate forecast errors</span></span></span>
-<span class="r-in"><span><span class="va">ext</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_forecast_errors.html">add_forecast_errors</a></span><span class="op">(</span><span class="va">ext</span>, test_sample <span class="op">=</span> <span class="va">us_macrodata</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">ext</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_forecast_errors.html" class="external-link">add_forecast_errors</a></span><span class="op">(</span><span class="va">ext</span>, test_sample <span class="op">=</span> <span class="va">us_macrodata</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Calculate selection criteria</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="selection_criteria.html">selection_criteria</a></span><span class="op">(</span><span class="va">ext</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/pkg/bayests/man/selection_criteria.html" class="external-link">selection_criteria</a></span><span class="op">(</span><span class="va">ext</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ------------------------------------------</span>

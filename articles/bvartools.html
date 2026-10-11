@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -227,7 +227,7 @@ three models.</p>
 model(s) in object <code>model</code> and augments the object
 accordingly.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_priors.html">add_priors</a></span><span class="op">(</span><span class="va">model</span>,</span>
+<code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_priors.html" class="external-link">add_priors</a></span><span class="op">(</span><span class="va">model</span>,</span>
 <span>                    coef <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>v_i <span class="op">=</span> <span class="fl">0</span>, v_i_det <span class="op">=</span> <span class="fl">0</span><span class="op">)</span>,</span>
 <span>                    sigma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>df <span class="op">=</span> <span class="fl">1</span>, scale <span class="op">=</span> <span class="fl">.0001</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>If researchers want to fine-tune individual prior specifications,
@@ -244,7 +244,7 @@ coefficients.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># The seed of the posterior simulation is drawn here</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1234567</span><span class="op">)</span></span>
-<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_initial_values.html">add_initial_values</a></span><span class="op">(</span><span class="va">model</span>, method <span class="op">=</span> <span class="st">"ols"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_initial_values.html" class="external-link">add_initial_values</a></span><span class="op">(</span><span class="va">model</span>, method <span class="op">=</span> <span class="st">"ols"</span><span class="op">)</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level2">
@@ -256,7 +256,7 @@ using function <code>add_posterior_coefficients</code> the model input
 is forwarded to a posterior function and the output is added to the
 original object:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_posterior_coefficients.html">add_posterior_coefficients</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html" class="external-link">add_posterior_coefficients</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></code></pre></div>
 <p>If researchers prefer to use their own posterior algorithms, this can
 be done by specifying argument <code>posterior_function</code> with a
 function that uses object <code>model</code> as its input.</p>
@@ -434,8 +434,8 @@ obtain them from the model and gives a message, if it does not succeed.
 Second, function <code>add_posterior_forecasts</code> then simulates the
 forecasts.</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_forecast_input.html">add_forecast_input</a></span><span class="op">(</span><span class="va">model</span>, n_ahead <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
-<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_posterior_forecasts.html">add_posterior_forecasts</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_forecast_input.html" class="external-link">add_forecast_input</a></span><span class="op">(</span><span class="va">model</span>, n_ahead <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
+<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_posterior_forecasts.html" class="external-link">add_posterior_forecasts</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></code></pre></div>
 <p>Forecasts with credible bands can be extracted from the model using
 the <code>predict</code> function. The <code>n_ahead</code> argument can
 be used to set the given forecast horizon. However, the number of
@@ -465,7 +465,7 @@ for an introduction.</p>
 <h4 id="forecast-error-impulse-response">Forecast error impulse response<a class="anchor" aria-label="anchor" href="#forecast-error-impulse-response"></a>
 </h4>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">FEIR</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/irf.html">irf</a></span><span class="op">(</span><span class="va">model</span>, impulse <span class="op">=</span> <span class="st">"income"</span>, response <span class="op">=</span> <span class="st">"cons"</span>, n_ahead <span class="op">=</span> <span class="fl">8</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">FEIR</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/irf.html" class="external-link">irf</a></span><span class="op">(</span><span class="va">model</span>, impulse <span class="op">=</span> <span class="st">"income"</span>, response <span class="op">=</span> <span class="st">"cons"</span>, n_ahead <span class="op">=</span> <span class="fl">8</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">FEIR</span>, main <span class="op">=</span> <span class="st">"Forecast Error Impulse Response"</span>, xlab <span class="op">=</span> <span class="st">"Period"</span>, ylab <span class="op">=</span> <span class="st">"Response"</span><span class="op">)</span></span></code></pre></div>
 <div class="float">
@@ -476,7 +476,7 @@ for an introduction.</p>
 <h4 id="orthogonalised-impulse-response">Orthogonalised impulse response<a class="anchor" aria-label="anchor" href="#orthogonalised-impulse-response"></a>
 </h4>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">OIR</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/irf.html">irf</a></span><span class="op">(</span><span class="va">model</span>, impulse <span class="op">=</span> <span class="st">"income"</span>, response <span class="op">=</span> <span class="st">"cons"</span>, n_ahead <span class="op">=</span> <span class="fl">8</span>, type <span class="op">=</span> <span class="st">"oir"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">OIR</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/irf.html" class="external-link">irf</a></span><span class="op">(</span><span class="va">model</span>, impulse <span class="op">=</span> <span class="st">"income"</span>, response <span class="op">=</span> <span class="st">"cons"</span>, n_ahead <span class="op">=</span> <span class="fl">8</span>, type <span class="op">=</span> <span class="st">"oir"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">OIR</span>, main <span class="op">=</span> <span class="st">"Orthogonalised Impulse Response"</span>, xlab <span class="op">=</span> <span class="st">"Period"</span>, ylab <span class="op">=</span> <span class="st">"Response"</span><span class="op">)</span></span></code></pre></div>
 <div class="float">
@@ -487,7 +487,7 @@ for an introduction.</p>
 <h4 id="generalised-impulse-response">Generalised impulse response<a class="anchor" aria-label="anchor" href="#generalised-impulse-response"></a>
 </h4>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">GIR</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/irf.html">irf</a></span><span class="op">(</span><span class="va">model</span>, impulse <span class="op">=</span> <span class="st">"income"</span>, response <span class="op">=</span> <span class="st">"cons"</span>, n_ahead <span class="op">=</span> <span class="fl">8</span>, type <span class="op">=</span> <span class="st">"gir"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">GIR</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/irf.html" class="external-link">irf</a></span><span class="op">(</span><span class="va">model</span>, impulse <span class="op">=</span> <span class="st">"income"</span>, response <span class="op">=</span> <span class="st">"cons"</span>, n_ahead <span class="op">=</span> <span class="fl">8</span>, type <span class="op">=</span> <span class="st">"gir"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">GIR</span>, main <span class="op">=</span> <span class="st">"Generalised Impulse Response"</span>, xlab <span class="op">=</span> <span class="st">"Period"</span>, ylab <span class="op">=</span> <span class="st">"Response"</span><span class="op">)</span></span></code></pre></div>
 <div class="float">
@@ -505,7 +505,7 @@ decomposition.</p>
 <h4 id="forecast-error-variance-decomposition">Forecast error variance decomposition<a class="anchor" aria-label="anchor" href="#forecast-error-variance-decomposition"></a>
 </h4>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">bvar_fevd_oir</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fevd.html">fevd</a></span><span class="op">(</span><span class="va">model</span>, response <span class="op">=</span> <span class="st">"cons"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">bvar_fevd_oir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/fevd.html" class="external-link">fevd</a></span><span class="op">(</span><span class="va">model</span>, response <span class="op">=</span> <span class="st">"cons"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">bvar_fevd_oir</span>, main <span class="op">=</span> <span class="st">"OIR-based FEVD of consumption"</span><span class="op">)</span></span></code></pre></div>
 <div class="float">
@@ -520,7 +520,7 @@ generalised impulse responses (GIR). Note that these do not
 automatically add up to unity. However, this could be changed by adding
 <code>normalise_gir = TRUE</code> to the function’s arguments.</p>
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">bvar_fevd_gir</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fevd.html">fevd</a></span><span class="op">(</span><span class="va">model</span>, response <span class="op">=</span> <span class="st">"cons"</span>, type <span class="op">=</span> <span class="st">"gir"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">bvar_fevd_gir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/fevd.html" class="external-link">fevd</a></span><span class="op">(</span><span class="va">model</span>, response <span class="op">=</span> <span class="st">"cons"</span>, type <span class="op">=</span> <span class="st">"gir"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">bvar_fevd_gir</span>, main <span class="op">=</span> <span class="st">"GIR-based FEVD of consumption"</span><span class="op">)</span></span></code></pre></div>
 <div class="float">
@@ -638,10 +638,10 @@ respons analysis.</p>
 <span>                     A <span class="op">=</span> <span class="va">draws_a</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">18</span>,<span class="op">]</span>,</span>
 <span>                     C <span class="op">=</span> <span class="va">draws_a</span><span class="op">[</span><span class="fl">19</span><span class="op">:</span><span class="fl">21</span>, <span class="op">]</span>,</span>
 <span>                     Sigma <span class="op">=</span> <span class="va">draws_sigma</span><span class="op">)</span></span></code></pre></div>
-<p>Since the output of function <code>draw_posterior</code> is an object
-of class <code>bvarmodel</code> as well, the calculation of summary
-statistics, forecasts, impulse responses and forecast error variance
-decompositions is performed as described above.</p>
+<p>Since the output of <code><a href="https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html" class="external-link">add_posterior_coefficients()</a></code> is an
+object of class <code>bvarmodel</code> as well, the calculation of
+summary statistics, forecasts, impulse responses and forecast error
+variance decompositions is performed as described above.</p>
 <div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">bvar_est_two</span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>

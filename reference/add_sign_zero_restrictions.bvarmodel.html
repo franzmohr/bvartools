@@ -11,7 +11,7 @@ to be exactly zero."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -52,7 +52,7 @@ to be exactly zero."></head><body>
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Sign and Zero Restrictions</h1>
-      <small class="dont-index">Source: <a href="https://github.com/franzmohr/bvartools/blob/main/R/add_sign_zero_restrictions.bvarmodel.R" class="external-link"><code>R/add_sign_zero_restrictions.bvarmodel.R</code></a>, <a href="https://github.com/franzmohr/bvartools/blob/main/R/add_sign_zero_restrictions.expandingwindow.R" class="external-link"><code>R/add_sign_zero_restrictions.expandingwindow.R</code></a>, <a href="https://github.com/franzmohr/bvartools/blob/main/R/add_sign_zero_restrictions.modellist.R" class="external-link"><code>R/add_sign_zero_restrictions.modellist.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/franzmohr/bvartools/blob/main/R/add_sign_zero_restrictions.bvarmodel.R" class="external-link"><code>R/add_sign_zero_restrictions.bvarmodel.R</code></a></small>
       <div class="d-none name"><code>add_sign_zero_restrictions.bvarmodel.Rd</code></div>
     </div>
 
@@ -65,7 +65,7 @@ to be exactly zero.</p>
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="co"># S3 method for class 'bvarmodel'</span></span>
-<span><span class="fu"><a href="add_sign_zero_restrictions.html">add_sign_zero_restrictions</a></span><span class="op">(</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_sign_zero_restrictions.html" class="external-link">add_sign_zero_restrictions</a></span><span class="op">(</span></span>
 <span>  <span class="va">object</span>,</span>
 <span>  <span class="va">restrictions</span>,</span>
 <span>  draws <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -74,13 +74,7 @@ to be exactly zero.</p>
 <span>  period <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  max_tries <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  <span class="va">...</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># S3 method for class 'expandingwindow'</span></span>
-<span><span class="fu"><a href="add_sign_zero_restrictions.html">add_sign_zero_restrictions</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># S3 method for class 'modellist'</span></span>
-<span><span class="fu"><a href="add_sign_zero_restrictions.html">add_sign_zero_restrictions</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -145,15 +139,15 @@ of the importance sampler and the share of the total weight held by its
 single largest draw, the shape <code>pareto_k</code> of the distribution fitted to
 the tail of the weights and whether they were <code>smooth</code>ed. Element
 <code>sign_restrictions</code> is set alongside
-it, so that <code><a href="irf.html">irf</a></code>, <code><a href="fevd.html">fevd</a></code> and <code><a href="spillover.html">spillover</a></code>
+it, so that <code><a href="https://rdrr.io/pkg/bayests/man/irf.html" class="external-link">irf</a></code>, <code><a href="https://rdrr.io/pkg/bayests/man/fevd.html" class="external-link">fevd</a></code> and <code><a href="spillover.html">spillover</a></code>
 read the rotations under <code>type = "sign"</code> as they do for
-<code><a href="add_sign_restrictions.html">add_sign_restrictions</a></code>.</p>
+<code><a href="https://rdrr.io/pkg/bayests/man/add_sign_restrictions.html" class="external-link">add_sign_restrictions</a></code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>A sign restriction can be imposed by trying rotations until one of
 them carries the signs that were asked for, which is what
-<code><a href="add_sign_restrictions.html">add_sign_restrictions</a></code> does. A zero restriction cannot: the
+<code><a href="https://rdrr.io/pkg/bayests/man/add_sign_restrictions.html" class="external-link">add_sign_restrictions</a></code> does. A zero restriction cannot: the
 rotations that satisfy one form a set of probability zero, so no number of
 tries finds a single member of it. This function uses the algorithms of
 Arias, Rubio-Ramirez and Waggoner (2018) instead, and needs at least one zero
@@ -182,7 +176,7 @@ its column is drawn from already covers both of its signs.</p>
 With many sign restrictions that can leave nothing: when one rotation in
 tens of thousands satisfies them all, a few thousand posterior draws produce
 no admissible rotation, and the function stops. <code>max_tries</code> draws more
-rotations per draw, but not the way <code><a href="add_sign_restrictions.html">add_sign_restrictions</a></code>
+rotations per draw, but not the way <code><a href="https://rdrr.io/pkg/bayests/man/add_sign_restrictions.html" class="external-link">add_sign_restrictions</a></code>
 does. Stopping at the first rotation that satisfies the signs would bias an
 importance sampler: the single try is what weights each posterior draw by the
 probability \(p\) that its rotations satisfy the signs, and a draw whose
@@ -237,8 +231,10 @@ dimension after the \(j-1\) columns before it and its own zero
 restrictions have been taken out. A shock carrying many zero restrictions
 therefore has to be named early. The function refuses an ordering that leaves
 a column with nothing to draw and says which shock it was.</p>
-<p>The result depends on the state of the random number generator, so
-<code><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></code> is needed to reproduce it. It depends on it in two
+<p>The draws are taken with a seed derived from the model's own, see
+<code><a href="https://rdrr.io/pkg/bayests/man/add_seed.html" class="external-link">add_seed</a></code>, so a model with a seed gives the same result
+however R's generator stands; a model without one needs <code><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></code>
+to reproduce it. The result depends on the seed in two
 places rather than one: the rotations are drawn at random, and so are the
 matrices that complete each shock's constraints to a square system. Appendix
 A.3 of the paper says any draw of the latter defines a valid algorithm, and
@@ -267,7 +263,16 @@ when the sample cannot be trusted rather than leaving that to be guessed
 from an effective sample size: the estimator has a finite variance only for
 \(k\) below one half, and above about 0.7 neither it nor its effective
 sample size means much. It is reported by <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></code> and kept in
-element <code>pareto_k</code> of <code>sign_zero_restrictions</code>.</p>
+element <code>pareto_k</code> of <code>sign_zero_restrictions</code>. It is <code>NA</code>
+where there is no tail to fit: when fewer than 25 draws satisfied the
+signs, and when the weights are equal by construction, as they are where
+every restriction is a sign.</p>
+<p>With <code>max_tries</code> above one, the smoothing and \(k\) apply to the
+ratio of the volume elements alone, and the estimate of \(p\) is
+multiplied in afterwards. The estimate lies between <code>1 / max_tries</code> and
+one, so it cannot make the tail heavier, and it takes only the values
+\(1, 1/2, 1/3, \ldots\): a Pareto fit to a tail of such ties returns a
+shape far above 0.7 for a sample that has nothing wrong with it.</p>
 <p><strong>The function warns when the importance sample is not fit to
 summarise</strong>: when \(k\) is 0.7 or above, when the effective sample size is
 below twenty, so that the draws returned have no percentiles worth reading,
@@ -332,15 +337,15 @@ importance sampling. <em>Journal of Machine Learning Research, 25</em>(72), 1-58
 <span class="r-in"><span><span class="co"># Number of iterations and burnin should be much higher.</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Add priors</span></span></span>
-<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_priors.html">add_priors</a></span><span class="op">(</span><span class="va">model</span>,</span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_priors.html" class="external-link">add_priors</a></span><span class="op">(</span><span class="va">model</span>,</span></span>
 <span class="r-in"><span>                    coef <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>v_i <span class="op">=</span> <span class="fl">1</span>, v_i_det <span class="op">=</span> <span class="fl">1</span> <span class="op">/</span> <span class="fl">10</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                    sigma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>df <span class="op">=</span> <span class="st">"k"</span>, scale <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Add initial values</span></span></span>
-<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_initial_values.html">add_initial_values</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_initial_values.html" class="external-link">add_initial_values</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Obtain posterior draws</span></span></span>
-<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_posterior_coefficients.html">add_posterior_coefficients</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html" class="external-link">add_posterior_coefficients</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Consumption does not respond to the investment shock on impact, and income</span></span></span>
 <span class="r-in"><span><span class="co"># rises. Investment is the first variable of the data set, which is what</span></span></span>
@@ -351,10 +356,10 @@ importance sampling. <em>Journal of Machine Learning Research, 25</em>(72), 1-58
 <span class="r-in"><span>                           horizon <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1234</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_sign_zero_restrictions.html">add_sign_zero_restrictions</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">restrictions</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_sign_zero_restrictions.html" class="external-link">add_sign_zero_restrictions</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">restrictions</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Obtain the identified impulse response</span></span></span>
-<span class="r-in"><span><span class="va">ir</span> <span class="op">&lt;-</span> <span class="fu"><a href="irf.html">irf</a></span><span class="op">(</span><span class="va">model</span>, impulse <span class="op">=</span> <span class="st">"invest"</span>, response <span class="op">=</span> <span class="st">"income"</span>, type <span class="op">=</span> <span class="st">"sign"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">ir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/irf.html" class="external-link">irf</a></span><span class="op">(</span><span class="va">model</span>, impulse <span class="op">=</span> <span class="st">"invest"</span>, response <span class="op">=</span> <span class="st">"income"</span>, type <span class="op">=</span> <span class="st">"sign"</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

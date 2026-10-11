@@ -6,10 +6,10 @@ a model in an HDF5 file, computed a piece of the chain at a time.
 ## Usage
 
 ``` r
-# S3 method for class 'bvarfile'
+# S3 method for class 'modelfile'
 irf(x, ..., chunk = 100)
 
-# S3 method for class 'bvarfile'
+# S3 method for class 'modelfile'
 fevd(x, ..., chunk = 100)
 ```
 
@@ -17,8 +17,8 @@ fevd(x, ..., chunk = 100)
 
 - x:
 
-  an object of class 'bvarfile', from
-  [`open_model`](https://franzmohr.github.io/bvartools/reference/open_model.md).
+  an object of class 'modelfile', from
+  [`read_model_file`](https://rdrr.io/pkg/bayests/man/read_model_file.html).
 
 - ...:
 
@@ -49,34 +49,31 @@ of `chunk`, each piece contributes what it has, and the pieces are put
 together at the end. What comes out is what the same call on the model
 in memory gives.
 
-For a variance decomposition the pieces are combined before the shares
-are normalised and before groups are collapsed, so `normalise_gir` and
-`max_groups` describe the whole chain rather than the piece they were
-applied to.
+For a variance decomposition the pieces hand back the shares of each of
+their draws, and the decomposition is summarised once over all of them,
+so `statistic`, `ci`, `normalise_gir` and `max_groups` describe the
+whole chain rather than the piece they were applied to.
+
+An identification given per draw is read at the draw's position in the
+whole chain: a list of impact matrices is cut to each piece's draws, and
+an impact function is called with the draw's number in the chain. A
+piece in which no draw is identified – under `type = "sign"`, or an
+impact function that declines all of its draws – contributes nothing.
 
 ## See also
 
 Other model comparison:
 [`add_forecast_errors.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/add_forecast_errors.bvarmodel.md),
 [`add_forecast_errors.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/add_forecast_errors.bvecmodel.md),
-[`add_predictive_loglik()`](https://franzmohr.github.io/bvartools/reference/add_predictive_loglik.md),
 [`add_predictive_loglik.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/add_predictive_loglik.bvarmodel.md),
 [`add_predictive_loglik.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/add_predictive_loglik.bvecmodel.md),
+[`add_predictive_loglik.expandingwindow()`](https://franzmohr.github.io/bvartools/reference/add_predictive_loglik.expandingwindow.md),
 [`aggregate_forecasts()`](https://franzmohr.github.io/bvartools/reference/aggregate_forecasts.md),
-[`align_model_obs.modellist()`](https://franzmohr.github.io/bvartools/reference/align_model_obs.modellist.md),
-[`choose_best_model.selcritlist()`](https://franzmohr.github.io/bvartools/reference/choose_best_model.selcritlist.md),
 [`create_external_forecast()`](https://franzmohr.github.io/bvartools/reference/create_external_forecast.md),
-[`folder_steps`](https://franzmohr.github.io/bvartools/reference/folder_steps.md),
-[`map_draws()`](https://franzmohr.github.io/bvartools/reference/map_draws.md),
-[`map_models()`](https://franzmohr.github.io/bvartools/reference/map_models.md),
-[`open_model()`](https://franzmohr.github.io/bvartools/reference/open_model.md),
-[`open_models()`](https://franzmohr.github.io/bvartools/reference/open_models.md),
 [`plot_forecast_errors_by_period()`](https://franzmohr.github.io/bvartools/reference/plot_forecast_errors_by_period.md),
 [`pool_forecasts()`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md),
 [`selection_criteria.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.bvarmodel.md),
-[`selection_criteria.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.bvecmodel.md),
-[`selection_criteria.default()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.default.md),
-[`selection_criteria.modellist()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.modellist.md)
+[`selection_criteria.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.bvecmodel.md)
 
 ## Examples
 
@@ -96,7 +93,7 @@ model <- add_posterior_coefficients(add_initial_values(model))
 file <- file.path(tempdir(), "bvartools-example-irf.h5")
 unlink(file)
 write_to_hdf5(model, filename = file)
-stored <- open_model(file)
+stored <- read_model_file(file)
 
 ir <- irf(stored, impulse = "invest", response = "income", n_ahead = 5,
           chunk = 25)

@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -145,14 +145,14 @@ same estimated model can be identified in several ways and compared.</p>
 <code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_bvarmodel.html">create_bvarmodel</a></span><span class="op">(</span><span class="va">data</span>, p <span class="op">=</span> <span class="fl">4</span>, deterministic <span class="op">=</span> <span class="st">"const"</span>,</span>
 <span>                          iterations <span class="op">=</span> <span class="fl">10000</span>, burnin <span class="op">=</span> <span class="fl">5000</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_priors.html">add_priors</a></span><span class="op">(</span><span class="va">model</span>,</span>
+<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_priors.html" class="external-link">add_priors</a></span><span class="op">(</span><span class="va">model</span>,</span>
 <span>                    coef <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>v_i <span class="op">=</span> <span class="fl">1</span>, v_i_det <span class="op">=</span> <span class="fl">1</span> <span class="op">/</span> <span class="fl">10</span><span class="op">)</span>,</span>
 <span>                    sigma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>df <span class="op">=</span> <span class="st">"k"</span>, scale <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1234567</span><span class="op">)</span></span>
-<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_initial_values.html">add_initial_values</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span>
+<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_initial_values.html" class="external-link">add_initial_values</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_posterior_coefficients.html">add_posterior_coefficients</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html" class="external-link">add_posterior_coefficients</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="imposing-the-restrictions">Imposing the restrictions<a class="anchor" aria-label="anchor" href="#imposing-the-restrictions"></a>
@@ -195,7 +195,7 @@ satisfy every row. The search is random, so a seed is needed to
 reproduce it.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">7654321</span><span class="op">)</span></span>
-<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_sign_restrictions.html">add_sign_restrictions</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">restrictions</span>, max_tries <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_sign_restrictions.html" class="external-link">add_sign_restrictions</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">restrictions</span>, max_tries <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span></code></pre></div>
 <p>Some draws may not yield an admissible rotation within
 <code>max_tries</code> attempts, and those are dropped. How many
 survived is worth looking at before anything else, and
@@ -203,7 +203,7 @@ survived is worth looking at before anything else, and
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span><span class="op">[[</span><span class="st">"model"</span><span class="op">]</span><span class="op">]</span><span class="op">[[</span><span class="st">"sign_restrictions"</span><span class="op">]</span><span class="op">]</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"accepted"</span>, <span class="st">"draws"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="co">#&gt; $accepted</span></span>
-<span><span class="co">#&gt; [1] 737</span></span>
+<span><span class="co">#&gt; [1] 743</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $draws</span></span>
 <span><span class="co">#&gt; [1] 10000</span></span></code></pre></div>
@@ -221,7 +221,7 @@ restrictions themselves.</p>
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">1</span><span class="op">)</span>, mar <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">4</span>, <span class="fl">3</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="kw">for</span> <span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"r"</span>, <span class="st">"Dp"</span>, <span class="st">"dy"</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="va">ir</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/irf.html">irf</a></span><span class="op">(</span><span class="va">model</span>, impulse <span class="op">=</span> <span class="st">"r"</span>, response <span class="op">=</span> <span class="va">i</span>, n_ahead <span class="op">=</span> <span class="fl">16</span>, type <span class="op">=</span> <span class="st">"sign"</span><span class="op">)</span></span>
+<span>  <span class="va">ir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/irf.html" class="external-link">irf</a></span><span class="op">(</span><span class="va">model</span>, impulse <span class="op">=</span> <span class="st">"r"</span>, response <span class="op">=</span> <span class="va">i</span>, n_ahead <span class="op">=</span> <span class="fl">16</span>, type <span class="op">=</span> <span class="st">"sign"</span><span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">ir</span>, main <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"Response of"</span>, <span class="va">i</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
@@ -245,8 +245,8 @@ quarters.</p>
 the same posterior draws recursively and comparing the inflation
 responses.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">sign_ir</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/irf.html">irf</a></span><span class="op">(</span><span class="va">model</span>, impulse <span class="op">=</span> <span class="st">"r"</span>, response <span class="op">=</span> <span class="st">"Dp"</span>, n_ahead <span class="op">=</span> <span class="fl">16</span>, type <span class="op">=</span> <span class="st">"sign"</span><span class="op">)</span></span>
-<span><span class="va">chol_ir</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/irf.html">irf</a></span><span class="op">(</span><span class="va">model</span>, impulse <span class="op">=</span> <span class="st">"r"</span>, response <span class="op">=</span> <span class="st">"Dp"</span>, n_ahead <span class="op">=</span> <span class="fl">16</span>, type <span class="op">=</span> <span class="st">"oir"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">sign_ir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/irf.html" class="external-link">irf</a></span><span class="op">(</span><span class="va">model</span>, impulse <span class="op">=</span> <span class="st">"r"</span>, response <span class="op">=</span> <span class="st">"Dp"</span>, n_ahead <span class="op">=</span> <span class="fl">16</span>, type <span class="op">=</span> <span class="st">"sign"</span><span class="op">)</span></span>
+<span><span class="va">chol_ir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/irf.html" class="external-link">irf</a></span><span class="op">(</span><span class="va">model</span>, impulse <span class="op">=</span> <span class="st">"r"</span>, response <span class="op">=</span> <span class="st">"Dp"</span>, n_ahead <span class="op">=</span> <span class="fl">16</span>, type <span class="op">=</span> <span class="st">"oir"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span>, mar <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">4</span>, <span class="fl">3</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">sign_ir</span>, main <span class="op">=</span> <span class="st">"Sign restricted"</span><span class="op">)</span></span>
@@ -284,7 +284,7 @@ identification rather than the data.</p>
 <p><code>fevd</code> and <code>spillover</code> take
 <code>type = "sign"</code> as well, and use the same rotations.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">decomposition</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fevd.html">fevd</a></span><span class="op">(</span><span class="va">model</span>, response <span class="op">=</span> <span class="st">"Dp"</span>, n_ahead <span class="op">=</span> <span class="fl">16</span>, type <span class="op">=</span> <span class="st">"sign"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">decomposition</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/fevd.html" class="external-link">fevd</a></span><span class="op">(</span><span class="va">model</span>, response <span class="op">=</span> <span class="st">"Dp"</span>, n_ahead <span class="op">=</span> <span class="fl">16</span>, type <span class="op">=</span> <span class="st">"sign"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">decomposition</span>, main <span class="op">=</span> <span class="st">"FEVD of inflation"</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">

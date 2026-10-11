@@ -128,7 +128,7 @@ variable and \\e_k\\ a selection vector for the impulse variable.
 
 If `type = "sign"`, the decomposition uses \\P Q\\, with \\Q\\ the
 rotation that
-[`add_sign_restrictions`](https://franzmohr.github.io/bvartools/reference/add_sign_restrictions.md)
+[`add_sign_restrictions`](https://rdrr.io/pkg/bayests/man/add_sign_restrictions.html)
 accepted for that draw, and is otherwise the orthogonalised case. A
 rotation of the Choleski factor still factorises \\\Sigma\\, so the
 shares add up as they do there. Draws that no admissible rotation was

@@ -20,6 +20,12 @@ multipliers(
   period = NULL,
   ...
 )
+
+# S3 method for class 'expandingwindow'
+multipliers(x, ...)
+
+# S3 method for class 'modellist'
+multipliers(x, ...)
 ```
 
 ## Arguments
@@ -79,8 +85,8 @@ multipliers(
 ## Value
 
 A time-series object of class 'bvarirf', which is what
-[`irf`](https://franzmohr.github.io/bvartools/reference/irf.md) returns,
-so that the same `plot` method applies.
+[`irf`](https://rdrr.io/pkg/bayests/man/irf.html) returns, so that the
+same `plot` method applies.
 
 ## Details
 
@@ -111,6 +117,9 @@ outside the unit circle – which is the normal case for a model in levels
 whose variables are integrated – a permanent change moves the endogenous
 variables permanently, and the multipliers converge to a level rather
 than to zero.
+
+For an object of class 'modellist' or 'expandingwindow' the multipliers
+of every model are returned in a list named after the models.
 
 ## References
 

@@ -18,7 +18,7 @@ vec_to_var(object, ...)
   an object of class `'bvecmodel'`, usually, the result of a call to
   [`create_bvecmodel`](https://franzmohr.github.io/bvartools/reference/create_bvecmodel.md),
   optionally already estimated with
-  [`add_posterior_coefficients`](https://franzmohr.github.io/bvartools/reference/add_posterior_coefficients.md).
+  [`add_posterior_coefficients`](https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html).
 
 - ...:
 
@@ -75,9 +75,8 @@ term.
 Note also that the elements `priors` and `initial` of the input object
 are not carried over, because they describe the coefficients of the VEC
 model. Use
-[`add_priors`](https://franzmohr.github.io/bvartools/reference/add_priors.md)
-and
-[`add_initial_values`](https://franzmohr.github.io/bvartools/reference/add_initial_values.md)
+[`add_priors`](https://rdrr.io/pkg/bayests/man/add_priors.html) and
+[`add_initial_values`](https://rdrr.io/pkg/bayests/man/add_initial_values.html)
 if the resulting model should be estimated in its VAR form. The same
 applies to the results of variable selection algorithms: a coefficient
 of the VAR representation is the sum of multiple coefficients of the VEC

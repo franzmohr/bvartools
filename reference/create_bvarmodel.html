@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -80,7 +80,10 @@
 <span>  missing <span class="op">=</span> <span class="st">"omit"</span>,</span>
 <span>  aggregate <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  soft <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  quantile_grid <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  quantile_grid <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  student_t <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  volatility_break <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  volatility_scales <span class="op">=</span> <span class="fl">3</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -212,6 +215,25 @@ series with an error variance of its own. See 'Details'.</p></dd>
 estimated as one structural quantile VAR rather than as one model each. Needs
 <code>error = "ald"</code> and constant coefficients. Defaults to <code>FALSE</code>. See 'Details'.</p></dd>
 
+
+<dt id="arg-student-t">student_t<a class="anchor" aria-label="anchor" href="#arg-student-t"></a></dt>
+<dd><p>logical. If <code>TRUE</code>, the errors are multivariate Student t
+rather than normal. Needs <code>error = "wishart"</code> and constant coefficients.
+Defaults to <code>FALSE</code>. See 'Details'.</p></dd>
+
+
+<dt id="arg-volatility-break">volatility_break<a class="anchor" aria-label="anchor" href="#arg-volatility-break"></a></dt>
+<dd><p>an optional date of <code>data</code>, <code>c(year, period)</code>
+such as <code>c(2020, 3)</code> or a single time such as <code>2020.167</code>: the first
+period of a break in the volatility of every shock. Needs <code>error = "wishart"</code>
+and constant coefficients. Defaults to <code>NULL</code>, no break. See 'Details'.</p></dd>
+
+
+<dt id="arg-volatility-scales">volatility_scales<a class="anchor" aria-label="anchor" href="#arg-volatility-scales"></a></dt>
+<dd><p>a whole number of at least one, how many periods from
+<code>volatility_break</code> on get a scale of their own before the excess decays
+(defaults to 3). Used only with <code>volatility_break</code>.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -304,10 +326,10 @@ level, the block of the first quantile first. With <code>structural = TRUE</code
 variable, the grid describes the whole distribution of each variable given the ones ordered
 before it: the estimated quantiles are sorted (Chernozhukov et al., 2010), interpolated linearly
 between the levels and continued by exponential tails. That distribution is what
-<code><a href="add_posterior_forecasts.html">add_posterior_forecasts</a></code> simulates from, variable by variable, so a grid does
+<code><a href="https://rdrr.io/pkg/bayests/man/add_posterior_forecasts.html" class="external-link">add_posterior_forecasts</a></code> simulates from, variable by variable, so a grid does
 forecast. A scenario given there pins variables in forecast periods, and a
 <code>forecast_quantile</code> takes every draw at one level, which gives the quantile paths the
-impulse responses of the model are differences of. <code><a href="add_posterior_loglik.html">add_posterior_loglik</a></code> scores
+impulse responses of the model are differences of. <code><a href="https://rdrr.io/pkg/bayests/man/add_posterior_loglik.html" class="external-link">add_posterior_loglik</a></code> scores
 the density the grid describes. Only models with constant coefficients take a grid. Summaries,
 plots and impulse responses work on the single levels, which
 <code><a href="split_quantile_grid.html">split_quantile_grid</a></code> returns.</p>
@@ -326,11 +348,11 @@ selection nor a structural model is available. What it buys is speed and an
 exact marginal likelihood: the sum of <code>/posterior/loglik</code> is the log
 marginal likelihood of the sample given the two discounts, so a grid over
 them can be compared without a chain being run for any of it.</p>
-<p><code><a href="add_posterior_coefficients.html">add_posterior_coefficients</a></code> estimates it like any other
+<p><code><a href="https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html" class="external-link">add_posterior_coefficients</a></code> estimates it like any other
 algorithm, the filter being part of the vendored BayesTS core. It consumes no
 random numbers, so two runs agree to the bit and a model estimated here and
 the same model estimated by the <code>bayests</code> command line over a file
-written with <code><a href="write_to_hdf5.html">write_to_hdf5</a></code> give the same numbers rather than
+written with <code><a href="https://rdrr.io/pkg/bayests/man/write_to_hdf5.html" class="external-link">write_to_hdf5</a></code> give the same numbers rather than
 merely the same distribution. What comes back is a posterior rather than a
 chain: one row per period under <code>posterior$a$mean</code>,
 <code>posterior$a$cov</code>, <code>posterior$u_sigma$scale</code> and
@@ -347,7 +369,7 @@ Karadi (2020).</p>
 sampler never draws them, so they are zero in every draw. Everything else
 treats the model as an ordinary VAR – the restricted variables are still
 regressors in the other equations, the error covariance still covers them,
-and <code><a href="irf.html">irf</a></code> and <code><a href="fevd.html">fevd</a></code> read the draws unchanged.</p>
+and <code><a href="https://rdrr.io/pkg/bayests/man/irf.html" class="external-link">irf</a></code> and <code><a href="https://rdrr.io/pkg/bayests/man/fevd.html" class="external-link">fevd</a></code> read the draws unchanged.</p>
 <p><strong>The variables named in <code>iid</code> have to be the first columns of
 <code>data</code></strong>, in any order among themselves. The restriction is carried by a
 variable's position rather than by a list of positions, which is what lets
@@ -386,6 +408,38 @@ start at zero rather than at an interpolation. Forecasts start from
 each draw's completed panel. Forecasts are scored and conditioned on a
 scenario in <code>data$forecast$constraints</code> only by models with constant
 coefficients and <code>error = "wishart"</code> or <code>"gamma"</code>.</p>
+<p><strong>Student t errors weight down the periods with large shocks without
+anyone dating them.</strong> With <code>student_t = TRUE</code> each period's shock vector is
+\(u_t \sim N(0, \lambda_t \Sigma)\) with
+\(\lambda_t \sim IG(\nu / 2, \nu / 2)\): a period whose shocks are large gets
+a large \(\lambda_t\), and its observations count for less in the estimate of
+the coefficients and of \(\Sigma\). The scale is common to every equation, so
+the Wishart prior stays conjugate. The degrees of freedom \(\nu\) are held
+fixed or drawn under a gamma prior, as <code>sigma$student_t</code> in
+<code><a href="add_priors.bvarmodel.html">add_priors.bvarmodel</a></code> says, and the draws of \(\nu\) and of every
+\(\lambda_t\) are <code>posterior$student_t$df</code> and
+<code>posterior$student_t$lambda</code>. The log likelihood and the predictive
+density are the Student t ones, with \(\lambda_t\) integrated out, and a
+forecast draws each period's \(\lambda\) from its prior. A scenario and a
+steady-state prior are refused.</p>
+<p><strong>A volatility break scales every shock from a known period on, and lets the
+data say by how much and for how long.</strong> With <code>volatility_break</code> the error
+covariance of period \(t\) is \(s_t^2 \Sigma\), the model of Lenza and Primiceri
+(2022) for the pandemic months: \(s_t = 1\) before the break, a free scale of at
+least one in each of the first <code>volatility_scales</code> periods from it, and after
+them \(s_t = 1 + (s_m - 1) \rho^j\) in the \(j\)-th period past the last free
+scale \(s_m\), so that the excess decays at the rate \(\rho\). Without it, a
+few months of enormous shocks pull the coefficients towards whatever explains them
+and widen every forecast band; with it, those periods count for less in the
+estimate of the coefficients and of \(\Sigma\). The scale is common to every
+equation, which keeps the Wishart prior conjugate. The prior of the scales and of
+\(\rho\) is <code>sigma$volatility</code> in <code><a href="add_priors.bvarmodel.html">add_priors.bvarmodel</a></code>, and
+their draws are <code>posterior$volatility$coeffs</code>, columns <code>s1</code>, <code>s2</code>,
+... and <code>rho</code>. The log likelihood and the forecasts use each period's scale,
+so a forecast made shortly after the break is drawn with the larger shocks the
+decay implies. Only the timing is known, and no scale goes below one: the break is
+a period of larger shocks. It can be combined with Student t errors; a
+steady-state prior is refused.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
@@ -401,8 +455,14 @@ without crossing. <em>Econometrica, 78</em>(3), 1093–1125.</p>
 <p>George, E. I., Sun, D., &amp; Ni, S. (2008). Bayesian stochastic search for VAR model
 restrictions. <em>Journal of Econometrics, 142</em>(1), 553–580.
 <a href="https://doi.org/10.1016/j.jeconom.2007.08.017" class="external-link">doi:10.1016/j.jeconom.2007.08.017</a></p>
+<p>Juarez, M. A., &amp; Steel, M. F. J. (2010). Model-based clustering of non-Gaussian
+panel data based on skew-t distributions. <em>Journal of Business &amp; Economic
+Statistics, 28</em>(1), 52–66. <a href="https://doi.org/10.1198/jbes.2009.07145" class="external-link">doi:10.1198/jbes.2009.07145</a></p>
 <p>Korobilis, D. (2013). VAR forecasting using Bayesian variable selection.
 <em>Journal of Applied Econometrics, 28</em>(2), 204–230. <a href="https://doi.org/10.1002/jae.1271" class="external-link">doi:10.1002/jae.1271</a></p>
+<p>Lenza, M., &amp; Primiceri, G. E. (2022). How to estimate a vector autoregression after
+March 2020. <em>Journal of Applied Econometrics, 37</em>(4), 688–699.
+<a href="https://doi.org/10.1002/jae.2895" class="external-link">doi:10.1002/jae.2895</a></p>
 <p>Kozumi, H., &amp; Kobayashi, G. (2011). Gibbs sampling methods for Bayesian quantile regression.
 <em>Journal of Statistical Computation and Simulation, 81</em>(11), 1565–1578.
 <a href="https://doi.org/10.1080/00949655.2010.496117" class="external-link">doi:10.1080/00949655.2010.496117</a></p>
@@ -426,7 +486,6 @@ mixed-frequency VAR. <em>Journal of Business &amp; Economic Statistics,
 <code><a href="add_priors.bvarmodel.html">add_priors.bvarmodel()</a></code>,
 <code><a href="add_priors.bvecmodel.html">add_priors.bvecmodel()</a></code>,
 <code><a href="aggregation_weights.html">aggregation_weights()</a></code>,
-<code><a href="combine_models.html">combine_models()</a></code>,
 <code><a href="create_bvecmodel.html">create_bvecmodel()</a></code>,
 <code><a href="transform_variables.html">transform_variables()</a></code>,
 <code><a href="use_expanding_window.bvarmodel.html">use_expanding_window.bvarmodel()</a></code>,

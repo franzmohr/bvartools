@@ -16,7 +16,7 @@ add_initial_values(object, method = "ols", ...)
   list of class 'bvarmodel', usually, the result of a call to
   [`create_bvarmodel`](https://franzmohr.github.io/bvartools/reference/create_bvarmodel.md)
   in combination with
-  [`add_priors`](https://franzmohr.github.io/bvartools/reference/add_priors.md).
+  [`add_priors`](https://rdrr.io/pkg/bayests/man/add_priors.html).
 
 - method:
 
@@ -106,8 +106,7 @@ The function also stores the seed of the posterior simulation as element
 from R's random number generator, so
 [`set.seed()`](https://rdrr.io/r/base/Random.html) before this call
 makes it reproducible.
-[`add_seed`](https://franzmohr.github.io/bvartools/reference/add_seed.md)
-replaces it.
+[`add_seed`](https://rdrr.io/pkg/bayests/man/add_seed.html) replaces it.
 
 ## See also
 
@@ -118,7 +117,6 @@ Other model set-up:
 [`add_priors.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/add_priors.bvarmodel.md),
 [`add_priors.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/add_priors.bvecmodel.md),
 [`aggregation_weights()`](https://franzmohr.github.io/bvartools/reference/aggregation_weights.md),
-[`combine_models()`](https://franzmohr.github.io/bvartools/reference/combine_models.md),
 [`create_bvarmodel()`](https://franzmohr.github.io/bvartools/reference/create_bvarmodel.md),
 [`create_bvecmodel()`](https://franzmohr.github.io/bvartools/reference/create_bvecmodel.md),
 [`transform_variables()`](https://franzmohr.github.io/bvartools/reference/transform_variables.md),

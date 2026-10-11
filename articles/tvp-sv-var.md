@@ -631,13 +631,13 @@ interval_width <- function(object) {
 
 round(rbind(simulated = interval_width(model), held = interval_width(held)), 2)
 #>             dy   Dp    r
-#> simulated 2.66 1.18 1.13
-#> held      2.54 0.90 0.42
+#> simulated 2.56 1.17 1.14
+#> held      2.49 0.88 0.43
 ```
 
 Eight quarters ahead, carrying the drift forward leaves the interval of
 output growth almost unchanged, widens that of inflation by about a
-quarter and makes that of the short-term rate two and a half times as
+third and makes that of the short-term rate two and a half times as
 wide. A forecast that holds the coefficients at the end of the sample
 understates the uncertainty this model implies.
 

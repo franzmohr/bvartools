@@ -64,3 +64,60 @@ intercept the centring removed. The function therefore sets
 and
 [`add_predictive_loglik.bvecmodel`](https://franzmohr.github.io/bvartools/reference/add_predictive_loglik.bvecmodel.md)
 accept it only with `forecast_states = "hold"`.
+
+## Examples
+
+``` r
+
+data("e6")
+model <- create_bvecmodel(e6 * 100, p = 1, r = 1, const = "unrestricted",
+                          iterations = 20, burnin = 10)
+model <- scale_error_correction(model)
+model <- add_priors(model,
+                    coef = list(v_i = 0, v_i_det = 0),
+                    coint = list(v_i = 0, p_tau_i = 1),
+                    sigma = list(df = "k", scale = 1))
+model <- add_posterior_coefficients(add_initial_values(model))
+
+# The draws of beta on the scale of the data
+model <- rescale_error_correction(model)
+summary(model)
+#> 
+#> Bayesian VEC model with p = 1 
+#> 
+#> Endogenous variables: R, Dp
+#> 
+#> Variable: R 
+#> 
+#>               Mean          SD    Naive SD Time-series SD        2.5%
+#> l.R    0.002063648 0.009129759 0.002041476    0.002041476 -0.01050834
+#> l.Dp  -0.006847198 0.029487231 0.006593545    0.006593545 -0.05517393
+#> const -0.026588152 0.070442096 0.015751332    0.004364938 -0.15911741
+#>                 50%      97.5% 
+#> l.R    0.0004154129 0.01585640 
+#> l.Dp  -0.0019250671 0.03591713 
+#> const -0.0285645037 0.07145289 
+#> 
+#> Variable: Dp 
+#> 
+#>             Mean         SD   Naive SD Time-series SD       2.5%        50%
+#> l.R    0.3879448 0.04632541 0.01035868     0.02386321  0.3204868  0.3845895
+#> l.Dp  -1.2733669 0.06935821 0.01550897     0.02301287 -1.3892523 -1.2709386
+#> const -1.8868954 0.42137442 0.09422219     0.25724596 -2.6194310 -1.8946072
+#>            97.5%  
+#> l.R    0.4796396 *
+#> l.Dp  -1.1500548 *
+#> const -1.2703436 *
+#> 
+#> Variance-covariance matrix:
+#> 
+#>             Mean         SD   Naive SD Time-series SD       2.5%        50%
+#> R_R    0.3147416 0.04878660 0.01090902     0.01090902  0.2253497  0.3067542
+#> R_Dp  -0.1488512 0.07897894 0.01766023     0.01766023 -0.2782921 -0.1643717
+#> Dp_Dp  3.0460750 0.27413891 0.06129932     0.06129932  2.7052140  2.9906090
+#>             97.5%  
+#> R_R    0.40585053 *
+#> R_Dp  -0.03010282 *
+#> Dp_Dp  3.72298541 *
+#> 
+```

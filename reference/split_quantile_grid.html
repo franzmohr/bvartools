@@ -9,7 +9,7 @@ create_bvarmodel, into one model per quantile."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -70,7 +70,7 @@ create_bvarmodel, into one model per quantile."></head><body>
 
 <dl><dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
 <dd><p>an object of class 'bvarmodel' holding a grid of quantiles, usually the
-result of a call to <code><a href="add_posterior_coefficients.html">add_posterior_coefficients</a></code>.</p></dd>
+result of a call to <code><a href="https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html" class="external-link">add_posterior_coefficients</a></code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -84,10 +84,10 @@ increasing order.</p>
 single-quantile model would have drawn. The models returned hold those draws with the
 specification of that model, so that everything written for a single quantile –
 <code><a href="summary.bvarmodel.html">summary</a></code>, <code><a href="plot.bvarmodel.html">plot</a></code>,
-<code><a href="add_posterior_loglik.html">add_posterior_loglik</a></code> – reads them as such. What describes the grid as a
+<code><a href="https://rdrr.io/pkg/bayests/man/add_posterior_loglik.html" class="external-link">add_posterior_loglik</a></code> – reads them as such. What describes the grid as a
 whole, its forecasts and its log likelihood, is not carried over. The impulse responses of
 a structural grid are differences of forecasts at a fixed level with and without a
-scenario; see <code>forecast_quantile</code> in <code><a href="add_posterior_forecasts.html">add_posterior_forecasts</a></code>.</p>
+scenario; see <code>forecast_quantile</code> in <code><a href="https://rdrr.io/pkg/bayests/man/add_posterior_forecasts.html" class="external-link">add_posterior_forecasts</a></code>.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -119,10 +119,10 @@ scenario; see <code>forecast_quantile</code> in <code><a href="add_posterior_for
 <span class="r-in"><span>                           structural <span class="op">=</span> <span class="cn">TRUE</span>, error <span class="op">=</span> <span class="st">"ald"</span>,</span></span>
 <span class="r-in"><span>                           quantile <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">0.5</span>, <span class="fl">0.9</span><span class="op">)</span>, quantile_grid <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
 <span class="r-in"><span>                           iterations <span class="op">=</span> <span class="fl">20</span>, burnin <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">object</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_priors.html">add_priors</a></span><span class="op">(</span><span class="va">object</span>, coef <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>v_i <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span><span class="va">object</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_priors.html" class="external-link">add_priors</a></span><span class="op">(</span><span class="va">object</span>, coef <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>v_i <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                     sigma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>shape <span class="op">=</span> <span class="fl">3</span>, rate <span class="op">=</span> <span class="fl">.01</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">object</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_initial_values.html">add_initial_values</a></span><span class="op">(</span><span class="va">object</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">object</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_posterior_coefficients.html">add_posterior_coefficients</a></span><span class="op">(</span><span class="va">object</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">object</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_initial_values.html" class="external-link">add_initial_values</a></span><span class="op">(</span><span class="va">object</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">object</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html" class="external-link">add_posterior_coefficients</a></span><span class="op">(</span><span class="va">object</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">levels</span> <span class="op">&lt;-</span> <span class="fu">split_quantile_grid</span><span class="op">(</span><span class="va">object</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">levels</span><span class="op">[[</span><span class="fl">3</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span></span>
@@ -136,18 +136,18 @@ scenario; see <code>forecast_quantile</code> in <code><a href="add_posterior_for
 <span class="r-out co"><span class="r-pr">#&gt;</span> Variable: Dp </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             Mean         SD    Naive SD Time-series SD         2.5%        50%</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Dp.l1 0.69373981 0.05229324 0.011693124    0.021217381  0.594222155 0.69984987</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> u.l1  0.03186382 0.02029465 0.004538021    0.006768237 -0.005073135 0.03358492</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> r.l1  0.05144957 0.01416861 0.003168197    0.008529387  0.028557634 0.05356347</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> const 0.46275990 0.20614535 0.046095501    0.129301563  0.167404127 0.42045853</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Dp    1.00000000 0.00000000 0.000000000    0.000000000  1.000000000 1.00000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> u     0.00000000 0.00000000 0.000000000    0.000000000  0.000000000 0.00000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> r     0.00000000 0.00000000 0.000000000    0.000000000  0.000000000 0.00000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Dp.l1 0.76344771 0.10103540 0.022592203     0.07446193  0.574666716 0.79553085</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> u.l1  0.05499625 0.02664818 0.005958714     0.01011525  0.002434898 0.06057067</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> r.l1  0.06247445 0.02273499 0.005083699     0.01434307  0.038808322 0.05485898</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> const 0.17491908 0.21169635 0.047336742     0.06310642 -0.085386565 0.12007398</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Dp    1.00000000 0.00000000 0.000000000     0.00000000  1.000000000 1.00000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> u     0.00000000 0.00000000 0.000000000     0.00000000  0.000000000 0.00000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> r     0.00000000 0.00000000 0.000000000     0.00000000  0.000000000 0.00000000</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            97.5%  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Dp.l1 0.77945902 *</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> u.l1  0.06936852  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> r.l1  0.07425293 *</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> const 0.82260518 *</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Dp.l1 0.88183164 *</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> u.l1  0.09459216 *</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> r.l1  0.10699599 *</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> const 0.59925897  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Dp    1.00000000 *</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> u     0.00000000  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> r     0.00000000  </span>
@@ -155,39 +155,39 @@ scenario; see <code>forecast_quantile</code> in <code><a href="add_posterior_for
 <span class="r-out co"><span class="r-pr">#&gt;</span> Variable: u </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             Mean         SD    Naive SD Time-series SD        2.5%        50%</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Dp.l1 0.17871842 0.10732912 0.023999521    0.023999521 -0.07939719 0.19473590</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> u.l1  0.98762754 0.01765468 0.003947707    0.003947707  0.96530566 0.98486908</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> r.l1  0.03836779 0.01484880 0.003320293    0.004928913  0.02063328 0.03654465</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> const 0.20295331 0.07401143 0.016549460    0.016549460  0.09404142 0.20229349</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Dp    0.02545400 0.16946292 0.037893060    0.099420548 -0.36369955 0.10282177</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Dp.l1 0.13770570 0.10820689 0.024195795    0.076293444 -0.07497076 0.16115457</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> u.l1  0.99029155 0.02145621 0.004797755    0.009442232  0.96135731 0.98810123</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> r.l1  0.06062479 0.04132126 0.009239714    0.020162668  0.01933366 0.04743353</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> const 0.22407943 0.11480515 0.025671211    0.025671211  0.08731751 0.17866288</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Dp    0.12033996 0.06369137 0.014241823    0.021002827  0.01721750 0.10802233</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> u     1.00000000 0.00000000 0.000000000    0.000000000  1.00000000 1.00000000</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> r     0.00000000 0.00000000 0.000000000    0.000000000  0.00000000 0.00000000</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           97.5%  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Dp.l1 0.2863116  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> u.l1  1.0290038 *</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> r.l1  0.0699384 *</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> const 0.3582669 *</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Dp    0.1865817  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Dp.l1 0.2735186  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> u.l1  1.0293063 *</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> r.l1  0.1514569 *</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> const 0.4788268 *</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Dp    0.2307205 *</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> u     1.0000000 *</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> r     0.0000000  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Variable: r </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              Mean        SD    Naive SD Time-series SD        2.5%         50%</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Dp.l1  0.20547267 0.1838521 0.041110580     0.14217832 -0.04844393  0.21581336</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> u.l1   0.59700899 0.1323295 0.029589777     0.02958978  0.39624886  0.58866286</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> r.l1   0.95909850 0.0258854 0.005788152     0.01531496  0.92384267  0.95915443</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> const  0.05037734 0.2811309 0.062862784     0.14309404 -0.27529478 -0.01438054</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Dp    -0.79745640 0.2695684 0.060277321     0.23653901 -1.17764834 -0.78681710</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> u      0.58910373 0.1435807 0.032105623     0.04853320  0.32700668  0.59353814</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> r      1.00000000 0.0000000 0.000000000     0.00000000  1.00000000  1.00000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              Mean         SD    Naive SD Time-series SD        2.5%        50%</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Dp.l1  0.29896843 0.15925493 0.035610484     0.07191537  0.03439939  0.2875877</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> u.l1   0.79264816 0.15687444 0.035078190     0.08000690  0.54664429  0.7871455</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> r.l1   0.95890750 0.02165361 0.004841895     0.01292860  0.92359571  0.9647326</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> const  0.06679168 0.15376155 0.034382129     0.03438213 -0.25184733  0.1085517</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Dp    -0.76536639 0.23629223 0.052836548     0.14245008 -1.27869772 -0.7388024</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> u      0.78200164 0.15785842 0.035298215     0.08916475  0.54053089  0.7926273</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> r      1.00000000 0.00000000 0.000000000     0.00000000  1.00000000  1.0000000</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            97.5%  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Dp.l1  0.4777130  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> u.l1   0.8912352 *</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> r.l1   0.9966976 *</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> const  0.6651494  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Dp    -0.3986366 *</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> u      0.8772428 *</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Dp.l1  0.5869363 *</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> u.l1   1.0280175 *</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> r.l1   0.9903825 *</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> const  0.3032161  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Dp    -0.4309915 *</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> u      1.0141046 *</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> r      1.0000000 *</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span></span></span>

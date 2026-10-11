@@ -11,7 +11,7 @@ for testing the algorithms of the package."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -292,7 +292,7 @@ arguments <code>p</code>, <code>r</code>, <code>const</code>, <code>trend</code>
 <p>The cointegration matrix is normalised so that its first \(r\) rows are an identity
 matrix. Its other rows for endogenous variables are drawn from <code>range_beta</code>, and
 its rows for a restricted constant or trend from <code>range_const</code> and
-<code>range_trend</code>. Since <code><a href="add_posterior_coefficients.html">add_posterior_coefficients</a></code> may use another
+<code>range_trend</code>. Since <code><a href="https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html" class="external-link">add_posterior_coefficients</a></code> may use another
 normalisation, estimates are best compared with the true parameters through
 \(\Pi_t\), which does not depend on it.</p>
 <p>The linear trend takes the value 1 in period \(p + 1\) of the returned series,

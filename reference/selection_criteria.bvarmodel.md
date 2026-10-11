@@ -63,24 +63,15 @@ their numerical standard error.
 Other model comparison:
 [`add_forecast_errors.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/add_forecast_errors.bvarmodel.md),
 [`add_forecast_errors.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/add_forecast_errors.bvecmodel.md),
-[`add_predictive_loglik()`](https://franzmohr.github.io/bvartools/reference/add_predictive_loglik.md),
 [`add_predictive_loglik.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/add_predictive_loglik.bvarmodel.md),
 [`add_predictive_loglik.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/add_predictive_loglik.bvecmodel.md),
+[`add_predictive_loglik.expandingwindow()`](https://franzmohr.github.io/bvartools/reference/add_predictive_loglik.expandingwindow.md),
 [`aggregate_forecasts()`](https://franzmohr.github.io/bvartools/reference/aggregate_forecasts.md),
-[`align_model_obs.modellist()`](https://franzmohr.github.io/bvartools/reference/align_model_obs.modellist.md),
 [`analysis_of_stored_models`](https://franzmohr.github.io/bvartools/reference/analysis_of_stored_models.md),
-[`choose_best_model.selcritlist()`](https://franzmohr.github.io/bvartools/reference/choose_best_model.selcritlist.md),
 [`create_external_forecast()`](https://franzmohr.github.io/bvartools/reference/create_external_forecast.md),
-[`folder_steps`](https://franzmohr.github.io/bvartools/reference/folder_steps.md),
-[`map_draws()`](https://franzmohr.github.io/bvartools/reference/map_draws.md),
-[`map_models()`](https://franzmohr.github.io/bvartools/reference/map_models.md),
-[`open_model()`](https://franzmohr.github.io/bvartools/reference/open_model.md),
-[`open_models()`](https://franzmohr.github.io/bvartools/reference/open_models.md),
 [`plot_forecast_errors_by_period()`](https://franzmohr.github.io/bvartools/reference/plot_forecast_errors_by_period.md),
 [`pool_forecasts()`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md),
-[`selection_criteria.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.bvecmodel.md),
-[`selection_criteria.default()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.default.md),
-[`selection_criteria.modellist()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.modellist.md)
+[`selection_criteria.bvecmodel()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.bvecmodel.md)
 
 ## Examples
 
@@ -120,45 +111,45 @@ sel
 #> Log-likelihood
 #> 
 #>            Mean Median Quantile (2.5%) Quantile (97.5%)
-#>  Model 1 -511.2 -511.8          -515.5           -507.8
-#>  Model 2 -499.1 -499.2          -501.8           -495.5
+#>  Model 1 -510.4 -509.3          -517.9             -506
+#>  Model 2 -499.9 -500.5          -503.0             -496
 #> 
 #> 
 #> Akaike Information Criterion (AIC)
 #> 
 #>          Mean Median Quantile (2.5%) Quantile (97.5%)
-#>  Model 1 1040   1040                                 
+#>  Model 1 1041   1041                                 
 #>  Model 2 1031   1031                                 
 #> 
 #> 
 #> Bayesian Information Criterion (BIC)
 #> 
 #>          Mean Median Quantile (2.5%) Quantile (97.5%)
-#>  Model 1 1085   1085                                 
+#>  Model 1 1086   1086                                 
 #>  Model 2 1098   1098                                 
 #> 
 #> 
 #> Hannan-Quinn Criterion (HQ)
 #> 
 #>          Mean Median Quantile (2.5%) Quantile (97.5%)
-#>  Model 1 1058   1058                                 
+#>  Model 1 1059   1059                                 
 #>  Model 2 1058   1058                                 
 #> 
 #> 
 #> Widely Applicable Information Criterion (WAIC)
 #> 
 #>          Mean Median Quantile (2.5%) Quantile (97.5%)
-#>  Model 1 1047   1047           980.3             1114
-#>  Model 2 1024   1024           959.7             1089
+#>  Model 1 1050   1050           982.1             1117
+#>  Model 2 1042   1042           964.4             1120
 #> 
-#> Periods with a pointwise log-likelihood variance above 0.4, which makes the correction of WAIC unreliable, in models 1 (9), 2 (16).
+#> Periods with a pointwise log-likelihood variance above 0.4, which makes the correction of WAIC unreliable, in models 1 (15), 2 (21).
 #> 
 #> 
 #> Leave-One-Out Information Criterion (LOOIC)
 #> 
 #>          Mean Median Quantile (2.5%) Quantile (97.5%)
-#>  Model 1 1040   1040           977.5             1102
-#>  Model 2 1018   1018           956.2             1080
+#>  Model 1 1045   1045           979.1             1110
+#>  Model 2 1028   1028           960.6             1095
 #> 
 #> Influential periods, whose importance sampling is unreliable, in models 1 (89), 2 (89), counted as a Pareto k above 0.
 

@@ -9,7 +9,7 @@ an object of class 'bvarmodel'."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -62,11 +62,12 @@ an object of class 'bvarmodel'.</p>
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="co"># S3 method for class 'bvarmodel'</span></span>
-<span><span class="fu"><a href="add_forecast_input.html">add_forecast_input</a></span><span class="op">(</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_forecast_input.html" class="external-link">add_forecast_input</a></span><span class="op">(</span></span>
 <span>  <span class="va">object</span>,</span>
 <span>  n_ahead <span class="op">=</span> <span class="fl">10</span>,</span>
 <span>  deterministic <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  exogen <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  y_start <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -94,7 +95,18 @@ automatically. If this is not successful, an error message we be returned.</p></
 model. Required if the model has such variables. It has to cover the <code>s</code> periods before
 the first forecast period, which are the last <code>s</code> periods of the estimation sample, as
 well as the <code>n_ahead</code> forecast periods, because the regressors of a forecast period
-include the lags of these variables. See <code><a href="prepare_forecast_input.html">prepare_forecast_input</a></code>.</p></dd>
+include the lags of these variables. See <code><a href="https://rdrr.io/pkg/bayests/man/prepare_forecast_input.html" class="external-link">prepare_forecast_input</a></code>.</p></dd>
+
+
+<dt id="arg-y-start">y_start<a class="anchor" aria-label="anchor" href="#arg-y-start"></a></dt>
+<dd><p>an optional time-series object with the endogenous variables of the model,
+by name and in the units of the estimation sample, that the forecast starts from: the
+forecast periods are the <code>n_ahead</code> periods after its last observation, and the lags of
+the first one are its last <code>p</code> observations. It may end after the estimation sample, so
+that a forecast can start from a nowcast or from data that came in after the model was
+estimated; <code>exogen</code> and <code>deterministic</code> then have to cover the new forecast
+periods. If <code>NULL</code> (default), the forecast starts after the end of the estimation
+sample. See 'Details' in <code><a href="https://rdrr.io/pkg/bayests/man/prepare_forecast_input.html" class="external-link">prepare_forecast_input</a></code>.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -105,7 +117,11 @@ include the lags of these variables. See <code><a href="prepare_forecast_input.h
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>The object in <code>object</code> with <code>model$h</code> set to <code>n_ahead</code> and
 <code>data$forecast$x</code> added, the regressors of the forecast periods in the layout of
-<code>data$train$x</code>, one row per period.</p>
+<code>data$train$x</code>, one row per period. If <code>y_start</code> is given,
+<code>model$forecast_start</code> is the time of the first forecast period, which
+<code><a href="predict.bvarmodel.html">predict</a></code> dates the forecasts by, and <code>data$forecast$y</code>
+holds the start values after the end of the sample, which it shows as the history the
+forecasts continue.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -117,12 +133,9 @@ include the lags of these variables. See <code><a href="prepare_forecast_input.h
 <code><a href="add_posterior_forecasts.bvecmodel.html">add_posterior_forecasts.bvecmodel()</a></code>,
 <code><a href="add_posterior_loglik.bvarmodel.html">add_posterior_loglik.bvarmodel()</a></code>,
 <code><a href="add_posterior_loglik.bvecmodel.html">add_posterior_loglik.bvecmodel()</a></code>,
-<code><a href="add_seed.html">add_seed()</a></code>,
-<code><a href="bayests_files.html">bayests_files()</a></code>,
-<code><a href="bayests_posterior.html">bayests_posterior()</a></code>,
+<code><a href="add_seed.bvarmodel.html">add_seed.bvarmodel()</a></code>,
 <code><a href="bvar.html">bvar()</a></code>,
 <code><a href="bvec.html">bvec()</a></code>,
-<code><a href="chain_diagnostics.html">chain_diagnostics()</a></code>,
 <code><a href="predict.bvecmodel.html">predict.bvecmodel()</a></code></p></div>
     </div>
 
@@ -139,12 +152,25 @@ include the lags of these variables. See <code><a href="prepare_forecast_input.h
 <span class="r-in"><span><span class="co"># Number of iterations and burnin should be much higher.</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Add priors</span></span></span>
-<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_priors.html">add_priors</a></span><span class="op">(</span><span class="va">model</span>,</span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_priors.html" class="external-link">add_priors</a></span><span class="op">(</span><span class="va">model</span>,</span></span>
 <span class="r-in"><span>                    coef <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>v_i <span class="op">=</span> <span class="fl">1</span>, v_i_det <span class="op">=</span> <span class="fl">1</span> <span class="op">/</span> <span class="fl">10</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                    sigma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>df <span class="op">=</span> <span class="st">"k"</span>, scale <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Add data used for forecast calculation</span></span></span>
-<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_forecast_input.html">add_forecast_input</a></span><span class="op">(</span><span class="va">model</span>, n_ahead <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_forecast_input.html" class="external-link">add_forecast_input</a></span><span class="op">(</span><span class="va">model</span>, n_ahead <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># A model estimated up to 1978Q4 whose forecast starts from the values</span></span></span>
+<span class="r-in"><span><span class="co"># of 1979Q1, which it was not estimated with</span></span></span>
+<span class="r-in"><span><span class="va">short</span> <span class="op">&lt;-</span> <span class="fu"><a href="create_bvarmodel.html">create_bvarmodel</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/window.html" class="external-link">window</a></span><span class="op">(</span><span class="va">e1</span>, end <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1978</span>, <span class="fl">4</span><span class="op">)</span><span class="op">)</span>, p <span class="op">=</span> <span class="fl">2</span>,</span></span>
+<span class="r-in"><span>                          deterministic <span class="op">=</span> <span class="st">"const"</span>,</span></span>
+<span class="r-in"><span>                          iterations <span class="op">=</span> <span class="fl">20</span>, burnin <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">short</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_priors.html" class="external-link">add_priors</a></span><span class="op">(</span><span class="va">short</span>,</span></span>
+<span class="r-in"><span>                    coef <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>v_i <span class="op">=</span> <span class="fl">1</span>, v_i_det <span class="op">=</span> <span class="fl">1</span> <span class="op">/</span> <span class="fl">10</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                    sigma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>df <span class="op">=</span> <span class="st">"k"</span>, scale <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">short</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_forecast_input.html" class="external-link">add_forecast_input</a></span><span class="op">(</span><span class="va">short</span>, n_ahead <span class="op">=</span> <span class="fl">4</span>,</span></span>
+<span class="r-in"><span>                            y_start <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/window.html" class="external-link">window</a></span><span class="op">(</span><span class="va">e1</span>, end <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1979</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">short</span><span class="op">[[</span><span class="st">"model"</span><span class="op">]</span><span class="op">]</span><span class="op">[[</span><span class="st">"forecast_start"</span><span class="op">]</span><span class="op">]</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1979.25</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

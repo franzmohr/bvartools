@@ -9,7 +9,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -73,7 +73,7 @@ specification, <code>data</code>, <code>priors</code>, <code>initial</code> and
 with one row per draw and one column per parameter.</p>
 <p>Passing a vector to an argument such as <code>p</code> or <code>r</code> creates one model
 per specification in a list of class 'modellist', and
-<code><a href="use_expanding_window.html">use_expanding_window</a></code> creates a list of class 'expandingwindow'.
+<code><a href="https://rdrr.io/pkg/bayests/man/use_expanding_window.html" class="external-link">use_expanding_window</a></code> creates a list of class 'expandingwindow'.
 The functions of the workflow accept these lists as well and apply to each
 model in turn.</p>
 <p><code><a href="bvartools_model.html">bvartools_model</a></code> describes the whole object element by element:
@@ -90,22 +90,22 @@ reaching into the object by hand.</p>
   the number of iterations and burn-in draws are set here.
   <code><a href="transform_variables.html">transform_variables</a></code> applies the transformation codes of
   FRED-MD and FRED-QD beforehand.</p></li>
-<li><p><code><a href="add_priors.html">add_priors</a></code> adds prior hyperparameters. Its arguments
+<li><p><code><a href="https://rdrr.io/pkg/bayests/man/add_priors.html" class="external-link">add_priors</a></code> adds prior hyperparameters. Its arguments
   <code>coef</code> and <code>sigma</code> are named lists without defaults, and neither
   may be empty: <code>coef</code> needs <code>v_i</code> or <code>minnesota</code>, and
   <code>sigma</code> the elements of the chosen <code>error</code>, which are <code>df</code>
   and <code>scale</code> for <code>"wishart"</code> and <code>shape</code> and <code>rate</code> for
   <code>"gamma"</code> and <code>"ald"</code>. Structural models cannot use the Wishart
   prior.</p></li>
-<li><p><code><a href="add_initial_values.html">add_initial_values</a></code> adds starting values, by default
+<li><p><code><a href="https://rdrr.io/pkg/bayests/man/add_initial_values.html" class="external-link">add_initial_values</a></code> adds starting values, by default
   from a least squares estimate.</p></li>
-<li><p><code><a href="add_posterior_coefficients.html">add_posterior_coefficients</a></code> runs the sampler.
+<li><p><code><a href="https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html" class="external-link">add_posterior_coefficients</a></code> runs the sampler.
   <code><a href="plot.bvarmodel.html">plot</a></code>, <code><a href="summary.bvarmodel.html">summary</a></code>
   and <code><a href="thin.bvarmodel.html">thin</a></code> inspect and thin the draws.</p></li>
-<li><p><code><a href="add_forecast_input.html">add_forecast_input</a></code> followed by
-  <code><a href="add_posterior_forecasts.html">add_posterior_forecasts</a></code> simulates forecasts, which
-  <code><a href="predict.bvarmodel.html">predict</a></code> summarises. <code><a href="irf.html">irf</a></code>,
-  <code><a href="fevd.html">fevd</a></code> and <code><a href="spillover.html">spillover</a></code> compute impulse responses,
+<li><p><code><a href="https://rdrr.io/pkg/bayests/man/add_forecast_input.html" class="external-link">add_forecast_input</a></code> followed by
+  <code><a href="https://rdrr.io/pkg/bayests/man/add_posterior_forecasts.html" class="external-link">add_posterior_forecasts</a></code> simulates forecasts, which
+  <code><a href="predict.bvarmodel.html">predict</a></code> summarises. <code><a href="https://rdrr.io/pkg/bayests/man/irf.html" class="external-link">irf</a></code>,
+  <code><a href="https://rdrr.io/pkg/bayests/man/fevd.html" class="external-link">fevd</a></code> and <code><a href="spillover.html">spillover</a></code> compute impulse responses,
   variance decompositions and connectedness measures.</p></li>
 </ol></div>
     <div class="section level2">
@@ -114,7 +114,7 @@ reaching into the object by hand.</p>
 
 <p>The type of model is fixed in <code><a href="create_bvarmodel.html">create_bvarmodel</a></code> and
 <code><a href="create_bvecmodel.html">create_bvecmodel</a></code>, and the priors that fit it in
-<code><a href="add_priors.html">add_priors</a></code>:</p><ul><li><p><code>error</code> sets the error covariance: <code>"wishart"</code> (default),
+<code><a href="https://rdrr.io/pkg/bayests/man/add_priors.html" class="external-link">add_priors</a></code>:</p><ul><li><p><code>error</code> sets the error covariance: <code>"wishart"</code> (default),
   <code>"gamma"</code> for a diagonal covariance, <code>"sv"</code> for stochastic
   volatility and, for VAR models, <code>"ald"</code> for a quantile VAR whose
   quantiles are given in <code>quantile</code>. Quantile VARs estimate no error
@@ -125,7 +125,7 @@ reaching into the object by hand.</p>
 <li><p><code>varsel</code> selects variables by <code>"ssvs"</code> (George et al., 2008)
   or <code>"bvs"</code> (Korobilis, 2013).</p></li>
 <li><p>A Minnesota prior is requested with <code>coef = list(minnesota = ...)</code>
-  in <code><a href="add_priors.html">add_priors</a></code>.</p></li>
+  in <code><a href="https://rdrr.io/pkg/bayests/man/add_priors.html" class="external-link">add_priors</a></code>.</p></li>
 </ul><p><code><a href="minnesota_prior.html">minnesota_prior</a></code>, <code><a href="ssvs_prior.html">ssvs_prior</a></code> and
 <code><a href="inclusion_prior.html">inclusion_prior</a></code> return the same prior components on their own,
 for use in a sampler written by the user.</p>
@@ -138,7 +138,7 @@ for use in a sampler written by the user.</p>
 <code>r</code> and whether constant, trend and seasonal terms are
 <code>"restricted"</code> to the cointegration space or <code>"unrestricted"</code>.
 Priors on the cointegration space go into the <code>coint</code> argument of
-<code><a href="add_priors.html">add_priors</a></code>. Forecasts, impulse responses, variance
+<code><a href="https://rdrr.io/pkg/bayests/man/add_priors.html" class="external-link">add_priors</a></code>. Forecasts, impulse responses, variance
 decompositions, spillovers and sign restrictions are computed for a
 'bvarmodel', so an estimated VEC model is first converted to its VAR
 representation in levels with <code><a href="vec_to_var.html">vec_to_var</a></code>.</p>
@@ -147,24 +147,24 @@ representation in levels with <code><a href="vec_to_var.html">vec_to_var</a></co
     <h2 id="identification">Identification<a class="anchor" aria-label="anchor" href="#identification"></a></h2>
 
 
-<p><code><a href="irf.html">irf</a></code> and <code><a href="fevd.html">fevd</a></code> provide forecast error,
+<p><code><a href="https://rdrr.io/pkg/bayests/man/irf.html" class="external-link">irf</a></code> and <code><a href="https://rdrr.io/pkg/bayests/man/fevd.html" class="external-link">fevd</a></code> provide forecast error,
 orthogonalised and generalised impulse responses through their <code>type</code>
-argument. <code><a href="add_sign_restrictions.html">add_sign_restrictions</a></code> identifies the shocks of an
+argument. <code><a href="https://rdrr.io/pkg/bayests/man/add_sign_restrictions.html" class="external-link">add_sign_restrictions</a></code> identifies the shocks of an
 estimated model by the signs of their impulse responses instead.</p>
     </div>
     <div class="section level2">
     <h2 id="model-comparison-and-forecast-evaluation">Model comparison and forecast evaluation<a class="anchor" aria-label="anchor" href="#model-comparison-and-forecast-evaluation"></a></h2>
 
 
-<ul><li><p>In sample: <code><a href="add_posterior_loglik.html">add_posterior_loglik</a></code>, then
-  <code><a href="selection_criteria.html">selection_criteria</a></code> (LL, AIC, BIC, HQ, WAIC, LOOIC), then
-  <code><a href="choose_best_model.html">choose_best_model</a></code>.</p></li>
-<li><p>Out of sample: <code><a href="use_expanding_window.html">use_expanding_window</a></code> before the priors
+<ul><li><p>In sample: <code><a href="https://rdrr.io/pkg/bayests/man/add_posterior_loglik.html" class="external-link">add_posterior_loglik</a></code>, then
+  <code><a href="https://rdrr.io/pkg/bayests/man/selection_criteria.html" class="external-link">selection_criteria</a></code> (LL, AIC, BIC, HQ, WAIC, LOOIC), then
+  <code><a href="https://rdrr.io/pkg/bayests/man/choose_best_model.html" class="external-link">choose_best_model</a></code>.</p></li>
+<li><p>Out of sample: <code><a href="https://rdrr.io/pkg/bayests/man/use_expanding_window.html" class="external-link">use_expanding_window</a></code> before the priors
   are added, the usual estimation and forecasting steps, then
-  <code><a href="add_forecast_errors.html">add_forecast_errors</a></code> with the test sample and
-  <code><a href="selection_criteria.html">selection_criteria</a></code> for MAFE and RMSFE.
+  <code><a href="https://rdrr.io/pkg/bayests/man/add_forecast_errors.html" class="external-link">add_forecast_errors</a></code> with the test sample and
+  <code><a href="https://rdrr.io/pkg/bayests/man/selection_criteria.html" class="external-link">selection_criteria</a></code> for MAFE and RMSFE.
   <code><a href="plot_forecast_errors_by_period.html">plot_forecast_errors_by_period</a></code> plots the errors over time.</p></li>
-<li><p><code><a href="combine_models.html">combine_models</a></code> and <code><a href="align_model_obs.html">align_model_obs</a></code> put
+<li><p><code><a href="https://rdrr.io/pkg/bayests/man/combine_models.html" class="external-link">combine_models</a></code> and <code><a href="https://rdrr.io/pkg/bayests/man/align_model_obs.html" class="external-link">align_model_obs</a></code> put
   differently specified models on a common sample, and
   <code><a href="create_external_forecast.html">create_external_forecast</a></code> brings forecasts produced elsewhere
   into the same comparison.</p></li>
@@ -173,7 +173,7 @@ estimated model by the signs of their impulse responses instead.</p>
     <h2 id="user-written-samplers">User-written samplers<a class="anchor" aria-label="anchor" href="#user-written-samplers"></a></h2>
 
 
-<p><code><a href="add_posterior_coefficients.html">add_posterior_coefficients</a></code> accepts a
+<p><code><a href="https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html" class="external-link">add_posterior_coefficients</a></code> accepts a
 <code>posterior_function</code> that replaces the built-in sampler. For a sampler
 written from scratch the package exports its building blocks, among them
 <code><a href="post_normal.html">post_normal</a></code>, <code><a href="post_normal_sur.html">post_normal_sur</a></code>, <code><a href="post_bvs.html">post_bvs</a></code>,
@@ -186,23 +186,23 @@ the rest of the workflow applies.</p>
     <h2 id="storage">Storage<a class="anchor" aria-label="anchor" href="#storage"></a></h2>
 
 
-<p><code><a href="write_to_hdf5.html">write_to_hdf5</a></code> and <code><a href="read_model_from_hdf5.html">read_model_from_hdf5</a></code> save and
+<p><code><a href="https://rdrr.io/pkg/bayests/man/write_to_hdf5.html" class="external-link">write_to_hdf5</a></code> and <code><a href="https://rdrr.io/pkg/bayests/man/read_model_from_hdf5.html" class="external-link">read_model_from_hdf5</a></code> save and
 restore a model with its draws, one per file or several side by side in
-groups listed by <code><a href="list_models_in_hdf5.html">list_models_in_hdf5</a></code>. The files follow the
+groups listed by <code><a href="https://rdrr.io/pkg/bayests/man/read_model_groups.html" class="external-link">read_model_groups</a></code>. The files follow the
 format of the BayesTS command line, so a model can also be estimated there
-and read back. <code><a href="read_models_from_folder.html">read_models_from_folder</a></code> and
-<code><a href="read_expanding_window_model_from_folder.html">read_expanding_window_model_from_folder</a></code> read a whole folder.</p>
+and read back. <code><a href="https://rdrr.io/pkg/bayests/man/read_models_from_folder.html" class="external-link">read_models_from_folder</a></code> and
+<code><a href="https://rdrr.io/pkg/bayests/man/read_expanding_window_model_from_folder.html" class="external-link">read_expanding_window_model_from_folder</a></code> read a whole folder.</p>
     </div>
     <div class="section level2">
     <h2 id="common-mistakes">Common mistakes<a class="anchor" aria-label="anchor" href="#common-mistakes"></a></h2>
 
 
 <ul><li><p>Calling a step without assigning its result, which discards what it added.</p></li>
-<li><p>Calling <code><a href="add_posterior_forecasts.html">add_posterior_forecasts</a></code> without
-  <code><a href="add_forecast_input.html">add_forecast_input</a></code>. The <code>n_ahead</code> given there is also
+<li><p>Calling <code><a href="https://rdrr.io/pkg/bayests/man/add_posterior_forecasts.html" class="external-link">add_posterior_forecasts</a></code> without
+  <code><a href="https://rdrr.io/pkg/bayests/man/add_forecast_input.html" class="external-link">add_forecast_input</a></code>. The <code>n_ahead</code> given there is also
   the longest horizon <code>predict</code> returns; a longer one is shortened to it.</p></li>
-<li><p>Calling <code><a href="selection_criteria.html">selection_criteria</a></code> for in-sample criteria
-  without <code><a href="add_posterior_loglik.html">add_posterior_loglik</a></code>.</p></li>
+<li><p>Calling <code><a href="https://rdrr.io/pkg/bayests/man/selection_criteria.html" class="external-link">selection_criteria</a></code> for in-sample criteria
+  without <code><a href="https://rdrr.io/pkg/bayests/man/add_posterior_loglik.html" class="external-link">add_posterior_loglik</a></code>.</p></li>
 <li><p>Calling <code>predict</code>, <code>irf</code> or <code>fevd</code> on a 'bvecmodel'
   instead of the result of <code><a href="vec_to_var.html">vec_to_var</a></code>.</p></li>
 <li><p>Passing draws to <code><a href="bvar.html">bvar</a></code> or <code><a href="bvec.html">bvec</a></code> with one row
@@ -275,11 +275,11 @@ monetary policy. <em>The Review of Economic Studies, 72</em>(3), 821–852.
 <span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="create_bvarmodel.html">create_bvarmodel</a></span><span class="op">(</span><span class="va">e1</span>, p <span class="op">=</span> <span class="fl">2</span>, deterministic <span class="op">=</span> <span class="st">"const"</span>,</span></span>
 <span class="r-in"><span>                          iterations <span class="op">=</span> <span class="fl">50</span>, burnin <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="co"># Number of iterations and burnin should be much higher.</span></span></span>
-<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_priors.html">add_priors</a></span><span class="op">(</span><span class="va">model</span>,</span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_priors.html" class="external-link">add_priors</a></span><span class="op">(</span><span class="va">model</span>,</span></span>
 <span class="r-in"><span>                    coef <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>v_i <span class="op">=</span> <span class="fl">0</span>, v_i_det <span class="op">=</span> <span class="fl">0</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                    sigma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>df <span class="op">=</span> <span class="fl">1</span>, scale <span class="op">=</span> <span class="fl">.0001</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_initial_values.html">add_initial_values</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_posterior_coefficients.html">add_posterior_coefficients</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_initial_values.html" class="external-link">add_initial_values</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html" class="external-link">add_posterior_coefficients</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Bayesian VAR model with p = 2 </span>
@@ -362,10 +362,10 @@ monetary policy. <em>The Review of Economic Studies, 72</em>(3), 821–852.
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Forecasts and impulse responses</span></span></span>
-<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_forecast_input.html">add_forecast_input</a></span><span class="op">(</span><span class="va">model</span>, n_ahead <span class="op">=</span> <span class="fl">8</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_posterior_forecasts.html">add_posterior_forecasts</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_forecast_input.html" class="external-link">add_forecast_input</a></span><span class="op">(</span><span class="va">model</span>, n_ahead <span class="op">=</span> <span class="fl">8</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_posterior_forecasts.html" class="external-link">add_posterior_forecasts</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">pred</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">model</span>, n_ahead <span class="op">=</span> <span class="fl">8</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">oir</span> <span class="op">&lt;-</span> <span class="fu"><a href="irf.html">irf</a></span><span class="op">(</span><span class="va">model</span>, impulse <span class="op">=</span> <span class="st">"income"</span>, response <span class="op">=</span> <span class="st">"cons"</span>, n_ahead <span class="op">=</span> <span class="fl">8</span>, type <span class="op">=</span> <span class="st">"oir"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">oir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/irf.html" class="external-link">irf</a></span><span class="op">(</span><span class="va">model</span>, impulse <span class="op">=</span> <span class="st">"income"</span>, response <span class="op">=</span> <span class="st">"cons"</span>, n_ahead <span class="op">=</span> <span class="fl">8</span>, type <span class="op">=</span> <span class="st">"oir"</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

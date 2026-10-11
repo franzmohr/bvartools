@@ -24,8 +24,7 @@ irf(x, ...)
 Nothing. The method raises an error, since impulse responses of a VEC
 model are obtained from its VAR representation: apply
 [`vec_to_var`](https://franzmohr.github.io/bvartools/reference/vec_to_var.md)
-first and then
-[`irf`](https://franzmohr.github.io/bvartools/reference/irf.md) to the
+first and then [`irf`](https://rdrr.io/pkg/bayests/man/irf.html) to the
 resulting 'bvarmodel'.
 
 ## See also

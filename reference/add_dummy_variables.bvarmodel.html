@@ -11,7 +11,7 @@ series that is known in advance."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -131,12 +131,12 @@ estimated error variance for the whole sample.</p>
 the end of the deterministic terms of the regressors, named after their type
 and period – <code>impulse.2020Q2</code>, <code>step.2008M09</code> – or after the
 columns of <code>data</code>, and their coefficients take the prior of the
-deterministic terms, <code>v_i_det</code> in <code><a href="add_priors.html">add_priors</a></code>.
+deterministic terms, <code>v_i_det</code> in <code><a href="https://rdrr.io/pkg/bayests/man/add_priors.html" class="external-link">add_priors</a></code>.
 <strong>The coefficient of an impulse dummy is estimated from a single
 observation</strong>, so its prior matters more than that of the constant: a tight
 one leaves most of the observation to the other coefficients, which is what
 the dummy was meant to prevent.</p>
-<p><strong>The function has to be called before <code><a href="add_priors.html">add_priors</a></code></strong>,
+<p><strong>The function has to be called before <code><a href="https://rdrr.io/pkg/bayests/man/add_priors.html" class="external-link">add_priors</a></code></strong>,
 since it changes the number of coefficients the priors are given for. A
 dummy variable that is zero in every period of the estimation sample, or
 that the other regressors already span – a step dummy that is one in every
@@ -146,11 +146,11 @@ zero after its period and a step dummy stays one. The series in <code>data</code
 are continued with the values they were given, so for a forecast they have
 to reach the last forecast period, or all deterministic terms of the
 forecast have to be given in argument <code>deterministic</code> of
-<code><a href="add_forecast_input.html">add_forecast_input</a></code>.</p>
+<code><a href="https://rdrr.io/pkg/bayests/man/add_forecast_input.html" class="external-link">add_forecast_input</a></code>.</p>
 <p>Of a list of models of class 'expandingwindow', each window gets the dummies
 whose periods it reaches and leaves out the rest: a forecast made at the end
 of a window that ends before a period could not have known about what
-happened in it. <code><a href="use_expanding_window.html">use_expanding_window</a></code> applied to a model with
+happened in it. <code><a href="https://rdrr.io/pkg/bayests/man/use_expanding_window.html" class="external-link">use_expanding_window</a></code> applied to a model with
 dummy variables does the same.</p>
 <p>In a VEC model the dummies enter the equations of the differences, not the
 cointegration term. <strong>An impulse dummy there shifts the level of the
@@ -168,7 +168,6 @@ period and minus one in the next, which can be given in <code>data</code>.
 <code><a href="add_priors.bvarmodel.html">add_priors.bvarmodel()</a></code>,
 <code><a href="add_priors.bvecmodel.html">add_priors.bvecmodel()</a></code>,
 <code><a href="aggregation_weights.html">aggregation_weights()</a></code>,
-<code><a href="combine_models.html">combine_models()</a></code>,
 <code><a href="create_bvarmodel.html">create_bvarmodel()</a></code>,
 <code><a href="create_bvecmodel.html">create_bvecmodel()</a></code>,
 <code><a href="transform_variables.html">transform_variables()</a></code>,
@@ -194,7 +193,7 @@ period and minus one in the next, which can be given in <code>data</code>.
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "const"          "impulse.1975Q1" "step.1979Q1"   </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Add priors</span></span></span>
-<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_priors.html">add_priors</a></span><span class="op">(</span><span class="va">model</span>,</span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_priors.html" class="external-link">add_priors</a></span><span class="op">(</span><span class="va">model</span>,</span></span>
 <span class="r-in"><span>                    coef <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>v_i <span class="op">=</span> <span class="fl">1</span>, v_i_det <span class="op">=</span> <span class="fl">1</span> <span class="op">/</span> <span class="fl">10</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                    sigma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>df <span class="op">=</span> <span class="st">"k"</span>, scale <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>

@@ -2,31 +2,386 @@
 
 ## bvartools 1.0.0
 
-- **[`add_priors()`](https://franzmohr.github.io/bvartools/reference/add_priors.md)
+- **A volatility break for VAR and VEC models with a Wishart prior.**
+  `create_bvarmodel(volatility_break = c(2020, 3))` and the same
+  argument of
+  [`create_bvecmodel()`](https://franzmohr.github.io/bvartools/reference/create_bvecmodel.md)
+  scale every shock from that period on by `s_t`, the model Lenza and
+  Primiceri (2022) proposed for estimating a VAR after March 2020: a
+  free scale in each of the first `volatility_scales` periods (three by
+  default), then an excess over one that decays at a rate `rho`. The
+  date says when; how large the break was and how fast it faded are
+  estimated, so the pandemic months count for less in the coefficients
+  and the covariance without being dropped. The prior is
+  `sigma$volatility = list(shape = , rho_shape1 = , rho_shape2 = )` in
+  [`add_priors()`](https://rdrr.io/pkg/bayests/man/add_priors.html), a
+  Pareto on the scales and a beta on `rho`, without a default; the error
+  message names the values of Lenza and Primiceri. The draws are
+  `posterior$volatility$coeffs`, columns `s1`, `s2`, … and `rho`. The
+  log likelihood and the forecasts use each period’s scale,
+  [`vec_to_var()`](https://franzmohr.github.io/bvartools/reference/vec_to_var.md)
+  carries the break to the VAR in levels, and
+  [`window()`](https://rdrr.io/r/stats/window.html),
+  [`thin()`](https://rdrr.io/pkg/coda/man/thin.html) and the model file
+  carry it; a window that ends before the break drops it with a warning,
+  and one that starts after it is refused. It is the sampler of
+  BayesTS’s VarNormalWishart and VecNormalWishart, vendored from
+  `deeebd0`, so it is available for constant coefficients and
+  `error = "wishart"` only and refused elsewhere, and a steady-state
+  prior is refused with it. It combines with Student t errors. Draws of
+  a model without it are unchanged.
+
+- **Student t errors for a VAR with a Wishart prior.**
+  `create_bvarmodel(student_t = TRUE)` makes each period’s shocks
+  multivariate t: `u_t ~ N(0, lambda_t Sigma)` with
+  `lambda_t ~ IG(nu / 2, nu / 2)`, so a period with large shocks gets a
+  large `lambda_t` and counts for less in the coefficients and the
+  covariance, without anyone dating it. The degrees of freedom are held
+  fixed with `sigma = list(..., student_t = list(df = 5))` in
+  [`add_priors()`](https://rdrr.io/pkg/bayests/man/add_priors.html), or
+  drawn under a gamma prior with
+  `student_t = list(shape = 2, rate = 0.1)`, the prior of Juarez and
+  Steel (2010); like every hyperparameter, the prior has no default. The
+  draws are `posterior$student_t$df` and `posterior$student_t$lambda`,
+  one column per period; the log likelihood and the predictive density
+  integrate `lambda` out, a forecast draws it from its prior, and
+  [`window()`](https://rdrr.io/r/stats/window.html),
+  [`thin()`](https://rdrr.io/pkg/coda/man/thin.html) and the model file
+  carry both. It is the sampler of BayesTS’s VarNormalWishart, vendored
+  from `9f470f1`, so it is available for constant coefficients and
+  `error = "wishart"` only and refused elsewhere, and a scenario and a
+  steady-state prior are refused with it. Draws of a model without it
+  are unchanged.
+
+- **Smaller corrections.**
+  [`minnesota_prior()`](https://franzmohr.github.io/bvartools/reference/minnesota_prior.md)
+  of a VEC model returns its prior precision as `v_inv`, as the VAR
+  method does, where it said `v_i`.
+  [`spillover()`](https://franzmohr.github.io/bvartools/reference/spillover.md)
+  over a model list or an expanding window stops on an error and names
+  the model, where it returned `NULL` elements or rows of `NA`.
+  `varsel$covar = TRUE` on a model without a covariance block is warned
+  about rather than dropped.
+  [`create_bvecmodel()`](https://franzmohr.github.io/bvartools/reference/create_bvecmodel.md)
+  names a single unnamed series `"y"`, as
+  [`create_bvarmodel()`](https://franzmohr.github.io/bvartools/reference/create_bvarmodel.md)
+  does.
+  [`persistence_profiles()`](https://franzmohr.github.io/bvartools/reference/persistence_profiles.md)
+  no longer takes a restricted constant for a variable of another
+  system. [`window()`](https://rdrr.io/r/stats/window.html) moves the
+  period of a sign and zero identification with the sample, and
+  [`use_expanding_window()`](https://rdrr.io/pkg/bayests/man/use_expanding_window.html)
+  drops an identification along with the draws it rotated. Error
+  messages name `priors$u_sigma` and `initial`, which they misspelt, and
+  the print of a spillover index names a sign restricted or custom
+  identification. Eleven functions without an example have one, and
+  `inst/CITATION` cites the BayesTS library. Draws are unchanged.
+
+- **Calls that stopped, or were refused for the wrong reason, now
+  work.**
+
+  - [`write_to_hdf5()`](https://rdrr.io/pkg/bayests/man/write_to_hdf5.html)
+    writes a model identified with
+    [`add_sign_zero_restrictions()`](https://rdrr.io/pkg/bayests/man/add_sign_zero_restrictions.html),
+    and the record of its importance sample survives the round trip.
+  - A VEC model too short for least squares starting values gets a start
+    for its cointegration vectors, instead of regressors the sampler
+    refused as NaN – the early windows of an expanding window ran into
+    this.
+  - [`thin()`](https://rdrr.io/pkg/coda/man/thin.html) thins a grid of
+    quantiles.
+  - A test sample with a gap anywhere before the horizon is scored; a
+    ragged edge is scored over the periods observed for every variable.
+  - [`pool_forecasts()`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md)
+    matches windows that end in the same period whatever other windows
+    each member has.
+  - [`irf()`](https://rdrr.io/pkg/bayests/man/irf.html) and
+    [`fevd()`](https://rdrr.io/pkg/bayests/man/fevd.html) on a stored
+    model take a list of impact matrices or an impact function per draw,
+    read at the draw’s position in the chain, and pass over pieces with
+    no draw identified by sign restrictions.
+  - [`ssvs_prior()`](https://franzmohr.github.io/bvartools/reference/ssvs_prior.md)
+    and
+    [`inclusion_prior()`](https://franzmohr.github.io/bvartools/reference/inclusion_prior.md)
+    take a model list, the three prior helpers an expanding window,
+    [`add_prior_options()`](https://franzmohr.github.io/bvartools/reference/add_prior_options.md)
+    an expanding window, and
+    [`multipliers()`](https://franzmohr.github.io/bvartools/reference/multipliers.md)
+    and
+    [`historical_decomposition()`](https://franzmohr.github.io/bvartools/reference/historical_decomposition.md)
+    either.
+  - [`add_predictive_loglik()`](https://rdrr.io/pkg/bayests/man/add_predictive_loglik.html)
+    on an expanding window of discounted models scores each window’s
+    forecast against a `test_sample`, instead of saying that its windows
+    held no posterior draws.
+  - Shrinkage or the stationarity restriction on a structural model,
+    which the samplers do not combine with it, is refused for that
+    reason, rather than for the length of the shrinkage groups.
+
+  Draws are unchanged.
+
+- **Results that came back wrong without an error are corrected.** Each
+  case ran to completion and returned plausible numbers:
+
+  - A univariate model scored against a test sample of several series –
+    an AR benchmark beside the VARs it is ranked against – read its
+    realised values off every column in turn. It now reads its own, by
+    name.
+  - [`window()`](https://rdrr.io/r/stats/window.html) left three things
+    at the length of the original sample: the panel completed by
+    `missing = "estimate"`, which
+    [`historical_decomposition()`](https://franzmohr.github.io/bvartools/reference/historical_decomposition.md)
+    then labelled with the window’s dates; the forecast input, forecasts
+    and realised values, which start after the original end and are now
+    dropped, with a warning, when the window moves the end; and the log
+    likelihood of a discounted model, whose sum still covered the whole
+    sample.
+  - A new forecast input or forecast left the forecast errors and
+    predictive scores of the previous forecast beside the new one, and
+    [`selection_criteria()`](https://rdrr.io/pkg/bayests/man/selection_criteria.html)
+    reported them as its own. Both now clear them.
+  - [`persistence_profiles()`](https://franzmohr.github.io/bvartools/reference/persistence_profiles.md)
+    of a time varying VEC model took the lag coefficients of the first
+    period beside the cointegrating vectors of the period asked for;
+    under stochastic volatility it stopped on a non-square matrix. It
+    now reads one period throughout.
+  - [`fevd()`](https://rdrr.io/pkg/bayests/man/fevd.html) on a stored
+    model with `statistic = "median"` or a `ci` averaged the medians and
+    quantiles of its chunks. It now summarises all draws at once and
+    equals the call on the model in memory.
+
+  Refused rather than ignored: `scenario` and `forecast_quantile` in
+  [`add_posterior_forecasts()`](https://rdrr.io/pkg/bayests/man/add_posterior_forecasts.html)
+  of a VEC model, which no VEC sampler supports and which a model list
+  mixing VAR and VEC models applied to its VARs alone;
+  [`multipliers()`](https://franzmohr.github.io/bvartools/reference/multipliers.md)
+  of a grid of quantiles, which returned the lowest quantile’s; and a
+  misspelt `coef$const` in
+  [`add_priors()`](https://rdrr.io/pkg/bayests/man/add_priors.html) of a
+  VEC model, or one given for a constant restricted to the cointegration
+  space. Draws are unchanged.
+
+- **A starting path of the wrong length is refused rather than padded or
+  cut.** The time varying models read `initial$a`, `initial$psi` and
+  `initial$beta` as paths, and a path of the wrong length used to be
+  padded with zeros or cut short without a word – a model cut with
+  [`window()`](https://rdrr.io/r/stats/window.html) and estimated
+  without
+  [`add_initial_values()`](https://rdrr.io/pkg/bayests/man/add_initial_values.html)
+  started from the periods of the old sample. It now stops and says to
+  call
+  [`add_initial_values()`](https://rdrr.io/pkg/bayests/man/add_initial_values.html),
+  as BayesTS does on a model file. **A time varying covariance block
+  without a selection scheme of its own follows the model’s**, as in
+  BayesTS: the gamma and stochastic volatility models with time varying
+  coefficients read a missing `priors$psi$varsel` as no selection, so a
+  model selecting with `varsel = "bvs"` ran without selection over the
+  covariances.
+  [`read_model_from_hdf5()`](https://rdrr.io/pkg/bayests/man/read_model_from_hdf5.html)
+  now also reads the scheme from the attribute of `/model/priors/psi`,
+  where BayesTS writes it, so a file written outside R keeps it. Draws
+  of a model set up with
+  [`add_priors()`](https://rdrr.io/pkg/bayests/man/add_priors.html),
+  which always states the scheme, are unchanged.
+
+- **The generics and the infrastructure every model package shares moved
+  to the new package bayests, which bvartools imports and re-exports.**
+  [`add_priors()`](https://rdrr.io/pkg/bayests/man/add_priors.html),
+  [`add_posterior_coefficients()`](https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html),
+  [`write_to_hdf5()`](https://rdrr.io/pkg/bayests/man/write_to_hdf5.html),
+  [`read_model_from_hdf5()`](https://rdrr.io/pkg/bayests/man/read_model_from_hdf5.html),
+  [`selection_criteria()`](https://rdrr.io/pkg/bayests/man/selection_criteria.html),
+  [`map_models()`](https://rdrr.io/pkg/bayests/man/map_models.html),
+  [`bayests_files()`](https://rdrr.io/pkg/bayests/man/bayests_files.html)
+  and the other moved functions are the same function objects, reached
+  under the same names, and the methods for ‘modellist’ and
+  ‘expandingwindow’ come with them. What stays here is what is
+  particular to VAR and VEC models: their constructors, priors, methods,
+  analysis, forecast pooling and external forecasts. The plots of
+  forecasts, impulse responses and variance decompositions and the print
+  of a time variation test moved too, since dfmtools returns the same
+  classes. dfmtools and ucmtools build on bayests the same way, which is
+  what lets a ‘modellist’ hold models of all three. Draws are unchanged.
+
+  Renames came with the move, none of them of anything in a CRAN
+  release. Functions that read from disk start with `read_`:
+  [`read_model_file()`](https://rdrr.io/pkg/bayests/man/read_model_file.html)
+  (was `open_model()`),
+  [`read_model_folder()`](https://rdrr.io/pkg/bayests/man/read_model_folder.html)
+  (was `open_models()`) and
+  [`read_model_groups()`](https://rdrr.io/pkg/bayests/man/read_model_groups.html)
+  (was `list_models_in_hdf5()`). The class of
+  [`read_model_file()`](https://rdrr.io/pkg/bayests/man/read_model_file.html)
+  is `modelfile` (was `bvarfile`), that of
+  [`read_model_folder()`](https://rdrr.io/pkg/bayests/man/read_model_folder.html)
+  is `modelfolder` (was `bvarfolder`), and the options are
+  `bayests.executable` (was `bvartools.bayests_executable`) and
+  `bayests.size_warning` (was `bvartools.size_warning`). A file is read
+  by the new
+  [`read_hdf5_model()`](https://rdrr.io/pkg/bayests/man/read_hdf5_model.html)
+  methods for ‘bvarmodel’ and ‘bvecmodel’, which hold the reader
+  [`read_model_from_hdf5()`](https://rdrr.io/pkg/bayests/man/read_model_from_hdf5.html)
+  used to be.
+
+- **A model with a seed now draws the same forecast every time.**
+  [`add_posterior_forecasts()`](https://rdrr.io/pkg/bayests/man/add_posterior_forecasts.html)
+  drew from R’s generator as it stood, so two forecasts of one fitted
+  model differed even after
+  [`add_seed()`](https://rdrr.io/pkg/bayests/man/add_seed.html), and
+  only [`set.seed()`](https://rdrr.io/r/base/Random.html) before the
+  call repeated them. The simulations that follow the coefficients now
+  draw from seeds derived from `object$model$seed`, one per stage, as
+  the BayesTS command line seeds its forecast stage from a stream
+  derived from `/model/seed` rather than from the seed itself: the
+  forecast of
+  [`add_posterior_forecasts()`](https://rdrr.io/pkg/bayests/man/add_posterior_forecasts.html)
+  (scenarios and quantile paths included, VAR and VEC, and so the
+  ‘modellist’ and ‘expandingwindow’ methods of bayests, on one core or
+  several), the score of
+  [`add_predictive_loglik()`](https://rdrr.io/pkg/bayests/man/add_predictive_loglik.html),
+  and the rotations of
+  [`add_sign_restrictions()`](https://rdrr.io/pkg/bayests/man/add_sign_restrictions.html)
+  and
+  [`add_sign_zero_restrictions()`](https://rdrr.io/pkg/bayests/man/add_sign_zero_restrictions.html),
+  whose resample shares their stream. A forecast therefore does not
+  reuse the random numbers the chain started from, and repeating a stage
+  no longer moves the draws of the next. **Draws change for every model
+  with a seed**: forecasts, predictive scores and rotations, and the
+  forecasts and score of the discounted models, which used the model’s
+  seed itself. A model without a seed draws from R’s generator as it
+  stands and gives the draws it gave before. Coefficient draws are
+  unchanged. Forecast pools have no seed and still need
+  [`set.seed()`](https://rdrr.io/r/base/Random.html). The seeding
+  functions come from bayests, which dfmtools uses too.
+
+- The vendored BayesTS core moves to `deeebd0`, past `75d35c6`, which
+  adds the four unobserved components models, and past the cycle start
+  of `4808dff` and the damped trend and signal equations of `bc27dfe`,
+  which reach this package only as new fields and their refusals in the
+  shared files. They belong to ucmtools and are skipped, with their
+  three support headers; what arrives here is their structs and
+  validators in the shared files and a third entry point of the band
+  sampler, `chan_jeliazkov_2009_precision()`, which nothing here calls.
+  Draws are unchanged: ten blocks of draws from VAR, SVAR, stochastic
+  volatility, time varying, VEC, model list and forecast runs with fixed
+  seeds are identical to those of a clean build of the previous version,
+  and past `4808dff` the coefficients and forecasts of a Wishart, a
+  correlated gamma, a stochastic volatility and a time varying VAR are
+  identical again, and again past `02a41de` and `deeebd0`, the latter
+  for a Wishart VEC as well.
+
+- **A forecast can now start from values after the end of the estimation
+  sample.**
+  [`add_forecast_input()`](https://rdrr.io/pkg/bayests/man/add_forecast_input.html)
+  and
+  [`prepare_forecast_input()`](https://rdrr.io/pkg/bayests/man/prepare_forecast_input.html)
+  take `y_start`, a time series of the endogenous variables whose last
+  `p` observations are the lags of the first forecast period. The
+  forecast periods are the `n_ahead` after its last observation, so a
+  model estimated to August can forecast October onwards from a nowcast
+  for September without being estimated again or simulated by hand.
+  `exogen` and `deterministic` have to cover the new periods, and are
+  refused with the periods they lack when they do not; the automatic
+  deterministic terms count through the periods in between, so that a
+  trend keeps counting and seasonal dummies fall on the right months.
+  [`predict()`](https://rdrr.io/r/stats/predict.html) dates the
+  forecasts by the new periods and shows the start values as the history
+  they continue, and
+  [`add_forecast_errors()`](https://rdrr.io/pkg/bayests/man/add_forecast_errors.html)
+  scores them against those periods. Start values that end with the
+  sample give the default forecast exactly. Argument `deterministic`
+  given by hand is now checked to cover the forecast periods as well,
+  rather than failing with R’s “number of items to replace”.
+
+  What starts from the last period of the sample is refused for such a
+  forecast, with the reason: a scenario, `forecast_states = "simulate"`
+  for time varying coefficients or stochastic volatility (`"hold"` is
+  available), the discounted model,
+  [`add_predictive_loglik()`](https://rdrr.io/pkg/bayests/man/add_predictive_loglik.html),
+  [`aggregate_forecasts()`](https://franzmohr.github.io/bvartools/reference/aggregate_forecasts.md)
+  and
+  [`pool_forecasts()`](https://franzmohr.github.io/bvartools/reference/pool_forecasts.md).
+  So are models estimated with `missing = "estimate"`, whose forecasts
+  start from each draw’s completed panel, a `bvecmodel` (use
+  [`vec_to_var()`](https://franzmohr.github.io/bvartools/reference/vec_to_var.md)
+  first) and an `expandingwindow`, whose windows each forecast from
+  their own sample.
+
+- **Variable selection can be kept off the error covariances in every
+  model that has them.** `varsel$covar = FALSE` used to be refused for a
+  model with a covariance block and constant coefficients, because that
+  sampler read one selection scheme for the whole model and applied it
+  to both blocks. BayesTS now reads the block’s own scheme everywhere,
+  so the combination is allowed and `covar` decides it in the constant
+  coefficient models as it already did in the time varying ones.
+
+  This is worth a thought rather than a default. A generalised impulse
+  response is built from the off-diagonals of the error covariance, so
+  selecting them to zero collapses it towards an orthogonalised
+  response, which removes the very thing that distinguishes the two; and
+  the block is small, `k(k-1)/2` elements against the sample, so there
+  is no dimensionality case for selecting over it the way there is for
+  the coefficients. Nothing changes for a model that does not ask:
+  absence of a covariance scheme still means the model’s own governs
+  both blocks, and draws are unchanged.
+
+- **A sound sign and zero restricted sample is no longer reported as
+  unreliable.** Two cases gave a Pareto shape above 0.7, and so a
+  warning, for importance weights with nothing wrong with them.
+
+  - **Several tries per draw.** With `max_tries` above one a weight is
+    the ratio of the volume elements times an estimate of the
+    probability that a rotation satisfies the signs. That estimate lies
+    between `1 / max_tries` and one and takes only the values 1, 1/2,
+    1/3 and so on, and the Pareto fit read its ties as a heavy tail: a
+    factor augmented VAR of dfmtools with three signs on one shock gave
+    a shape of 10.3 at `max_tries = 100`, where the largest single
+    weight held 0.15% of the total. The ratio is now smoothed and
+    diagnosed on its own and the estimate multiplied in afterwards.
+    Being bounded, the estimate cannot make the tail heavier, so the
+    shape still detects a heavy-tailed ratio where there are zero
+    restrictions.
+    [`arias_rubio_ramirez_waggoner_2018()`](https://franzmohr.github.io/bvartools/reference/arias_rubio_ramirez_waggoner_2018.md)
+    keeps the two apart for every caller,
+    [`add_sign_zero_restrictions()`](https://rdrr.io/pkg/bayests/man/add_sign_zero_restrictions.html)
+    included.
+  - **Weights that are equal by construction.** With signs alone the
+    volume elements cancel and the weights are equal, up to the rounding
+    of the numerical derivative in the ninth digit. A Pareto fit to that
+    noise returned whatever shape it suggested, below 0.7 under one seed
+    and above it under another. Weights whose logarithms span less than
+    1e-6 are now left equal, and `pareto_k` is `NA`, as it is when fewer
+    than 25 draws satisfied the signs.
+
+  The resampled draws change only where smoothing used to act on those
+  ties or that noise; at `max_tries = 1` with any zero restriction, and
+  with `smooth = FALSE`, they are unchanged.
+
+- **[`add_priors()`](https://rdrr.io/pkg/bayests/man/add_priors.html)
   now warns when SSVS is combined with `coef$coint_var = TRUE`, and the
   model runs.** SSVS centres both components of its prior at zero, so
   the sampler refuses a prior mean of one on the first own lags, and
   until now that surfaced only as an error from
-  [`add_posterior_coefficients()`](https://franzmohr.github.io/bvartools/reference/add_posterior_coefficients.md),
+  [`add_posterior_coefficients()`](https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html),
   one step after the prior was chosen.
-  [`add_priors()`](https://franzmohr.github.io/bvartools/reference/add_priors.md)
-  now says so where the choice is made, sets those prior means to zero
-  and points to `varsel = "bvs"`, which keeps the prior mean and so can
+  [`add_priors()`](https://rdrr.io/pkg/bayests/man/add_priors.html) now
+  says so where the choice is made, sets those prior means to zero and
+  points to `varsel = "bvs"`, which keeps the prior mean and so can
   select variables around a random walk.
 
 - **Models of other packages can now be stored in BayesTS files and kept
   in one `modellist` with the VARs and VECs.**
-  [`write_bayests_tree()`](https://franzmohr.github.io/bvartools/reference/write_bayests_tree.md)
+  [`write_bayests_tree()`](https://rdrr.io/pkg/bayests/man/write_bayests_tree.html)
   writes a nested list into a model file. It applies the same rules as
-  [`write_to_hdf5()`](https://franzmohr.github.io/bvartools/reference/write_to_hdf5.md):
+  [`write_to_hdf5()`](https://rdrr.io/pkg/bayests/man/write_to_hdf5.html):
   a model already there is refused, and a write that fails is undone.
-  [`read_bayests_tree()`](https://franzmohr.github.io/bvartools/reference/write_bayests_tree.md)
+  [`read_bayests_tree()`](https://rdrr.io/pkg/bayests/man/write_bayests_tree.html)
   reads any model file back as such a list, including one written by the
   BayesTS command line. A package that stores its models this way
   registers a
-  [`from_bayests_tree()`](https://franzmohr.github.io/bvartools/reference/from_bayests_tree.md)
+  [`from_bayests_tree()`](https://rdrr.io/pkg/bayests/man/from_bayests_tree.html)
   method, and
-  [`read_model_from_hdf5()`](https://franzmohr.github.io/bvartools/reference/read_model_from_hdf5.md)
+  [`read_model_from_hdf5()`](https://rdrr.io/pkg/bayests/man/read_model_from_hdf5.html)
   then returns its object for any file whose `/model/rclass` names that
   class.
 
@@ -37,23 +392,22 @@
 
   The reader loads the package named in `/model/rpackage`, so its
   methods are found whether or not it is attached, including in a worker
-  of
-  [`map_models()`](https://franzmohr.github.io/bvartools/reference/map_models.md).
+  of [`map_models()`](https://rdrr.io/pkg/bayests/man/map_models.html).
   A file from the command line has no `rclass` or `rpackage`. A `Dfm*`
   or `Favar*` model is then read as a dfmtools model. If the package is
   not installed, the read stops and names it.
 
-  [`write_to_hdf5()`](https://franzmohr.github.io/bvartools/reference/write_to_hdf5.md)
+  [`write_to_hdf5()`](https://rdrr.io/pkg/bayests/man/write_to_hdf5.html)
   on a `modellist` used to treat everything that was not a `bvarmodel`
   or a `bvecmodel` as a nested list, and tried to write a factor model’s
   `data` and `model` elements as models. It now writes any model through
   its own method, so
-  [`read_models_from_folder()`](https://franzmohr.github.io/bvartools/reference/read_models_from_folder.md)
+  [`read_models_from_folder()`](https://rdrr.io/pkg/bayests/man/read_models_from_folder.html)
   returns the list it was given.
-  [`map_models()`](https://franzmohr.github.io/bvartools/reference/map_models.md)
+  [`map_models()`](https://rdrr.io/pkg/bayests/man/map_models.html)
   likewise accepts any model it can write back.
 
-- **[`use_expanding_window()`](https://franzmohr.github.io/bvartools/reference/use_expanding_window.md)
+- **[`use_expanding_window()`](https://rdrr.io/pkg/bayests/man/use_expanding_window.html)
   and [`window()`](https://rdrr.io/r/stats/window.html) now cut the
   observations of a panel not observed whole.** For a model created with
   `missing = "estimate"` or `aggregate`, every window used to keep all
@@ -70,10 +424,10 @@
   what was observed up to the end of the window, so that they no longer
   interpolate towards later observations.
 
-- **[`add_predictive_loglik()`](https://franzmohr.github.io/bvartools/reference/add_predictive_loglik.md)
+- **[`add_predictive_loglik()`](https://rdrr.io/pkg/bayests/man/add_predictive_loglik.html)
   no longer fails on expanding windows when a dummy variable first
   enters during the evaluation period.**
-  [`use_expanding_window()`](https://franzmohr.github.io/bvartools/reference/use_expanding_window.md)
+  [`use_expanding_window()`](https://rdrr.io/pkg/bayests/man/use_expanding_window.html)
   leaves an impulse, step or data dummy of
   [`add_dummy_variables()`](https://franzmohr.github.io/bvartools/reference/add_dummy_variables.md)
   out of the windows that end before its event, so the window just
@@ -87,17 +441,16 @@
 
 - **The log predictive likelihood can now be plotted, as a total and
   period by period.**
-  [`selection_criteria()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.md)
+  [`selection_criteria()`](https://rdrr.io/pkg/bayests/man/selection_criteria.html)
   has computed `"LPL"` for expanding windows for some time, with a band
   around the sum and the per-period log predictive densities in
-  attribute `"terms"`, but no plot could reach it:
-  [`plot.selcritlist()`](https://franzmohr.github.io/bvartools/reference/plot.selcritlist.md)
+  attribute `"terms"`, but no plot could reach it: `plot.selcritlist()`
   matched the criterion against a list that did not contain `"LPL"`, so
   an object that carried it reported it as unavailable. It is in that
   list now, and `plot(criteria, criterion = "LPL")` draws the usual
   error bar per model.
 
-  [`plot_predictive_loglik()`](https://franzmohr.github.io/bvartools/reference/plot_predictive_loglik.md)
+  [`plot_predictive_loglik()`](https://rdrr.io/pkg/bayests/man/plot_predictive_loglik.html)
   is new and plots the terms of that sum rather than the sum. With a
   `baseline` it draws the cumulative difference of every model to that
   one, which answers a question the total cannot: whether a model’s
@@ -109,7 +462,7 @@
   line says it at a glance. `cumulative = FALSE` plots each period on
   its own, and without a `baseline` the densities themselves are drawn.
 
-- **[`time_variation_test()`](https://franzmohr.github.io/bvartools/reference/time_variation_test.md)
+- **[`time_variation_test()`](https://rdrr.io/pkg/bayests/man/time_variation_test.html)
   now works on a list of models, on expanding windows and on a folder of
   stored models.** The Bayes factors of Chan (2018) could be computed
   for one `bvarmodel` or `bvecmodel` at a time, which meant that a grid
@@ -120,10 +473,10 @@
   Like
   [`persistence_profiles()`](https://franzmohr.github.io/bvartools/reference/persistence_profiles.md)
   and
-  [`selection_criteria()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.md),
+  [`selection_criteria()`](https://rdrr.io/pkg/bayests/man/selection_criteria.html),
   the new methods read rather than write: `modellist` and
   `expandingwindow` return a list of results of the same class as the
-  object, and `bvarfolder` returns a named list with one entry per
+  object, and `modelfolder` returns a named list with one entry per
   stored model and leaves the folder untouched. Arguments such as
   `joint` and `batches` reach every element, and the folder method takes
   `cores`.
@@ -137,7 +490,7 @@
 
 - **[`arias_rubio_ramirez_waggoner_2018()`](https://franzmohr.github.io/bvartools/reference/arias_rubio_ramirez_waggoner_2018.md)
   is exported.** It is the identification step of
-  [`add_sign_zero_restrictions()`](https://franzmohr.github.io/bvartools/reference/add_sign_zero_restrictions.md)
+  [`add_sign_zero_restrictions()`](https://rdrr.io/pkg/bayests/man/add_sign_zero_restrictions.html)
   on its own. It takes a list of reduced-form draws, each a coefficient
   matrix and a covariance, and returns:
 
@@ -147,12 +500,12 @@
 
   It exists for packages that estimate a VAR inside something larger,
   such as the state equation of a factor augmented VAR in dfmtools.
-  [`add_sign_zero_restrictions()`](https://franzmohr.github.io/bvartools/reference/add_sign_zero_restrictions.md)
+  [`add_sign_zero_restrictions()`](https://rdrr.io/pkg/bayests/man/add_sign_zero_restrictions.html)
   now runs it, so the same seed gives the same draws through either, and
   the draws are unchanged. Unlike the method, the function accepts a
   table of signs alone.
 
-- **[`add_sign_zero_restrictions()`](https://franzmohr.github.io/bvartools/reference/add_sign_zero_restrictions.md)
+- **[`add_sign_zero_restrictions()`](https://rdrr.io/pkg/bayests/man/add_sign_zero_restrictions.html)
   takes `max_tries`.**
 
   - **The problem.** The algorithm of Arias, Rubio-Ramírez and Waggoner
@@ -188,9 +541,9 @@
   variable’s whole conditional distribution given the ones ordered
   before it: the quantiles are sorted, interpolated linearly and
   continued by exponential tails.
-  [`add_posterior_loglik()`](https://franzmohr.github.io/bvartools/reference/add_posterior_loglik.md)
+  [`add_posterior_loglik()`](https://rdrr.io/pkg/bayests/man/add_posterior_loglik.html)
   scores that density, and
-  [`add_posterior_forecasts()`](https://franzmohr.github.io/bvartools/reference/add_posterior_forecasts.md)
+  [`add_posterior_forecasts()`](https://rdrr.io/pkg/bayests/man/add_posterior_forecasts.html)
   simulates from it variable by variable, so a grid forecasts where a
   single quantile still does not. `forecast_quantile` takes every
   forecast draw at one level, and `scenario` pins variables in forecast
@@ -202,9 +555,9 @@
   returns the single levels, which
   [`summary()`](https://rdrr.io/r/base/summary.html),
   [`plot()`](https://rdrr.io/r/graphics/plot.default.html) and
-  [`irf()`](https://franzmohr.github.io/bvartools/reference/irf.md) work
-  on; on the grid itself they stop and say so. Draws are unchanged for
-  every model without a grid.
+  [`irf()`](https://rdrr.io/pkg/bayests/man/irf.html) work on; on the
+  grid itself they stop and say so. Draws are unchanged for every model
+  without a grid.
 
 - **[`historical_decomposition()`](https://franzmohr.github.io/bvartools/reference/historical_decomposition.md)
   decomposes the path of a variable into the contributions of the
@@ -214,24 +567,23 @@
   path the lags before the sample, the deterministic terms and the
   exogenous variables produce without shocks. The identification is
   `"oir"`, the rotations of
-  [`add_sign_restrictions()`](https://franzmohr.github.io/bvartools/reference/add_sign_restrictions.md)
+  [`add_sign_restrictions()`](https://rdrr.io/pkg/bayests/man/add_sign_restrictions.html)
   or
-  [`add_sign_zero_restrictions()`](https://franzmohr.github.io/bvartools/reference/add_sign_zero_restrictions.md)
+  [`add_sign_zero_restrictions()`](https://rdrr.io/pkg/bayests/man/add_sign_zero_restrictions.html)
   (`"sign"`), or any impact matrix (`"custom"`), as in
-  [`irf()`](https://franzmohr.github.io/bvartools/reference/irf.md). The
-  result is a time series of the posterior mean or median contributions,
-  with credible bounds on request (`ci`), and
+  [`irf()`](https://rdrr.io/pkg/bayests/man/irf.html). The result is a
+  time series of the posterior mean or median contributions, with
+  credible bounds on request (`ci`), and
   [`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws them as
   stacked bars. A panel not observed whole is decomposed draw by draw
   over the completed panel. Available for models with constant
   coefficients and a covariance that does not change over the sample.
 
-- **[`fevd()`](https://franzmohr.github.io/bvartools/reference/fevd.md)
-  reports medians and credible bands.** `statistic = "median"`
-  summarises the shares by their posterior median instead of the mean,
-  and `ci = 0.68` attaches the 16th and 84th percentiles as attributes
-  `lower` and `upper`. Without either argument the result is the same as
-  before.
+- **[`fevd()`](https://rdrr.io/pkg/bayests/man/fevd.html) reports
+  medians and credible bands.** `statistic = "median"` summarises the
+  shares by their posterior median instead of the mean, and `ci = 0.68`
+  attaches the 16th and 84th percentiles as attributes `lower` and
+  `upper`. Without either argument the result is the same as before.
 
 - **An `iid` variable can be missing.**
   [`create_bvarmodel()`](https://franzmohr.github.io/bvartools/reference/create_bvarmodel.md)
@@ -257,7 +609,7 @@
   `data$train$constraints`, one linear constraint per observation, and
   the completed panel comes back in `posterior$y`; forecasts start from
   it and
-  [`add_posterior_loglik()`](https://franzmohr.github.io/bvartools/reference/add_posterior_loglik.md)
+  [`add_posterior_loglik()`](https://rdrr.io/pkg/bayests/man/add_posterior_loglik.html)
   scores only what was observed. Available for the Gaussian errors with
   constant or time varying coefficients; not for quantile, discounted or
   structural models or with `iid`. The model file carries the
@@ -292,11 +644,11 @@
   outside the package. The pool behaves like an expanding window
   exercise, or like a single model if single models were pooled: it
   joins a list of models through
-  [`combine_models()`](https://franzmohr.github.io/bvartools/reference/combine_models.md),
+  [`combine_models()`](https://rdrr.io/pkg/bayests/man/combine_models.html),
   is scored by
-  [`add_forecast_errors()`](https://franzmohr.github.io/bvartools/reference/add_forecast_errors.md)
+  [`add_forecast_errors()`](https://rdrr.io/pkg/bayests/man/add_forecast_errors.html)
   and ranked by
-  [`selection_criteria()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.md),
+  [`selection_criteria()`](https://rdrr.io/pkg/bayests/man/selection_criteria.html),
   and the functions that estimate a model leave it unchanged. Windows
   are matched by the end of their estimation samples, and the pool keeps
   the variables and horizons all members share. The log predictive
@@ -327,7 +679,7 @@
   of an expanding window leave out a dummy whose period they do not
   reach, since a forecast from there could not have known about it.
   Refused are a call after
-  [`add_priors()`](https://franzmohr.github.io/bvartools/reference/add_priors.md),
+  [`add_priors()`](https://rdrr.io/pkg/bayests/man/add_priors.html),
   which would leave the priors one coefficient short, a dummy that is
   zero throughout the estimation sample, and one the other regressors
   already span, such as a step that is one in every period. In a VEC
@@ -342,10 +694,9 @@
   falls is the speed of convergence to equilibrium. A profile that does
   not fall says the relation is not cointegrating whatever the rank
   asserts, which makes it the check on a rank chosen by a test or a
-  criterion. Unlike
-  [`irf()`](https://franzmohr.github.io/bvartools/reference/irf.md) and
-  [`fevd()`](https://franzmohr.github.io/bvartools/reference/fevd.md),
-  which a VEC model reaches through
+  criterion. Unlike [`irf()`](https://rdrr.io/pkg/bayests/man/irf.html)
+  and [`fevd()`](https://rdrr.io/pkg/bayests/man/fevd.html), which a VEC
+  model reaches through
   [`vec_to_var()`](https://franzmohr.github.io/bvartools/reference/vec_to_var.md),
   this one cannot be taken from the level VAR alone –
   [`vec_to_var()`](https://franzmohr.github.io/bvartools/reference/vec_to_var.md)
@@ -359,7 +710,7 @@
   long-run relation to follow.
 
 - **A failed
-  [`bayests_files()`](https://franzmohr.github.io/bvartools/reference/bayests_files.md)
+  [`bayests_files()`](https://rdrr.io/pkg/bayests/man/bayests_files.html)
   run names the file it failed on.** The reason reported for a path was
   the last five lines of the executable’s log. A path may be a
   directory, and the walk carries on past a file it cannot process, so
@@ -371,7 +722,7 @@
   and the tail is used only when there is none – a process killed from
   outside still leaves the last thing it said.
 
-- **[`selection_criteria()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.md)
+- **[`selection_criteria()`](https://rdrr.io/pkg/bayests/man/selection_criteria.html)
   can evaluate AIC, BIC and HQ at the best draw.** The new argument
   `plugin` chooses the point the deviance is taken at. `"mean"`, the
   default and the behaviour up to now, uses the posterior mean of the
@@ -392,12 +743,12 @@
   Johansen’s reduced rank regression decomposes
   `S11^-1/2 S10 S00^-1 S01 S11^-1/2'`, which is of the form `A' A` and
   so symmetric – in floating point to about 1e-15, no further.
-  [`add_initial_values()`](https://franzmohr.github.io/bvartools/reference/add_initial_values.md)
+  [`add_initial_values()`](https://rdrr.io/pkg/bayests/man/add_initial_values.html)
   decomposed it as a general matrix, and for some designs the
   eigenvectors came back **complex**: the complex values travelled into
   `beta`, `alpha` and everything built from them, and failed at the
   first thing that cannot hold them,
-  [`write_to_hdf5()`](https://franzmohr.github.io/bvartools/reference/write_to_hdf5.md)
+  [`write_to_hdf5()`](https://rdrr.io/pkg/bayests/man/write_to_hdf5.html)
   reporting the HDF5 error “not a datatype” because the format has no
   complex type. It affected five of the thirty-three sub-models of a
   GVEC whose error correction term carried a restricted constant, where
@@ -417,11 +768,10 @@ A model is now an object:
 or
 [`create_bvecmodel()`](https://franzmohr.github.io/bvartools/reference/create_bvecmodel.md)
 builds it,
-[`add_priors()`](https://franzmohr.github.io/bvartools/reference/add_priors.md)
-and
-[`add_initial_values()`](https://franzmohr.github.io/bvartools/reference/add_initial_values.md)
+[`add_priors()`](https://rdrr.io/pkg/bayests/man/add_priors.html) and
+[`add_initial_values()`](https://rdrr.io/pkg/bayests/man/add_initial_values.html)
 complete it, and
-[`add_posterior_coefficients()`](https://franzmohr.github.io/bvartools/reference/add_posterior_coefficients.md)
+[`add_posterior_coefficients()`](https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html)
 estimates it. Forecasts, log-likelihoods and model comparison are
 further `add_*()` steps on the same object. The functions 0.3.0 marked
 for removal are gone:
@@ -429,7 +779,7 @@ for removal are gone:
 | 0.3.0 | 1.0.0 |
 |----|----|
 | `gen_var()`, `gen_vec()` | [`create_bvarmodel()`](https://franzmohr.github.io/bvartools/reference/create_bvarmodel.md), [`create_bvecmodel()`](https://franzmohr.github.io/bvartools/reference/create_bvecmodel.md) |
-| `draw_posterior()`, `bvarpost()`, `bvecpost()` | [`add_posterior_coefficients()`](https://franzmohr.github.io/bvartools/reference/add_posterior_coefficients.md), with [`add_posterior_forecasts()`](https://franzmohr.github.io/bvartools/reference/add_posterior_forecasts.md) and [`add_posterior_loglik()`](https://franzmohr.github.io/bvartools/reference/add_posterior_loglik.md) |
+| `draw_posterior()`, `bvarpost()`, `bvecpost()` | [`add_posterior_coefficients()`](https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html), with [`add_posterior_forecasts()`](https://rdrr.io/pkg/bayests/man/add_posterior_forecasts.html) and [`add_posterior_loglik()`](https://rdrr.io/pkg/bayests/man/add_posterior_loglik.html) |
 | `bvec_to_bvar()` | [`vec_to_var()`](https://franzmohr.github.io/bvartools/reference/vec_to_var.md) |
 | `kalman_dk()` | [`kalman_durbin_koopman_2002()`](https://franzmohr.github.io/bvartools/reference/kalman_durbin_koopman_2002.md) |
 | `stochvol_ksc1998()`, `stoch_vol()` | [`stochvol_ksc_1998()`](https://franzmohr.github.io/bvartools/reference/stochvol_ksc_1998.md) |
@@ -440,23 +790,23 @@ for removal are gone:
 
 The classes `bvar`, `bvec` and `bvarlist` are now `bvarmodel`,
 `bvecmodel` and `modellist`.
-[`add_priors()`](https://franzmohr.github.io/bvartools/reference/add_priors.md),
+[`add_priors()`](https://rdrr.io/pkg/bayests/man/add_priors.html),
 [`bvar()`](https://franzmohr.github.io/bvartools/reference/bvar.md),
 [`bvec()`](https://franzmohr.github.io/bvartools/reference/bvec.md),
-[`irf()`](https://franzmohr.github.io/bvartools/reference/irf.md),
-[`fevd()`](https://franzmohr.github.io/bvartools/reference/fevd.md),
+[`irf()`](https://rdrr.io/pkg/bayests/man/irf.html),
+[`fevd()`](https://rdrr.io/pkg/bayests/man/fevd.html),
 [`inclusion_prior()`](https://franzmohr.github.io/bvartools/reference/inclusion_prior.md),
 [`minnesota_prior()`](https://franzmohr.github.io/bvartools/reference/minnesota_prior.md)
 and
 [`ssvs_prior()`](https://franzmohr.github.io/bvartools/reference/ssvs_prior.md)
 keep their names but take the new model objects.
-[`add_priors()`](https://franzmohr.github.io/bvartools/reference/add_priors.md)
-no longer has defaults for `coef` and `sigma`. The entries below give
-the details.
+[`add_priors()`](https://rdrr.io/pkg/bayests/man/add_priors.html) no
+longer has defaults for `coef` and `sigma`. The entries below give the
+details.
 
 ### Changes
 
-- **[`expected_model_size()`](https://franzmohr.github.io/bvartools/reference/expected_model_size.md)
+- **[`expected_model_size()`](https://rdrr.io/pkg/bayests/man/expected_model_size.html)
   says how large a model will be before it is estimated.** It works from
   the specification alone, block by block: a matrix of eight-byte
   numbers with one row per kept draw and one column per parameter, so it
@@ -469,22 +819,22 @@ the details.
   block by the number of periods, so a model that is small with constant
   coefficients can need gigabytes. The print method gives the total, the
   share of each step
-  ([`add_posterior_coefficients()`](https://franzmohr.github.io/bvartools/reference/add_posterior_coefficients.md),
-  [`add_posterior_loglik()`](https://franzmohr.github.io/bvartools/reference/add_posterior_loglik.md),
-  [`add_posterior_forecasts()`](https://franzmohr.github.io/bvartools/reference/add_posterior_forecasts.md))
+  ([`add_posterior_coefficients()`](https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html),
+  [`add_posterior_loglik()`](https://rdrr.io/pkg/bayests/man/add_posterior_loglik.html),
+  [`add_posterior_forecasts()`](https://rdrr.io/pkg/bayests/man/add_posterior_forecasts.html))
   and every block; `sum(result$bytes)` is the total. It is a generic
   with methods for ‘bvarmodel’, ‘bvecmodel’, ‘modellist’ and
   ‘expandingwindow’, and **bgvars** and **dfmtools** add methods for
   their own classes, so the workflow is the same in all three packages.
 
   Two functions now warn before they start when the result would exceed
-  `options(bvartools.size_warning)`, which is one gigabyte unless set
+  `options(bayests.size_warning)`, which is one gigabyte unless set
   otherwise.
-  [`add_posterior_coefficients()`](https://franzmohr.github.io/bvartools/reference/add_posterior_coefficients.md)
+  [`add_posterior_coefficients()`](https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html)
   checks what
-  [`expected_model_size()`](https://franzmohr.github.io/bvartools/reference/expected_model_size.md)
+  [`expected_model_size()`](https://rdrr.io/pkg/bayests/man/expected_model_size.html)
   predicts for the draws it is about to simulate, and
-  [`write_to_hdf5()`](https://franzmohr.github.io/bvartools/reference/write_to_hdf5.md)
+  [`write_to_hdf5()`](https://rdrr.io/pkg/bayests/man/write_to_hdf5.html)
   checks the size of the object it is about to write, which is about the
   disk space the files will need. Each warns once per call, for a whole
   list of models rather than for each model in it. `Inf` turns the
@@ -495,7 +845,7 @@ the details.
   option that adds a block, so a sampler that starts storing something
   new fails there.
 
-- **[`add_sign_zero_restrictions()`](https://franzmohr.github.io/bvartools/reference/add_sign_zero_restrictions.md)
+- **[`add_sign_zero_restrictions()`](https://rdrr.io/pkg/bayests/man/add_sign_zero_restrictions.html)
   Pareto smooths its importance weights, and reports how heavy their
   tail is.** Nothing in the algorithm bounds the ratio of two volume
   elements, so a draw landing where the proposal put almost no
@@ -530,7 +880,7 @@ the details.
   `smooth = FALSE` takes the raw weights of the paper’s Algorithm 3,
   which is what to set to reproduce it exactly.
 
-- **[`chain_diagnostics()`](https://franzmohr.github.io/bvartools/reference/chain_diagnostics.md)
+- **[`chain_diagnostics()`](https://rdrr.io/pkg/bayests/man/chain_diagnostics.html)
   reports the rank-normalised R-hat and two effective sample sizes, one
   of which is about the credible bands.** The diagnostics were the
   pre-2021 ones: a plain split R-hat and the sum over chains of
@@ -540,12 +890,12 @@ the details.
 
   `ess` becomes `ess_bulk` and `ess_tail`, and the second is the one to
   read here. Almost nothing this package returns is a point –
-  [`irf()`](https://franzmohr.github.io/bvartools/reference/irf.md),
-  [`fevd()`](https://franzmohr.github.io/bvartools/reference/fevd.md)
-  and the forecasts all come back as quantiles – and the bulk effective
-  sample size is about the centre of the posterior, not about the 16th
-  and 84th percentiles the bands are drawn at. A sample can carry a
-  comfortable `ess_bulk` and a band that still moves between runs.
+  [`irf()`](https://rdrr.io/pkg/bayests/man/irf.html),
+  [`fevd()`](https://rdrr.io/pkg/bayests/man/fevd.html) and the
+  forecasts all come back as quantiles – and the bulk effective sample
+  size is about the centre of the posterior, not about the 16th and 84th
+  percentiles the bands are drawn at. A sample can carry a comfortable
+  `ess_bulk` and a band that still moves between runs.
   [`summary()`](https://rdrr.io/r/base/summary.html) now prints the
   smallest `ess_tail` beside the largest R-hat, and says so below about
   400.
@@ -566,7 +916,7 @@ the details.
 
 - **A VEC model of rank zero needs no `coint` prior, and the draws of
   the cointegration vectors have names.**
-  [`add_priors()`](https://franzmohr.github.io/bvartools/reference/add_priors.md)
+  [`add_priors()`](https://rdrr.io/pkg/bayests/man/add_priors.html)
   insisted on `coint` for every VEC model, although one of rank zero has
   no cointegration space; it is now required only for a positive rank,
   with a message saying so, and one given at rank zero is checked and
@@ -592,16 +942,16 @@ the details.
   every draw. Everything else treats the model as the VAR it is – the
   restricted variables are still regressors elsewhere, the error
   covariance still covers them, and
-  [`irf()`](https://franzmohr.github.io/bvartools/reference/irf.md) and
-  [`fevd()`](https://franzmohr.github.io/bvartools/reference/fevd.md)
-  read the draws unchanged. Available for constant coefficients and
-  every error term, and refused alongside `structural`, `varsel` or
-  `tvp`. This is the refreshed BayesTS core (`3425586`).
+  [`irf()`](https://rdrr.io/pkg/bayests/man/irf.html) and
+  [`fevd()`](https://rdrr.io/pkg/bayests/man/fevd.html) read the draws
+  unchanged. Available for constant coefficients and every error term,
+  and refused alongside `structural`, `varsel` or `tvp`. This is the
+  refreshed BayesTS core (`3425586`).
 
-- **[`add_sign_zero_restrictions()`](https://franzmohr.github.io/bvartools/reference/add_sign_zero_restrictions.md)
+- **[`add_sign_zero_restrictions()`](https://rdrr.io/pkg/bayests/man/add_sign_zero_restrictions.html)
   identifies a VAR with sign *and* zero restrictions**, by the
   algorithms of Arias, Rubio-Ramirez and Waggoner (2018).
-  [`add_sign_restrictions()`](https://franzmohr.github.io/bvartools/reference/add_sign_restrictions.md)
+  [`add_sign_restrictions()`](https://rdrr.io/pkg/bayests/man/add_sign_restrictions.html)
   cannot impose a zero: the rotations that satisfy one form a set of
   probability zero, so no number of tries finds a member of it. The new
   function draws rotations that satisfy the zero restrictions by
@@ -610,9 +960,8 @@ the details.
   numerically. The restriction table gains a `sign` of `0` and a
   `horizon` of `Inf` for the long run. What comes back is an equally
   weighted resample, so
-  [`irf()`](https://franzmohr.github.io/bvartools/reference/irf.md),
-  [`fevd()`](https://franzmohr.github.io/bvartools/reference/fevd.md)
-  and
+  [`irf()`](https://rdrr.io/pkg/bayests/man/irf.html),
+  [`fevd()`](https://rdrr.io/pkg/bayests/man/fevd.html) and
   [`spillover()`](https://franzmohr.github.io/bvartools/reference/spillover.md)
   read it under `type = "sign"` unchanged;
   [`summary()`](https://rdrr.io/r/base/summary.html) reports the
@@ -624,19 +973,19 @@ the details.
   is given, the members come back with the number of draws their own
   effective sample size allows.
 
-- **[`add_sign_zero_restrictions()`](https://franzmohr.github.io/bvartools/reference/add_sign_zero_restrictions.md)
+- **[`add_sign_zero_restrictions()`](https://rdrr.io/pkg/bayests/man/add_sign_zero_restrictions.html)
   now says when its importance sample cannot be trusted.** An importance
   sampler fails quietly: when the weights are unequal the effective
   sample size collapses, and because `draws` defaults to it the function
   would hand back a posterior of a handful of rows that
-  [`irf()`](https://franzmohr.github.io/bvartools/reference/irf.md) and
-  [`fevd()`](https://franzmohr.github.io/bvartools/reference/fevd.md)
-  would summarise without complaint. It now warns – when the effective
-  sample size is below twenty, or when it keeps less than a quarter of
-  the information in the draws that satisfied the signs – and says which
-  of two repairs applies. Many mildly unequal weights are fixed by more
-  candidate draws; one enormous weight is not, and calls for a different
-  seed, a different variable ordering or weaker restrictions.
+  [`irf()`](https://rdrr.io/pkg/bayests/man/irf.html) and
+  [`fevd()`](https://rdrr.io/pkg/bayests/man/fevd.html) would summarise
+  without complaint. It now warns – when the effective sample size is
+  below twenty, or when it keeps less than a quarter of the information
+  in the draws that satisfied the signs – and says which of two repairs
+  applies. Many mildly unequal weights are fixed by more candidate
+  draws; one enormous weight is not, and calls for a different seed, a
+  different variable ordering or weaker restrictions.
   [`summary()`](https://rdrr.io/r/base/summary.html) reports the share
   held by the largest draw beside the effective sample size whether or
   not anything was warned about, and it is kept in `max_weight_share` of
@@ -657,7 +1006,7 @@ the details.
   `error = "wishart"` and `"ald"` as well, so `VarTvpWishart`,
   `VecTvpWishart` and `VarTvpAld` join the four models that already took
   it, and
-  [`time_variation_test()`](https://franzmohr.github.io/bvartools/reference/time_variation_test.md)
+  [`time_variation_test()`](https://rdrr.io/pkg/bayests/man/time_variation_test.html)
   reports their Bayes factors for time variation. This is the refreshed
   BayesTS core (`1e21f94`); the three bindings read `omega_v` and return
   the `omega` draws beside `sigma`. *Draws are unchanged for every model
@@ -665,11 +1014,9 @@ the details.
 
 - **The remaining findings of the audit.**
 
-  - [`irf()`](https://franzmohr.github.io/bvartools/reference/irf.md) of
-    a quantile VAR (`error = "ald"`) takes only `type = "feir"` or
-    `"custom"`, and
-    [`fevd()`](https://franzmohr.github.io/bvartools/reference/fevd.md)
-    and
+  - [`irf()`](https://rdrr.io/pkg/bayests/man/irf.html) of a quantile
+    VAR (`error = "ald"`) takes only `type = "feir"` or `"custom"`, and
+    [`fevd()`](https://rdrr.io/pkg/bayests/man/fevd.html) and
     [`spillover()`](https://franzmohr.github.io/bvartools/reference/spillover.md)
     refuse one. Its `u_sigma_inv` holds the latent precisions of the
     asymmetric Laplace errors, period by period, which the other types
@@ -697,14 +1044,14 @@ the details.
     VEC method passed on; a Minnesota prior without `kappa3` for a model
     with exogenous variables, as documented; and a forecast error
     criterion in
-    [`choose_best_model()`](https://franzmohr.github.io/bvartools/reference/choose_best_model.md),
+    [`choose_best_model()`](https://rdrr.io/pkg/bayests/man/choose_best_model.html),
     which returned a position in a matrix rather than a model.
   - Least squares starting values need more periods than regressors, not
     as many, and for a VEC the count includes every series of the error
     correction term.
-  - [`fevd()`](https://franzmohr.github.io/bvartools/reference/fevd.md)
-    of a model stored in a file weights each chunk by its identified
-    draws under `type = "sign"`.
+  - [`fevd()`](https://rdrr.io/pkg/bayests/man/fevd.html) of a model
+    stored in a file weights each chunk by its identified draws under
+    `type = "sign"`.
   - [`ssvs_prior()`](https://franzmohr.github.io/bvartools/reference/ssvs_prior.md)
     for a VEC refuses `"sv+covar"`, which a typo let through.
 
@@ -715,38 +1062,37 @@ the details.
     path of a time varying covariance. It expected k(k-1)/2 columns per
     period where the samplers store k², so the path kept the whole
     sample, and a forecast or
-    [`add_predictive_loglik()`](https://franzmohr.github.io/bvartools/reference/add_predictive_loglik.md)
+    [`add_predictive_loglik()`](https://rdrr.io/pkg/bayests/man/add_predictive_loglik.html)
     from the window read Psi from a period of the original sample.
     `VarTvpGamma`, `VarTvpStochvol`, `VecTvpGamma` and `VecTvpStochvol`
     with a covariance block were affected.
   - [`window()`](https://rdrr.io/r/stats/window.html) now also cuts the
     posterior of a discounted model, one row per period, which it left
     at the whole sample.
-  - [`use_expanding_window()`](https://franzmohr.github.io/bvartools/reference/use_expanding_window.md)
+  - [`use_expanding_window()`](https://rdrr.io/pkg/bayests/man/use_expanding_window.html)
     no longer copies the posterior draws, starting values or forecast
     input of the model it is given into every window, and warns when it
     drops them. Windows cut from an estimated model used to keep the
     draws of the whole sample, so
-    [`add_predictive_loglik()`](https://franzmohr.github.io/bvartools/reference/add_predictive_loglik.md)
+    [`add_predictive_loglik()`](https://rdrr.io/pkg/bayests/man/add_predictive_loglik.html)
     scored every window with draws that had seen the period it was
     evaluated on. Priors are still copied.
-  - [`read_model_from_hdf5()`](https://franzmohr.github.io/bvartools/reference/read_model_from_hdf5.md)
+  - [`read_model_from_hdf5()`](https://rdrr.io/pkg/bayests/man/read_model_from_hdf5.html)
     keeps the shape of a matrix with one row. A one-step forecast input,
     or the one realised period of the last but one expanding window,
     came back transposed and could not be used. The realised values also
     get their column names back.
-  - [`read_models_from_folder()`](https://franzmohr.github.io/bvartools/reference/read_models_from_folder.md)
+  - [`read_models_from_folder()`](https://rdrr.io/pkg/bayests/man/read_models_from_folder.html)
     returns a list of expanding windows as one expanding window per
     specification, where it used to merge them all into one and so
     pooled the specifications. A model list comes back in the order
-    [`write_to_hdf5()`](https://franzmohr.github.io/bvartools/reference/write_to_hdf5.md)
+    [`write_to_hdf5()`](https://rdrr.io/pkg/bayests/man/write_to_hdf5.html)
     wrote it in, which the files now record.
-  - [`irf()`](https://franzmohr.github.io/bvartools/reference/irf.md),
-    [`fevd()`](https://franzmohr.github.io/bvartools/reference/fevd.md)
-    and
+  - [`irf()`](https://rdrr.io/pkg/bayests/man/irf.html),
+    [`fevd()`](https://rdrr.io/pkg/bayests/man/fevd.html) and
     [`spillover()`](https://franzmohr.github.io/bvartools/reference/spillover.md)
     with `type = "sign"` use the period
-    [`add_sign_restrictions()`](https://franzmohr.github.io/bvartools/reference/add_sign_restrictions.md)
+    [`add_sign_restrictions()`](https://rdrr.io/pkg/bayests/man/add_sign_restrictions.html)
     found the rotations in, and refuse another one for a model whose
     covariance moves: the rotations only satisfy the restrictions in
     that period. They used to default to the last period, where a share
@@ -758,7 +1104,7 @@ the details.
     state equation. `shape` and `rate`, or `omega_v`, and the
     compensating scale of the loadings were only set without a Minnesota
     prior, so
-    [`add_initial_values()`](https://franzmohr.github.io/bvartools/reference/add_initial_values.md)
+    [`add_initial_values()`](https://rdrr.io/pkg/bayests/man/add_initial_values.html)
     failed.
 
 - **An `NA`, `NaN` or infinite value in the input stops with its name.**
@@ -770,31 +1116,31 @@ the details.
   did not fail at all: it came back as a NaN forecast or a NaN score.
   *Draws are unchanged* for every input that is accepted.
 
-  [`prepare_forecast_input()`](https://franzmohr.github.io/bvartools/reference/prepare_forecast_input.md),
+  [`prepare_forecast_input()`](https://rdrr.io/pkg/bayests/man/prepare_forecast_input.html),
   and so
-  [`add_forecast_input()`](https://franzmohr.github.io/bvartools/reference/add_forecast_input.md),
+  [`add_forecast_input()`](https://rdrr.io/pkg/bayests/man/add_forecast_input.html),
   used to leave the lags of the endogenous variables that the estimation
   sample does not reach as `NA`. The forecast writes its own earlier
   horizons into those cells, so nothing read them, but the check covers
   them all the same; they are zero now, and forecasts are unchanged. A
   model given its forecast input before this, whether kept in R or
   written to a file with
-  [`write_to_hdf5()`](https://franzmohr.github.io/bvartools/reference/write_to_hdf5.md),
+  [`write_to_hdf5()`](https://rdrr.io/pkg/bayests/man/write_to_hdf5.html),
   still carries the `NA`s and is refused: call
-  [`add_forecast_input()`](https://franzmohr.github.io/bvartools/reference/add_forecast_input.md)
+  [`add_forecast_input()`](https://rdrr.io/pkg/bayests/man/add_forecast_input.html)
   on it again.
 
 - **Several chains, and a diagnostic that compares them.**
-  [`add_posterior_coefficients()`](https://franzmohr.github.io/bvartools/reference/add_posterior_coefficients.md)
+  [`add_posterior_coefficients()`](https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html)
   takes `chains`: the simulation is run once per chain, each with a seed
   of its own, and the chains are pooled one after the other in the draws
   every later step reads, so forecasts, log-likelihoods, impulse
   responses and files use all of them. The first chain uses the model’s
   seed, so one chain, the default, draws exactly what it always has; the
   others are spread far from the seeds
-  [`add_seed()`](https://franzmohr.github.io/bvartools/reference/add_seed.md)
-  gives neighbouring models of a list. New function
-  [`chain_diagnostics()`](https://franzmohr.github.io/bvartools/reference/chain_diagnostics.md)
+  [`add_seed()`](https://rdrr.io/pkg/bayests/man/add_seed.html) gives
+  neighbouring models of a list. New function
+  [`chain_diagnostics()`](https://rdrr.io/pkg/bayests/man/chain_diagnostics.html)
   reports the split R-hat of Gelman et al. (2013) and the effective
   sample size of every parameter, and
   [`summary()`](https://rdrr.io/r/base/summary.html) states the largest
@@ -814,7 +1160,7 @@ the details.
   for the loadings, because they multiply the levels in the error
   correction term, but `omega_v` was one value for every coefficient,
   the loadings included, so the test of
-  [`time_variation_test()`](https://franzmohr.github.io/bvartools/reference/time_variation_test.md)
+  [`time_variation_test()`](https://rdrr.io/pkg/bayests/man/time_variation_test.html)
   compared each loading’s posterior at zero with a prior on the scale of
   the other coefficients. `omega_v_alpha` sets the first `k * r`
   elements of `priors$a$omega_v` and falls back to `omega_v`; it needs
@@ -864,9 +1210,9 @@ the details.
   `forecast_states = "simulate"` is mostly that drift: on Austrian GDP,
   prices, unemployment and a short rate, the spread of next year’s GDP
   growth was 5 to 11 percentage points against about 1.5 with `"hold"`.
-  [`add_posterior_forecasts()`](https://franzmohr.github.io/bvartools/reference/add_posterior_forecasts.md)
+  [`add_posterior_forecasts()`](https://rdrr.io/pkg/bayests/man/add_posterior_forecasts.html)
   and
-  [`add_predictive_loglik()`](https://franzmohr.github.io/bvartools/reference/add_predictive_loglik.md)
+  [`add_predictive_loglik()`](https://rdrr.io/pkg/bayests/man/add_predictive_loglik.html)
   now warn when a series in the term is more than 50 times its standard
   deviation per period away from zero; interest rates and inflation in
   percent stay far below that. A time varying VEC estimated on series
@@ -945,34 +1291,33 @@ the details.
 - **The forecasts of a discounted model are
   [`coda::mcmc`](https://rdrr.io/pkg/coda/man/mcmc.html) draws, and an
   estimated discounted model can be written to HDF5.**
-  [`add_posterior_forecasts()`](https://franzmohr.github.io/bvartools/reference/add_posterior_forecasts.md)
+  [`add_posterior_forecasts()`](https://rdrr.io/pkg/bayests/man/add_posterior_forecasts.html)
   returned the i.i.d. forecast draws of `VarTvpDiscount` and
   `VecTvpDiscount` as a plain matrix, without the start, end and
   thinning interval every step after it reads, so
-  [`add_forecast_errors()`](https://franzmohr.github.io/bvartools/reference/add_forecast_errors.md)
+  [`add_forecast_errors()`](https://rdrr.io/pkg/bayests/man/add_forecast_errors.html)
   stopped with “non-numeric argument to mathematical function” and
-  [`write_to_hdf5()`](https://franzmohr.github.io/bvartools/reference/write_to_hdf5.md)
+  [`write_to_hdf5()`](https://rdrr.io/pkg/bayests/man/write_to_hdf5.html)
   with “If a sample robj is not provided, both dtype and space have to
   be given”. They are now labelled as draws 1 to `iterations`,
   unthinned, which is what BayesTS writes for them.
-  [`write_to_hdf5()`](https://franzmohr.github.io/bvartools/reference/write_to_hdf5.md)
+  [`write_to_hdf5()`](https://rdrr.io/pkg/bayests/man/write_to_hdf5.html)
   also stopped on the per-period posterior itself, and would have left
   out `posterior$u_sigma` and `posterior$df`; it now writes the
   closed-form blocks without the chain attributes, as BayesTS does, and
-  [`read_model_from_hdf5()`](https://franzmohr.github.io/bvartools/reference/read_model_from_hdf5.md)
+  [`read_model_from_hdf5()`](https://rdrr.io/pkg/bayests/man/read_model_from_hdf5.html)
   reads them back as the plain matrices they are.
-  [`selection_criteria()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.md)
+  [`selection_criteria()`](https://rdrr.io/pkg/bayests/man/selection_criteria.html)
   on an expanding window of discounted models reports the last window’s
   `LML`, which it dropped. The draws are unchanged: only their labels
   are new.
 
 - **[`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws the
   criteria of an expanding window.**
-  [`selection_criteria()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.md)
+  [`selection_criteria()`](https://rdrr.io/pkg/bayests/man/selection_criteria.html)
   on an `expandingwindow` or a single model returns a `selcrit` that
-  keeps the model’s classes, and with no
-  [`plot.selcrit()`](https://franzmohr.github.io/bvartools/reference/plot.selcritlist.md)
-  the call reached
+  keeps the model’s classes, and with no `plot.selcrit()` the call
+  reached
   [`plot.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/plot.bvarmodel.md)
   and stopped with “dim(X) must have positive length”. The new method
   plots it as a `selcritlist` of one.
@@ -1019,7 +1364,7 @@ the details.
   be raced against eight-quarter forecasts. Both are scored against the
   same realised annual figures, from `levels` or the models’ data, which
   travel in `data$test$y`, so
-  [`add_forecast_errors()`](https://franzmohr.github.io/bvartools/reference/add_forecast_errors.md)
+  [`add_forecast_errors()`](https://rdrr.io/pkg/bayests/man/add_forecast_errors.html)
   needs no test sample; an annual `test_sample` of official figures
   overrides them. The frequency refusal of
   [`create_external_forecast()`](https://franzmohr.github.io/bvartools/reference/create_external_forecast.md)
@@ -1029,7 +1374,7 @@ the details.
   `macroprojections` vignette used to carry out by hand, which now uses
   this function. No sampler is touched: draws are unchanged.
 
-- **[`add_forecast_errors()`](https://franzmohr.github.io/bvartools/reference/add_forecast_errors.md)
+- **[`add_forecast_errors()`](https://rdrr.io/pkg/bayests/man/add_forecast_errors.html)
   refuses a test sample at another frequency than the forecasts.** It
   matched the periods by their time alone, and 2020 is a year and the
   first quarter of 2020 alike.
@@ -1051,15 +1396,14 @@ the details.
   before. `VecNormalWishart` and `VecKlgs2010` draws are unchanged.
 
 - **`coint$g_i` sets the G of `VecNormalStochvol`.**
-  [`add_priors()`](https://franzmohr.github.io/bvartools/reference/add_priors.md)
-  and
+  [`add_priors()`](https://rdrr.io/pkg/bayests/man/add_priors.html) and
   [`cointspace_prior()`](https://franzmohr.github.io/bvartools/reference/cointspace_prior.md)
   take the inverse of G, the matrix the loadings’ prior is scaled by, as
   diagonal elements, a full matrix or `"ml"` for the inverse of
   Johansen’s error covariance, and store it as `priors$beta$g_inv`, the
   name a BayesTS model file uses. Left out, G still comes from the
   starting log-volatilities, so the prior depends on
-  [`add_initial_values()`](https://franzmohr.github.io/bvartools/reference/add_initial_values.md);
+  [`add_initial_values()`](https://rdrr.io/pkg/bayests/man/add_initial_values.html);
   given, it does not. It is refused for every other model, which scales
   the loadings’ prior by its error covariance.
 
@@ -1070,12 +1414,11 @@ the details.
   the rest, now stops with a message naming the position. So do a
   negative `v_i` and a `p_tau_inv` that is not positive definite while
   `v_i` is positive.
-  [`add_priors()`](https://franzmohr.github.io/bvartools/reference/add_priors.md)
-  and
+  [`add_priors()`](https://rdrr.io/pkg/bayests/man/add_priors.html) and
   [`cointspace_prior()`](https://franzmohr.github.io/bvartools/reference/cointspace_prior.md)
   produce none of these, so only a prior edited by hand reaches them.
 
-- **[`bayests_files()`](https://franzmohr.github.io/bvartools/reference/bayests_files.md)
+- **[`bayests_files()`](https://rdrr.io/pkg/bayests/man/bayests_files.html)
   renames the exit status into place once it is written.** The script it
   runs wrote BayesTS’s exit status straight into the file the session
   polls for, and a redirection creates that file before anything is in
@@ -1099,7 +1442,7 @@ the details.
   inclusion indicators were scored as if both mixture components sat at
   zero, so the chain targeted neither model (George, Sun and Ni 2008,
   eq. 12).
-  [`add_priors()`](https://franzmohr.github.io/bvartools/reference/add_priors.md)
+  [`add_priors()`](https://rdrr.io/pkg/bayests/man/add_priors.html)
   produces a diagonal precision and `tau0 < tau1` from its defaults, so
   what reaches this is a non-zero mean: **`coef$const` together with
   SSVS and `varsel$exclude_det = FALSE`, the default, now stops** with a
@@ -1115,7 +1458,7 @@ the details.
   describe the prior rather than the data (Korobilis 2013, section 3.1).
   The core reports a selected position whose conditional prior variance
   is 100 or more, and
-  [`add_posterior_coefficients()`](https://franzmohr.github.io/bvartools/reference/add_posterior_coefficients.md)
+  [`add_posterior_coefficients()`](https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html)
   raises it as an R warning for the seven constant-coefficient models
   that offer `bvs`. It was collected rather than raised where it arose:
   `Rf_warning()` may longjmp out of a running sampler. *Draws are
@@ -1127,7 +1470,7 @@ the details.
   fingerprint recording is identical for every file without it.
 
 - **A test for time variation in TVP-VARs with stochastic volatility.**
-  [`add_priors()`](https://franzmohr.github.io/bvartools/reference/add_priors.md)
+  [`add_priors()`](https://rdrr.io/pkg/bayests/man/add_priors.html)
   takes `coef$omega_v` and `sigma$omega_v` in place of `shape`/`rate`
   for a model with `tvp = TRUE` and `error = "sv"` or `"sv+covar"`. Each
   puts a normal prior `N(0, omega_v)` on the signed standard deviation
@@ -1144,15 +1487,15 @@ the details.
   [`?add_priors.bvarmodel`](https://franzmohr.github.io/bvartools/reference/add_priors.bvarmodel.md)
   gives the formula. The blocks choose their prior one by one, `omega_v`
   is refused beside `shape`/`rate` and on every other model, and
-  [`write_to_hdf5()`](https://franzmohr.github.io/bvartools/reference/write_to_hdf5.md)
+  [`write_to_hdf5()`](https://rdrr.io/pkg/bayests/man/write_to_hdf5.html)
   and
-  [`read_model_from_hdf5()`](https://franzmohr.github.io/bvartools/reference/read_model_from_hdf5.md)
+  [`read_model_from_hdf5()`](https://rdrr.io/pkg/bayests/man/read_model_from_hdf5.html)
   carry the prior and the draws. `VarTvpStochvol` now also returns the
   core’s warnings, which
-  [`add_posterior_coefficients()`](https://franzmohr.github.io/bvartools/reference/add_posterior_coefficients.md)
+  [`add_posterior_coefficients()`](https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html)
   raises.
 
-- **[`time_variation_test()`](https://franzmohr.github.io/bvartools/reference/time_variation_test.md)
+- **[`time_variation_test()`](https://rdrr.io/pkg/bayests/man/time_variation_test.html)
   turns those draws into Bayes factors.** For a `bvarmodel` estimated
   under `omega_v` it reports, for every coefficient, covariance
   coefficient and log-volatility, the log Bayes factor in favour of time
@@ -1167,19 +1510,19 @@ the details.
   `coef$omega_v` is accepted for `tvp = TRUE` with `error = "gamma"` or
   `"gamma+covar"` as well, for the coefficients and the covariance
   coefficients, whose draws and
-  [`time_variation_test()`](https://franzmohr.github.io/bvartools/reference/time_variation_test.md)
+  [`time_variation_test()`](https://rdrr.io/pkg/bayests/man/time_variation_test.html)
   rows are those of the stochastic volatility model. The error precision
   of these models does not move, so `sigma$omega_v` remains for
   stochastic volatility, and is now refused on every other error term
   rather than accepted as a name and left unread.
 
 - **And TVP-VEC models with stochastic volatility.**
-  [`add_priors()`](https://franzmohr.github.io/bvartools/reference/add_priors.md)
-  on a `bvecmodel` with `tvp = TRUE` and `error = "sv"` or `"sv+covar"`
-  takes `coef$omega_v` (the loadings, the other coefficients and the
+  [`add_priors()`](https://rdrr.io/pkg/bayests/man/add_priors.html) on a
+  `bvecmodel` with `tvp = TRUE` and `error = "sv"` or `"sv+covar"` takes
+  `coef$omega_v` (the loadings, the other coefficients and the
   covariance coefficients) and `sigma$omega_v` (the log-volatilities) in
   place of `shape`/`rate`, and
-  [`time_variation_test()`](https://franzmohr.github.io/bvartools/reference/time_variation_test.md)
+  [`time_variation_test()`](https://rdrr.io/pkg/bayests/man/time_variation_test.html)
   has a `bvecmodel` method, which labels the loadings by the error
   correction term they load on. The cointegration space keeps its state
   equation, whose variance is fixed to pin down the scale of beta, so it
@@ -1197,14 +1540,11 @@ the details.
   growth rate, and always did.
 
 - **Every plot method returns its input invisibly**, which
-  [`plot.bvarfevd()`](https://franzmohr.github.io/bvartools/reference/plot.bvarfevd.md),
-  [`plot.bvarirf()`](https://franzmohr.github.io/bvartools/reference/plot.bvarirf.md),
-  [`plot.bvarprd()`](https://franzmohr.github.io/bvartools/reference/plot.bvarprd.md),
-  [`plot.modellist()`](https://franzmohr.github.io/bvartools/reference/plot.modellist.md)
-  and
+  `plot.bvarfevd()`, `plot.bvarirf()`, `plot.bvarprd()`,
+  `plot.modellist()` and
   [`plot_forecast_errors_by_period()`](https://franzmohr.github.io/bvartools/reference/plot_forecast_errors_by_period.md)
   did not: they returned whatever their last drawing call did.
-  **[`write_to_hdf5()`](https://franzmohr.github.io/bvartools/reference/write_to_hdf5.md)
+  **[`write_to_hdf5()`](https://rdrr.io/pkg/bayests/man/write_to_hdf5.html)
   on a ‘modellist’ or an ‘expandingwindow’ returns the paths it wrote**,
   invisibly, as it already did for a single model.
 
@@ -1216,7 +1556,7 @@ the details.
   for the first, which is how
   [`bvec()`](https://franzmohr.github.io/bvartools/reference/bvec.md)’s
   example and the VEC vignette have always used it.
-  [`selection_criteria()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.md)
+  [`selection_criteria()`](https://rdrr.io/pkg/bayests/man/selection_criteria.html)
   says what the median and the band of `RSFE` are – the ones of `AFE` up
   to the interpolation between draws.
 
@@ -1235,7 +1575,7 @@ the details.
   and
   [`create_bvecmodel()`](https://franzmohr.github.io/bvartools/reference/create_bvecmodel.md),
   and
-  [`add_posterior_coefficients()`](https://franzmohr.github.io/bvartools/reference/add_posterior_coefficients.md)
+  [`add_posterior_coefficients()`](https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html)
   estimates them here like any other algorithm: the filter is part of
   the vendored BayesTS core, as every sampler in this package is.
   Estimating one consumes no random numbers, so a model estimated in R
@@ -1264,12 +1604,12 @@ the details.
   What they buy, besides the speed, is that the sum of
   `/posterior/loglik` is the **exact** log marginal likelihood of the
   sample rather than an estimate of it.
-  [`selection_criteria()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.md)
+  [`selection_criteria()`](https://rdrr.io/pkg/bayests/man/selection_criteria.html)
   reports it as `LML`, and it is the one criterion they carry: there is
   no chain to estimate an effective number of parameters from, and the
   marginal likelihood has already paid for the complexity a count of
   parameters would charge for.
-  [`choose_best_model()`](https://franzmohr.github.io/bvartools/reference/choose_best_model.md)
+  [`choose_best_model()`](https://rdrr.io/pkg/bayests/man/choose_best_model.html)
   maximises it, so a grid over the rank, the lag order, the
   cointegration matrix or the two discounts is compared without a chain
   being run for any of it.
@@ -1280,7 +1620,7 @@ the details.
   n_design x k mean and the n_design x n_design regressor side of a
   covariance – and not the `/priors/a/mu` and `/priors/a/v_inv` of a
   sampler, which a discounted model reads as no prior at all.
-  [`add_priors()`](https://franzmohr.github.io/bvartools/reference/add_priors.md)
+  [`add_priors()`](https://rdrr.io/pkg/bayests/man/add_priors.html)
   therefore takes `coef$v_i`, `coef$v_i_det`, `coef$v_i_alpha` and
   `coef$const`, refuses `coef$shape` and `coef$rate`, which are the
   prior of state variances this model does not have, and refuses
@@ -1288,7 +1628,7 @@ the details.
   matrix `/data/train/z` is not written, the filter running against the
   compact `/data/train/x` instead. And a discounted VEC **conditions on
   a fixed cointegration matrix** rather than drawing one:
-  [`add_initial_values()`](https://franzmohr.github.io/bvartools/reference/add_initial_values.md)
+  [`add_initial_values()`](https://rdrr.io/pkg/bayests/man/add_initial_values.html)
   puts Johansen’s estimate at `/initial/beta`, or the space given in its
   new `beta` argument, and there is no cointegration space prior to
   specify. What drifts is the adjustment to the long-run relations and
@@ -1296,11 +1636,11 @@ the details.
   one `algorithm = "KLGS2010"` answers rather than a cheaper way of
   answering the same one.
 
-  [`open_models()`](https://franzmohr.github.io/bvartools/reference/open_models.md)
+  [`read_model_folder()`](https://rdrr.io/pkg/bayests/man/read_model_folder.html)
   reports `delta_beta` and `delta_sigma` in the manifest, at 1 for every
   model that has no discounts, which is what 1 means.
 
-- **[`read_model_from_hdf5()`](https://franzmohr.github.io/bvartools/reference/read_model_from_hdf5.md)
+- **[`read_model_from_hdf5()`](https://rdrr.io/pkg/bayests/man/read_model_from_hdf5.html)
   reads a posterior block of one row as one row.** hdf5r drops a
   dimension of size one, and
   [`as.matrix()`](https://rdrr.io/r/base/matrix.html) then made a column
@@ -1353,13 +1693,13 @@ the details.
   not prose – so it says to check it against the upstream log during a
   refresh.
 
-- **[`selection_criteria()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.md)
+- **[`selection_criteria()`](https://rdrr.io/pkg/bayests/man/selection_criteria.html)
   has a default method.** A model of a class this package has no method
   for – a dynamic factor model of dfmtools, say – now gets `LL`, `WAIC`,
   `LOOIC` from `posterior$loglik` and `LPL` from
   `posterior$forecast$loglik`, which is everything the draws alone
   support.
-  [`choose_best_model()`](https://franzmohr.github.io/bvartools/reference/choose_best_model.md)
+  [`choose_best_model()`](https://rdrr.io/pkg/bayests/man/choose_best_model.html)
   ranks the result and [`print()`](https://rdrr.io/r/base/print.html)
   shows it, both unchanged.
 
@@ -1391,19 +1731,19 @@ the details.
   the country models of a global VAR are read for, where the foreign
   block is weakly exogenous.
 
-- **[`selection_criteria()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.md)
+- **[`selection_criteria()`](https://rdrr.io/pkg/bayests/man/selection_criteria.html)
   reports the score of a forecast as `LPL`.** A model that carries
   `posterior$forecast$loglik` – the log predictive density of each
   period its horizon realised, written by BayesTS against `data$test$y`
   – now gets the criterion `"LPL"`, the log of the mean of the draws of
   each period’s density, summed over the periods.
-  [`choose_best_model()`](https://franzmohr.github.io/bvartools/reference/choose_best_model.md)
+  [`choose_best_model()`](https://rdrr.io/pkg/bayests/man/choose_best_model.html)
   takes it as before and [`print()`](https://rdrr.io/r/base/print.html)
   shows it beside the in-sample criteria.
 
   It is the criterion an expanding window exercise already reported,
   from the densities of
-  [`add_predictive_loglik()`](https://franzmohr.github.io/bvartools/reference/add_predictive_loglik.md),
+  [`add_predictive_loglik()`](https://rdrr.io/pkg/bayests/man/add_predictive_loglik.html),
   and the two now go through one function: the same densities give the
   same entry, band and numerical standard error alike, so a comparison
   of a scored model with a scored window is a comparison of the same
@@ -1413,10 +1753,10 @@ the details.
   both sum to the log predictive likelihood of the stretch they cover.
 
 - **A model carries what it was scored against, in `data$test$y`.**
-  [`add_forecast_errors()`](https://franzmohr.github.io/bvartools/reference/add_forecast_errors.md)
+  [`add_forecast_errors()`](https://rdrr.io/pkg/bayests/man/add_forecast_errors.html)
   puts the periods of the horizon it took the errors against into the
   model, and
-  [`write_to_hdf5()`](https://franzmohr.github.io/bvartools/reference/write_to_hdf5.md)
+  [`write_to_hdf5()`](https://rdrr.io/pkg/bayests/man/write_to_hdf5.html)
   writes them to `/data/test/y`, beside `/data/train/y`. `test_sample`
   now defaults to `NULL`, in which case those values are used, so a
   model read back from a file is scored without the sample being
@@ -1443,11 +1783,11 @@ the details.
   `posterior$forecast_errors` is gone. **This breaks code that reads
   either of the old names**, in a model object as much as in a file
   written with
-  [`write_to_hdf5()`](https://franzmohr.github.io/bvartools/reference/write_to_hdf5.md);
+  [`write_to_hdf5()`](https://rdrr.io/pkg/bayests/man/write_to_hdf5.html);
   the accessors [`predict()`](https://rdrr.io/r/stats/predict.html),
-  [`get_forecast_errors()`](https://franzmohr.github.io/bvartools/reference/get_forecast_errors.md)
+  [`get_forecast_errors()`](https://rdrr.io/pkg/bayests/man/get_forecast_errors.html)
   and
-  [`selection_criteria()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.md)
+  [`selection_criteria()`](https://rdrr.io/pkg/bayests/man/selection_criteria.html)
   are unchanged and are the way to reach both without naming a path.
 
   The group is the place for everything the forecast periods produce,
@@ -1466,43 +1806,43 @@ the details.
   which is what BayesTS 0.3.0 writes. A file written before that is
   migrated by running its forecast again. An object in a session is
   migrated the same way, by
-  [`add_posterior_forecasts()`](https://franzmohr.github.io/bvartools/reference/add_posterior_forecasts.md),
+  [`add_posterior_forecasts()`](https://rdrr.io/pkg/bayests/man/add_posterior_forecasts.html),
   and says so rather than being read as one that was never forecast.
 
 - **A folder of models is worked on without holding it.**
-  [`open_models()`](https://franzmohr.github.io/bvartools/reference/open_models.md)
+  [`read_model_folder()`](https://rdrr.io/pkg/bayests/man/read_model_folder.html)
   returns a handle to a folder written with
-  [`write_to_hdf5()`](https://franzmohr.github.io/bvartools/reference/write_to_hdf5.md),
+  [`write_to_hdf5()`](https://rdrr.io/pkg/bayests/man/write_to_hdf5.html),
   carrying a row per model – where it is and what it is – and none of
   the draws.
-  [`map_models()`](https://franzmohr.github.io/bvartools/reference/map_models.md)
+  [`map_models()`](https://rdrr.io/pkg/bayests/man/map_models.html)
   reads one model, applies a function, writes it back and drops it, and
-  [`add_priors()`](https://franzmohr.github.io/bvartools/reference/add_priors.md),
-  [`add_initial_values()`](https://franzmohr.github.io/bvartools/reference/add_initial_values.md),
-  [`add_seed()`](https://franzmohr.github.io/bvartools/reference/add_seed.md),
-  [`add_posterior_coefficients()`](https://franzmohr.github.io/bvartools/reference/add_posterior_coefficients.md),
-  [`add_posterior_loglik()`](https://franzmohr.github.io/bvartools/reference/add_posterior_loglik.md)
+  [`add_priors()`](https://rdrr.io/pkg/bayests/man/add_priors.html),
+  [`add_initial_values()`](https://rdrr.io/pkg/bayests/man/add_initial_values.html),
+  [`add_seed()`](https://rdrr.io/pkg/bayests/man/add_seed.html),
+  [`add_posterior_coefficients()`](https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html),
+  [`add_posterior_loglik()`](https://rdrr.io/pkg/bayests/man/add_posterior_loglik.html)
   and [`thin()`](https://rdrr.io/pkg/coda/man/thin.html) have methods
   for the handle, so a step costs one model per worker rather than the
   whole folder. They take `models`, the models a step is applied to,
   which makes a long estimation resumable, and the seeds are the ones
   the same models get as a list, so a run taken in parts draws what a
   run over all of them draws. With `write = FALSE`
-  [`map_models()`](https://franzmohr.github.io/bvartools/reference/map_models.md)
-  only reads, which is how
-  [`selection_criteria()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.md)
+  [`map_models()`](https://rdrr.io/pkg/bayests/man/map_models.html) only
+  reads, which is how
+  [`selection_criteria()`](https://rdrr.io/pkg/bayests/man/selection_criteria.html)
   compares a grid too large to hold, and
-  [`read_models_from_folder()`](https://franzmohr.github.io/bvartools/reference/read_models_from_folder.md)
+  [`read_models_from_folder()`](https://rdrr.io/pkg/bayests/man/read_models_from_folder.html)
   takes `draws` for reading part of every chain. This is the file-first
   workflow bgvars has for a global model, for any list of models: a lag
   and rank grid, or an expanding window.
 
 - **BayesTS can be run on stored models.**
-  [`bayests_files()`](https://franzmohr.github.io/bvartools/reference/bayests_files.md)
+  [`bayests_files()`](https://rdrr.io/pkg/bayests/man/bayests_files.html)
   returns a function that runs the BayesTS executable on a model file or
   on a whole directory of them and leaves the results where it wrote
   them.
-  [`bayests_posterior()`](https://franzmohr.github.io/bvartools/reference/bayests_posterior.md)
+  [`bayests_posterior()`](https://rdrr.io/pkg/bayests/man/bayests_posterior.html)
   remains the way to draw a model that is in the session, but for a
   model that is already stored it copies the draws three times and holds
   them in R for no purpose; run on the files, nothing of them passes
@@ -1510,24 +1850,24 @@ the details.
   is drawn with the seed in its file.
 
 - **A model can be analysed from its file.**
-  [`open_model()`](https://franzmohr.github.io/bvartools/reference/open_model.md)
+  [`read_model_file()`](https://rdrr.io/pkg/bayests/man/read_model_file.html)
   returns a handle to a model written with
-  [`write_to_hdf5()`](https://franzmohr.github.io/bvartools/reference/write_to_hdf5.md),
+  [`write_to_hdf5()`](https://rdrr.io/pkg/bayests/man/write_to_hdf5.html),
   carrying its specification, its data and the length of its chain but
   none of its draws.
-  [`map_draws()`](https://franzmohr.github.io/bvartools/reference/map_draws.md)
-  reads the chain in pieces and applies a function to each, and
-  [`irf()`](https://franzmohr.github.io/bvartools/reference/irf.md) and
-  [`fevd()`](https://franzmohr.github.io/bvartools/reference/fevd.md)
-  have methods for such a handle: an impulse response stacks the
-  responses of the pieces and takes its quantiles over all of them, a
-  variance decomposition averages the pieces before shares are
-  normalised or groups collapsed. Both give what the same call on the
-  model in memory gives, which is what the tests check. This is for the
-  models whose draws are what they are large in – a time varying model,
-  or a global model solved from many sub-models.
+  [`map_draws()`](https://rdrr.io/pkg/bayests/man/map_draws.html) reads
+  the chain in pieces and applies a function to each, and
+  [`irf()`](https://rdrr.io/pkg/bayests/man/irf.html) and
+  [`fevd()`](https://rdrr.io/pkg/bayests/man/fevd.html) have methods for
+  such a handle: an impulse response stacks the responses of the pieces
+  and takes its quantiles over all of them, a variance decomposition
+  averages the pieces before shares are normalised or groups collapsed.
+  Both give what the same call on the model in memory gives, which is
+  what the tests check. This is for the models whose draws are what they
+  are large in – a time varying model, or a global model solved from
+  many sub-models.
 
-- **[`read_model_from_hdf5()`](https://franzmohr.github.io/bvartools/reference/read_model_from_hdf5.md)
+- **[`read_model_from_hdf5()`](https://rdrr.io/pkg/bayests/man/read_model_from_hdf5.html)
   reads part of a chain.** It read every draw of every block, so a
   caller working through a long chain – solving a global model of time
   varying sub-models draw by draw, say – had to hold the whole posterior
@@ -1538,7 +1878,7 @@ the details.
   from, so its blocks are labelled as a chain of their own, while a full
   read keeps the labels the file carries.
 
-- **[`add_predictive_loglik()`](https://franzmohr.github.io/bvartools/reference/add_predictive_loglik.md)
+- **[`add_predictive_loglik()`](https://rdrr.io/pkg/bayests/man/add_predictive_loglik.html)
   takes VAR models.** It refused anything but a VEC model, so the log
   predictive likelihood, the criterion for models whose coefficients or
   variances follow a state equation, was unavailable for the VAR models
@@ -1550,11 +1890,11 @@ the details.
   windows alone. Windows of mixed forms are still refused.
 
 - **The vignettes and tests seed before
-  [`add_initial_values()`](https://franzmohr.github.io/bvartools/reference/add_initial_values.md).**
+  [`add_initial_values()`](https://rdrr.io/pkg/bayests/man/add_initial_values.html).**
   Since the seed of the posterior simulation is drawn by
-  [`add_initial_values()`](https://franzmohr.github.io/bvartools/reference/add_initial_values.md),
+  [`add_initial_values()`](https://rdrr.io/pkg/bayests/man/add_initial_values.html),
   a [`set.seed()`](https://rdrr.io/r/base/Random.html) between it and
-  [`add_posterior_coefficients()`](https://franzmohr.github.io/bvartools/reference/add_posterior_coefficients.md)
+  [`add_posterior_coefficients()`](https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html)
   no longer changes the draws, and a model whose initial values were
   added first was simulated with a seed that no earlier call had fixed.
   The vignettes ‘Introduction to bvartools’, ‘Bayesian Error Correction
@@ -1566,14 +1906,12 @@ the details.
 
 - **Lists of models from other packages are seeded and simulated on
   several cores.**
-  [`add_seed()`](https://franzmohr.github.io/bvartools/reference/add_seed.md)
-  on a `modellist` or an `expandingwindow` numbered only VAR and VEC
-  models, and returned the dynamic factor models of dfmtools, which
-  registers
-  [`add_seed()`](https://franzmohr.github.io/bvartools/reference/add_seed.md)
-  methods of its own, without a seed. It now seeds and counts every
-  element with an
-  [`add_seed()`](https://franzmohr.github.io/bvartools/reference/add_seed.md)
+  [`add_seed()`](https://rdrr.io/pkg/bayests/man/add_seed.html) on a
+  `modellist` or an `expandingwindow` numbered only VAR and VEC models,
+  and returned the dynamic factor models of dfmtools, which registers
+  [`add_seed()`](https://rdrr.io/pkg/bayests/man/add_seed.html) methods
+  of its own, without a seed. It now seeds and counts every element with
+  an [`add_seed()`](https://rdrr.io/pkg/bayests/man/add_seed.html)
   method of its own, external forecasts excepted, and walks the same
   lists the parallel simulation does. With `cores` above 1, the workers
   loaded bvartools but never the package that registered the methods for
@@ -1581,15 +1919,15 @@ the details.
   method”. Each worker now loads, after the library paths of the
   session, the namespace of every method the models of the list dispatch
   to, and a model without a seed is given one through
-  [`add_seed()`](https://franzmohr.github.io/bvartools/reference/add_seed.md)
-  whenever it has a method for it. `utils` is a new import.
+  [`add_seed()`](https://rdrr.io/pkg/bayests/man/add_seed.html) whenever
+  it has a method for it. `utils` is a new import.
 
 - **Lists of models can be simulated on several cores.** The ‘modellist’
   and ‘expandingwindow’ methods of
-  [`add_posterior_coefficients()`](https://franzmohr.github.io/bvartools/reference/add_posterior_coefficients.md),
-  [`add_posterior_forecasts()`](https://franzmohr.github.io/bvartools/reference/add_posterior_forecasts.md)
+  [`add_posterior_coefficients()`](https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html),
+  [`add_posterior_forecasts()`](https://rdrr.io/pkg/bayests/man/add_posterior_forecasts.html)
   and
-  [`add_posterior_loglik()`](https://franzmohr.github.io/bvartools/reference/add_posterior_loglik.md)
+  [`add_posterior_loglik()`](https://rdrr.io/pkg/bayests/man/add_posterior_loglik.html)
   have a new argument `cores`, 1 by default, which keeps the sequential
   simulation. With more, the models – counted through nested lists, such
   as the expanding windows of several specifications – are shared out
@@ -1608,7 +1946,7 @@ the details.
   a given number of workers. An error on a worker is raised as on one
   core. For 16 TVP models over eight expanding windows, eight workers
   cut the time of
-  [`add_posterior_coefficients()`](https://franzmohr.github.io/bvartools/reference/add_posterior_coefficients.md)
+  [`add_posterior_coefficients()`](https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html)
   from 21 to 5 seconds. With OpenBLAS the parallel draws equal those of
   a session running its BLAS on one thread: OpenBLAS rounds some results
   differently on one thread than on several, and a Markov chain carries
@@ -1621,39 +1959,39 @@ the details.
   BayesTS executable, while compiling with `-O3` made no difference.
 
 - **Every model carries the seed of its posterior simulation.**
-  [`add_initial_values()`](https://franzmohr.github.io/bvartools/reference/add_initial_values.md)
+  [`add_initial_values()`](https://rdrr.io/pkg/bayests/man/add_initial_values.html)
   stores a seed, drawn from R’s random number generator, as
   `object$model$seed` unless the model has one, and the new
-  [`add_seed()`](https://franzmohr.github.io/bvartools/reference/add_seed.md)
-  replaces it – for a `modellist` or an `expandingwindow` with `seed`,
+  [`add_seed()`](https://rdrr.io/pkg/bayests/man/add_seed.html) replaces
+  it – for a `modellist` or an `expandingwindow` with `seed`,
   `seed + 1`, …, one per model, counted through nested lists. The
   internal samplers of
-  [`add_posterior_coefficients()`](https://franzmohr.github.io/bvartools/reference/add_posterior_coefficients.md)
+  [`add_posterior_coefficients()`](https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html)
   draw with that seed: R’s generator is set to it, with R’s default
   kinds, for the simulation and put back as it was afterwards. **This
   changes the draws of existing code**, not their distribution: a
   [`set.seed()`](https://rdrr.io/r/base/Random.html) between
-  [`add_initial_values()`](https://franzmohr.github.io/bvartools/reference/add_initial_values.md)
+  [`add_initial_values()`](https://rdrr.io/pkg/bayests/man/add_initial_values.html)
   and
-  [`add_posterior_coefficients()`](https://franzmohr.github.io/bvartools/reference/add_posterior_coefficients.md)
+  [`add_posterior_coefficients()`](https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html)
   no longer has an effect, and results of earlier versions do not
   reproduce draw for draw.
   [`set.seed()`](https://rdrr.io/r/base/Random.html) before
-  [`add_initial_values()`](https://franzmohr.github.io/bvartools/reference/add_initial_values.md)
+  [`add_initial_values()`](https://rdrr.io/pkg/bayests/man/add_initial_values.html)
   still makes a script reproducible, and a model now draws the same
   whichever worker of a cluster simulates it. A model without a seed
   draws from R’s generator as before.
-  [`write_to_hdf5()`](https://franzmohr.github.io/bvartools/reference/write_to_hdf5.md)
+  [`write_to_hdf5()`](https://rdrr.io/pkg/bayests/man/write_to_hdf5.html)
   writes the seed as attribute `seed` of `/model` and
-  [`read_model_from_hdf5()`](https://franzmohr.github.io/bvartools/reference/read_model_from_hdf5.md)
+  [`read_model_from_hdf5()`](https://rdrr.io/pkg/bayests/man/read_model_from_hdf5.html)
   reads it back.
-  [`use_expanding_window()`](https://franzmohr.github.io/bvartools/reference/use_expanding_window.md)
+  [`use_expanding_window()`](https://rdrr.io/pkg/bayests/man/use_expanding_window.html)
   counts a seed the model already has up from window to window.
 
 - **Posterior simulation with the BayesTS executable.**
-  [`bayests_posterior()`](https://franzmohr.github.io/bvartools/reference/bayests_posterior.md)
+  [`bayests_posterior()`](https://rdrr.io/pkg/bayests/man/bayests_posterior.html)
   returns a function for argument `posterior_function` of
-  [`add_posterior_coefficients()`](https://franzmohr.github.io/bvartools/reference/add_posterior_coefficients.md).
+  [`add_posterior_coefficients()`](https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html).
   It writes the model to a file, lets the standalone `bayests posterior`
   draw into it with the model’s seed and reads the draws back; nothing
   else about the model changes. The draws have the elements, dimensions
@@ -1663,23 +2001,23 @@ the details.
   constant, stochastic volatility and time varying VAR and VEC models of
   bgvars’ `gvar2023` data.
 
-- **[`add_priors()`](https://franzmohr.github.io/bvartools/reference/add_priors.md)
+- **[`add_priors()`](https://rdrr.io/pkg/bayests/man/add_priors.html)
   rejects non-positive Wishart degrees of freedom.** The documentation
   of `sigma$df` said “a non-negative integer” and
-  [`add_priors()`](https://franzmohr.github.io/bvartools/reference/add_priors.md)
-  only stopped for negative values, but every Wishart sampler rejects
+  [`add_priors()`](https://rdrr.io/pkg/bayests/man/add_priors.html) only
+  stopped for negative values, but every Wishart sampler rejects
   `df <= 0`, so `sigma = list(df = 0, ...)` passed
-  [`add_priors()`](https://franzmohr.github.io/bvartools/reference/add_priors.md)
-  and failed later in
-  [`add_posterior_coefficients()`](https://franzmohr.github.io/bvartools/reference/add_posterior_coefficients.md).
+  [`add_priors()`](https://rdrr.io/pkg/bayests/man/add_priors.html) and
+  failed later in
+  [`add_posterior_coefficients()`](https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html).
   For VEC models this was hidden until the error prior was stored as
   given, since
-  [`add_priors()`](https://franzmohr.github.io/bvartools/reference/add_priors.md)
-  used to add the rank to `df`.
-  [`add_priors()`](https://franzmohr.github.io/bvartools/reference/add_priors.md)
-  now stops for `df <= 0` – for a VAR after truncating `df` to an
-  integer, as it is stored – and the documentation says “a positive
-  integer”. The gamma `shape` keeps its non-negative check.
+  [`add_priors()`](https://rdrr.io/pkg/bayests/man/add_priors.html) used
+  to add the rank to `df`.
+  [`add_priors()`](https://rdrr.io/pkg/bayests/man/add_priors.html) now
+  stops for `df <= 0` – for a VAR after truncating `df` to an integer,
+  as it is stored – and the documentation says “a positive integer”. The
+  gamma `shape` keeps its non-negative check.
 
 - **The error correction term can be centred.**
   [`scale_error_correction()`](https://franzmohr.github.io/bvartools/reference/scale_error_correction.md)
@@ -1704,7 +2042,7 @@ the details.
   the maximum likelihood residual standard deviation.
   [`vec_to_var()`](https://franzmohr.github.io/bvartools/reference/vec_to_var.md)
   and
-  [`add_predictive_loglik()`](https://franzmohr.github.io/bvartools/reference/add_predictive_loglik.md)
+  [`add_predictive_loglik()`](https://rdrr.io/pkg/bayests/man/add_predictive_loglik.html)
   refuse a centred term as they refuse a scaled one,
   [`bvec()`](https://franzmohr.github.io/bvartools/reference/bvec.md)
   adds the means back when it rebuilds the levels, and the means travel
@@ -1734,7 +2072,7 @@ the details.
 
 - **Time varying cointegration spaces start on the scale of their state
   equation.**
-  [`add_initial_values()`](https://franzmohr.github.io/bvartools/reference/add_initial_values.md)
+  [`add_initial_values()`](https://rdrr.io/pkg/bayests/man/add_initial_values.html)
   started the cointegration vectors of a time varying VEC model at the
   maximum likelihood estimate normalised to beta’ S11 beta = I, whose
   scale depends on the data and has nothing to do with the state
@@ -1753,26 +2091,26 @@ the details.
 
 - **The loadings of a time varying VEC model can drift more slowly than
   its other coefficients.** New element `coef$rate_alpha` of
-  [`add_priors()`](https://franzmohr.github.io/bvartools/reference/add_priors.md)
-  sets the rate of the gamma prior on the precisions of the loadings’
-  random walks, as `coef$rate_det` does for the deterministic terms;
-  without it the loadings take `coef$rate`, as before. The loadings
-  multiply the levels in the error correction term, so one rate for all
-  coefficients either freezes the coefficients of the differenced
-  regressors or lets the loadings – and, with a large `rate_det`, the
-  constant – absorb the residuals. On the sub-models of the TVP-SV-GVEC
-  vignette of bgvars, a rate of 1e-5 with `rate_alpha = 1e-10` and
-  `rate_det = 1e-8` let the short-run coefficients drift while every
-  equation kept a residual standard deviation of the order of least
-  squares, where a common rate of 1e-5 took it down to 0.3 to 0.8 of it.
-  A VAR model refuses the element.
+  [`add_priors()`](https://rdrr.io/pkg/bayests/man/add_priors.html) sets
+  the rate of the gamma prior on the precisions of the loadings’ random
+  walks, as `coef$rate_det` does for the deterministic terms; without it
+  the loadings take `coef$rate`, as before. The loadings multiply the
+  levels in the error correction term, so one rate for all coefficients
+  either freezes the coefficients of the differenced regressors or lets
+  the loadings – and, with a large `rate_det`, the constant – absorb the
+  residuals. On the sub-models of the TVP-SV-GVEC vignette of bgvars, a
+  rate of 1e-5 with `rate_alpha = 1e-10` and `rate_det = 1e-8` let the
+  short-run coefficients drift while every equation kept a residual
+  standard deviation of the order of least squares, where a common rate
+  of 1e-5 took it down to 0.3 to 0.8 of it. A VAR model refuses the
+  element.
 
 - **VEC models are forecast directly, with their states simulated
   forward.**
-  [`add_forecast_input()`](https://franzmohr.github.io/bvartools/reference/add_forecast_input.md),
-  [`add_posterior_forecasts()`](https://franzmohr.github.io/bvartools/reference/add_posterior_forecasts.md),
+  [`add_forecast_input()`](https://rdrr.io/pkg/bayests/man/add_forecast_input.html),
+  [`add_posterior_forecasts()`](https://rdrr.io/pkg/bayests/man/add_posterior_forecasts.html),
   [`predict()`](https://rdrr.io/r/stats/predict.html) and
-  [`add_forecast_errors()`](https://franzmohr.github.io/bvartools/reference/add_forecast_errors.md)
+  [`add_forecast_errors()`](https://rdrr.io/pkg/bayests/man/add_forecast_errors.html)
   now have methods for a `bvecmodel`; the first three used to stop and
   point to
   [`vec_to_var()`](https://franzmohr.github.io/bvartools/reference/vec_to_var.md).
@@ -1792,11 +2130,10 @@ the details.
   can only hold its coefficients at the last period.
   `forecast_states = "hold"` keeps them there. An expanding window of
   VEC models can now be forecast and evaluated with
-  [`selection_criteria()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.md)
+  [`selection_criteria()`](https://rdrr.io/pkg/bayests/man/selection_criteria.html)
   without converting its windows.
-  [`irf()`](https://franzmohr.github.io/bvartools/reference/irf.md),
-  [`fevd()`](https://franzmohr.github.io/bvartools/reference/fevd.md)
-  and
+  [`irf()`](https://rdrr.io/pkg/bayests/man/irf.html),
+  [`fevd()`](https://rdrr.io/pkg/bayests/man/fevd.html) and
   [`spillover()`](https://franzmohr.github.io/bvartools/reference/spillover.md)
   still take the VAR representation.
 
@@ -1834,7 +2171,7 @@ the details.
 
 - **Forecasts of time varying and stochastic volatility models carry the
   drift forward.**
-  [`add_posterior_forecasts()`](https://franzmohr.github.io/bvartools/reference/add_posterior_forecasts.md)
+  [`add_posterior_forecasts()`](https://rdrr.io/pkg/bayests/man/add_posterior_forecasts.html)
   forecast `VarTvpGamma`, `VarTvpStochvol`, `VarTvpWishart` and
   `VarNormalStochvol` models from each draw’s coefficients, covariance
   block and volatilities in the last sample period, held for every
@@ -1848,7 +2185,7 @@ the details.
   `add_posterior_forecasts(forecast_states = "hold")` gives the old
   forecasts and is stored in `model$forecast_states`. For stochastic
   volatility models
-  [`add_posterior_coefficients()`](https://franzmohr.github.io/bvartools/reference/add_posterior_coefficients.md)
+  [`add_posterior_coefficients()`](https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html)
   now also keeps `posterior$u_sigma_inv$sigma`, the variance of the
   log-volatility innovations, which the forecast steps the volatility
   by; a model fitted with an earlier version lacks it and forecasts only
@@ -1861,13 +2198,13 @@ the details.
   posteriors carry the same blocks as those of the VAR models.
 
 - **Predictive likelihoods for VEC models.** New
-  [`add_predictive_loglik()`](https://franzmohr.github.io/bvartools/reference/add_predictive_loglik.md)
+  [`add_predictive_loglik()`](https://rdrr.io/pkg/bayests/man/add_predictive_loglik.html)
   adds to every window of an expanding window exercise the draws of the
   one-step-ahead log predictive density of the observation the next
   window adds, and
-  [`selection_criteria()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.md)
+  [`selection_criteria()`](https://rdrr.io/pkg/bayests/man/selection_criteria.html)
   sums them to the log predictive likelihood, criterion `"LPL"`, which
-  [`choose_best_model()`](https://franzmohr.github.io/bvartools/reference/choose_best_model.md)
+  [`choose_best_model()`](https://rdrr.io/pkg/bayests/man/choose_best_model.html)
   maximises. Time varying coefficients, cointegration spaces, error
   covariances and stochastic volatilities are carried one period forward
   with their state equations first. The variance of the random walk of
@@ -1880,15 +2217,15 @@ the details.
   the Austrian sub-model of a global VEC model it left the ranks of a
   TVP-SV-VEC 0.2 apart where the predictive likelihood separated them by
   3.7 with a standard error of 1.5.
-  [`?selection_criteria`](https://franzmohr.github.io/bvartools/reference/selection_criteria.md)
+  [`?selection_criteria`](https://rdrr.io/pkg/bayests/man/selection_criteria.html)
   says when to use which.
 
 - **The prior of the loadings of a time varying VEC model follows
   `coef$v_i`.**
-  [`add_priors()`](https://franzmohr.github.io/bvartools/reference/add_priors.md)
-  gave the loadings a prior precision of 1 / (1 - rho^2) whatever
-  `coef$v_i` was, which put alpha beta’ at unit prior variance rather
-  than on the scale `coef$v_i` asks for, as
+  [`add_priors()`](https://rdrr.io/pkg/bayests/man/add_priors.html) gave
+  the loadings a prior precision of 1 / (1 - rho^2) whatever `coef$v_i`
+  was, which put alpha beta’ at unit prior variance rather than on the
+  scale `coef$v_i` asks for, as
   [`?cointspace_prior`](https://franzmohr.github.io/bvartools/reference/cointspace_prior.md)
   says. Koop et al.
 
@@ -1907,7 +2244,7 @@ the details.
   `coef$rate` of 1e-8 or 1e-12, as the time varying vignettes use – the
   chain could not move the level of a coefficient path: the posterior of
   the coefficients was the output of
-  [`add_initial_values()`](https://franzmohr.github.io/bvartools/reference/add_initial_values.md).
+  [`add_initial_values()`](https://rdrr.io/pkg/bayests/man/add_initial_values.html).
   Two chains started from different values returned their own starting
   values, and a time varying VEC model kept its loadings at their
   maximum likelihood starting values while its cointegration vectors
@@ -1924,11 +2261,11 @@ the details.
 
 - **Forecasts of an expanding window start from the end of each
   window.**
-  [`prepare_forecast_input()`](https://franzmohr.github.io/bvartools/reference/prepare_forecast_input.md)
+  [`prepare_forecast_input()`](https://rdrr.io/pkg/bayests/man/prepare_forecast_input.html)
   took the lags of the first forecast period from the original series a
   model was created from rather than from its estimation sample, so
   every window of
-  [`use_expanding_window()`](https://franzmohr.github.io/bvartools/reference/use_expanding_window.md)
+  [`use_expanding_window()`](https://rdrr.io/pkg/bayests/man/use_expanding_window.html)
   but the last forecast from the last observations of the whole series,
   and so did a model cut short by
   [`window()`](https://rdrr.io/r/stats/window.html). On the first
@@ -1956,7 +2293,7 @@ the details.
   point of the chain changes.
 
 - **Semiautomatic SSVS priors for structural models.**
-  [`add_priors()`](https://franzmohr.github.io/bvartools/reference/add_priors.md)
+  [`add_priors()`](https://rdrr.io/pkg/bayests/man/add_priors.html)
   refused `varsel$semiautomatic` for structural models, and
   [`ssvs_prior()`](https://franzmohr.github.io/bvartools/reference/ssvs_prior.md)
   fell back to `tau` for the contemporaneous coefficients of a
@@ -1974,8 +2311,8 @@ the details.
   structural models with variable selection and `varsel$minnesota`.
 
 - **Gamma priors are documented, and can differ by equation.**
-  [`?add_priors`](https://franzmohr.github.io/bvartools/reference/add_priors.md)
-  now says that `shape` and `rate` are those of a gamma prior on a
+  [`?add_priors`](https://rdrr.io/pkg/bayests/man/add_priors.html) now
+  says that `shape` and `rate` are those of a gamma prior on a
   precision, with mean `shape / rate`, which is how every sampler reads
   them; a comment in the code claimed the error prior was halved on its
   way to the sampler, which it is not. `sigma$shape` and `sigma$rate` of
@@ -1986,9 +2323,9 @@ the details.
   simulated period by default.** `n_ahead` defaulted to 10 and warned
   whenever fewer periods had been simulated. It now defaults to the
   horizon given to
-  [`add_forecast_input()`](https://franzmohr.github.io/bvartools/reference/add_forecast_input.md).
+  [`add_forecast_input()`](https://rdrr.io/pkg/bayests/man/add_forecast_input.html).
 
-- **[`write_to_hdf5()`](https://franzmohr.github.io/bvartools/reference/write_to_hdf5.md)
+- **[`write_to_hdf5()`](https://rdrr.io/pkg/bayests/man/write_to_hdf5.html)
   writes the starting error precision of constant gamma models where
   BayesTS reads it.** R keeps the starting precision of every model with
   a gamma error as `initial$u_omega_inv`, and the model file carried
@@ -1999,7 +2336,7 @@ the details.
   `"gamma+covar"`, structural models among them, with “initial error
   precision must be 6x6, got 0x0”. The file now uses the BayesTS name
   for these models, and
-  [`read_model_from_hdf5()`](https://franzmohr.github.io/bvartools/reference/read_model_from_hdf5.md)
+  [`read_model_from_hdf5()`](https://rdrr.io/pkg/bayests/man/read_model_from_hdf5.html)
   maps it back, so a model read from a file still estimates inside R.
   Models estimated inside R were not affected.
 
@@ -2012,7 +2349,7 @@ the details.
   single-equation quantile regression failed this way. The same
   selection in the summary of VEC models is fixed too.
 
-- **[`add_priors()`](https://franzmohr.github.io/bvartools/reference/add_priors.md)
+- **[`add_priors()`](https://rdrr.io/pkg/bayests/man/add_priors.html)
   stores the error prior of VEC models as given.** It added the
   cointegration rank `r` to `sigma$df` and to the gamma `sigma$shape`.
   The VEC samplers with constant coefficients and a Wishart prior add
@@ -2055,17 +2392,16 @@ the details.
   variables.**
   [`inclusion_prior()`](https://franzmohr.github.io/bvartools/reference/inclusion_prior.md)
   with `minnesota_like = TRUE`, and so
-  [`add_priors()`](https://franzmohr.github.io/bvartools/reference/add_priors.md)
-  with `varsel$minnesota`, filled `s` blocks of lagged exogenous
-  differences after the current one, although a VEC model has `s - 1`.
-  Whenever the model had fewer unrestricted deterministic terms than
-  exogenous variables, as with the three foreign series of
-  `at_macrodata` and a constant, this stopped with “subscript out of
-  bounds”. With at least as many deterministic terms the surplus block
-  was overwritten by theirs, so the probabilities were already right
-  there.
+  [`add_priors()`](https://rdrr.io/pkg/bayests/man/add_priors.html) with
+  `varsel$minnesota`, filled `s` blocks of lagged exogenous differences
+  after the current one, although a VEC model has `s - 1`. Whenever the
+  model had fewer unrestricted deterministic terms than exogenous
+  variables, as with the three foreign series of `at_macrodata` and a
+  constant, this stopped with “subscript out of bounds”. With at least
+  as many deterministic terms the surplus block was overwritten by
+  theirs, so the probabilities were already right there.
 
-- **[`add_initial_values()`](https://franzmohr.github.io/bvartools/reference/add_initial_values.md)
+- **[`add_initial_values()`](https://rdrr.io/pkg/bayests/man/add_initial_values.html)
   stores the LS error covariance coefficients in the order the samplers
   read them.** The strict lower triangle of `Psi` is stored row by row,
   but the regression that estimates it returned its coefficients column
@@ -2074,7 +2410,7 @@ the details.
   `"sv+covar"` started its chain with the coefficients in the wrong
   places. A constant coefficient model soon draws its way out of that. A
   time varying one whose state variances start small, as
-  [`add_initial_values()`](https://franzmohr.github.io/bvartools/reference/add_initial_values.md)
+  [`add_initial_values()`](https://rdrr.io/pkg/bayests/man/add_initial_values.html)
   sets them under a small prior rate, stays at those starting values,
   and so did its error variances: in a six-variable `sv+covar` model the
   error standard deviations of the last three equations came out 9 to 52
@@ -2158,15 +2494,15 @@ the details.
   free elements of A0 are stored column by column, which is also the
   order of the contemporaneous regressors, but the function that
   prepares the draws for
-  [`irf()`](https://franzmohr.github.io/bvartools/reference/irf.md) and
-  [`fevd()`](https://franzmohr.github.io/bvartools/reference/fevd.md)
-  read them row by row. For up to three variables the two orders
-  coincide. From four on, elements were swapped: with `us_macrodata` and
-  the change in its interest rate, the six-quarter decomposition of that
-  change came to 24, 21, 55 and 0 percent instead of 12, 22, 66 and 0
-  percent, and a structural generalised response had the wrong sign.
-  Affected are types `"sir"` and `"sgir"`, for time varying models as
-  well and for structural VEC models through
+  [`irf()`](https://rdrr.io/pkg/bayests/man/irf.html) and
+  [`fevd()`](https://rdrr.io/pkg/bayests/man/fevd.html) read them row by
+  row. For up to three variables the two orders coincide. From four on,
+  elements were swapped: with `us_macrodata` and the change in its
+  interest rate, the six-quarter decomposition of that change came to
+  24, 21, 55 and 0 percent instead of 12, 22, 66 and 0 percent, and a
+  structural generalised response had the wrong sign. Affected are types
+  `"sir"` and `"sgir"`, for time varying models as well and for
+  structural VEC models through
   [`vec_to_var()`](https://franzmohr.github.io/bvartools/reference/vec_to_var.md).
   **Results change** for structural models with four or more endogenous
   variables.
@@ -2248,11 +2584,11 @@ the details.
   of periods 0 to `n_ahead - 1`. The code summed them up to `n_ahead`,
   so the default of 10 decomposed the 11 step error. The table now
   corresponds to period `n_ahead - 1` of
-  [`fevd()`](https://franzmohr.github.io/bvartools/reference/fevd.md),
-  which counts its periods from impact, and the documentation of
-  [`fevd()`](https://franzmohr.github.io/bvartools/reference/fevd.md)
-  states that its period `h` sums the responses of periods 0 to `h`.
-  **Results change** for every spillover measure.
+  [`fevd()`](https://rdrr.io/pkg/bayests/man/fevd.html), which counts
+  its periods from impact, and the documentation of
+  [`fevd()`](https://rdrr.io/pkg/bayests/man/fevd.html) states that its
+  period `h` sums the responses of periods 0 to `h`. **Results change**
+  for every spillover measure.
 
 - **Forecast input for a model with exogenous variables says which
   periods `exogen` has to cover.** The regressors of a forecast period
@@ -2261,23 +2597,23 @@ the details.
   the argument pointed to a ‘Details’ section that did not exist – and a
   series starting with the first forecast period failed with R’s “number
   of items to replace is not a multiple of replacement length”.
-  [`add_forecast_input()`](https://franzmohr.github.io/bvartools/reference/add_forecast_input.md)
+  [`add_forecast_input()`](https://rdrr.io/pkg/bayests/man/add_forecast_input.html)
   now refuses such a series with a message naming the periods it has to
   cover, and
-  [`?prepare_forecast_input`](https://franzmohr.github.io/bvartools/reference/prepare_forecast_input.md)
+  [`?prepare_forecast_input`](https://rdrr.io/pkg/bayests/man/prepare_forecast_input.html)
   explains why.
 
 - **Time varying models repeat their posterior draws from a seed set
   after
-  [`add_initial_values()`](https://franzmohr.github.io/bvartools/reference/add_initial_values.md).**
+  [`add_initial_values()`](https://rdrr.io/pkg/bayests/man/add_initial_values.html).**
   For every model with `tvp = TRUE`,
-  [`add_initial_values()`](https://franzmohr.github.io/bvartools/reference/add_initial_values.md)
+  [`add_initial_values()`](https://rdrr.io/pkg/bayests/man/add_initial_values.html)
   drew the initial precisions of the state equations, `a_sigma_inv` and
   `psi_sigma_inv`, from their gamma priors under every `method`. Under
   the default `"ols"` or `"maxlik"`, that was its only use of the random
   number generator. A [`set.seed()`](https://rdrr.io/r/base/Random.html)
   placed between it and
-  [`add_posterior_coefficients()`](https://franzmohr.github.io/bvartools/reference/add_posterior_coefficients.md)
+  [`add_posterior_coefficients()`](https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html)
   fixed the sampler but not where the chain started, so two R sessions
   running the same script gave different draws. This looked like
   undefined behaviour in the samplers, most visibly for `VarTvpAld` and
@@ -2337,7 +2673,7 @@ the details.
   with BVS did not repeat its draws from the same seed in a fresh
   session, and a time varying VAR with a gamma error term and BVS
   differed between the two builds. Neither was the samplers:
-  [`add_initial_values()`](https://franzmohr.github.io/bvartools/reference/add_initial_values.md)
+  [`add_initial_values()`](https://rdrr.io/pkg/bayests/man/add_initial_values.html)
   drew the starting state precisions without a seed, which the entry
   above fixes. The vendored set is still the same 65 files.
 
@@ -2374,7 +2710,7 @@ the details.
 
   **The time varying models score every period of the log likelihood
   under its own error precision.**
-  [`add_posterior_loglik()`](https://franzmohr.github.io/bvartools/reference/add_posterior_loglik.md)
+  [`add_posterior_loglik()`](https://rdrr.io/pkg/bayests/man/add_posterior_loglik.html)
   scored the whole sample under the precision of the last period, which
   is the likelihood of a model whose volatility does not move. That was
   wrong for `error = "sv"` and `"sv+covar"`, and for `"gamma+covar"`,
@@ -2393,7 +2729,7 @@ the details.
   coefficients and forecasts are bit-identical. The constant VEC
   samplers also refuse a prior precision of the cointegration space that
   is not symmetric, which
-  [`add_priors()`](https://franzmohr.github.io/bvartools/reference/add_priors.md)
+  [`add_priors()`](https://rdrr.io/pkg/bayests/man/add_priors.html)
   already did.
 
   The refresh adds one file,
@@ -2429,9 +2765,9 @@ the details.
 - **The prior on the cointegration space is built by an exported
   function,
   [`cointspace_prior()`](https://franzmohr.github.io/bvartools/reference/cointspace_prior.md).**
-  [`add_priors()`](https://franzmohr.github.io/bvartools/reference/add_priors.md)
-  for VEC models checks `coint` and builds `priors$beta` through it, and
-  a package with VEC models of its own layout can call it too – bgvars
+  [`add_priors()`](https://rdrr.io/pkg/bayests/man/add_priors.html) for
+  VEC models checks `coint` and builds `priors$beta` through it, and a
+  package with VEC models of its own layout can call it too – bgvars
   does for the sub-models of a global VEC model, whose error correction
   term also holds the weakly exogenous and global variables. They then
   get the same checks and the same prior, the one centred on the maximum
@@ -2448,9 +2784,9 @@ the details.
   [`?add_priors.bvecmodel`](https://franzmohr.github.io/bvartools/reference/add_priors.bvecmodel.md)
   as a section of its own.
 
-- **[`add_posterior_forecasts()`](https://franzmohr.github.io/bvartools/reference/add_posterior_forecasts.md)
+- **[`add_posterior_forecasts()`](https://rdrr.io/pkg/bayests/man/add_posterior_forecasts.html)
   and
-  [`add_posterior_loglik()`](https://franzmohr.github.io/bvartools/reference/add_posterior_loglik.md)
+  [`add_posterior_loglik()`](https://rdrr.io/pkg/bayests/man/add_posterior_loglik.html)
   no longer change the object they are given, and a second forecast
   replaces the first.** The C++ functions behind them take the model as
   an `Rcpp::List`, which wraps the R object the caller holds rather than
@@ -2540,7 +2876,7 @@ the details.
   The vendored set is still the same 64 files, so `inst/COPYRIGHTS` is
   unchanged.
 
-- **[`write_to_hdf5()`](https://franzmohr.github.io/bvartools/reference/write_to_hdf5.md)
+- **[`write_to_hdf5()`](https://rdrr.io/pkg/bayests/man/write_to_hdf5.html)
   releases the file of a model before it returns.** The specification of
   a model, its class and the properties of its datasets are stored as
   HDF5 attributes, and they were written with hdf5r’s `h5attr<-`, which
@@ -2570,21 +2906,19 @@ the details.
     `period` of 1.5 and silently used period 1, and stopped with the
     message of an `if()` on a vector of periods. `period` must now be a
     single integer within the sample, and the same check applies to the
-    draws behind
-    [`irf()`](https://franzmohr.github.io/bvartools/reference/irf.md)
-    and
-    [`fevd()`](https://franzmohr.github.io/bvartools/reference/fevd.md).
+    draws behind [`irf()`](https://rdrr.io/pkg/bayests/man/irf.html) and
+    [`fevd()`](https://rdrr.io/pkg/bayests/man/fevd.html).
     [`thin()`](https://rdrr.io/pkg/coda/man/thin.html) stopped with
     “wrong sign in ‘by’ argument” for an interval longer than the chain;
     the interval must now be a positive integer no larger than the
     number of draws.
-  - [`irf()`](https://franzmohr.github.io/bvartools/reference/irf.md),
-    [`fevd()`](https://franzmohr.github.io/bvartools/reference/fevd.md),
+  - [`irf()`](https://rdrr.io/pkg/bayests/man/irf.html),
+    [`fevd()`](https://rdrr.io/pkg/bayests/man/fevd.html),
     [`spillover()`](https://franzmohr.github.io/bvartools/reference/spillover.md),
-    [`add_posterior_forecasts()`](https://franzmohr.github.io/bvartools/reference/add_posterior_forecasts.md)
+    [`add_posterior_forecasts()`](https://rdrr.io/pkg/bayests/man/add_posterior_forecasts.html)
     and [`predict()`](https://rdrr.io/r/stats/predict.html) on a
     `bvecmodel` stopped with “no applicable method”. Like
-    [`add_forecast_input()`](https://franzmohr.github.io/bvartools/reference/add_forecast_input.md),
+    [`add_forecast_input()`](https://rdrr.io/pkg/bayests/man/add_forecast_input.html),
     they now say to use
     [`vec_to_var()`](https://franzmohr.github.io/bvartools/reference/vec_to_var.md)
     first.
@@ -2594,9 +2928,9 @@ the details.
     [`print()`](https://rdrr.io/r/base/print.html) says whether `rho` is
     fixed or drawn, and from which prior.
   - A round trip through
-    [`write_to_hdf5()`](https://franzmohr.github.io/bvartools/reference/write_to_hdf5.md)
+    [`write_to_hdf5()`](https://rdrr.io/pkg/bayests/man/write_to_hdf5.html)
     and
-    [`read_model_from_hdf5()`](https://franzmohr.github.io/bvartools/reference/read_model_from_hdf5.md)
+    [`read_model_from_hdf5()`](https://rdrr.io/pkg/bayests/man/read_model_from_hdf5.html)
     now returns every element that was written, with its values, shape
     and class; only the order of the elements within a group follows the
     file, which lists them by name. Scalar and character priors came
@@ -2621,7 +2955,7 @@ the details.
   [`vec_to_var()`](https://franzmohr.github.io/bvartools/reference/vec_to_var.md)
   method for expanding windows opens the route to forecasts, forecast
   errors and out-of-sample selection criteria for VEC models, which
-  [`add_forecast_input()`](https://franzmohr.github.io/bvartools/reference/add_forecast_input.md)
+  [`add_forecast_input()`](https://rdrr.io/pkg/bayests/man/add_forecast_input.html)
   pointed to but no method provided.
 
 - **Unreliable WAIC, AIC, BIC and HQ are flagged.** All four rest on the
@@ -2635,7 +2969,7 @@ the details.
   printed under the criteria, as the Pareto k diagnostic of LOOIC
   already was.
 
-- **[`add_priors()`](https://franzmohr.github.io/bvartools/reference/add_priors.md)
+- **[`add_priors()`](https://rdrr.io/pkg/bayests/man/add_priors.html)
   rejects unknown elements in all of its arguments.** It already did for
   `coef`, but ignored a misspelt element of `sigma`, `varsel` and
   `coint` without a message, so the setting it was meant for was
@@ -2653,21 +2987,18 @@ the details.
     while the coefficients did follow `period`. It now reports the
     covariance of the period asked for.
   - [`summary()`](https://rdrr.io/r/base/summary.html) and
-    [`fevd()`](https://franzmohr.github.io/bvartools/reference/fevd.md)
-    stopped with “subscript out of bounds” on a model with time varying
-    parameters and a gamma error term without covariance block, because
-    they read its single error precision as one per period. That also
-    broke [`summary()`](https://rdrr.io/r/base/summary.html) on model
-    lists and expanding windows of such models. Whether the precision is
-    a path is now read off the stored draws, by
+    [`fevd()`](https://rdrr.io/pkg/bayests/man/fevd.html) stopped with
+    “subscript out of bounds” on a model with time varying parameters
+    and a gamma error term without covariance block, because they read
+    its single error precision as one per period. That also broke
+    [`summary()`](https://rdrr.io/r/base/summary.html) on model lists
+    and expanding windows of such models. Whether the precision is a
+    path is now read off the stored draws, by
     [`summary()`](https://rdrr.io/r/base/summary.html),
     [`plot()`](https://rdrr.io/r/graphics/plot.default.html) and the
-    draws behind
-    [`irf()`](https://franzmohr.github.io/bvartools/reference/irf.md)
-    and
-    [`fevd()`](https://franzmohr.github.io/bvartools/reference/fevd.md)
-    alike, where it used to be decided from the specification four
-    different ways.
+    draws behind [`irf()`](https://rdrr.io/pkg/bayests/man/irf.html) and
+    [`fevd()`](https://rdrr.io/pkg/bayests/man/fevd.html) alike, where
+    it used to be decided from the specification four different ways.
   - [`thin()`](https://rdrr.io/pkg/coda/man/thin.html) left the draws of
     the state variances of a time varying model (`a$sigma`, `psi$sigma`)
     and of `rho` (`beta$rho`) unthinned while thinning the rest, so that
@@ -2680,7 +3011,7 @@ the details.
     and cointegration vectors of time varying models, error precisions
     and log-volatilities that vary by period, and the pointwise
     log-likelihood – are now cut to the periods of the window.
-  - [`selection_criteria()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.md)
+  - [`selection_criteria()`](https://rdrr.io/pkg/bayests/man/selection_criteria.html)
     on an expanding window stopped with “non-numeric matrix extent”
     unless the windows had forecast errors. The in-sample and
     out-of-sample criteria are now each computed when their draws exist,
@@ -2714,7 +3045,7 @@ the details.
 
   `rho` bounds how informative this can be: even `T = 0` leaves a tilt
   of about `sqrt(1 - rho^2)` per period, and
-  [`add_priors()`](https://franzmohr.github.io/bvartools/reference/add_priors.md)
+  [`add_priors()`](https://rdrr.io/pkg/bayests/man/add_priors.html)
   warns when the requested weight asks for more.
 
   A larger weight does not always tighten the posterior. It lowers `T`,
@@ -2754,7 +3085,7 @@ the details.
   direction is stated in the units of the unscaled series.
 
 - **A sampler that cannot run now stops.**
-  [`add_posterior_coefficients()`](https://franzmohr.github.io/bvartools/reference/add_posterior_coefficients.md)
+  [`add_posterior_coefficients()`](https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html)
   used to catch the error, print it, and return the *unestimated* model
   with an `error` element added – an object of the right class, carrying
   the specification and the data of a fitted model and no posterior
@@ -2765,7 +3096,7 @@ the details.
   what about the input it could not work with, now reaches the caller.
 
   This changes what a batch does.
-  [`add_posterior_coefficients()`](https://franzmohr.github.io/bvartools/reference/add_posterior_coefficients.md)
+  [`add_posterior_coefficients()`](https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html)
   on a `modellist`, an `expandingwindow` or a bgvars `gvarmodel` is an
   `lapply` over the single-model method, so one unusable specification
   ends the run instead of leaving a hole in the results. If you were
@@ -2778,12 +3109,12 @@ the details.
 
 - **The out-of-sample regressors of a forecast are no longer in SUR
   form.**
-  [`add_forecast_input()`](https://franzmohr.github.io/bvartools/reference/add_forecast_input.md)
+  [`add_forecast_input()`](https://rdrr.io/pkg/bayests/man/add_forecast_input.html)
   stores them as `object$data$forecast$x`, one row per forecast period
   and one column per regressor, where `object$data$forecast$z` used to
   hold the same numbers kroneckered up with an identity of order `k` –
   `k` times the rows and `k` times the columns.
-  [`prepare_forecast_input()`](https://franzmohr.github.io/bvartools/reference/prepare_forecast_input.md)
+  [`prepare_forecast_input()`](https://rdrr.io/pkg/bayests/man/prepare_forecast_input.html)
   returns the matrix under the name `x` for the same reason. HDF5
   exports write `/data/forecast/x`.
 
@@ -2810,14 +3141,14 @@ the details.
   turned into plausible regressors. Code that reads
   `object$data$forecast$z` itself has to be updated; code that goes
   through
-  [`add_forecast_input()`](https://franzmohr.github.io/bvartools/reference/add_forecast_input.md)
+  [`add_forecast_input()`](https://rdrr.io/pkg/bayests/man/add_forecast_input.html)
   and
-  [`add_posterior_forecasts()`](https://franzmohr.github.io/bvartools/reference/add_posterior_forecasts.md)
+  [`add_posterior_forecasts()`](https://rdrr.io/pkg/bayests/man/add_posterior_forecasts.html)
   does not.
 
 - **The autocorrelation of a time varying cointegration space can be
   estimated.**
-  [`add_priors()`](https://franzmohr.github.io/bvartools/reference/add_priors.md)
+  [`add_priors()`](https://rdrr.io/pkg/bayests/man/add_priors.html)
   takes `coint$rho_min` and `coint$rho_max`, the support of a uniform
   prior on the `rho` of `beta_t = rho beta_{t-1} + eta_t`, and with them
   `VecTvpWishart`, `VecTvpGamma` and `VecTvpStochvol` draw `rho` in the
@@ -2838,8 +3169,7 @@ the details.
   is built once from `coint$rho` and does not follow the draw, so it
   drops out of `rho`’s conditional and leaves a normal truncated to the
   prior’s support. The shrinkage the loadings carry is fixed the same
-  way.
-  [`?add_priors`](https://franzmohr.github.io/bvartools/reference/add_priors.md)
+  way. [`?add_priors`](https://rdrr.io/pkg/bayests/man/add_priors.html)
   says so.
 
 - **A time varying cointegration space was centred on the wrong state in
@@ -2857,12 +3187,10 @@ the details.
   verified that every other model’s draws are unchanged digit for digit.
 
 - **Sign restrictions.**
-  [`add_sign_restrictions()`](https://franzmohr.github.io/bvartools/reference/add_sign_restrictions.md)
+  [`add_sign_restrictions()`](https://rdrr.io/pkg/bayests/man/add_sign_restrictions.html)
   identifies the shocks of a VAR by the signs of the impulse responses
-  they produce, and
-  [`irf()`](https://franzmohr.github.io/bvartools/reference/irf.md),
-  [`fevd()`](https://franzmohr.github.io/bvartools/reference/fevd.md)
-  and
+  they produce, and [`irf()`](https://rdrr.io/pkg/bayests/man/irf.html),
+  [`fevd()`](https://rdrr.io/pkg/bayests/man/fevd.html) and
   [`spillover()`](https://franzmohr.github.io/bvartools/reference/spillover.md)
   use that identification under `type = "sign"`. The restrictions are
   given as a data frame of `impulse`, `response`, `sign` and an optional
@@ -2887,30 +3215,28 @@ the details.
   identification on `us_macrodata` and says what a set identified
   credible band does and does not mean.
 
-- **[`irf()`](https://franzmohr.github.io/bvartools/reference/irf.md)
-  and
-  [`fevd()`](https://franzmohr.github.io/bvartools/reference/fevd.md)
-  return the impact period for `n_ahead = 0`.** A horizon of zero is
-  well defined – the response is `Phi_0 P`, which is `P`, and the
-  decomposition rests on `Phi_0 = I` – but both failed with
-  “Mat::cols(): indices out of bounds or incorrectly used” instead. The
-  recursions reused the lag order as a count of regressor columns, and
-  on impact that count is zero, so the slice of the coefficient matrix
-  asked for column `0` through column `-1` on unsigned indices. The
-  count is now separate from the lag order and the coefficients are only
-  sliced where the recursion actually runs.
-  [`irf()`](https://franzmohr.github.io/bvartools/reference/irf.md) and
-  [`fevd()`](https://franzmohr.github.io/bvartools/reference/fevd.md)
-  also validate `n_ahead` the way
+- **[`irf()`](https://rdrr.io/pkg/bayests/man/irf.html) and
+  [`fevd()`](https://rdrr.io/pkg/bayests/man/fevd.html) return the
+  impact period for `n_ahead = 0`.** A horizon of zero is well defined –
+  the response is `Phi_0 P`, which is `P`, and the decomposition rests
+  on `Phi_0 = I` – but both failed with “Mat::cols(): indices out of
+  bounds or incorrectly used” instead. The recursions reused the lag
+  order as a count of regressor columns, and on impact that count is
+  zero, so the slice of the coefficient matrix asked for column `0`
+  through column `-1` on unsigned indices. The count is now separate
+  from the lag order and the coefficients are only sliced where the
+  recursion actually runs.
+  [`irf()`](https://rdrr.io/pkg/bayests/man/irf.html) and
+  [`fevd()`](https://rdrr.io/pkg/bayests/man/fevd.html) also validate
+  `n_ahead` the way
   [`spillover()`](https://franzmohr.github.io/bvartools/reference/spillover.md)
   already did, so a negative horizon is rejected in R with a message
   rather than reaching the recursion, and a cumulative impulse response
   over the impact period alone keeps its shape instead of transposing
   itself.
 
-- **[`irf()`](https://franzmohr.github.io/bvartools/reference/irf.md),
-  [`fevd()`](https://franzmohr.github.io/bvartools/reference/fevd.md)
-  and
+- **[`irf()`](https://rdrr.io/pkg/bayests/man/irf.html),
+  [`fevd()`](https://rdrr.io/pkg/bayests/man/fevd.html) and
   [`spillover()`](https://franzmohr.github.io/bvartools/reference/spillover.md)
   accept a caller supplied impact matrix.** The new type `"custom"`
   takes the matrix `P` that the forecast error responses are
@@ -2921,17 +3247,16 @@ the details.
   recursions; it is now an argument, and the recursions need not learn
   about a scheme to carry it. The types that were already there are
   unchanged, and the matrix that reproduces one of them is not always
-  the obvious one –
-  [`irf()`](https://franzmohr.github.io/bvartools/reference/irf.md)
+  the obvious one – [`irf()`](https://rdrr.io/pkg/bayests/man/irf.html)
   normalised the Choleski factor to a unit shock under `"oir"` while
-  [`fevd()`](https://franzmohr.github.io/bvartools/reference/fevd.md)
-  did not, and the custom path normalises nothing at all. (A later entry
-  above removed that normalisation, so the Choleski factor now
-  reproduces `"oir"` in both.) Under `"custom"` the two decompositions
-  keep `Sigma` as the forecast error covariance, so their shares add up
-  across shocks exactly when `P P'` equals `Sigma`, as it does for a
-  rotation of the Choleski factor. This is groundwork for sign
-  restrictions, which produce such a rotation per draw.
+  [`fevd()`](https://rdrr.io/pkg/bayests/man/fevd.html) did not, and the
+  custom path normalises nothing at all. (A later entry above removed
+  that normalisation, so the Choleski factor now reproduces `"oir"` in
+  both.) Under `"custom"` the two decompositions keep `Sigma` as the
+  forecast error covariance, so their shares add up across shocks
+  exactly when `P P'` equals `Sigma`, as it does for a rotation of the
+  Choleski factor. This is groundwork for sign restrictions, which
+  produce such a rotation per draw.
 
 - **[`summary()`](https://rdrr.io/r/base/summary.html) no longer marks a
   covariance that was never estimated as significant.** The asterisk
@@ -2971,31 +3296,28 @@ the details.
   and reading the structural quantities in its place produced responses
   that belonged to no model at all – on the same VAR an `"oir"` response
   was out by up to 3.8 against the Choleski response of the reduced
-  form.
-  [`irf()`](https://franzmohr.github.io/bvartools/reference/irf.md),
-  [`fevd()`](https://franzmohr.github.io/bvartools/reference/fevd.md)
-  and
+  form. [`irf()`](https://rdrr.io/pkg/bayests/man/irf.html),
+  [`fevd()`](https://rdrr.io/pkg/bayests/man/fevd.html) and
   [`spillover()`](https://franzmohr.github.io/bvartools/reference/spillover.md)
   now stop with an explanation rather than return those numbers. Use
   `"sir"` or `"sgir"` on a structural model, or estimate it with
   `structural = FALSE`.
 
-- **[`fevd()`](https://franzmohr.github.io/bvartools/reference/fevd.md)
-  and its [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
-  method can pool the smaller contributions into one group.** The new
-  argument `max_groups` caps the number of groups shown: the
-  `max_groups - 1` variables with the largest contribution across the
-  whole horizon are kept, in the order of the endogenous variables, and
-  the remaining ones are added up in a further group `"Other"`. The row
-  sums are untouched, so a decomposition that added up to one still
-  does. Passed to
-  [`fevd()`](https://franzmohr.github.io/bvartools/reference/fevd.md),
-  the returned decomposition itself has at most `max_groups` columns;
-  passed to [`plot()`](https://rdrr.io/r/graphics/plot.default.html),
-  the full decomposition is kept and only the bars and the legend are
-  pooled – which is the point of the argument, since a model with many
-  variables produced a legend that crowded out the bars. The default is
-  `NULL` in both, which shows a group per variable as before.
+- **[`fevd()`](https://rdrr.io/pkg/bayests/man/fevd.html) and its
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) method can
+  pool the smaller contributions into one group.** The new argument
+  `max_groups` caps the number of groups shown: the `max_groups - 1`
+  variables with the largest contribution across the whole horizon are
+  kept, in the order of the endogenous variables, and the remaining ones
+  are added up in a further group `"Other"`. The row sums are untouched,
+  so a decomposition that added up to one still does. Passed to
+  [`fevd()`](https://rdrr.io/pkg/bayests/man/fevd.html), the returned
+  decomposition itself has at most `max_groups` columns; passed to
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html), the full
+  decomposition is kept and only the bars and the legend are pooled –
+  which is the point of the argument, since a model with many variables
+  produced a legend that crowded out the bars. The default is `NULL` in
+  both, which shows a group per variable as before.
 
 - **Bayesian quantile VARs.**
   [`create_bvarmodel()`](https://franzmohr.github.io/bvartools/reference/create_bvarmodel.md)
@@ -3016,17 +3338,17 @@ the details.
   variance comes from rather than a new kind of model.
 
   The workflow is the usual one.
-  [`add_priors()`](https://franzmohr.github.io/bvartools/reference/add_priors.md)
+  [`add_priors()`](https://rdrr.io/pkg/bayests/man/add_priors.html)
   takes the inverse gamma prior of the scale of the asymmetric Laplace,
   one per equation, through `sigma = list(shape = , rate = )`, and
   stores it in `priors$u_scale`; note that these are used as given,
   unlike the gamma prior on the error variances, which is halved on the
   way in.
-  [`add_initial_values()`](https://franzmohr.github.io/bvartools/reference/add_initial_values.md)
+  [`add_initial_values()`](https://rdrr.io/pkg/bayests/man/add_initial_values.html)
   starts each scale at the mean of the check function of the residuals.
-  [`add_posterior_coefficients()`](https://franzmohr.github.io/bvartools/reference/add_posterior_coefficients.md)
+  [`add_posterior_coefficients()`](https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html)
   and
-  [`add_posterior_loglik()`](https://franzmohr.github.io/bvartools/reference/add_posterior_loglik.md)
+  [`add_posterior_loglik()`](https://rdrr.io/pkg/bayests/man/add_posterior_loglik.html)
   dispatch as they do for every other algorithm, and the draws of the
   scale arrive in `posterior$u_scale`.
   [`summary()`](https://rdrr.io/r/base/summary.html) and
@@ -3044,7 +3366,7 @@ the details.
   leaves a residual whose quantile is not the one that was asked for.
   They do not forecast, since the `h` step ahead quantile is not the
   quantile of the iterated one step ahead quantiles;
-  [`add_posterior_forecasts()`](https://franzmohr.github.io/bvartools/reference/add_posterior_forecasts.md)
+  [`add_posterior_forecasts()`](https://rdrr.io/pkg/bayests/man/add_posterior_forecasts.html)
   says so rather than producing a path that cannot be read as one. And
   the spread of the draws is not a calibrated credible interval: the
   asymmetric Laplace is a working likelihood, the posterior locates the
@@ -3080,10 +3402,10 @@ the details.
   [`vec_to_var()`](https://franzmohr.github.io/bvartools/reference/vec_to_var.md)
   collects while it rebuilds the regressors of the VAR. Nothing numeric
   reads these labels, so no result changes –
-  [`irf()`](https://franzmohr.github.io/bvartools/reference/irf.md) and
-  [`fevd()`](https://franzmohr.github.io/bvartools/reference/fevd.md)
-  were unaffected throughout, which is why this surfaced only in the two
-  methods that print.
+  [`irf()`](https://rdrr.io/pkg/bayests/man/irf.html) and
+  [`fevd()`](https://rdrr.io/pkg/bayests/man/fevd.html) were unaffected
+  throughout, which is why this surfaced only in the two methods that
+  print.
 
   The name helper no longer trusts the field either. A missing or
   wrong-length vector of deterministic names is replaced by `det.1`,
@@ -3150,7 +3472,7 @@ the details.
   agree, which is what it did here.
 
 - **Writing a model to HDF5 is about a third faster.**
-  [`write_to_hdf5()`](https://franzmohr.github.io/bvartools/reference/write_to_hdf5.md)
+  [`write_to_hdf5()`](https://rdrr.io/pkg/bayests/man/write_to_hdf5.html)
   used to ask the file whether a dataset was there before writing it,
   and then name the dataset again for each of its attributes, so a
   series with two attributes was opened three times over. It now writes
@@ -3161,7 +3483,7 @@ the details.
   numbers in it. On a sub-model of 27 models that is 208 ms per model
   rather than 294. What is written is unchanged.
 
-- **[`write_to_hdf5()`](https://franzmohr.github.io/bvartools/reference/write_to_hdf5.md)
+- **[`write_to_hdf5()`](https://rdrr.io/pkg/bayests/man/write_to_hdf5.html)
   records the chain of the `psi` draws correctly.** The `start`, `end`
   and `thin` of the draws in `posterior/psi` were attached to the
   datasets of `posterior/a` rather than to their own, so `psi` came back
@@ -3172,11 +3494,11 @@ the details.
 
 - **A model can be addressed by group, so one HDF5 file can hold
   several.**
-  [`write_to_hdf5()`](https://franzmohr.github.io/bvartools/reference/write_to_hdf5.md)
+  [`write_to_hdf5()`](https://rdrr.io/pkg/bayests/man/write_to_hdf5.html)
   and
-  [`read_model_from_hdf5()`](https://franzmohr.github.io/bvartools/reference/read_model_from_hdf5.md)
+  [`read_model_from_hdf5()`](https://rdrr.io/pkg/bayests/man/read_model_from_hdf5.html)
   take a `group` argument, and the new
-  [`list_models_in_hdf5()`](https://franzmohr.github.io/bvartools/reference/list_models_in_hdf5.md)
+  [`read_model_groups()`](https://rdrr.io/pkg/bayests/man/read_model_groups.html)
   reports which groups of a file hold a model. Without a `group` nothing
   changes: the model is the whole file, and an existing file is still
   refused.
@@ -3196,7 +3518,7 @@ the details.
   removed, a group it added to an existing file is unlinked on its own,
   so the models beside it survive.
 
-- **[`read_models_from_folder()`](https://franzmohr.github.io/bvartools/reference/read_models_from_folder.md)
+- **[`read_models_from_folder()`](https://rdrr.io/pkg/bayests/man/read_models_from_folder.html)
   returns a flat, named list.** It used to mirror the directory tree
   into a nesting and give the result no names at all, so a folder of
   sub-models came back as `[[1]]`, `[[2]]`, `[[3]]` with no way to tell
@@ -3210,12 +3532,12 @@ the details.
   guessed from a path. An expanding window was recognised by looking for
   `"ExpWind"` in the first file’s *full* path, so the class of the
   result depended on the names of every directory above it as well.
-  [`write_to_hdf5()`](https://franzmohr.github.io/bvartools/reference/write_to_hdf5.md)
+  [`write_to_hdf5()`](https://rdrr.io/pkg/bayests/man/write_to_hdf5.html)
   now records the collection in the models themselves; the old name is
   still honoured, so folders written before this are read the same way
   as before.
 
-- **[`write_to_hdf5()`](https://franzmohr.github.io/bvartools/reference/write_to_hdf5.md)
+- **[`write_to_hdf5()`](https://rdrr.io/pkg/bayests/man/write_to_hdf5.html)
   no longer swallows a failed write.** The bodies of the ‘bvarmodel’ and
   ‘bvecmodel’ methods were wrapped in
   [`try()`](https://rdrr.io/r/base/try.html) whose result was discarded,
@@ -3281,13 +3603,13 @@ the details.
   in long format – a period, a publication date, a variable and a value,
   under whatever column names the source uses – and returns an object
   that mimics the windows of
-  [`use_expanding_window()`](https://franzmohr.github.io/bvartools/reference/use_expanding_window.md).
+  [`use_expanding_window()`](https://rdrr.io/pkg/bayests/man/use_expanding_window.html).
   From there the usual path applies:
-  [`combine_models()`](https://franzmohr.github.io/bvartools/reference/combine_models.md)
+  [`combine_models()`](https://rdrr.io/pkg/bayests/man/combine_models.html)
   puts it beside the models,
-  [`add_forecast_errors()`](https://franzmohr.github.io/bvartools/reference/add_forecast_errors.md)
+  [`add_forecast_errors()`](https://rdrr.io/pkg/bayests/man/add_forecast_errors.html)
   scores it against the same test data, and
-  [`selection_criteria()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.md),
+  [`selection_criteria()`](https://rdrr.io/pkg/bayests/man/selection_criteria.html),
   `print(relative = )`,
   [`plot()`](https://rdrr.io/r/graphics/plot.default.html) and
   [`plot_forecast_errors_by_period()`](https://franzmohr.github.io/bvartools/reference/plot_forecast_errors_by_period.md)
@@ -3312,11 +3634,9 @@ the details.
   contributes a single value rather than a posterior: the credible bands
   of their out-of-sample statistics are degenerate and they have no
   in-sample criteria. Three functions that previously assumed every
-  model carries both kinds of criteria –
-  [`print.selcritlist()`](https://franzmohr.github.io/bvartools/reference/selection_criteria.md),
-  [`plot.selcritlist()`](https://franzmohr.github.io/bvartools/reference/plot.selcritlist.md)
-  and
-  [`choose_best_model()`](https://franzmohr.github.io/bvartools/reference/choose_best_model.md)
+  model carries both kinds of criteria – `print.selcritlist()`,
+  `plot.selcritlist()` and
+  [`choose_best_model()`](https://rdrr.io/pkg/bayests/man/choose_best_model.html)
   – now leave a model’s row empty instead of failing when a criterion is
   missing from it.
 
@@ -3327,11 +3647,11 @@ the details.
   `bvarmodel`, `modellist` and `expandingwindow`, the last of which
   gives the index over a growing sample – the chart that literature is
   built around – from the windows
-  [`use_expanding_window()`](https://franzmohr.github.io/bvartools/reference/use_expanding_window.md)
+  [`use_expanding_window()`](https://rdrr.io/pkg/bayests/man/use_expanding_window.html)
   already produces. VEC models go through
   [`vec_to_var()`](https://franzmohr.github.io/bvartools/reference/vec_to_var.md)
   first, as they do for
-  [`fevd()`](https://franzmohr.github.io/bvartools/reference/fevd.md).
+  [`fevd()`](https://rdrr.io/pkg/bayests/man/fevd.html).
 
   Every measure is computed once per posterior draw and only then
   summarised, which is not the same as computing it from the mean
@@ -3349,14 +3669,12 @@ the details.
   pass, where looping `.vardecomp()` over responses would rebuild the
   impulse responses once per row.
 
-- **Fixed:
-  [`fevd()`](https://franzmohr.github.io/bvartools/reference/fevd.md)
-  read the wrong period of a time-varying or stochastic volatility
-  model.** **Draws are unchanged; the variance decomposition of those
-  models changes, and the old numbers were wrong.** The sample length
-  was taken as `nrow(train$y) / k`, which was right when `gen_var()`
-  stacked the series into one column and is wrong for the
-  one-row-per-period layout
+- **Fixed: [`fevd()`](https://rdrr.io/pkg/bayests/man/fevd.html) read
+  the wrong period of a time-varying or stochastic volatility model.**
+  **Draws are unchanged; the variance decomposition of those models
+  changes, and the old numbers were wrong.** The sample length was taken
+  as `nrow(train$y) / k`, which was right when `gen_var()` stacked the
+  series into one column and is wrong for the one-row-per-period layout
   [`create_bvarmodel()`](https://franzmohr.github.io/bvartools/reference/create_bvarmodel.md)
   produces. With `k` variables it understated the sample by a factor of
   `k`, so the default `period` was fractional – indexing the posterior
@@ -3367,22 +3685,18 @@ the details.
   The count now comes from the regressor matrix, whose row count is
   unambiguously `k` times the sample length, and falls back on `y` only
   where a model has no regressors, handling both layouts. Shared by
-  [`fevd()`](https://franzmohr.github.io/bvartools/reference/fevd.md)
-  and
+  [`fevd()`](https://rdrr.io/pkg/bayests/man/fevd.html) and
   [`spillover()`](https://franzmohr.github.io/bvartools/reference/spillover.md)
   through a new internal `.collect_draws()`, lifted out of
   [`fevd.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/fevd.bvarmodel.md)
   so the two cannot disagree about which slice of a row a period is.
 
-- **Fixed:
-  [`irf()`](https://franzmohr.github.io/bvartools/reference/irf.md) had
-  both defects the
-  [`fevd()`](https://franzmohr.github.io/bvartools/reference/fevd.md)
-  fix above describes.** **Draws are unchanged; impulse responses of
+- **Fixed: [`irf()`](https://rdrr.io/pkg/bayests/man/irf.html) had both
+  defects the [`fevd()`](https://rdrr.io/pkg/bayests/man/fevd.html) fix
+  above describes.** **Draws are unchanged; impulse responses of
   time-varying, stochastic volatility and structural models change, and
   the old numbers were wrong.** `.collect_draws()` was introduced for
-  [`fevd()`](https://franzmohr.github.io/bvartools/reference/fevd.md)
-  and
+  [`fevd()`](https://rdrr.io/pkg/bayests/man/fevd.html) and
   [`spillover()`](https://franzmohr.github.io/bvartools/reference/spillover.md)
   but
   [`irf.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/irf.bvarmodel.md)
@@ -3393,9 +3707,9 @@ the details.
   commented out, so `type = "sir"` and `type = "sgir"` built the
   recursion from the structural `A_i` instead of the reduced-form
   `A_0^{-1} A_i` that
-  [`fevd()`](https://franzmohr.github.io/bvartools/reference/fevd.md)
-  uses. Constant-coefficient, non-structural models are unaffected: they
-  read neither `tt` nor `A_0`.
+  [`fevd()`](https://rdrr.io/pkg/bayests/man/fevd.html) uses.
+  Constant-coefficient, non-structural models are unaffected: they read
+  neither `tt` nor `A_0`.
 
   [`irf.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/irf.bvarmodel.md)
   now calls `.collect_draws()` like the other two, and only attaches the
@@ -3548,8 +3862,7 @@ the details.
   scheme separately, which is why `varsel$covar = FALSE` is a real
   choice there and not here. That asymmetry lives in the vendored core –
   the constant coefficient input types have no per-block field to set –
-  so
-  [`add_priors()`](https://franzmohr.github.io/bvartools/reference/add_priors.md)
+  so [`add_priors()`](https://rdrr.io/pkg/bayests/man/add_priors.html)
   now says so up front, and names the three ways out: select the
   covariances too, drop them, or use a time-varying model.
   `varsel$covar = TRUE` and every combination without a covariance block
@@ -3607,15 +3920,13 @@ the details.
 
 - **Fixed: three examples that no longer matched the API.**
   [`predict.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/predict.bvarmodel.md)
-  and
-  [`plot.bvarprd()`](https://franzmohr.github.io/bvartools/reference/plot.bvarprd.md)
-  called [`predict()`](https://rdrr.io/r/stats/predict.html) straight
-  after
-  [`add_posterior_coefficients()`](https://franzmohr.github.io/bvartools/reference/add_posterior_coefficients.md),
+  and `plot.bvarprd()` called
+  [`predict()`](https://rdrr.io/r/stats/predict.html) straight after
+  [`add_posterior_coefficients()`](https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html),
   from before forecasting moved into
-  [`add_forecast_input()`](https://franzmohr.github.io/bvartools/reference/add_forecast_input.md)
+  [`add_forecast_input()`](https://rdrr.io/pkg/bayests/man/add_forecast_input.html)
   and
-  [`add_posterior_forecasts()`](https://franzmohr.github.io/bvartools/reference/add_posterior_forecasts.md);
+  [`add_posterior_forecasts()`](https://rdrr.io/pkg/bayests/man/add_posterior_forecasts.html);
   they now run those two first.
   [`post_coint_kls()`](https://franzmohr.github.io/bvartools/reference/post_coint_kls.md)
   read `temp$data$y` and passed `w = ect` where the example only ever
@@ -3670,12 +3981,12 @@ the details.
   equals Pesaran and Shin, and the two coincide only when every variable
   has unit residual variance. `bgvars::gfevd()` carries the same line.
   Correcting it would move existing
-  [`fevd()`](https://franzmohr.github.io/bvartools/reference/fevd.md)
-  and `gfevd()` numbers, so it is left for a deliberate decision;
-  `test-spillover.R` pins the current behaviour in both directions so
-  that a change to it fails loudly. *Since corrected: see the
-  `fevd(type = "gir")` entry above, which divides by the variance of the
-  shock as Pesaran and Shin do.*
+  [`fevd()`](https://rdrr.io/pkg/bayests/man/fevd.html) and `gfevd()`
+  numbers, so it is left for a deliberate decision; `test-spillover.R`
+  pins the current behaviour in both directions so that a change to it
+  fails loudly. *Since corrected: see the `fevd(type = "gir")` entry
+  above, which divides by the variance of the shock as Pesaran and Shin
+  do.*
 
 - **Vendored BayesTS core refreshed.** **Draws are unchanged**, for
   every VAR and VEC model this package samples. Upstream’s own
@@ -4166,8 +4477,8 @@ the details.
   as having seven components, now says ten.
 
 - Fixed missing transformations for structural models in
-  [`irf()`](https://franzmohr.github.io/bvartools/reference/irf.md) and
-  [`fevd()`](https://franzmohr.github.io/bvartools/reference/fevd.md).
+  [`irf()`](https://rdrr.io/pkg/bayests/man/irf.html) and
+  [`fevd()`](https://rdrr.io/pkg/bayests/man/fevd.html).
 
 - Added function `choose_best_model`.
 

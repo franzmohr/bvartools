@@ -9,7 +9,7 @@ function create_bvecmodel."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -62,7 +62,7 @@ function <code><a href="create_bvecmodel.html">create_bvecmodel</a></code>.</p>
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="co"># S3 method for class 'bvecmodel'</span></span>
-<span><span class="fu"><a href="add_priors.html">add_priors</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">coef</span>, coint <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">sigma</span>, varsel <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_priors.html" class="external-link">add_priors</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">coef</span>, coint <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">sigma</span>, varsel <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -120,6 +120,10 @@ selection algorithm. Required if the model was created with
   <dt><code>psi</code>, <code>u_sigma</code></dt>
 <dd><p>the priors of the error covariance coefficients
   and error variances, as for a VAR model.</p></dd>
+
+  <dt><code>volatility</code></dt>
+<dd><p>for a volatility break, <code>shape</code>, <code>rho_shape1</code>
+  and <code>rho_shape2</code>, as given in <code>sigma$volatility</code>.</p></dd>
 
 
 </dl></div>
@@ -198,7 +202,7 @@ error, as does an element that is not listed below.</p>
   deviation of the state innovations of the coefficients, loadings included unless
   <code>omega_v_alpha</code> is given, and of the
   covariance coefficients – the non-centred parameterisation that lets the posterior carry
-  the test for time variation of <code><a href="time_variation_test.html">time_variation_test</a></code>; see
+  the test for time variation of <code><a href="https://rdrr.io/pkg/bayests/man/time_variation_test.html" class="external-link">time_variation_test</a></code>; see
   <code><a href="add_priors.bvarmodel.html">add_priors.bvarmodel</a></code> for the model and the draws it adds. The cointegration
   space keeps its state equation. Only for models with time varying parameters,
   <code>tvp = TRUE</code>, whatever their <code>error</code>.</p></dd>
@@ -209,7 +213,7 @@ error, as does an element that is not listed below.</p>
   <code>omega_v</code> is used. The loadings multiply the levels in the error correction term, so
   a standard deviation of their innovations that is small for a coefficient on a differenced
   regressor moves the fitted value by much more, and the test for time variation of
-  <code><a href="time_variation_test.html">time_variation_test</a></code> compares each loading's posterior at zero with its own
+  <code><a href="https://rdrr.io/pkg/bayests/man/time_variation_test.html" class="external-link">time_variation_test</a></code> compares each loading's posterior at zero with its own
   prior: a prior on the wrong scale makes the Bayes factor of a loading say more about the
   prior than about the loading. Only used with <code>omega_v</code> and a positive rank.</p></dd>
 
@@ -218,7 +222,8 @@ error, as does an element that is not listed below.</p>
 elements, and the priors they give, are described in section 'Prior on the
 cointegration space' below, which is shared with <code><a href="cointspace_prior.html">cointspace_prior</a></code>.</p>
 <p>Argument <code>sigma</code> must contain the elements that belong to the
-<code>error</code> of the model:</p><ul><li><p><code>"wishart"</code>: <code>df</code> and <code>scale</code>. Not available for structural models.</p></li>
+<code>error</code> of the model:</p><ul><li><p><code>"wishart"</code>: <code>df</code> and <code>scale</code>. Not available for structural models.
+  A model created with <code>volatility_break</code> also needs <code>volatility</code>.</p></li>
 <li><p><code>"gamma"</code> and <code>"gamma+covar"</code>: <code>shape</code> and <code>rate</code>.</p></li>
 <li><p><code>"sv"</code> and <code>"sv+covar"</code>: <code>mu</code>, <code>v_i</code>, <code>shape</code>, <code>rate</code>,
   <code>state_variance</code> and <code>offset</code>; with <code>tvp = TRUE</code>, <code>omega_v</code> may take the
@@ -232,6 +237,15 @@ cointegration space' below, which is shared with <code><a href="cointspace_prior
   <dt><code>scale</code></dt>
 <dd><p>a positive numeric specifying the prior error variance of the endogenous
   variables in the inverse Wishart prior.</p></dd>
+
+  <dt><code>volatility</code></dt>
+<dd><p>for a model with a volatility break, the prior of its
+  scales and decay, <code>list(shape = , rho_shape1 = , rho_shape2 = )</code>: a Pareto
+  prior with shape <code>shape</code> on every free scale, which puts no mass below one,
+  and a beta prior with shapes <code>rho_shape1</code> and <code>rho_shape2</code> on the rate
+  \(\rho\) the break decays at. Lenza and Primiceri (2022) use
+  <code>list(shape = 1, rho_shape1 = 3.04, rho_shape2 = 1.51)</code>, a beta with mode 0.8
+  and standard deviation 0.2. Refused for a model without a break.</p></dd>
 
   <dt><code>shape</code></dt>
 <dd><p>for <code>"gamma"</code> and <code>"gamma+covar"</code> a non-negative numeric, or a
@@ -269,7 +283,12 @@ cointegration space' below, which is shared with <code><a href="cointspace_prior
 
   <dt><code>covar</code></dt>
 <dd><p>logical indicating if the variable selection algorithm
-  should also be applied to the error covariance matrix.</p></dd>
+  should also be applied to the error covariance matrix. <strong>Worth a
+  thought rather than a default.</strong> A generalised impulse response is built
+  from the off-diagonals of the error covariance, so selecting them to zero
+  collapses it towards an orthogonalised response; and the block carries
+  \(k(k-1)/2\) elements, so there is rarely the dimensionality case for
+  selecting over it that there is for the coefficients.</p></dd>
 
   <dt><code>exclude_det</code></dt>
 <dd><p>logical indicating if deterministic terms should
@@ -363,7 +382,7 @@ volatility the covariance differs from period to period, so \(G\) is fixed
 for the whole run instead: \(G^{-1}\) is <code>g_i</code> if it is given, and
 otherwise the error precision implied by the starting values of the
 log-volatilities, averaged over the sample once before the first draw. That
-fallback depends on <code><a href="add_initial_values.html">add_initial_values</a></code>, so giving <code>g_i</code>
+fallback depends on <code><a href="https://rdrr.io/pkg/bayests/man/add_initial_values.html" class="external-link">add_initial_values</a></code>, so giving <code>g_i</code>
 makes the prior independent of how the chain is started. <code>g_i = "ml"</code>
 uses Johansen's (1995) estimate of the error covariance, the same one
 <code>v_i = "ml"</code> is based on.</p>
@@ -394,14 +413,14 @@ likelihood estimate. It can be combined with a numeric <code>p_tau_i</code>.</p>
 the prior on the state before the sample is that equation's own stationary
 distribution, \(N(0, I / (1 - \rho^2))\). This is what makes the prior
 proper, so a \(\rho\) close to one is intended and one further from it draws
-a warning. <code><a href="add_priors.html">add_priors</a></code> gives the loadings the compensating scale:
+a warning. <code><a href="https://rdrr.io/pkg/bayests/man/add_priors.html" class="external-link">add_priors</a></code> gives the loadings the compensating scale:
 only the product \(\alpha \beta^{\prime}\) is identified, so their prior
 variance is shrunk by \(1 - \rho^2\), leaving the product on the scale
 <code>coef$v_i</code> asks for.</p>
 <p>When \(\rho\) is drawn, those last two are computed from <code>coint$rho</code>
 once and do not follow the draw: the state before the sample keeps the normal
 prior built here, and the loadings keep the shrinkage of
-<code><a href="add_priors.html">add_priors</a></code>. This is a deliberate departure from Koop et al.
+<code><a href="https://rdrr.io/pkg/bayests/man/add_priors.html" class="external-link">add_priors</a></code>. This is a deliberate departure from Koop et al.
 (2011), in whom the state before the sample is the stationary distribution of
 whatever \(\rho\) currently is. It is also what makes the draw an exact
 Gibbs block rather than their Metropolis-within-Gibbs step: with the state
@@ -526,6 +545,9 @@ a time varying cointegration model. <em>Journal of Econometrics, 165</em>(2), 21
 <a href="https://doi.org/10.1016/j.jeconom.2011.07.007" class="external-link">doi:10.1016/j.jeconom.2011.07.007</a></p>
 <p>Korobilis, D. (2013). VAR forecasting using Bayesian variable selection.
 <em>Journal of Applied Econometrics, 28</em>(2), 204–230. <a href="https://doi.org/10.1002/jae.1271" class="external-link">doi:10.1002/jae.1271</a></p>
+<p>Lenza, M., &amp; Primiceri, G. E. (2022). How to estimate a vector autoregression after
+March 2020. <em>Journal of Applied Econometrics, 37</em>(4), 688–699.
+<a href="https://doi.org/10.1002/jae.2895" class="external-link">doi:10.1002/jae.2895</a></p>
 <p>Lütkepohl, H. (2006). <em>New introduction to multiple time series analysis</em> (2nd ed.). Berlin: Springer.</p>
     </div>
     <div class="section level2">
@@ -537,7 +559,6 @@ a time varying cointegration model. <em>Journal of Econometrics, 165</em>(2), 21
 <code><a href="add_prior_options.html">add_prior_options()</a></code>,
 <code><a href="add_priors.bvarmodel.html">add_priors.bvarmodel()</a></code>,
 <code><a href="aggregation_weights.html">aggregation_weights()</a></code>,
-<code><a href="combine_models.html">combine_models()</a></code>,
 <code><a href="create_bvarmodel.html">create_bvarmodel()</a></code>,
 <code><a href="create_bvecmodel.html">create_bvecmodel()</a></code>,
 <code><a href="transform_variables.html">transform_variables()</a></code>,
@@ -558,7 +579,7 @@ a time varying cointegration model. <em>Journal of Econometrics, 165</em>(2), 21
 <span class="r-in"><span><span class="co"># Chosen number of iterations and burn-in should be much higher.</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Add priors</span></span></span>
-<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_priors.html">add_priors</a></span><span class="op">(</span><span class="va">model</span>,</span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_priors.html" class="external-link">add_priors</a></span><span class="op">(</span><span class="va">model</span>,</span></span>
 <span class="r-in"><span>                    coef <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>v_i <span class="op">=</span> <span class="fl">1</span>, v_i_det <span class="op">=</span> <span class="fl">1</span> <span class="op">/</span> <span class="fl">10</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                    coint <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>v_i <span class="op">=</span> <span class="fl">0</span>, p_tau_i <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                    sigma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>df <span class="op">=</span> <span class="st">"k"</span>, scale <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
@@ -572,7 +593,7 @@ a time varying cointegration model. <em>Journal of Econometrics, 165</em>(2), 21
 <span class="r-in"><span>                          seasonal <span class="op">=</span> <span class="st">"unrestricted"</span>,</span></span>
 <span class="r-in"><span>                          iterations <span class="op">=</span> <span class="fl">10</span>, burnin <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_priors.html">add_priors</a></span><span class="op">(</span><span class="va">model</span>,</span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_priors.html" class="external-link">add_priors</a></span><span class="op">(</span><span class="va">model</span>,</span></span>
 <span class="r-in"><span>                    coef <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>v_i <span class="op">=</span> <span class="fl">1</span>, v_i_det <span class="op">=</span> <span class="fl">1</span> <span class="op">/</span> <span class="fl">10</span>,</span></span>
 <span class="r-in"><span>                                shape <span class="op">=</span> <span class="fl">3</span>, rate <span class="op">=</span> <span class="fl">0.0001</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                    coint <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>rho <span class="op">=</span> <span class="fl">0.999</span><span class="op">)</span>,</span></span>

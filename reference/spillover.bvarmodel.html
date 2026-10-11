@@ -9,7 +9,7 @@ object of class 'bvarmodel'."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -86,7 +86,7 @@ object of class 'bvarmodel'.</p>
 <dd><p>the forecast horizon \(H\) of the decomposed forecast error
 variance, which is made of the impulse responses of periods 0 to \(H - 1\).
 Defaults to 10, the horizon of Diebold and Yilmaz (2012). The table therefore
-corresponds to the rows of period \(H - 1\) of <code><a href="fevd.html">fevd</a></code>, which counts
+corresponds to the rows of period \(H - 1\) of <code><a href="https://rdrr.io/pkg/bayests/man/fevd.html" class="external-link">fevd</a></code>, which counts
 its periods from the impact period.</p></dd>
 
 
@@ -170,7 +170,7 @@ Under <code>type = "oir"</code> the decomposition uses the Choleski factor of
 \(\Sigma\), adds up by construction and depends on the ordering of the
 variables, which is what the generalised version of Diebold and Yilmaz (2012)
 avoids. Under <code>type = "sign"</code> it uses the Choleski factor rotated by
-what <code><a href="add_sign_restrictions.html">add_sign_restrictions</a></code> accepted for that draw, leaving out
+what <code><a href="https://rdrr.io/pkg/bayests/man/add_sign_restrictions.html" class="external-link">add_sign_restrictions</a></code> accepted for that draw, leaving out
 the draws no rotation was found for. Under <code>type = "custom"</code> it uses the
 matrix supplied in argument
 <code>impact</code> in place of that factor and is otherwise the orthogonalised
@@ -207,7 +207,7 @@ the measures are ratios, so the index of the mean is not the mean of the
 index. It is also what gives the index a credible interval, which the
 original point estimate based version does not have.</p>
 <p>Objects of class <code>'bvecmodel'</code> have to be transformed with
-<code><a href="vec_to_var.html">vec_to_var</a></code> first, as for <code><a href="fevd.html">fevd</a></code>.</p>
+<code><a href="vec_to_var.html">vec_to_var</a></code> first, as for <code><a href="https://rdrr.io/pkg/bayests/man/fevd.html" class="external-link">fevd</a></code>.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
@@ -256,15 +256,15 @@ linear multivariate models. <em>Economics Letters, 58</em>, 17–29.
 <span class="r-in"><span><span class="co"># Chosen number of iterations and burnin should be much higher.</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Add prior specifications</span></span></span>
-<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_priors.html">add_priors</a></span><span class="op">(</span><span class="va">model</span>,</span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_priors.html" class="external-link">add_priors</a></span><span class="op">(</span><span class="va">model</span>,</span></span>
 <span class="r-in"><span>                    coef <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>v_i <span class="op">=</span> <span class="fl">1</span>, v_i_det <span class="op">=</span> <span class="fl">1</span> <span class="op">/</span> <span class="fl">10</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                    sigma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>df <span class="op">=</span> <span class="st">"k"</span>, scale <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Add initial values</span></span></span>
-<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_initial_values.html">add_initial_values</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_initial_values.html" class="external-link">add_initial_values</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Obtain posterior draws</span></span></span>
-<span class="r-in"><span><span class="va">object</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_posterior_coefficients.html">add_posterior_coefficients</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">object</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html" class="external-link">add_posterior_coefficients</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Obtain the connectedness measures</span></span></span>
 <span class="r-in"><span><span class="va">sp</span> <span class="op">&lt;-</span> <span class="fu"><a href="spillover.html">spillover</a></span><span class="op">(</span><span class="va">object</span><span class="op">)</span></span></span>
@@ -276,10 +276,10 @@ linear multivariate models. <em>Economics Letters, 58</em>, 17–29.
 <span class="r-out co"><span class="r-pr">#&gt;</span> Draws:         100 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>        invest income cons from</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> invest   82.9    6.6 10.5  5.7</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> income    8.6   66.4 25.0 11.2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> cons     11.5   28.4 60.1 13.3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> to        6.7   11.7 11.8 30.2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> invest   84.0    6.3  9.7  5.3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> income    7.6   67.5 24.9 10.8</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> cons     10.3   28.7 61.0 13.0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> to        6.0   11.7 11.5 29.2</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Rows are responses, columns are shocks. The corner is the total index.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Means only; see $total, $from, $to and $net for credible intervals.</span>

@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -138,13 +138,13 @@ sample ends in 2017Q4.</p>
 <span>                                iterations <span class="op">=</span> <span class="va">iterations</span>,</span>
 <span>                                burnin <span class="op">=</span> <span class="va">burnin</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">var_default</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/use_expanding_window.html">use_expanding_window</a></span><span class="op">(</span><span class="va">var_default</span>, start <span class="op">=</span> <span class="va">expanding_window_start</span><span class="op">)</span></span>
+<span><span class="va">var_default</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/use_expanding_window.html" class="external-link">use_expanding_window</a></span><span class="op">(</span><span class="va">var_default</span>, start <span class="op">=</span> <span class="va">expanding_window_start</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">var_default</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_priors.html">add_priors</a></span><span class="op">(</span><span class="va">var_default</span>,</span>
+<span><span class="va">var_default</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_priors.html" class="external-link">add_priors</a></span><span class="op">(</span><span class="va">var_default</span>,</span>
 <span>                          coef <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>v_i <span class="op">=</span> <span class="fl">1</span> <span class="op">/</span> <span class="fl">10</span>, v_i_det <span class="op">=</span> <span class="fl">1</span> <span class="op">/</span> <span class="fl">100</span><span class="op">)</span>,</span>
 <span>                          sigma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>df <span class="op">=</span> <span class="fl">3</span>, scale <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">var_default</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_initial_values.html">add_initial_values</a></span><span class="op">(</span><span class="va">var_default</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">var_default</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_initial_values.html" class="external-link">add_initial_values</a></span><span class="op">(</span><span class="va">var_default</span><span class="op">)</span></span></code></pre></div>
 <p>Second, create a series of VAR models with stochastic search variable
 selection (SSVS):</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
@@ -155,14 +155,14 @@ selection (SSVS):</p>
 <span>                            iterations <span class="op">=</span> <span class="va">iterations</span>,</span>
 <span>                            burnin <span class="op">=</span> <span class="va">burnin</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">var_ssvs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/use_expanding_window.html">use_expanding_window</a></span><span class="op">(</span><span class="va">var_ssvs</span>, start <span class="op">=</span> <span class="va">expanding_window_start</span><span class="op">)</span></span>
+<span><span class="va">var_ssvs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/use_expanding_window.html" class="external-link">use_expanding_window</a></span><span class="op">(</span><span class="va">var_ssvs</span>, start <span class="op">=</span> <span class="va">expanding_window_start</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">var_ssvs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_priors.html">add_priors</a></span><span class="op">(</span><span class="va">var_ssvs</span>,</span>
+<span><span class="va">var_ssvs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_priors.html" class="external-link">add_priors</a></span><span class="op">(</span><span class="va">var_ssvs</span>,</span>
 <span>                          coef <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>v_i <span class="op">=</span> <span class="fl">1</span> <span class="op">/</span> <span class="fl">10</span>, v_i_det <span class="op">=</span> <span class="fl">1</span> <span class="op">/</span> <span class="fl">100</span><span class="op">)</span>,</span>
 <span>                          sigma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>df <span class="op">=</span> <span class="fl">3</span>, scale <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span>
 <span>                          varsel <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>inprior <span class="op">=</span> <span class="fl">0.5</span>, tau <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.05</span>, <span class="fl">10</span><span class="op">)</span>, exclude_det <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">var_ssvs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_initial_values.html">add_initial_values</a></span><span class="op">(</span><span class="va">var_ssvs</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">var_ssvs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_initial_values.html" class="external-link">add_initial_values</a></span><span class="op">(</span><span class="va">var_ssvs</span><span class="op">)</span></span></code></pre></div>
 <p>Third, create a series of VAR models with Bayesian variable selection
 à la Korobilis (2013):</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
@@ -173,17 +173,17 @@ selection (SSVS):</p>
 <span>                            iterations <span class="op">=</span> <span class="va">iterations</span>,</span>
 <span>                            burnin <span class="op">=</span> <span class="va">burnin</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">var_bvs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/use_expanding_window.html">use_expanding_window</a></span><span class="op">(</span><span class="va">var_bvs</span>, start <span class="op">=</span> <span class="va">expanding_window_start</span><span class="op">)</span></span>
+<span><span class="va">var_bvs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/use_expanding_window.html" class="external-link">use_expanding_window</a></span><span class="op">(</span><span class="va">var_bvs</span>, start <span class="op">=</span> <span class="va">expanding_window_start</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">var_bvs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_priors.html">add_priors</a></span><span class="op">(</span><span class="va">var_bvs</span>,</span>
+<span><span class="va">var_bvs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_priors.html" class="external-link">add_priors</a></span><span class="op">(</span><span class="va">var_bvs</span>,</span>
 <span>                          coef <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>v_i <span class="op">=</span> <span class="fl">1</span> <span class="op">/</span> <span class="fl">10</span>, v_i_det <span class="op">=</span> <span class="fl">1</span> <span class="op">/</span> <span class="fl">100</span><span class="op">)</span>,</span>
 <span>                          sigma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>df <span class="op">=</span> <span class="fl">3</span>, scale <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span>
 <span>                          varsel <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>inprior <span class="op">=</span> <span class="fl">0.5</span>, exclude_det <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">var_bvs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_initial_values.html">add_initial_values</a></span><span class="op">(</span><span class="va">var_bvs</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">var_bvs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_initial_values.html" class="external-link">add_initial_values</a></span><span class="op">(</span><span class="va">var_bvs</span><span class="op">)</span></span></code></pre></div>
 <p>Use <code>combine_models</code> to make one object:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">models</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/combine_models.html">combine_models</a></span><span class="op">(</span><span class="va">var_default</span>,</span>
+<code class="sourceCode R"><span><span class="va">models</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/combine_models.html" class="external-link">combine_models</a></span><span class="op">(</span><span class="va">var_default</span>,</span>
 <span>                         <span class="va">var_ssvs</span>,</span>
 <span>                         <span class="va">var_bvs</span><span class="op">)</span></span></code></pre></div>
 </div>
@@ -191,7 +191,7 @@ selection (SSVS):</p>
 <h3 id="draw-posteriors">Draw posteriors<a class="anchor" aria-label="anchor" href="#draw-posteriors"></a>
 </h3>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">models</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_posterior_coefficients.html">add_posterior_coefficients</a></span><span class="op">(</span><span class="va">models</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">models</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html" class="external-link">add_posterior_coefficients</a></span><span class="op">(</span><span class="va">models</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="forecasting">Forecasting<a class="anchor" aria-label="anchor" href="#forecasting"></a>
@@ -205,12 +205,12 @@ obtain them from the model and gives a message, if it does not succeed.
 Second, function <code>add_posterior_forecasts</code> then simulates the
 forecasts.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">models</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_forecast_input.html">add_forecast_input</a></span><span class="op">(</span><span class="va">models</span>, n_ahead <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span>
-<span><span class="va">models</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_posterior_forecasts.html">add_posterior_forecasts</a></span><span class="op">(</span><span class="va">models</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">models</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_forecast_input.html" class="external-link">add_forecast_input</a></span><span class="op">(</span><span class="va">models</span>, n_ahead <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span>
+<span><span class="va">models</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_posterior_forecasts.html" class="external-link">add_posterior_forecasts</a></span><span class="op">(</span><span class="va">models</span><span class="op">)</span></span></code></pre></div>
 <p>Calculate forecast errors on which out-of-sample selection criteria
 will be based:</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">models</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_forecast_errors.html">add_forecast_errors</a></span><span class="op">(</span><span class="va">models</span>, test_sample <span class="op">=</span> <span class="va">data</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">models</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_forecast_errors.html" class="external-link">add_forecast_errors</a></span><span class="op">(</span><span class="va">models</span>, test_sample <span class="op">=</span> <span class="va">data</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="evaluation">Evaluation<a class="anchor" aria-label="anchor" href="#evaluation"></a>
@@ -219,10 +219,10 @@ will be based:</p>
 log-likelihoods, on which in-sample selection criteria will be
 based:</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">models</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_posterior_loglik.html">add_posterior_loglik</a></span><span class="op">(</span><span class="va">models</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">models</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_posterior_loglik.html" class="external-link">add_posterior_loglik</a></span><span class="op">(</span><span class="va">models</span><span class="op">)</span></span></code></pre></div>
 <p>Calculate in-sample and out-of-sample selection criteria:</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">sc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/selection_criteria.html">selection_criteria</a></span><span class="op">(</span><span class="va">models</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">sc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/selection_criteria.html" class="external-link">selection_criteria</a></span><span class="op">(</span><span class="va">models</span><span class="op">)</span></span></code></pre></div>
 <p>Compare the selection criteria. For out-of-sample criteria, the first
 model is used as a reference for comparison:</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
@@ -309,35 +309,35 @@ model is used as a reference for comparison:</p>
 <span><span class="co">#&gt; Mean absolute forecast errors (MAFE)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;  Variable h Model 1 Model 2 Model 3 Model 4 Model 5 Model 6</span></span>
-<span><span class="co">#&gt;        dy 1       1  0.9937  1.0185  1.0176  0.9812  0.9926</span></span>
-<span><span class="co">#&gt;        Dp 1       1  0.9398  0.9488  0.9424  0.9456  0.9757</span></span>
-<span><span class="co">#&gt;         r 1       1  0.9927  0.9902  0.9807  0.9793  0.9933</span></span>
-<span><span class="co">#&gt;        dy 2       1  1.0207  1.0264  1.0275  1.0018  1.0012</span></span>
-<span><span class="co">#&gt;        Dp 2       1  0.9437  0.9385  0.9285  0.9339  0.9842</span></span>
-<span><span class="co">#&gt;         r 2       1  1.0967  1.0648  1.0513  1.0238  1.0334</span></span>
-<span><span class="co">#&gt;        dy 3       1  1.0055  1.0165  1.0247  1.0175  0.9930</span></span>
-<span><span class="co">#&gt;        Dp 3       1  1.0051  1.0001  0.9838  0.9698  1.0013</span></span>
-<span><span class="co">#&gt;         r 3       1  1.1615  1.1503  1.1115  1.0678  1.0905</span></span>
-<span><span class="co">#&gt;        dy 4       1  0.9994  1.0101  1.0326  0.9989  0.9868</span></span>
-<span><span class="co">#&gt;        Dp 4       1  1.0297  1.0438  1.0320  0.9725  1.0359</span></span>
-<span><span class="co">#&gt;         r 4       1  1.2000  1.2151  1.1743  1.1063  1.0944</span></span>
+<span><span class="co">#&gt;        dy 1       1  1.0008  1.0111  1.0103  0.9888  0.9895</span></span>
+<span><span class="co">#&gt;        Dp 1       1  0.9502  0.9630  0.9525  0.9569  0.9753</span></span>
+<span><span class="co">#&gt;         r 1       1  0.9854  0.9851  0.9801  0.9748  1.0073</span></span>
+<span><span class="co">#&gt;        dy 2       1  1.0064  1.0140  1.0241  0.9787  0.9772</span></span>
+<span><span class="co">#&gt;        Dp 2       1  0.9280  0.9379  0.9413  0.9351  0.9767</span></span>
+<span><span class="co">#&gt;         r 2       1  1.1030  1.0675  1.0360  1.0113  1.0483</span></span>
+<span><span class="co">#&gt;        dy 3       1  1.0274  1.0242  1.0318  1.0153  1.0090</span></span>
+<span><span class="co">#&gt;        Dp 3       1  0.9906  0.9881  0.9842  0.9650  0.9974</span></span>
+<span><span class="co">#&gt;         r 3       1  1.1516  1.1507  1.0925  1.0434  1.0999</span></span>
+<span><span class="co">#&gt;        dy 4       1  1.0124  1.0247  1.0360  0.9886  0.9971</span></span>
+<span><span class="co">#&gt;        Dp 4       1  1.0224  1.0380  1.0371  0.9773  1.0562</span></span>
+<span><span class="co">#&gt;         r 4       1  1.1798  1.2088  1.1728  1.0954  1.1298</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Root mean squared forecast errors (RMSFE)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;  Variable h Model 1 Model 2 Model 3 Model 4 Model 5 Model 6</span></span>
-<span><span class="co">#&gt;        dy 1       1  0.9894  1.0137  1.0173  0.9826  0.9900</span></span>
-<span><span class="co">#&gt;        Dp 1       1  0.9399  0.9540  0.9475  0.9493  0.9848</span></span>
-<span><span class="co">#&gt;         r 1       1  0.9862  0.9848  0.9801  0.9761  0.9902</span></span>
-<span><span class="co">#&gt;        dy 2       1  1.0194  1.0298  1.0312  1.0053  1.0039</span></span>
-<span><span class="co">#&gt;        Dp 2       1  0.9502  0.9444  0.9346  0.9379  0.9917</span></span>
-<span><span class="co">#&gt;         r 2       1  1.0980  1.0686  1.0474  1.0192  1.0328</span></span>
-<span><span class="co">#&gt;        dy 3       1  1.0063  1.0177  1.0257  1.0141  0.9944</span></span>
-<span><span class="co">#&gt;        Dp 3       1  1.0022  1.0000  0.9874  0.9684  1.0026</span></span>
-<span><span class="co">#&gt;         r 3       1  1.1636  1.1544  1.1127  1.0641  1.0923</span></span>
-<span><span class="co">#&gt;        dy 4       1  0.9978  1.0097  1.0320  0.9990  0.9915</span></span>
-<span><span class="co">#&gt;        Dp 4       1  1.0344  1.0461  1.0311  0.9811  1.0398</span></span>
-<span><span class="co">#&gt;         r 4       1  1.1970  1.2152  1.1781  1.1056  1.1006</span></span></code></pre></div>
+<span><span class="co">#&gt;        dy 1       1  0.9984  1.0082  1.0132  0.9893  0.9887</span></span>
+<span><span class="co">#&gt;        Dp 1       1  0.9522  0.9668  0.9535  0.9572  0.9814</span></span>
+<span><span class="co">#&gt;         r 1       1  0.9882  0.9891  0.9849  0.9765  1.0070</span></span>
+<span><span class="co">#&gt;        dy 2       1  1.0031  1.0116  1.0257  0.9792  0.9801</span></span>
+<span><span class="co">#&gt;        Dp 2       1  0.9355  0.9428  0.9459  0.9379  0.9816</span></span>
+<span><span class="co">#&gt;         r 2       1  1.1054  1.0753  1.0399  1.0130  1.0502</span></span>
+<span><span class="co">#&gt;        dy 3       1  1.0247  1.0282  1.0319  1.0080  1.0112</span></span>
+<span><span class="co">#&gt;        Dp 3       1  0.9948  0.9915  0.9894  0.9727  1.0019</span></span>
+<span><span class="co">#&gt;         r 3       1  1.1575  1.1551  1.0998  1.0471  1.1010</span></span>
+<span><span class="co">#&gt;        dy 4       1  1.0047  1.0149  1.0282  0.9813  0.9944</span></span>
+<span><span class="co">#&gt;        Dp 4       1  1.0183  1.0339  1.0335  0.9742  1.0480</span></span>
+<span><span class="co">#&gt;         r 4       1  1.1827  1.2097  1.1761  1.0944  1.1291</span></span></code></pre></div>
 <div class="section level4">
 <h4 id="in-sample-plots">In-sample plots<a class="anchor" aria-label="anchor" href="#in-sample-plots"></a>
 </h4>
@@ -414,9 +414,9 @@ race:</p>
 <code>combine_models</code> adds it to the list of models, where the
 functions that estimate a model leave it unchanged:</p>
 <div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">models_and_pool</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/combine_models.html">combine_models</a></span><span class="op">(</span><span class="va">models</span>, <span class="va">pool</span><span class="op">)</span></span>
-<span><span class="va">models_and_pool</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_forecast_errors.html">add_forecast_errors</a></span><span class="op">(</span><span class="va">models_and_pool</span>, test_sample <span class="op">=</span> <span class="va">data</span><span class="op">)</span></span>
-<span><span class="va">sc_pool</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/selection_criteria.html">selection_criteria</a></span><span class="op">(</span><span class="va">models_and_pool</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">models_and_pool</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/combine_models.html" class="external-link">combine_models</a></span><span class="op">(</span><span class="va">models</span>, <span class="va">pool</span><span class="op">)</span></span>
+<span><span class="va">models_and_pool</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_forecast_errors.html" class="external-link">add_forecast_errors</a></span><span class="op">(</span><span class="va">models_and_pool</span>, test_sample <span class="op">=</span> <span class="va">data</span><span class="op">)</span></span>
+<span><span class="va">sc_pool</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/selection_criteria.html" class="external-link">selection_criteria</a></span><span class="op">(</span><span class="va">models_and_pool</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">sc_pool</span>, relative <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ------------------------------------------</span></span>
@@ -506,35 +506,35 @@ functions that estimate a model leave it unchanged:</p>
 <span><span class="co">#&gt; Mean absolute forecast errors (MAFE)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;  Variable h Model 1 Model 2 Model 3 Model 4 Model 5 Model 6 Model 7</span></span>
-<span><span class="co">#&gt;        dy 1       1  0.9937  1.0185  1.0176  0.9812  0.9926  1.0006</span></span>
-<span><span class="co">#&gt;        Dp 1       1  0.9398  0.9488  0.9424  0.9456  0.9757  0.9587</span></span>
-<span><span class="co">#&gt;         r 1       1  0.9927  0.9902  0.9807  0.9793  0.9933  0.9894</span></span>
-<span><span class="co">#&gt;        dy 2       1  1.0207  1.0264  1.0275  1.0018  1.0012  1.0129</span></span>
-<span><span class="co">#&gt;        Dp 2       1  0.9437  0.9385  0.9285  0.9339  0.9842  0.9548</span></span>
-<span><span class="co">#&gt;         r 2       1  1.0967  1.0648  1.0513  1.0238  1.0334  1.0450</span></span>
-<span><span class="co">#&gt;        dy 3       1  1.0055  1.0165  1.0247  1.0175  0.9930  1.0095</span></span>
-<span><span class="co">#&gt;        Dp 3       1  1.0051  1.0001  0.9838  0.9698  1.0013  0.9934</span></span>
-<span><span class="co">#&gt;         r 3       1  1.1615  1.1503  1.1115  1.0678  1.0905  1.0969</span></span>
-<span><span class="co">#&gt;        dy 4       1  0.9994  1.0101  1.0326  0.9989  0.9868  1.0047</span></span>
-<span><span class="co">#&gt;        Dp 4       1  1.0297  1.0438  1.0320  0.9725  1.0359  1.0190</span></span>
-<span><span class="co">#&gt;         r 4       1  1.2000  1.2151  1.1743  1.1063  1.0944  1.1317</span></span>
+<span><span class="co">#&gt;        dy 1       1  1.0008  1.0111  1.0103  0.9888  0.9895  1.0001</span></span>
+<span><span class="co">#&gt;        Dp 1       1  0.9502  0.9630  0.9525  0.9569  0.9753  0.9663</span></span>
+<span><span class="co">#&gt;         r 1       1  0.9854  0.9851  0.9801  0.9748  1.0073  0.9888</span></span>
+<span><span class="co">#&gt;        dy 2       1  1.0064  1.0140  1.0241  0.9787  0.9772  1.0001</span></span>
+<span><span class="co">#&gt;        Dp 2       1  0.9280  0.9379  0.9413  0.9351  0.9767  0.9532</span></span>
+<span><span class="co">#&gt;         r 2       1  1.1030  1.0675  1.0360  1.0113  1.0483  1.0444</span></span>
+<span><span class="co">#&gt;        dy 3       1  1.0274  1.0242  1.0318  1.0153  1.0090  1.0180</span></span>
+<span><span class="co">#&gt;        Dp 3       1  0.9906  0.9881  0.9842  0.9650  0.9974  0.9875</span></span>
+<span><span class="co">#&gt;         r 3       1  1.1516  1.1507  1.0925  1.0434  1.0999  1.0897</span></span>
+<span><span class="co">#&gt;        dy 4       1  1.0124  1.0247  1.0360  0.9886  0.9971  1.0098</span></span>
+<span><span class="co">#&gt;        Dp 4       1  1.0224  1.0380  1.0371  0.9773  1.0562  1.0218</span></span>
+<span><span class="co">#&gt;         r 4       1  1.1798  1.2088  1.1728  1.0954  1.1298  1.1311</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Root mean squared forecast errors (RMSFE)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;  Variable h Model 1 Model 2 Model 3 Model 4 Model 5 Model 6 Model 7</span></span>
-<span><span class="co">#&gt;        dy 1       1  0.9894  1.0137  1.0173  0.9826  0.9900  0.9989</span></span>
-<span><span class="co">#&gt;        Dp 1       1  0.9399  0.9540  0.9475  0.9493  0.9848  0.9628</span></span>
-<span><span class="co">#&gt;         r 1       1  0.9862  0.9848  0.9801  0.9761  0.9902  0.9863</span></span>
-<span><span class="co">#&gt;        dy 2       1  1.0194  1.0298  1.0312  1.0053  1.0039  1.0150</span></span>
-<span><span class="co">#&gt;        Dp 2       1  0.9502  0.9444  0.9346  0.9379  0.9917  0.9602</span></span>
-<span><span class="co">#&gt;         r 2       1  1.0980  1.0686  1.0474  1.0192  1.0328  1.0448</span></span>
-<span><span class="co">#&gt;        dy 3       1  1.0063  1.0177  1.0257  1.0141  0.9944  1.0098</span></span>
-<span><span class="co">#&gt;        Dp 3       1  1.0022  1.0000  0.9874  0.9684  1.0026  0.9935</span></span>
-<span><span class="co">#&gt;         r 3       1  1.1636  1.1544  1.1127  1.0641  1.0923  1.0992</span></span>
-<span><span class="co">#&gt;        dy 4       1  0.9978  1.0097  1.0320  0.9990  0.9915  1.0051</span></span>
-<span><span class="co">#&gt;        Dp 4       1  1.0344  1.0461  1.0311  0.9811  1.0398  1.0223</span></span>
-<span><span class="co">#&gt;         r 4       1  1.1970  1.2152  1.1781  1.1056  1.1006  1.1351</span></span></code></pre></div>
+<span><span class="co">#&gt;        dy 1       1  0.9984  1.0082  1.0132  0.9893  0.9887  0.9997</span></span>
+<span><span class="co">#&gt;        Dp 1       1  0.9522  0.9668  0.9535  0.9572  0.9814  0.9687</span></span>
+<span><span class="co">#&gt;         r 1       1  0.9882  0.9891  0.9849  0.9765  1.0070  0.9910</span></span>
+<span><span class="co">#&gt;        dy 2       1  1.0031  1.0116  1.0257  0.9792  0.9801  1.0001</span></span>
+<span><span class="co">#&gt;        Dp 2       1  0.9355  0.9428  0.9459  0.9379  0.9816  0.9576</span></span>
+<span><span class="co">#&gt;         r 2       1  1.1054  1.0753  1.0399  1.0130  1.0502  1.0479</span></span>
+<span><span class="co">#&gt;        dy 3       1  1.0247  1.0282  1.0319  1.0080  1.0112  1.0174</span></span>
+<span><span class="co">#&gt;        Dp 3       1  0.9948  0.9915  0.9894  0.9727  1.0019  0.9918</span></span>
+<span><span class="co">#&gt;         r 3       1  1.1575  1.1551  1.0998  1.0471  1.1010  1.0949</span></span>
+<span><span class="co">#&gt;        dy 4       1  1.0047  1.0149  1.0282  0.9813  0.9944  1.0040</span></span>
+<span><span class="co">#&gt;        Dp 4       1  1.0183  1.0339  1.0335  0.9742  1.0480  1.0183</span></span>
+<span><span class="co">#&gt;         r 4       1  1.1827  1.2097  1.1761  1.0944  1.1291  1.1341</span></span></code></pre></div>
 <p>The pool is the last model of the list. It was not estimated, so it
 has no in-sample criteria. Over these nine forecasts it lands in the
 middle of the field in most columns: it seldom beats the best model of a
@@ -629,11 +629,11 @@ comparison twice.</p>
 models. The functions, which add priors, initial values or posterior
 draws, are without effect for them:</p>
 <div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">all_models</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/combine_models.html">combine_models</a></span><span class="op">(</span><span class="va">models</span>, <span class="va">external</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">all_models</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/combine_models.html" class="external-link">combine_models</a></span><span class="op">(</span><span class="va">models</span>, <span class="va">external</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">all_models</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_forecast_errors.html">add_forecast_errors</a></span><span class="op">(</span><span class="va">all_models</span>, test_sample <span class="op">=</span> <span class="va">data</span><span class="op">)</span></span>
+<span><span class="va">all_models</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_forecast_errors.html" class="external-link">add_forecast_errors</a></span><span class="op">(</span><span class="va">all_models</span>, test_sample <span class="op">=</span> <span class="va">data</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">sc_all</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/selection_criteria.html">selection_criteria</a></span><span class="op">(</span><span class="va">all_models</span><span class="op">)</span></span>
+<span><span class="va">sc_all</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/selection_criteria.html" class="external-link">selection_criteria</a></span><span class="op">(</span><span class="va">all_models</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">sc_all</span>, relative <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -730,35 +730,35 @@ draws, are without effect for them:</p>
 <span><span class="co">#&gt; Mean absolute forecast errors (MAFE)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;  Variable h Model 1 Model 2 Model 3 Model 4 Model 5 Model 6 Model 7 Model 8</span></span>
-<span><span class="co">#&gt;        dy 1       1  0.9937  1.0185  1.0176  0.9812  0.9926  0.5870  0.6042</span></span>
-<span><span class="co">#&gt;        Dp 1       1  0.9398  0.9488  0.9424  0.9456  0.9757  0.5202  0.6144</span></span>
-<span><span class="co">#&gt;         r 1       1  0.9927  0.9902  0.9807  0.9793  0.9933  0.4397 10.1737</span></span>
-<span><span class="co">#&gt;        dy 2       1  1.0207  1.0264  1.0275  1.0018  1.0012  0.7027  0.5601</span></span>
-<span><span class="co">#&gt;        Dp 2       1  0.9437  0.9385  0.9285  0.9339  0.9842  0.5839  0.5857</span></span>
-<span><span class="co">#&gt;         r 2       1  1.0967  1.0648  1.0513  1.0238  1.0334  0.5862  6.7976</span></span>
-<span><span class="co">#&gt;        dy 3       1  1.0055  1.0165  1.0247  1.0175  0.9930  1.0504  0.5657</span></span>
-<span><span class="co">#&gt;        Dp 3       1  1.0051  1.0001  0.9838  0.9698  1.0013  0.8012  0.5798</span></span>
-<span><span class="co">#&gt;         r 3       1  1.1615  1.1503  1.1115  1.0678  1.0905  0.4087  5.4600</span></span>
-<span><span class="co">#&gt;        dy 4       1  0.9994  1.0101  1.0326  0.9989  0.9868  0.6789  0.5155</span></span>
-<span><span class="co">#&gt;        Dp 4       1  1.0297  1.0438  1.0320  0.9725  1.0359  0.9226  0.6909</span></span>
-<span><span class="co">#&gt;         r 4       1  1.2000  1.2151  1.1743  1.1063  1.0944  0.3536  4.6988</span></span>
+<span><span class="co">#&gt;        dy 1       1  1.0008  1.0111  1.0103  0.9888  0.9895  0.5859  0.6031</span></span>
+<span><span class="co">#&gt;        Dp 1       1  0.9502  0.9630  0.9525  0.9569  0.9753  0.5233  0.6180</span></span>
+<span><span class="co">#&gt;         r 1       1  0.9854  0.9851  0.9801  0.9748  1.0073  0.4392 10.1606</span></span>
+<span><span class="co">#&gt;        dy 2       1  1.0064  1.0140  1.0241  0.9787  0.9772  0.6954  0.5543</span></span>
+<span><span class="co">#&gt;        Dp 2       1  0.9280  0.9379  0.9413  0.9351  0.9767  0.5838  0.5855</span></span>
+<span><span class="co">#&gt;         r 2       1  1.1030  1.0675  1.0360  1.0113  1.0483  0.5840  6.7725</span></span>
+<span><span class="co">#&gt;        dy 3       1  1.0274  1.0242  1.0318  1.0153  1.0090  1.0583  0.5700</span></span>
+<span><span class="co">#&gt;        Dp 3       1  0.9906  0.9881  0.9842  0.9650  0.9974  0.7975  0.5771</span></span>
+<span><span class="co">#&gt;         r 3       1  1.1516  1.1507  1.0925  1.0434  1.0999  0.4066  5.4326</span></span>
+<span><span class="co">#&gt;        dy 4       1  1.0124  1.0247  1.0360  0.9886  0.9971  0.6788  0.5154</span></span>
+<span><span class="co">#&gt;        Dp 4       1  1.0224  1.0380  1.0371  0.9773  1.0562  0.9253  0.6929</span></span>
+<span><span class="co">#&gt;         r 4       1  1.1798  1.2088  1.1728  1.0954  1.1298  0.3534  4.6960</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Root mean squared forecast errors (RMSFE)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;  Variable h Model 1 Model 2 Model 3 Model 4 Model 5 Model 6 Model 7 Model 8</span></span>
-<span><span class="co">#&gt;        dy 1       1  0.9894  1.0137  1.0173  0.9826  0.9900  0.6228  0.6091</span></span>
-<span><span class="co">#&gt;        Dp 1       1  0.9399  0.9540  0.9475  0.9493  0.9848  0.4585  0.6407</span></span>
-<span><span class="co">#&gt;         r 1       1  0.9862  0.9848  0.9801  0.9761  0.9902  0.4371  8.0756</span></span>
-<span><span class="co">#&gt;        dy 2       1  1.0194  1.0298  1.0312  1.0053  1.0039  0.7018  0.5876</span></span>
-<span><span class="co">#&gt;        Dp 2       1  0.9502  0.9444  0.9346  0.9379  0.9917  0.5588  0.6256</span></span>
-<span><span class="co">#&gt;         r 2       1  1.0980  1.0686  1.0474  1.0192  1.0328  0.5364  5.4044</span></span>
-<span><span class="co">#&gt;        dy 3       1  1.0063  1.0177  1.0257  1.0141  0.9944  0.8490  0.6047</span></span>
-<span><span class="co">#&gt;        Dp 3       1  1.0022  1.0000  0.9874  0.9684  1.0026  0.8073  0.6288</span></span>
-<span><span class="co">#&gt;         r 3       1  1.1636  1.1544  1.1127  1.0641  1.0923  0.3733  4.3417</span></span>
-<span><span class="co">#&gt;        dy 4       1  0.9978  1.0097  1.0320  0.9990  0.9915  0.6128  0.5943</span></span>
-<span><span class="co">#&gt;        Dp 4       1  1.0344  1.0461  1.0311  0.9811  1.0398  0.8559  0.6988</span></span>
-<span><span class="co">#&gt;         r 4       1  1.1970  1.2152  1.1781  1.1056  1.1006  0.3197  3.7383</span></span></code></pre></div>
+<span><span class="co">#&gt;        dy 1       1  0.9984  1.0082  1.0132  0.9893  0.9887  0.6229  0.6092</span></span>
+<span><span class="co">#&gt;        Dp 1       1  0.9522  0.9668  0.9535  0.9572  0.9814  0.4611  0.6444</span></span>
+<span><span class="co">#&gt;         r 1       1  0.9882  0.9891  0.9849  0.9765  1.0070  0.4386  8.1034</span></span>
+<span><span class="co">#&gt;        dy 2       1  1.0031  1.0116  1.0257  0.9792  0.9801  0.6935  0.5806</span></span>
+<span><span class="co">#&gt;        Dp 2       1  0.9355  0.9428  0.9459  0.9379  0.9816  0.5586  0.6254</span></span>
+<span><span class="co">#&gt;         r 2       1  1.1054  1.0753  1.0399  1.0130  1.0502  0.5362  5.4025</span></span>
+<span><span class="co">#&gt;        dy 3       1  1.0247  1.0282  1.0319  1.0080  1.0112  0.8546  0.6087</span></span>
+<span><span class="co">#&gt;        Dp 3       1  0.9948  0.9915  0.9894  0.9727  1.0019  0.8051  0.6270</span></span>
+<span><span class="co">#&gt;         r 3       1  1.1575  1.1551  1.0998  1.0471  1.1010  0.3725  4.3324</span></span>
+<span><span class="co">#&gt;        dy 4       1  1.0047  1.0149  1.0282  0.9813  0.9944  0.6098  0.5914</span></span>
+<span><span class="co">#&gt;        Dp 4       1  1.0183  1.0339  1.0335  0.9742  1.0480  0.8519  0.6955</span></span>
+<span><span class="co">#&gt;         r 4       1  1.1827  1.2097  1.1761  1.0944  1.1291  0.3195  3.7352</span></span></code></pre></div>
 <p>The two forecasters are the last two models of the list. Since
 external forecasts are point forecasts, each publication contributes a
 single value to the out-of-sample statistics instead of a full

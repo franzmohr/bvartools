@@ -9,7 +9,7 @@ function create_bvarmodel."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -62,7 +62,7 @@ function <code><a href="create_bvarmodel.html">create_bvarmodel</a></code>.</p>
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="co"># S3 method for class 'bvarmodel'</span></span>
-<span><span class="fu"><a href="add_priors.html">add_priors</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">coef</span>, <span class="va">sigma</span>, varsel <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_priors.html" class="external-link">add_priors</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">coef</span>, <span class="va">sigma</span>, varsel <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -121,6 +121,14 @@ selection algorithm. Required if the model was created with
   <dt><code>u_scale</code></dt>
 <dd><p>for <code>error = "ald"</code>, the prior of the scales of the
   asymmetric Laplace distribution with <code>type</code>, <code>shape</code> and <code>rate</code>.</p></dd>
+
+  <dt><code>student_t</code></dt>
+<dd><p>for Student t errors, <code>df</code>, or <code>shape</code> and
+  <code>rate</code>, as given in <code>sigma$student_t</code>.</p></dd>
+
+  <dt><code>volatility</code></dt>
+<dd><p>for a volatility break, <code>shape</code>, <code>rho_shape1</code>
+  and <code>rho_shape2</code>, as given in <code>sigma$volatility</code>.</p></dd>
 
 
 </dl></div>
@@ -200,7 +208,9 @@ an element that is not listed below.</p>
 
 
 </dl><p>Argument <code>sigma</code> must contain the elements that belong to the
-<code>error</code> of the model:</p><ul><li><p><code>"wishart"</code>: <code>df</code> and <code>scale</code>. Not available for structural models.</p></li>
+<code>error</code> of the model:</p><ul><li><p><code>"wishart"</code>: <code>df</code> and <code>scale</code>. Not available for structural models.
+  A model created with <code>student_t = TRUE</code> also needs <code>student_t</code>, and one
+  created with <code>volatility_break</code> needs <code>volatility</code>.</p></li>
 <li><p><code>"gamma"</code> and <code>"gamma+covar"</code>: <code>shape</code> and <code>rate</code>.</p></li>
 <li><p><code>"sv"</code> and <code>"sv+covar"</code>: <code>mu</code>, <code>v_i</code>, <code>shape</code>, <code>rate</code>,
   <code>state_variance</code> and <code>offset</code>; with <code>tvp = TRUE</code>, <code>omega_v</code> may take the
@@ -214,6 +224,22 @@ an element that is not listed below.</p>
   <dt><code>scale</code></dt>
 <dd><p>a positive numeric specifying the prior error variance of the endogenous
   variables in the inverse Wishart prior.</p></dd>
+
+  <dt><code>student_t</code></dt>
+<dd><p>for a model with Student t errors, the prior of their degrees of
+  freedom \(\nu\): <code>list(df = 5)</code> holds them fixed at five, and
+  <code>list(shape = 2, rate = 0.1)</code> draws them under a gamma prior with that shape and
+  rate – the prior of Juarez and Steel (2010), whose mean of 20 leaves room for tails
+  anywhere from heavy to nearly normal. Refused for a model with normal errors.</p></dd>
+
+  <dt><code>volatility</code></dt>
+<dd><p>for a model with a volatility break, the prior of its
+  scales and decay, <code>list(shape = , rho_shape1 = , rho_shape2 = )</code>: a Pareto
+  prior with shape <code>shape</code> on every free scale, which puts no mass below one,
+  and a beta prior with shapes <code>rho_shape1</code> and <code>rho_shape2</code> on the rate
+  \(\rho\) the break decays at. Lenza and Primiceri (2022) use
+  <code>list(shape = 1, rho_shape1 = 3.04, rho_shape2 = 1.51)</code>, a beta with mode 0.8
+  and standard deviation 0.2. Refused for a model without a break.</p></dd>
 
   <dt><code>shape</code></dt>
 <dd><p>for <code>"gamma"</code> and <code>"gamma+covar"</code> a non-negative numeric, or a
@@ -272,7 +298,12 @@ For structural models only a gamma prior or stochastic volatility specification 
 
   <dt><code>covar</code></dt>
 <dd><p>logical indicating if the variable selection algorithm
-  should also be applied to the error covariance matrix.</p></dd>
+  should also be applied to the error covariance matrix. <strong>Worth a
+  thought rather than a default.</strong> A generalised impulse response is built
+  from the off-diagonals of the error covariance, so selecting them to zero
+  collapses it towards an orthogonalised response; and the block carries
+  \(k(k-1)/2\) elements, so there is rarely the dimensionality case for
+  selecting over it that there is for the coefficients.</p></dd>
 
   <dt><code>exclude_det</code></dt>
 <dd><p>logical indicating if deterministic terms should
@@ -313,8 +344,14 @@ Gaussian and partial non-Gaussian state space models. <em>Journal of Econometric
 <p>George, E. I., Sun, D., &amp; Ni, S. (2008). Bayesian stochastic search for VAR model
 restrictions. <em>Journal of Econometrics, 142</em>(1), 553–580.
 <a href="https://doi.org/10.1016/j.jeconom.2007.08.017" class="external-link">doi:10.1016/j.jeconom.2007.08.017</a></p>
+<p>Juarez, M. A., &amp; Steel, M. F. J. (2010). Model-based clustering of non-Gaussian
+panel data based on skew-t distributions. <em>Journal of Business &amp; Economic
+Statistics, 28</em>(1), 52–66. <a href="https://doi.org/10.1198/jbes.2009.07145" class="external-link">doi:10.1198/jbes.2009.07145</a></p>
 <p>Korobilis, D. (2013). VAR forecasting using Bayesian variable selection.
 <em>Journal of Applied Econometrics, 28</em>(2), 204–230. <a href="https://doi.org/10.1002/jae.1271" class="external-link">doi:10.1002/jae.1271</a></p>
+<p>Lenza, M., &amp; Primiceri, G. E. (2022). How to estimate a vector autoregression after
+March 2020. <em>Journal of Applied Econometrics, 37</em>(4), 688–699.
+<a href="https://doi.org/10.1002/jae.2895" class="external-link">doi:10.1002/jae.2895</a></p>
 <p>Lütkepohl, H. (2006). <em>New introduction to multiple time series analysis</em> (2nd ed.). Berlin: Springer.</p>
     </div>
     <div class="section level2">
@@ -326,7 +363,6 @@ restrictions. <em>Journal of Econometrics, 142</em>(1), 553–580.
 <code><a href="add_prior_options.html">add_prior_options()</a></code>,
 <code><a href="add_priors.bvecmodel.html">add_priors.bvecmodel()</a></code>,
 <code><a href="aggregation_weights.html">aggregation_weights()</a></code>,
-<code><a href="combine_models.html">combine_models()</a></code>,
 <code><a href="create_bvarmodel.html">create_bvarmodel()</a></code>,
 <code><a href="create_bvecmodel.html">create_bvecmodel()</a></code>,
 <code><a href="transform_variables.html">transform_variables()</a></code>,
@@ -347,7 +383,7 @@ restrictions. <em>Journal of Econometrics, 142</em>(1), 553–580.
 <span class="r-in"><span><span class="co"># Number of iterations and burn-in should be much higher.</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Add prior specifications</span></span></span>
-<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="add_priors.html">add_priors</a></span><span class="op">(</span><span class="va">model</span>,</span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_priors.html" class="external-link">add_priors</a></span><span class="op">(</span><span class="va">model</span>,</span></span>
 <span class="r-in"><span>                    coef <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>v_i <span class="op">=</span> <span class="fl">1</span>, v_i_det <span class="op">=</span> <span class="fl">1</span> <span class="op">/</span> <span class="fl">10</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                    sigma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>df <span class="op">=</span> <span class="st">"k"</span>, scale <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>

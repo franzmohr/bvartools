@@ -24,7 +24,7 @@
 
     <a class="navbar-brand me-2" href="index.html">bvartools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -73,7 +73,7 @@
 <div class="page-header"><h1 id="bvartools">bvartools<a class="anchor" aria-label="anchor" href="#bvartools"></a>
 </h1></div>
 <p><a href="https://cran.r-project.org/package=bvartools" class="external-link"><img src="https://www.r-pkg.org/badges/version/bvartools" alt="CRAN status"></a> <a href="https://cran.r-project.org/package=bvartools" class="external-link"><img src="https://cranlogs.r-pkg.org/badges/bvartools" alt="CRAN downloads"></a> <a href="https://cran.r-project.org/package=bvartools" class="external-link"><img src="https://cranlogs.r-pkg.org/badges/grand-total/bvartools" alt="Total downloads"></a> <a href="https://github.com/franzmohr/bvartools/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/franzmohr/bvartools/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check"></a> <a href="https://app.codecov.io/gh/franzmohr/bvartools" class="external-link"><img src="https://codecov.io/gh/franzmohr/bvartools/graph/badge.svg" alt="Codecov test coverage"></a> <a href="https://www.gnu.org/licenses/gpl-2.0" class="external-link"><img src="https://img.shields.io/badge/license-GPL%20%28%3E%3D%202%29-blue.svg" alt="License: GPL (&gt;= 2)"></a> <a href="https://doi.org/10.5281/zenodo.22736604" class="external-link"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.22736604.svg" alt="DOI"></a></p>
-<p><a href="https://github.com/sponsors/franzmohr" class="external-link"><img src="https://img.shields.io/badge/Sponsor-%E2%9D%A4-ea4aaa?logo=github-sponsors&amp;logoColor=white" alt="GitHub Sponsors"></a> <a href="https://buymeacoffee.com/franzmohr" class="external-link"><img src="https://img.shields.io/badge/Buy%20Me%20a%20Coffee-FFDD00?logo=buymeacoffee&amp;logoColor=black" alt="Buy Me a Coffee"></a></p>
+<p><a href="https://github.com/sponsors/franzmohr" class="external-link"><img src="https://img.shields.io/badge/Sponsor-%E2%9D%A4-ea4aaa?logo=github-sponsors&amp;logoColor=white" alt="GitHub Sponsors"></a> <a href="https://buymeacoffee.com/franzmohr" class="external-link"><img src="https://img.shields.io/badge/Buy%20me%20coffee%20%26%20AI%20tokens-FFDD00?logo=buymeacoffee&amp;logoColor=black" alt="Buy me coffee &amp; AI tokens"></a></p>
 <div class="section level2">
 <h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
 </h2>
@@ -149,7 +149,7 @@
 <ol start="1998" style="list-style-type: decimal"><li>
 </li></ol>
 </li>
-<li>Time varying parameter models (TVP-VEC) à la Koop, León-González and Strachan (2011)<a class="footnote-ref" tabindex="0" data-bs-toggle="popover" data-bs-content='&lt;p&gt;The autocorrelation coefficient of the time varying cointegration space is drawn along with the other parameters once &lt;code&gt;add_priors&lt;/code&gt; is given the bounds &lt;code&gt;coint$rho_min&lt;/code&gt; and &lt;code&gt;coint$rho_max&lt;/code&gt; of a uniform prior on it. Name neither and it is held fixed at &lt;code&gt;coint$rho&lt;/code&gt;, which is what versions up to 0.2.1 always did. The draw is an exact Gibbs block rather than the Metropolis-within-Gibbs step of Koop et al. (2011); &lt;code&gt;&lt;a href="reference/add_priors.html"&gt;?add_priors&lt;/a&gt;&lt;/code&gt; explains where the two models differ.&lt;/p&gt;'><sup>2</sup></a>
+<li>Time varying parameter models (TVP-VEC) à la Koop, León-González and Strachan (2011)<a class="footnote-ref" tabindex="0" data-bs-toggle="popover" data-bs-content='&lt;p&gt;The autocorrelation coefficient of the time varying cointegration space is drawn along with the other parameters once &lt;code&gt;add_priors&lt;/code&gt; is given the bounds &lt;code&gt;coint$rho_min&lt;/code&gt; and &lt;code&gt;coint$rho_max&lt;/code&gt; of a uniform prior on it. Name neither and it is held fixed at &lt;code&gt;coint$rho&lt;/code&gt;, which is what versions up to 0.2.1 always did. The draw is an exact Gibbs block rather than the Metropolis-within-Gibbs step of Koop et al. (2011); &lt;code&gt;&lt;a href="reference/add_priors.bvecmodel.html"&gt;?add_priors.bvecmodel&lt;/a&gt;&lt;/code&gt; explains where the two models differ.&lt;/p&gt;'><sup>2</sup></a>
 </li>
 </ul>
 <p><em>Dynamic factor models</em> are no longer part of this package. They moved to <a href="https://github.com/franzmohr/dfmtools" class="external-link">dfmtools</a>, which implements the algorithm used in the textbook of Chan, Koop, Poirier and Tobias (2019).</p>
@@ -200,14 +200,16 @@
 <div class="section level3">
 <h3 id="development-version">Development version<a class="anchor" aria-label="anchor" href="#development-version"></a>
 </h3>
+<p>The development version needs the development version of <a href="https://github.com/franzmohr/bayests-r" class="external-link">bayests</a>, the layer of generics and model files it shares with dfmtools and ucmtools, which is not on CRAN yet:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># install.packages("devtools")</span></span>
+<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"franzmohr/bayests-r"</span><span class="op">)</span></span>
 <span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"franzmohr/bvartools"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="speed-and-rs-blas-library">Speed and R’s BLAS library<a class="anchor" aria-label="anchor" href="#speed-and-rs-blas-library"></a>
 </h3>
-<p>The samplers spend most of their time in linear algebra, which R hands to its BLAS library. The reference BLAS that comes with R on Windows and with many Linux builds is slow, and switching R to an optimised BLAS such as OpenBLAS speeds up estimation far more than any compiler setting. For a time varying parameter VAR with three variables and two lags, OpenBLAS halved the time of <code><a href="reference/add_posterior_coefficients.html">add_posterior_coefficients()</a></code> and brought it level with the standalone BayesTS executable, while compiling with <code>-O3</code> instead of R’s default <code>-O2</code> made no difference. The BLAS belongs to the R installation rather than to the package, so it has to be changed there:</p>
+<p>The samplers spend most of their time in linear algebra, which R hands to its BLAS library. The reference BLAS that comes with R on Windows and with many Linux builds is slow, and switching R to an optimised BLAS such as OpenBLAS speeds up estimation far more than any compiler setting. For a time varying parameter VAR with three variables and two lags, OpenBLAS halved the time of <code><a href="https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html" class="external-link">add_posterior_coefficients()</a></code> and brought it level with the standalone BayesTS executable, while compiling with <code>-O3</code> instead of R’s default <code>-O2</code> made no difference. The BLAS belongs to the R installation rather than to the package, so it has to be changed there:</p>
 <ul>
 <li>
 <strong>Windows:</strong> Replace <code>Rblas.dll</code> in the <code>bin/x64</code> folder of the R installation with the OpenBLAS DLL renamed to <code>Rblas.dll</code>, and copy the DLLs it depends on (for a MinGW build <code>libgfortran-5.dll</code>, <code>libgomp-1.dll</code>, <code>libquadmath-0.dll</code>, <code>libgcc_s_seh-1.dll</code> and <code>libwinpthread-1.dll</code>) into the same folder. Keep a copy of the original file. Replace only <code>Rblas.dll</code>, not <code>Rlapack.dll</code>, which R cannot load from OpenBLAS.</li>
@@ -225,9 +227,9 @@
 <span><span class="co"># ... parLapply(cl, ...) running the models ...</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/parallel/makeCluster.html" class="external-link">stopCluster</a></span><span class="op">(</span><span class="va">cl</span><span class="op">)</span></span></code></pre></div>
 <p>The script’s own session keeps all cores. To restrict it as well, set the variable before R starts, e.g. <code>OPENBLAS_NUM_THREADS=1 Rscript script.R</code>.</p>
-<p>For lists of models none of this is needed: <code><a href="reference/add_posterior_coefficients.html">add_posterior_coefficients()</a></code>, <code><a href="reference/add_posterior_forecasts.html">add_posterior_forecasts()</a></code> and <code><a href="reference/add_posterior_loglik.html">add_posterior_loglik()</a></code> take an argument <code>cores</code> for objects of class ‘modellist’ and ‘expandingwindow’, start that many workers with one BLAS thread each and stop them again. For 16 TVP models, two lag orders over eight expanding windows, eight workers cut the time of <code><a href="reference/add_posterior_coefficients.html">add_posterior_coefficients()</a></code> from 21 to 5 seconds.</p>
+<p>For lists of models none of this is needed: <code><a href="https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html" class="external-link">add_posterior_coefficients()</a></code>, <code><a href="https://rdrr.io/pkg/bayests/man/add_posterior_forecasts.html" class="external-link">add_posterior_forecasts()</a></code> and <code><a href="https://rdrr.io/pkg/bayests/man/add_posterior_loglik.html" class="external-link">add_posterior_loglik()</a></code> take an argument <code>cores</code> for objects of class ‘modellist’ and ‘expandingwindow’, start that many workers with one BLAS thread each and stop them again. For 16 TVP models, two lag orders over eight expanding windows, eight workers cut the time of <code><a href="https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html" class="external-link">add_posterior_coefficients()</a></code> from 21 to 5 seconds.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">models</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/add_posterior_coefficients.html">add_posterior_coefficients</a></span><span class="op">(</span><span class="va">models</span>, cores <span class="op">=</span> <span class="fl">8</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">models</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html" class="external-link">add_posterior_coefficients</a></span><span class="op">(</span><span class="va">models</span>, cores <span class="op">=</span> <span class="fl">8</span><span class="op">)</span></span></code></pre></div>
 <p>Seeded coefficient draws are the same on any number of workers. OpenBLAS rounds some results differently on one thread than on several, though, and a Markov chain carries that forward, so they equal those of a session that runs its BLAS on one thread rather than those of a session on several.</p>
 </div>
 </div>
@@ -269,7 +271,7 @@
 <p>Function <code>add_priors</code> produces priors for the specified model(s) in object <code>model</code> and augments the object accordingly.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Add uninformative prior</span></span>
-<span><span class="va">model_with_prior</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/add_priors.html">add_priors</a></span><span class="op">(</span><span class="va">model</span>,</span>
+<span><span class="va">model_with_prior</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_priors.html" class="external-link">add_priors</a></span><span class="op">(</span><span class="va">model</span>,</span>
 <span>                               coef <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>v_i <span class="op">=</span> <span class="fl">0</span>, v_i_det <span class="op">=</span> <span class="fl">0</span><span class="op">)</span>,</span>
 <span>                               sigma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>df <span class="op">=</span> <span class="fl">1</span>, scale <span class="op">=</span> <span class="fl">.0001</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>If researchers want to fine-tune individual prior specifications, this can be done by directly accessing the respective elements in object <code>model_with_prior</code>.</p>
@@ -279,7 +281,7 @@
 </h3>
 <p>Function <code>add_initial_values</code> adds initial values of posterior coefficients to <code>model_with_prior</code>. The default behaviour of the function is to obtain an LS estimate of the coefficients.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/add_initial_values.html">add_initial_values</a></span><span class="op">(</span><span class="va">model_with_prior</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_initial_values.html" class="external-link">add_initial_values</a></span><span class="op">(</span><span class="va">model_with_prior</span><span class="op">)</span></span></code></pre></div>
 <p>To be sure, check the initial values, the function produced:</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># </span></span>
@@ -297,7 +299,7 @@
 </h4>
 <p>The output of <code>add_priors</code> and <code>add_initial_values</code> can be used as the input for user-written algorithms for posterior simulation. However, <code>bvartools</code> also comes with built-in posterior simulation functions from the <a href="https://github.com/franzmohr/BayesTS" class="external-link">BayesTS</a> library. By using function <code>add_posterior_coefficients</code>, the model input is forwarded to a posterior function and the output is added to the original object:</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/add_posterior_coefficients.html">add_posterior_coefficients</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html" class="external-link">add_posterior_coefficients</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level4">
 <h4 id="using-custom-posterior-functions">Using custom posterior functions<a class="anchor" aria-label="anchor" href="#using-custom-posterior-functions"></a>
@@ -465,8 +467,8 @@
 </h3>
 <p>Forecasts are obtained in two steps. Function <code>add_forecast_input</code> generates the data of the forecast periods, where deterministic terms can be provided in the argument <code>deterministic</code> and unmodelled variables in the argument <code>exogen</code>. If they are not provided, the function tries to obtain them from the model. Function <code>add_posterior_forecasts</code> then simulates the forecasts.</p>
 <div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">bvar_est</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/add_forecast_input.html">add_forecast_input</a></span><span class="op">(</span><span class="va">bvar_est</span>, n_ahead <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
-<span><span class="va">bvar_est</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/add_posterior_forecasts.html">add_posterior_forecasts</a></span><span class="op">(</span><span class="va">bvar_est</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">bvar_est</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_forecast_input.html" class="external-link">add_forecast_input</a></span><span class="op">(</span><span class="va">bvar_est</span>, n_ahead <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
+<span><span class="va">bvar_est</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_posterior_forecasts.html" class="external-link">add_posterior_forecasts</a></span><span class="op">(</span><span class="va">bvar_est</span><span class="op">)</span></span></code></pre></div>
 <p>Forecasts with credible bands can be extracted from the model using the <code>predict</code> function. The <code>n_ahead</code> argument can be used to set the given forecast horizon. However, the number of available forecast periods is limited to specification used in <code>add_forecast_input</code>.</p>
 <div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bvar_pred</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">bvar_est</span><span class="op">)</span></span>
@@ -481,7 +483,7 @@
 <h4 id="forecast-error-impulse-response">Forecast error impulse response<a class="anchor" aria-label="anchor" href="#forecast-error-impulse-response"></a>
 </h4>
 <div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">IR</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/irf.html">irf</a></span><span class="op">(</span><span class="va">bvar_est</span>, impulse <span class="op">=</span> <span class="st">"income"</span>, response <span class="op">=</span> <span class="st">"cons"</span>, n_ahead <span class="op">=</span> <span class="fl">8</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">IR</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/irf.html" class="external-link">irf</a></span><span class="op">(</span><span class="va">bvar_est</span>, impulse <span class="op">=</span> <span class="st">"income"</span>, response <span class="op">=</span> <span class="st">"cons"</span>, n_ahead <span class="op">=</span> <span class="fl">8</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">IR</span>, main <span class="op">=</span> <span class="st">"Forecast Error Impulse Response"</span>, xlab <span class="op">=</span> <span class="st">"Period"</span>, ylab <span class="op">=</span> <span class="st">"Response"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="reference/figures/README-feir-1.png" alt="Forecast error impulse response of consumption to a shock in income over eight periods, drawn as the posterior median with a credible band around it."></p>
@@ -490,7 +492,7 @@
 <h4 id="orthogonalised-impulse-response">Orthogonalised impulse response<a class="anchor" aria-label="anchor" href="#orthogonalised-impulse-response"></a>
 </h4>
 <div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">OIR</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/irf.html">irf</a></span><span class="op">(</span><span class="va">bvar_est</span>, impulse <span class="op">=</span> <span class="st">"income"</span>, response <span class="op">=</span> <span class="st">"cons"</span>, n_ahead <span class="op">=</span> <span class="fl">8</span>, type <span class="op">=</span> <span class="st">"oir"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">OIR</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/irf.html" class="external-link">irf</a></span><span class="op">(</span><span class="va">bvar_est</span>, impulse <span class="op">=</span> <span class="st">"income"</span>, response <span class="op">=</span> <span class="st">"cons"</span>, n_ahead <span class="op">=</span> <span class="fl">8</span>, type <span class="op">=</span> <span class="st">"oir"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">OIR</span>, main <span class="op">=</span> <span class="st">"Orthogonalised Impulse Response"</span>, xlab <span class="op">=</span> <span class="st">"Period"</span>, ylab <span class="op">=</span> <span class="st">"Response"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="reference/figures/README-oir-1.png" alt="Orthogonalised impulse response of consumption to a shock in income over eight periods, drawn as the posterior median with a credible band around it."></p>
@@ -499,7 +501,7 @@
 <h4 id="generalised-impulse-response">Generalised impulse response<a class="anchor" aria-label="anchor" href="#generalised-impulse-response"></a>
 </h4>
 <div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">GIR</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/irf.html">irf</a></span><span class="op">(</span><span class="va">bvar_est</span>, impulse <span class="op">=</span> <span class="st">"income"</span>, response <span class="op">=</span> <span class="st">"cons"</span>, n_ahead <span class="op">=</span> <span class="fl">8</span>, type <span class="op">=</span> <span class="st">"gir"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">GIR</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/irf.html" class="external-link">irf</a></span><span class="op">(</span><span class="va">bvar_est</span>, impulse <span class="op">=</span> <span class="st">"income"</span>, response <span class="op">=</span> <span class="st">"cons"</span>, n_ahead <span class="op">=</span> <span class="fl">8</span>, type <span class="op">=</span> <span class="st">"gir"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">GIR</span>, main <span class="op">=</span> <span class="st">"Generalised Impulse Response"</span>, xlab <span class="op">=</span> <span class="st">"Period"</span>, ylab <span class="op">=</span> <span class="st">"Response"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="reference/figures/README-gir-1.png" alt="Generalised impulse response of consumption to a shock in income over eight periods, drawn as the posterior median with a credible band around it."></p>
@@ -509,7 +511,7 @@
 <h3 id="forecast-error-variance-decomposition">Forecast error variance decomposition<a class="anchor" aria-label="anchor" href="#forecast-error-variance-decomposition"></a>
 </h3>
 <div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">bvar_fevd</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fevd.html">fevd</a></span><span class="op">(</span><span class="va">bvar_est</span>, response <span class="op">=</span> <span class="st">"cons"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">bvar_fevd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/fevd.html" class="external-link">fevd</a></span><span class="op">(</span><span class="va">bvar_est</span>, response <span class="op">=</span> <span class="st">"cons"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">bvar_fevd</span>, main <span class="op">=</span> <span class="st">"FEVD of consumption"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="reference/figures/README-fevd-1.png" alt="Stacked bar chart of the forecast error variance decomposition of consumption over six periods, with the share of the variance attributed to investment, income and consumption."></p>

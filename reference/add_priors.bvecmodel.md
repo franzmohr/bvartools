@@ -74,6 +74,11 @@ The object in `object` with the element `priors` added, a list with
   the priors of the error covariance coefficients and error variances,
   as for a VAR model.
 
+- `volatility`:
+
+  for a volatility break, `shape`, `rho_shape1` and `rho_shape2`, as
+  given in `sigma$volatility`.
+
 ## Details
 
 None of the arguments `coef`, `coint`, `sigma` and `varsel` provides
@@ -177,7 +182,7 @@ Argument `coef` can contain the following elements:
   included unless `omega_v_alpha` is given, and of the covariance
   coefficients – the non-centred parameterisation that lets the
   posterior carry the test for time variation of
-  [`time_variation_test`](https://franzmohr.github.io/bvartools/reference/time_variation_test.md);
+  [`time_variation_test`](https://rdrr.io/pkg/bayests/man/time_variation_test.html);
   see
   [`add_priors.bvarmodel`](https://franzmohr.github.io/bvartools/reference/add_priors.bvarmodel.md)
   for the model and the draws it adds. The cointegration space keeps its
@@ -192,7 +197,7 @@ Argument `coef` can contain the following elements:
   so a standard deviation of their innovations that is small for a
   coefficient on a differenced regressor moves the fitted value by much
   more, and the test for time variation of
-  [`time_variation_test`](https://franzmohr.github.io/bvartools/reference/time_variation_test.md)
+  [`time_variation_test`](https://rdrr.io/pkg/bayests/man/time_variation_test.html)
   compares each loading's posterior at zero with its own prior: a prior
   on the wrong scale makes the Bayes factor of a loading say more about
   the prior than about the loading. Only used with `omega_v` and a
@@ -206,7 +211,8 @@ the cointegration space' below, which is shared with
 Argument `sigma` must contain the elements that belong to the `error` of
 the model:
 
-- `"wishart"`: `df` and `scale`. Not available for structural models.
+- `"wishart"`: `df` and `scale`. Not available for structural models. A
+  model created with `volatility_break` also needs `volatility`.
 
 - `"gamma"` and `"gamma+covar"`: `shape` and `rate`.
 
@@ -229,6 +235,17 @@ The elements are
 
   a positive numeric specifying the prior error variance of the
   endogenous variables in the inverse Wishart prior.
+
+- `volatility`:
+
+  for a model with a volatility break, the prior of its scales and
+  decay, `list(shape = , rho_shape1 = , rho_shape2 = )`: a Pareto prior
+  with shape `shape` on every free scale, which puts no mass below one,
+  and a beta prior with shapes `rho_shape1` and `rho_shape2` on the rate
+  \\\rho\\ the break decays at. Lenza and Primiceri (2022) use
+  `list(shape = 1, rho_shape1 = 3.04, rho_shape2 = 1.51)`, a beta with
+  mode 0.8 and standard deviation 0.2. Refused for a model without a
+  break.
 
 - `shape`:
 
@@ -279,7 +296,12 @@ Argument `varsel` can contain the following elements:
 - `covar`:
 
   logical indicating if the variable selection algorithm should also be
-  applied to the error covariance matrix.
+  applied to the error covariance matrix. **Worth a thought rather than
+  a default.** A generalised impulse response is built from the
+  off-diagonals of the error covariance, so selecting them to zero
+  collapses it towards an orthogonalised response; and the block carries
+  \\k(k-1)/2\\ elements, so there is rarely the dimensionality case for
+  selecting over it that there is for the coefficients.
 
 - `exclude_det`:
 
@@ -397,7 +419,7 @@ stochastic volatility the covariance differs from period to period, so
 given, and otherwise the error precision implied by the starting values
 of the log-volatilities, averaged over the sample once before the first
 draw. That fallback depends on
-[`add_initial_values`](https://franzmohr.github.io/bvartools/reference/add_initial_values.md),
+[`add_initial_values`](https://rdrr.io/pkg/bayests/man/add_initial_values.html),
 so giving `g_i` makes the prior independent of how the chain is started.
 `g_i = "ml"` uses Johansen's (1995) estimate of the error covariance,
 the same one `v_i = "ml"` is based on.
@@ -433,22 +455,22 @@ N(0, I)\\, and the prior on the state before the sample is that
 equation's own stationary distribution, \\N(0, I / (1 - \rho^2))\\. This
 is what makes the prior proper, so a \\\rho\\ close to one is intended
 and one further from it draws a warning.
-[`add_priors`](https://franzmohr.github.io/bvartools/reference/add_priors.md)
-gives the loadings the compensating scale: only the product \\\alpha
+[`add_priors`](https://rdrr.io/pkg/bayests/man/add_priors.html) gives
+the loadings the compensating scale: only the product \\\alpha
 \beta^{\prime}\\ is identified, so their prior variance is shrunk by
 \\1 - \rho^2\\, leaving the product on the scale `coef$v_i` asks for.
 
 When \\\rho\\ is drawn, those last two are computed from `coint$rho`
 once and do not follow the draw: the state before the sample keeps the
 normal prior built here, and the loadings keep the shrinkage of
-[`add_priors`](https://franzmohr.github.io/bvartools/reference/add_priors.md).
-This is a deliberate departure from Koop et al. (2011), in whom the
-state before the sample is the stationary distribution of whatever
-\\\rho\\ currently is. It is also what makes the draw an exact Gibbs
-block rather than their Metropolis-within-Gibbs step: with the state
-before the sample free of \\\rho\\, the conditional posterior of
-\\\rho\\ is a normal truncated to the prior's support. Draws of \\\rho\\
-are returned in `object$posterior$beta$rho`.
+[`add_priors`](https://rdrr.io/pkg/bayests/man/add_priors.html). This is
+a deliberate departure from Koop et al. (2011), in whom the state before
+the sample is the stationary distribution of whatever \\\rho\\ currently
+is. It is also what makes the draw an exact Gibbs block rather than
+their Metropolis-within-Gibbs step: with the state before the sample
+free of \\\rho\\, the conditional posterior of \\\rho\\ is a normal
+truncated to the prior's support. Draws of \\\rho\\ are returned in
+`object$posterior$beta$rho`.
 
 How far the space moves is not set by the prior on any variance. The
 steps \\\eta_t\\ have unit variance whatever `coef$rate` and
@@ -588,6 +610,11 @@ Korobilis, D. (2013). VAR forecasting using Bayesian variable selection.
 *Journal of Applied Econometrics, 28*(2), 204–230.
 [doi:10.1002/jae.1271](https://doi.org/10.1002/jae.1271)
 
+Lenza, M., & Primiceri, G. E. (2022). How to estimate a vector
+autoregression after March 2020. *Journal of Applied Econometrics,
+37*(4), 688–699.
+[doi:10.1002/jae.2895](https://doi.org/10.1002/jae.2895)
+
 Lütkepohl, H. (2006). *New introduction to multiple time series
 analysis* (2nd ed.). Berlin: Springer.
 
@@ -600,7 +627,6 @@ Other model set-up:
 [`add_prior_options()`](https://franzmohr.github.io/bvartools/reference/add_prior_options.md),
 [`add_priors.bvarmodel()`](https://franzmohr.github.io/bvartools/reference/add_priors.bvarmodel.md),
 [`aggregation_weights()`](https://franzmohr.github.io/bvartools/reference/aggregation_weights.md),
-[`combine_models()`](https://franzmohr.github.io/bvartools/reference/combine_models.md),
 [`create_bvarmodel()`](https://franzmohr.github.io/bvartools/reference/create_bvarmodel.md),
 [`create_bvecmodel()`](https://franzmohr.github.io/bvartools/reference/create_bvecmodel.md),
 [`transform_variables()`](https://franzmohr.github.io/bvartools/reference/transform_variables.md),

@@ -14,12 +14,6 @@ add_sign_restrictions(
   period = NULL,
   ...
 )
-
-# S3 method for class 'expandingwindow'
-add_sign_restrictions(object, ...)
-
-# S3 method for class 'modellist'
-add_sign_restrictions(object, ...)
 ```
 
 ## Arguments
@@ -113,18 +107,21 @@ restricted shocks should be interpreted.
 Only sign restrictions are supported. A zero restriction cannot be
 imposed by rejection, because the set of rotations that satisfies one
 has probability zero, so no number of tries finds a member of it. Use
-[`add_sign_zero_restrictions`](https://franzmohr.github.io/bvartools/reference/add_sign_zero_restrictions.md),
+[`add_sign_zero_restrictions`](https://rdrr.io/pkg/bayests/man/add_sign_zero_restrictions.html),
 which draws rotations that satisfy the zero restrictions by construction
 and reweights them.
 
 The accepted rotations are added to the object as element `q` of its
 posterior draws, from where
-[`irf`](https://franzmohr.github.io/bvartools/reference/irf.md),
-[`fevd`](https://franzmohr.github.io/bvartools/reference/fevd.md) and
+[`irf`](https://rdrr.io/pkg/bayests/man/irf.html),
+[`fevd`](https://rdrr.io/pkg/bayests/man/fevd.html) and
 [`spillover`](https://franzmohr.github.io/bvartools/reference/spillover.md)
 use them under `type = "sign"`.
 
-The result depends on the state of the random number generator, so
+The rotations are drawn with a seed derived from the model's own, see
+[`add_seed`](https://rdrr.io/pkg/bayests/man/add_seed.html), so that a
+model with a seed gives the same rotations however R's generator stands.
+A model without one draws from R's generator as it stands, and
 [`set.seed`](https://rdrr.io/r/base/Random.html) is needed to reproduce
 it.
 

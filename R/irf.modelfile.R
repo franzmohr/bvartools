@@ -16,10 +16,16 @@
 #' together at the end. What comes out is what the same call on the model in
 #' memory gives.
 #'
-#' For a variance decomposition the pieces are combined before the shares are
-#' normalised and before groups are collapsed, so \code{normalise_gir} and
-#' \code{max_groups} describe the whole chain rather than the piece they were
-#' applied to.
+#' For a variance decomposition the pieces hand back the shares of each of
+#' their draws, and the decomposition is summarised once over all of them, so
+#' \code{statistic}, \code{ci}, \code{normalise_gir} and \code{max_groups}
+#' describe the whole chain rather than the piece they were applied to.
+#'
+#' An identification given per draw is read at the draw's position in the
+#' whole chain: a list of impact matrices is cut to each piece's draws, and an
+#' impact function is called with the draw's number in the chain. A piece in
+#' which no draw is identified -- under \code{type = "sign"}, or an impact
+#' function that declines all of its draws -- contributes nothing.
 #'
 #' @return What \code{\link{irf.bvarmodel}} and \code{\link{fevd.bvarmodel}}
 #' return: an object of class 'bvarirf' or 'bvarfevd'.
@@ -65,9 +71,18 @@ irf.modelfile <- function(x, ..., chunk = 100) {
   # quantiles below are taken over. They are small -- one row per draw and one
   # column per horizon -- so the chain of responses is held whole where the
   # chain of the model is not.
-  pieces <- map_draws(x, function(model) {
-    do.call(irf, c(list(model), arguments, list(keep_draws = TRUE)))
+  pieces <- .map_draw_pieces(x, function(model, piece) {
+    if (!.has_identified_draws(model, arguments[["type"]])) {
+      return(NULL)
+    }
+    piece_arguments <- .piece_impact(arguments, piece)
+    tryCatch(do.call(irf, c(list(model), piece_arguments, list(keep_draws = TRUE))),
+             bvartools_no_draws = function(e) NULL)
   }, chunk = chunk)
+  pieces <- Filter(Negate(is.null), pieces)
+  if (length(pieces) == 0) {
+    stop("No draw of the stored model is identified.")
+  }
 
   result <- do.call("rbind", lapply(pieces, unclass))
 
@@ -87,76 +102,95 @@ fevd.modelfile <- function(x, ..., chunk = 100) {
 
   arguments <- list(...)
   normalise_gir <- isTRUE(arguments[["normalise_gir"]])
-  max_groups <- arguments[["max_groups"]]
-  arguments[["normalise_gir"]] <- NULL
-  arguments[["max_groups"]] <- NULL
   type <- if (is.null(arguments[["type"]])) "oir" else arguments[["type"]]
-
-  # A median or a credible interval is a statistic of all the draws at once,
-  # which no average of the chunks' own medians and quantiles is. The chunks
-  # hand back the shares of their draws instead, and the decomposition is
-  # summarised over the whole chain as fevd() does for a model in memory.
   statistic <- if (is.null(arguments[["statistic"]])) "mean" else arguments[["statistic"]]
   ci <- arguments[["ci"]]
-  if (statistic != "mean" || !is.null(ci)) {
-    if (!statistic %in% c("mean", "median")) {
-      stop("Argument 'statistic' must be \"mean\" or \"median\".")
-    }
-    .check_ci(ci)
-    max_groups <- .check_max_groups(max_groups)
-    if (!is.null(ci) && !is.null(max_groups)) {
-      stop("Arguments 'ci' and 'max_groups' cannot be combined: the bounds of a pooled column ",
-           "are not the pooled bounds.")
-    }
-    arguments[["statistic"]] <- NULL
-    arguments[["ci"]] <- NULL
-    pieces <- map_draws(x, function(model) {
-      do.call(fevd, c(list(model), arguments,
-                      list(normalise_gir = FALSE, max_groups = NULL, .return_draws = TRUE)))
-    }, chunk = chunk)
-    draws <- do.call(cbind, pieces)
-    varnames <- x[["model"]][["endogen"]]
-    n_ahead <- nrow(draws) / length(varnames) - 1
-    return(.summarise_fevd_draws(draws, n_ahead, varnames, type, normalise_gir, statistic,
-                                 ci, max_groups))
+  max_groups <- .check_max_groups(arguments[["max_groups"]])
+  if (!statistic %in% c("mean", "median")) {
+    stop("Argument 'statistic' must be \"mean\" or \"median\".")
+  }
+  .check_ci(ci)
+  if (!is.null(ci) && !is.null(max_groups)) {
+    stop("Arguments 'ci' and 'max_groups' cannot be combined: the bounds of a pooled column ",
+         "are not the pooled bounds.")
+  }
+  for (i in c("normalise_gir", "max_groups", "statistic", "ci")) {
+    arguments[[i]] <- NULL
   }
 
-  # A decomposition is the mean of the decompositions of the draws, so a piece
-  # contributes its own mean and its weight. Normalising or collapsing groups
-  # first would average quantities that are no longer shares of the same thing,
-  # so both are left to the end.
-  # The weight of a piece is the number of draws its mean is over. Under a sign
-  # identification those are the draws that were identified, which differ from
-  # chunk to chunk; weighting by all of them over-weighted a chunk with a low
-  # acceptance rate.
-  sign <- identical(arguments[["type"]], "sign")
-  pieces <- map_draws(x, function(model) {
-    shares <- do.call(fevd, c(list(model), arguments,
-                              list(normalise_gir = FALSE, max_groups = NULL)))
-    draws <- if (sign) {
-      sum(!is.na(as.matrix(model[["posterior"]][["q"]][["coeffs"]])[, 1]))
-    } else {
-      nrow(model[["posterior"]][["u_sigma_inv"]][["coeffs"]])
+  # Every piece hands back the shares of each of its draws, and the
+  # decomposition is summarised once over all of them, as fevd() does for a
+  # model in memory. That is exact for every statistic and needs no weights:
+  # averaging the pieces' own results was exact for the mean alone, and only
+  # where every draw of a piece counted -- not under an identification that
+  # keeps some draws and not others.
+  pieces <- .map_draw_pieces(x, function(model, piece) {
+    if (!.has_identified_draws(model, type)) {
+      return(NULL)
     }
-    list(shares = unclass(shares), draws = draws)
+    piece_arguments <- .piece_impact(arguments, piece)
+    tryCatch(do.call(fevd, c(list(model), piece_arguments,
+                             list(normalise_gir = FALSE, max_groups = NULL,
+                                  .return_draws = TRUE))),
+             bvartools_no_draws = function(e) NULL)
   }, chunk = chunk)
-
-  weights <- vapply(pieces, function(piece) piece[["draws"]], numeric(1))
-  result <- Reduce(`+`, Map(function(piece, weight) piece[["shares"]] * weight,
-                            pieces, weights)) / sum(weights)
-
-  if (type %in% c("gir", "sgir") && normalise_gir) {
-    result <- t(apply(result, 1, function(z) z / sum(z)))
-  }
-  colnames(result) <- x[["model"]][["endogen"]]
-
-  max_groups <- .check_max_groups(max_groups)
-  if (!is.null(max_groups) && max_groups < x[["model"]][["k"]]) {
-    result <- .limit_fevd_groups(result, max_groups)
+  pieces <- Filter(function(piece) !is.null(piece) && ncol(piece) > 0, pieces)
+  if (length(pieces) == 0) {
+    stop("No draw of the stored model is identified.")
   }
 
-  result <- stats::ts(result, start = 0, frequency = 1)
-  class(result) <- append("bvarfevd", class(result))
+  draws <- do.call(cbind, pieces)
+  varnames <- x[["model"]][["endogen"]]
+  n_ahead <- nrow(draws) / length(varnames) - 1
+  .summarise_fevd_draws(draws, n_ahead, varnames, type, normalise_gir, statistic, ci,
+                        max_groups)
+}
 
-  result
+
+# map_draws() for the analysis above, handing each piece the positions in the
+# chain of the draws it holds as well. An identification given per draw -- a
+# list of impact matrices, or a function of the draw's number -- has to be
+# read at those positions: every piece used to be handed the whole list, which
+# it refused for its length, and a function saw the piece's own numbering.
+.map_draw_pieces <- function(x, f, chunk) {
+  if (!inherits(x, "modelfile")) {
+    stop("Argument 'x' must be of class 'modelfile'. Use read_model_file().")
+  }
+  chunk <- max(1L, as.integer(chunk))
+  pieces <- split(seq_len(x[["draws"]]), ceiling(seq_len(x[["draws"]]) / chunk))
+  lapply(pieces, function(piece) {
+    model <- read_model_from_hdf5(filename = x[["filename"]], group = x[["group"]],
+                                  draws = piece)
+    f(model, piece)
+  })
+}
+
+# The arguments of a piece, with a per-draw identification cut to its draws.
+.piece_impact <- function(arguments, piece) {
+  impact <- arguments[["impact"]]
+  if (is.function(impact)) {
+    arguments[["impact"]] <- function(draw, i) impact(draw, piece[i])
+  } else if (is.list(impact) && !is.data.frame(impact)) {
+    arguments[["impact"]] <- impact[piece]
+  }
+  arguments
+}
+
+# Stops for an identification that declined every draw, with a class of its
+# own, so that a piece of a stored chain in which it did can be skipped rather
+# than stopping the analysis of the others.
+.stop_no_identified_draws <- function() {
+  stop(structure(class = c("bvartools_no_draws", "error", "condition"),
+                 list(message = paste0("No draw has an impact matrix: the identification ",
+                                       "declined every one."), call = NULL)))
+}
+
+# Whether a piece has a draw to analyse. Under a sign identification a piece
+# can hold none that was identified, and analysing it stopped the whole call.
+.has_identified_draws <- function(model, type) {
+  if (!identical(type, "sign")) {
+    return(TRUE)
+  }
+  q <- model[["posterior"]][["q"]][["coeffs"]]
+  !is.null(q) && any(!is.na(as.matrix(q)[, 1]))
 }

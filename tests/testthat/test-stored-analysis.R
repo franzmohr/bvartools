@@ -106,3 +106,49 @@ test_that("a median and a credible interval of a stored decomposition are over t
   expect_error(fevd(pair[["file"]], response = variables[2], ci = 0.9, max_groups = 2,
                     chunk = 7), "cannot be combined")
 })
+
+test_that("an identification given per draw reaches each draw of a stored model", {
+  # Every piece used to be handed the whole list of impact matrices, which it
+  # refused for its length, and an impact function saw the piece's numbering.
+  pair <- stored_pair()
+  variables <- pair[["memory"]][["model"]][["endogen"]]
+  # Impact matrices that differ by draw number, so that a draw read at the
+  # wrong position gives a different answer.
+  k <- length(variables)
+  n <- pair[["file"]][["draws"]]
+  per_draw <- lapply(seq_len(n), function(i) diag(i / 10, k))
+  every_other <- function(draw, i) if (i %% 2 == 0) NULL else diag(i / 10, k)
+
+  for (impact in list(per_draw, every_other)) {
+    expect_equal(irf(pair[["file"]], impulse = variables[1], response = variables[2],
+                     n_ahead = 4, type = "custom", impact = impact, chunk = 7),
+                 irf(pair[["memory"]], impulse = variables[1], response = variables[2],
+                     n_ahead = 4, type = "custom", impact = impact))
+    expect_equal(fevd(pair[["file"]], response = variables[2], n_ahead = 4, type = "custom",
+                      impact = impact, chunk = 7),
+                 fevd(pair[["memory"]], response = variables[2], n_ahead = 4, type = "custom",
+                      impact = impact))
+  }
+})
+
+test_that("a piece of a stored chain without an identified draw is passed over", {
+  # Draws left unidentified, as add_sign_restrictions() leaves those it found
+  # no rotation for.
+  model <- fx_var_sign()
+  q <- model[["posterior"]][["q"]][["coeffs"]]
+  q[c(1:3, 7), ] <- NA
+  model[["posterior"]][["q"]][["coeffs"]] <- q
+  file <- file.path(tempdir(), "bvartools-stored-sign.h5")
+  unlink(file)
+  write_to_hdf5(model, filename = file)
+  stored <- read_model_file(file)
+  variables <- model[["model"]][["endogen"]]
+
+  # One draw at a time, so that some pieces hold no identified draw.
+  expect_equal(irf(stored, impulse = variables[1], response = variables[2], n_ahead = 4,
+                   type = "sign", chunk = 1),
+               irf(model, impulse = variables[1], response = variables[2], n_ahead = 4,
+                   type = "sign"))
+  expect_equal(fevd(stored, response = variables[2], n_ahead = 4, type = "sign", chunk = 1),
+               fevd(model, response = variables[2], n_ahead = 4, type = "sign"))
+})

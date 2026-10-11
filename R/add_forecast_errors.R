@@ -24,7 +24,6 @@
   }
   test_sample <- stats::ts(test_sample, class = c("mts", "ts", "matrix"))
   stats::tsp(test_sample) <- tsp_test_sample
-  test_sample <- stats::na.omit(test_sample)
 
   # Determine when the forecasts start
   tsp_train <- stats::tsp(object[["data"]][["train"]][["y"]])
@@ -42,10 +41,21 @@
     return(NULL)
   }
 
-  test_sample <- stats::window(test_sample, start = forecast_starts_at)
+  test_sample <- as.matrix(stats::window(test_sample, start = forecast_starts_at))
   h <- min(object[["model"]][["h"]], nrow(test_sample))
+  test_sample <- test_sample[seq_len(h), , drop = FALSE]
 
-  return(as.matrix(test_sample[1:h, , drop = FALSE]))
+  # The periods of the horizon observed for every variable, up to the first
+  # that is not. Missing values were dropped with stats::na.omit() over the
+  # whole test sample, which stops on any gap inside it -- one years before the
+  # horizon was enough to make a model unscorable.
+  complete <- stats::complete.cases(test_sample)
+  observed <- if (all(complete)) h else which(!complete)[1] - 1
+  if (observed == 0) {
+    return(NULL)
+  }
+
+  return(test_sample[seq_len(observed), , drop = FALSE])
 }
 
 

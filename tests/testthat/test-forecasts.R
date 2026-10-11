@@ -290,3 +290,18 @@ test_that("a new forecast replaces the errors and scores of the previous one", {
   redrawn <- add_posterior_forecasts(model)
   expect_null(redrawn[["posterior"]][["forecast"]][["errors"]])
 })
+
+test_that("a gap in the test sample before the horizon does not stop the scoring", {
+  # stats::na.omit() over the whole test sample stopped on any interior gap.
+  data <- var_data()
+  data[10, "Dp"] <- NA
+  model <- scored_var_model(n_ahead = 4)
+  scored <- add_forecast_errors(model, test_sample = data)
+  expect_identical(dim(scored[["data"]][["test"]][["y"]]), c(4L, 3L))
+
+  # A ragged edge scores the periods observed for every variable.
+  ragged <- var_data()
+  ragged[nrow(ragged) - 1, "r"] <- NA
+  scored <- add_forecast_errors(model, test_sample = ragged)
+  expect_identical(nrow(scored[["data"]][["test"]][["y"]]), 2L)
+})

@@ -297,7 +297,12 @@ struct VarSpec
     /// how much, and how fast it fades, are drawn. It reaches the forecast too:
     /// a horizon past the break is drawn with the scale it implies there.
     ///
-    /// Read by VarNormalWishart only, and refused by every other algorithm.
+    /// Read by VarNormalWishart and VecNormalWishart, and refused by every other
+    /// algorithm. In the VEC the rows of the differenced response, of the
+    /// short-run regressors and of the levels the cointegration space is
+    /// built from are divided by s_t alike, which keeps the loadings, the space
+    /// and the Wishart conjugate; its forecast and score are the level VAR's,
+    /// break included.
     int volatility_break = 0;
 
     /// How many periods from the break have a scale of their own before the

@@ -119,8 +119,8 @@ inline void require_supported_volatility_break(const VarSpec &spec, const bool s
     {
         throw std::invalid_argument(
             std::string(algorithm) +
-            " does not read /model/volatility_break: only VarNormalWishart scales its error "
-            "covariance from a known period on");
+            " does not read /model/volatility_break: only VarNormalWishart and VecNormalWishart "
+            "scale their error covariance from a known period on");
     }
 }
 

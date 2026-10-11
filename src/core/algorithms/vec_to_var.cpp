@@ -131,6 +131,8 @@ VarNormalWishartDraws vec_to_var_coefficients(const VarSpec &spec,
 
     VarNormalWishartDraws out;
     out.u_sigma_inv = draws.u_sigma_inv;
+    // A volatility break is the same in both parameterisations.
+    out.volatility = draws.volatility;
     out.a = arma::mat(static_cast<arma::uword>(var_spec.nparams_per_period()), iterations);
 
     // Where the deterministic terms sit in each coefficient matrix.

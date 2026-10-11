@@ -401,6 +401,11 @@ struct VecNormalWishartDraws
 
     arma::mat beta;     ///< n_beta x iterations. Empty when the model has no cointegration.
 
+    /// (volatility_scales + 1) x iterations: the free scales and decay rate of
+    /// a volatility break, as in VarNormalWishartDraws::volatility. Empty
+    /// without one.
+    arma::mat volatility;
+
     /// (k * k) x iterations; each column is a vectorised precision matrix.
     arma::mat u_sigma_inv;
 
@@ -410,6 +415,7 @@ struct VecNormalWishartDraws
     bool has_a() const { return a.n_elem > 0; }
     bool has_beta() const { return beta.n_elem > 0; }
     bool has_lambda() const { return a_lambda.n_elem > 0; }
+    bool has_volatility() const { return volatility.n_elem > 0; }
 };
 
 /// Posterior draws of the non-SUR Koop, Leon-Gonzalez and Strachan (2010)

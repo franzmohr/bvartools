@@ -1530,7 +1530,7 @@ void VecNormalWishartInput::validate() const
     core::require_supported_iid_block(spec, false, "VecNormalWishart");
     core::require_supported_shrinkage(spec, false, "VecNormalWishart");
     core::require_supported_steady_state(spec, false, "VecNormalWishart");
-    core::require_supported_volatility_break(spec, false, "VecNormalWishart");
+    core::require_supported_volatility_break(spec, true, "VecNormalWishart");
     core::require_supported_student_t(spec, false, "VecNormalWishart");
     core::require_supported_constraints(spec, train, test, false, "VecNormalWishart");
     core::require_supported_forecast_constraints(spec, forecast, false, "VecNormalWishart");
@@ -1563,6 +1563,8 @@ void VecNormalWishartInput::validate() const
     }
 
     validate_wishart_block(u_sigma_prior, initial.u_sigma_inv, k);
+    core::validate_volatility_break(spec, volatility_prior, initial.volatility, tt,
+                                    "VecNormalWishart");
 }
 
 namespace

@@ -283,6 +283,39 @@ struct VarSpec
     /// second way of switching a coefficient off.
     int n_iid = 0;
 
+    /// A break in the volatility of every shock at once, at a known period:
+    /// the column of /data/train/y where it starts, counted from one, and zero
+    /// for none. From that period on the error covariance is s_t^2 Sigma, the
+    /// scaling of Lenza and Primiceri (2022) for the pandemic months -- common
+    /// to every equation, which is what keeps the Wishart block conjugate:
+    ///
+    ///     s_t = 1                                  before the break,
+    ///     s_t = s_j                                j = t - break < volatility_scales,
+    ///     s_t = 1 + (s_{m-1} - 1) rho^(j - m + 1)  after them, m = volatility_scales,
+    ///
+    /// each free scale at least one and rho in (0, 1). What is known is when;
+    /// how much, and how fast it fades, are drawn. It reaches the forecast too:
+    /// a horizon past the break is drawn with the scale it implies there.
+    ///
+    /// Read by VarNormalWishart only, and refused by every other algorithm.
+    int volatility_break = 0;
+
+    /// How many periods from the break have a scale of their own before the
+    /// decay takes over -- three in Lenza and Primiceri (2022), for March,
+    /// April and May 2020. At least one. Read only where volatility_break is.
+    int volatility_scales = 3;
+
+    /// Student t errors: u_t ~ N(0, lambda_t Sigma), lambda_t ~ IG(nu / 2, nu / 2)
+    /// independently over periods, so every period's shock vector is
+    /// multivariate t with nu degrees of freedom. The mixing scale is common to
+    /// every equation, like a volatility break's, and the two multiply. What it
+    /// adds is that nobody has to say which periods are extreme: a period whose
+    /// shocks are large is weighted down by its own lambda_t. nu is drawn under
+    /// a gamma prior or held fixed (StudentTPrior).
+    ///
+    /// Read by VarNormalWishart only, and refused by every other algorithm.
+    bool student_t = false;
+
     /// What a forecast does with the states of a time-varying model. Read by the
     /// forecasts of every model with something that drifts: VarTvpWishart,
     /// VarTvpGamma, VarTvpStochvol, VarNormalStochvol, VecTvpWishart,
@@ -402,6 +435,10 @@ struct VarSpec
 
     /// Whether any equation is restricted to carry no coefficients at all.
     bool uses_iid() const { return n_iid > 0; }
+
+    /// Whether the error covariance is scaled from a known period on; see
+    /// volatility_break.
+    bool uses_volatility_break() const { return volatility_break > 0; }
 
     /// Whether the model carries a Psi block. One variable has no off-diagonal
     /// covariance to model, so the flag on its own is not enough.

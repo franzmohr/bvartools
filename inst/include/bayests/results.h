@@ -58,6 +58,21 @@ struct VarNormalWishartDraws
     /// where theta is fixed.
     arma::mat a_theta;
 
+    /// (volatility_scales + 1) x iterations: the free scales of a volatility
+    /// break, then its decay rate. Empty without one
+    /// (VarSpec::volatility_break). The error covariance of a period is
+    /// s_t^2 Sigma, Sigma the inverse of u_sigma_inv, so the log likelihood and
+    /// every forecast past the break depend on it.
+    arma::mat volatility;
+
+    /// 1 x iterations: the degrees of freedom of Student t errors, and
+    /// tt x iterations: each period's mixing scale lambda_t, the factor its
+    /// covariance was inflated by -- large where the period was an outlier.
+    /// Empty without Student t errors (VarSpec::student_t). The log likelihood
+    /// and the forecast read the first; lambda integrates out of both.
+    arma::mat student_t_df;
+    arma::mat student_t_lambda;
+
     /// Length of the chain these draws came from.
     arma::uword iterations() const { return u_sigma_inv.n_cols; }
 
@@ -65,6 +80,8 @@ struct VarNormalWishartDraws
     bool has_lambda() const { return a_lambda.n_elem > 0; }
     bool has_y() const { return y.n_elem > 0; }
     bool has_constraints_inv() const { return constraints_inv.n_elem > 0; }
+    bool has_volatility() const { return volatility.n_elem > 0; }
+    bool has_student_t() const { return student_t_df.n_elem > 0; }
 };
 
 /// Posterior draws of a VAR with independent gamma priors on the error

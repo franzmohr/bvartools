@@ -36,7 +36,8 @@ elements hold the draws after burn-in as \code{\link[coda]{mcmc}} objects with o
 row per draw and one column per parameter, in element \code{coeffs}: \code{beta}, the
 cointegration coefficients, \eqn{K_\beta r} columns or \eqn{T K_\beta r} for time
 varying cointegration, \code{a}, the loadings and the remaining coefficients, and the
-draws of the error term as described in \code{\link{add_posterior_coefficients.bvarmodel}}.
+draws of the error term and of a volatility break as described in
+\code{\link{add_posterior_coefficients.bvarmodel}}.
 }
 \description{
 Forwards model input to posterior simulation functions for vector error correction models.

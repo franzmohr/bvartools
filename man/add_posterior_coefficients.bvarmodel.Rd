@@ -87,6 +87,11 @@ With Student t errors (\code{student_t = TRUE} in \code{\link{create_bvarmodel}}
 \code{posterior$student_t} holds \code{df}, the draws of the degrees of freedom,
 and \code{lambda}, the draws of each period's mixing scale: one column per
 period, large where the period's shocks were.
+
+With a volatility break (\code{volatility_break} in \code{\link{create_bvarmodel}}
+or \code{\link{create_bvecmodel}}), \code{posterior$volatility$coeffs} holds the
+draws of the free scales, columns \code{s1}, \code{s2}, ..., one per period from the
+break on, and of \code{rho}, the rate their excess over one decays at after them.
 }
 \examples{
 

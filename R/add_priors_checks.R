@@ -187,7 +187,8 @@
   }
 
   allowed_sigma_arguments <- c("df", "scale", "shape", "rate", "mu", "v_i",
-                               "state_variance", "offset", "omega_v", "student_t")
+                               "state_variance", "offset", "omega_v", "student_t",
+                               "volatility")
   for (i in names(sigma)) {
     if (!i %in% allowed_sigma_arguments) {
       stop(paste0("Element '", i, "' in argument 'sigma' is not recognised."))

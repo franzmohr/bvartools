@@ -35,6 +35,10 @@ the same periods. In either case the draws or moments that remain were
 estimated from the whole sample; re-estimate the model to condition on the
 window alone.
 
+The period of a volatility break moves with the window. A window that ends
+before the break drops it, with its prior and its draws, and a warning; one
+that starts after it is refused, since a break has to fall inside the sample.
+
 \strong{A window that ends before the sample drops the forecast input, the
 forecasts and the realised values they were scored against}, with a warning:
 they start after the original end, from its last observations. Call

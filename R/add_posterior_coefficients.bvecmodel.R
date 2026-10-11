@@ -54,7 +54,8 @@
 #' row per draw and one column per parameter, in element \code{coeffs}: \code{beta}, the
 #' cointegration coefficients, \eqn{K_\beta r} columns or \eqn{T K_\beta r} for time
 #' varying cointegration, \code{a}, the loadings and the remaining coefficients, and the
-#' draws of the error term as described in \code{\link{add_posterior_coefficients.bvarmodel}}.
+#' draws of the error term and of a volatility break as described in
+#' \code{\link{add_posterior_coefficients.bvarmodel}}.
 #'
 #' @references
 #' 
@@ -147,7 +148,8 @@ add_posterior_coefficients.bvecmodel <- function(object, posterior_function = NU
     }
     object <- .raise_core_warnings(object)
 
-    for (i in c("a", "beta", "psi", "u_sigma_inv", "u_omega_inv")) {
+    # 'volatility' holds the scales of a volatility break.
+    for (i in c("a", "beta", "psi", "u_sigma_inv", "u_omega_inv", "volatility")) {
       if (!is.null(object[["posterior"]][[i]][["coeffs"]])) {
         object[["posterior"]][[i]][["coeffs"]] <- .mcmc_draws(object[["model"]], object[["posterior"]][[i]][["coeffs"]])
       }
@@ -176,6 +178,7 @@ add_posterior_coefficients.bvecmodel <- function(object, posterior_function = NU
     # model does not have as NULL. Such an element cannot be written to a file,
     # so a round trip lost it; it is dropped here, which reads the same.
     object[["posterior"]] <- .drop_null(object[["posterior"]])
+    object[["posterior"]][["volatility"]] <- .label_volatility_draws(object[["posterior"]][["volatility"]])
 
   } else {
     # Apply own function

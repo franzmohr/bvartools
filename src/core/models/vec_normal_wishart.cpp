@@ -10,6 +10,7 @@
 #include "core/algorithms/wishart.h"
 #include "core/models/model_support.h"
 #include "core/models/predictive_score.h"
+#include "core/models/volatility_break_support.h"
 #include "core/models/vec_support.h"
 
 #include <cmath>
@@ -40,7 +41,7 @@ namespace bayests
         const int iterations = input.spec.iterations;
         const int draws = input.spec.draws();
 
-        const arma::vec y = stacked_response(input.train);
+        arma::vec y = stacked_response(input.train);
         arma::mat z = input.train.z;
         arma::mat w_t = arma::trans(input.train.w);
 
@@ -137,11 +138,46 @@ namespace bayests
         out.u_sigma_inv = arma::mat(k * k, iterations);
         arma::mat u = arma::reshape(y, k, tt);
 
+        // A volatility break: every sweep runs on the rows from the break on
+        // divided by s_t -- the differenced response, the short-run regressors,
+        // and the levels w the cointegration term and the beta block are built
+        // from -- and ends by drawing the scales from the residuals on the
+        // original scale. Inactive, it draws and rescales nothing.
+        core::VolatilityBreak volatility(input.spec, input.volatility_prior, input.initial.volatility,
+                                         static_cast<arma::uword>(tt), static_cast<arma::uword>(k));
+        const arma::vec y_original = volatility.active() ? y : arma::vec();
+        const arma::mat z_original = volatility.active() ? z : arma::mat();
+        const arma::mat w_original = volatility.active() ? w_t : arma::mat();
+        if (volatility.active())
+        {
+            out.volatility = arma::mat(volatility.theta().n_elem, iterations);
+        }
+
         // Start simulation
         for (int draw = 0; draw < draws; draw++)
         {
             reporter.check_interrupt();
             reporter.progress(draw + 1, draws);
+
+            if (volatility.active())
+            {
+                core::rescale_rows(y_original, z_original, volatility.scales(),
+                                   static_cast<arma::uword>(k), volatility.start(), y, z);
+                if (use_beta)
+                {
+                    w_t = w_original;
+                    w_t.each_row() /= arma::trans(volatility.scales());
+                    w_cross = w_t * arma::trans(w_t);
+                }
+                if (a_bvs && use_non_alpha)
+                {
+                    z_bvs.cols(n_alpha, n_a - 1) = z.cols(n_alpha, n_a - 1);
+                }
+                if (!use_a)
+                {
+                    u = arma::reshape(y, k, tt);
+                }
+            }
 
             if (use_a)
             {
@@ -283,6 +319,14 @@ namespace bayests
             }
             u_sigma_inv = wishart(u, u_sigma_scale, post_u_sigma_df);
 
+            // Update the volatility break, from the residuals on the original scale
+            if (volatility.active())
+            {
+                arma::mat u_original = u;
+                u_original.each_row() %= arma::trans(volatility.scales());
+                volatility.update(u_original, u_sigma_inv, draw < input.spec.burnin);
+            }
+
             // Store draws
             if (input.spec.keeps(draw))
             {
@@ -303,10 +347,15 @@ namespace bayests
                 }
 
                 out.u_sigma_inv.col(draw_pos) = arma::vectorise(u_sigma_inv);
+                if (volatility.active())
+                {
+                    out.volatility.col(draw_pos) = volatility.theta();
+                }
             }
         }
 
         reporter.finish();
+        volatility.report(reporter, input.spec.burnin);
         return out;
     }
 
@@ -337,6 +386,9 @@ namespace bayests
         VarNormalWishartInput var_input;
         var_input.spec = vec_to_var_spec(input.spec);
         var_input.forecast = input.forecast;
+        // Read for its length alone: a volatility break places the horizon at
+        // periods tt and on.
+        var_input.train.y = input.train.y;
 
         const VarNormalWishartDraws var_coefficients =
             vec_to_var_coefficients(input.spec, coefficients);
@@ -400,17 +452,37 @@ namespace bayests
             }
         }
 
-        // Calculate log likelihood
+        // Calculate log likelihood. Under a volatility break period t's
+        // covariance is s_t^2 Sigma.
+        const bool scaled = input.spec.uses_volatility_break();
+        if (scaled && coefficients.volatility.n_cols != draws)
+        {
+            throw std::invalid_argument("the model has a volatility break, and posterior draws of "
+                                        "it (/posterior/volatility/coeffs) are missing or not one "
+                                        "column per draw");
+        }
         const double part_a = -k * std::log(2 * arma::datum::pi) / 2;
         arma::mat u_sigma_inv;
         for (arma::uword draw = 0; draw < draws; draw++)
         {
             u_sigma_inv = arma::reshape(coefficients.u_sigma_inv.col(draw), k, k);
             const double part_b = core::half_log_det_precision(u_sigma_inv);
+            const arma::vec s =
+                scaled ? core::volatility_path(input.spec, coefficients.volatility.col(draw), 0,
+                                               static_cast<arma::uword>(tt))
+                       : arma::vec();
             for (int i = 0; i < tt; i++)
             {
                 const double part_c = -arma::as_scalar(arma::trans(u.submat(i * k, draw, (i + 1) * k - 1, draw)) * u_sigma_inv * u.submat(i * k, draw, (i + 1) * k - 1, draw)) / 2;
-                loglik(draw, i) = part_a + part_b + part_c;
+                if (scaled)
+                {
+                    const double si = s(static_cast<arma::uword>(i));
+                    loglik(draw, i) = part_a + part_b - k * std::log(si) + part_c / (si * si);
+                }
+                else
+                {
+                    loglik(draw, i) = part_a + part_b + part_c;
+                }
             }
         }
 
@@ -431,6 +503,8 @@ arma::mat VecNormalWishartSampler::predictive_log_density(const VecNormalWishart
     core::require_scorable(var_input.spec, "this VEC");
     var_input.forecast = input.forecast;
     var_input.test = input.test;
+    // Read for its length alone, as in forecast().
+    var_input.train.y = input.train.y;
 
     const VarNormalWishartDraws var_coefficients =
         vec_to_var_coefficients(input.spec, coefficients);

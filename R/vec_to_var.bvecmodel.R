@@ -291,6 +291,11 @@ vec_to_var.bvecmodel <- function(object, ...) {
   model[["structural"]] <- structural
   model[["error"]] <- specs[["error"]]
   model[["tvp"]] <- specs[["tvp"]]
+  # A volatility break is the same in both forms: the representation has the
+  # periods of the VEC model, and posterior$volatility, passed through below,
+  # holds the draws of its scales.
+  model[["volatility_break"]] <- specs[["volatility_break"]]
+  model[["volatility_scales"]] <- specs[["volatility_scales"]]
   # Whether the VAR representation can simulate its states forward, which is
   # what add_posterior_forecasts() does unless told otherwise.
   #

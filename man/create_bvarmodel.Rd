@@ -27,7 +27,9 @@ create_bvarmodel(
   aggregate = NULL,
   soft = NULL,
   quantile_grid = FALSE,
-  student_t = FALSE
+  student_t = FALSE,
+  volatility_break = NULL,
+  volatility_scales = 3
 )
 }
 \arguments{
@@ -117,6 +119,15 @@ estimated as one structural quantile VAR rather than as one model each. Needs
 \item{student_t}{logical. If \code{TRUE}, the errors are multivariate Student t
 rather than normal. Needs \code{error = "wishart"} and constant coefficients.
 Defaults to \code{FALSE}. See 'Details'.}
+
+\item{volatility_break}{an optional date of \code{data}, \code{c(year, period)}
+such as \code{c(2020, 3)} or a single time such as \code{2020.167}: the first
+period of a break in the volatility of every shock. Needs \code{error = "wishart"}
+and constant coefficients. Defaults to \code{NULL}, no break. See 'Details'.}
+
+\item{volatility_scales}{a whole number of at least one, how many periods from
+\code{volatility_break} on get a scale of their own before the excess decays
+(defaults to 3). Used only with \code{volatility_break}.}
 }
 \value{
 An object of class 'bvarmodel' or, if a vector is given in \code{p}, \code{s}
@@ -328,6 +339,25 @@ fixed or drawn under a gamma prior, as \code{sigma$student_t} in
 density are the Student t ones, with \eqn{\lambda_t} integrated out, and a
 forecast draws each period's \eqn{\lambda} from its prior. A scenario and a
 steady-state prior are refused.
+
+\strong{A volatility break scales every shock from a known period on, and lets the
+data say by how much and for how long.} With \code{volatility_break} the error
+covariance of period \eqn{t} is \eqn{s_t^2 \Sigma}, the model of Lenza and Primiceri
+(2022) for the pandemic months: \eqn{s_t = 1} before the break, a free scale of at
+least one in each of the first \code{volatility_scales} periods from it, and after
+them \eqn{s_t = 1 + (s_m - 1) \rho^j} in the \eqn{j}-th period past the last free
+scale \eqn{s_m}, so that the excess decays at the rate \eqn{\rho}. Without it, a
+few months of enormous shocks pull the coefficients towards whatever explains them
+and widen every forecast band; with it, those periods count for less in the
+estimate of the coefficients and of \eqn{\Sigma}. The scale is common to every
+equation, which keeps the Wishart prior conjugate. The prior of the scales and of
+\eqn{\rho} is \code{sigma$volatility} in \code{\link{add_priors.bvarmodel}}, and
+their draws are \code{posterior$volatility$coeffs}, columns \code{s1}, \code{s2},
+... and \code{rho}. The log likelihood and the forecasts use each period's scale,
+so a forecast made shortly after the break is drawn with the larger shocks the
+decay implies. Only the timing is known, and no scale goes below one: the break is
+a period of larger shocks. It can be combined with Student t errors; a
+steady-state prior is refused.
 }
 \examples{
 
@@ -365,6 +395,10 @@ Statistics, 28}(1), 52--66. \doi{10.1198/jbes.2009.07145}
 
 Korobilis, D. (2013). VAR forecasting using Bayesian variable selection.
 \emph{Journal of Applied Econometrics, 28}(2), 204--230. \doi{10.1002/jae.1271}
+
+Lenza, M., & Primiceri, G. E. (2022). How to estimate a vector autoregression after
+March 2020. \emph{Journal of Applied Econometrics, 37}(4), 688--699.
+\doi{10.1002/jae.2895}
 
 Kozumi, H., & Kobayashi, G. (2011). Gibbs sampling methods for Bayesian quantile regression.
 \emph{Journal of Statistical Computation and Simulation, 81}(11), 1565--1578.

@@ -129,6 +129,28 @@ inline void read_draws_if_present(const Rcpp::List &list, const char *name, arma
   }
 }
 
+/// The volatility break of the two Wishart samplers (VarSpec::volatility_break):
+/// its prior from priors$volatility, under the names of /priors/volatility in
+/// a model file, and where its scales start from initial$volatility. Absent,
+/// both stay empty, and the sampler refuses a break without a prior.
+inline void read_volatility_break(const Rcpp::List &object, bayests::VolatilityBreakPrior &prior,
+                                  arma::vec &initial)
+{
+  if (has(object, "priors")) {
+    const Rcpp::List priors = object["priors"];
+    if (has(priors, "volatility")) {
+      const Rcpp::List prior_volatility = priors["volatility"];
+      prior.shape = optional_double(prior_volatility, "shape", 0.0);
+      prior.rho_shape1 = optional_double(prior_volatility, "rho_shape1", 0.0);
+      prior.rho_shape2 = optional_double(prior_volatility, "rho_shape2", 0.0);
+    }
+  }
+  if (has(object, "initial")) {
+    const Rcpp::List initial_values = object["initial"];
+    read_vec_if_present(initial_values, "volatility", initial);
+  }
+}
+
 /// Draws as R expects them, from the column-per-draw matrix the core returns.
 inline arma::mat draws_to_r(const arma::mat &draws)
 {
@@ -253,6 +275,10 @@ inline bayests::VarSpec read_spec(const Rcpp::List &model, const char *covar_err
   // Student t errors, read for every model so that the core refuses them by
   // name wherever they are not offered (VarSpec::student_t).
   spec.student_t = optional_bool(model, "student_t", false);
+  // A volatility break, likewise: the period of data$train$y it starts in,
+  // counted from one, and zero for none (VarSpec::volatility_break).
+  spec.volatility_break = optional_int(model, "volatility_break", 0);
+  spec.volatility_scales = optional_int(model, "volatility_scales", 3);
   // Whether a time-varying model's forecast carries its random walks over the
   // horizon or holds them at the last sample period. Absent unless
   // add_posterior_forecasts() was given one, and `simulate` then, which is the

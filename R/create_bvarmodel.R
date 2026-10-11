@@ -67,6 +67,13 @@
 #' @param student_t logical. If \code{TRUE}, the errors are multivariate Student t
 #' rather than normal. Needs \code{error = "wishart"} and constant coefficients.
 #' Defaults to \code{FALSE}. See 'Details'.
+#' @param volatility_break an optional date of \code{data}, \code{c(year, period)}
+#' such as \code{c(2020, 3)} or a single time such as \code{2020.167}: the first
+#' period of a break in the volatility of every shock. Needs \code{error = "wishart"}
+#' and constant coefficients. Defaults to \code{NULL}, no break. See 'Details'.
+#' @param volatility_scales a whole number of at least one, how many periods from
+#' \code{volatility_break} on get a scale of their own before the excess decays
+#' (defaults to 3). Used only with \code{volatility_break}.
 #'
 #' @details The function produces the data matrices for vector autoregressive (VAR)
 #' models, which can also include unmodelled, non-deterministic variables:
@@ -252,6 +259,25 @@
 #' forecast draws each period's \eqn{\lambda} from its prior. A scenario and a
 #' steady-state prior are refused.
 #'
+#' \strong{A volatility break scales every shock from a known period on, and lets the
+#' data say by how much and for how long.} With \code{volatility_break} the error
+#' covariance of period \eqn{t} is \eqn{s_t^2 \Sigma}, the model of Lenza and Primiceri
+#' (2022) for the pandemic months: \eqn{s_t = 1} before the break, a free scale of at
+#' least one in each of the first \code{volatility_scales} periods from it, and after
+#' them \eqn{s_t = 1 + (s_m - 1) \rho^j} in the \eqn{j}-th period past the last free
+#' scale \eqn{s_m}, so that the excess decays at the rate \eqn{\rho}. Without it, a
+#' few months of enormous shocks pull the coefficients towards whatever explains them
+#' and widen every forecast band; with it, those periods count for less in the
+#' estimate of the coefficients and of \eqn{\Sigma}. The scale is common to every
+#' equation, which keeps the Wishart prior conjugate. The prior of the scales and of
+#' \eqn{\rho} is \code{sigma$volatility} in \code{\link{add_priors.bvarmodel}}, and
+#' their draws are \code{posterior$volatility$coeffs}, columns \code{s1}, \code{s2},
+#' ... and \code{rho}. The log likelihood and the forecasts use each period's scale,
+#' so a forecast made shortly after the break is drawn with the larger shocks the
+#' decay implies. Only the timing is known, and no scale goes below one: the break is
+#' a period of larger shocks. It can be combined with Student t errors; a
+#' steady-state prior is refused.
+#'
 #' @return An object of class 'bvarmodel' or, if a vector is given in \code{p}, \code{s}
 #' or \code{quantile}, a list of class 'modellist' with one such object per
 #' specification. A 'bvarmodel' is a list with the elements
@@ -311,6 +337,10 @@
 #' Korobilis, D. (2013). VAR forecasting using Bayesian variable selection.
 #' \emph{Journal of Applied Econometrics, 28}(2), 204--230. \doi{10.1002/jae.1271}
 #' 
+#' Lenza, M., & Primiceri, G. E. (2022). How to estimate a vector autoregression after
+#' March 2020. \emph{Journal of Applied Econometrics, 37}(4), 688--699.
+#' \doi{10.1002/jae.2895}
+#'
 #' Kozumi, H., & Kobayashi, G. (2011). Gibbs sampling methods for Bayesian quantile regression.
 #' \emph{Journal of Statistical Computation and Simulation, 81}(11), 1565--1578.
 #' \doi{10.1080/00949655.2010.496117}
@@ -350,7 +380,9 @@ create_bvarmodel <- function(data, p = 2,
                              aggregate = NULL,
                              soft = NULL,
                              quantile_grid = FALSE,
-                             student_t = FALSE) {
+                             student_t = FALSE,
+                             volatility_break = NULL,
+                             volatility_scales = 3) {
   
   # Input checks ----
   if (!"ts" %in% class(data)) {
@@ -714,6 +746,10 @@ create_bvarmodel <- function(data, p = 2,
   y <- stats::ts(as.matrix(temp[, 1:k]), class = c("mts", "ts", "matrix"))
   stats::tsp(y) <- stats::tsp(temp)
   dimnames(y)[[2]] <- temp_name[1:k]
+
+  # A volatility break, recorded as the period of y it falls on; see
+  # R/volatility_break.R.
+  model <- c(model, .volatility_break_model(volatility_break, volatility_scales, y, model_type))
   
   # What was observed of the sample, where it was not observed whole
   constraints <- NULL

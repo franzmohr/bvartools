@@ -20,6 +20,10 @@
 #' estimated from the whole sample; re-estimate the model to condition on the
 #' window alone.
 #'
+#' The period of a volatility break moves with the window. A window that ends
+#' before the break drops it, with its prior and its draws, and a warning; one
+#' that starts after it is refused, since a break has to fall inside the sample.
+#'
 #' \strong{A window that ends before the sample drops the forecast input, the
 #' forecasts and the realised values they were scored against}, with a warning:
 #' they start after the original end, from its last observations. Call
@@ -70,6 +74,9 @@ window.bvarmodel <- function(x, start = NULL, end = NULL, ...) {
   x <- .window_panel(x, periods, orig_time)
 
   .warn_empty_dummy_variables(x)
+
+  # A volatility break is a period of the sample, and moves with it.
+  x <- .window_volatility_break(x, periods)
 
   if (!is.null(x[["posterior"]])) {
     x[["posterior"]] <- .window_posterior(x[["posterior"]], periods, length(orig_time),

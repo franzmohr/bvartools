@@ -1109,6 +1109,9 @@ struct VecNormalWishartInitial
     arma::vec a_lambda;
     arma::vec beta;
     arma::mat u_sigma_inv;
+    /// Where a volatility break starts (VarSpec::volatility_break), as in
+    /// VarNormalWishartInitial::volatility.
+    arma::vec volatility;
 };
 
 /// The complete argument of the VecNormalWishart sampler.
@@ -1130,6 +1133,10 @@ struct VecNormalWishartInput
     ConstantCointSpacePrior beta_prior; ///< Unused when there are no regressors, i.e., r = 0.
     
     WishartPrior u_sigma_prior;    
+
+    /// The prior of a volatility break. Unused without one
+    /// (VarSpec::volatility_break).
+    VolatilityBreakPrior volatility_prior;
 
     VecNormalWishartInitial initial;
 

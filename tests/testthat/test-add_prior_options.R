@@ -152,3 +152,18 @@ test_that("the options survive the round trip through a file", {
   expect_equal(unclass(back$posterior$a$shrinkage), unclass(model$posterior$a$shrinkage),
                ignore_attr = TRUE)
 })
+
+test_that("shrinkage on a structural model is refused for what it is", {
+  # An even number of variables used to fail on the length of the groups, which
+  # read as a fault in 'group' rather than as the combination the samplers refuse.
+  for (k in 2:3) {
+    model <- create_bvarmodel(var_data()[, seq_len(k)], p = 1, deterministic = "const",
+                              structural = TRUE, error = "gamma", iterations = 10, burnin = 5)
+    model <- add_priors(model, coef = list(v_i = 1, v_i_det = 0.1),
+                        sigma = list(shape = 3, rate = 0.01))
+    expect_error(add_prior_options(model, shrinkage = "horseshoe"), "structural form",
+                 info = k)
+    expect_error(add_prior_options(model, stationary = TRUE), "structural form", info = k)
+    expect_no_error(add_prior_options(model, steady_state = NULL))
+  }
+})

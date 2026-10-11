@@ -34,10 +34,16 @@ Neither needs the draws together, so the chain is read in pieces of
 together at the end. What comes out is what the same call on the model in
 memory gives.
 
-For a variance decomposition the pieces are combined before the shares are
-normalised and before groups are collapsed, so \code{normalise_gir} and
-\code{max_groups} describe the whole chain rather than the piece they were
-applied to.
+For a variance decomposition the pieces hand back the shares of each of
+their draws, and the decomposition is summarised once over all of them, so
+\code{statistic}, \code{ci}, \code{normalise_gir} and \code{max_groups}
+describe the whole chain rather than the piece they were applied to.
+
+An identification given per draw is read at the draw's position in the
+whole chain: a list of impact matrices is cut to each piece's draws, and an
+impact function is called with the draw's number in the chain. A piece in
+which no draw is identified -- under \code{type = "sign"}, or an impact
+function that declines all of its draws -- contributes nothing.
 }
 \examples{
 

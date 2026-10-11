@@ -1,5 +1,33 @@
 # bvartools 1.0.0
 
+* **Calls that stopped, or were refused for the wrong reason, now work.**
+
+  - `write_to_hdf5()` writes a model identified with
+    `add_sign_zero_restrictions()`, and the record of its importance sample
+    survives the round trip.
+  - A VEC model too short for least squares starting values gets a start for
+    its cointegration vectors, instead of regressors the sampler refused as
+    NaN -- the early windows of an expanding window ran into this.
+  - `thin()` thins a grid of quantiles.
+  - A test sample with a gap anywhere before the horizon is scored; a ragged
+    edge is scored over the periods observed for every variable.
+  - `pool_forecasts()` matches windows that end in the same period whatever
+    other windows each member has.
+  - `irf()` and `fevd()` on a stored model take a list of impact matrices or
+    an impact function per draw, read at the draw's position in the chain, and
+    pass over pieces with no draw identified by sign restrictions.
+  - `ssvs_prior()` and `inclusion_prior()` take a model list, the three prior
+    helpers an expanding window, `add_prior_options()` an expanding window, and
+    `multipliers()` and `historical_decomposition()` either.
+  - `add_predictive_loglik()` on an expanding window of discounted models
+    scores each window's forecast against a `test_sample`, instead of saying
+    that its windows held no posterior draws.
+  - Shrinkage or the stationarity restriction on a structural model, which the
+    samplers do not combine with it, is refused for that reason, rather than for
+    the length of the shrinkage groups.
+
+  Draws are unchanged.
+
 * **Results that came back wrong without an error are corrected.** Each case
   ran to completion and returned plausible numbers:
 

@@ -34,6 +34,9 @@
 #' \eqn{\kappa_{4}} \tab for deterministic variables.
 #' }
 #' 
+#' For an object of class 'modellist' or 'expandingwindow' the prior of every
+#' model is returned in the shape of the collection, each of its own dimensions.
+#'
 #' @return A list containing a matrix of prior inclusion probabilities and an integer vector
 #' specifying the positions of variables, which should be included in the variable selection algorithm.
 #' 

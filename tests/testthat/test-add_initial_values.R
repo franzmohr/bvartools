@@ -298,3 +298,17 @@ test_that("a starting path of the wrong length is refused rather than padded or 
   expect_error(add_posterior_coefficients(windowed), "add_initial_values")
   expect_no_error(add_posterior_coefficients(add_initial_values(windowed)))
 })
+
+test_that("a VEC model too short for least squares starts still has finite regressors", {
+  # The fallback zeroed the coefficients but left beta unset and the first
+  # k * r regressors, beta' w_{t-1}, as NA, so the sampler refused the model.
+  # This is the early window of an expanding window.
+  data <- stats::window(e6, end = c(1973, 4))
+  model <- create_bvecmodel(data, p = 4, r = 1, iterations = 10, burnin = 5)
+  model <- add_priors(model, coef = list(v_i = 1, v_i_det = 0.1),
+                      coint = list(v_i = 0, p_tau_i = 1), sigma = list(df = "k", scale = 1))
+  expect_warning(model <- add_initial_values(model), "Not enough observations")
+  expect_false(anyNA(model[["data"]][["train"]][["z"]]))
+  expect_length(model[["initial"]][["beta"]], ncol(model[["data"]][["train"]][["w"]]))
+  expect_no_error(add_posterior_coefficients(add_seed(model, 1)))
+})

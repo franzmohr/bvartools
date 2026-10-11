@@ -61,11 +61,30 @@ read_hdf5_model.bvecmodel <- function(x, h5_root, draws = NULL, ...) {
         period <- hdf5r::h5attr(group_sign, "period")
       }
 
+      max_tries <- NULL
+      if ("max_tries" %in% hdf5r::h5attr_names(group_sign)) {
+        max_tries <- hdf5r::h5attr(group_sign, "max_tries")
+      }
+
       result[["model"]][["sign_restrictions"]] <- list(
         "restrictions" = as.data.frame(restrictions),
-        "max_tries" = hdf5r::h5attr(group_sign, "max_tries"),
+        "max_tries" = max_tries,
         "period" = period
       )
+    }
+
+    # The identification of add_sign_zero_restrictions(), table and record.
+    if ("sign_zero_restrictions" %in% names(h5_root[["model"]])) {
+      group_sz <- h5_root[["model"]][["sign_zero_restrictions"]]
+      dataset <- group_sz[["restrictions"]]
+      restrictions <- .hdf5_read_matrix(dataset)
+      colnames(restrictions) <- hdf5r::h5attr(dataset, "columns")
+      sign_zero <- list("restrictions" = as.data.frame(restrictions))
+      for (i in hdf5r::h5attr_names(group_sz)) {
+        value <- hdf5r::h5attr(group_sz, i)
+        sign_zero[[i]] <- if (is.numeric(value) && is.nan(value)) NA_real_ else value
+      }
+      result[["model"]][["sign_zero_restrictions"]] <- sign_zero
     }
 
     # The rules the dummy variables of add_dummy_variables() are continued by

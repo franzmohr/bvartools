@@ -124,7 +124,11 @@ pool_forecasts <- function(...) {
   forecasts <- lapply(seq_len(n_members), function(i) {
     x <- if (windows) unclass(members[[i]]) else list(members[[i]])
     ends <- vapply(x, .pool_sample_end, numeric(1))
-    stats::setNames(x, format(ends, digits = 10))
+    # One by one: format() of a vector pads every element to the decimals of
+    # the longest, so the end 2023.5 was "2023.5" for a member with that one
+    # window and "2023.50" for a member whose windows included 2023.25, and the
+    # two did not match.
+    stats::setNames(x, vapply(ends, format, character(1), digits = 10))
   })
   names(forecasts) <- names(members)
 

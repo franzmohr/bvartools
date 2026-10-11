@@ -209,6 +209,9 @@ fevd.bvarmodel <- function(x, response = NULL, n_ahead = 5, type = "oir", normal
   # The draws in the shape .vardecomp wants them, shared with spillover() so
   # that the two cannot disagree about which slice of a row is `period`.
   A <- .collect_draws(x, period = period, need_A0 = need_A0, impact = impact)
+  if (length(A) == 0) {
+    .stop_no_identified_draws()
+  }
 
   phi <- lapply(A, .vardecomp, h = n_ahead,
                 type = if (type == "sign") "custom" else type, response = response)

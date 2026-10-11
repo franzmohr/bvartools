@@ -577,3 +577,27 @@ test_that("a discounted model carries no SUR matrix", {
   on.exit(unlink(path), add = TRUE)
   expect_silent(write_to_hdf5(model, filename = path))
 })
+
+test_that("an expanding window of discounted models is scored through its forecasts", {
+  # It used to be told that its windows held no posterior draws.
+  data("e1", package = "bvartools", envir = environment())
+  series <- diff(log(e1)) * 100
+  train <- stats::window(series, end = c(1980, 4))
+  model <- create_bvarmodel(train, p = 1, deterministic = "const", algorithm = "discount",
+                            delta_beta = 0.99, iterations = 15, burnin = 0, thin = 1)
+  windows <- use_expanding_window(model, start = c(1980, 2))
+  windows <- add_priors(windows, coef = list(v_i = 1, v_i_det = 1 / 10),
+                        sigma = list(df = "k", scale = 1))
+  windows <- add_posterior_coefficients(add_initial_values(windows))
+  windows <- add_posterior_forecasts(add_forecast_input(windows, n_ahead = 1))
+
+  expect_error(add_predictive_loglik(windows), "test_sample")
+  scored <- add_predictive_loglik(windows, test_sample = series)
+  for (i in seq_along(windows)) {
+    alone <- add_predictive_loglik(windows[[i]], test_sample = series)
+    expect_equal(scored[[i]][["predictive"]][["loglik"]],
+                 as.numeric(as.matrix(alone[["posterior"]][["forecast"]][["loglik"]])[, 1]))
+  }
+  criteria <- selection_criteria(scored)
+  expect_false(is.null(criteria[["LPL"]]))
+})

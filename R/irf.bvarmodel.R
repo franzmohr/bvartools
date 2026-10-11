@@ -206,6 +206,9 @@ irf.bvarmodel <- function(x, impulse = NULL, response = NULL, n_ahead = 5, ci = 
   # model's contemporaneous block into the coefficients the recursion uses.
   A <- .collect_draws(x, period = period, need_A0 = need_A0,
                       need_Sigma = need_Sigma, impact = impact)
+  if (length(A) == 0) {
+    .stop_no_identified_draws()
+  }
 
   # Size of the shock, one value per draw. A numeric shock is the same for every
   # draw. "oir", "gir" and "sgir" count a shock in standard deviations already,

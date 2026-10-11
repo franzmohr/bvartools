@@ -203,3 +203,16 @@ test_that("a scenario conditions the forecast of a Gaussian VAR too", {
   expect_equal(unname(fc[, 2]), rep(0.5, nrow(fc)), tolerance = 1e-8)
   expect_equal(unname(fc[, 5]), rep(0.25, nrow(fc)), tolerance = 1e-8)
 })
+
+test_that("a grid of quantiles can be thinned", {
+  # Its draws used to be counted off the error precisions, which a grid does
+  # not keep, so thin() said it had none.
+  object <- grid_fitted()
+  thinned <- thin(object, 2)
+  expect_identical(nrow(thinned[["posterior"]][["a"]][["coeffs"]]),
+                   as.integer(fx_iterations / 2))
+  expect_identical(nrow(thinned[["posterior"]][["u_scale"]][["coeffs"]]),
+                   as.integer(fx_iterations / 2))
+  expect_equal(unname(as.matrix(thinned[["posterior"]][["a"]][["coeffs"]])),
+               unname(as.matrix(object[["posterior"]][["a"]][["coeffs"]])[seq(2, fx_iterations, 2), ]))
+})

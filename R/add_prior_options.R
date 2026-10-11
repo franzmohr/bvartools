@@ -118,7 +118,10 @@
 add_prior_options <- function(object, shrinkage = "none", stationary = FALSE,
                               steady_state = NULL, constraints = NULL) {
 
-  if (inherits(object, "modellist")) {
+  # The windows of an expanding window exercise are models like those of a
+  # list, and the order .drop_empty_dummy_variables() prescribes -- the options
+  # after the windows are cut -- needs this to take them.
+  if (inherits(object, "modellist") || inherits(object, "expandingwindow")) {
     for (i in seq_along(object)) {
       object[[i]] <- add_prior_options(object[[i]], shrinkage = shrinkage, stationary = stationary,
                                        steady_state = steady_state, constraints = constraints)
@@ -126,7 +129,7 @@ add_prior_options <- function(object, shrinkage = "none", stationary = FALSE,
     return(object)
   }
   if (!inherits(object, "bvarmodel")) {
-    stop("Argument 'object' must be of class 'bvarmodel' or 'modellist'.")
+    stop("Argument 'object' must be of class 'bvarmodel', 'modellist' or 'expandingwindow'.")
   }
   if (is.null(object[["priors"]][["a"]])) {
     stop("Argument 'object' has no prior on its coefficients. Call add_priors() first.")
@@ -139,6 +142,24 @@ add_prior_options <- function(object, shrinkage = "none", stationary = FALSE,
   # Shrinkage ----
   if (is.character(shrinkage)) {
     shrinkage <- list("type" = shrinkage)
+  }
+
+  # Refused by the samplers whatever the groups: each of these rearranges the
+  # prior or the draw the shrinkage and the stationarity restriction act on.
+  # Said here, before the groups are built -- for a structural model with an
+  # even number of variables they came out the wrong length, and the refusal
+  # read as a fault in 'group' rather than as the combination it is.
+  shrinks <- is.list(shrinkage) && !identical(shrinkage[["type"]], "none")
+  if (shrinks || isTRUE(stationary)) {
+    clash <- c(if (isTRUE(model[["structural"]])) "a structural form",
+               if (!is.null(model[["varsel"]]) && model[["varsel"]] != "none") "variable selection",
+               if (isTRUE(model[["n_iid"]] > 0)) "i.i.d. variables ('iid')")
+    if (length(clash) > 0) {
+      stop("Shrinkage and the stationarity restriction are not combined with ",
+           paste(clash, collapse = " or "), ": each rearranges the prior or the draw they ",
+           "act on. Estimate the model without ", paste(clash, collapse = " and "),
+           ", or without 'shrinkage' and 'stationary'.")
+    }
   }
   if (!is.list(shrinkage) || length(shrinkage[["type"]]) != 1 ||
       !shrinkage[["type"]] %in% c("none", "minnesota", "horseshoe", "normal_gamma")) {

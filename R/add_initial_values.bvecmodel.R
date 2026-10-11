@@ -170,6 +170,23 @@ add_initial_values.bvecmodel <- function(object, method = "maxlik", ...){
       
     } else {
       warning("Not enough observations for ML-based initial values. Setting initial values of coefficients to 0.")
+      # The cointegration vectors still need a start, and the first k * r
+      # regressors are beta' w_{t-1}, which create_bvecmodel() leaves as NA
+      # until there is a beta. Without one the sampler was handed NaN
+      # regressors and refused the model -- the early windows of an expanding
+      # window among them. The normalised start of method "prior" serves.
+      if (r > 0) {
+        beta <- matrix(0, k_ect, r)
+        beta[1:r, 1:r] <- diag(1, r)
+        beta <- .tvp_initial_beta_scale(beta, object)
+        z[, 1:n_alpha] <- kronecker(crossprod(t(w), beta), diag(1, k))
+        if (object[["model"]][["tvp"]]) {
+          object[["initial"]][["beta"]] <- matrix(beta, length(beta) * tt)
+          object[["initial"]][["beta_init"]] <- matrix(beta)
+        } else {
+          object[["initial"]][["beta"]] <- matrix(beta)
+        }
+      }
       if (n_z > 0) {
         if (object[["model"]][["tvp"]]) {
           object[["initial"]][["a"]] <- matrix(0, ncol(z) * tt)

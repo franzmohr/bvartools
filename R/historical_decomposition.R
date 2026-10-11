@@ -58,6 +58,9 @@ historical_decomposition <- function(x, ...) {
 #' time-varying parameters and stochastic volatility, whose impact matrix would
 #' differ from period to period, and structural models.
 #'
+#' For an object of class 'modellist' or 'expandingwindow' the decomposition of
+#' every model is returned in a list named after the models.
+#'
 #' @return A time series of class \code{"bvarhd"}, one row per period of the
 #' estimation sample and one column per shock plus a last column
 #' \code{baseline}. With \code{ci}, attributes \code{lower} and \code{upper}

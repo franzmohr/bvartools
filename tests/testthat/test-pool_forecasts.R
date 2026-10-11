@@ -193,3 +193,14 @@ test_that("single models are pooled into one pooled forecast", {
   expect_identical(nrow(as.matrix(pool[["posterior"]][["forecast"]][["forecasts"]])),
                    2L * nrow(as.matrix(member[[1]][["posterior"]][["forecast"]][["forecasts"]])))
 })
+
+test_that("windows ending in the same period match whatever else each member has", {
+  # The windows were named with format() of all ends at once, which pads to the
+  # longest: 1996.5 was "1996.50" beside 1996.25 and "1996.5" alone.
+  member <- fx_expanding_forecast()
+  single <- unclass(member)[2]
+  attributes(single) <- c(attributes(single),
+                          attributes(member)[setdiff(names(attributes(member)), "names")])
+  pooled <- suppressMessages(pool_forecasts(all = member, one = single))
+  expect_length(pooled, 1)
+})

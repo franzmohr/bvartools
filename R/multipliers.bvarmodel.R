@@ -57,6 +57,9 @@ NULL
 #' are integrated -- a permanent change moves the endogenous variables
 #' permanently, and the multipliers converge to a level rather than to zero.
 #'
+#' For an object of class 'modellist' or 'expandingwindow' the multipliers of
+#' every model are returned in a list named after the models.
+#'
 #' @return A time-series object of class 'bvarirf', which is what
 #' \code{\link[bayests]{irf}} returns, so that the same \code{plot} method applies.
 #'

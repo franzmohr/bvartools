@@ -56,7 +56,17 @@ thin.bvarmodel <- function(x, thin = 10, ...) {
          "nothing to thin.", call. = FALSE)
   }
 
-  draws <- nrow(x[["posterior"]][["u_sigma_inv"]][["coeffs"]])
+  # Counted off the error precisions, or where a model keeps none -- a grid of
+  # quantiles -- off its scales or its coefficients; counting off the
+  # precisions alone refused a grid as having no draws at all.
+  posterior <- x[["posterior"]]
+  draws <- NULL
+  for (block in c("u_sigma_inv", "u_scale", "a")) {
+    if (!is.null(posterior[[block]][["coeffs"]])) {
+      draws <- nrow(posterior[[block]][["coeffs"]])
+      break
+    }
+  }
   if (is.null(draws)) {
     stop("Argument 'x' has no posterior draws to thin.", call. = FALSE)
   }

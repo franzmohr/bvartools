@@ -22,9 +22,12 @@ jobs:
         with:
           use-public-rspm: true
 
+      # bayests is installed from GitHub until it is on CRAN, which it has to
+      # be before this package can be submitted; then remove this line's
+      # github:: entry and let it resolve from CRAN like the rest.
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::covr, any::xml2
+          extra-packages: any::covr, any::xml2, github::franzmohr/bayests-r
           needs: coverage
 
       - name: Test coverage

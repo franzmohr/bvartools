@@ -39,9 +39,12 @@ jobs:
           r-version: ${{ matrix.config.r }}
           http-user-agent: ${{ matrix.config.http-user-agent }}
 
+      # bayests is installed from GitHub until it is on CRAN, which it has to
+      # be before this package can be submitted; then remove this line's
+      # github:: entry and let it resolve from CRAN like the rest.
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::rcmdcheck
+          extra-packages: any::rcmdcheck, github::franzmohr/bayests-r
           needs: check
 
       - uses: r-lib/actions/check-r-package@v2

@@ -93,10 +93,10 @@ reference:
   - read_model_from_hdf5
   - read_models_from_folder
   - read_expanding_window_model_from_folder
-  - list_models_in_hdf5
-  - open_model
-  - open_models
-  - folder_steps
+  - read_model_groups
+  - read_model_file
+  - read_model_folder
+  - read_hdf5_model.bvarmodel
   - analysis_of_stored_models
   - map_models
   - write_bayests_tree

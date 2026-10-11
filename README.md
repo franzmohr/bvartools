@@ -125,8 +125,13 @@ install.packages("bvartools")
 
 ### Development version
 
+The development version needs the development version of
+[bayests](https://github.com/franzmohr/bayests-r), the layer of generics and
+model files it shares with dfmtools and ucmtools, which is not on CRAN yet:
+
 ``` r
 # install.packages("devtools")
+devtools::install_github("franzmohr/bayests-r")
 devtools::install_github("franzmohr/bvartools")
 ```
 

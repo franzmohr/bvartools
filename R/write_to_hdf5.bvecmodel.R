@@ -155,7 +155,8 @@ write_to_hdf5.bvecmodel <- function(object, filename, group = "", ...) {
     group_priors <- .hdf5_group(handles, output, "priors")
 
     ## Those kept in a group of their own ----
-    for (i in c("a", "beta", "psi")) {
+    # 'volatility' is the prior of a volatility break.
+    for (i in c("a", "beta", "psi", "volatility")) {
       if (!is.null(object[["priors"]][[i]])) {
         group_prior <- .hdf5_group(handles, group_priors, i)
         for (j in names(object[["priors"]][[i]])) {
@@ -214,8 +215,10 @@ write_to_hdf5.bvecmodel <- function(object, filename, group = "", ...) {
     #
     # 'u_sigma' is a discounted model's: the scale of its Wishart, one column
     # per period, which the samplers' 'u_sigma_inv' has no counterpart for.
+    #
+    # 'volatility' holds the scales of a volatility break.
     for (i in c("a", "beta", "psi", "u_omega_inv", "u_sigma_inv", "forecast",
-                "u_sigma")) {
+                "u_sigma", "volatility")) {
       if (i %in% names(object[["posterior"]])) {
         group_draws <- .hdf5_group(handles, group_posterior, i)
         for (j in names(object[["posterior"]][[i]])) {

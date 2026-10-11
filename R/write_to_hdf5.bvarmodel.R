@@ -215,8 +215,9 @@ write_to_hdf5.bvarmodel <- function(object, filename, group = "", ...) {
     # 'constraints' that of the error precision of soft constraints. An element
     # that is itself a list -- the adaptive prior in a$shrinkage -- is a group
     # below the block's.
-    # 'student_t' is the prior of Student t errors' degrees of freedom.
-    for (i in c("a", "psi", "u_scale", "mu", "constraints", "student_t")) {
+    # 'student_t' is the prior of Student t errors' degrees of freedom, and
+    # 'volatility' that of a volatility break.
+    for (i in c("a", "psi", "u_scale", "mu", "constraints", "student_t", "volatility")) {
       if (!is.null(object[["priors"]][[i]])) {
         group_prior <- .hdf5_group(handles, group_priors, i)
         for (j in names(object[["priors"]][[i]])) {
@@ -290,9 +291,10 @@ write_to_hdf5.bvarmodel <- function(object, filename, group = "", ...) {
     # 'y', 'constraints_inv' and 'mu' are the completed panel, the precision of
     # soft constraints and the unconditional mean; see add_posterior_coefficients().
     # 'student_t' holds the degrees of freedom and the mixing scales of Student
-    # t errors, /posterior/student_t/df and /lambda as BayesTS writes them.
+    # t errors, /posterior/student_t/df and /lambda as BayesTS writes them, and
+    # 'volatility' the scales of a volatility break, /posterior/volatility/coeffs.
     for (i in c("a", "psi", "u_omega_inv", "u_sigma_inv", "u_scale", "q", "forecast",
-                "u_sigma", "y", "constraints_inv", "mu", "student_t")) {
+                "u_sigma", "y", "constraints_inv", "mu", "student_t", "volatility")) {
       if (i %in% names(object[["posterior"]])) {
         group_draws <- .hdf5_group(handles, group_posterior, i)
         for (j in names(object[["posterior"]][[i]])) {

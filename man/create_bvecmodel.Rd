@@ -22,7 +22,9 @@ create_bvecmodel(
   delta_sigma = 1,
   iterations = 20000,
   burnin = 2000,
-  thin = 1
+  thin = 1,
+  volatility_break = NULL,
+  volatility_scales = 3
 )
 }
 \arguments{
@@ -90,6 +92,15 @@ the burn-in the sampler keeps the last of every \code{thin} draws, so it runs
 \code{burnin + iterations * thin} draws and still keeps \code{iterations}. Unlike
 \code{\link[=thin.bvecmodel]{thin}}, which thins draws already made, the draws
 that are not kept are never held in memory.}
+
+\item{volatility_break}{an optional date of \code{data}, \code{c(year, period)}
+such as \code{c(2020, 3)} or a single time such as \code{2020.167}: the first
+period of a break in the volatility of every shock. Needs \code{error = "wishart"}
+and constant coefficients. Defaults to \code{NULL}, no break. See 'Details'.}
+
+\item{volatility_scales}{a whole number of at least one, how many periods from
+\code{volatility_break} on get a scale of their own before the excess decays
+(defaults to 3). Used only with \code{volatility_break}.}
 }
 \value{
 An object of class 'bvecmodel' or, if a vector is given in \code{p}, \code{s}
@@ -196,6 +207,18 @@ chain: one row per period under \code{posterior$a$mean},
 \code{posterior$a$cov}, \code{posterior$u_sigma$scale} and
 \code{posterior$df}, and no \code{coeffs} anywhere, because joining one
 draw per period would look like a sampled path and is not one.
+
+\strong{A volatility break scales every shock from a known period on.} With
+\code{volatility_break} the error covariance of period \eqn{t} is
+\eqn{s_t^2 \Sigma}, as described for \code{\link{create_bvarmodel}} after Lenza and
+Primiceri (2022), and is available for constant coefficients and
+\code{error = "wishart"}. The differenced variables, the short-run regressors and
+the levels the cointegration term is built from are all divided by \eqn{s_t}, which
+keeps the loadings, the cointegration space and the Wishart prior conjugate. The
+prior is \code{sigma$volatility} in \code{\link{add_priors.bvecmodel}}, the draws are
+\code{posterior$volatility$coeffs}, and \code{\link{vec_to_var}} carries both the
+break and its draws over to the VAR in levels, whose log likelihood and forecasts
+are the VEC model's.
 }
 \examples{
 
@@ -221,6 +244,10 @@ simulation for cointegrated models with priors on the cointegration space.
 
 Korobilis, D. (2013). VAR forecasting using Bayesian variable selection.
 \emph{Journal of Applied Econometrics, 28}(2), 204--230. \doi{10.1002/jae.1271}
+
+Lenza, M., & Primiceri, G. E. (2022). How to estimate a vector autoregression after
+March 2020. \emph{Journal of Applied Econometrics, 37}(4), 688--699.
+\doi{10.1002/jae.2895}
 
 Lütkepohl, H. (2006). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
 

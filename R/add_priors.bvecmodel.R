@@ -100,6 +100,7 @@
 #' \code{error} of the model:
 #' \itemize{
 #'   \item \code{"wishart"}: \code{df} and \code{scale}. Not available for structural models.
+#'   A model created with \code{volatility_break} also needs \code{volatility}.
 #'   \item \code{"gamma"} and \code{"gamma+covar"}: \code{shape} and \code{rate}.
 #'   \item \code{"sv"} and \code{"sv+covar"}: \code{mu}, \code{v_i}, \code{shape}, \code{rate},
 #'   \code{state_variance} and \code{offset}; with \code{tvp = TRUE}, \code{omega_v} may take the
@@ -113,6 +114,13 @@
 #'   matrix to the posterior degrees of freedom, as the prior of the loadings requires.}
 #'   \item{\code{scale}}{a positive numeric specifying the prior error variance of the endogenous
 #'   variables in the inverse Wishart prior.}
+#'   \item{\code{volatility}}{for a model with a volatility break, the prior of its
+#'   scales and decay, \code{list(shape = , rho_shape1 = , rho_shape2 = )}: a Pareto
+#'   prior with shape \code{shape} on every free scale, which puts no mass below one,
+#'   and a beta prior with shapes \code{rho_shape1} and \code{rho_shape2} on the rate
+#'   \eqn{\rho} the break decays at. Lenza and Primiceri (2022) use
+#'   \code{list(shape = 1, rho_shape1 = 3.04, rho_shape2 = 1.51)}, a beta with mode 0.8
+#'   and standard deviation 0.2. Refused for a model without a break.}
 #'   \item{\code{shape}}{for \code{"gamma"} and \code{"gamma+covar"} a non-negative numeric, or a
 #'   character expression in \code{k} as for \code{df}, specifying the shape of the gamma prior on
 #'   the error precisions, the inverse error variances, whose mean is \code{shape / rate}, either one
@@ -184,6 +192,8 @@
 #'   same elements as for a VAR model in \code{\link{add_priors.bvarmodel}}.}
 #'   \item{\code{psi}, \code{u_sigma}}{the priors of the error covariance coefficients
 #'   and error variances, as for a VAR model.}
+#'   \item{\code{volatility}}{for a volatility break, \code{shape}, \code{rho_shape1}
+#'   and \code{rho_shape2}, as given in \code{sigma$volatility}.}
 #' }
 #'
 #' @references
@@ -210,6 +220,10 @@
 #' Korobilis, D. (2013). VAR forecasting using Bayesian variable selection.
 #' \emph{Journal of Applied Econometrics, 28}(2), 204--230. \doi{10.1002/jae.1271}
 #' 
+#' Lenza, M., & Primiceri, G. E. (2022). How to estimate a vector autoregression after
+#' March 2020. \emph{Journal of Applied Econometrics, 37}(4), 688--699.
+#' \doi{10.1002/jae.2895}
+#'
 #' Lütkepohl, H. (2006). \emph{New introduction to multiple time series analysis} (2nd ed.). Berlin: Springer.
 #' 
 #' @examples 
@@ -741,6 +755,10 @@ add_priors.bvecmodel <- function(object,
       object[["priors"]][[pos]][["shape"]] <- matrix(help_df, k)
     }
   }
+
+  # A volatility break: the prior of its scales and decay, under the name of
+  # the model file's /priors/volatility. See R/volatility_break.R.
+  object[["priors"]][["volatility"]] <- .add_priors_volatility(object, sigma)
   
   return(object)
 }

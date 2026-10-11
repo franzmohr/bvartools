@@ -85,6 +85,8 @@ bayests::VarNormalWishartInput read_input(const Rcpp::List &object) {
     input.initial.student_t_df = optional_double(initial, "student_t_df", 0.0);
   }
 
+  read_volatility_break(object, input.volatility_prior, input.initial.volatility);
+
   read_extensions(object, input);
   return input;
 }
@@ -109,6 +111,12 @@ bayests::VarNormalWishartDraws read_draws(const Rcpp::List &object) {
   if (has(posterior, "u_sigma_inv")) {
     const Rcpp::List posterior_u_sigma_inv = posterior["u_sigma_inv"];
     read_draws_if_present(posterior_u_sigma_inv, "coeffs", draws.u_sigma_inv);
+  }
+  // The scales of a volatility break, which the log likelihood and the
+  // forecast read: the free ones and then the decay rate.
+  if (has(posterior, "volatility")) {
+    const Rcpp::List posterior_volatility = posterior["volatility"];
+    read_draws_if_present(posterior_volatility, "coeffs", draws.volatility);
   }
   // nu is what the log likelihood and the forecast read; lambda integrates out
   // of both, and is read back only so that a round trip keeps it.
@@ -138,6 +146,12 @@ Rcpp::List write_draws(const bayests::VarNormalWishartDraws &draws) {
     }
   }
   posteriors["u_sigma_inv"] = Rcpp::List::create(Rcpp::Named("coeffs") = draws_to_r(draws.u_sigma_inv));
+  // One row per draw: the free scales of a volatility break and then the rate
+  // the last one's excess decays at, /posterior/volatility/coeffs in a file.
+  if (draws.has_volatility()) {
+    posteriors.push_back(Rcpp::List::create(Rcpp::Named("coeffs") = draws_to_r(draws.volatility)),
+                         "volatility");
+  }
   // One row per draw: nu, and each period's mixing scale lambda_t, the factor
   // that period's covariance was inflated by.
   if (draws.has_student_t()) {

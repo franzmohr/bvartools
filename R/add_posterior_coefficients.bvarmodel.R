@@ -41,6 +41,11 @@
 #' and \code{lambda}, the draws of each period's mixing scale: one column per
 #' period, large where the period's shocks were.
 #'
+#' With a volatility break (\code{volatility_break} in \code{\link{create_bvarmodel}}
+#' or \code{\link{create_bvecmodel}}), \code{posterior$volatility$coeffs} holds the
+#' draws of the free scales, columns \code{s1}, \code{s2}, ..., one per period from the
+#' break on, and of \code{rho}, the rate their excess over one decays at after them.
+#'
 #' @return The object in \code{object} with the element \code{posterior} added. Each of its
 #' elements is a list whose element \code{coeffs} holds the draws after burn-in as a
 #' \code{\link[coda]{mcmc}} object with one row per draw and one column per parameter:
@@ -165,8 +170,9 @@ add_posterior_coefficients.bvarmodel <- function(object, posterior_function = NU
     # adaptive prior on the coefficients.
     # 'student_t' holds 'df', the degrees of freedom of Student t errors, and
     # 'lambda', each period's mixing scale.
+    # 'volatility' holds the scales of a volatility break.
     for (i in c("a", "psi", "u_sigma_inv", "u_omega_inv", "u_scale", "y", "constraints_inv", "mu",
-                "student_t")) {
+                "student_t", "volatility")) {
       for (j in c("coeffs", "lambda", "sigma", "omega", "omega_log_zero", "omega_log_zero_joint",
                   "shrinkage", "local", "theta", "df")) {
         if (!is.null(object[["posterior"]][[i]][[j]])) {
@@ -179,6 +185,7 @@ add_posterior_coefficients.bvarmodel <- function(object, posterior_function = NU
     # model does not have as NULL. Such an element cannot be written to a file,
     # so a round trip lost it; it is dropped here, which reads the same.
     object[["posterior"]] <- .drop_null(object[["posterior"]])
+    object[["posterior"]][["volatility"]] <- .label_volatility_draws(object[["posterior"]][["volatility"]])
 
   } else {
     # Apply own function

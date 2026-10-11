@@ -1,5 +1,27 @@
 # bvartools 1.0.0
 
+* **A volatility break for VAR and VEC models with a Wishart prior.**
+  `create_bvarmodel(volatility_break = c(2020, 3))` and the same argument of
+  `create_bvecmodel()` scale every shock from that period on by `s_t`, the
+  model Lenza and Primiceri (2022) proposed for estimating a VAR after March
+  2020: a free scale in each of the first `volatility_scales` periods (three by
+  default), then an excess over one that decays at a rate `rho`. The date says
+  when; how large the break was and how fast it faded are estimated, so the
+  pandemic months count for less in the coefficients and the covariance
+  without being dropped. The prior is `sigma$volatility = list(shape = ,
+  rho_shape1 = , rho_shape2 = )` in `add_priors()`, a Pareto on the scales and
+  a beta on `rho`, without a default; the error message names the values of
+  Lenza and Primiceri. The draws are `posterior$volatility$coeffs`, columns
+  `s1`, `s2`, ... and `rho`. The log likelihood and the forecasts use each
+  period's scale, `vec_to_var()` carries the break to the VAR in levels, and
+  `window()`, `thin()` and the model file carry it; a window that ends before
+  the break drops it with a warning, and one that starts after it is refused.
+  It is the sampler of BayesTS's VarNormalWishart and VecNormalWishart,
+  vendored from `deeebd0`, so it is available for constant coefficients and
+  `error = "wishart"` only and refused elsewhere, and a steady-state prior is
+  refused with it. It combines with Student t errors. Draws of a model without
+  it are unchanged.
+
 * **Student t errors for a VAR with a Wishart prior.**
   `create_bvarmodel(student_t = TRUE)` makes each period's shocks multivariate
   t: `u_t ~ N(0, lambda_t Sigma)` with `lambda_t ~ IG(nu / 2, nu / 2)`, so a

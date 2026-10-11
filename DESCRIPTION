@@ -157,6 +157,7 @@ Collate:
     'vec_to_var.R'
     'vec_to_var.bvecmodel.R'
     'vec_to_var.modellist.R'
+    'volatility_break.R'
     'window.bvarmodel.R'
     'window.bvecmodel.R'
     'write_to_hdf5.bvarmodel.R'

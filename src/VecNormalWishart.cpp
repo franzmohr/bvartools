@@ -84,6 +84,8 @@ bayests::VecNormalWishartInput read_input(const Rcpp::List &object) {
     read_mat_if_present(initial, "u_sigma_inv", input.initial.u_sigma_inv);
   }
 
+  read_volatility_break(object, input.volatility_prior, input.initial.volatility);
+
   read_extensions(object, input);
   return input;
 }
@@ -113,6 +115,12 @@ bayests::VecNormalWishartDraws read_draws(const Rcpp::List &object) {
     const Rcpp::List posterior_u_sigma_inv = posterior["u_sigma_inv"];
     read_draws_if_present(posterior_u_sigma_inv, "coeffs", draws.u_sigma_inv);
   }
+  // The scales of a volatility break, which the log likelihood and the
+  // forecast read: the free ones and then the decay rate.
+  if (has(posterior, "volatility")) {
+    const Rcpp::List posterior_volatility = posterior["volatility"];
+    read_draws_if_present(posterior_volatility, "coeffs", draws.volatility);
+  }
 
   read_draw_extensions(object, draws);
   return draws;
@@ -138,6 +146,12 @@ Rcpp::List write_draws(const bayests::VecNormalWishartDraws &draws) {
     posteriors["beta"] = Rcpp::List::create(Rcpp::Named("coeffs") = draws_to_r(draws.beta));
   }
   posteriors["u_sigma_inv"] = Rcpp::List::create(Rcpp::Named("coeffs") = draws_to_r(draws.u_sigma_inv));
+  // One row per draw: the free scales of a volatility break and then the rate
+  // the last one's excess decays at, /posterior/volatility/coeffs in a file.
+  if (draws.has_volatility()) {
+    posteriors.push_back(Rcpp::List::create(Rcpp::Named("coeffs") = draws_to_r(draws.volatility)),
+                         "volatility");
+  }
 
   write_draw_extensions(posteriors, draws);
   return posteriors;

@@ -159,3 +159,11 @@ test_that("a VEC model is multiplied through its levels form", {
                  as.numeric(by_hand(as_var, i, "g", "R", 6)), info = i)
   }
 })
+
+test_that("the multipliers of a list of models are those of each model", {
+  model <- varx_model()
+  models <- structure(list(a = model, b = model), class = c("modellist", "list"))
+  result <- multipliers(models, impulse = "cons", response = "income")
+  expect_named(result, c("a", "b"))
+  expect_equal(result[["a"]], multipliers(model, impulse = "cons", response = "income"))
+})

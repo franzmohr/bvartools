@@ -118,7 +118,10 @@
 add_prior_options <- function(object, shrinkage = "none", stationary = FALSE,
                               steady_state = NULL, constraints = NULL) {
 
-  if (inherits(object, "modellist")) {
+  # The windows of an expanding window exercise are models like those of a
+  # list, and the order .drop_empty_dummy_variables() prescribes -- the options
+  # after the windows are cut -- needs this to take them.
+  if (inherits(object, "modellist") || inherits(object, "expandingwindow")) {
     for (i in seq_along(object)) {
       object[[i]] <- add_prior_options(object[[i]], shrinkage = shrinkage, stationary = stationary,
                                        steady_state = steady_state, constraints = constraints)
@@ -126,7 +129,7 @@ add_prior_options <- function(object, shrinkage = "none", stationary = FALSE,
     return(object)
   }
   if (!inherits(object, "bvarmodel")) {
-    stop("Argument 'object' must be of class 'bvarmodel' or 'modellist'.")
+    stop("Argument 'object' must be of class 'bvarmodel', 'modellist' or 'expandingwindow'.")
   }
   if (is.null(object[["priors"]][["a"]])) {
     stop("Argument 'object' has no prior on its coefficients. Call add_priors() first.")

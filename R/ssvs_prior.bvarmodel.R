@@ -13,6 +13,9 @@
 #' (\eqn{\tau_1}) variables. This is the semiautomatic approach described in George et al. (2008).
 #' @param ... arguments passed forward to method.
 #' 
+#' For an object of class 'modellist' or 'expandingwindow' the prior of every
+#' model is returned in the shape of the collection, each of its own dimensions.
+#'
 #' @return A list containing the vectors of prior standard deviations for restricted
 #' and unrestricted variables, respectively.
 #' 

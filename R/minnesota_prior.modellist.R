@@ -6,6 +6,9 @@
 #' @param object a list of class 'modellist'.
 #' @param ... further arguments passed to or from other methods.
 #' 
+#' The same for an object of class 'expandingwindow', each window getting the
+#' prior of its own sample.
+#'
 #' @return A list of class 'modellist'.
 #' 
 #' @export

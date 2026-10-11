@@ -8,6 +8,8 @@
 #include "core/models/model_support.h"
 #include "core/models/shrinkage_support.h"
 #include "core/models/steady_state_support.h"
+#include "core/models/student_t_support.h"
+#include "core/models/volatility_break_support.h"
 
 #include <algorithm>
 #include <cmath>
@@ -792,6 +794,8 @@ void VarNormalWishartInput::validate() const
     core::require_supported_iid_block(spec, true, "VarNormalWishart");
     core::require_supported_shrinkage(spec, true, "VarNormalWishart");
     core::require_supported_steady_state(spec, true, "VarNormalWishart");
+    core::require_supported_volatility_break(spec, true, "VarNormalWishart");
+    core::require_supported_student_t(spec, true, "VarNormalWishart");
     core::require_steady_state(spec, true, train, a_prior, mu_prior, initial.mu, "VarNormalWishart");
     core::validate_shrinkage(spec.shrinkage, a_shrinkage_prior, a_prior, initial.a_shrinkage,
                              initial.a_local, initial.a_theta, "a");
@@ -811,6 +815,10 @@ void VarNormalWishartInput::validate() const
     const arma::uword nparams = train.nparams();
 
     require_identified_structural(spec, true, "a Wishart prior on the error precision");
+    core::validate_volatility_break(spec, volatility_prior, initial.volatility, train, test, tt,
+                                    "VarNormalWishart");
+    core::validate_student_t(spec, student_t_prior, initial.student_t_df, train, forecast, test,
+                             "VarNormalWishart");
 
     if (use_a())
     {
@@ -841,6 +849,8 @@ void VarNormalGammaInput::validate() const
     core::require_supported_iid_block(spec, true, "VarNormalGamma");
     core::require_supported_shrinkage(spec, true, "VarNormalGamma");
     core::require_supported_steady_state(spec, true, "VarNormalGamma");
+    core::require_supported_volatility_break(spec, false, "VarNormalGamma");
+    core::require_supported_student_t(spec, false, "VarNormalGamma");
     core::require_steady_state(spec, true, train, a_prior, mu_prior, initial.mu, "VarNormalGamma");
     core::validate_shrinkage(spec.shrinkage, a_shrinkage_prior, a_prior, initial.a_shrinkage,
                              initial.a_local, initial.a_theta, "a");
@@ -901,6 +911,8 @@ void VarNormalStochvolInput::validate() const
     core::require_supported_iid_block(spec, true, "VarNormalStochvol");
     core::require_supported_shrinkage(spec, true, "VarNormalStochvol");
     core::require_supported_steady_state(spec, true, "VarNormalStochvol");
+    core::require_supported_volatility_break(spec, false, "VarNormalStochvol");
+    core::require_supported_student_t(spec, false, "VarNormalStochvol");
     core::require_steady_state(spec, true, train, a_prior, mu_prior, initial.mu, "VarNormalStochvol");
     core::validate_shrinkage(spec.shrinkage, a_shrinkage_prior, a_prior, initial.a_shrinkage,
                              initial.a_local, initial.a_theta, "a");
@@ -980,6 +992,8 @@ void VarNormalAldInput::validate() const
     core::require_supported_iid_block(spec, true, "VarNormalAld");
     core::require_supported_shrinkage(spec, false, "VarNormalAld");
     core::require_supported_steady_state(spec, false, "VarNormalAld");
+    core::require_supported_volatility_break(spec, false, "VarNormalAld");
+    core::require_supported_student_t(spec, false, "VarNormalAld");
     core::require_supported_constraints(spec, train, test, false, "VarNormalAld");
     core::require_supported_forecast_constraints(spec, forecast, spec.uses_quantile_grid(),
                                                  "VarNormalAld");
@@ -1037,6 +1051,8 @@ void VarTvpAldInput::validate() const
     core::require_supported_iid_block(spec, false, "VarTvpAld");
     core::require_supported_shrinkage(spec, false, "VarTvpAld");
     core::require_supported_steady_state(spec, false, "VarTvpAld");
+    core::require_supported_volatility_break(spec, false, "VarTvpAld");
+    core::require_supported_student_t(spec, false, "VarTvpAld");
     core::require_supported_constraints(spec, train, test, false, "VarTvpAld");
     core::require_supported_forecast_constraints(spec, forecast, false, "VarTvpAld");
     // Before anything that would read a value: a NaN or an infinity here would
@@ -1077,6 +1093,8 @@ void VarTvpGammaInput::validate() const
     core::require_supported_iid_block(spec, false, "VarTvpGamma");
     core::require_supported_shrinkage(spec, false, "VarTvpGamma");
     core::require_supported_steady_state(spec, false, "VarTvpGamma");
+    core::require_supported_volatility_break(spec, false, "VarTvpGamma");
+    core::require_supported_student_t(spec, false, "VarTvpGamma");
     // A panel not observed whole is estimated; a score from one, a horizon
     // realised in part and a scenario are refused, the forecast carrying
     // states forward that the completion step over the horizon does not yet.
@@ -1144,6 +1162,8 @@ void VarTvpWishartInput::validate() const
     core::require_supported_iid_block(spec, false, "VarTvpWishart");
     core::require_supported_shrinkage(spec, false, "VarTvpWishart");
     core::require_supported_steady_state(spec, false, "VarTvpWishart");
+    core::require_supported_volatility_break(spec, false, "VarTvpWishart");
+    core::require_supported_student_t(spec, false, "VarTvpWishart");
     // A panel not observed whole is estimated; a score from one, a horizon
     // realised in part and a scenario are refused, the forecast carrying
     // states forward that the completion step over the horizon does not yet.
@@ -1205,6 +1225,8 @@ void VarTvpStochvolInput::validate() const
     core::require_supported_iid_block(spec, false, "VarTvpStochvol");
     core::require_supported_shrinkage(spec, false, "VarTvpStochvol");
     core::require_supported_steady_state(spec, false, "VarTvpStochvol");
+    core::require_supported_volatility_break(spec, false, "VarTvpStochvol");
+    core::require_supported_student_t(spec, false, "VarTvpStochvol");
     // A panel not observed whole is estimated; a score from one, a horizon
     // realised in part and a scenario are refused, the forecast carrying
     // states forward that the completion step over the horizon does not yet.
@@ -1509,6 +1531,8 @@ void VecNormalWishartInput::validate() const
     core::require_supported_iid_block(spec, false, "VecNormalWishart");
     core::require_supported_shrinkage(spec, false, "VecNormalWishart");
     core::require_supported_steady_state(spec, false, "VecNormalWishart");
+    core::require_supported_volatility_break(spec, false, "VecNormalWishart");
+    core::require_supported_student_t(spec, false, "VecNormalWishart");
     core::require_supported_constraints(spec, train, test, false, "VecNormalWishart");
     core::require_supported_forecast_constraints(spec, forecast, false, "VecNormalWishart");
     // Before anything that would read a value: a NaN or an infinity here would
@@ -1756,6 +1780,8 @@ void DfmNormalGammaInput::validate() const
     core::require_supported_iid_block(spec, false, "DfmNormalGamma");
     core::require_supported_shrinkage(spec, false, "DfmNormalGamma");
     core::require_supported_steady_state(spec, false, "DfmNormalGamma");
+    core::require_supported_volatility_break(spec, false, "DfmNormalGamma");
+    core::require_supported_student_t(spec, false, "DfmNormalGamma");
     core::require_supported_constraints(spec, train, test, false, "DfmNormalGamma");
     // Before anything that would read a value: a NaN or an infinity here would
     // otherwise surface as a failed factorisation, or as NaN in the output.
@@ -1778,6 +1804,8 @@ void DfmTvpGammaInput::validate() const
     core::require_supported_iid_block(spec, false, "DfmTvpGamma");
     core::require_supported_shrinkage(spec, false, "DfmTvpGamma");
     core::require_supported_steady_state(spec, false, "DfmTvpGamma");
+    core::require_supported_volatility_break(spec, false, "DfmTvpGamma");
+    core::require_supported_student_t(spec, false, "DfmTvpGamma");
     core::require_supported_constraints(spec, train, test, false, "DfmTvpGamma");
     // Before anything that would read a value: a NaN or an infinity here would
     // otherwise surface as a failed factorisation, or as NaN in the output.
@@ -1825,6 +1853,8 @@ void DfmTvpStochvolInput::validate() const
     core::require_supported_iid_block(spec, false, "DfmTvpStochvol");
     core::require_supported_shrinkage(spec, false, "DfmTvpStochvol");
     core::require_supported_steady_state(spec, false, "DfmTvpStochvol");
+    core::require_supported_volatility_break(spec, false, "DfmTvpStochvol");
+    core::require_supported_student_t(spec, false, "DfmTvpStochvol");
     core::require_supported_constraints(spec, train, test, false, "DfmTvpStochvol");
     // Before anything that would read a value: a NaN or an infinity here would
     // otherwise surface as a failed factorisation, or as NaN in the output.
@@ -1871,6 +1901,8 @@ void DfmNormalStochvolInput::validate() const
     core::require_supported_iid_block(spec, false, "DfmNormalStochvol");
     core::require_supported_shrinkage(spec, false, "DfmNormalStochvol");
     core::require_supported_steady_state(spec, false, "DfmNormalStochvol");
+    core::require_supported_volatility_break(spec, false, "DfmNormalStochvol");
+    core::require_supported_student_t(spec, false, "DfmNormalStochvol");
     core::require_supported_constraints(spec, train, test, false, "DfmNormalStochvol");
     // Before anything that would read a value: a NaN or an infinity here would
     // otherwise surface as a failed factorisation, or as NaN in the output.
@@ -1906,6 +1938,8 @@ void FavarNormalWishartInput::validate() const
     core::require_supported_iid_block(spec, false, "FavarNormalWishart");
     core::require_supported_shrinkage(spec, false, "FavarNormalWishart");
     core::require_supported_steady_state(spec, false, "FavarNormalWishart");
+    core::require_supported_volatility_break(spec, false, "FavarNormalWishart");
+    core::require_supported_student_t(spec, false, "FavarNormalWishart");
     core::require_supported_constraints(spec, train, test, false, "FavarNormalWishart");
     // Before anything that would read a value: a NaN or an infinity here would
     // otherwise surface as a failed factorisation, or as NaN in the output.
@@ -1994,6 +2028,8 @@ void VecKlgs2010Input::validate() const
     core::require_supported_iid_block(spec, false, "VecKlgs2010");
     core::require_supported_shrinkage(spec, false, "VecKlgs2010");
     core::require_supported_steady_state(spec, false, "VecKlgs2010");
+    core::require_supported_volatility_break(spec, false, "VecKlgs2010");
+    core::require_supported_student_t(spec, false, "VecKlgs2010");
     core::require_supported_constraints(spec, train, test, false, "VecKlgs2010");
     core::require_supported_forecast_constraints(spec, forecast, false, "VecKlgs2010");
     // Before anything that would read a value: a NaN or an infinity here would
@@ -2049,6 +2085,8 @@ void VecNormalGammaInput::validate() const
     core::require_supported_iid_block(spec, false, "VecNormalGamma");
     core::require_supported_shrinkage(spec, false, "VecNormalGamma");
     core::require_supported_steady_state(spec, false, "VecNormalGamma");
+    core::require_supported_volatility_break(spec, false, "VecNormalGamma");
+    core::require_supported_student_t(spec, false, "VecNormalGamma");
     core::require_supported_constraints(spec, train, test, false, "VecNormalGamma");
     core::require_supported_forecast_constraints(spec, forecast, false, "VecNormalGamma");
     // Before anything that would read a value: a NaN or an infinity here would
@@ -2106,6 +2144,8 @@ void VecNormalStochvolInput::validate() const
     core::require_supported_iid_block(spec, false, "VecNormalStochvol");
     core::require_supported_shrinkage(spec, false, "VecNormalStochvol");
     core::require_supported_steady_state(spec, false, "VecNormalStochvol");
+    core::require_supported_volatility_break(spec, false, "VecNormalStochvol");
+    core::require_supported_student_t(spec, false, "VecNormalStochvol");
     core::require_supported_constraints(spec, train, test, false, "VecNormalStochvol");
     core::require_supported_forecast_constraints(spec, forecast, false, "VecNormalStochvol");
     // Before anything that would read a value: a NaN or an infinity here would
@@ -2172,6 +2212,8 @@ void VecTvpWishartInput::validate() const
     core::require_supported_iid_block(spec, false, "VecTvpWishart");
     core::require_supported_shrinkage(spec, false, "VecTvpWishart");
     core::require_supported_steady_state(spec, false, "VecTvpWishart");
+    core::require_supported_volatility_break(spec, false, "VecTvpWishart");
+    core::require_supported_student_t(spec, false, "VecTvpWishart");
     core::require_supported_constraints(spec, train, test, false, "VecTvpWishart");
     core::require_supported_forecast_constraints(spec, forecast, false, "VecTvpWishart");
     // Before anything that would read a value: a NaN or an infinity here would
@@ -2211,6 +2253,8 @@ void VecTvpGammaInput::validate() const
     core::require_supported_iid_block(spec, false, "VecTvpGamma");
     core::require_supported_shrinkage(spec, false, "VecTvpGamma");
     core::require_supported_steady_state(spec, false, "VecTvpGamma");
+    core::require_supported_volatility_break(spec, false, "VecTvpGamma");
+    core::require_supported_student_t(spec, false, "VecTvpGamma");
     core::require_supported_constraints(spec, train, test, false, "VecTvpGamma");
     core::require_supported_forecast_constraints(spec, forecast, false, "VecTvpGamma");
     // Before anything that would read a value: a NaN or an infinity here would
@@ -2263,6 +2307,8 @@ void VecTvpStochvolInput::validate() const
     core::require_supported_iid_block(spec, false, "VecTvpStochvol");
     core::require_supported_shrinkage(spec, false, "VecTvpStochvol");
     core::require_supported_steady_state(spec, false, "VecTvpStochvol");
+    core::require_supported_volatility_break(spec, false, "VecTvpStochvol");
+    core::require_supported_student_t(spec, false, "VecTvpStochvol");
     core::require_supported_constraints(spec, train, test, false, "VecTvpStochvol");
     core::require_supported_forecast_constraints(spec, forecast, false, "VecTvpStochvol");
     // Before anything that would read a value: a NaN or an infinity here would
@@ -2334,6 +2380,8 @@ arma::uword validate_uc_common(const VarSpec &spec, const TrainData &train,
                    "their prior that way");
     }
     core::require_supported_steady_state(spec, false, algorithm);
+    core::require_supported_volatility_break(spec, false, algorithm);
+    core::require_supported_student_t(spec, false, algorithm);
     core::require_supported_constraints(spec, train, test, false, algorithm);
     // Before anything that would read a value: a NaN or an infinity here would
     // otherwise surface as a failed factorisation, or as NaN in the output.

@@ -8,6 +8,7 @@
 #include "core/algorithms/bvs.h"
 #include "core/algorithms/ssvs.h"
 #include "core/models/model_support.h"
+#include "core/models/predictive_score.h"
 #include "core/models/vec_support.h"
 
 #include <cmath>
@@ -515,6 +516,9 @@ arma::mat VecNormalGammaSampler::predictive_log_density(const VecNormalGammaInpu
     // which is also where the structural refusal and the shape checks live.
     VarNormalWishartInput var_input;
     var_input.spec = vec_to_var_spec(input.spec);
+    // Refused here under this model's own name rather than the VAR's it
+    // delegates to, as the other VECs and `bayests check` name it.
+    core::require_scorable(var_input.spec, "this VEC");
     var_input.forecast = input.forecast;
     var_input.test = input.test;
 

@@ -584,17 +584,33 @@ void require_completed_panels(const Input &input, const Draws &draws, const bool
 /// One draw of a forecast conditioned on /data/forecast/constraints: the path
 /// the draw's VAR puts on the horizon, starting where its panel ends, drawn by
 /// the completion step. k x h.
+///
+/// `horizon_scale`, where it is not empty, holds one s_i per horizon, and the
+/// error covariance of horizon i is s_i^2 Sigma -- a volatility break reaching
+/// into the forecast (VarSpec::volatility_break). Empty, the covariance is the
+/// draw's own in every period, as it always was.
 template <typename Input, typename Draws>
 arma::mat conditioned_forecast(const Input &input, const Draws &draws, const arma::uword draw,
-                               const bool use_a, const char *algorithm)
+                               const bool use_a, const char *algorithm,
+                               const arma::vec &horizon_scale = arma::vec())
 {
     const arma::uword k = static_cast<arma::uword>(input.spec.k);
     const arma::uword p = static_cast<arma::uword>(input.spec.p);
     const arma::mat x = use_a ? input.forecast.x : arma::mat(static_cast<arma::uword>(input.spec.h), 0);
+    arma::mat covariance = draw_covariance(draws, draw, k, algorithm);
+    if (!horizon_scale.is_empty())
+    {
+        const arma::mat sigma = covariance;
+        covariance.set_size(horizon_scale.n_elem * k, k);
+        for (arma::uword i = 0; i < horizon_scale.n_elem; i++)
+        {
+            covariance.rows(i * k, i * k + k - 1) = horizon_scale(i) * horizon_scale(i) * sigma;
+        }
+    }
     return draw_constrained_var_path(
         var_path_prior_from(draw_coefficients_column(draws, draw, use_a), k, x,
                             horizon_presample(starting_panel(input, draws, draw, k), p),
-                            draw_covariance(draws, draw, k, algorithm), p),
+                            covariance, p),
         input.forecast.constraints, arma::vec());
 }
 

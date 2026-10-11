@@ -10,6 +10,7 @@
 #include "bayests/reporter.h"
 #include "bayests/spec.h"
 #include "core/models/adaptive_walk.h"
+#include "core/models/error_scale_checks.h"
 
 #include <cmath>
 #include <stdexcept>
@@ -36,87 +37,6 @@ inline double student_t_log_density(const double q, const double log_det_s, cons
     return std::lgamma(0.5 * (nu + k)) - std::lgamma(0.5 * nu) -
            0.5 * k * std::log(nu * arma::datum::pi) - 0.5 * log_det_s -
            0.5 * (nu + k) * std::log1p(q / nu);
-}
-
-/// Refuses /model/student_t where the algorithm does not read it.
-inline void require_supported_student_t(const VarSpec &spec, const bool supported,
-                                        const char *algorithm)
-{
-    if (spec.student_t && !supported)
-    {
-        throw std::invalid_argument(std::string(algorithm) +
-                                    " does not read /model/student_t: only VarNormalWishart has "
-                                    "Student t errors");
-    }
-}
-
-/// Refuses Student t errors the sampler cannot run as given: a prior that is
-/// neither a fixed nu nor a gamma on it, or both; a start that is not
-/// positive; and the combinations that would read the error covariance as the
-/// same in every period -- the steady-state prior's draw of the mean and a
-/// panel or a horizon not observed whole -- or would condition a forecast on a
-/// scenario, which carries information about the horizon's lambda that a draw
-/// from its prior ignores.
-inline void validate_student_t(const VarSpec &spec, const StudentTPrior &prior,
-                               const double initial_df, const TrainData &train,
-                               const ForecastData &forecast, const TestData &test,
-                               const char *algorithm)
-{
-    if (!spec.student_t)
-    {
-        return;
-    }
-    const std::string name(algorithm);
-    const bool fixed = prior.df != 0.0;
-    const bool drawn = prior.shape != 0.0 || prior.rate != 0.0;
-    if (fixed == drawn)
-    {
-        throw std::invalid_argument(
-            name + ": /model/student_t needs exactly one of /priors/student_t/df, which holds nu "
-                   "fixed, and /priors/student_t/shape and rate, a gamma prior that draws it");
-    }
-    const auto positive = [&](const double v, const char *what) {
-        if (!(v > 0.0) || !std::isfinite(v))
-        {
-            throw std::invalid_argument(name + ": /priors/student_t/" + what +
-                                        " must be positive and finite; got " + std::to_string(v));
-        }
-    };
-    if (fixed)
-    {
-        positive(prior.df, "df");
-    }
-    else
-    {
-        positive(prior.shape, "shape");
-        positive(prior.rate, "rate");
-    }
-    if (initial_df != 0.0 && (!(initial_df > 0.0) || !std::isfinite(initial_df)))
-    {
-        throw std::invalid_argument(name + ": /initial/student_t_df must be positive and finite; got " +
-                                    std::to_string(initial_df));
-    }
-    if (spec.steady_state)
-    {
-        throw std::invalid_argument(
-            name + " does not combine /model/student_t with /model/steady_state, whose draw of "
-                   "the unconditional mean reads the error covariance as the same in every period");
-    }
-    if (!train.constraints.empty() || !test.constraints.empty())
-    {
-        throw std::invalid_argument(
-            name + " does not combine /model/student_t with /data/train/constraints or "
-                   "/data/test/constraints yet: the panel a completion draws has one error "
-                   "covariance for every period");
-    }
-    if (!forecast.constraints.empty())
-    {
-        throw std::invalid_argument(
-            name + " does not condition a forecast with Student t errors on "
-                   "/data/forecast/constraints yet: a scenario says something about how large the "
-                   "horizon's shocks are, so lambda would have to be drawn given it, not from its "
-                   "prior");
-    }
 }
 
 /// The Student t block of a sampler: the mixing scales lambda_t over the

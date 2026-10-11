@@ -7,7 +7,23 @@ project is here -- the core deliberately links neither HDF5 nor HighFive,
 prints nothing and reads no files, which is what makes it embeddable in an R
 package at all.
 
-The copy is **BayesTS `8c9865f`**, BayesTS `main` after merging `b1e8849`,
+The copy is **BayesTS `9f470f1`**, BayesTS `main` after merging `ae77301` and
+`9f470f1`. `ae77301` lets the volatility break and the Student t errors of
+VarNormalWishart read a panel not observed whole -- `/data/train/constraints`,
+mixed frequencies and missing values -- through `completion_support.h`;
+`9f470f1` moves the four refusals of those two error scales out of the
+samplers' headers into the new `core/models/error_scale_checks.h`, so that
+`inputs.cpp` no longer includes `student_t_support.h` and
+`volatility_break_support.h`. Of the files here it changes `inputs.cpp`,
+`completion_support.h`, `student_t_support.h`, `volatility_break_support.h`,
+`var_normal_wishart.cpp` and the two discounted models, and adds
+`error_scale_checks.h`. Student t errors reach R through VarNormalWishart.cpp;
+the volatility break does not yet. No draw of a model without either moves:
+fixed-seed coefficients, log likelihoods and forecasts of VARs, VECs, factor
+and unobserved components models are identical to a build of the previous
+copy, and upstream compared the fingerprints of all 215 fixtures, none moved.
+
+Before that the copy was **BayesTS `8c9865f`**, BayesTS `main` after merging `b1e8849`,
 `004b000` and `efd18b8`. `b1e8849` adds a volatility break to VarNormalWishart
 (Lenza and Primiceri 2022) and `004b000` Student t errors to it, with the
 adapted random walk proposal `UcNormalSkew` used moved out into the new

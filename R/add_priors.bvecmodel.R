@@ -397,6 +397,16 @@ add_priors.bvecmodel <- function(object,
   }
   
   varsel_covar <- use_ssvs_error | use_bvs_error
+
+  # Selection over the covariance block needs a block to select over. Without
+  # one the request was dropped without a word; it is warned about rather than
+  # refused, so that a list of models over error specifications can share one
+  # 'varsel'.
+  if (varsel_covar && !object[["model"]][["error"]] %in% c("gamma+covar", "sv+covar")) {
+    warning("Argument 'varsel$covar' asks for selection over the covariance block, and ",
+            "a model with error = \"", object[["model"]][["error"]], "\" has none, so it is ignored. Use ",
+            "error = \"gamma+covar\" or \"sv+covar\" for a covariance block.", call. = FALSE)
+  }
   
   # Generate priors ----
   
@@ -521,7 +531,7 @@ add_priors.bvecmodel <- function(object,
                               max_var = coef[["max_var"]],
                               sigma = "AR")
       
-      object[["priors"]][["a"]][["v_inv"]] <- minn[["v_i"]]
+      object[["priors"]][["a"]][["v_inv"]] <- minn[["v_inv"]]
     }
     
     # SSVS prior ----

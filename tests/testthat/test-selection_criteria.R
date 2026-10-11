@@ -118,11 +118,12 @@ test_that("the default criterion is the one that stays defined for every model",
   # specification, so it is what a comparison defaults to.
   expect_equal(choose_best_model(criteria),
                choose_best_model(criteria, criterion = "WAIC"))
-  expect_identical(formals(bayests:::choose_best_model.selcritlist)[["criterion"]], "WAIC")
+  choose <- getS3method("choose_best_model", "selcritlist")
+  expect_identical(formals(choose)[["criterion"]], "WAIC")
 
   # Choosing and plotting should not disagree about what they show by default
-  expect_identical(formals(bayests:::plot.selcritlist)[["criterion"]],
-                   formals(bayests:::choose_best_model.selcritlist)[["criterion"]])
+  expect_identical(formals(getS3method("plot", "selcritlist"))[["criterion"]],
+                   formals(choose)[["criterion"]])
 })
 
 test_that("get_model_specifications describes the underlying model", {
@@ -300,9 +301,8 @@ test_that("LOOIC reweights the posterior towards the data it has not seen", {
   criteria <- selection_criteria(model)
   loglik <- as.matrix(model[["posterior"]][["loglik"]])
 
-  loo <- bayests:::.psis_loo(loglik)
-  expect_equal(criteria[["LOOIC"]][["mean"]], loo[["looic"]])
-  expect_equal(criteria[["LOOIC"]][["median"]], criteria[["LOOIC"]][["mean"]])
+  looic <- criteria[["LOOIC"]][["mean"]]
+  expect_equal(criteria[["LOOIC"]][["median"]], looic)
 
   # As for WAIC the band is a normal interval around the estimate rather than
   # posterior quantiles, so it is symmetric.
@@ -312,10 +312,14 @@ test_that("LOOIC reweights the posterior towards the data it has not seen", {
   # Cross validation cannot flatter the model more than the fit it is derived
   # from, and it estimates the same effective number of parameters that WAIC
   # penalises with.
-  expect_gt(loo[["looic"]], -2 * sum(apply(loglik, 2, function(z) {
-    bayests:::.log_sum_exp(z) - log(nrow(loglik))
-  })))
-  expect_equal(loo[["p_loo"]], sum(apply(loglik, 2, stats::var)), tolerance = 0.3)
+  # The log pointwise predictive density of the fit, written out.
+  lppd <- sum(apply(loglik, 2, function(z) {
+    top <- max(z)
+    top + log(mean(exp(z - top)))
+  }))
+  expect_gt(looic, -2 * lppd)
+  # p_loo, the gap between the fit and its cross-validated version.
+  expect_equal(lppd + looic / 2, sum(apply(loglik, 2, stats::var)), tolerance = 0.3)
 })
 
 # The smoothing of the importance weights and its Pareto fit are tested in
@@ -411,15 +415,22 @@ test_that("the scored periods are counted on from the end of the sample", {
 
 test_that("both sources of an LPL give the same entry for the same densities", {
   # An expanding window takes one density per window and a scored model one per
-  # horizon. They are the same quantity computed two ways, and both go through
-  # .lpl_entry(), so the same draws have to give the same entry -- which is what
-  # keeps a comparison of the two honest.
+  # horizon. They are the same quantity computed two ways, so the same draws have
+  # to give the same entry -- which is what keeps a comparison of the two honest.
   model <- scored_model(periods = 3)
   score <- unclass(model[["posterior"]][["forecast"]][["loglik"]])
   periods <- attr(selection_criteria(model)[["LPL"]], "terms")[["period"]]
 
-  as_windows <- lapply(seq_len(ncol(score)), function(i) score[, i])
-  from_windows <- bayests:::.lpl_entry(as_windows, periods, 0.025, 0.975)
+  # The same densities as the windows of an expanding window exercise.
+  plain <- model
+  plain[["posterior"]][["forecast"]] <- NULL
+  windows <- lapply(seq_len(ncol(score)), function(i) {
+    window_i <- plain
+    window_i[["predictive"]] <- list(loglik = score[, i], period = periods[i])
+    window_i
+  })
+  class(windows) <- c("expandingwindow", "list")
+  from_windows <- selection_criteria(windows)[["LPL"]]
 
   expect_equal(unclass(selection_criteria(model)[["LPL"]]), unclass(from_windows))
   expect_equal(attr(selection_criteria(model)[["LPL"]], "nse"), attr(from_windows, "nse"))

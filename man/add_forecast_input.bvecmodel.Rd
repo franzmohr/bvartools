@@ -43,6 +43,23 @@ The forecast starts right after the estimation sample. Argument \code{y_start} o
 after the sample, convert the model with \code{\link{vec_to_var}} and give them, in levels,
 to the resulting 'bvarmodel'.
 }
+\examples{
+
+data("e6")
+model <- create_bvecmodel(e6 * 100, p = 1, r = 1, const = "unrestricted",
+                          iterations = 20, burnin = 10)
+# Number of iterations and burn-in should be much higher.
+model <- add_priors(model,
+                    coef = list(v_i = 0, v_i_det = 0),
+                    coint = list(v_i = 0, p_tau_i = 1),
+                    sigma = list(df = "k", scale = 1))
+model <- add_posterior_coefficients(add_initial_values(model))
+
+model <- add_forecast_input(model, n_ahead = 4)
+model <- add_posterior_forecasts(model)
+plot(predict(model))
+
+}
 \seealso{
 Other posterior simulation:
 \code{\link[=add_forecast_input.bvarmodel]{add_forecast_input.bvarmodel()}},

@@ -27,6 +27,23 @@ The forecasts are of the levels, and so is the history they are shown with: it
 is recovered from the differences and the error correction term the way
 \code{\link{vec_to_var}} recovers it.
 }
+\examples{
+
+data("e6")
+model <- create_bvecmodel(e6 * 100, p = 1, r = 1, const = "unrestricted",
+                          iterations = 20, burnin = 10)
+# Number of iterations and burn-in should be much higher.
+model <- add_priors(model,
+                    coef = list(v_i = 0, v_i_det = 0),
+                    coint = list(v_i = 0, p_tau_i = 1),
+                    sigma = list(df = "k", scale = 1))
+model <- add_posterior_coefficients(add_initial_values(model))
+
+model <- add_posterior_forecasts(add_forecast_input(model, n_ahead = 4))
+prd <- predict(model)
+plot(prd)
+
+}
 \seealso{
 Other posterior simulation:
 \code{\link[=add_forecast_input.bvarmodel]{add_forecast_input.bvarmodel()}},

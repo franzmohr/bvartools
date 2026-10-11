@@ -25,6 +25,22 @@
 #' and the regressors of the forecast periods, in levels, in \code{data$forecast$x}.
 #'
 #' @family posterior simulation
+#' @examples
+#'
+#' data("e6")
+#' model <- create_bvecmodel(e6 * 100, p = 1, r = 1, const = "unrestricted",
+#'                           iterations = 20, burnin = 10)
+#' # Number of iterations and burn-in should be much higher.
+#' model <- add_priors(model,
+#'                     coef = list(v_i = 0, v_i_det = 0),
+#'                     coint = list(v_i = 0, p_tau_i = 1),
+#'                     sigma = list(df = "k", scale = 1))
+#' model <- add_posterior_coefficients(add_initial_values(model))
+#'
+#' model <- add_forecast_input(model, n_ahead = 4)
+#' model <- add_posterior_forecasts(model)
+#' plot(predict(model))
+#'
 #' @export
 #' @method add_forecast_input bvecmodel
 add_forecast_input.bvecmodel <- function(object, n_ahead = 10, deterministic = NULL, exogen = NULL, ...){
@@ -110,6 +126,23 @@ add_forecast_input.bvecmodel <- function(object, n_ahead = 10, deterministic = N
 #' \code{forecast_states} that was given is stored in \code{model$forecast_states}.
 #'
 #' @family posterior simulation
+#' @examples
+#'
+#' data("e6")
+#' model <- create_bvecmodel(e6 * 100, p = 1, r = 1, const = "unrestricted",
+#'                           iterations = 20, burnin = 10)
+#' # Number of iterations and burn-in should be much higher.
+#' model <- add_priors(model,
+#'                     coef = list(v_i = 0, v_i_det = 0),
+#'                     coint = list(v_i = 0, p_tau_i = 1),
+#'                     sigma = list(df = "k", scale = 1))
+#' model <- add_posterior_coefficients(add_initial_values(model))
+#'
+#' # Forecasts of the levels, from the VAR in levels the model implies
+#' model <- add_forecast_input(model, n_ahead = 4)
+#' model <- add_posterior_forecasts(model)
+#' predict(model)
+#'
 #' @export
 #' @method add_posterior_forecasts bvecmodel
 add_posterior_forecasts.bvecmodel <- function(object, forecast_states = NULL, scenario = NULL,
@@ -190,6 +223,22 @@ add_posterior_forecasts.bvecmodel <- function(object, forecast_states = NULL, sc
 #' \code{\link{predict.bvarmodel}}.
 #'
 #' @family posterior simulation
+#' @examples
+#'
+#' data("e6")
+#' model <- create_bvecmodel(e6 * 100, p = 1, r = 1, const = "unrestricted",
+#'                           iterations = 20, burnin = 10)
+#' # Number of iterations and burn-in should be much higher.
+#' model <- add_priors(model,
+#'                     coef = list(v_i = 0, v_i_det = 0),
+#'                     coint = list(v_i = 0, p_tau_i = 1),
+#'                     sigma = list(df = "k", scale = 1))
+#' model <- add_posterior_coefficients(add_initial_values(model))
+#'
+#' model <- add_posterior_forecasts(add_forecast_input(model, n_ahead = 4))
+#' prd <- predict(model)
+#' plot(prd)
+#'
 #' @export
 #' @method predict bvecmodel
 predict.bvecmodel <- function(object, n_ahead = NULL, ...){
@@ -292,79 +341,4 @@ predict.bvecmodel <- function(object, n_ahead = NULL, ...){
   }
 
   invisible(NULL)
-}
-
-
-
-#' Impulse Response Function
-#'
-#' Guard method for objects of class 'bvecmodel'.
-#'
-#' @param x an object of class 'bvecmodel'.
-#' @param ... additional arguments.
-#'
-#' @return Nothing. The method raises an error, since impulse responses of a VEC model are
-#' obtained from its VAR representation: apply \code{\link{vec_to_var}} first and then
-#' \code{\link[bayests]{irf}} to the resulting 'bvarmodel'.
-#'
-#' @family post-estimation analysis
-#' @export
-#' @method irf bvecmodel
-irf.bvecmodel <- function(x, ...){
-  .use_vec_to_var("irf")
-}
-
-
-
-#' Forecast Error Variance Decomposition
-#'
-#' Guard method for objects of class 'bvecmodel'.
-#'
-#' @param x an object of class 'bvecmodel'.
-#' @param ... additional arguments.
-#'
-#' @return Nothing. The method raises an error, since variance decompositions of a VEC model
-#' are obtained from its VAR representation: apply \code{\link{vec_to_var}} first and then
-#' \code{\link[bayests]{fevd}} to the resulting 'bvarmodel'.
-#'
-#' @family post-estimation analysis
-#' @export
-#' @method fevd bvecmodel
-fevd.bvecmodel <- function(x, ...){
-  .use_vec_to_var("fevd")
-}
-
-
-
-#' Spillover Index
-#'
-#' Guard method for objects of class 'bvecmodel'.
-#'
-#' @param object an object of class 'bvecmodel'.
-#' @param ... additional arguments.
-#'
-#' @return Nothing. The method raises an error, since spillover indices of a VEC model are
-#' obtained from its VAR representation: apply \code{\link{vec_to_var}} first and then
-#' \code{\link{spillover}} to the resulting 'bvarmodel'.
-#'
-#' @family post-estimation analysis
-#' @export
-#' @method spillover bvecmodel
-spillover.bvecmodel <- function(object, ...){
-  .use_vec_to_var("spillover")
-}
-
-
-
-# The error the guards above raise. Impulse responses, variance decompositions
-# and spillovers of a VEC model go through its VAR representation, so those
-# functions have no method of their own for it. Without these guards they
-# stopped with R's "no applicable method", which says nothing about what to do
-# instead. Forecasts are the exception: they are simulated from the VEC model's
-# own draws, in levels, by the methods above.
-.use_vec_to_var <- function(fun) {
-  stop("'", fun, "' does not work directly on a 'bvecmodel' object.\n",
-       "Use 'vec_to_var()' first and then use '", fun, "' on the\n",
-       "resulting 'bvarmodel' object.",
-       call. = FALSE)
 }

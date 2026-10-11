@@ -26,6 +26,25 @@
 #' discounted model is a plain matrix, since its rows are periods rather than
 #' draws. \code{\link{bvartools_model}} describes the elements one by one.
 #'
+#' @examples
+#'
+#' data("e1")
+#' e1 <- diff(log(e1)) * 100
+#' model <- create_bvarmodel(e1, p = 2, deterministic = "const",
+#'                           iterations = 20, burnin = 10)
+#' # Number of iterations and burn-in should be much higher.
+#' model <- add_priors(model,
+#'                     coef = list(v_i = 0, v_i_det = 0),
+#'                     sigma = list(df = "k", scale = 1))
+#' model <- add_posterior_coefficients(add_initial_values(model))
+#'
+#' # The method behind read_model_from_hdf5() for VAR and VEC models
+#' file <- file.path(tempdir(), "bvartools-example-read.h5")
+#' unlink(file)
+#' write_to_hdf5(model, filename = file)
+#' stored <- read_model_from_hdf5(file)
+#' class(stored)
+#'
 #' @export
 read_hdf5_model.bvarmodel <- function(x, h5_root, draws = NULL, ...) {
   .read_var_layout(x, h5_root, draws)

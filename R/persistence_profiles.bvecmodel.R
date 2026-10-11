@@ -107,9 +107,14 @@ persistence_profiles.bvecmodel <- function(object, n_ahead = 20, ci = 0.95,
 
   k <- object[["model"]][["k"]]
   k_w <- ncol(object[["data"]][["train"]][["w"]])
-  if (k_w > k) {
-    warning("The cointegrating vectors of this model span ", k_w, " variables ",
-            "while only ", k, " of them are endogenous to it, so the profiles ",
+  # The restricted deterministic terms sit in w too, and are not variables of
+  # another system: counting them warned about a partial relation for every
+  # model with a restricted constant.
+  n_restricted <- object[["model"]][["n_restricted"]]
+  n_restricted <- if (is.null(n_restricted)) 0 else n_restricted
+  if (k_w - n_restricted > k) {
+    warning("The cointegrating vectors of this model span ", k_w - n_restricted,
+            " variables while only ", k, " of them are endogenous to it, so the profiles ",
             "follow the part of each relation this model governs. For the whole ",
             "relation, take the profiles of the system in which the remaining ",
             "variables are endogenous.", call. = FALSE)

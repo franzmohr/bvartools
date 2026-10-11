@@ -290,6 +290,16 @@ create_bvecmodel <- function(data, p, exogen = NULL, s = NULL, r = NULL,
     stop("Specification of argument 'varsel' is not supported.")
   }
   
+  # A single series without a name gets one, as in create_bvarmodel(): without
+  # it the model had no 'endogen', and the regressors were named "d." and the
+  # like.
+  if (is.null(dimnames(data))) {
+    tsp_temp <- stats::tsp(data)
+    data <- stats::ts(as.matrix(data), class = c("mts", "ts", "matrix"))
+    stats::tsp(data) <- tsp_temp
+    dimnames(data)[[2]] <- "y"
+  }
+
   data_name <- dimnames(data)[[2]]
   k <- NCOL(data)
   n_ect <- k

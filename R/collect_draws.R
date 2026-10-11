@@ -24,8 +24,8 @@
 # is unambiguously `k` times the sample length. `y` is only fallen back on when
 # there are no regressors, and then its layout has to be decided: a single
 # column holds the stacked series, anything wider is one row per period. The
-# stacked reading used to be the only one -- it is what gen_var produced -- and
-# create_bvarmodel returns the wide one, so both have to be handled.
+# stacked reading used to be the only one -- the layout of models built by early
+# versions -- and create_bvarmodel returns the wide one, so both have to be handled.
 .train_periods <- function(x, k) {
   z <- x[["data"]][["train"]][["z"]]
   if (!is.null(z)) {

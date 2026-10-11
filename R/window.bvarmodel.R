@@ -27,6 +27,22 @@
 #'
 #' @return An object of class 'bvarmodel'.
 #'
+#' @examples
+#'
+#' data("e1")
+#' e1 <- diff(log(e1)) * 100
+#' model <- create_bvarmodel(e1, p = 2, deterministic = "const",
+#'                           iterations = 20, burnin = 10)
+#' # Number of iterations and burn-in should be much higher.
+#' model <- add_priors(model,
+#'                     coef = list(v_i = 0, v_i_det = 0),
+#'                     sigma = list(df = "k", scale = 1))
+#' model <- add_posterior_coefficients(add_initial_values(model))
+#'
+#' # The last ten years of the sample
+#' recent <- window(model, start = c(1972, 1))
+#' start(recent$data$train$y)
+#'
 #' @export
 #' @method window bvarmodel
 window.bvarmodel <- function(x, start = NULL, end = NULL, ...) {
@@ -70,12 +86,18 @@ window.bvarmodel <- function(x, start = NULL, end = NULL, ...) {
     moved <- match(stored, periods)
     if (is.na(moved)) {
       x[["model"]][["sign_restrictions"]] <- NULL
+      x[["model"]][["sign_zero_restrictions"]] <- NULL
       x[["posterior"]][["q"]] <- NULL
       warning("The sign restrictions were imposed in a period the window leaves out, so ",
               "the identification was dropped. Run add_sign_restrictions() again.",
               call. = FALSE)
     } else {
       x[["model"]][["sign_restrictions"]][["period"]] <- as.integer(moved)
+      # The record of add_sign_zero_restrictions() names the same period, and
+      # was left pointing into the original sample.
+      if (!is.null(x[["model"]][["sign_zero_restrictions"]])) {
+        x[["model"]][["sign_zero_restrictions"]][["period"]] <- as.integer(moved)
+      }
     }
   }
 

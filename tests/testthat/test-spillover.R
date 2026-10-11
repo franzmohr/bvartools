@@ -289,3 +289,14 @@ test_that("a structural model is rejected", {
                  "not defined for a structural model")
   }
 })
+
+test_that("an error in a model of a collection is reported rather than dropped", {
+  # Every error used to become a NULL element or a row of NA.
+  expect_error(spillover(fx_var_modellist(), n_ahead = 4, type = "nope"), "of model '")
+  expect_error(spillover(fx_expanding_window(), n_ahead = 4, type = "nope"), "of window 1")
+})
+
+test_that("the print of a spillover index names its identification", {
+  out <- capture.output(print(spillover(fx_var_sign(), n_ahead = 4, type = "sign")))
+  expect_true(any(grepl("sign restricted", out)))
+})

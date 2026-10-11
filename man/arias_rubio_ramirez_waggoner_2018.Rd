@@ -71,6 +71,36 @@ The function draws from the random number generator in the order
 same rotations through either. It warns when the importance sample is not
 fit to summarise, and stops when no draw has an admissible rotation.
 }
+\examples{
+
+data("e1")
+e1 <- diff(log(e1)) * 100
+model <- create_bvarmodel(e1, p = 2, deterministic = "const",
+                          iterations = 20, burnin = 10)
+# Number of iterations and burn-in should be much higher.
+model <- add_priors(model,
+                    coef = list(v_i = 0, v_i_det = 0),
+                    sigma = list(df = "k", scale = 1))
+model <- add_posterior_coefficients(add_initial_values(model))
+
+# One list element per draw: the coefficients, lag blocks first, and the
+# error covariance
+a <- as.matrix(model$posterior$a$coeffs)
+s <- as.matrix(model$posterior$u_sigma_inv$coeffs)
+draws <- lapply(seq_len(nrow(a)), function(i) {
+  list(A = matrix(a[i, ], 3), Sigma = solve(matrix(s[i, ], 3)))
+})
+
+# An investment shock that leaves income unchanged on impact and raises
+# consumption
+restrictions <- data.frame(impulse = "invest", response = c("income", "cons"),
+                           sign = c(0, 1), horizon = 0)
+set.seed(1)
+id <- suppressWarnings(arias_rubio_ramirez_waggoner_2018(
+  draws, restrictions, variables = c("invest", "income", "cons"), lags = 2))
+id$accepted
+
+}
 \references{
 Arias, J. E., Rubio-Ramirez, J. F., Waggoner, D. F. (2018). Inference based on structural vector
 autoregressions identified with sign and zero restrictions: Theory and applications.

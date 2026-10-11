@@ -37,7 +37,7 @@ test_that("every block of a VEC model's Minnesota prior follows its formula", {
       sqrt(sum(e^2) / (nrow(X) - ncol(X)))
     }, numeric(1))
 
-    v <- 1 / diag(prior[["v_i"]])
+    v <- 1 / diag(prior[["v_inv"]])
     expect_equal(v[1:(k * r)], rep(kappa$kappa1, k * r), info = s)
     V <- matrix(v[-(1:(k * r))], k, dimnames = list(NULL, colnames(x)))
 

@@ -153,6 +153,7 @@ Collate:
     'transform_variables.R'
     'use_expanding_window.bvarmodel.R'
     'use_expanding_window.bvecmodel.R'
+    'vec_guards.bvecmodel.R'
     'vec_to_var.R'
     'vec_to_var.bvecmodel.R'
     'vec_to_var.modellist.R'

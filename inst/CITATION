@@ -52,6 +52,17 @@ bibentry(header = "To cite the algorithm of Koop et al. (2011) use:",
 )
 
 
+bibentry(header = "To cite the BayesTS library, whose samplers bvartools runs, use:",
+         bibtype = "Manual",
+         title = "{BayesTS}: Bayesian time series estimation in C++",
+         author = person(c("Franz", "X."), "Mohr"),
+         year = "2026",
+         doi = "10.5281/zenodo.22722531",
+         url = "https://github.com/franzmohr/BayesTS",
+         textVersion = paste0("Franz X. Mohr (2026). BayesTS: Bayesian time series estimation in C++. ",
+                "doi:10.5281/zenodo.22722531")
+)
+
 bibentry(header = "To cite the algorithm of Durbin & Koopman (2002) use:",
          bibtype = "article",
          title = "A simple and efficient simulation smoother for state space time series analysis",
@@ -62,9 +73,10 @@ bibentry(header = "To cite the algorithm of Durbin & Koopman (2002) use:",
          volume = "89",
          number = "3",
          pages = "603--615",
+         doi = "10.1093/biomet/89.3.603",
          textVersion = paste0("J. Durbin & S. J. Koopman (2002). ",
                 "A simple and efficient simulation smoother for state space time series analysis ",
-                "Biometrika 89(3), 603--615.")
+                "Biometrika 89(3), 603--615. doi:10.1093/biomet/89.3.603")
 )
 
 bibentry(header = "To cite the SSVS algorithm of George et al. (2008) use:",

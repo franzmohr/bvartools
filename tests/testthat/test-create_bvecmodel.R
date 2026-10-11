@@ -96,3 +96,11 @@ test_that("lag orders of the VAR in levels must be given", {
   expect_identical(colnames(model[["data"]][["train"]][["x"]]),
                    c("d.lr.l01", "d.Dp.l01", "d.r.s.l00"))
 })
+
+test_that("a single series without a name gets one", {
+  # create_bvarmodel() names it; create_bvecmodel() left 'endogen' NULL and
+  # named the regressors "d." and the like.
+  model <- create_bvecmodel(e6[, 1], p = 1, r = 1)
+  expect_identical(model[["model"]][["endogen"]], "y")
+  expect_false(any(grepl("^[dl][.]$", colnames(model[["data"]][["train"]][["w"]]))))
+})

@@ -55,3 +55,20 @@ model, and \code{\link{add_posterior_forecasts.bvecmodel}} and
 \code{\link{add_predictive_loglik.bvecmodel}} accept it only with
 \code{forecast_states = "hold"}.
 }
+\examples{
+
+data("e6")
+model <- create_bvecmodel(e6 * 100, p = 1, r = 1, const = "unrestricted",
+                          iterations = 20, burnin = 10)
+model <- scale_error_correction(model)
+model <- add_priors(model,
+                    coef = list(v_i = 0, v_i_det = 0),
+                    coint = list(v_i = 0, p_tau_i = 1),
+                    sigma = list(df = "k", scale = 1))
+model <- add_posterior_coefficients(add_initial_values(model))
+
+# The draws of beta on the scale of the data
+model <- rescale_error_correction(model)
+summary(model)
+
+}

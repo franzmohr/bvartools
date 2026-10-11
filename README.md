@@ -631,4 +631,4 @@ Economics, 52*(2), 381-419.
     prior on it. Name neither and it is held fixed at `coint$rho`, which
     is what versions up to 0.2.1 always did. The draw is an exact Gibbs
     block rather than the Metropolis-within-Gibbs step of Koop et
-    al. (2011); `?add_priors` explains where the two models differ.
+    al. (2011); `?add_priors.bvecmodel` explains where the two models differ.

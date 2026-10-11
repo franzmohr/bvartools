@@ -69,3 +69,24 @@ Neither transformation can be applied twice, and neither can be added to a
 model that already carries the other: \code{rescale_error_correction} has
 to be called in between.
 }
+\examples{
+
+data("e6")
+model <- create_bvecmodel(e6 * 100, p = 1, r = 1, const = "unrestricted",
+                          iterations = 20, burnin = 10)
+
+# Divide the series in the error correction term by the standard deviation
+# of their differences
+model <- scale_error_correction(model)
+attr(model$data$train$w, "scale")
+
+model <- add_priors(model,
+                    coef = list(v_i = 0, v_i_det = 0),
+                    coint = list(v_i = 0, p_tau_i = 1),
+                    sigma = list(df = "k", scale = 1))
+model <- add_posterior_coefficients(add_initial_values(model))
+
+# Put the cointegration vectors back on the scale of the data
+model <- rescale_error_correction(model)
+
+}

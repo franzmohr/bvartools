@@ -103,6 +103,14 @@ use_expanding_window.bvarmodel <- function(object, start, ...) {
     object[["posterior"]] <- NULL
     dropped <- c(dropped, "the posterior draws")
   }
+  # An identification is of the draws it rotated, which go with the posterior;
+  # kept, it named a period of the whole sample and rotations no window had.
+  if (!is.null(object[["model"]][["sign_restrictions"]]) ||
+      !is.null(object[["model"]][["sign_zero_restrictions"]])) {
+    object[["model"]][["sign_restrictions"]] <- NULL
+    object[["model"]][["sign_zero_restrictions"]] <- NULL
+    dropped <- c(dropped, "the sign restrictions")
+  }
   if (!is.null(object[["initial"]])) {
     object[["initial"]] <- NULL
     dropped <- c(dropped, "the starting values")

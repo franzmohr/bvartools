@@ -6,8 +6,7 @@
 #include "core/models/constraint_support.h"
 #include "core/models/shrinkage_support.h"
 #include "core/models/steady_state_support.h"
-#include "core/models/student_t_support.h"
-#include "core/models/volatility_break_support.h"
+#include "core/models/error_scale_checks.h"
 #include "core/models/discount_support.h"
 #include "core/models/predictive_score.h"
 

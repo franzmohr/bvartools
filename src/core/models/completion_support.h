@@ -13,6 +13,7 @@
 #include "core/models/predictive_score.h"
 
 #include <algorithm>
+#include <functional>
 #include <stdexcept>
 #include <string>
 
@@ -278,6 +279,22 @@ inline arma::mat covariance_of(const arma::mat &precision, const char *algorithm
     return covariance;
 }
 
+/// One covariance per period from one k x k `sigma` and a scale per period:
+/// period t's is scale_t^2 sigma, stacked, (n k) x k -- the form
+/// var_path_prior_from() takes for a covariance that moves. What a volatility
+/// break (VarSpec::volatility_break) and Student t errors (VarSpec::student_t)
+/// make of the completion step, its likelihood, a scenario and a score.
+inline arma::mat scaled_covariance(const arma::mat &sigma, const arma::vec &scale)
+{
+    const arma::uword k = sigma.n_rows;
+    arma::mat out(scale.n_elem * k, k);
+    for (arma::uword t = 0; t < scale.n_elem; t++)
+    {
+        out.rows(t * k, t * k + k - 1) = scale(t) * scale(t) * sigma;
+    }
+    return out;
+}
+
 /// The data-completion step in a VAR sampler's sweep, and what it keeps from
 /// one sweep to the next: the compact regressors whose lag block it rewrites,
 /// the presample it conditions on, and the error precision of each soft group.
@@ -536,8 +553,12 @@ void require_no_panel_score(const Input &input, const char *algorithm)
 
 /// The pointwise log likelihood of a panel not observed whole, every draw: the
 /// density of what was observed, with the rest integrated out.
+///
+/// `period_scale`, where given, returns draw `d`'s scale of every period, tt of
+/// them, and period t's covariance is scale_t^2 times the draw's own.
 template <typename Input, typename Draws>
-arma::mat observed_log_likelihood(const Input &input, const Draws &draws, const char *algorithm)
+arma::mat observed_log_likelihood(const Input &input, const Draws &draws, const char *algorithm,
+                                  const std::function<arma::vec(arma::uword)> &period_scale = nullptr)
 {
     const arma::uword k = static_cast<arma::uword>(input.spec.k);
     const arma::uword p = static_cast<arma::uword>(input.spec.p);
@@ -553,10 +574,12 @@ arma::mat observed_log_likelihood(const Input &input, const Draws &draws, const 
     arma::mat loglik(n_draws, tt);
     for (arma::uword draw = 0; draw < n_draws; draw++)
     {
+        const arma::mat covariance =
+            period_scale ? scaled_covariance(draw_covariance(draws, draw, k, algorithm), period_scale(draw))
+                         : draw_covariance(draws, draw, k, algorithm, tt);
         loglik.row(draw) = observed_log_likelihood(
             input.train.constraints, x, presample,
-            draw_coefficients_column(draws, draw, use_a, nparams, tt),
-            draw_covariance(draws, draw, k, algorithm, tt),
+            draw_coefficients_column(draws, draw, use_a, nparams, tt), covariance,
             soft ? arma::vec(draws.constraints_inv.col(draw)) : arma::vec(), k, p);
     }
     return loglik;
@@ -597,16 +620,9 @@ arma::mat conditioned_forecast(const Input &input, const Draws &draws, const arm
     const arma::uword k = static_cast<arma::uword>(input.spec.k);
     const arma::uword p = static_cast<arma::uword>(input.spec.p);
     const arma::mat x = use_a ? input.forecast.x : arma::mat(static_cast<arma::uword>(input.spec.h), 0);
-    arma::mat covariance = draw_covariance(draws, draw, k, algorithm);
-    if (!horizon_scale.is_empty())
-    {
-        const arma::mat sigma = covariance;
-        covariance.set_size(horizon_scale.n_elem * k, k);
-        for (arma::uword i = 0; i < horizon_scale.n_elem; i++)
-        {
-            covariance.rows(i * k, i * k + k - 1) = horizon_scale(i) * horizon_scale(i) * sigma;
-        }
-    }
+    const arma::mat sigma = draw_covariance(draws, draw, k, algorithm);
+    const arma::mat covariance =
+        horizon_scale.is_empty() ? sigma : scaled_covariance(sigma, horizon_scale);
     return draw_constrained_var_path(
         var_path_prior_from(draw_coefficients_column(draws, draw, use_a), k, x,
                             horizon_presample(starting_panel(input, draws, draw, k), p),
@@ -619,9 +635,13 @@ arma::mat conditioned_forecast(const Input &input, const Draws &draws, const arm
 /// realised, from where each draw's panel ends, draws x periods. `periods` is
 /// what scored_horizons() found; the realised rows are checked here, a score
 /// running from draws without validate() in between.
+///
+/// `horizon_scale`, where given, returns draw `d`'s scale of every scored
+/// horizon, and horizon i's covariance is scale_i^2 times the draw's own.
 template <typename Input, typename Draws>
 arma::mat score_from_panel(const Input &input, const Draws &draws, const arma::uword periods,
-                           const char *algorithm)
+                           const char *algorithm,
+                           const std::function<arma::vec(arma::uword)> &horizon_scale = nullptr)
 {
     const arma::uword k = static_cast<arma::uword>(input.spec.k);
     const arma::uword p = static_cast<arma::uword>(input.spec.p);
@@ -652,10 +672,12 @@ arma::mat score_from_panel(const Input &input, const Draws &draws, const arma::u
     arma::mat score(n_draws, periods);
     for (arma::uword draw = 0; draw < n_draws; draw++)
     {
+        const arma::mat sigma = draw_covariance(draws, draw, k, algorithm);
         score.row(draw) = arma::trans(constrained_var_path_log_density(
             var_path_prior_from(draw_coefficients_column(draws, draw, use_a), k, x,
                                 horizon_presample(starting_panel(input, draws, draw, k), p),
-                                draw_covariance(draws, draw, k, algorithm), p),
+                                horizon_scale ? scaled_covariance(sigma, horizon_scale(draw)) : sigma,
+                                p),
             observed, arma::vec()));
     }
     return score;

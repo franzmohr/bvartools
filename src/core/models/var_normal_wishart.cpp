@@ -177,8 +177,10 @@ VarNormalWishartDraws VarNormalWishartSampler::draw_coefficients(const VarNormal
     core::StudentTErrors tails(input.spec, input.student_t_prior, input.initial.student_t_df,
                                static_cast<arma::uword>(tt), static_cast<arma::uword>(k));
     const bool rescaled = volatility.active() || tails.active();
-    const arma::vec y_original = rescaled ? y : arma::vec();
-    const arma::mat z_original = rescaled ? z : arma::mat();
+    // The rows on their original scale: the data, or where the panel is not
+    // observed whole, the sweep's completion of it.
+    arma::vec y_original = rescaled ? y : arma::vec();
+    arma::mat z_original = rescaled ? z : arma::mat();
     if (volatility.active())
     {
         out.volatility = arma::mat(volatility.theta().n_elem, iterations);
@@ -201,24 +203,14 @@ VarNormalWishartDraws VarNormalWishartSampler::draw_coefficients(const VarNormal
         reporter.check_interrupt();
         reporter.progress(draw + 1, draws);
 
-        if (rescaled)
-        {
-            core::rescale_rows(y_original, z_original, row_scale(), static_cast<arma::uword>(k),
-                               first_scaled, y, z);
-            if (a_bvs)
-            {
-                z_bvs = z;
-            }
-            if (!use_a)
-            {
-                u = arma::reshape(y, k, tt);
-            }
-        }
-
         if (complete)
         {
-            const arma::mat path =
-                completion.complete(iid.scatter(a), core::covariance_of(u_sigma_inv, "VarNormalWishart"));
+            // Under a volatility break or Student t errors each period's
+            // covariance is s_t^2 lambda_t Sigma, and the completion draws the
+            // panel with exactly that.
+            const arma::mat sigma = core::covariance_of(u_sigma_inv, "VarNormalWishart");
+            const arma::mat path = completion.complete(
+                iid.scatter(a), rescaled ? core::scaled_covariance(sigma, row_scale()) : sigma);
             y = arma::vectorise(path);
             if (use_a)
             {
@@ -231,6 +223,25 @@ VarNormalWishartDraws VarNormalWishartSampler::draw_coefficients(const VarNormal
             else
             {
                 u = path;
+            }
+        }
+
+        if (rescaled)
+        {
+            if (complete)
+            {
+                y_original = y;
+                z_original = z;
+            }
+            core::rescale_rows(y_original, z_original, row_scale(), static_cast<arma::uword>(k),
+                               first_scaled, y, z);
+            if (a_bvs)
+            {
+                z_bvs = z;
+            }
+            if (!use_a)
+            {
+                u = arma::reshape(y, k, tt);
             }
         }
 
@@ -378,7 +389,8 @@ VarNormalWishartDraws VarNormalWishartSampler::draw_coefficients(const VarNormal
                 out.student_t_df(0, draw_pos) = tails.df();
                 out.student_t_lambda.col(draw_pos) = tails.lambda();
             }
-            completion.store(out.y, out.constraints_inv, static_cast<arma::uword>(draw_pos), y);
+            completion.store(out.y, out.constraints_inv, static_cast<arma::uword>(draw_pos),
+                             rescaled ? y_original : y);
         }
     }
 
@@ -672,16 +684,42 @@ arma::mat gaussian_log_likelihood(const VarSpec &spec, const arma::vec &y, const
     return loglik;
 }
 
-/// The likelihood and the score run from draws without validate() in between,
-/// so the one combination they would get wrong is refused here as well: the
-/// completion step's density has one covariance for every period.
-void require_no_break_with_constraints(const VarNormalWishartInput &input)
+/// Each period's scale, s_t sqrt(lambda_t), of draw `draw` over `n` periods from
+/// `first` -- what a volatility break and Student t errors make of the error
+/// covariance -- for the stages that read a panel not observed whole. lambda
+/// is the draw's own, so under Student t errors these densities condition on
+/// it: with rows that reach across periods it does not integrate out in
+/// closed form.
+arma::vec draw_period_scale(const VarSpec &spec, const VarNormalWishartDraws &coefficients,
+                            const arma::uword draw, const arma::uword first, const arma::uword n)
 {
-    if (input.spec.uses_volatility_break() || input.spec.student_t)
+    arma::vec scale = spec.uses_volatility_break()
+                          ? core::volatility_path(spec, coefficients.volatility.col(draw), first, n)
+                          : arma::vec(n, arma::fill::ones);
+    if (spec.student_t)
     {
-        throw std::invalid_argument(
-            "VarNormalWishart does not combine /model/volatility_break or /model/student_t with "
-            "/data/train/constraints or /data/test/constraints");
+        scale %= arma::sqrt(coefficients.student_t_lambda.col(draw).rows(first, first + n - 1));
+    }
+    return scale;
+}
+
+void require_scale_draws(const VarSpec &spec, const VarNormalWishartDraws &coefficients,
+                         const arma::uword tt)
+{
+    const arma::uword draws = coefficients.iterations();
+    if (spec.uses_volatility_break() && coefficients.volatility.n_cols != draws)
+    {
+        throw std::invalid_argument("the model has a volatility break, and posterior draws of it "
+                                    "(/posterior/volatility/coeffs) are missing or not one column "
+                                    "per draw");
+    }
+    if (spec.student_t &&
+        (coefficients.student_t_lambda.n_cols != draws || coefficients.student_t_lambda.n_rows != tt))
+    {
+        throw std::invalid_argument("the model has Student t errors on a panel not observed whole, "
+                                    "and its density conditions on the mixing scales: "
+                                    "/posterior/student_t/lambda is missing or not tt rows and one "
+                                    "column per draw");
     }
 }
 
@@ -716,7 +754,15 @@ arma::mat VarNormalWishartSampler::log_likelihood(const VarNormalWishartInput &i
     // rows ending in t given those ending before it.
     if (!input.train.constraints.empty())
     {
-        require_no_break_with_constraints(input);
+        if (input.spec.uses_volatility_break() || input.spec.student_t)
+        {
+            const arma::uword tt = y.n_elem / static_cast<arma::uword>(k);
+            require_scale_draws(input.spec, coefficients, tt);
+            return core::observed_log_likelihood(
+                input, coefficients, "VarNormalWishart", [&](const arma::uword draw) {
+                    return draw_period_scale(input.spec, coefficients, draw, 0, tt);
+                });
+        }
         return core::observed_log_likelihood(input, coefficients, "VarNormalWishart");
     }
 
@@ -739,7 +785,24 @@ arma::mat VarNormalWishartSampler::predictive_log_density(const VarNormalWishart
     // every file without constraints, so its scores do not move.
     if (!input.train.constraints.empty() || !input.test.constraints.empty())
     {
-        require_no_break_with_constraints(input);
+        if (input.spec.student_t)
+        {
+            throw std::invalid_argument(
+                "VarNormalWishart does not score a forecast with Student t errors from a panel not "
+                "observed whole, or against a horizon realised in part, yet: the horizon's lambda "
+                "would have to be integrated out of a density whose rows reach across periods");
+        }
+        if (input.spec.uses_volatility_break())
+        {
+            const arma::uword tt_sample =
+                stacked_response(input.train).n_elem / static_cast<arma::uword>(input.spec.k);
+            require_scale_draws(input.spec, coefficients, tt_sample);
+            return core::score_from_panel(
+                input, coefficients, periods, "VarNormalWishart", [&](const arma::uword draw) {
+                    return core::volatility_path(input.spec, coefficients.volatility.col(draw),
+                                                 tt_sample, periods);
+                });
+        }
         return core::score_from_panel(input, coefficients, periods, "VarNormalWishart");
     }
 

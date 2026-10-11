@@ -10,6 +10,7 @@
 #include "bayests/reporter.h"
 #include "bayests/spec.h"
 #include "core/models/adaptive_walk.h"
+#include "core/models/error_scale_checks.h"
 
 #include <cmath>
 #include <stdexcept>
@@ -53,112 +54,6 @@ inline arma::vec volatility_path(const VarSpec &spec, const arma::vec &theta, co
                      : 1.0 + (last - 1.0) * std::pow(rho, static_cast<double>(j - m + 1));
     }
     return s;
-}
-
-/// Refuses /model/volatility_break where the algorithm does not read it.
-inline void require_supported_volatility_break(const VarSpec &spec, const bool supported,
-                                               const char *algorithm)
-{
-    if (spec.volatility_break != 0 && !supported)
-    {
-        throw std::invalid_argument(
-            std::string(algorithm) +
-            " does not read /model/volatility_break: only VarNormalWishart scales its error "
-            "covariance from a known period on");
-    }
-}
-
-/// Refuses a volatility break the sampler cannot estimate as given: a break
-/// outside the sample, no free scale, a prior that is not proper, a start
-/// outside the support, and the combinations that would read the error
-/// covariance as constant -- the steady-state prior's draw of the mean, and a
-/// panel or a horizon not observed whole, which the completion step draws with
-/// one covariance for every period.
-inline void validate_volatility_break(const VarSpec &spec, const VolatilityBreakPrior &prior,
-                                      const arma::vec &initial, const TrainData &train,
-                                      const TestData &test, const arma::uword tt,
-                                      const char *algorithm)
-{
-    const std::string name(algorithm);
-    if (spec.volatility_break < 0)
-    {
-        throw std::invalid_argument(name + ": /model/volatility_break is a period of "
-                                           "/data/train/y counted from one, or zero for none; got " +
-                                    std::to_string(spec.volatility_break));
-    }
-    if (!spec.uses_volatility_break())
-    {
-        return;
-    }
-    if (spec.volatility_scales < 1)
-    {
-        throw std::invalid_argument(name + ": /model/volatility_scales must be at least one, the "
-                                           "period of the break itself; got " +
-                                    std::to_string(spec.volatility_scales));
-    }
-    if (static_cast<arma::uword>(spec.volatility_break) > tt)
-    {
-        throw std::invalid_argument(
-            name + ": /model/volatility_break is period " + std::to_string(spec.volatility_break) +
-            " and /data/train/y has " + std::to_string(tt) +
-            ": the break has to be inside the sample, whose periods after it are what "
-            "estimate it");
-    }
-    if (spec.steady_state)
-    {
-        throw std::invalid_argument(
-            name + " does not combine /model/volatility_break with /model/steady_state, whose "
-                   "draw of the unconditional mean reads the error covariance as the same in "
-                   "every period");
-    }
-    if (!train.constraints.empty() || !test.constraints.empty())
-    {
-        throw std::invalid_argument(
-            name + " does not combine /model/volatility_break with /data/train/constraints or "
-                   "/data/test/constraints: the panel a completion draws has one error "
-                   "covariance for every period, and the break is the claim that it has not");
-    }
-
-    const auto positive = [&](const double v, const char *what) {
-        if (!(v > 0.0) || !std::isfinite(v))
-        {
-            throw std::invalid_argument(name + ": /priors/volatility/" + what +
-                                        " must be positive and finite under "
-                                        "/model/volatility_break; got " +
-                                        std::to_string(v));
-        }
-    };
-    positive(prior.shape, "shape");
-    positive(prior.rho_shape1, "rho_shape1");
-    positive(prior.rho_shape2, "rho_shape2");
-
-    if (initial.n_elem > 0)
-    {
-        const arma::uword m = static_cast<arma::uword>(spec.volatility_scales);
-        if (initial.n_elem != m + 1)
-        {
-            throw std::invalid_argument(name + ": /initial/volatility needs volatility_scales + 1 = " +
-                                        std::to_string(m + 1) +
-                                        " elements, the free scales and then the decay rate; got " +
-                                        std::to_string(initial.n_elem));
-        }
-        for (arma::uword j = 0; j < m; j++)
-        {
-            if (!(initial(j) > 1.0) || !std::isfinite(initial(j)))
-            {
-                throw std::invalid_argument(name + ": every scale in /initial/volatility must be "
-                                                   "finite and above one; element " +
-                                            std::to_string(j + 1) + " is " +
-                                            std::to_string(initial(j)));
-            }
-        }
-        if (!(initial(m) > 0.0 && initial(m) < 1.0))
-        {
-            throw std::invalid_argument(name + ": the decay rate, the last element of "
-                                               "/initial/volatility, must be in (0, 1); got " +
-                                        std::to_string(initial(m)));
-        }
-    }
 }
 
 /// One draw from Gamma(shape a, rate b) restricted to (0, 1].

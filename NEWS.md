@@ -1,5 +1,23 @@
 # bvartools 1.0.0
 
+* **Student t errors for a VAR with a Wishart prior.**
+  `create_bvarmodel(student_t = TRUE)` makes each period's shocks multivariate
+  t: `u_t ~ N(0, lambda_t Sigma)` with `lambda_t ~ IG(nu / 2, nu / 2)`, so a
+  period with large shocks gets a large `lambda_t` and counts for less in the
+  coefficients and the covariance, without anyone dating it. The degrees of
+  freedom are held fixed with `sigma = list(..., student_t = list(df = 5))` in
+  `add_priors()`, or drawn under a gamma prior with `student_t = list(shape = 2,
+  rate = 0.1)`, the prior of Juarez and Steel (2010); like every
+  hyperparameter, the prior has no default. The draws are
+  `posterior$student_t$df` and `posterior$student_t$lambda`, one column per
+  period; the log likelihood and the predictive density integrate `lambda` out,
+  a forecast draws it from its prior, and `window()`, `thin()` and the model
+  file carry both. It is the sampler of BayesTS's VarNormalWishart, vendored
+  from `9f470f1`, so it is available for constant coefficients and
+  `error = "wishart"` only and refused elsewhere, and a scenario and a
+  steady-state prior are refused with it. Draws of a model without it are
+  unchanged.
+
 * **Smaller corrections.** `minnesota_prior()` of a VEC model returns its
   prior precision as `v_inv`, as the VAR method does, where it said `v_i`.
   `spillover()` over a model list or an expanding window stops on an error and
@@ -134,7 +152,7 @@
   Forecast pools have no seed and still need `set.seed()`. The seeding
   functions come from bayests, which dfmtools uses too.
 
-* The vendored BayesTS core moves to `02a41de`, past `75d35c6`, which adds the
+* The vendored BayesTS core moves to `9f470f1`, past `75d35c6`, which adds the
   four unobserved components models, and past the cycle start of `4808dff` and
   the damped trend and signal equations of `bc27dfe`, which reach this package
   only as new fields and their refusals in the shared files. They belong to ucmtools and are skipped, with their three

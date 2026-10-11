@@ -5,11 +5,10 @@
 
 #include "core/models/completion_support.h"
 #include "core/models/constraint_support.h"
+#include "core/models/error_scale_checks.h"
 #include "core/models/model_support.h"
 #include "core/models/shrinkage_support.h"
 #include "core/models/steady_state_support.h"
-#include "core/models/student_t_support.h"
-#include "core/models/volatility_break_support.h"
 
 #include <algorithm>
 #include <cmath>
@@ -815,7 +814,7 @@ void VarNormalWishartInput::validate() const
     const arma::uword nparams = train.nparams();
 
     require_identified_structural(spec, true, "a Wishart prior on the error precision");
-    core::validate_volatility_break(spec, volatility_prior, initial.volatility, train, test, tt,
+    core::validate_volatility_break(spec, volatility_prior, initial.volatility, tt,
                                     "VarNormalWishart");
     core::validate_student_t(spec, student_t_prior, initial.student_t_df, train, forecast, test,
                              "VarNormalWishart");

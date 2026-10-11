@@ -36,6 +36,11 @@
 #' rather than leaving that one without a posterior and carrying it into
 #' whatever reads the results.
 #' 
+#' With Student t errors (\code{student_t = TRUE} in \code{\link{create_bvarmodel}}),
+#' \code{posterior$student_t} holds \code{df}, the draws of the degrees of freedom,
+#' and \code{lambda}, the draws of each period's mixing scale: one column per
+#' period, large where the period's shocks were.
+#'
 #' @return The object in \code{object} with the element \code{posterior} added. Each of its
 #' elements is a list whose element \code{coeffs} holds the draws after burn-in as a
 #' \code{\link[coda]{mcmc}} object with one row per draw and one column per parameter:
@@ -158,9 +163,12 @@ add_posterior_coefficients.bvarmodel <- function(object, posterior_function = NU
     # the error precision of its soft constraints, 'mu' the unconditional mean
     # under a steady-state prior, and a$shrinkage and a$local the scales of an
     # adaptive prior on the coefficients.
-    for (i in c("a", "psi", "u_sigma_inv", "u_omega_inv", "u_scale", "y", "constraints_inv", "mu")) {
+    # 'student_t' holds 'df', the degrees of freedom of Student t errors, and
+    # 'lambda', each period's mixing scale.
+    for (i in c("a", "psi", "u_sigma_inv", "u_omega_inv", "u_scale", "y", "constraints_inv", "mu",
+                "student_t")) {
       for (j in c("coeffs", "lambda", "sigma", "omega", "omega_log_zero", "omega_log_zero_joint",
-                  "shrinkage", "local", "theta")) {
+                  "shrinkage", "local", "theta", "df")) {
         if (!is.null(object[["posterior"]][[i]][[j]])) {
           object[["posterior"]][[i]][[j]] <- .mcmc_draws(object[["model"]], object[["posterior"]][[i]][[j]])
         }

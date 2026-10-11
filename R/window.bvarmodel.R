@@ -124,6 +124,8 @@ window.bvarmodel <- function(x, start = NULL, end = NULL, ...) {
                  # The panel completed by a model with missing = "estimate",
                  # one draw per row, k values per period.
                  "y$coeffs" = k,
+                 # The mixing scale of Student t errors, one per period.
+                 "student_t$lambda" = 1,
                  "loglik" = 1)
   if (isTRUE(x[["model"]][["rank"]] > 0) && !is.null(x[["data"]][["train"]][["w"]])) {
     widths[["beta$coeffs"]] <- NCOL(x[["data"]][["train"]][["w"]]) * x[["model"]][["rank"]]

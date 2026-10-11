@@ -140,6 +140,24 @@ add_prior_options <- function(object, shrinkage = "none", stationary = FALSE,
   if (is.character(shrinkage)) {
     shrinkage <- list("type" = shrinkage)
   }
+
+  # Refused by the samplers whatever the groups: each of these rearranges the
+  # prior or the draw the shrinkage and the stationarity restriction act on.
+  # Said here, before the groups are built -- for a structural model with an
+  # even number of variables they came out the wrong length, and the refusal
+  # read as a fault in 'group' rather than as the combination it is.
+  shrinks <- is.list(shrinkage) && !identical(shrinkage[["type"]], "none")
+  if (shrinks || isTRUE(stationary)) {
+    clash <- c(if (isTRUE(model[["structural"]])) "a structural form",
+               if (!is.null(model[["varsel"]]) && model[["varsel"]] != "none") "variable selection",
+               if (isTRUE(model[["n_iid"]] > 0)) "i.i.d. variables ('iid')")
+    if (length(clash) > 0) {
+      stop("Shrinkage and the stationarity restriction are not combined with ",
+           paste(clash, collapse = " or "), ": each rearranges the prior or the draw they ",
+           "act on. Estimate the model without ", paste(clash, collapse = " and "),
+           ", or without 'shrinkage' and 'stationary'.")
+    }
+  }
   if (!is.list(shrinkage) || length(shrinkage[["type"]]) != 1 ||
       !shrinkage[["type"]] %in% c("none", "minnesota", "horseshoe", "normal_gamma")) {
     stop("Argument 'shrinkage' must be 'none', 'minnesota', 'horseshoe' or 'normal_gamma', ",

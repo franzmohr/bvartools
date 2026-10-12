@@ -64,7 +64,8 @@ followed the Bundesbank, the start of the monetary union in 1999, the
 financial crisis, and a decade of interest rates close to or below zero.
 The pandemic quarters are left out. Output growth moved by ten percent
 within a quarter in 2020, which is a break of a different kind than the
-gradual drift these models are built for.
+gradual drift these models are built for. The last section but one
+returns to them with a model built for that kind of break.
 
 ``` r
 
@@ -641,6 +642,225 @@ third and makes that of the short-term rate two and a half times as
 wide. A forecast that holds the coefficients at the end of the sample
 understates the uncertainty this model implies.
 
+## The pandemic quarters: a volatility break
+
+The sample above ends in 2019 because the quarters after it are not the
+kind of change a random walk describes. Austrian output fell by ten
+percent in the second quarter of 2020 and rose by as much in the third.
+A stochastic volatility model has to treat a jump like that as a
+sequence of draws from its state equation, and either the prior lets the
+volatility move that far – in which case it moves that far all the time
+– or it does not, and the jump ends up in the coefficients. A VAR with a
+constant covariance matrix does worse: it spreads the two quarters over
+the whole sample.
+
+What is unusual about the pandemic is that its timing is known. Lenza
+and Primiceri (2022) use that: from a known period on, the error
+covariance is $`s_t^2 \Sigma`$ instead of $`\Sigma`$, with a free scale
+$`s_t \geq 1`$ in each of the first few periods and, after them, an
+excess over one that decays at a rate $`\rho`$,
+
+``` math
+s_t = 1 + (s_m - 1) \rho^{t - t_m}, \qquad t > t_m,
+```
+
+where $`t_m`$ is the last period with a scale of its own. The date says
+when the break happened; how large it was and how quickly it faded are
+estimated. The scale is common to all equations, so the coefficients and
+$`\Sigma`$ keep their conjugate priors, and the model is a VAR with
+constant coefficients and a Wishart prior, `error = "wishart"`, with one
+more argument. Argument `volatility_break` gives the first period of the
+break as a date of the data, and `volatility_scales` the number of free
+scales, three by default. The prior of the scales and of $`\rho`$ is
+element `volatility` of `sigma`. Like every other prior in `bvartools`
+it has no default; the values below are the ones Lenza and Primiceri
+use, a Pareto prior with shape one on each scale, which puts no mass
+below one, and a beta prior with mode 0.8 and standard deviation 0.2 on
+$`\rho`$.
+
+The two models below are estimated on the sample up to 2023Q3, the last
+quarter of the data set, once without and once with a break in 2020Q1.
+
+``` r
+
+full <- ts.intersect(dy = diff(at[, "y"]), Dp = at[, "Dp"], r = at[, "r"]) * 100
+
+constant <- create_bvarmodel(full, p = 2, deterministic = "const",
+                             iterations = 5000, burnin = 1000)
+constant <- add_priors(constant, coef = list(v_i = 1, v_i_det = 1 / 10),
+                       sigma = list(df = "k", scale = 1))
+
+scaled <- create_bvarmodel(full, p = 2, deterministic = "const",
+                           volatility_break = c(2020, 1),
+                           iterations = 5000, burnin = 1000)
+scaled <- add_priors(scaled, coef = list(v_i = 1, v_i_det = 1 / 10),
+                     sigma = list(df = "k", scale = 1,
+                                  volatility = list(shape = 1, rho_shape1 = 3.04,
+                                                    rho_shape2 = 1.51)))
+
+set.seed(1234567)
+constant <- add_posterior_coefficients(add_initial_values(constant))
+scaled <- add_posterior_coefficients(add_initial_values(scaled))
+```
+
+The draws of the break are in `posterior$volatility$coeffs`, one column
+per free scale and a last one for $`\rho`$.
+
+``` r
+
+round(summary(scaled[["posterior"]][["volatility"]][["coeffs"]])[["quantiles"]], 2)
+#>     2.5%  25%  50%  75% 97.5%
+#> s1  1.26 1.82 2.31 3.08  5.99
+#> s2  3.49 5.13 6.57 8.75 17.42
+#> s3  2.62 3.69 4.42 5.21  7.85
+#> rho 0.61 0.72 0.77 0.82  0.91
+```
+
+The path of $`s_t`$ follows from each draw. The helper below computes it
+for every period of the sample, one before the break.
+
+``` r
+
+scale_path <- function(object, ci = 0.9) {
+  draws <- as.matrix(object[["posterior"]][["volatility"]][["coeffs"]])
+  m <- ncol(draws) - 1  # the free scales; the last column is rho
+  y <- object[["data"]][["train"]][["y"]]
+  # Periods since the break, which is period 1
+  j <- seq_len(nrow(y)) - object[["model"]][["volatility_break"]] + 1
+
+  path <- apply(draws, 1, function(d) {
+    s <- rep(1, length(j))
+    free <- j >= 1 & j <= m
+    s[free] <- d[j[free]]
+    decay <- j > m
+    s[decay] <- 1 + (d[m] - 1) * d[m + 1]^(j[decay] - m)
+    s
+  })
+  bands <- t(apply(path, 1, stats::quantile,
+                   probs = c((1 - ci) / 2, .5, 1 - (1 - ci) / 2)))
+
+  stats::ts(bands, start = stats::start(y), frequency = stats::frequency(y))
+}
+
+stats::ts.plot(window(scale_path(scaled), start = c(2018, 1)), lty = c(2, 1, 2),
+               main = "Scale of the shocks", ylab = "s")
+abline(h = 1, lty = "dotted")
+```
+
+![plot of chunk pandemic-path](figures/tvp-sv-var-pandemic-path-1.png)
+
+plot of chunk pandemic-path
+
+The shocks of 2020Q2 were between four and fourteen times their usual
+size, with a median of six and a half, those of 2020Q3 about four times
+and those of 2020Q1 about two. The excess then fades by about a quarter
+every quarter, so that by the end of the sample the shocks are some
+fifteen percent larger than before 2020.
+
+What the break changes is what the rest of the sample is allowed to say.
+The equation of output growth shows it most clearly:
+
+``` r
+
+coefficients_of <- function(object, equation) {
+  a <- matrix(colMeans(object[["posterior"]][["a"]][["coeffs"]]), object[["model"]][["k"]])
+  dimnames(a) <- list(object[["model"]][["endogen"]],
+                      dimnames(object[["data"]][["train"]][["x"]])[[2]])
+  a[equation, ]
+}
+
+round(rbind(constant = coefficients_of(constant, "dy"),
+            "volatility break" = coefficients_of(scaled, "dy")), 2)
+#>                  dy.01 Dp.01 r.01 dy.02 Dp.02  r.02 const
+#> constant         -0.27 -0.11 0.26 -0.10 -0.30 -0.11  0.76
+#> volatility break -0.10  0.08 0.26 -0.06 -0.52 -0.12  0.71
+```
+
+Without the break, the fall and the rebound of 2020 are two of the
+largest observations in the sample, and one following the other is
+evidence of negative autocorrelation: the coefficient of the first lag
+of output growth is $`-0.27`$. With the break, an observation counts
+with the inverse of $`s_t^2`$, so those two quarters weigh a twentieth
+of an ordinary one or less, and the coefficient is $`-0.10`$. The
+covariance matrix shows the same thing. Its draws are those of
+$`\Sigma`$, the covariance before the break, and the standard deviation
+of the output growth residual falls by more than a third once the
+pandemic quarters no longer have to be absorbed by it:
+
+``` r
+
+residual_sd_of <- function(object) {
+  k <- object[["model"]][["k"]]
+  sigma <- solve(matrix(colMeans(object[["posterior"]][["u_sigma_inv"]][["coeffs"]]), k))
+  stats::setNames(sqrt(diag(sigma)), object[["model"]][["endogen"]])
+}
+
+round(rbind(constant = residual_sd_of(constant),
+            "volatility break" = residual_sd_of(scaled)), 2)
+#>                    dy   Dp    r
+#> constant         1.50 0.37 0.13
+#> volatility break 0.95 0.34 0.13
+```
+
+The log likelihood uses the scale of each period, so the two models can
+be compared on the same data. The posterior mean of the sum of the
+pointwise log likelihood is far higher with the break:
+
+``` r
+
+loglik_of <- function(object) {
+  mean(rowSums(add_posterior_loglik(object)[["posterior"]][["loglik"]]))
+}
+
+round(c(constant = loglik_of(constant), "volatility break" = loglik_of(scaled)), 1)
+#>         constant volatility break 
+#>           -256.3           -191.4
+```
+
+Forecasts use the scale the decay implies for each period of the
+horizon, so a forecast made shortly after the break is drawn with larger
+shocks than one made years later. The width of the 90% intervals one and
+eight quarters ahead shows how that plays out:
+
+``` r
+
+constant <- add_posterior_forecasts(add_forecast_input(constant, n_ahead = 8))
+scaled <- add_posterior_forecasts(add_forecast_input(scaled, n_ahead = 8))
+
+width_of <- function(object, h) {
+  fcst <- predict(object, n_ahead = 8)[["fcst"]]
+  apply(fcst[h, , ], 1, function(x) diff(stats::quantile(x, c(0.05, 0.95))))
+}
+
+round(rbind("constant, h = 1" = width_of(constant, 1),
+            "volatility break, h = 1" = width_of(scaled, 1),
+            "constant, h = 8" = width_of(constant, 8),
+            "volatility break, h = 8" = width_of(scaled, 8)), 2)
+#>                           dy   Dp    r
+#> constant, h = 1         5.21 1.25 0.46
+#> volatility break, h = 1 3.88 1.36 0.53
+#> constant, h = 8         5.23 1.85 1.80
+#> volatility break, h = 8 3.48 1.67 1.95
+```
+
+The interval of output growth is narrower with the break, since its
+usual shocks are no longer measured with the pandemic in them. The
+intervals of inflation and the short-term rate are slightly wider one
+quarter ahead. That is the price of a scale common to all equations: the
+pandemic was mainly a shock to output, but the model scales the shocks
+of every variable by the same $`s_t`$, and since the estimate of
+$`\Sigma`$ barely changes for the other two, what remains of the break
+at the end of the sample widens their intervals.
+
+Three more things are worth knowing. The break is available only for
+constant coefficients and a Wishart prior, the model whose blocks stay
+conjugate under the scaling, and `create_bvarmodel` refuses it for a TVP
+or a stochastic volatility model. When the periods of large shocks are
+not known in advance, `student_t = TRUE` gives each period a scale of
+its own and lets the data find them; the two can also be combined. And
+the same argument `volatility_break` is available for VEC models in
+`create_bvecmodel`.
+
 ## Other combinations
 
 `tvp` and `error` are independent, so the four models below are all
@@ -700,6 +920,10 @@ Econometrics, 3*(4), 267-358. <https://dx.doi.org/10.1561/0800000013>
 Korobilis, D. (2013). VAR forecasting using Bayesian variable selection.
 *Journal of Applied Econometrics, 28*(2), 204-230.
 <https://doi.org/10.1002/jae.1271>
+
+Lenza, M., & Primiceri, G. E. (2022). How to estimate a vector
+autoregression after March 2020. *Journal of Applied Econometrics,
+37*(4), 688-699. <https://doi.org/10.1002/jae.2895>
 
 Primiceri, G. E. (2005). Time varying structural vector autoregressions
 and monetary policy. *Review of Economic Studies, 72*(3), 821-852.

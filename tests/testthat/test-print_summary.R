@@ -132,6 +132,27 @@ test_that("summary of a VEC model reports the cointegration term", {
   expect_output(print(summarised), "l.lr")
 })
 
+test_that("the digits of a printed summary can be set", {
+  # print() took digits without passing it on, so only options(digits = )
+  # changed the tables. Asking for d digits must print what the default,
+  # getOption("digits") - 3, prints when the option is d + 3.
+  printed <- function(object, ...) utils::capture.output(print(object, ...))
+  for (summarised in list(summary(fx_var_fitted()), summary(fx_vec_fitted()))) {
+    few <- printed(summarised, digits = 3)
+    many <- printed(summarised, digits = 6)
+    expect_false(identical(few, many))
+
+    old <- options(digits = 6)
+    by_option_few <- printed(summarised)
+    options(digits = 9)
+    by_option_many <- printed(summarised)
+    options(old)
+
+    expect_identical(few, by_option_few)
+    expect_identical(many, by_option_many)
+  }
+})
+
 test_that("the credible interval of the summary can be set", {
   narrow <- summary(fx_var_fitted(), ci = 0.5)
   wide <- summary(fx_var_fitted(), ci = 0.95)

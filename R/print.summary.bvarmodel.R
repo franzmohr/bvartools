@@ -179,7 +179,7 @@ print.summary.bvarmodel <- function(x, digits = max(3L, getOption("digits") - 3L
       temp[, "Signif."] <- temp[, x[["model"]][["ci"]][1]] > 0 | temp[, x[["model"]][["ci"]][2]] < 0
       temp[, "Signif."] <- ifelse(temp[, "Signif."], "*", "")
       names(temp)[length(names(temp))] <- ""
-      print(temp, ...)
+      print(temp, digits = digits, ...)
     } 
   } else {
     cat("\n\nNo regressors.\n\n")
@@ -224,7 +224,7 @@ print.summary.bvarmodel <- function(x, digits = max(3L, getOption("digits") - 3L
     temp[, "Signif."] <- temp[, x[["model"]][["ci"]][1]] > 0 | temp[, x[["model"]][["ci"]][2]] < 0
     temp[, "Signif."] <- ifelse(temp[, "Signif."], "*", "")
     names(temp)[length(names(temp))] <- ""
-    print(temp, ...)
+    print(temp, digits = digits, ...)
   }
 
   .print_chains_summary(x[["chains"]])

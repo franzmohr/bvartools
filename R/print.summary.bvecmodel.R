@@ -102,7 +102,7 @@ print.summary.bvecmodel <- function(x, digits = max(3L, getOption("digits") - 3L
       temp[, "Signif."] <- temp[, x[["model"]][["ci"]][1]] > 0 | temp[, x[["model"]][["ci"]][2]] < 0
       temp[, "Signif."] <- ifelse(temp[, "Signif."], "*", "")
       names(temp)[length(names(temp))] <- ""
-      print(temp, ...)
+      print(temp, digits = digits, ...)
     } 
   } else {
     cat("\n\nNo regressors.\n\n")
@@ -147,7 +147,7 @@ print.summary.bvecmodel <- function(x, digits = max(3L, getOption("digits") - 3L
     temp[, "Signif."] <- temp[, x[["model"]][["ci"]][1]] > 0 | temp[, x[["model"]][["ci"]][2]] < 0
     temp[, "Signif."] <- ifelse(temp[, "Signif."], "*", "")
     names(temp)[length(names(temp))] <- ""
-    print(temp, ...)
+    print(temp, digits = digits, ...)
   }
   
   # Autocorrelation of the cointegration state equation, where it was drawn
@@ -159,7 +159,7 @@ print.summary.bvecmodel <- function(x, digits = max(3L, getOption("digits") - 3L
                      x[["model"]][["ci"]][1], "50%", x[["model"]][["ci"]][2])
     row.names(temp) <- "rho"
     cat("\nAutocorrelation of the cointegration state equation:\n\n")
-    print(temp, ...)
+    print(temp, digits = digits, ...)
   }
 
   .print_chains_summary(x[["chains"]])

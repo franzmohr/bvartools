@@ -8,6 +8,9 @@ test_that("vec_to_var produces a VAR model of the same size", {
   expect_identical(var[["model"]][["endogen"]], vec[["model"]][["endogen"]])
   # p is the lag order of the model in levels in both parameterisations.
   expect_equal(var[["model"]][["p"]], vec[["model"]][["p"]])
+  # Its regressors are named as those of create_bvarmodel() and summary().
+  expect_identical(colnames(var[["data"]][["train"]][["x"]]),
+                   .get_regressor_names_bvarmodel(var))
 })
 
 test_that("the converted model carries the posterior draws over", {

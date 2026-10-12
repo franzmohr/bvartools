@@ -293,7 +293,7 @@ coefficient_path <- function(object, equation, regressor, ci = 0.9) {
             frequency = stats::frequency(object[["data"]][["train"]][["y"]]))
 }
 
-path <- coefficient_path(model, equation = "r", regressor = "r.01")
+path <- coefficient_path(model, equation = "r", regressor = "r.l1")
 
 stats::ts.plot(path, lty = c(2, 1, 2),
                main = "Short-term rate ~ its own first lag",

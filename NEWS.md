@@ -40,6 +40,17 @@
   steady-state prior are refused with it. Draws of a model without it are
   unchanged.
 
+* **The regressors of a VAR model are named as `summary()` labels them.**
+  The columns of `data$train$x` of `create_bvarmodel()` were named `"y.01"`
+  for the first lag of `y` and `"x.l00"` for an exogenous `x`, where
+  `summary()` says `"y.l1"` and `"x.l0"`; they are now named the same way,
+  without padding the lag. `vec_to_var()` names the regressors of the VAR in
+  levels alike. A single exogenous series without a name, such as
+  `ts(cbind(ect = x))`, whose name `cbind()` drops when `x` is a `ts`, takes
+  the name of the variable passed as `exogen` rather than `"exogen"`. Code that
+  selects columns of `data$train$x` by name must use the new names. Draws are
+  unchanged.
+
 * **Smaller corrections.** `minnesota_prior()` of a VEC model returns its
   prior precision as `v_inv`, as the VAR method does, where it said `v_i`.
   `spillover()` over a model list or an expanding window stops on an error and

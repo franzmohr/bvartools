@@ -55,9 +55,44 @@ test_that("regressors are named after variable and lag", {
   model <- fx_var_model()
 
   expect_identical(colnames(model[["data"]][["train"]][["x"]]),
-                   c("y.01", "Dp.01", "r.01", "const"))
+                   c("y.l1", "Dp.l1", "r.l1", "const"))
   expect_identical(colnames(model[["data"]][["train"]][["y"]]),
                    c("y", "Dp", "r"))
+})
+
+test_that("regressors carry the labels of summary()", {
+  set.seed(1)
+  dy <- stats::ts(matrix(rnorm(80), 40, 2, dimnames = list(NULL, c("s", "n"))),
+                  start = c(2000, 1), frequency = 4)
+  ect <- stats::ts(cbind(ect = rnorm(40)), start = c(2000, 1), frequency = 4)
+  labels <- function(model) {
+    bvartools:::.get_regressor_names_bvarmodel(model)
+  }
+
+  model <- create_bvarmodel(dy, p = 1, exogen = ect, s = 0,
+                            deterministic = "const")
+  expect_identical(colnames(model[["data"]][["train"]][["x"]]),
+                   c("s.l1", "n.l1", "ect.l0", "const"))
+  expect_identical(colnames(model[["data"]][["train"]][["x"]]), labels(model))
+
+  # Lags of ten and more are not padded either.
+  model <- create_bvarmodel(dy, p = 10, exogen = ect, s = 2,
+                            deterministic = "const")
+  x_names <- colnames(model[["data"]][["train"]][["x"]])
+  expect_identical(x_names, labels(model))
+  expect_true(all(c("s.l1", "n.l10", "ect.l2") %in% x_names))
+
+  # A single unnamed series is named after the variable passed as 'exogen',
+  # since ts(cbind(ect = x)) drops the name when x is a ts.
+  x <- stats::ts(rnorm(40), start = c(2000, 1), frequency = 4)
+  ect <- stats::ts(cbind(ect = x), start = c(2000, 1), frequency = 4)
+  expect_null(dimnames(ect))
+  model <- create_bvarmodel(dy, p = 1, exogen = ect, deterministic = "const")
+  expect_identical(model[["model"]][["exogen"]], "ect")
+  expect_identical(colnames(model[["data"]][["train"]][["x"]]), labels(model))
+  model <- create_bvarmodel(dy, p = 1, exogen = stats::lag(x, 0),
+                            deterministic = "const")
+  expect_identical(model[["model"]][["exogen"]], "exogen")
 })
 
 test_that("deterministic terms drive the number of deterministic regressors", {
@@ -120,8 +155,8 @@ test_that("exogenous variables enter with two lags by default", {
   expect_identical(model[["model"]][["m"]], NCOL(data[["foreign"]]))
   expect_identical(model[["model"]][["s"]], 2L)
   x_names <- colnames(model[["data"]][["train"]][["x"]])
-  expect_true(all(paste0("poil.l", c("00", "01", "02")) %in% x_names))
-  expect_false("poil.l03" %in% x_names)
+  expect_true(all(paste0("poil.l", 0:2) %in% x_names))
+  expect_false("poil.l3" %in% x_names)
 })
 
 test_that("an invalid lag order of exogenous variables is rejected", {

@@ -307,7 +307,7 @@ aggregation_weights <- function(type = c("average", "sum", "growth"), n = 3) {
 
     # The lags of the series, named as create_bvarmodel() names them.
     if (!is.null(x)) {
-      prefix <- paste0(series[j], ".")
+      prefix <- paste0(series[j], ".l")
       for (col in which(startsWith(dimnames(x)[[2]], prefix))) {
         lag <- suppressWarnings(as.integer(substring(dimnames(x)[[2]][col], nchar(prefix) + 1)))
         if (is.na(lag) || lag < 1 || any(pos_x - lag < 1)) {

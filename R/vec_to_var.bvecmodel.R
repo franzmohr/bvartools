@@ -199,8 +199,7 @@ vec_to_var.bvecmodel <- function(object, ...) {
       x[[i]] <- x[[i - 1]] - x_diff[, (i - 2) * k + 1:k, drop = FALSE]
     }
   }
-  x_names <- paste0(rep(y_names, times = p), ".",
-                    rep(.lag_label(1:p, p), each = k))
+  x_names <- paste0(rep(y_names, times = p), ".l", rep(1:p, each = k))
 
   # The unmodelled, non-detereministic variables. The VEC model regresses on the
   # current difference, so the levels it implies run from the current period to
@@ -217,7 +216,7 @@ vec_to_var.bvecmodel <- function(object, ...) {
     }
     x <- c(x, x_exo)
     x_names <- c(x_names, paste0(rep(exogen_names, times = s + 1), ".l",
-                                 rep(.lag_label(0:s, s), each = m)))
+                                 rep(0:s, each = m)))
   }
 
   # Deterministic terms. The unrestricted ones keep the order they had, the
@@ -467,7 +466,7 @@ vec_to_var.bvecmodel <- function(object, ...) {
   return(do.call(cbind, paths))
 }
 
-# Zero-padded lag index, in the format used by create_bvarmodel()
+# Zero-padded lag index, in the format used by create_bvecmodel()
 .lag_label <- function(i, max_lag) {
   formatC(as.integer(i), width = max(2, nchar(max_lag)), flag = "0", format = "d")
 }

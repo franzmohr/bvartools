@@ -340,7 +340,7 @@ add_priors.bvecmodel <- function(object,
   ## sigma ----
   error_prior <- .add_priors_check_sigma(object, sigma)
   # A VEC model has normal errors only; a prior for Student t ones is refused.
-  .add_priors_student_t(object, sigma)
+  student_t_prior(object, sigma)
   
   ## Minnesota ----
   minnesota <- FALSE # Minnesota prior?
@@ -758,7 +758,7 @@ add_priors.bvecmodel <- function(object,
 
   # A volatility break: the prior of its scales and decay, under the name of
   # the model file's /priors/volatility. See R/volatility_break.R.
-  object[["priors"]][["volatility"]] <- .add_priors_volatility(object, sigma)
+  object[["priors"]][["volatility"]] <- volatility_break_prior(object, sigma)
   
   return(object)
 }

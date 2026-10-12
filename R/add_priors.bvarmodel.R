@@ -705,10 +705,10 @@ add_priors.bvarmodel <- function(object,
 
   # Student t errors: the prior of their degrees of freedom, under the name of
   # the model file's /priors/student_t.
-  object[["priors"]][["student_t"]] <- .add_priors_student_t(object, sigma)
+  object[["priors"]][["student_t"]] <- student_t_prior(object, sigma)
   # A volatility break: the prior of its scales and decay, under the name of
   # the model file's /priors/volatility. See R/volatility_break.R.
-  object[["priors"]][["volatility"]] <- .add_priors_volatility(object, sigma)
+  object[["priors"]][["volatility"]] <- volatility_break_prior(object, sigma)
 
   return(object)
 }

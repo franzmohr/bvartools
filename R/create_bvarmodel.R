@@ -743,7 +743,7 @@ create_bvarmodel <- function(data, p = 2,
 
   # A volatility break, recorded as the period of y it falls on; see
   # R/volatility_break.R.
-  model <- c(model, .volatility_break_model(volatility_break, volatility_scales, y, model_type))
+  model <- c(model, check_volatility_break(volatility_break, volatility_scales, y, model_type))
   
   # What was observed of the sample, where it was not observed whole
   constraints <- NULL

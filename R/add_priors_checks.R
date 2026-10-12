@@ -316,12 +316,34 @@
   }
 }
 
-# The prior of Student t errors, from 'sigma$student_t': a fixed number of
-# degrees of freedom in 'df', or a gamma prior on them in 'shape' and 'rate'.
-# NULL for a model without Student t errors, which is refused a prior for them
-# rather than left to ignore it. Like every other hyperparameter, it has no
-# default.
-.add_priors_student_t <- function(object, sigma) {
+#' The prior of Student t errors
+#'
+#' Checks \code{sigma$student_t} against the model and returns the prior the
+#' degrees of freedom are drawn under, or \code{NULL} for a model with normal
+#' errors.
+#'
+#' @param object a model object whose \code{model$student_t} says whether its
+#' errors are Student t.
+#' @param sigma the list given to \code{\link{add_priors}}, whose element
+#' \code{student_t} is either \code{list(df = )}, holding the degrees of
+#' freedom fixed, or \code{list(shape = , rate = )}, the gamma prior of Juarez
+#' and Steel (2010) under which they are drawn.
+#'
+#' @details
+#' Exported so that a package building its own models checks the prior the way
+#' \code{\link{add_priors}} does. Like every other hyperparameter it has no
+#' default, and a prior given to a model with normal errors is refused rather
+#' than ignored.
+#'
+#' @return A named list of the prior, or \code{NULL}.
+#'
+#' @references
+#' Juarez, M. A. and Steel, M. F. J. (2010). Model-based clustering of
+#' non-Gaussian panel data based on skew-t distributions. \emph{Journal of
+#' Business & Economic Statistics}, 28(1), 52--66.
+#'
+#' @export
+student_t_prior <- function(object, sigma) {
   prior <- sigma[["student_t"]]
   if (!isTRUE(object[["model"]][["student_t"]])) {
     if (!is.null(prior)) {

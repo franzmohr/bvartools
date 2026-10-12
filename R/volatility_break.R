@@ -1,11 +1,45 @@
-# The volatility break of Lenza and Primiceri (2022), which create_bvarmodel()
-# and create_bvecmodel() offer for the two constant-coefficient Wishart
-# samplers. The break is given as a date of the data and kept in the model as
-# the period of data$train$y it falls on, counted from one -- what
-# /model/volatility_break of a model file holds and what the sampler reads.
-# NULL when no break was asked for, so that a model without one is the model it
-# always was, in memory and in its file.
-.volatility_break_model <- function(volatility_break, volatility_scales, y, algorithm) {
+#' Check a volatility break and place it in the sample
+#'
+#' Validates the volatility break of Lenza and Primiceri (2022) and returns the
+#' two fields a model carries for it, or \code{NULL} when no break was asked
+#' for.
+#'
+#' @param volatility_break the first period of the break as a date of the data,
+#' \code{c(year, period)} such as \code{c(2020, 3)}, or a single time such as
+#' \code{2020}. \code{NULL} for no break.
+#' @param volatility_scales a whole number of at least one, how many periods
+#' from the break on get a scale of their own before the excess decays.
+#' @param y the endogenous series of the estimation sample, whose
+#' \code{\link[stats]{time}} the date is looked up in.
+#' @param algorithm the sampler the model would be estimated with.
+#'
+#' @details
+#' \code{\link{create_bvarmodel}} and \code{\link{create_bvecmodel}} call
+#' this, and it is exported so that a package building its own models -- the
+#' sub-models of a global model in \pkg{bgvars} among them -- validates a
+#' break the same way rather than repeating the arithmetic. The break is given
+#' as a date and kept as the period of \code{y} it falls on, counted from one,
+#' which is what \code{/model/volatility_break} of a model file holds and what
+#' the sampler reads.
+#'
+#' \strong{It is refused for every algorithm but the two constant coefficient
+#' Wishart samplers}, \code{VarNormalWishart} and \code{VecNormalWishart},
+#' which are the ones that scale the error covariance from a known period on. A
+#' break outside the estimation sample is refused as well: the periods after it
+#' are what estimate its size.
+#'
+#' @return A named list with the integer elements \code{volatility_break} and
+#' \code{volatility_scales}, or \code{NULL}.
+#'
+#' @references
+#' Lenza, M. and Primiceri, G. E. (2022). How to estimate a vector
+#' autoregression after March 2020. \emph{Journal of Applied Econometrics},
+#' 37(4), 688--699.
+#'
+#' @seealso \code{\link{volatility_break_prior}}
+#'
+#' @export
+check_volatility_break <- function(volatility_break, volatility_scales, y, algorithm) {
   if (is.null(volatility_break)) {
     return(NULL)
   }
@@ -46,12 +80,32 @@
        "volatility_scales" = as.integer(volatility_scales))
 }
 
-# The prior of a volatility break, from 'sigma$volatility': the Pareto shape of
-# every free scale and the two shapes of the beta prior on the rate its excess
-# decays at, the names of /priors/volatility in a model file. There is no
-# default, as there is none for the rest of 'sigma'; the message names the
-# values Lenza and Primiceri (2022) use.
-.add_priors_volatility <- function(object, sigma) {
+#' The prior of a volatility break
+#'
+#' Checks \code{sigma$volatility} against the model and returns the prior a
+#' volatility break is drawn under, or \code{NULL} for a model without one.
+#'
+#' @param object a model object whose \code{model$volatility_break} says
+#' whether it has a break.
+#' @param sigma the list given to \code{\link{add_priors}}, whose element
+#' \code{volatility} is the prior: \code{shape}, the Pareto shape of every
+#' free scale, and \code{rho_shape1} and \code{rho_shape2}, the two shapes of
+#' the beta prior on the rate the excess decays at.
+#'
+#' @details
+#' Exported for the same reason as \code{\link{check_volatility_break}}: a
+#' package that builds its own models checks the prior the same way. There is
+#' no default, as there is none for the rest of \code{sigma}, and the message
+#' names the values of Lenza and Primiceri (2022). A prior given to a model
+#' without a break is refused rather than ignored, and a break without a prior
+#' is refused as well.
+#'
+#' @return A named list of the prior, or \code{NULL}.
+#'
+#' @seealso \code{\link{check_volatility_break}}
+#'
+#' @export
+volatility_break_prior <- function(object, sigma) {
   prior <- sigma[["volatility"]]
   if (is.null(object[["model"]][["volatility_break"]])) {
     if (!is.null(prior)) {

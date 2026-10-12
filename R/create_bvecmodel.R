@@ -459,7 +459,7 @@ create_bvecmodel <- function(data, p, exogen = NULL, s = NULL, r = NULL,
 
   # A volatility break, recorded as the period of y it falls on; see
   # R/volatility_break.R.
-  model <- c(model, .volatility_break_model(volatility_break, volatility_scales, y, algo))
+  model <- c(model, check_volatility_break(volatility_break, volatility_scales, y, algo))
   
   tt <- nrow(temp)
   

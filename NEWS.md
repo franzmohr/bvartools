@@ -1,5 +1,18 @@
 # bvartools 1.0.0
 
+* **A package building its own models can check a volatility break and the
+  Student t prior the way `add_priors()` does.** `check_volatility_break()`
+  validates a break, places it in the estimation sample and returns the two
+  fields a model carries for it; `volatility_break_prior()` and
+  `student_t_prior()` check `sigma$volatility` and `sigma$student_t` against
+  the model and return the priors. All three were internal to
+  `create_bvarmodel()`, `create_bvecmodel()` and `add_priors()`, and are
+  exported now because bgvars builds the sub-models of a global model itself
+  and would otherwise repeat the date arithmetic, the refusals and the
+  messages. Nothing about the three changed beyond the name, so the draws of
+  every model are unchanged; `check_discount_specification()` is exported for
+  the same reason.
+
 * **A volatility break for VAR and VEC models with a Wishart prior.**
   `create_bvarmodel(volatility_break = c(2020, 3))` and the same argument of
   `create_bvecmodel()` scale every shock from that period on by `s_t`, the

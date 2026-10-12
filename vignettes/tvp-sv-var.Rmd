@@ -841,13 +841,154 @@ model scales the shocks of every variable by the same $s_t$, and since the
 estimate of $\Sigma$ barely changes for the other two, what remains of the break
 at the end of the sample widens their intervals.
 
-Three more things are worth knowing. The break is available only for constant
+Two more things are worth knowing. The break is available only for constant
 coefficients and a Wishart prior, the model whose blocks stay conjugate under
 the scaling, and `create_bvarmodel` refuses it for a TVP or a stochastic
-volatility model. When the periods of large shocks are not known in advance,
-`student_t = TRUE` gives each period a scale of its own and lets the data find
-them; the two can also be combined. And the same argument `volatility_break` is
-available for VEC models in `create_bvecmodel`.
+volatility model. And the same argument `volatility_break` is available for VEC
+models in `create_bvecmodel`.
+
+## Student t errors: letting the data find the outliers
+
+The break needs a date. When the periods of large shocks are not known in
+advance -- or when there are more of them than one would care to list --
+Student t errors are the alternative. Each period gets a scale of its own,
+
+$$u_t \sim N(0, \lambda_t \Sigma), \qquad \lambda_t \sim IG(\nu / 2, \nu / 2),$$
+
+so that the shocks of each period are multivariate $t$ with $\nu$ degrees of
+freedom. A period whose shocks are large draws a large $\lambda_t$ and counts
+for less in the estimate of the coefficients and of $\Sigma$, as the pandemic
+quarters did under the break, but no period is singled out in advance. Like the
+break, $\lambda_t$ is common to all equations, which keeps the Wishart prior
+conjugate, and the model is again a VAR with constant coefficients and
+`error = "wishart"`, now with `student_t = TRUE`.
+
+The degrees of freedom decide how heavy the tails are: a small $\nu$ allows a
+few periods with very large shocks, and as $\nu$ grows the model approaches the
+normal one. They can be held fixed, `student_t = list(df = 5)` in `sigma`, or
+drawn under a gamma prior. The prior below, with shape 2 and rate 0.1, is the
+one of Juarez and Steel (2010). Its mean of 20 is close to normal tails, but it
+leaves room for very heavy ones if the data ask for them. The second model
+combines the break with Student t errors, so that the pandemic is handled by
+the break and the $\lambda_t$ are left to find whatever else there is.
+
+
+``` r
+heavy <- create_bvarmodel(full, p = 2, deterministic = "const",
+                          student_t = TRUE,
+                          iterations = 5000, burnin = 1000)
+heavy <- add_priors(heavy, coef = list(v_i = 1, v_i_det = 1 / 10),
+                    sigma = list(df = "k", scale = 1,
+                                 student_t = list(shape = 2, rate = 0.1)))
+
+both <- create_bvarmodel(full, p = 2, deterministic = "const",
+                         volatility_break = c(2020, 1), student_t = TRUE,
+                         iterations = 5000, burnin = 1000)
+both <- add_priors(both, coef = list(v_i = 1, v_i_det = 1 / 10),
+                   sigma = list(df = "k", scale = 1,
+                                volatility = list(shape = 1, rho_shape1 = 3.04,
+                                                  rho_shape2 = 1.51),
+                                student_t = list(shape = 2, rate = 0.1)))
+
+heavy <- add_posterior_coefficients(add_initial_values(heavy))
+both <- add_posterior_coefficients(add_initial_values(both))
+```
+
+The draws are in `posterior$student_t`: `df` holds those of $\nu$ and `lambda`
+those of $\lambda_t$, one column per period. The degrees of freedom of the two
+models:
+
+
+``` r
+round(rbind("Student t" = summary(heavy[["posterior"]][["student_t"]][["df"]])[["quantiles"]],
+            "Student t and break" = summary(both[["posterior"]][["student_t"]][["df"]])[["quantiles"]]), 1)
+#>                     2.5% 25%  50%  75% 97.5%
+#> Student t            2.9 3.7  4.3  4.9   6.7
+#> Student t and break  5.5 8.4 10.9 15.6  26.5
+```
+
+The square root of $\lambda_t$ is a factor on the standard deviation of the
+shocks, which makes it comparable to the $s_t$ of the previous section. Its
+posterior median over the sample:
+
+
+``` r
+lambda_path <- function(object) {
+  y <- object[["data"]][["train"]][["y"]]
+  lambda <- object[["posterior"]][["student_t"]][["lambda"]]
+  stats::ts(sqrt(apply(lambda, 2, stats::median)),
+            start = stats::start(y), frequency = stats::frequency(y))
+}
+
+plot(lambda_path(heavy), type = "h", ylab = "Factor",
+     main = "Square root of the mixing scales")
+```
+
+<div class="figure" style="text-align: center">
+<img src="figures/tvp-sv-var-student-t-path-1.png" alt="plot of chunk student-t-path"  />
+<p class="caption">plot of chunk student-t-path</p>
+</div>
+
+And the periods with the largest mixing scales, in each of the two models:
+
+
+``` r
+largest_lambda <- function(object, n = 6) {
+  y <- object[["data"]][["train"]][["y"]]
+  quarter <- paste0(floor(stats::time(y) + 1e-6), "Q", stats::cycle(y))
+  lambda <- apply(object[["posterior"]][["student_t"]][["lambda"]], 2, stats::median)
+  largest <- order(lambda, decreasing = TRUE)[seq_len(n)]
+  stats::setNames(round(lambda[largest], 1), quarter[largest])
+}
+
+largest_lambda(heavy)
+#> 2020Q2 2020Q3 2021Q3 1984Q1 2020Q1 1981Q1 
+#>   28.0   13.6    4.7    4.2    4.1    3.5
+largest_lambda(both)
+#> 1984Q1 1981Q1 2009Q1 2008Q4 1990Q1 1986Q2 
+#>    2.5    2.0    2.0    1.9    1.8    1.7
+```
+
+The comparison of the two lists is the point of the exercise. Told nothing about
+the pandemic, the Student t model finds it: the two largest mixing scales belong
+to 2020Q2 and 2020Q3, and their square roots of about five and three and a half
+are not far below the scales the break estimated for those quarters. 2020Q1 and
+2021Q3 follow, beside two quarters of the early 1980s. With the break in the
+model, the pandemic quarters no longer need a large $\lambda_t$, the degrees of
+freedom rise to around eleven, and what remains are a few quarters of the early
+1980s and the financial crisis of 2008Q4 and 2009Q1, none with a factor much
+above one and a half.
+
+The log likelihood of a Student t model is the multivariate $t$ density, with
+$\lambda_t$ integrated out, so it can be set beside those of the previous
+section:
+
+
+``` r
+round(c(constant = loglik_of(constant), "volatility break" = loglik_of(scaled),
+        "Student t" = loglik_of(heavy), "Student t and break" = loglik_of(both)), 1)
+#>            constant    volatility break           Student t Student t and break 
+#>              -256.3              -191.4              -193.9              -180.4
+```
+
+Each way of handling the pandemic does far better than the model that ignores
+it, and the two do about equally well on their own, the break slightly better:
+that is what knowing the date buys. Together they do best, since the break takes
+care of the pandemic and the Student t errors of the outliers before it, which
+neither does alone. These are in-sample log likelihoods, which favour the larger
+model; the vignette on model comparison shows how to penalise them for what the
+extra parameters add.
+
+A caution on reading the draws of the covariance matrix: under Student t errors
+they are those of $\Sigma$, but the covariance of the shocks is
+$\nu / (\nu - 2) \, \Sigma$, which with $\nu$ around four is about twice
+$\Sigma$. Comparing the residual standard deviations of a Student t model with
+those of a normal one has to take that factor into account. Forecasts draw the
+$\lambda$ of each period of the horizon from its prior, so their intervals have
+the tails the estimated $\nu$ implies. A scenario, a forecast conditional on the
+future path of some variables, is refused under Student t errors, since the
+values it pins down carry information about the $\lambda$ of the horizon that
+the forecast would ignore.
 
 ## Other combinations
 
@@ -883,6 +1024,8 @@ Durbin, J., & Koopman, S. J. (2002). A simple and efficient simulation smoother 
 Kim, S., Shephard, N., & Chib, S. (1998). Stochastic volatility: Likelihood inference and comparison with ARCH models. *Review of Economic Studies, 65*(3), 361-393. <https://doi.org/10.1111/1467-937X.00050>
 
 Koop, G., & Korobilis, D. (2010). Bayesian multivariate time series methods for empirical macroeconomics. *Foundations and Trends in Econometrics, 3*(4), 267-358. <https://dx.doi.org/10.1561/0800000013>
+
+Juarez, M. A., & Steel, M. F. J. (2010). Model-based clustering of non-Gaussian panel data based on skew-t distributions. *Journal of Business & Economic Statistics, 28*(1), 52-66. <https://doi.org/10.1198/jbes.2009.07145>
 
 Korobilis, D. (2013). VAR forecasting using Bayesian variable selection. *Journal of Applied Econometrics, 28*(2), 204-230. <https://doi.org/10.1002/jae.1271>
 

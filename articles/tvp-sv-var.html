@@ -322,77 +322,77 @@ last one by default and reports which period that is.</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Variable: dy </span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;              Mean         SD    Naive SD Time-series SD       2.5%        50%</span></span>
-<span><span class="co">#&gt; dy.l1 -0.06766177 0.10397267 0.001898273    0.007392209 -0.3194090  0.0000000</span></span>
-<span><span class="co">#&gt; Dp.l1 -0.01162626 0.09853076 0.001798917    0.003011082 -0.3267298  0.0000000</span></span>
-<span><span class="co">#&gt; r.l1  -0.05376752 0.20138136 0.003676704    0.010363487 -0.6484436  0.0000000</span></span>
-<span><span class="co">#&gt; dy.l2 -0.02060344 0.06125665 0.001118388    0.002845653 -0.2224629  0.0000000</span></span>
-<span><span class="co">#&gt; Dp.l2 -0.27608206 0.26671894 0.004869599    0.017091790 -0.8020163 -0.2676497</span></span>
-<span><span class="co">#&gt; r.l2  -0.01065359 0.18430811 0.003364990    0.006638106 -0.4296461  0.0000000</span></span>
-<span><span class="co">#&gt; const  0.49237726 0.25084014 0.004579693    0.011574151  0.0101080  0.4899124</span></span>
-<span><span class="co">#&gt;           97.5% Incl. prob.  </span></span>
-<span><span class="co">#&gt; dy.l1 0.0000000   0.4020000  </span></span>
-<span><span class="co">#&gt; Dp.l1 0.1715765   0.1873333  </span></span>
-<span><span class="co">#&gt; r.l1  0.1992534   0.2590000  </span></span>
-<span><span class="co">#&gt; dy.l2 0.0000000   0.1740000  </span></span>
-<span><span class="co">#&gt; Dp.l2 0.0000000   0.6370000  </span></span>
-<span><span class="co">#&gt; r.l2  0.4391324   0.2523333  </span></span>
-<span><span class="co">#&gt; const 0.9886756   1.0000000 *</span></span>
+<span><span class="co">#&gt;           Mean      SD Naive SD Time-series SD     2.5%     50%  97.5%</span></span>
+<span><span class="co">#&gt; dy.l1 -0.06766 0.10397 0.001898       0.007392 -0.31941  0.0000 0.0000</span></span>
+<span><span class="co">#&gt; Dp.l1 -0.01163 0.09853 0.001799       0.003011 -0.32673  0.0000 0.1716</span></span>
+<span><span class="co">#&gt; r.l1  -0.05377 0.20138 0.003677       0.010363 -0.64844  0.0000 0.1993</span></span>
+<span><span class="co">#&gt; dy.l2 -0.02060 0.06126 0.001118       0.002846 -0.22246  0.0000 0.0000</span></span>
+<span><span class="co">#&gt; Dp.l2 -0.27608 0.26672 0.004870       0.017092 -0.80202 -0.2676 0.0000</span></span>
+<span><span class="co">#&gt; r.l2  -0.01065 0.18431 0.003365       0.006638 -0.42965  0.0000 0.4391</span></span>
+<span><span class="co">#&gt; const  0.49238 0.25084 0.004580       0.011574  0.01011  0.4899 0.9887</span></span>
+<span><span class="co">#&gt;       Incl. prob.  </span></span>
+<span><span class="co">#&gt; dy.l1      0.4020  </span></span>
+<span><span class="co">#&gt; Dp.l1      0.1873  </span></span>
+<span><span class="co">#&gt; r.l1       0.2590  </span></span>
+<span><span class="co">#&gt; dy.l2      0.1740  </span></span>
+<span><span class="co">#&gt; Dp.l2      0.6370  </span></span>
+<span><span class="co">#&gt; r.l2       0.2523  </span></span>
+<span><span class="co">#&gt; const      1.0000 *</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Variable: Dp </span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;                Mean         SD     Naive SD Time-series SD          2.5%</span></span>
-<span><span class="co">#&gt; dy.l1  0.0018245901 0.01370096 0.0002501441   0.0005756225  0.0000000000</span></span>
-<span><span class="co">#&gt; Dp.l1  0.0253534766 0.07122439 0.0013003735   0.0068516621  0.0000000000</span></span>
-<span><span class="co">#&gt; r.l1   0.3613668725 0.33059345 0.0060357830   0.0706068185  0.0000000000</span></span>
-<span><span class="co">#&gt; dy.l2  0.0434754726 0.05436881 0.0009926342   0.0060227282 -0.0009244389</span></span>
-<span><span class="co">#&gt; Dp.l2  0.0007497872 0.02986807 0.0005453138   0.0014379151 -0.0155039069</span></span>
-<span><span class="co">#&gt; r.l2  -0.1772978240 0.30546351 0.0055769752   0.0621685542 -0.8530440524</span></span>
-<span><span class="co">#&gt; const  0.4279407306 0.12716457 0.0023216968   0.0044570686  0.1720831831</span></span>
-<span><span class="co">#&gt;              50%      97.5% Incl. prob.  </span></span>
-<span><span class="co">#&gt; dy.l1 0.00000000 0.03973456  0.05066667  </span></span>
-<span><span class="co">#&gt; Dp.l1 0.00000000 0.26405001  0.18466667  </span></span>
-<span><span class="co">#&gt; r.l1  0.30895912 1.03824272  0.71933333  </span></span>
-<span><span class="co">#&gt; dy.l2 0.01091376 0.16552413  0.53933333  </span></span>
-<span><span class="co">#&gt; Dp.l2 0.00000000 0.04258125  0.06300000  </span></span>
-<span><span class="co">#&gt; r.l2  0.00000000 0.30428087  0.62500000  </span></span>
-<span><span class="co">#&gt; const 0.43009563 0.67091270  1.00000000 *</span></span>
+<span><span class="co">#&gt;             Mean      SD  Naive SD Time-series SD       2.5%     50%   97.5%</span></span>
+<span><span class="co">#&gt; dy.l1  0.0018246 0.01370 0.0002501      0.0005756  0.0000000 0.00000 0.03973</span></span>
+<span><span class="co">#&gt; Dp.l1  0.0253535 0.07122 0.0013004      0.0068517  0.0000000 0.00000 0.26405</span></span>
+<span><span class="co">#&gt; r.l1   0.3613669 0.33059 0.0060358      0.0706068  0.0000000 0.30896 1.03824</span></span>
+<span><span class="co">#&gt; dy.l2  0.0434755 0.05437 0.0009926      0.0060227 -0.0009244 0.01091 0.16552</span></span>
+<span><span class="co">#&gt; Dp.l2  0.0007498 0.02987 0.0005453      0.0014379 -0.0155039 0.00000 0.04258</span></span>
+<span><span class="co">#&gt; r.l2  -0.1772978 0.30546 0.0055770      0.0621686 -0.8530441 0.00000 0.30428</span></span>
+<span><span class="co">#&gt; const  0.4279407 0.12716 0.0023217      0.0044571  0.1720832 0.43010 0.67091</span></span>
+<span><span class="co">#&gt;       Incl. prob.  </span></span>
+<span><span class="co">#&gt; dy.l1     0.05067  </span></span>
+<span><span class="co">#&gt; Dp.l1     0.18467  </span></span>
+<span><span class="co">#&gt; r.l1      0.71933  </span></span>
+<span><span class="co">#&gt; dy.l2     0.53933  </span></span>
+<span><span class="co">#&gt; Dp.l2     0.06300  </span></span>
+<span><span class="co">#&gt; r.l2      0.62500  </span></span>
+<span><span class="co">#&gt; const     1.00000 *</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Variable: r </span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;              Mean         SD     Naive SD Time-series SD         2.5%</span></span>
-<span><span class="co">#&gt; dy.l1  0.00000000 0.00000000 0.0000000000    0.000000000  0.000000000</span></span>
-<span><span class="co">#&gt; Dp.l1  0.05220649 0.04012371 0.0007325554    0.002211338 -0.031900495</span></span>
-<span><span class="co">#&gt; r.l1   0.76547778 0.13585662 0.0024803912    0.032356669  0.540659834</span></span>
-<span><span class="co">#&gt; dy.l2  0.00000000 0.00000000 0.0000000000    0.000000000  0.000000000</span></span>
-<span><span class="co">#&gt; Dp.l2  0.02693453 0.03537183 0.0006457983    0.013152542 -0.005023465</span></span>
-<span><span class="co">#&gt; r.l2  -0.06398210 0.10429857 0.0019042227    0.041424138 -0.325765972</span></span>
-<span><span class="co">#&gt; const -0.07200072 0.04283763 0.0007821046    0.004921840 -0.158284876</span></span>
-<span><span class="co">#&gt;                50%      97.5% Incl. prob.  </span></span>
-<span><span class="co">#&gt; dy.l1  0.000000000 0.00000000       0.000  </span></span>
-<span><span class="co">#&gt; Dp.l1  0.053186622 0.12767010       1.000  </span></span>
-<span><span class="co">#&gt; r.l1   0.744148382 1.05703783       1.000 *</span></span>
-<span><span class="co">#&gt; dy.l2  0.000000000 0.00000000       0.000  </span></span>
-<span><span class="co">#&gt; Dp.l2  0.001007306 0.10713221       0.534  </span></span>
-<span><span class="co">#&gt; r.l2   0.000000000 0.00000000       0.356  </span></span>
-<span><span class="co">#&gt; const -0.071091613 0.00848782       1.000  </span></span>
+<span><span class="co">#&gt;           Mean      SD  Naive SD Time-series SD      2.5%       50%    97.5%</span></span>
+<span><span class="co">#&gt; dy.l1  0.00000 0.00000 0.0000000       0.000000  0.000000  0.000000 0.000000</span></span>
+<span><span class="co">#&gt; Dp.l1  0.05221 0.04012 0.0007326       0.002211 -0.031900  0.053187 0.127670</span></span>
+<span><span class="co">#&gt; r.l1   0.76548 0.13586 0.0024804       0.032357  0.540660  0.744148 1.057038</span></span>
+<span><span class="co">#&gt; dy.l2  0.00000 0.00000 0.0000000       0.000000  0.000000  0.000000 0.000000</span></span>
+<span><span class="co">#&gt; Dp.l2  0.02693 0.03537 0.0006458       0.013153 -0.005023  0.001007 0.107132</span></span>
+<span><span class="co">#&gt; r.l2  -0.06398 0.10430 0.0019042       0.041424 -0.325766  0.000000 0.000000</span></span>
+<span><span class="co">#&gt; const -0.07200 0.04284 0.0007821       0.004922 -0.158285 -0.071092 0.008488</span></span>
+<span><span class="co">#&gt;       Incl. prob.  </span></span>
+<span><span class="co">#&gt; dy.l1       0.000  </span></span>
+<span><span class="co">#&gt; Dp.l1       1.000  </span></span>
+<span><span class="co">#&gt; r.l1        1.000 *</span></span>
+<span><span class="co">#&gt; dy.l2       0.000  </span></span>
+<span><span class="co">#&gt; Dp.l2       0.534  </span></span>
+<span><span class="co">#&gt; r.l2        0.356  </span></span>
+<span><span class="co">#&gt; const       1.000  </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Variance-covariance matrix:</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;               Mean           SD     Naive SD Time-series SD          2.5%</span></span>
-<span><span class="co">#&gt; dy_dy 0.5549256554 0.2695637998 4.921539e-03   1.168082e-02  0.2169780893</span></span>
-<span><span class="co">#&gt; dy_Dp 0.0161935012 0.0330812509 6.039782e-04   7.819450e-04 -0.0392778929</span></span>
-<span><span class="co">#&gt; dy_r  0.0037394042 0.0118258557 2.159096e-04   5.084859e-04 -0.0183331837</span></span>
-<span><span class="co">#&gt; Dp_Dp 0.0557002682 0.0225878511 4.123959e-04   1.021271e-03  0.0234843645</span></span>
-<span><span class="co">#&gt; Dp_r  0.0014304985 0.0025211217 4.602917e-05   1.307302e-04 -0.0033831386</span></span>
-<span><span class="co">#&gt; r_r   0.0008602822 0.0006741049 1.230742e-05   5.140512e-05  0.0001284892</span></span>
-<span><span class="co">#&gt;                50%       97.5%  </span></span>
-<span><span class="co">#&gt; dy_dy 0.5056563407 1.185442863 *</span></span>
-<span><span class="co">#&gt; dy_Dp 0.0137449605 0.083110599  </span></span>
-<span><span class="co">#&gt; dy_r  0.0028928328 0.029777305  </span></span>
-<span><span class="co">#&gt; Dp_Dp 0.0520005209 0.110561139 *</span></span>
-<span><span class="co">#&gt; Dp_r  0.0012771839 0.006934711  </span></span>
-<span><span class="co">#&gt; r_r   0.0006783617 0.002690065 *</span></span></code></pre></div>
+<span><span class="co">#&gt;            Mean        SD  Naive SD Time-series SD       2.5%       50%</span></span>
+<span><span class="co">#&gt; dy_dy 0.5549257 0.2695638 4.922e-03      1.168e-02  0.2169781 0.5056563</span></span>
+<span><span class="co">#&gt; dy_Dp 0.0161935 0.0330813 6.040e-04      7.819e-04 -0.0392779 0.0137450</span></span>
+<span><span class="co">#&gt; dy_r  0.0037394 0.0118259 2.159e-04      5.085e-04 -0.0183332 0.0028928</span></span>
+<span><span class="co">#&gt; Dp_Dp 0.0557003 0.0225879 4.124e-04      1.021e-03  0.0234844 0.0520005</span></span>
+<span><span class="co">#&gt; Dp_r  0.0014305 0.0025211 4.603e-05      1.307e-04 -0.0033831 0.0012772</span></span>
+<span><span class="co">#&gt; r_r   0.0008603 0.0006741 1.231e-05      5.141e-05  0.0001285 0.0006784</span></span>
+<span><span class="co">#&gt;          97.5%  </span></span>
+<span><span class="co">#&gt; dy_dy 1.185443 *</span></span>
+<span><span class="co">#&gt; dy_Dp 0.083111  </span></span>
+<span><span class="co">#&gt; dy_r  0.029777  </span></span>
+<span><span class="co">#&gt; Dp_Dp 0.110561 *</span></span>
+<span><span class="co">#&gt; Dp_r  0.006935  </span></span>
+<span><span class="co">#&gt; r_r   0.002690 *</span></span></code></pre></div>
 <p>Argument <code>period</code> asks for another one. It is an index
 into the estimation sample, which the following helper turns into a
 date.</p>
@@ -413,77 +413,70 @@ date.</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Variable: dy </span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;               Mean         SD    Naive SD Time-series SD       2.5%        50%</span></span>
-<span><span class="co">#&gt; dy.l1 -0.072134674 0.10537027 0.001923789    0.006704301 -0.3148963  0.0000000</span></span>
-<span><span class="co">#&gt; Dp.l1 -0.013526138 0.09881734 0.001804149    0.003191526 -0.3125264  0.0000000</span></span>
-<span><span class="co">#&gt; r.l1  -0.052359100 0.19701054 0.003596904    0.010218271 -0.6243782  0.0000000</span></span>
-<span><span class="co">#&gt; dy.l2 -0.021631783 0.06144375 0.001121804    0.002797053 -0.2316808  0.0000000</span></span>
-<span><span class="co">#&gt; Dp.l2 -0.272573770 0.26081901 0.004761882    0.016773706 -0.7808815 -0.2766784</span></span>
-<span><span class="co">#&gt; r.l2  -0.008907563 0.18479702 0.003373917    0.006567947 -0.4251843  0.0000000</span></span>
-<span><span class="co">#&gt; const  0.909116827 0.34337761 0.006269189    0.014311110  0.2813589  0.9030186</span></span>
-<span><span class="co">#&gt;           97.5% Incl. prob.  </span></span>
-<span><span class="co">#&gt; dy.l1 0.0000000   0.4020000  </span></span>
-<span><span class="co">#&gt; Dp.l1 0.1544908   0.1873333  </span></span>
-<span><span class="co">#&gt; r.l1  0.1761092   0.2590000  </span></span>
-<span><span class="co">#&gt; dy.l2 0.0000000   0.1740000  </span></span>
-<span><span class="co">#&gt; Dp.l2 0.0000000   0.6370000  </span></span>
-<span><span class="co">#&gt; r.l2  0.4469828   0.2523333  </span></span>
-<span><span class="co">#&gt; const 1.6224755   1.0000000 *</span></span>
+<span><span class="co">#&gt;            Mean      SD Naive SD Time-series SD    2.5%     50%  97.5%</span></span>
+<span><span class="co">#&gt; dy.l1 -0.072135 0.10537 0.001924       0.006704 -0.3149  0.0000 0.0000</span></span>
+<span><span class="co">#&gt; Dp.l1 -0.013526 0.09882 0.001804       0.003192 -0.3125  0.0000 0.1545</span></span>
+<span><span class="co">#&gt; r.l1  -0.052359 0.19701 0.003597       0.010218 -0.6244  0.0000 0.1761</span></span>
+<span><span class="co">#&gt; dy.l2 -0.021632 0.06144 0.001122       0.002797 -0.2317  0.0000 0.0000</span></span>
+<span><span class="co">#&gt; Dp.l2 -0.272574 0.26082 0.004762       0.016774 -0.7809 -0.2767 0.0000</span></span>
+<span><span class="co">#&gt; r.l2  -0.008908 0.18480 0.003374       0.006568 -0.4252  0.0000 0.4470</span></span>
+<span><span class="co">#&gt; const  0.909117 0.34338 0.006269       0.014311  0.2814  0.9030 1.6225</span></span>
+<span><span class="co">#&gt;       Incl. prob.  </span></span>
+<span><span class="co">#&gt; dy.l1      0.4020  </span></span>
+<span><span class="co">#&gt; Dp.l1      0.1873  </span></span>
+<span><span class="co">#&gt; r.l1       0.2590  </span></span>
+<span><span class="co">#&gt; dy.l2      0.1740  </span></span>
+<span><span class="co">#&gt; Dp.l2      0.6370  </span></span>
+<span><span class="co">#&gt; r.l2       0.2523  </span></span>
+<span><span class="co">#&gt; const      1.0000 *</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Variable: Dp </span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;               Mean         SD     Naive SD Time-series SD         2.5%</span></span>
-<span><span class="co">#&gt; dy.l1  0.001223182 0.01065461 0.0001945257   0.0005725423  0.000000000</span></span>
-<span><span class="co">#&gt; Dp.l1  0.023961741 0.06726437 0.0012280738   0.0062672858  0.000000000</span></span>
-<span><span class="co">#&gt; r.l1   0.374502915 0.33212748 0.0060637903   0.0756091111  0.000000000</span></span>
-<span><span class="co">#&gt; dy.l2  0.037568280 0.04736384 0.0008647414   0.0051526043 -0.006451094</span></span>
-<span><span class="co">#&gt; Dp.l2  0.002244977 0.03051569 0.0005571376   0.0021658408  0.000000000</span></span>
-<span><span class="co">#&gt; r.l2  -0.157378892 0.29684418 0.0054196084   0.0575494130 -0.797566832</span></span>
-<span><span class="co">#&gt; const  0.449820064 0.24390705 0.0044531130   0.0233716934  0.003377620</span></span>
-<span><span class="co">#&gt;              50%      97.5% Incl. prob.  </span></span>
-<span><span class="co">#&gt; dy.l1 0.00000000 0.02316293  0.05066667  </span></span>
-<span><span class="co">#&gt; Dp.l1 0.00000000 0.24209397  0.18466667  </span></span>
-<span><span class="co">#&gt; r.l1  0.33268519 1.05023495  0.71933333  </span></span>
-<span><span class="co">#&gt; dy.l2 0.00564744 0.13953725  0.53933333  </span></span>
-<span><span class="co">#&gt; Dp.l2 0.00000000 0.05854793  0.06300000  </span></span>
-<span><span class="co">#&gt; r.l2  0.00000000 0.32146525  0.62500000  </span></span>
-<span><span class="co">#&gt; const 0.43807523 0.93219374  1.00000000 *</span></span>
+<span><span class="co">#&gt;            Mean      SD  Naive SD Time-series SD      2.5%      50%   97.5%</span></span>
+<span><span class="co">#&gt; dy.l1  0.001223 0.01065 0.0001945      0.0005725  0.000000 0.000000 0.02316</span></span>
+<span><span class="co">#&gt; Dp.l1  0.023962 0.06726 0.0012281      0.0062673  0.000000 0.000000 0.24209</span></span>
+<span><span class="co">#&gt; r.l1   0.374503 0.33213 0.0060638      0.0756091  0.000000 0.332685 1.05023</span></span>
+<span><span class="co">#&gt; dy.l2  0.037568 0.04736 0.0008647      0.0051526 -0.006451 0.005647 0.13954</span></span>
+<span><span class="co">#&gt; Dp.l2  0.002245 0.03052 0.0005571      0.0021658  0.000000 0.000000 0.05855</span></span>
+<span><span class="co">#&gt; r.l2  -0.157379 0.29684 0.0054196      0.0575494 -0.797567 0.000000 0.32147</span></span>
+<span><span class="co">#&gt; const  0.449820 0.24391 0.0044531      0.0233717  0.003378 0.438075 0.93219</span></span>
+<span><span class="co">#&gt;       Incl. prob.  </span></span>
+<span><span class="co">#&gt; dy.l1     0.05067  </span></span>
+<span><span class="co">#&gt; Dp.l1     0.18467  </span></span>
+<span><span class="co">#&gt; r.l1      0.71933  </span></span>
+<span><span class="co">#&gt; dy.l2     0.53933  </span></span>
+<span><span class="co">#&gt; Dp.l2     0.06300  </span></span>
+<span><span class="co">#&gt; r.l2      0.62500  </span></span>
+<span><span class="co">#&gt; const     1.00000 *</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Variable: r </span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;              Mean         SD     Naive SD Time-series SD        2.5%        50%</span></span>
-<span><span class="co">#&gt; dy.l1  0.00000000 0.00000000 0.0000000000    0.000000000  0.00000000 0.00000000</span></span>
-<span><span class="co">#&gt; Dp.l1  0.11862161 0.04337690 0.0007919502    0.004322264  0.03783040 0.11711549</span></span>
-<span><span class="co">#&gt; r.l1   0.78114349 0.13041418 0.0023810263    0.032497847  0.58650861 0.75349352</span></span>
-<span><span class="co">#&gt; dy.l2  0.00000000 0.00000000 0.0000000000    0.000000000  0.00000000 0.00000000</span></span>
-<span><span class="co">#&gt; Dp.l2  0.03697603 0.04427310 0.0008083125    0.021672938  0.00000000 0.01001898</span></span>
-<span><span class="co">#&gt; r.l2  -0.05524863 0.09173104 0.0016747721    0.035880180 -0.28198381 0.00000000</span></span>
-<span><span class="co">#&gt; const  0.25574982 0.11487598 0.0020973388    0.003991628  0.03300074 0.25226729</span></span>
-<span><span class="co">#&gt;           97.5% Incl. prob.  </span></span>
-<span><span class="co">#&gt; dy.l1 0.0000000       0.000  </span></span>
-<span><span class="co">#&gt; Dp.l1 0.2042341       1.000 *</span></span>
-<span><span class="co">#&gt; r.l1  1.0726864       1.000 *</span></span>
-<span><span class="co">#&gt; dy.l2 0.0000000       0.000  </span></span>
-<span><span class="co">#&gt; Dp.l2 0.1321874       0.534  </span></span>
-<span><span class="co">#&gt; r.l2  0.0000000       0.356  </span></span>
-<span><span class="co">#&gt; const 0.4882360       1.000 *</span></span>
+<span><span class="co">#&gt;           Mean      SD  Naive SD Time-series SD     2.5%     50%  97.5%</span></span>
+<span><span class="co">#&gt; dy.l1  0.00000 0.00000 0.0000000       0.000000  0.00000 0.00000 0.0000</span></span>
+<span><span class="co">#&gt; Dp.l1  0.11862 0.04338 0.0007920       0.004322  0.03783 0.11712 0.2042</span></span>
+<span><span class="co">#&gt; r.l1   0.78114 0.13041 0.0023810       0.032498  0.58651 0.75349 1.0727</span></span>
+<span><span class="co">#&gt; dy.l2  0.00000 0.00000 0.0000000       0.000000  0.00000 0.00000 0.0000</span></span>
+<span><span class="co">#&gt; Dp.l2  0.03698 0.04427 0.0008083       0.021673  0.00000 0.01002 0.1322</span></span>
+<span><span class="co">#&gt; r.l2  -0.05525 0.09173 0.0016748       0.035880 -0.28198 0.00000 0.0000</span></span>
+<span><span class="co">#&gt; const  0.25575 0.11488 0.0020973       0.003992  0.03300 0.25227 0.4882</span></span>
+<span><span class="co">#&gt;       Incl. prob.  </span></span>
+<span><span class="co">#&gt; dy.l1       0.000  </span></span>
+<span><span class="co">#&gt; Dp.l1       1.000 *</span></span>
+<span><span class="co">#&gt; r.l1        1.000 *</span></span>
+<span><span class="co">#&gt; dy.l2       0.000  </span></span>
+<span><span class="co">#&gt; Dp.l2       0.534  </span></span>
+<span><span class="co">#&gt; r.l2        0.356  </span></span>
+<span><span class="co">#&gt; const       1.000 *</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Variance-covariance matrix:</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;               Mean          SD     Naive SD Time-series SD         2.5%</span></span>
-<span><span class="co">#&gt; dy_dy  0.912996773 0.295187371 0.0053893594   0.0133269841  0.467218367</span></span>
-<span><span class="co">#&gt; dy_Dp -0.006821686 0.044219083 0.0008073263   0.0012000092 -0.100925158</span></span>
-<span><span class="co">#&gt; dy_r  -0.010830576 0.022184087 0.0004050242   0.0005743755 -0.058892796</span></span>
-<span><span class="co">#&gt; Dp_Dp  0.162271955 0.047817857 0.0008730306   0.0042481869  0.092349501</span></span>
-<span><span class="co">#&gt; Dp_r   0.015009521 0.008391297 0.0001532034   0.0003682097  0.001909403</span></span>
-<span><span class="co">#&gt; r_r    0.020845748 0.009227624 0.0001684726   0.0005591898  0.009098373</span></span>
-<span><span class="co">#&gt;                50%      97.5%  </span></span>
-<span><span class="co">#&gt; dy_dy  0.874570181 1.61600473 *</span></span>
-<span><span class="co">#&gt; dy_Dp -0.004507798 0.07236357  </span></span>
-<span><span class="co">#&gt; dy_r  -0.010021401 0.03178108  </span></span>
-<span><span class="co">#&gt; Dp_Dp  0.153836655 0.28153681 *</span></span>
-<span><span class="co">#&gt; Dp_r   0.014139235 0.03386032 *</span></span>
-<span><span class="co">#&gt; r_r    0.018898561 0.04360818 *</span></span></code></pre></div>
+<span><span class="co">#&gt;            Mean       SD  Naive SD Time-series SD      2.5%       50%   97.5%  </span></span>
+<span><span class="co">#&gt; dy_dy  0.912997 0.295187 0.0053894      0.0133270  0.467218  0.874570 1.61600 *</span></span>
+<span><span class="co">#&gt; dy_Dp -0.006822 0.044219 0.0008073      0.0012000 -0.100925 -0.004508 0.07236  </span></span>
+<span><span class="co">#&gt; dy_r  -0.010831 0.022184 0.0004050      0.0005744 -0.058893 -0.010021 0.03178  </span></span>
+<span><span class="co">#&gt; Dp_Dp  0.162272 0.047818 0.0008730      0.0042482  0.092350  0.153837 0.28154 *</span></span>
+<span><span class="co">#&gt; Dp_r   0.015010 0.008391 0.0001532      0.0003682  0.001909  0.014139 0.03386 *</span></span>
+<span><span class="co">#&gt; r_r    0.020846 0.009228 0.0001685      0.0005592  0.009098  0.018899 0.04361 *</span></span></code></pre></div>
 <p>Comparing the two tables compares two models: the same specification,
 fitted to the same sample, describing two different points in it.</p>
 <p>The inclusion probabilities are the exception. They do not carry a
@@ -547,7 +540,7 @@ column.</p>
 <span>            frequency <span class="op">=</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/time.html" class="external-link">frequency</a></span><span class="op">(</span><span class="va">object</span><span class="op">[[</span><span class="st">"data"</span><span class="op">]</span><span class="op">]</span><span class="op">[[</span><span class="st">"train"</span><span class="op">]</span><span class="op">]</span><span class="op">[[</span><span class="st">"y"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="op">}</span></span>
 <span></span>
-<span><span class="va">path</span> <span class="op">&lt;-</span> <span class="fu">coefficient_path</span><span class="op">(</span><span class="va">model</span>, equation <span class="op">=</span> <span class="st">"r"</span>, regressor <span class="op">=</span> <span class="st">"r.01"</span><span class="op">)</span></span>
+<span><span class="va">path</span> <span class="op">&lt;-</span> <span class="fu">coefficient_path</span><span class="op">(</span><span class="va">model</span>, equation <span class="op">=</span> <span class="st">"r"</span>, regressor <span class="op">=</span> <span class="st">"r.l1"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/ts.plot.html" class="external-link">ts.plot</a></span><span class="op">(</span><span class="va">path</span>, lty <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span>,</span>
 <span>               main <span class="op">=</span> <span class="st">"Short-term rate ~ its own first lag"</span>,</span>
@@ -829,7 +822,7 @@ say. The equation of output growth shows it most clearly:</p>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span>constant <span class="op">=</span> <span class="fu">coefficients_of</span><span class="op">(</span><span class="va">constant</span>, <span class="st">"dy"</span><span class="op">)</span>,</span>
 <span>            <span class="st">"volatility break"</span> <span class="op">=</span> <span class="fu">coefficients_of</span><span class="op">(</span><span class="va">scaled</span>, <span class="st">"dy"</span><span class="op">)</span><span class="op">)</span>, <span class="fl">2</span><span class="op">)</span></span>
-<span><span class="co">#&gt;                  dy.01 Dp.01 r.01 dy.02 Dp.02  r.02 const</span></span>
+<span><span class="co">#&gt;                  dy.l1 Dp.l1 r.l1 dy.l2 Dp.l2  r.l2 const</span></span>
 <span><span class="co">#&gt; constant         -0.27 -0.11 0.26 -0.10 -0.30 -0.11  0.76</span></span>
 <span><span class="co">#&gt; volatility break -0.10  0.08 0.26 -0.06 -0.52 -0.12  0.71</span></span></code></pre></div>
 <p>Without the break, the fall and the rebound of 2020 are two of the
@@ -903,14 +896,169 @@ and since the estimate of
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="normal">Σ</mi><annotation encoding="application/x-tex">\Sigma</annotation></semantics></math>
 barely changes for the other two, what remains of the break at the end
 of the sample widens their intervals.</p>
-<p>Three more things are worth knowing. The break is available only for
+<p>Two more things are worth knowing. The break is available only for
 constant coefficients and a Wishart prior, the model whose blocks stay
 conjugate under the scaling, and <code>create_bvarmodel</code> refuses
-it for a TVP or a stochastic volatility model. When the periods of large
-shocks are not known in advance, <code>student_t = TRUE</code> gives
-each period a scale of its own and lets the data find them; the two can
-also be combined. And the same argument <code>volatility_break</code> is
-available for VEC models in <code>create_bvecmodel</code>.</p>
+it for a TVP or a stochastic volatility model. And the same argument
+<code>volatility_break</code> is available for VEC models in
+<code>create_bvecmodel</code>.</p>
+</div>
+<div class="section level2">
+<h2 id="student-t-errors-letting-the-data-find-the-outliers">Student t errors: letting the data find the outliers<a class="anchor" aria-label="anchor" href="#student-t-errors-letting-the-data-find-the-outliers"></a>
+</h2>
+<p>The break needs a date. When the periods of large shocks are not
+known in advance – or when there are more of them than one would care to
+list – Student t errors are the alternative. Each period gets a scale of
+its own,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>u</mi><mi>t</mi></msub><mo>∼</mo><mi>N</mi><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo>,</mo><msub><mi>λ</mi><mi>t</mi></msub><mi mathvariant="normal">Σ</mi><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>λ</mi><mi>t</mi></msub><mo>∼</mo><mi>I</mi><mi>G</mi><mo stretchy="false" form="prefix">(</mo><mi>ν</mi><mi>/</mi><mn>2</mn><mo>,</mo><mi>ν</mi><mi>/</mi><mn>2</mn><mo stretchy="false" form="postfix">)</mo><mo>,</mo></mrow><annotation encoding="application/x-tex">u_t \sim N(0, \lambda_t \Sigma), \qquad \lambda_t \sim IG(\nu / 2, \nu / 2),</annotation></semantics></math></p>
+<p>so that the shocks of each period are multivariate
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>
+with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ν</mi><annotation encoding="application/x-tex">\nu</annotation></semantics></math>
+degrees of freedom. A period whose shocks are large draws a large
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>λ</mi><mi>t</mi></msub><annotation encoding="application/x-tex">\lambda_t</annotation></semantics></math>
+and counts for less in the estimate of the coefficients and of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="normal">Σ</mi><annotation encoding="application/x-tex">\Sigma</annotation></semantics></math>,
+as the pandemic quarters did under the break, but no period is singled
+out in advance. Like the break,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>λ</mi><mi>t</mi></msub><annotation encoding="application/x-tex">\lambda_t</annotation></semantics></math>
+is common to all equations, which keeps the Wishart prior conjugate, and
+the model is again a VAR with constant coefficients and
+<code>error = "wishart"</code>, now with
+<code>student_t = TRUE</code>.</p>
+<p>The degrees of freedom decide how heavy the tails are: a small
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ν</mi><annotation encoding="application/x-tex">\nu</annotation></semantics></math>
+allows a few periods with very large shocks, and as
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ν</mi><annotation encoding="application/x-tex">\nu</annotation></semantics></math>
+grows the model approaches the normal one. They can be held fixed,
+<code>student_t = list(df = 5)</code> in <code>sigma</code>, or drawn
+under a gamma prior. The prior below, with shape 2 and rate 0.1, is the
+one of Juarez and Steel (2010). Its mean of 20 is close to normal tails,
+but it leaves room for very heavy ones if the data ask for them. The
+second model combines the break with Student t errors, so that the
+pandemic is handled by the break and the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>λ</mi><mi>t</mi></msub><annotation encoding="application/x-tex">\lambda_t</annotation></semantics></math>
+are left to find whatever else there is.</p>
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">heavy</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_bvarmodel.html">create_bvarmodel</a></span><span class="op">(</span><span class="va">full</span>, p <span class="op">=</span> <span class="fl">2</span>, deterministic <span class="op">=</span> <span class="st">"const"</span>,</span>
+<span>                          student_t <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>                          iterations <span class="op">=</span> <span class="fl">5000</span>, burnin <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span>
+<span><span class="va">heavy</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_priors.html" class="external-link">add_priors</a></span><span class="op">(</span><span class="va">heavy</span>, coef <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>v_i <span class="op">=</span> <span class="fl">1</span>, v_i_det <span class="op">=</span> <span class="fl">1</span> <span class="op">/</span> <span class="fl">10</span><span class="op">)</span>,</span>
+<span>                    sigma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>df <span class="op">=</span> <span class="st">"k"</span>, scale <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>                                 student_t <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>shape <span class="op">=</span> <span class="fl">2</span>, rate <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">both</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_bvarmodel.html">create_bvarmodel</a></span><span class="op">(</span><span class="va">full</span>, p <span class="op">=</span> <span class="fl">2</span>, deterministic <span class="op">=</span> <span class="st">"const"</span>,</span>
+<span>                         volatility_break <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2020</span>, <span class="fl">1</span><span class="op">)</span>, student_t <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>                         iterations <span class="op">=</span> <span class="fl">5000</span>, burnin <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span>
+<span><span class="va">both</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_priors.html" class="external-link">add_priors</a></span><span class="op">(</span><span class="va">both</span>, coef <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>v_i <span class="op">=</span> <span class="fl">1</span>, v_i_det <span class="op">=</span> <span class="fl">1</span> <span class="op">/</span> <span class="fl">10</span><span class="op">)</span>,</span>
+<span>                   sigma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>df <span class="op">=</span> <span class="st">"k"</span>, scale <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>                                volatility <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>shape <span class="op">=</span> <span class="fl">1</span>, rho_shape1 <span class="op">=</span> <span class="fl">3.04</span>,</span>
+<span>                                                  rho_shape2 <span class="op">=</span> <span class="fl">1.51</span><span class="op">)</span>,</span>
+<span>                                student_t <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>shape <span class="op">=</span> <span class="fl">2</span>, rate <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">heavy</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html" class="external-link">add_posterior_coefficients</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_initial_values.html" class="external-link">add_initial_values</a></span><span class="op">(</span><span class="va">heavy</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">both</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_posterior_coefficients.html" class="external-link">add_posterior_coefficients</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/bayests/man/add_initial_values.html" class="external-link">add_initial_values</a></span><span class="op">(</span><span class="va">both</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p>The draws are in <code>posterior$student_t</code>: <code>df</code>
+holds those of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ν</mi><annotation encoding="application/x-tex">\nu</annotation></semantics></math>
+and <code>lambda</code> those of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>λ</mi><mi>t</mi></msub><annotation encoding="application/x-tex">\lambda_t</annotation></semantics></math>,
+one column per period. The degrees of freedom of the two models:</p>
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="st">"Student t"</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">heavy</span><span class="op">[[</span><span class="st">"posterior"</span><span class="op">]</span><span class="op">]</span><span class="op">[[</span><span class="st">"student_t"</span><span class="op">]</span><span class="op">]</span><span class="op">[[</span><span class="st">"df"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span><span class="op">[[</span><span class="st">"quantiles"</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>            <span class="st">"Student t and break"</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">both</span><span class="op">[[</span><span class="st">"posterior"</span><span class="op">]</span><span class="op">]</span><span class="op">[[</span><span class="st">"student_t"</span><span class="op">]</span><span class="op">]</span><span class="op">[[</span><span class="st">"df"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span><span class="op">[[</span><span class="st">"quantiles"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span>, <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="co">#&gt;                     2.5% 25%  50%  75% 97.5%</span></span>
+<span><span class="co">#&gt; Student t            2.9 3.7  4.3  4.9   6.7</span></span>
+<span><span class="co">#&gt; Student t and break  5.5 8.4 10.9 15.6  26.5</span></span></code></pre></div>
+<p>The square root of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>λ</mi><mi>t</mi></msub><annotation encoding="application/x-tex">\lambda_t</annotation></semantics></math>
+is a factor on the standard deviation of the shocks, which makes it
+comparable to the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>s</mi><mi>t</mi></msub><annotation encoding="application/x-tex">s_t</annotation></semantics></math>
+of the previous section. Its posterior median over the sample:</p>
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">lambda_path</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">object</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">y</span> <span class="op">&lt;-</span> <span class="va">object</span><span class="op">[[</span><span class="st">"data"</span><span class="op">]</span><span class="op">]</span><span class="op">[[</span><span class="st">"train"</span><span class="op">]</span><span class="op">]</span><span class="op">[[</span><span class="st">"y"</span><span class="op">]</span><span class="op">]</span></span>
+<span>  <span class="va">lambda</span> <span class="op">&lt;-</span> <span class="va">object</span><span class="op">[[</span><span class="st">"posterior"</span><span class="op">]</span><span class="op">]</span><span class="op">[[</span><span class="st">"student_t"</span><span class="op">]</span><span class="op">]</span><span class="op">[[</span><span class="st">"lambda"</span><span class="op">]</span><span class="op">]</span></span>
+<span>  <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/ts.html" class="external-link">ts</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">lambda</span>, <span class="fl">2</span>, <span class="fu">stats</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/r/stats/median.html" class="external-link">median</a></span><span class="op">)</span><span class="op">)</span>,</span>
+<span>            start <span class="op">=</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/start.html" class="external-link">start</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span>, frequency <span class="op">=</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/time.html" class="external-link">frequency</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu">lambda_path</span><span class="op">(</span><span class="va">heavy</span><span class="op">)</span>, type <span class="op">=</span> <span class="st">"h"</span>, ylab <span class="op">=</span> <span class="st">"Factor"</span>,</span>
+<span>     main <span class="op">=</span> <span class="st">"Square root of the mixing scales"</span><span class="op">)</span></span></code></pre></div>
+<div class="figure" style="text-align: center">
+<img src="figures/tvp-sv-var-student-t-path-1.png" alt="plot of chunk student-t-path"><p class="caption">
+plot of chunk student-t-path
+</p>
+</div>
+<p>And the periods with the largest mixing scales, in each of the two
+models:</p>
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">largest_lambda</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">object</span>, <span class="va">n</span> <span class="op">=</span> <span class="fl">6</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">y</span> <span class="op">&lt;-</span> <span class="va">object</span><span class="op">[[</span><span class="st">"data"</span><span class="op">]</span><span class="op">]</span><span class="op">[[</span><span class="st">"train"</span><span class="op">]</span><span class="op">]</span><span class="op">[[</span><span class="st">"y"</span><span class="op">]</span><span class="op">]</span></span>
+<span>  <span class="va">quarter</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">floor</a></span><span class="op">(</span><span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/time.html" class="external-link">time</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span> <span class="op">+</span> <span class="fl">1e-6</span><span class="op">)</span>, <span class="st">"Q"</span>, <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/time.html" class="external-link">cycle</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="va">lambda</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">object</span><span class="op">[[</span><span class="st">"posterior"</span><span class="op">]</span><span class="op">]</span><span class="op">[[</span><span class="st">"student_t"</span><span class="op">]</span><span class="op">]</span><span class="op">[[</span><span class="st">"lambda"</span><span class="op">]</span><span class="op">]</span>, <span class="fl">2</span>, <span class="fu">stats</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/r/stats/median.html" class="external-link">median</a></span><span class="op">)</span></span>
+<span>  <span class="va">largest</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/order.html" class="external-link">order</a></span><span class="op">(</span><span class="va">lambda</span>, decreasing <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span><span class="op">]</span></span>
+<span>  <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/setNames.html" class="external-link">setNames</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">lambda</span><span class="op">[</span><span class="va">largest</span><span class="op">]</span>, <span class="fl">1</span><span class="op">)</span>, <span class="va">quarter</span><span class="op">[</span><span class="va">largest</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span></span>
+<span><span class="fu">largest_lambda</span><span class="op">(</span><span class="va">heavy</span><span class="op">)</span></span>
+<span><span class="co">#&gt; 2020Q2 2020Q3 2021Q3 1984Q1 2020Q1 1981Q1 </span></span>
+<span><span class="co">#&gt;   28.0   13.6    4.7    4.2    4.1    3.5</span></span>
+<span><span class="fu">largest_lambda</span><span class="op">(</span><span class="va">both</span><span class="op">)</span></span>
+<span><span class="co">#&gt; 1984Q1 1981Q1 2009Q1 2008Q4 1990Q1 1986Q2 </span></span>
+<span><span class="co">#&gt;    2.5    2.0    2.0    1.9    1.8    1.7</span></span></code></pre></div>
+<p>The comparison of the two lists is the point of the exercise. Told
+nothing about the pandemic, the Student t model finds it: the two
+largest mixing scales belong to 2020Q2 and 2020Q3, and their square
+roots of about five and three and a half are not far below the scales
+the break estimated for those quarters. 2020Q1 and 2021Q3 follow, beside
+two quarters of the early 1980s. With the break in the model, the
+pandemic quarters no longer need a large
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>λ</mi><mi>t</mi></msub><annotation encoding="application/x-tex">\lambda_t</annotation></semantics></math>,
+the degrees of freedom rise to around eleven, and what remains are a few
+quarters of the early 1980s and the financial crisis of 2008Q4 and
+2009Q1, none with a factor much above one and a half.</p>
+<p>The log likelihood of a Student t model is the multivariate
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>
+density, with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>λ</mi><mi>t</mi></msub><annotation encoding="application/x-tex">\lambda_t</annotation></semantics></math>
+integrated out, so it can be set beside those of the previous
+section:</p>
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>constant <span class="op">=</span> <span class="fu">loglik_of</span><span class="op">(</span><span class="va">constant</span><span class="op">)</span>, <span class="st">"volatility break"</span> <span class="op">=</span> <span class="fu">loglik_of</span><span class="op">(</span><span class="va">scaled</span><span class="op">)</span>,</span>
+<span>        <span class="st">"Student t"</span> <span class="op">=</span> <span class="fu">loglik_of</span><span class="op">(</span><span class="va">heavy</span><span class="op">)</span>, <span class="st">"Student t and break"</span> <span class="op">=</span> <span class="fu">loglik_of</span><span class="op">(</span><span class="va">both</span><span class="op">)</span><span class="op">)</span>, <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="co">#&gt;            constant    volatility break           Student t Student t and break </span></span>
+<span><span class="co">#&gt;              -256.3              -191.4              -193.9              -180.4</span></span></code></pre></div>
+<p>Each way of handling the pandemic does far better than the model that
+ignores it, and the two do about equally well on their own, the break
+slightly better: that is what knowing the date buys. Together they do
+best, since the break takes care of the pandemic and the Student t
+errors of the outliers before it, which neither does alone. These are
+in-sample log likelihoods, which favour the larger model; the vignette
+on model comparison shows how to penalise them for what the extra
+parameters add.</p>
+<p>A caution on reading the draws of the covariance matrix: under
+Student t errors they are those of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="normal">Σ</mi><annotation encoding="application/x-tex">\Sigma</annotation></semantics></math>,
+but the covariance of the shocks is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ν</mi><mi>/</mi><mo stretchy="false" form="prefix">(</mo><mi>ν</mi><mo>−</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi mathvariant="normal">Σ</mi></mrow><annotation encoding="application/x-tex">\nu / (\nu - 2) \, \Sigma</annotation></semantics></math>,
+which with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ν</mi><annotation encoding="application/x-tex">\nu</annotation></semantics></math>
+around four is about twice
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="normal">Σ</mi><annotation encoding="application/x-tex">\Sigma</annotation></semantics></math>.
+Comparing the residual standard deviations of a Student t model with
+those of a normal one has to take that factor into account. Forecasts
+draw the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>λ</mi><annotation encoding="application/x-tex">\lambda</annotation></semantics></math>
+of each period of the horizon from its prior, so their intervals have
+the tails the estimated
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ν</mi><annotation encoding="application/x-tex">\nu</annotation></semantics></math>
+implies. A scenario, a forecast conditional on the future path of some
+variables, is refused under Student t errors, since the values it pins
+down carry information about the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>λ</mi><annotation encoding="application/x-tex">\lambda</annotation></semantics></math>
+of the horizon that the forecast would ignore.</p>
 </div>
 <div class="section level2">
 <h2 id="other-combinations">Other combinations<a class="anchor" aria-label="anchor" href="#other-combinations"></a>
@@ -970,6 +1118,9 @@ Economic Studies, 65</em>(3), 361-393. <a href="https://doi.org/10.1111/1467-937
 <p>Koop, G., &amp; Korobilis, D. (2010). Bayesian multivariate time
 series methods for empirical macroeconomics. <em>Foundations and Trends
 in Econometrics, 3</em>(4), 267-358. <a href="https://dx.doi.org/10.1561/0800000013" class="external-link uri">https://dx.doi.org/10.1561/0800000013</a></p>
+<p>Juarez, M. A., &amp; Steel, M. F. J. (2010). Model-based clustering
+of non-Gaussian panel data based on skew-t distributions. <em>Journal of
+Business &amp; Economic Statistics, 28</em>(1), 52-66. <a href="https://doi.org/10.1198/jbes.2009.07145" class="external-link uri">https://doi.org/10.1198/jbes.2009.07145</a></p>
 <p>Korobilis, D. (2013). VAR forecasting using Bayesian variable
 selection. <em>Journal of Applied Econometrics, 28</em>(2), 204-230. <a href="https://doi.org/10.1002/jae.1271" class="external-link uri">https://doi.org/10.1002/jae.1271</a></p>
 <p>Lenza, M., &amp; Primiceri, G. E. (2022). How to estimate a vector

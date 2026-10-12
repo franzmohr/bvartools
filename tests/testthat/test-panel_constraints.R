@@ -254,3 +254,21 @@ test_that("window() cuts the constraints of a panel not observed whole", {
   expect_constraints_fit(cut)
   expect_equal(nrow(cut$data$train$y), nrow(stats::window(model$data$train$y, start = start, end = end)))
 })
+
+test_that("a window fills the lags in x again, found by their names", {
+  set.seed(1)
+  n <- 60
+  y <- ts(cbind(a = cumsum(rnorm(n)), b = rnorm(n)), start = c(2020, 1), frequency = 12)
+  y[seq(2, n, by = 3), "b"] <- NA
+  model <- create_bvarmodel(y, p = 2, deterministic = "const", missing = "estimate")
+  x <- model$data$train$x
+  expect_true(all(c("b.l1", "b.l2") %in% colnames(x)))
+
+  # The lags of 'b' are found by their names "b.l1" and "b.l2" and filled from
+  # what was observed, as create_bvarmodel() filled them.
+  emptied <- model
+  emptied$data$train$x[, c("b.l1", "b.l2")] <- 0
+  end <- max(stats::time(y))
+  refilled <- bvartools:::.refill_panel(emptied, model$data$train$constraints, end)
+  expect_equal(unclass(refilled$data$train$x), unclass(x), ignore_attr = TRUE)
+})

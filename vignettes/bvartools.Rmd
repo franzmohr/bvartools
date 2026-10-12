@@ -269,7 +269,7 @@ A_freq <- tcrossprod(y, x) %*% solve(tcrossprod(x))
 
 # Round estimates and print
 round(A_freq, 3)
-#>        invest.01 income.01 cons.01 invest.02 income.02 cons.02  const
+#>        invest.l1 income.l1 cons.l1 invest.l2 income.l2 cons.l2  const
 #> invest    -0.320     0.146   0.961    -0.161     0.115   0.934 -1.672
 #> income     0.044    -0.153   0.289     0.050     0.019  -0.010  1.577
 #> cons      -0.002     0.225  -0.264     0.034     0.355  -0.022  1.293

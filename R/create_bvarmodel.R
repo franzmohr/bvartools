@@ -454,11 +454,19 @@ create_bvarmodel <- function(data, p = 2,
   if (use_exo) {
     if (is.null(dimnames(exogen))) {
       # If 'exogen' is a simple ts object, transform it into a matrix object
-      # to keep variable name information
+      # to keep variable name information. A single series has no name of its
+      # own -- ts(cbind(ect = x)) drops it when x is a ts -- so it takes the name
+      # of the variable passed as 'exogen', and "exogen" only when it was
+      # passed as an expression.
+      exo_arg <- substitute(exogen)
       tsp_temp <- stats::tsp(exogen)
       exogen <- stats::ts(as.matrix(exogen), class = c("mts", "ts", "matrix"))
       stats::tsp(exogen) <- tsp_temp
-      dimnames(exogen)[[2]] <- "exogen"
+      if (is.name(exo_arg) && NCOL(exogen) == 1) {
+        dimnames(exogen)[[2]] <- as.character(exo_arg)
+      } else {
+        dimnames(exogen)[[2]] <- "exogen"
+      }
     }
   }
   
@@ -578,18 +586,15 @@ create_bvarmodel <- function(data, p = 2,
     model[["exogen"]] <- dimnames(exogen)[[2]]
   }
   
+  # The columns are named as summary() labels the coefficients, by the name
+  # of the variable and ".l" with its lag: "y.l1" and "x.l0".
   temp <- data
   temp_name <- data_name
   if (p_max >= 1) {
     # Obtain lags of endogenous variables
     for (i in 1:p_max) {
       temp <- cbind(temp, stats::lag(data, -i))
-      if (nchar(p_max) > 2) {
-        i_temp <- paste0(c(rep(0, nchar(p_max) - nchar(i)), i), collapse = "")
-      } else {
-        i_temp <- paste0(c(rep(0, 2 - nchar(i)), i), collapse = "")
-      }
-      temp_name <- c(temp_name, paste0(data_name, ".", i_temp))
+      temp_name <- c(temp_name, paste0(data_name, ".l", i))
     }
   }
   
@@ -600,22 +605,11 @@ create_bvarmodel <- function(data, p = 2,
     s_max <- max(s)
     
     temp <- cbind(temp, exogen)
-    if (nchar(s_max) > 2) {
-      i_temp <- rep(0, nchar(s_max))
-    } else {
-      i_temp <- rep(0, 2)
-    }
-    i_temp <- paste0(i_temp, collapse = "")
-    temp_name <- c(temp_name, paste0(exo_name, ".l", i_temp))
+    temp_name <- c(temp_name, paste0(exo_name, ".l0"))
     if (s_max > 0) {
       for (i in 1:s_max) {
         temp <- cbind(temp, stats::lag(exogen, -i))
-        if (nchar(s_max) > 2) {
-          i_temp <- paste0(c(rep(0, nchar(s_max) - nchar(i)), i), collapse = "")
-        } else {
-          i_temp <- paste0(c(rep(0, 2 - nchar(i)), i), collapse = "")
-        }
-        temp_name <- c(temp_name, paste0(exo_name, ".l", i_temp))
+        temp_name <- c(temp_name, paste0(exo_name, ".l", i))
       } 
     }
     

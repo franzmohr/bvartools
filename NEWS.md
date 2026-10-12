@@ -51,6 +51,14 @@
   selects columns of `data$train$x` by name must use the new names. Draws are
   unchanged.
 
+* **`print(summary(model), digits = 4)` now sets the digits of the summary.**
+  The `print()` methods of `summary.bvarmodel` and `summary.bvecmodel` took
+  `digits` but never passed it on, so the coefficient, covariance and `rho`
+  tables were printed with `getOption("digits")` whatever was asked. They now
+  use it, which also means that the default, `max(3, getOption("digits") - 3)`,
+  takes effect: *printed summaries show four significant digits by default*
+  where they showed seven. The summary objects themselves are unchanged.
+
 * **Smaller corrections.** `minnesota_prior()` of a VEC model returns its
   prior precision as `v_inv`, as the VAR method does, where it said `v_i`.
   `spillover()` over a model list or an expanding window stops on an error and

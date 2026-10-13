@@ -180,3 +180,23 @@ volatility_break_prior <- function(object, sigma) {
   x[["model"]][["volatility_break"]] <- as.integer(moved)
   x
 }
+
+# The free parameters a volatility break adds, for the counts AIC, BIC and HQ
+# penalise by: the scales of the periods that have one of their own, and the
+# rate the last one's excess over one decays at.
+#
+# Counted against the sample rather than from 'volatility_scales' alone, because
+# a scale the sample does not reach is not a parameter the data paid for: a
+# break in the last period of the sample has one scale and no decay, whatever
+# the model asked for. In the ordinary case, a break with room after it, this is
+# volatility_scales + 1.
+.volatility_break_nparams <- function(object) {
+  period <- object[["model"]][["volatility_break"]]
+  if (is.null(period)) {
+    return(0)
+  }
+  tt <- nrow(object[["data"]][["train"]][["y"]])
+  scales <- as.numeric(object[["model"]][["volatility_scales"]])
+  after <- tt - period + 1
+  min(scales, after) + (after > scales)
+}

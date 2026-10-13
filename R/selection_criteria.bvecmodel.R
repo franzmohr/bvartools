@@ -98,7 +98,11 @@ selection_criteria.bvecmodel <- function(object, ci = 0.95,
     stop("The free parameters of the cointegration term cannot be counted ",
          "without the error correction term in 'data$train$w'.")
   }
-  nparams <- rank * (k + k_ect - rank) + k * n_x + k * (k + 1) / 2
+  # A volatility break adds the scales it draws and the rate they decay at,
+  # which the likelihood below is evaluated with: without them the model would
+  # be credited with a fit it did not pay for. See .volatility_break_nparams().
+  nparams <- rank * (k + k_ect - rank) + k * n_x + k * (k + 1) / 2 +
+    .volatility_break_nparams(object)
   h <- object[["model"]][["h"]]
   max_n_columns <- k * h
   

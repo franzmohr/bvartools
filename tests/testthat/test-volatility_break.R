@@ -183,3 +183,62 @@ test_that("a VEC model's break reaches its VAR in levels unchanged", {
                unclass(as.matrix(fit[["posterior"]][["volatility"]][["coeffs"]])),
                ignore_attr = TRUE)
 })
+
+test_that("the criteria count the scales and the rate they decay at", {
+
+  fit <- add_posterior_loglik(volatility_break_fit())
+  tt <- nrow(fit[["data"]][["train"]][["y"]])
+  k <- fit[["model"]][["k"]]
+
+  # The count AIC and BIC differ by, which is what each of them penalises with.
+  counted <- function(x) {
+    sel <- selection_criteria(x)
+    (sel[["BIC"]][["mean"]] - sel[["AIC"]][["mean"]]) /
+      (log(nrow(x[["data"]][["train"]][["y"]])) - 2)
+  }
+
+  # A bivariate VAR(1) with a constant: 2 * (2 + 1) coefficients and 3 of the
+  # error covariance, then the three free scales and the decay rate.
+  plain <- k * (k * 1 + 1) + k * (k + 1) / 2
+  expect_equal(counted(fit), plain + 4)
+  expect_equal(.volatility_break_nparams(fit), 4)
+
+  # The same model with the break taken off it counts the coefficients alone.
+  # Its deviance is another model's, the break being part of the likelihood, so
+  # only the count is comparable.
+  bare <- fit
+  bare[["model"]][["volatility_break"]] <- NULL
+  bare[["model"]][["volatility_scales"]] <- NULL
+  expect_equal(counted(bare), plain)
+  expect_equal(.volatility_break_nparams(bare), 0)
+
+  # What the four were added to is the penalty and not the deviance: the
+  # deviance is still the one of the likelihood at the posterior mean, which
+  # scales the covariance of the periods after the break.
+  sel <- selection_criteria(fit)
+  point <- .posterior_mean_model(fit)
+  expect_equal(sel[["AIC"]][["mean"]] - 2 * (plain + 4),
+               -2 * sum(add_posterior_loglik(point)[["posterior"]][["loglik"]]))
+  expect_equal(sel[["BIC"]][["mean"]] - sel[["AIC"]][["mean"]],
+               (log(tt) - 2) * (plain + 4))
+
+  # A scale the sample does not reach is not a parameter the data paid for. A
+  # break in the last period has one scale and no decay; one three periods from
+  # the end has its three scales and still no decay.
+  late <- fit
+  late[["model"]][["volatility_break"]] <- as.integer(tt)
+  expect_equal(.volatility_break_nparams(late), 1)
+  late[["model"]][["volatility_break"]] <- as.integer(tt - 2)
+  expect_equal(.volatility_break_nparams(late), 3)
+  late[["model"]][["volatility_break"]] <- as.integer(tt - 3)
+  expect_equal(.volatility_break_nparams(late), 4)
+
+  # And the VEC model counts it beside the free elements of Pi.
+  vec <- add_posterior_loglik(volatility_break_vec())
+  k_vec <- vec[["model"]][["k"]]
+  k_ect <- ncol(vec[["data"]][["train"]][["w"]])
+  n_x <- ncol(vec[["data"]][["train"]][["x"]])
+  r <- vec[["model"]][["rank"]]
+  expect_equal(counted(vec),
+               r * (k_vec + k_ect - r) + k_vec * n_x + k_vec * (k_vec + 1) / 2 + 4)
+})

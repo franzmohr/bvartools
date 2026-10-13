@@ -1,5 +1,18 @@
 # bvartools 1.0.0
 
+* **AIC, BIC and HQ count the parameters a volatility break adds.** The scales
+  a break draws and the rate their excess decays at were missing from the
+  count, so a model with a break was credited with the fit its scaled error
+  covariance bought and charged nothing for it. At `volatility_scales = 3`,
+  which is four parameters, its BIC was better than it should have been by
+  `log(tt) * 4` -- about 21 on a sample of 176 -- and its AIC by 8, which is
+  enough to decide a comparison between a model with a break and one without.
+  The deviance was already right: the likelihood of both samplers that take a
+  break scales the covariance of the periods from it on, and the plug-in
+  deviance inherits that. Scales the sample does not reach are not counted, so
+  a break in the last period of the sample costs one parameter rather than
+  four. `WAIC`, `LOOIC` and `LPL` are unaffected, as is every draw.
+
 * **A package building its own models can check a volatility break and the
   Student t prior the way `add_priors()` does.** `check_volatility_break()`
   validates a break, places it in the estimation sample and returns the two

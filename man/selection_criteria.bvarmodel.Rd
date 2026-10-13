@@ -46,6 +46,25 @@ and \code{"nse"} their numerical standard error.
 \description{
 Calculates model selection criteria for an object of class 'bvarmodel'.
 }
+\details{
+\code{AIC}, \code{BIC} and \code{HQ} penalise the deviance at the point
+\code{plugin} names by a count of free parameters: the coefficients of every
+equation, the \eqn{k(k + 1)/2} of the error covariance -- or, in a structural
+model, its diagonal and the free elements of \eqn{A_0}, which come to the
+same number -- for a VEC model the \eqn{r(k + k_{ect} - r)} free elements of
+\eqn{\Pi = \alpha \beta'}, and, where the model has a volatility break, the
+scales it draws and the rate their excess decays at.
+
+\strong{States are not counted.} The log-volatilities of a stochastic
+volatility model, the coefficient paths of a time varying one and the period
+scales of Student t errors are one per period, and how much of that freedom a
+fit used is not a count of parameters. Those models are compared by
+\code{WAIC} and \code{LOOIC}, which penalise by the flexibility the fit
+actually used, or by \code{LPL}, which conditions on nothing a period has
+not seen. A break is counted because it is a handful of parameters rather
+than a path, and because the likelihood the deviance is evaluated from
+scales the covariance of the periods after it.
+}
 \examples{
 
 # Load data

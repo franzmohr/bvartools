@@ -242,3 +242,69 @@ test_that("the criteria count the scales and the rate they decay at", {
   expect_equal(counted(vec),
                r * (k_vec + k_ect - r) + k_vec * n_x + k_vec * (k_vec + 1) / 2 + 4)
 })
+
+test_that("an expanding window carries the break only where its sample reaches it", {
+
+  # One warning for the call, naming how many windows end before the break,
+  # rather than one per window.
+  reaches <- function(model, start) {
+    windows <- NULL
+    warnings <- testthat::capture_warnings(
+      windows <- use_expanding_window(model, start = start))
+    period <- model[["model"]][["volatility_break"]]
+    ends <- vapply(windows, function(x) nrow(x[["data"]][["train"]][["y"]]), integer(1))
+    carries <- vapply(windows,
+                      function(x) !is.null(x[["model"]][["volatility_break"]]), logical(1))
+
+    # Carried where the sample reaches the break and nowhere else.
+    expect_identical(carries, ends >= period)
+    # One warning about the break, beside the one a fitted model draws for its
+    # posterior and starting values, which the windows do not copy.
+    about_break <- grep("volatility break", warnings, value = TRUE)
+    expect_length(about_break, 1L)
+    expect_match(about_break,
+                 sprintf("^%d of the %d windows end before the volatility break",
+                         sum(!carries), length(windows)))
+    list(windows = windows, carries = carries, period = period)
+  }
+
+  fit <- volatility_break_fit()
+  period <- fit[["model"]][["volatility_break"]]
+  times <- stats::time(fit[["data"]][["train"]][["y"]])
+  out <- reaches(fit, times[period - 9])
+  expect_true(sum(!out$carries) > 0)
+
+  # Where it is carried the period is the one it had, since every window of an
+  # expanding window begins where the sample begins, and the prior goes with it.
+  kept <- out$windows[out$carries]
+  expect_true(all(vapply(kept, function(x) x[["model"]][["volatility_break"]],
+                         integer(1)) == period))
+  expect_true(all(vapply(kept, function(x) x[["model"]][["volatility_scales"]],
+                         integer(1)) == fit[["model"]][["volatility_scales"]]))
+  expect_true(all(vapply(kept, function(x) !is.null(x[["priors"]][["volatility"]]),
+                         logical(1))))
+
+  # A window without the break has no prior for one either, which add_priors()
+  # would refuse and the sampler could not read.
+  unreached <- out$windows[!out$carries]
+  expect_true(all(vapply(unreached,
+                         function(x) is.null(x[["priors"]][["volatility"]]), logical(1))))
+  expect_true(all(vapply(unreached,
+                         function(x) is.null(x[["model"]][["volatility_scales"]]),
+                         logical(1))))
+
+  # Windows that all reach the break say nothing about one. The fitted model
+  # still warns that its posterior and starting values are not copied.
+  warnings <- testthat::capture_warnings(
+    all_reach <- use_expanding_window(fit, start = times[period + 1]))
+  expect_length(grep("volatility break", warnings, value = TRUE), 0L)
+  expect_true(all(vapply(all_reach,
+                         function(x) !is.null(x[["model"]][["volatility_break"]]),
+                         logical(1))))
+
+  # The VEC model does the same.
+  vec <- volatility_break_vec()
+  vtimes <- stats::time(vec[["data"]][["train"]][["y"]])
+  vout <- reaches(vec, vtimes[vec[["model"]][["volatility_break"]] - 2])
+  expect_true(sum(!vout$carries) > 0)
+})

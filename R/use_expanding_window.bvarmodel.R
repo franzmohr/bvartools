@@ -12,7 +12,10 @@
 #' window. The training sample of the first ends in the period before \code{start}, and
 #' each further window adds one period. Posterior draws, starting values and forecast input
 #' that \code{object} already carries belong to the whole sample and are not copied into
-#' the windows; a warning says so.
+#' the windows; a warning says so. A window whose sample does not
+#' reach a \code{volatility_break} carries no break and no prior for one, as
+#' \code{\link[stats]{window}} drops it; one warning names how many windows
+#' that is. A dummy variable whose period no window reaches is left out of it.
 #'
 #' @examples
 #' 
@@ -83,6 +86,9 @@ use_expanding_window.bvarmodel <- function(object, start, ...) {
     rm(temp)
   }
   
+  # A window whose sample does not reach a volatility break cannot hold it.
+  result <- .window_volatility_break_expanding(result)
+
   class(result) <- append("expandingwindow", class(result))
   
   return(result)

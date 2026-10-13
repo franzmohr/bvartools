@@ -148,6 +148,27 @@ volatility_break_prior <- function(object, sigma) {
   volatility
 }
 
+# Whether a window of 'periods', indices into the original sample, reaches a
+# model's volatility break. A model without one reaches it trivially.
+.reaches_volatility_break <- function(x, periods) {
+  period <- x[["model"]][["volatility_break"]]
+  is.null(period) || (period - periods[1] + 1) <= length(periods)
+}
+
+# A volatility break taken off a model, with its prior and its draws. What a
+# window whose sample does not reach the break is left with.
+.without_volatility_break <- function(x) {
+  x[["model"]][["volatility_break"]] <- NULL
+  x[["model"]][["volatility_scales"]] <- NULL
+  if (!is.null(x[["priors"]])) {
+    x[["priors"]][["volatility"]] <- NULL
+  }
+  if (!is.null(x[["posterior"]])) {
+    x[["posterior"]][["volatility"]] <- NULL
+  }
+  x
+}
+
 # The period of a volatility break moves with a window of the sample, which
 # window() keeps as 'periods', indices into the original sample. A window that
 # ends before the break leaves a sample without one, and the break is dropped
@@ -164,21 +185,35 @@ volatility_break_prior <- function(object, sigma) {
          "the sample of the model. Create the model again on the shorter sample, without ",
          "'volatility_break' if the window is past the break's effect.", call. = FALSE)
   }
-  if (moved > length(periods)) {
-    x[["model"]][["volatility_break"]] <- NULL
-    x[["model"]][["volatility_scales"]] <- NULL
-    if (!is.null(x[["priors"]])) {
-      x[["priors"]][["volatility"]] <- NULL
-    }
-    if (!is.null(x[["posterior"]])) {
-      x[["posterior"]][["volatility"]] <- NULL
-    }
+  if (!.reaches_volatility_break(x, periods)) {
     warning("The window ends before the volatility break, so the break was dropped ",
             "together with its prior and its draws.", call. = FALSE)
-    return(x)
+    return(.without_volatility_break(x))
   }
   x[["model"]][["volatility_break"]] <- as.integer(moved)
   x
+}
+
+# The same for the windows of an expanding window, which all begin where the
+# sample begins: the break keeps its period in every window that reaches it and
+# is taken off the ones that do not.
+#
+# Reported once for the call rather than once per window. An expanding window
+# over the quarters around a break produces one unreached window per quarter
+# before it -- for the pandemic and forty quarters of evaluation, twenty-six of
+# them -- and a warning each would bury everything else the call has to say.
+.window_volatility_break_expanding <- function(result) {
+  unreached <- vapply(result, function(x) {
+    !.reaches_volatility_break(x, seq_len(nrow(x[["data"]][["train"]][["y"]])))
+  }, logical(1))
+  if (!any(unreached)) {
+    return(result)
+  }
+  result[unreached] <- lapply(result[unreached], .without_volatility_break)
+  warning(sum(unreached), " of the ", length(result), " windows end before the ",
+          "volatility break and carry none, together with its prior: a window cannot ",
+          "hold a break its sample does not reach.", call. = FALSE)
+  result
 }
 
 # The free parameters a volatility break adds, for the counts AIC, BIC and HQ

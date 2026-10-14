@@ -2,6 +2,59 @@
 
 ## bvartools 1.0.0
 
+- **An expanding window no longer carries a volatility break its sample
+  does not reach.**
+  [`use_expanding_window()`](https://rdrr.io/pkg/bayests/man/use_expanding_window.html)
+  sliced the data of every window but left `model$volatility_break` as
+  it was, so a window ending before the break kept a break pointing past
+  its own last period – an index of 162 in a sample of 136 – together
+  with a prior for it. [`window()`](https://rdrr.io/r/stats/window.html)
+  has always dropped the break there, with its prior and its draws, and
+  the windows now do the same. It matters wherever a break is scored out
+  of sample, which is the only honest way to score one: a quarter cannot
+  be predicted by a model told about a catastrophe nobody had seen yet,
+  so the windows before the break are the specification without it and
+  the ones after it are the specification with it. The report is one
+  warning for the call naming how many windows dropped it, not one per
+  window, since an expanding window over the quarters around a break
+  produces one such window per quarter before it.
+
+- **AIC, BIC and HQ count the parameters a volatility break adds.** The
+  scales a break draws and the rate their excess decays at were missing
+  from the count, so a model with a break was credited with the fit its
+  scaled error covariance bought and charged nothing for it. At
+  `volatility_scales = 3`, which is four parameters, its BIC was better
+  than it should have been by `log(tt) * 4` – about 21 on a sample of
+  176 – and its AIC by 8, which is enough to decide a comparison between
+  a model with a break and one without. The deviance was already right:
+  the likelihood of both samplers that take a break scales the
+  covariance of the periods from it on, and the plug-in deviance
+  inherits that. Scales the sample does not reach are not counted, so a
+  break in the last period of the sample costs one parameter rather than
+  four. `WAIC`, `LOOIC` and `LPL` are unaffected, as is every draw.
+
+- **A package building its own models can check a volatility break and
+  the Student t prior the way
+  [`add_priors()`](https://rdrr.io/pkg/bayests/man/add_priors.html)
+  does.**
+  [`check_volatility_break()`](https://franzmohr.github.io/bvartools/reference/check_volatility_break.md)
+  validates a break, places it in the estimation sample and returns the
+  two fields a model carries for it;
+  [`volatility_break_prior()`](https://franzmohr.github.io/bvartools/reference/volatility_break_prior.md)
+  and
+  [`student_t_prior()`](https://franzmohr.github.io/bvartools/reference/student_t_prior.md)
+  check `sigma$volatility` and `sigma$student_t` against the model and
+  return the priors. All three were internal to
+  [`create_bvarmodel()`](https://franzmohr.github.io/bvartools/reference/create_bvarmodel.md),
+  [`create_bvecmodel()`](https://franzmohr.github.io/bvartools/reference/create_bvecmodel.md)
+  and [`add_priors()`](https://rdrr.io/pkg/bayests/man/add_priors.html),
+  and are exported now because bgvars builds the sub-models of a global
+  model itself and would otherwise repeat the date arithmetic, the
+  refusals and the messages. Nothing about the three changed beyond the
+  name, so the draws of every model are unchanged;
+  [`check_discount_specification()`](https://franzmohr.github.io/bvartools/reference/discount_models.md)
+  is exported for the same reason.
+
 - **A volatility break for VAR and VEC models with a Wishart prior.**
   `create_bvarmodel(volatility_break = c(2020, 3))` and the same
   argument of

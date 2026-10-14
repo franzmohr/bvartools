@@ -77,6 +77,8 @@
   : Generate Artificial VAR Data
 - [`generate_artificial_vec()`](https://franzmohr.github.io/bvartools/reference/generate_artificial_vec.md)
   : Generate Artificial VEC Data
+- [`check_volatility_break()`](https://franzmohr.github.io/bvartools/reference/check_volatility_break.md)
+  : Check a volatility break and place it in the sample
 
 ## Priors and initial values
 
@@ -151,6 +153,10 @@
   : Prior Inclusion Probabilities
 - [`cointspace_prior()`](https://franzmohr.github.io/bvartools/reference/cointspace_prior.md)
   : Build the Prior on the Cointegration Space
+- [`volatility_break_prior()`](https://franzmohr.github.io/bvartools/reference/volatility_break_prior.md)
+  : The prior of a volatility break
+- [`student_t_prior()`](https://franzmohr.github.io/bvartools/reference/student_t_prior.md)
+  : The prior of Student t errors
 - [`add_sign_restrictions(`*`<bvarmodel>`*`)`](https://franzmohr.github.io/bvartools/reference/add_sign_restrictions.bvarmodel.md)
   : Sign Restrictions
 - [`add_sign_zero_restrictions(`*`<bvarmodel>`*`)`](https://franzmohr.github.io/bvartools/reference/add_sign_zero_restrictions.bvarmodel.md)

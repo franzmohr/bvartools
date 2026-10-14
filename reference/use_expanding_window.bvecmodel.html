@@ -86,7 +86,10 @@ expanding window approach.</p></dd>
 window. The training sample of the first ends in the period before <code>start</code>, and
 each further window adds one period. Posterior draws, starting values and forecast input
 that <code>object</code> already carries belong to the whole sample and are not copied into
-the windows; a warning says so.</p>
+the windows; a warning says so. A window whose sample does not
+reach a <code>volatility_break</code> carries no break and no prior for one, as
+<code><a href="https://rdrr.io/r/stats/window.html" class="external-link">window</a></code> drops it; one warning names how many windows
+that is. A dummy variable whose period no window reaches is left out of it.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

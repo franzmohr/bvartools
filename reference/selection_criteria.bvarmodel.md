@@ -58,6 +58,26 @@ the mean of the draws of each scored period's predictive density, summed
 over the periods. Attribute `"terms"` holds those per period and `"nse"`
 their numerical standard error.
 
+## Details
+
+`AIC`, `BIC` and `HQ` penalise the deviance at the point `plugin` names
+by a count of free parameters: the coefficients of every equation, the
+\\k(k + 1)/2\\ of the error covariance – or, in a structural model, its
+diagonal and the free elements of \\A_0\\, which come to the same number
+– for a VEC model the \\r(k + k\_{ect} - r)\\ free elements of \\\Pi =
+\alpha \beta'\\, and, where the model has a volatility break, the scales
+it draws and the rate their excess decays at.
+
+**States are not counted.** The log-volatilities of a stochastic
+volatility model, the coefficient paths of a time varying one and the
+period scales of Student t errors are one per period, and how much of
+that freedom a fit used is not a count of parameters. Those models are
+compared by `WAIC` and `LOOIC`, which penalise by the flexibility the
+fit actually used, or by `LPL`, which conditions on nothing a period has
+not seen. A break is counted because it is a handful of parameters
+rather than a path, and because the likelihood the deviance is evaluated
+from scales the covariance of the periods after it.
+
 ## See also
 
 Other model comparison:

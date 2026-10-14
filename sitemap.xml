@@ -47,6 +47,7 @@
 <url><loc>https://franzmohr.github.io/bvartools/reference/bvartools-package.html</loc></url>
 <url><loc>https://franzmohr.github.io/bvartools/reference/bvartools_model.html</loc></url>
 <url><loc>https://franzmohr.github.io/bvartools/reference/bvec.html</loc></url>
+<url><loc>https://franzmohr.github.io/bvartools/reference/check_volatility_break.html</loc></url>
 <url><loc>https://franzmohr.github.io/bvartools/reference/coint_kls2010_reparameterise_two.html</loc></url>
 <url><loc>https://franzmohr.github.io/bvartools/reference/coint_prepare_sur_data.html</loc></url>
 <url><loc>https://franzmohr.github.io/bvartools/reference/cointspace_prior.html</loc></url>
@@ -128,6 +129,7 @@
 <url><loc>https://franzmohr.github.io/bvartools/reference/ssvs_prior.html</loc></url>
 <url><loc>https://franzmohr.github.io/bvartools/reference/stochvol_ksc_1998.html</loc></url>
 <url><loc>https://franzmohr.github.io/bvartools/reference/stochvol_ocsn_2007.html</loc></url>
+<url><loc>https://franzmohr.github.io/bvartools/reference/student_t_prior.html</loc></url>
 <url><loc>https://franzmohr.github.io/bvartools/reference/summary.bvarmodel.html</loc></url>
 <url><loc>https://franzmohr.github.io/bvartools/reference/summary.bvecmodel.html</loc></url>
 <url><loc>https://franzmohr.github.io/bvartools/reference/sur_const_to_tvp.html</loc></url>
@@ -143,6 +145,7 @@
 <url><loc>https://franzmohr.github.io/bvartools/reference/vec_to_var.expandingwindow.html</loc></url>
 <url><loc>https://franzmohr.github.io/bvartools/reference/vec_to_var.html</loc></url>
 <url><loc>https://franzmohr.github.io/bvartools/reference/vec_to_var.modellist.html</loc></url>
+<url><loc>https://franzmohr.github.io/bvartools/reference/volatility_break_prior.html</loc></url>
 <url><loc>https://franzmohr.github.io/bvartools/reference/window.bvarmodel.html</loc></url>
 <url><loc>https://franzmohr.github.io/bvartools/reference/window.bvecmodel.html</loc></url>
 <url><loc>https://franzmohr.github.io/bvartools/reference/write_to_hdf5.bvarmodel.html</loc></url>

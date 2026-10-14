@@ -33,7 +33,11 @@ per window. The training sample of the first ends in the period before
 `start`, and each further window adds one period. Posterior draws,
 starting values and forecast input that `object` already carries belong
 to the whole sample and are not copied into the windows; a warning says
-so.
+so. A window whose sample does not reach a `volatility_break` carries no
+break and no prior for one, as
+[`window`](https://rdrr.io/r/stats/window.html) drops it; one warning
+names how many windows that is. A dummy variable whose period no window
+reaches is left out of it.
 
 ## See also
 

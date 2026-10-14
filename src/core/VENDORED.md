@@ -7,8 +7,20 @@ project is here -- the core deliberately links neither HDF5 nor HighFive,
 prints nothing and reads no files, which is what makes it embeddable in an R
 package at all.
 
-The copy is **BayesTS `deeebd0`**, BayesTS `main` after merging `c7d9f38`,
-which adds the volatility break to VecNormalWishart: the rows of the
+The copy is **BayesTS `v0.4.0`** (`6471dd4`), the release, which over the
+previous copy carries `c61b967`: `Reporter` gains a hook through which an
+embedded host can watch a time-varying coefficient path form,
+`kept_draw()`, which the nine time-varying samplers call with each kept draw
+of the path. Of the files here it changes `reporter.h`, which now includes
+`bayests/arma.h` and so still sees RcppArmadillo first, and the seven
+time-varying VAR and VEC samplers; the default hook does nothing and consumes
+no random numbers. No draw moves:
+fixed-seed coefficients, log likelihoods and forecasts of a VAR and a VEC, and
+of time-varying VARs and VECs under gamma and stochastic volatility errors,
+are identical to a build of the previous copy.
+
+Before that the copy was **BayesTS `deeebd0`**, BayesTS `main` after merging
+`c7d9f38`, which adds the volatility break to VecNormalWishart: the rows of the
 differenced response, of the short-run regressors and of the levels the
 cointegration term is built from are divided by the scale of their period, and
 the forecast and the score are the level VAR's, break included. Of the files

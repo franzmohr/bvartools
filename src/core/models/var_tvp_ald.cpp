@@ -274,6 +274,7 @@ VarTvpAldDraws VarTvpAldSampler::draw_coefficients(const VarTvpAldInput &input,
             if (use_a)
             {
                 out.a.col(draw_pos) = arma::vectorise(a);
+                reporter.kept_draw("a", static_cast<long long>(draw_pos), a);
                 out.a_sigma.col(draw_pos) = a_sigma.diag();
                 if (use_varsel)
                 {

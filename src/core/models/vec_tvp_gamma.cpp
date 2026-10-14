@@ -545,6 +545,7 @@ VecTvpGammaDraws VecTvpGammaSampler::draw_coefficients(const VecTvpGammaInput &i
             if (use_a)
             {
                 out.a.col(draw_pos) = arma::vectorise(a);
+                reporter.kept_draw("a", static_cast<long long>(draw_pos), a);
                 out.a_sigma.col(draw_pos) = arma::vectorise(a_sigma.diag());
                 if (a_noncentred)
                 {

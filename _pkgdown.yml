@@ -26,6 +26,7 @@ reference:
   - starts_with("window.")
   - generate_artificial_var
   - generate_artificial_vec
+  - check_volatility_break
 
 - title: Priors and initial values
   contents:
@@ -35,6 +36,8 @@ reference:
   - starts_with("ssvs_prior")
   - starts_with("inclusion_prior")
   - cointspace_prior
+  - volatility_break_prior
+  - student_t_prior
   - starts_with("add_sign_restrictions")
   - starts_with("add_sign_zero_restrictions")
   - starts_with("add_initial_values")
